@@ -1,0 +1,9 @@
+<Project>
+  <!-- 모든 프로젝트 공통 설정. 경고는 오류로 다룬다 (AGENTS.md §9). -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+</Project>
