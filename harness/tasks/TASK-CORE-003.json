@@ -1,0 +1,32 @@
+{
+  "id": "TASK-CORE-003",
+  "title": "인증: 로그인, 내부 토큰, API 키, 기본 권한 정책",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/security.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-002"
+  ],
+  "acceptance": [
+    "인증 없는 API 호출은 401",
+    "비밀번호는 PBKDF2 해시로만 저장",
+    "로그인 이력이 user_login_log에 남는다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "TASK-CORE-007",
+  "title": "문서 번호 채번 서비스",
+  "module": "CORE",
+  "layer": [
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/layers.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-002"
+  ],
+  "acceptance": [
+    "동시에 채번해도 번호가 겹치지 않는다 (AS IS get_auto_num 대체)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
