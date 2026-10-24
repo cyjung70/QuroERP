@@ -1,0 +1,29 @@
+{
+  "id": "TASK-CORE-005",
+  "title": "코드 API와 코드 값 검사 (ICodeValidator)",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/codes.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-002"
+  ],
+  "acceptance": [
+    "GET /api/codes/{majorCode}가 번역 이름을 돌려준다",
+    "없는 코드 저장 시 422"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

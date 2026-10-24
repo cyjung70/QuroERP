@@ -1,0 +1,27 @@
+{
+  "id": "TASK-CORE-002",
+  "title": "DB 마이그레이션 기반과 공통 테이블",
+  "module": "CORE",
+  "layer": [
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/database.md",
+    "docs/architecture/database-tables.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-001"
+  ],
+  "acceptance": [
+    "마이그레이션이 빈 PostgreSQL에 적용된다",
+    "UnitOfWork·연결 팩토리 통합 테스트 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
