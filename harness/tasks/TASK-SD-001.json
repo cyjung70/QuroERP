@@ -1,0 +1,35 @@
+{
+  "id": "TASK-SD-001",
+  "title": "고객 마스터 API (Application·Domain·Infrastructure)",
+  "module": "SD",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "S",
+  "specs": [
+    "docs/specifications/SD/customer.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-015",
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "TASK-BC-020",
+  "title": "품목 이미지 업로드 화면 (S)",
+  "module": "BC",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "S",
+  "specs": [
+    "docs/specifications/BC/item-image-upload.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-019",
+    "TASK-CORE-006"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

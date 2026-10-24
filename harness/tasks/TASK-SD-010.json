@@ -1,0 +1,29 @@
+{
+  "id": "TASK-SD-010",
+  "title": "수주 마감 화면 (S)",
+  "module": "SD",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "S",
+  "specs": [
+    "docs/specifications/SD/sales-order-closing.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-SD-009"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

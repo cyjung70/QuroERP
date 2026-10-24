@@ -1,0 +1,38 @@
+{
+  "id": "TASK-MM-021",
+  "title": "재고 연령 분석 상세 리포트 조회·PDF·화면",
+  "module": "MM",
+  "layer": [
+    "Api",
+    "Application",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "M",
+  "specs": [
+    "docs/specifications/MM/report-inventory-aging-detail.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-015",
+    "TASK-BC-017",
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-006",
+    "TASK-CORE-007"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "FastReport PDF 출력"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

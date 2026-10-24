@@ -1,0 +1,30 @@
+{
+  "id": "TASK-CORE-008",
+  "title": "재고 공통: 재고 이동, 마이너스 재고 설정",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/inventory.md",
+    "docs/business-rules/MM/inventory.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-002"
+  ],
+  "acceptance": [
+    "MM-BR-001~004 테스트 통과",
+    "동시 출고 시 재고가 음수로 새지 않는다 (설정 OFF)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
