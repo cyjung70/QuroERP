@@ -1,0 +1,28 @@
+{
+  "id": "TASK-CORE-004",
+  "title": "다국어 기반 (resx, 번역 테이블 조회)",
+  "module": "CORE",
+  "layer": [
+    "Blazor",
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/i18n.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-001"
+  ],
+  "acceptance": [
+    "ko/en 전환 시 라벨이 바뀐다",
+    "ProblemDetails code로 메시지를 표시한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

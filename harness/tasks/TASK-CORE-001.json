@@ -1,0 +1,27 @@
+{
+  "id": "TASK-CORE-001",
+  "title": "솔루션 구조와 프로젝트 참조",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/layers.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-code-review"
+  ],
+  "dependsOn": [],
+  "acceptance": [
+    "AGENTS.md §4의 프로젝트 6개와 테스트 프로젝트 3개가 빌드된다",
+    "프로젝트 참조가 layers.md 표와 같다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

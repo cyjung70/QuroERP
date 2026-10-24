@@ -1,0 +1,26 @@
+{
+  "id": "TASK-CORE-006",
+  "title": "화면유형 공통 컴포넌트 S/M/SM/MM",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screens.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-004"
+  ],
+  "acceptance": [
+    "4개 유형 샘플 화면이 동작한다",
+    "저장하지 않은 변경 확인, 행 상태(I/U/D)가 동작한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
