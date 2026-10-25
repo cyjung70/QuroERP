@@ -76,7 +76,7 @@
 | 결제 조건 | Terms | code_major 'TERMS' | BC | 코드 (AS IS A300) |
 | 단위 | Unit | code_major 'UNIT' | BC | 코드 (AS IS S100) |
 | 사용 여부 | ValidFlag | code_major 'VALID_FLAG' | BC | 코드 (AS IS S300) |
-| 마이너스 재고 허용 | AllowNegativeStock | allow_negative_stock | MM | 가용재고보다 많이 출고하는 것을 허용하는 설정 (inventory.md) |
+| 마이너스 재고 모드 | NegativeStockMode | negative_stock_mode | MM | 현재고보다 많이 출고하는 것을 허용하는 시스템 설정: ALLOW, ALLOW_IN_MONTH, DENY (inventory.md) |
 | 화면유형 | ScreenType | - | 공통 | S, M, SM, MM (screens.md) |
 | 문서 번호 | DocumentNo | *_no | 공통 | 수주·발주 등 업무 문서 번호. 채번 서비스가 만든다 |
 | 감사 컬럼 | AuditColumns | created_at, created_by, updated_at, updated_by | 공통 | 모든 테이블 공통 (database.md) |

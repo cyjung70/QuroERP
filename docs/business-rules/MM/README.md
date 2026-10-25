@@ -11,5 +11,5 @@
 - [입고](goods-receipt.md): MM-BR-101 ~ MM-BR-115
 - [예외 입고](unplanned-receipt.md): MM-BR-201 ~ MM-BR-208
 - [재고 실사](stock-count.md): MM-BR-301 ~ MM-BR-308
-- [재고 월 마감](closing.md): MM-BR-401 ~ MM-BR-406
+- [재고 월 마감](closing.md): MM-BR-401 ~ MM-BR-407
 - [구매 시뮬레이션](purchase-simulation.md): MM-BR-501 ~ MM-BR-509

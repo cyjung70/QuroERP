@@ -39,8 +39,8 @@
 | `created_by` | `varchar NOT NULL` | 생성 사용자 ID |
 | `updated_at` | `timestamptz NOT NULL DEFAULT now()` | 수정 시각 |
 | `updated_by` | `varchar NOT NULL` | 수정 사용자 ID |
-| `company_id` | `bigint` | 회사 구분이 필요한 테이블만 [확인 필요 — 다중 회사 지원 범위] |
 
+- 다중 회사는 지원하지 않는다. 회사는 `bc_company` 1행이고, 테이블에 `company_id`를 두지 않는다.
 - 동시 수정 검사는 `updated_at`을 낙관적 잠금으로 쓴다 (`WHERE id = @Id AND updated_at = @UpdatedAt`, 영향 행 0이면 충돌).
 
 ## 타입

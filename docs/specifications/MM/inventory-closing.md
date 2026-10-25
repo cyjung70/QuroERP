@@ -22,9 +22,10 @@
 ## 대체 흐름
 
 - 재고 이동이 없거나 대상 달이 이번 달 이후면 마감하지 않는다 (MM-BR-401·402).
+- 마이너스 재고 모드가 `ALLOW_IN_MONTH`이고 대상 달 기말 수량이 음수인 품목이 있으면 마감하지 않고 그 품목을 보여 준다 (MM-BR-407).
 - 다른 사용자가 마감·취소 중이면 끝날 때까지 기다린다 (MM-BR-405).
 - 마감한 달의 재고 이동은 모든 문서에서 막힌다 (MM-BR-004).
-- 재고를 줄이는 저장은 마이너스 재고 설정을 따른다 (MM-BR-001, MM-BR-002).
+- 재고를 줄이는 저장은 마이너스 재고 모드를 따른다 (MM-BR-001, MM-BR-002).
 
 ## 화면 필드
 
@@ -66,6 +67,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `run_closing`
 - [MM-BR-404](../../business-rules/MM/closing.md)
 - [MM-BR-405](../../business-rules/MM/closing.md)
 - [MM-BR-406](../../business-rules/MM/closing.md)
+- [MM-BR-407](../../business-rules/MM/closing.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
@@ -88,8 +90,8 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `run_closing`
 - `MM-UC-008-T03` 동시 수정 충돌 409
 - `MM-UC-008-T04` 없는 코드 값 저장 시 422
 - `MM-UC-008-T05` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-401 → MM-UT-401)
-- `MM-UC-008-T06` 마이너스 재고 OFF: 가용재고 부족 시 저장 차단 (MM-BR-001)
-- `MM-UC-008-T07` 마이너스 재고 ON: 저장되고 이력 표시 (MM-BR-002)
+- `MM-UC-008-T06` 마이너스 재고 DENY: 현재고 부족 시 저장 차단 (MM-BR-001)
+- `MM-UC-008-T07` 마이너스 재고 ALLOW·ALLOW_IN_MONTH: 저장되고 이력 표시 (MM-BR-002)
 
 ## AS IS 근거
 
