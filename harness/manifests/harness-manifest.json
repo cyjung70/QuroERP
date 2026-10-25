@@ -48,7 +48,7 @@
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "0c008cbd2abebf25ac09e0ac187d18dab43ca0fbc864dd14c0334c98e1fcef9a"
+      "sha256": "fc4e2bc3b5458477a2ac27580c37c129a14f219ae046778e43c68d09982294b5"
     },
     {
       "path": "docs/architecture/api.md",
@@ -76,7 +76,7 @@
     },
     {
       "path": "docs/architecture/layers.md",
-      "sha256": "aab1d7c893c17c10e967c0774f9350ba4e409e0aa7ff918cfdcfac179bc93fcc"
+      "sha256": "7e872aeb737f910b4e17135186bbb0404116efee123c1c23e0d1a7092efdbfba"
     },
     {
       "path": "docs/architecture/print-documents.md",
