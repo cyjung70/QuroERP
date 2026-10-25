@@ -13,23 +13,32 @@
 
 <PageTitle>@L["Bc.Login.Title"]</PageTitle>
 
-<h1>@L["Bc.Login.Title"]</h1>
+<main class="login-page">
+    <section class="login-frame" aria-label="@L["Bc.Login.Title"]">
+        <div class="login-hero" aria-hidden="true"></div>
 
-<EditForm Model="Input" FormName="login" OnSubmit="LoginAsync" method="post">
-    @if (_errorCode is not null)
-    {
-        <p role="alert">@L[_errorCode]</p>
-    }
-    <div>
-        <label for="user-id">@L["Bc.Login.UserId"]</label>
-        <InputText id="user-id" @bind-Value="Input!.UserId" autocomplete="username" required />
-    </div>
-    <div>
-        <label for="password">@L["Bc.Login.Password"]</label>
-        <InputText id="password" type="password" @bind-Value="Input!.Password" autocomplete="current-password" required />
-    </div>
-    <button type="submit">@L["Bc.Login.Submit"]</button>
-</EditForm>
+        <EditForm class="login-form" Model="Input" FormName="login" OnSubmit="LoginAsync" method="post">
+            @if (_errorCode is not null)
+            {
+                <p class="login-error" role="alert">@L[_errorCode]</p>
+            }
+            <div class="login-field">
+                <label for="user-id">@L["Bc.Login.UserId"]</label>
+                <InputText id="user-id" @bind-Value="Input!.UserId" autocomplete="username" required />
+            </div>
+            <div class="login-field">
+                <label for="password">@L["Bc.Login.Password"]</label>
+                <InputText id="password" type="password" @bind-Value="Input!.Password" autocomplete="current-password" required />
+            </div>
+            <div class="login-actions">
+                <button class="login-submit" type="submit">@L["Bc.Login.Submit"]</button>
+                <button class="login-clear" type="reset">@L["Bc.Login.Clear"]</button>
+            </div>
+        </EditForm>
+
+        <footer class="login-copyright">@L["Bc.Login.Copyright"]</footer>
+    </section>
+</main>
 
 @code {
     private const string RequiredCode = "BC-E-002";
