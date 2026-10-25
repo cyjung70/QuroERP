@@ -10,6 +10,8 @@
 | 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
 | 사전조건 | 로그인 (security.md) |
 
+> 출력 문서의 회사 로고를 이 화면에서 올리고 바꾼다 (`logo_image`, `logo_content_type` — PNG·JPEG). 로고는 `GET /api/bc/company/logo`로 읽는다 (`docs/architecture/print-documents.md`).
+
 ## 기본 흐름
 
 화면유형 표준 흐름이다. AS IS 로직 분석으로 BR이 정해지면 갱신된다.
