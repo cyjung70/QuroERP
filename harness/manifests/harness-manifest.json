@@ -64,7 +64,7 @@
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "3a89e236f771aaa210e211a849fcf50b8ac1085200b7b5b4c8531e979cb2a113"
+      "sha256": "1f9861921b7db62167e57630faa4ce20cb0b23209a85a51d22ae3ea8e075f7d7"
     },
     {
       "path": "docs/architecture/i18n.md",
@@ -196,7 +196,7 @@
     },
     {
       "path": "docs/specifications/BC/company.md",
-      "sha256": "ba56e9f712f726bd7032fe3e3962ee503758d4c04d319f380c1eb5b74ccab18e"
+      "sha256": "0b84eab47cf8bc36bab0cb528b76a7452c6276dcbf27f40f695f16d39d63ae14"
     },
     {
       "path": "docs/specifications/BC/item-barcode.md",
@@ -204,7 +204,7 @@
     },
     {
       "path": "docs/specifications/BC/item-image-upload.md",
-      "sha256": "d1bddf7cd6376935a6f100a3b1eb7de3900306593abf37f4fcb43e6183000c19"
+      "sha256": "eca661232b0afe14876bea01cb29e3e5bdbc1f34609be02a18dce9797577d4b2"
     },
     {
       "path": "docs/specifications/BC/item.md",
