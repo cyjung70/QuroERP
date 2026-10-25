@@ -1,8 +1,6 @@
 ﻿using System.Reflection;
-using DbUp;
-using DbUp.Engine;
-using DbUp.Support;
 using Microsoft.Extensions.Configuration;
+using QuroERP.Database;
 
 // QuroERP DB 마이그레이션 (DbUp)
 //   기본:   Scripts/Schema → Scripts/Seed 순서로 아직 적용하지 않은 스크립트를 적용한다 (기록: schemaversions)
@@ -25,49 +23,12 @@ if (string.IsNullOrWhiteSpace(connectionString))
 }
 
 var includeDemo = args.Contains("--demo", StringComparer.OrdinalIgnoreCase);
-var assembly = Assembly.GetExecutingAssembly();
-
-var core = Upgrade(connectionString, "schemaversions",
-    ("Schema", 1),
-    ("Seed", 2));
-if (!core.Successful)
+var result = DatabaseMigrator.Upgrade(connectionString, includeDemo);
+if (!result.Successful)
 {
+    Console.Error.WriteLine($"실패한 스크립트: {result.ErrorScript?.Name}");
+    Console.Error.WriteLine(result.Error);
     return 1;
 }
 
-if (includeDemo)
-{
-    var demo = Upgrade(connectionString, "schemaversions_demo", ("Demo", 1));
-    if (!demo.Successful)
-    {
-        return 1;
-    }
-}
-
 return 0;
-
-DatabaseUpgradeResult Upgrade(string connection, string journalTable, params (string Folder, int Order)[] folders)
-{
-    var builder = DeployChanges.To
-        .PostgresqlDatabase(connection)
-        .JournalToPostgresqlTable("public", journalTable)
-        .WithTransactionPerScript()
-        .LogToConsole();
-
-    foreach (var (folder, order) in folders)
-    {
-        var prefix = $"{assembly.GetName().Name}.Scripts.{folder}.";
-        builder = builder.WithScriptsEmbeddedInAssembly(
-            assembly,
-            name => name.StartsWith(prefix, StringComparison.Ordinal),
-            new SqlScriptOptions { ScriptType = ScriptType.RunOnce, RunGroupOrder = order });
-    }
-
-    var result = builder.Build().PerformUpgrade();
-    if (!result.Successful)
-    {
-        Console.Error.WriteLine($"실패한 스크립트: {result.ErrorScript?.Name}");
-        Console.Error.WriteLine(result.Error);
-    }
-    return result;
-}
