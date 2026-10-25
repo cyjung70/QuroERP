@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.13" />
   </ItemGroup>
 
   <!-- 스크립트는 실행 파일에 포함한다. 리소스 이름: QuroERP.Database.Scripts.<Schema|Seed|Demo>.<파일> -->

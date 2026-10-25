@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="..\QuroErp.Contracts\QuroErp.Contracts.csproj" />
@@ -9,6 +9,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <!-- 기본 리소스(SharedResource.resx)의 언어 (i18n.md) -->
+    <NeutralLanguage>ko</NeutralLanguage>
   </PropertyGroup>
 
 </Project>

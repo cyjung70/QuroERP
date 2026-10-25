@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Bc.Login.Title" xml:space="preserve"><value>로그인</value></data>
+  <data name="Bc.Login.UserId" xml:space="preserve"><value>사용자 ID</value></data>
+  <data name="Bc.Login.Password" xml:space="preserve"><value>비밀번호</value></data>
+  <data name="Bc.Login.Submit" xml:space="preserve"><value>로그인</value></data>
+  <data name="Bc.Login.Clear" xml:space="preserve"><value>지우기</value></data>
+  <data name="Bc.Login.Copyright" xml:space="preserve"><value>© 2026 QuroSYS Co., Ltd. All Rights Reserved.</value></data>
+  <data name="Common.Logout" xml:space="preserve"><value>로그아웃</value></data>
+  <data name="BC-E-001" xml:space="preserve"><value>사용자 ID 또는 비밀번호가 올바르지 않습니다.</value></data>
+  <data name="BC-E-002" xml:space="preserve"><value>사용자 ID와 비밀번호를 입력하세요.</value></data>
+  <data name="BC-E-003" xml:space="preserve"><value>서버에 연결할 수 없습니다. 잠시 후 다시 시도하세요.</value></data>
+</root>
