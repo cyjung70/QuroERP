@@ -31,6 +31,7 @@ Browser ──SignalR──▶ QuroErp.Web (Blazor Interactive Server)
 
 - 호출 방향은 `Web → Api → Application → Domain`이고, Infrastructure는 Application이 정의한 인터페이스를 구현한다 (의존성 역전).
 - Domain은 Dapper, ASP.NET Core, PostgreSQL을 모른다.
+- Api는 Domain을 직접 참조하지 않는다. 다만 Application 참조로 들어오는 Domain 예외 타입(`DomainException`)은 예외 → ProblemDetails 변환(422)에만 쓸 수 있다. 엔티티·값 객체·규칙 등 그 밖의 Domain 타입은 Api에서 쓰지 않는다.
 - `QuroERP.Database`는 배포·개발 도구다. 앱(Web·Api)은 이 프로젝트를 참조하지 않고, 앱 시작 때 마이그레이션을 실행하지 않는다.
 - [확인 필요] "Application → Domain → Infrastructure" 순서를 위와 같이 의존성 역전 방식으로 해석했다.
 

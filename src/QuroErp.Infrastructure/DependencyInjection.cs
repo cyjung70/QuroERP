@@ -2,9 +2,11 @@ using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Common.Auth;
+using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Infrastructure.Common.Auth;
+using QuroErp.Infrastructure.Common.Codes;
 using QuroErp.Infrastructure.Common.I18n;
 using QuroErp.Infrastructure.Common.Persistence;
 
@@ -36,6 +38,7 @@ public static class DependencyInjection
         services.AddSingleton<IApiClientRepository, ApiClientRepository>();
         services.AddSingleton<IPasswordHashService, PasswordHashService>();
         services.AddSingleton<ITranslationRepository, TranslationRepository>();
+        services.AddSingleton<ICodeRepository, CodeRepository>();
         return services;
     }
 }
