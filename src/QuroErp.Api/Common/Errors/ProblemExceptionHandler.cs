@@ -16,6 +16,7 @@ public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetail
         {
             DomainException e => (StatusCodes.Status422UnprocessableEntity, e.Code, e.Args),
             NotFoundException e => (StatusCodes.Status404NotFound, e.Code, e.Args),
+            ConcurrencyException => (StatusCodes.Status409Conflict, ConcurrencyException.Code, (IReadOnlyList<object>)[]),
             _ => (0, null, null),
         };
         if (code is null)

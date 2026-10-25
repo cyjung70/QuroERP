@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Web.Auth;
+using QuroErp.Web.Bc.Companies;
+using QuroErp.Web.Mm.Inventory;
 
 namespace QuroErp.Web.Tests;
 
@@ -19,11 +21,18 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
         Content = new StringContent("""{"status":401,"code":"BC-E-001"}""", null, "application/problem+json"),
     };
 
+    /// <summary>Response of business APIs (company, inventory setting) by request. Default: 404 without body.</summary>
+    public Func<HttpRequestMessage, HttpResponseMessage> BusinessApiResponse { get; set; } = _ => new HttpResponseMessage(HttpStatusCode.NotFound);
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting(WebAuthentication.ApiBaseUrlKey, "http://api.test");
         builder.ConfigureTestServices(services =>
-            services.AddHttpClient<AuthApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeApiHandler(this)));
+        {
+            services.AddHttpClient<AuthApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeApiHandler(this));
+            services.AddHttpClient<CompanyApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
+            services.AddHttpClient<InventorySettingApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
+        });
     }
 
     /// <summary>쿠키를 유지하고 리디렉션을 따라가지 않는 클라이언트.</summary>
@@ -49,5 +58,11 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
             Task.FromResult(factory.ApiResponse());
+    }
+
+    private sealed class FakeBusinessApiHandler(WebFactory factory) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(factory.BusinessApiResponse(request));
     }
 }
