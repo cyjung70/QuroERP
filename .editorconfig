@@ -1,0 +1,14 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+
+[*.{json,xml,csproj,props,slnx,yml}]
+indent_size = 2
+
+# 테스트 이름은 <메서드>_<조건>_<기대 결과> 형식이다 (quro-unit-test 스킬)
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none
