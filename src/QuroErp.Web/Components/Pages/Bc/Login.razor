@@ -4,10 +4,12 @@
 @using Microsoft.AspNetCore.Authentication
 @using QuroErp.Contracts.Common.Auth
 @using QuroErp.Web.Auth
+@using QuroErp.Web.Common
 @inject AuthApiClient AuthApi
 @inject AccessTokenStore Tokens
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
 
 @* BC-UC-001 로그인. 쿠키를 써야 해서 정적 SSR로 렌더링한다 (rendermode 없음) *@
 
@@ -18,9 +20,9 @@
         <div class="login-hero" aria-hidden="true"></div>
 
         <EditForm class="login-form" Model="Input" FormName="login" OnSubmit="LoginAsync" method="post">
-            @if (_errorCode is not null)
+            @if (_error is not null)
             {
-                <p class="login-error" role="alert">@L[_errorCode]</p>
+                <p class="login-error" role="alert">@_error</p>
             }
             <div class="login-field">
                 <label for="user-id">@L["Bc.Login.UserId"]</label>
@@ -36,7 +38,10 @@
             </div>
         </EditForm>
 
-        <footer class="login-copyright">@L["Bc.Login.Copyright"]</footer>
+        <footer class="login-footer">
+            <span class="login-copyright">@L["Bc.Login.Copyright"]</span>
+            <LanguageSelector />
+        </footer>
     </section>
 </main>
 
@@ -44,7 +49,7 @@
     private const string RequiredCode = "BC-E-002";
     private const string UnavailableCode = "BC-E-003";
 
-    private string? _errorCode;
+    private string? _error;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -61,11 +66,11 @@
     {
         if (Input is null || string.IsNullOrWhiteSpace(Input.UserId) || string.IsNullOrEmpty(Input.Password))
         {
-            _errorCode = RequiredCode;
+            _error = Messages.Get(RequiredCode);
             return;
         }
 
-        LoginResponse? login;
+        LoginResponse login;
         try
         {
             login = await AuthApi.LoginAsync(
@@ -73,29 +78,24 @@
                 HttpContext.Connection.RemoteIpAddress?.ToString(),
                 HttpContext.RequestAborted);
         }
-        catch (HttpRequestException)
+        catch (ApiProblemException e)
         {
-            _errorCode = UnavailableCode;
+            // 로그인 실패는 401 + code BC-E-001
+            _error = Messages.Get(e.Problem);
             return;
         }
-
-        if (login is null)
+        catch (HttpRequestException)
         {
-            _errorCode = AuthRoutes.LoginFailedCode;
+            _error = Messages.Get(UnavailableCode);
             return;
         }
 
         var sessionId = Tokens.Add(login);
         await HttpContext.SignInAsync(WebAuthClaims.CreatePrincipal(sessionId, login));
-        Navigation.NavigateTo(LocalReturnUrl(ReturnUrl));
+        // 사용자 언어 설정이 있으면 그 언어로 바꾼다 (사용자 설정 → 브라우저 언어 → ko)
+        WebLocalization.SetCultureCookie(HttpContext, login.LangCode);
+        Navigation.NavigateTo(LocalUrl.OrRoot(ReturnUrl));
     }
-
-    // 다른 사이트로 보내지 않도록 같은 사이트 경로만 허용한다
-    private static string LocalReturnUrl(string? returnUrl) =>
-        returnUrl is not null && returnUrl.StartsWith('/') && !returnUrl.StartsWith("//", StringComparison.Ordinal)
-            && !returnUrl.StartsWith("/\\", StringComparison.Ordinal)
-            ? returnUrl
-            : "/";
 
     private sealed class LoginInput
     {

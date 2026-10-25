@@ -1,0 +1,21 @@
+@using System.Globalization
+@using QuroErp.Web.Common
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* 언어 바꾸기. 쿠키를 써야 해서 일반 폼으로 보내고 화면을 다시 읽는다 *@
+<form class="language-selector" method="post" action="@WebLocalization.CulturePath" aria-label="@L["Common.Language"]">
+    <AntiforgeryToken />
+    <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+    @foreach (var culture in WebLocalization.Cultures)
+    {
+        <button type="submit" name="culture" value="@culture" lang="@culture"
+                aria-pressed="@(culture == CultureInfo.CurrentUICulture.TwoLetterISOLanguageName ? "true" : "false")">
+            @L[$"Common.Language.{culture}"]
+        </button>
+    }
+</form>
+
+@code {
+    private string ReturnUrl => "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+}

@@ -24,6 +24,9 @@ public sealed class AppUser
 
     public DateOnly? PasswordValidDt { get; init; }
 
+    /// <summary>사용자 언어 설정 (ko, en). null이면 브라우저 언어를 따른다.</summary>
+    public string? LangCode { get; init; }
+
     /// <summary>
     /// 로그인할 수 있는 사용자인지 본다: 사용 여부가 'Y'이고, 사용자 유효일이 지나지 않았다.
     /// [추정] valid_flag가 비어 있으면 사용하지 않는 사용자로 본다.
