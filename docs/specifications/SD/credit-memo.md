@@ -77,6 +77,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/sd/credit-memos | 신규 |
 | PUT | /api/sd/credit-memos/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/sd/credit-memos/{id} | 삭제 |
+| GET | /api/sd/credit-memos/{id}/print/credit-memo.pdf | Credit Memo 인쇄 (FastReport PDF) |
 
 ## 관련 테이블
 
@@ -131,7 +132,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_nu
 ## AS IS 근거
 
 - 레거시 화면·SQL 분석 자료는 비공개 Harness 저장소(QuroHarness)에 있다. 유즈케이스 ID로 찾는다.
-- 레거시 출력물 1개 → FastReport로 옮긴다 (`docs/architecture/reports.md`)
+- 출력 문서: Credit Memo (`credit-memo`) (`docs/architecture/print-documents.md`)
 - 화면유형 판정 근거: 그리드 1, 입력 필드 20, 헤더·상세 저장 (S_DN_HDR, S_DN_DTL)
 
 ## 메모

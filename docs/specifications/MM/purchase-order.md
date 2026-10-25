@@ -59,6 +59,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/mm/purchase-orders | 신규 |
 | PUT | /api/mm/purchase-orders/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/mm/purchase-orders/{id} | 삭제 |
+| GET | /api/mm/purchase-orders/{id}/print/purchase-order.pdf | 발주서 인쇄 (FastReport PDF) |
 
 ## 관련 테이블
 
@@ -101,7 +102,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 ## AS IS 근거
 
 - 레거시 화면·SQL 분석 자료는 비공개 Harness 저장소(QuroHarness)에 있다. 유즈케이스 ID로 찾는다.
-- 레거시 출력물 1개 → FastReport로 옮긴다 (`docs/architecture/reports.md`)
+- 출력 문서: 발주서 (`purchase-order`) (`docs/architecture/print-documents.md`)
 - 화면유형 판정 근거: 그리드 1, 입력 필드 4, 헤더·상세 저장 (M_PO_HDR, M_PO_DTL)
 
 ## 메모

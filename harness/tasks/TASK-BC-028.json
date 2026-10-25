@@ -9,7 +9,9 @@
   "specs": [
     "docs/specifications/BC/sales-price.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-403"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

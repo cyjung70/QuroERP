@@ -93,7 +93,15 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [SD-BR-301](../../business-rules/SD/customer.md)
+- [SD-BR-302](../../business-rules/SD/customer.md)
+- [SD-BR-303](../../business-rules/SD/customer.md)
+- [SD-BR-304](../../business-rules/SD/customer.md)
+- [SD-BR-305](../../business-rules/SD/customer.md)
+- [SD-BR-306](../../business-rules/SD/customer.md)
+- [SD-BR-307](../../business-rules/SD/customer.md)
+- [SD-BR-308](../../business-rules/SD/customer.md)
+- [SD-BR-309](../../business-rules/SD/customer.md)
 
 ## 다국어 리소스 키
 
@@ -107,6 +115,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - `SD-UC-001-T02` 필수 값 누락 시 저장 차단
 - `SD-UC-001-T03` 동시 수정 충돌 409
 - `SD-UC-001-T04` 없는 코드 값 저장 시 422
+- `SD-UC-001-T05` 관련 BR마다 단위 테스트 (`SD-UT-` + BR 번호, 예: SD-BR-301 → SD-UT-301)
 
 ## AS IS 근거
 

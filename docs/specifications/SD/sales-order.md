@@ -79,6 +79,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/sd/sales-orders | 신규 |
 | PUT | /api/sd/sales-orders/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/sd/sales-orders/{id} | 삭제 |
+| GET | /api/sd/sales-orders/{id}/print/sales-order.pdf | 수주서 인쇄 (FastReport PDF) |
+| GET | /api/sd/sales-orders/{id}/print/picking-list.pdf | 피킹 리스트 인쇄 (FastReport PDF) |
+| GET | /api/sd/sales-orders/{id}/print/set-component-list.pdf | 세트 구성품 목록 인쇄 (FastReport PDF) |
 
 ## 관련 테이블
 
@@ -109,6 +112,11 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`, 
 - [SD-BR-010](../../business-rules/SD/sales-order.md)
 - [SD-BR-011](../../business-rules/SD/sales-order.md)
 - [SD-BR-012](../../business-rules/SD/sales-order.md)
+- [SD-BR-401](../../business-rules/SD/pricing.md)
+- [SD-BR-402](../../business-rules/SD/pricing.md)
+- [SD-BR-403](../../business-rules/SD/pricing.md)
+- [SD-BR-404](../../business-rules/SD/pricing.md)
+- [SD-BR-405](../../business-rules/SD/pricing.md)
 
 ## 다국어 리소스 키
 
@@ -127,7 +135,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`, 
 ## AS IS 근거
 
 - 레거시 화면·SQL 분석 자료는 비공개 Harness 저장소(QuroHarness)에 있다. 유즈케이스 ID로 찾는다.
-- 레거시 출력물 3개 → FastReport로 옮긴다 (`docs/architecture/reports.md`)
+- 출력 문서: 수주서 (`sales-order`), 피킹 리스트 (`picking-list`), 세트 구성품 목록 (`set-component-list`) (`docs/architecture/print-documents.md`)
 - 화면유형 판정 근거: 그리드 1, 입력 필드 20, 헤더·상세 저장 (S_SO_HDR, S_SO_DTL)
 
 ## 메모
