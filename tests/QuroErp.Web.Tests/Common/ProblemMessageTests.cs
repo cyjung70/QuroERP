@@ -61,6 +61,25 @@ public class ProblemMessageTests(WebFactory factory) : IClassFixture<WebFactory>
         }
     }
 
+    [Theory, Trait("Id", "CORE-005-WT-01")]
+    [InlineData("ko", "VALID_FLAG 코드 값 'X'이(가) 올바르지 않습니다.")]
+    [InlineData("en", "'X' is not a valid VALID_FLAG code.")]
+    public void Get_InvalidCodeWithArgs_FormatsArgs(string culture, string expected)
+    {
+        var original = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = new CultureInfo(culture);
+        try
+        {
+            var messages = new ProblemMessages(factory.Services.GetRequiredService<IStringLocalizer<SharedResource>>());
+
+            messages.Get(new ApiProblem(422, "Common-E-002", ["VALID_FLAG", "X"])).Should().Be(expected);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = original;
+        }
+    }
+
     [Theory, Trait("Id", "CORE-004-WT-10")]
     [InlineData("en", "The user ID or password is incorrect.")]
     [InlineData("ko", "사용자 ID 또는 비밀번호가 올바르지 않습니다.")]

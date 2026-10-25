@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Common.Auth;
+using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
 
 namespace QuroErp.Application;
@@ -12,6 +13,8 @@ public static class DependencyInjection
         services.AddScoped<LoginService>();
         services.AddScoped<ApiKeyAuthenticator>();
         services.AddScoped<TranslationService>();
+        services.AddScoped<ICodeValidator, CodeValidator>();
+        services.AddScoped<CodeService>();
         return services;
     }
 }
