@@ -1,0 +1,171 @@
+@page "/bc/company"
+@rendermode InteractiveServer
+@using System.Net.Http
+@using QuroErp.Contracts.Bc.Companies
+@using QuroErp.Contracts.Mm.Inventory
+@using QuroErp.Web.Bc.Companies
+@using QuroErp.Web.Common
+@using QuroErp.Web.Mm.Inventory
+@inject CompanyApiClient CompanyApi
+@inject InventorySettingApiClient InventorySettingApi
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-007 company screen, minimal version: logo (ADR-0024) and inventory setting (ADR-0025) only.
+   Company fields and the QuroSingleForm layout come with TASK-BC-013/014 after the common components (TASK-CORE-006). *@
+
+<PageTitle>@L["Bc.Company.Title"]</PageTitle>
+
+<h1>@L["Bc.Company.Title"]</h1>
+
+@if (_error is not null)
+{
+    <p class="page-error" role="alert">@_error</p>
+}
+@if (_notice is not null)
+{
+    <p class="page-notice" role="status">@_notice</p>
+}
+
+<section aria-labelledby="logo-title">
+    <h2 id="logo-title">@L["Bc.Company.Logo"]</h2>
+    @if (_logo is not null)
+    {
+        <img class="company-logo" src="@_logo.ToDataUrl()" alt="@L["Bc.Company.Logo"]" />
+    }
+    else if (_loaded)
+    {
+        <p>@L["Bc.Company.Logo.None"]</p>
+    }
+    <AuthorizeView Roles="admin">
+        <div>
+            <InputFile id="logo-file" accept="image/png,image/jpeg" OnChange="SelectLogo" />
+            <button type="button" disabled="@(_logoFile is null || _busy)" @onclick="UploadLogoAsync">@L["Bc.Company.Logo.Upload"]</button>
+            <small>@L["Bc.Company.Logo.Hint"]</small>
+        </div>
+    </AuthorizeView>
+</section>
+
+<section aria-labelledby="inventory-setting-title">
+    <h2 id="inventory-setting-title">@L["Mm.InventorySetting.Title"]</h2>
+    @if (_setting is not null)
+    {
+        <AuthorizeView Roles="admin">
+            <Authorized>
+                <fieldset>
+                    <legend>@L["Mm.InventorySetting.NegativeStockMode"]</legend>
+                    <InputRadioGroup Name="negative-stock-mode" @bind-Value="_mode">
+                        @foreach (var mode in NegativeStockModes.All)
+                        {
+                            <label>
+                                <InputRadio Name="negative-stock-mode" Value="mode" />
+                                @L[$"Mm.InventorySetting.Mode.{mode}"]
+                            </label>
+                        }
+                    </InputRadioGroup>
+                </fieldset>
+                <button type="button" disabled="@(_busy || _mode == _setting.NegativeStockMode)" @onclick="SaveSettingAsync">@L["Common.Save"]</button>
+            </Authorized>
+            <NotAuthorized>
+                <p>@L["Mm.InventorySetting.NegativeStockMode"]: @L[$"Mm.InventorySetting.Mode.{_setting.NegativeStockMode}"]</p>
+            </NotAuthorized>
+        </AuthorizeView>
+    }
+</section>
+
+@code {
+    private CompanyLogoImage? _logo;
+    private IBrowserFile? _logoFile;
+    private InventorySettingDto? _setting;
+    private string _mode = NegativeStockModes.Deny;
+    private bool _loaded;
+    private bool _busy;
+    private string? _error;
+    private string? _notice;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RunAsync(async () =>
+        {
+            _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
+            ApplySetting(await InventorySettingApi.GetAsync(CancellationToken.None));
+        });
+        _loaded = true;
+    }
+
+    private void SelectLogo(InputFileChangeEventArgs e)
+    {
+        _logoFile = e.File;
+        _notice = null;
+        _error = null;
+    }
+
+    private async Task UploadLogoAsync()
+    {
+        if (_logoFile is null)
+        {
+            return;
+        }
+        // Checked again by the API (BC-E-005); checking here avoids sending a large file over the circuit
+        if (_logoFile.Size > CompanyRoutes.LogoMaxBytes)
+        {
+            _error = Messages.Get(TooLargeCode, CompanyRoutes.LogoMaxBytes / 1024);
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            using var buffer = new MemoryStream();
+            await using (var stream = _logoFile.OpenReadStream(CompanyRoutes.LogoMaxBytes))
+            {
+                await stream.CopyToAsync(buffer);
+            }
+            await CompanyApi.UploadLogoAsync(buffer.ToArray(), _logoFile.Name, CancellationToken.None);
+            _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
+            _notice = L["Common.Saved"];
+        });
+    }
+
+    private async Task SaveSettingAsync()
+    {
+        await RunAsync(async () =>
+        {
+            ApplySetting(await InventorySettingApi.UpdateAsync(
+                new UpdateInventorySettingRequest(_mode, _setting!.UpdatedAt), CancellationToken.None));
+            _notice = L["Common.Saved"];
+        });
+    }
+
+    private void ApplySetting(InventorySettingDto setting)
+    {
+        _setting = setting;
+        _mode = setting.NegativeStockMode;
+    }
+
+    // Shows API errors (ProblemDetails code) and connection failures as messages instead of breaking the circuit
+    private async Task RunAsync(Func<Task> action)
+    {
+        _busy = true;
+        _error = null;
+        _notice = null;
+        try
+        {
+            await action();
+        }
+        catch (ApiProblemException e)
+        {
+            _error = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _error = Messages.Get(UnavailableCode);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private const string TooLargeCode = "BC-E-005";
+    private const string UnavailableCode = "BC-E-003";
+}
