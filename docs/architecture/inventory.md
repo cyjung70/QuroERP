@@ -11,17 +11,18 @@
 ## 마이너스 재고 허용 옵션
 
 ```sql
-mm_inventory_setting(id, company_id bigint, plant_id bigint NULL, warehouse_id bigint NULL,
-                     allow_negative_stock boolean NOT NULL DEFAULT false, 감사 컬럼)
+mm_inventory_setting(id, negative_stock_mode varchar NOT NULL DEFAULT 'DENY', 감사 컬럼)  -- 1행만 둔다
 ```
 
-- 가장 구체적인 설정이 이긴다: 창고 → 플랜트 → 회사. 설정이 없으면 `false`(허용 안 함).
-- MVP는 회사 단위 설정만 화면에서 바꾼다. 플랜트·창고 컬럼은 확장을 위해 미리 둔다. [확인 필요 — AS IS에는 플랜트·창고 구분이 없다]
+- 시스템 전체(글로벌) 설정 하나다. 회사·플랜트·창고별 설정은 없다 (다중 회사를 지원하지 않는다).
+- 회사 정보 화면의 "재고 설정"에서 바꾼다. API: `GET /api/mm/inventory-setting`, `PUT /api/mm/inventory-setting` (관리자 권한).
+- 값은 C# enum `NegativeStockMode`를 문자열로 저장한다. 화면 이름은 리소스 키 `Mm.InventorySetting.Mode.<값>`이다.
 
-| 설정 | 출고·이동으로 가용재고가 0보다 작아질 때 |
-| --- | --- |
-| OFF | 저장을 막는다. 오류 `MM-E-001` (품목, 현재고, 요청 수량 표시) |
-| ON | 저장한다. `mm_goods_movement.negative_stock = true`로 표시해 이력을 남긴다 |
+| 모드 | 이름 | 출고·이동으로 현재고가 0보다 작아질 때 | 월 마감 |
+| --- | --- | --- | --- |
+| `ALLOW` | 항상 허용 | 저장한다. `mm_goods_movement.negative_stock = true`로 이력을 남긴다 | 그대로 마감한다 |
+| `ALLOW_IN_MONTH` | 월중 허용, 월말 불가 | 저장하고 이력을 남긴다 (`ALLOW`와 같다) | 대상 달 기말 수량이 음수인 품목이 있으면 마감하지 않는다 (MM-BR-407) |
+| `DENY` | 허용 안 함 (기본값) | 저장을 막는다. 오류 `MM-E-001` (품목, 현재고, 요청 수량) | 그대로 마감한다 |
 
 - 검사와 차감은 같은 트랜잭션에서 `SELECT ... FOR UPDATE`로 품목 행을 잠근 뒤 한다 (동시 출고 방지).
 - 규칙은 Domain의 `StockPolicy`에 둔다. Infrastructure는 설정을 읽어 넘겨주기만 한다.

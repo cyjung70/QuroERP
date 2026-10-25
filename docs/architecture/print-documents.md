@@ -5,7 +5,7 @@
 
 - API: `GET /api/{module}/{resource}/{id}/print/{document}.pdf` — 권한은 그 문서 조회 권한과 같다.
 - 템플릿: `src/QuroErp.Infrastructure/Reports/Templates/<module>/<document>.frx`.
-- 회사 이름·주소·연락처는 `bc_company`에서, 로고는 회사 설정의 로고 이미지에서 가져온다 [확인 필요 — 로고 저장 위치].
+- 회사 이름·주소·연락처는 `bc_company`에서, 로고는 `bc_company.logo_image`(`logo_content_type`)에서 가져온다. 로고가 없으면 회사 이름만 찍는다.
 - 문서 번호는 저장된 번호 전체를 찍는다. 금액은 저장된 값을 그대로 찍는다 (출력 때 다시 계산하지 않는다).
 
 | 문서 | 모듈 | 이름 | 화면 명세 | 내용 |
