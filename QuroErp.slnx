@@ -10,6 +10,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/QuroErp.Application.Tests/QuroErp.Application.Tests.csproj" />
+    <Project Path="tests/QuroERP.Database.Tests/QuroERP.Database.Tests.csproj" />
     <Project Path="tests/QuroErp.Domain.Tests/QuroErp.Domain.Tests.csproj" />
     <Project Path="tests/QuroErp.Infrastructure.Tests/QuroErp.Infrastructure.Tests.csproj" />
   </Folder>
