@@ -2,9 +2,9 @@
 -- en: AS IS 이름. ko: 새로 만든 이름 [추정]. 기호·고유명사(단위, 결제 조건, 운송사, 주)는 ko도 en과 같다.
 -- 적용된 스크립트는 고치지 않는다. 바꿀 것은 새 번호의 스크립트로 추가한다.
 
-INSERT INTO code_major_translation (major_id, lang_code, name, created_by, updated_by)
+INSERT INTO sys_code_major_translation (major_id, lang_code, name, created_by, updated_by)
 SELECT m.id, v.lang_code, v.name, 'system', 'system'
-FROM code_major m JOIN (VALUES
+FROM sys_code_major m JOIN (VALUES
     ('AP_PAYMENT_METHOD', 'ko', '지급 방법'),
     ('AP_PAYMENT_METHOD', 'en', 'AP Payment Method'),
     ('AR_PAYMENT_METHOD', 'ko', '입금 방법'),
@@ -55,10 +55,10 @@ FROM code_major m JOIN (VALUES
     ('MOVEMENT_TYPE', 'en', 'Movement Type')
 ) AS v (major_code, lang_code, name) ON v.major_code = m.major_code;
 
-INSERT INTO code_minor_translation (minor_id, lang_code, name, created_by, updated_by)
+INSERT INTO sys_code_minor_translation (minor_id, lang_code, name, created_by, updated_by)
 SELECT n.id, v.lang_code, v.name, 'system', 'system'
-FROM code_minor n
-JOIN code_major m ON m.id = n.major_id
+FROM sys_code_minor n
+JOIN sys_code_major m ON m.id = n.major_id
 JOIN (VALUES
     ('CART_NO', '1', 'ko', '1'),
     ('CART_NO', '1', 'en', '1'),

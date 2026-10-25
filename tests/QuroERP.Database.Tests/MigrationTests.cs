@@ -55,18 +55,18 @@ public partial class MigrationTests(MigratedSchemaFixture db)
     public void Seed_EveryCodeHasKoAndEnTranslation()
     {
         var majorsWithout = Query<string>("""
-            SELECT m.major_code FROM code_major m
-            WHERE (SELECT count(DISTINCT lang_code) FROM code_major_translation t
+            SELECT m.major_code FROM sys_code_major m
+            WHERE (SELECT count(DISTINCT lang_code) FROM sys_code_major_translation t
                    WHERE t.major_id = m.id AND t.lang_code IN ('ko', 'en')) < 2
             """);
         var minorsWithout = Query<string>("""
-            SELECT m.major_code || '.' || n.minor_code FROM code_minor n JOIN code_major m ON m.id = n.major_id
-            WHERE (SELECT count(DISTINCT lang_code) FROM code_minor_translation t
+            SELECT m.major_code || '.' || n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
+            WHERE (SELECT count(DISTINCT lang_code) FROM sys_code_minor_translation t
                    WHERE t.minor_id = n.id AND t.lang_code IN ('ko', 'en')) < 2
             """);
 
-        Query<long>("SELECT count(*) FROM code_major").Single().Should().Be(24);
-        Query<long>("SELECT count(*) FROM code_minor").Single().Should().Be(121);
+        Query<long>("SELECT count(*) FROM sys_code_major").Single().Should().Be(24);
+        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(121);
         majorsWithout.Should().BeEmpty();
         minorsWithout.Should().BeEmpty();
     }
@@ -76,11 +76,25 @@ public partial class MigrationTests(MigratedSchemaFixture db)
     {
         // codes.md 예시 SalesOrderStatus Entry/Released/Closed = SO/RE/CL
         Query<string>("""
-            SELECT n.minor_code FROM code_minor n JOIN code_major m ON m.id = n.major_id
+            SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
             WHERE m.major_code = 'SO_STATUS' ORDER BY n.sort_order
             """).Should().Equal("SO", "RE", "CL");
-        Query<string>("SELECT role_code FROM role ORDER BY role_code")
+        Query<string>("SELECT role_code FROM sys_role ORDER BY role_code")
             .Should().Equal("admin", "manager", "poweruser", "salesman", "srep");
+    }
+
+    [DatabaseFact, Trait("Id", "DB-IT-07")]
+    public void Columns_HaveNoSizeOrPrecision()
+    {
+        // database.md "타입": 문자는 varchar, 소수는 numeric으로 크기를 정하지 않는다
+        var sized = Query<string>("""
+            SELECT table_name || '.' || column_name FROM information_schema.columns
+            WHERE table_schema = @schema AND table_name <> @journal
+              AND (character_maximum_length IS NOT NULL OR (data_type = 'numeric' AND numeric_precision IS NOT NULL)
+                   OR data_type IN ('character', 'timestamp without time zone'))
+            """, ("journal", DatabaseMigrator.JournalTable));
+
+        sized.Should().BeEmpty();
     }
 
     /// <summary>database-tables.md의 "목록"과 "새 테이블" 표에 있는 테이블 이름.</summary>

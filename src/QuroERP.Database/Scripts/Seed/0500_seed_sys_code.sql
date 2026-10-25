@@ -5,7 +5,7 @@
 --   MVP 밖(AP_PAYMENT_METHOD, AR_PAYMENT_METHOD)의 Minor는 데이터 이관 때 넣는다.
 -- 적용된 스크립트는 고치지 않는다. 바꿀 것은 새 번호의 스크립트로 추가한다.
 
-INSERT INTO code_major (major_code, created_by, updated_by) VALUES
+INSERT INTO sys_code_major (major_code, created_by, updated_by) VALUES
     ('AP_PAYMENT_METHOD', 'system', 'system'),
     ('AR_PAYMENT_METHOD', 'system', 'system'),
     ('CART_NO', 'system', 'system'),
@@ -31,9 +31,9 @@ INSERT INTO code_major (major_code, created_by, updated_by) VALUES
     ('VALID_FLAG', 'system', 'system'),
     ('MOVEMENT_TYPE', 'system', 'system');
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('1', 10),
     ('2', 20),
     ('3', 30),
@@ -42,9 +42,9 @@ FROM code_major m CROSS JOIN (VALUES
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'CART_NO';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('OP', 10),
     ('PA', 20),
     ('CL', 30),
@@ -52,26 +52,26 @@ FROM code_major m CROSS JOIN (VALUES
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'CREDIT_MEMO_STATUS';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('SALES', 10),
     ('PURCHASE', 20)
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'DEPARTMENT';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('Y', 10),
     ('N', 20),
     ('ALL', 30)
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'DISPLAY_OPTIONS';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('Y', 1),
     ('N', 2),
     ('OWNED_ACCT', 3),
@@ -80,17 +80,17 @@ FROM code_major m CROSS JOIN (VALUES
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'FREIGHT_CHARGE';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('REGULAR', 10),
     ('JUNK', 20)
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'INVENTORY_ADJUST';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('OP', 10),
     ('PA', 20),
     ('CL', 30),
@@ -98,27 +98,27 @@ FROM code_major m CROSS JOIN (VALUES
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'INVOICE_STATUS';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('INVENTORY', 10),
     ('SET', 11),
     ('SERVICE', 21)
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'ITEM_TYPE';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('PO', 10),
     ('RE', 20),
     ('CL', 30)
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'PO_STATUS';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('DELIVERY', 10),
     ('UPS', 20),
     ('UCL', 30),
@@ -128,18 +128,18 @@ FROM code_major m CROSS JOIN (VALUES
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'SHIPMENT_VIA';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('SO', 10),
     ('RE', 20),
     ('CL', 30)
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'SO_STATUS';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('AL', 10),
     ('AK', 20),
     ('AZ', 30),
@@ -194,9 +194,9 @@ FROM code_major m CROSS JOIN (VALUES
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'STATE';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('COD_15', 10),
     ('COD_30', 20),
     ('COD_45', 30),
@@ -213,9 +213,9 @@ FROM code_major m CROSS JOIN (VALUES
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'TERMS';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('PCS', 10),
     ('EA', 20),
     ('G', 30),
@@ -226,18 +226,18 @@ FROM code_major m CROSS JOIN (VALUES
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'UNIT';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('Y', 10),
     ('N', 20),
     ('S', 30)
 ) AS v (minor_code, sort_order)
 WHERE m.major_code = 'VALID_FLAG';
 
-INSERT INTO code_minor (major_id, minor_code, sort_order, created_by, updated_by)
+INSERT INTO sys_code_minor (major_id, minor_code, sort_order, created_by, updated_by)
 SELECT m.id, v.minor_code, v.sort_order, 'system', 'system'
-FROM code_major m CROSS JOIN (VALUES
+FROM sys_code_major m CROSS JOIN (VALUES
     ('GR', 10),
     ('DN', 20),
     ('GI', 30),
