@@ -15,7 +15,7 @@
 ## 권한
 
 - API는 `FallbackPolicy = RequireAuthenticatedUser`로 모든 엔드포인트를 막는다. `[AllowAnonymous]`는 로그인 API만.
-- 메뉴·화면 권한은 역할(`role`)과 `role_menu`로 정한다. API는 `[Authorize(Policy = "Menu:<menu_code>")]`로 검사한다.
+- 메뉴·화면 권한은 역할(`sys_role`)과 `sys_role_menu`로 정한다. API는 `[Authorize(Policy = "Menu:<menu_code>")]`로 검사한다.
 - API 키 호출자는 API 키에 붙은 역할로 검사한다.
 
 ## 비밀번호
@@ -31,5 +31,5 @@
 
 ## 로그
 
-- 로그인 성공·실패를 `user_login_log`에 남긴다 (사용자, 시각, IP).
+- 로그인 성공·실패를 `sys_user_login_log`에 남긴다 (사용자, 시각, IP).
 - 비밀번호, 토큰, API 키 원문은 로그에 쓰지 않는다.

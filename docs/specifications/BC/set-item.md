@@ -52,8 +52,8 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | R |
-| `bom` | `P_BOM` | CRUD |
+| `bc_item` | `B_ITEM` | R |
+| `pp_bom` | `P_BOM` | CRUD |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`
 

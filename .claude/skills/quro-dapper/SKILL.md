@@ -27,7 +27,7 @@ Dapper와 PostgreSQL로 안전하고(파라미터만) 일관된(트랜잭션·�
 4. 모든 메서드는 `IDbTransaction`(또는 UnitOfWork)과 `CancellationToken`을 받는다. `CommandDefinition`을 쓴다.
 5. 헤더·상세는 헤더 `INSERT ... RETURNING id` 후 상세를 같은 트랜잭션에서 넣는다.
 6. 수정은 `WHERE id = @Id AND updated_at = @UpdatedAt`. 영향 행이 0이면 `ConcurrencyException`.
-7. 재고 차감 전에는 `SELECT ... FROM item WHERE id = ANY(@Ids) FOR UPDATE`로 잠근다.
+7. 재고 차감 전에는 `SELECT ... FROM bc_item WHERE id = ANY(@Ids) FOR UPDATE`로 잠근다.
 8. 통합 테스트는 실제 PostgreSQL에서 돌린다 (`quro-unit-test`).
 
 ## 코드 예시
@@ -36,9 +36,9 @@ Dapper와 PostgreSQL로 안전하고(파라미터만) 일관된(트랜잭션·�
 internal sealed class SalesOrderRepository(IDbConnectionFactory db) : ISalesOrderRepository
 {
     private const string InsertHeader = """
-        INSERT INTO sales_order (order_no, customer_id, order_date, status, ship_via,
-                                 created_by, updated_by)
-        VALUES (@OrderNo, @CustomerId, @OrderDate, @Status, @ShipVia, @CreatedBy, @CreatedBy)
+        INSERT INTO sd_sales_order (so_no, customer_id, so_dt, status, ship_via,
+                                    created_by, updated_by)
+        VALUES (@SoNo, @CustomerId, @SoDt, @Status, @ShipVia, @CreatedBy, @CreatedBy)
         RETURNING id
         """;
 
