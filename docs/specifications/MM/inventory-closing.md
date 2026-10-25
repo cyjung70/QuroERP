@@ -59,11 +59,20 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `run_closing`
 
 ## 관련 BR
 
+- [MM-BR-401](../../business-rules/MM/closing.md)
+- [MM-BR-402](../../business-rules/MM/closing.md)
+- [MM-BR-403](../../business-rules/MM/closing.md)
+- [MM-BR-404](../../business-rules/MM/closing.md)
+- [MM-BR-405](../../business-rules/MM/closing.md)
+- [MM-BR-406](../../business-rules/MM/closing.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
 - [MM-BR-004](../../business-rules/MM/inventory.md)
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [MM-BR-005](../../business-rules/MM/inventory.md)
+- [MM-BR-006](../../business-rules/MM/inventory.md)
+- [MM-BR-007](../../business-rules/MM/inventory.md)
+- [MM-BR-008](../../business-rules/MM/inventory.md)
 
 ## 다국어 리소스 키
 
@@ -77,8 +86,9 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `run_closing`
 - `MM-UC-008-T02` 필수 값 누락 시 저장 차단
 - `MM-UC-008-T03` 동시 수정 충돌 409
 - `MM-UC-008-T04` 없는 코드 값 저장 시 422
-- `MM-UC-008-T05` 마이너스 재고 OFF: 가용재고 부족 시 저장 차단 (MM-BR-001)
-- `MM-UC-008-T06` 마이너스 재고 ON: 저장되고 이력 표시 (MM-BR-002)
+- `MM-UC-008-T05` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-401 → MM-UT-401)
+- `MM-UC-008-T06` 마이너스 재고 OFF: 가용재고 부족 시 저장 차단 (MM-BR-001)
+- `MM-UC-008-T07` 마이너스 재고 ON: 저장되고 이력 표시 (MM-BR-002)
 
 ## AS IS 근거
 

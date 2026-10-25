@@ -6,7 +6,7 @@
 - 서버(Domain)에서 검사한다. 한 번의 저장(헤더·줄·수주 송장 수량·재고 이동·수주 상태)은 한 트랜잭션이다.
 - "TO BE 변경"은 AS IS 동작을 바꾼 규칙이다 (AS IS 결함 수정, 스테이블영 확정).
 - 송장 상태는 SA00 코드다: `OP` 미입금, `PA` 일부 입금, `CL` 입금 완료, `VO` Void.
-- 재고 규칙은 [재고 공통](../MM/inventory.md)(MM-BR-001~004)을 따른다.
+- 재고 규칙은 [재고 공통](../MM/inventory.md)(MM-BR-001~008)을 따른다.
 
 | ID | 규칙 | 조건 | 위반 시 처리 | AS IS 근거 | 테스트 |
 |---|---|---|---|---|---|
@@ -20,10 +20,10 @@
 | SD-BR-108 | 수주에서 가져온 송장 줄을 저장하면 수주 줄 송장 수량에 더하고, 지우면 뺀다 | 줄 추가·삭제 | 같은 트랜잭션에서 `sd_sales_order_line.dn_qty` 갱신 | AS IS 송장 저장 | SD-UT-108 |
 | SD-BR-109 | 송장 합계는 줄 금액 합이고, 입금 전이므로 잔액은 합계와 같다. 줄 금액은 SD-BR-005 식으로 계산한다 | 줄 변경 | `tot_dn_amt = bal_amt = sum(dn_amt)` | AS IS `update_hdr_amt('DN')` | SD-UT-109 |
 | SD-BR-110 | 송장 줄을 저장·삭제·Void하면 관련 수주 상태를 다시 계산한다 (SD-BR-012) | 수주에서 가져온 줄이 바뀜 | 수주 상태 갱신 | AS IS는 누적 송장 수량으로 판단해 `CL`이 되지 않았다 — TO BE 변경 | SD-UT-110 |
-| SD-BR-111 | 재고 관리 품목 줄은 저장할 때 출고한다: 수량 `-dn_qty`, 단가 = 그 시점 이동평균원가, 이동 유형 `DN`. 줄을 지우면 출고를 취소한다 | 재고 관리 품목 (SD-BR-112) | `mm_goods_movement` 추가·삭제, MM-BR-001~004 적용 | AS IS `issue_inv('DN')`, `delete_mov_inv` | SD-UT-111 |
-| SD-BR-112 | 재고 관리 품목은 품목 유형이 Service가 아닌 품목이다. 출고·출고 취소·Void가 모두 이 판정 하나를 쓴다 [확인 필요 — Set 품목의 구성품 출고 여부] | 품목 유형 | (판정 규칙) | AS IS는 출고는 Service 제외, Void는 Inventory만 취소해 Set 재고가 남았다 — 결함 수정 | SD-UT-112 |
+| SD-BR-111 | 재고 관리 품목 줄은 저장할 때 출고한다: 수량 `-dn_qty`, 단가 = 그 시점 이동평균원가, 이동 유형 `DN`. 줄을 지우면 출고를 취소한다 | 재고 관리 품목 (SD-BR-112) | `mm_goods_movement` 추가·삭제, MM-BR-001~008 적용 | AS IS `issue_inv('DN')`, `delete_mov_inv` | SD-UT-111 |
+| SD-BR-112 | 재고 관리 품목 판정은 [MM-BR-008](../MM/inventory.md)을 따른다. 세트 품목은 구성품으로 전개해 출고한다 (MM-BR-007). 출고·출고 취소·Void가 같은 판정을 쓴다 | 품목 유형 | (판정 규칙) | AS IS는 출고는 Service 제외, Void는 Inventory만 취소해 Set 재고가 남았다 — 결함 수정 | SD-UT-112 |
 | SD-BR-113 | Void하면 줄마다 출고를 취소하고 줄 수량·금액을 0으로, 수주 줄 송장 수량을 되돌리고, 헤더를 `VO`·합계 0·잔액 0으로 만든 뒤 수주 상태를 다시 계산한다 | Void 실행 (SD-BR-104 통과) | 같은 트랜잭션 | AS IS `void_dn`은 수주 송장 수량을 되돌리지 않았다 — TO BE 변경 | SD-UT-113 |
-| SD-BR-114 | 재고 관리 품목의 이동평균원가가 0이면 송장 줄을 저장할 수 없다 | `moving_avg_cost = 0` | 저장 차단, 메시지 SD-E-114 | AS IS `issue_inv` ("Moving Average Cost should not be 0") | SD-UT-114 |
+| SD-BR-114 | 재고 관리 품목의 이동평균원가가 0이면 송장 줄을 저장할 수 없다. 세트는 구성품 원가로 검사한다 (MM-BR-008) | `moving_avg_cost = 0` | 저장 차단, 메시지 SD-E-114 | AS IS `issue_inv` ("Moving Average Cost should not be 0") | SD-UT-114 |
 | SD-BR-115 | 수주 가져오기는 같은 고객의 `CL`이 아닌 수주에서 남은 수량 > 0인 줄만 보여 준다. 수량 기본값은 남은 수량이고, 헤더(담당자·결제 조건·운송비·배송지·결제 예정일)는 수주에서 복사한다 | 수주 가져오기 | (조회 규칙) | AS IS 송장 수주 선택 | SD-UT-115 |
 | SD-BR-116 | 수주 없이 품목을 직접 넣은 줄도 저장할 수 있다. 이 줄에는 SD-BR-102·108·110을 적용하지 않는다 | `sales_order_line_id is null` | 저장 | AS IS 송장 품목 직접 입력 | SD-UT-116 |
 | SD-BR-117 | 배송지·고객 단가 갱신 확인은 수주와 같다 (SD-BR-009, SD-BR-010) | 저장 시 | 사용자 선택 | AS IS 저장 전 확인 | SD-UT-117 |

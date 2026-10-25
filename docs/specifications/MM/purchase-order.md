@@ -75,7 +75,14 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [MM-BR-011](../../business-rules/MM/purchase-order.md)
+- [MM-BR-012](../../business-rules/MM/purchase-order.md)
+- [MM-BR-013](../../business-rules/MM/purchase-order.md)
+- [MM-BR-014](../../business-rules/MM/purchase-order.md)
+- [MM-BR-015](../../business-rules/MM/purchase-order.md)
+- [MM-BR-016](../../business-rules/MM/purchase-order.md)
+- [MM-BR-017](../../business-rules/MM/purchase-order.md)
+- [MM-BR-018](../../business-rules/MM/purchase-order.md)
 
 ## 다국어 리소스 키
 
@@ -89,6 +96,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 - `MM-UC-003-T02` 상세 행 추가·수정·삭제 저장
 - `MM-UC-003-T03` 저장 중 오류 시 전체 롤백
 - `MM-UC-003-T04` 동시 수정 충돌 409
+- `MM-UC-003-T05` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-011 → MM-UT-011)
 
 ## AS IS 근거
 

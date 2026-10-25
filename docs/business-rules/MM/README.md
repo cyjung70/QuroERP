@@ -6,12 +6,10 @@
 ## 작성 상태
 
 - AS IS JSP·프로시저 로직 분석 결과를 주제별 파일로 추가한다 [작성 중].
-- [재고 공통](inventory.md): MM-BR-001 ~ MM-BR-004
-
-## 주제 (예정)
-
-- purchase-order.md 발주
-- goods-receipt.md 입고
-- stock-count.md 실사
-- purchase-simulation.md 구매 시뮬레이션
-- closing.md 월 마감
+- [재고 공통](inventory.md): MM-BR-001 ~ MM-BR-008
+- [발주](purchase-order.md): MM-BR-011 ~ MM-BR-018
+- [입고](goods-receipt.md): MM-BR-101 ~ MM-BR-115
+- [예외 입고](unplanned-receipt.md): MM-BR-201 ~ MM-BR-208
+- [재고 실사](stock-count.md): MM-BR-301 ~ MM-BR-308
+- [재고 월 마감](closing.md): MM-BR-401 ~ MM-BR-406
+- [구매 시뮬레이션](purchase-simulation.md): MM-BR-501 ~ MM-BR-509

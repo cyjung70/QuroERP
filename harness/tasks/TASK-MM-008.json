@@ -10,10 +10,29 @@
     "docs/specifications/MM/goods-receipt.md"
   ],
   "rules": [
+    "MM-BR-101",
+    "MM-BR-102",
+    "MM-BR-103",
+    "MM-BR-104",
+    "MM-BR-105",
+    "MM-BR-106",
+    "MM-BR-107",
+    "MM-BR-108",
+    "MM-BR-109",
+    "MM-BR-110",
+    "MM-BR-111",
+    "MM-BR-112",
+    "MM-BR-113",
+    "MM-BR-114",
+    "MM-BR-115",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
-    "MM-BR-004"
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008"
   ],
   "skills": [
     "quro-blazor",

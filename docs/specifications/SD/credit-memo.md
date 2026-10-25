@@ -107,6 +107,10 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_nu
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
 - [MM-BR-004](../../business-rules/MM/inventory.md)
+- [MM-BR-005](../../business-rules/MM/inventory.md)
+- [MM-BR-006](../../business-rules/MM/inventory.md)
+- [MM-BR-007](../../business-rules/MM/inventory.md)
+- [MM-BR-008](../../business-rules/MM/inventory.md)
 
 ## 다국어 리소스 키
 
