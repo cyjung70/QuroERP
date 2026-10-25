@@ -30,10 +30,10 @@
 | BC | BC-UC-016 | 고객 이름 변경 | S | [change-customer-name](specifications/BC/change-customer-name.md) |  |
 | BC | BC-UC-017 | 장바구니 | S | [cart](specifications/BC/cart.md) |  |
 | SD | SD-UC-001 | 고객 마스터 | S | [customer](specifications/SD/customer.md) |  |
-| SD | SD-UC-002 | 수주 | SM | [sales-order](specifications/SD/sales-order.md) |  |
-| SD | SD-UC-003 | 매출 송장(출고) | SM | [sales-invoice](specifications/SD/sales-invoice.md) | [MM-BR-001](business-rules/MM/inventory.md), [MM-BR-002](business-rules/MM/inventory.md), [MM-BR-003](business-rules/MM/inventory.md), [MM-BR-004](business-rules/MM/inventory.md) |
-| SD | SD-UC-004 | Credit Memo (매출 반품·취소) | SM | [credit-memo](specifications/SD/credit-memo.md) | [MM-BR-001](business-rules/MM/inventory.md), [MM-BR-002](business-rules/MM/inventory.md), [MM-BR-003](business-rules/MM/inventory.md), [MM-BR-004](business-rules/MM/inventory.md) |
-| SD | SD-UC-005 | 수주 마감 | S | [sales-order-closing](specifications/SD/sales-order-closing.md) |  |
+| SD | SD-UC-002 | 수주 | SM | [sales-order](specifications/SD/sales-order.md) | [SD-BR-001](business-rules/SD/sales-order.md), [SD-BR-002](business-rules/SD/sales-order.md), [SD-BR-003](business-rules/SD/sales-order.md), [SD-BR-004](business-rules/SD/sales-order.md), [SD-BR-005](business-rules/SD/sales-order.md), [SD-BR-006](business-rules/SD/sales-order.md), [SD-BR-007](business-rules/SD/sales-order.md), [SD-BR-008](business-rules/SD/sales-order.md), [SD-BR-009](business-rules/SD/sales-order.md), [SD-BR-010](business-rules/SD/sales-order.md), [SD-BR-011](business-rules/SD/sales-order.md), [SD-BR-012](business-rules/SD/sales-order.md) |
+| SD | SD-UC-003 | 매출 송장(출고) | SM | [sales-invoice](specifications/SD/sales-invoice.md) | [SD-BR-101](business-rules/SD/sales-invoice.md), [SD-BR-102](business-rules/SD/sales-invoice.md), [SD-BR-103](business-rules/SD/sales-invoice.md), [SD-BR-104](business-rules/SD/sales-invoice.md), [SD-BR-105](business-rules/SD/sales-invoice.md), [SD-BR-106](business-rules/SD/sales-invoice.md), [SD-BR-107](business-rules/SD/sales-invoice.md), [SD-BR-108](business-rules/SD/sales-invoice.md), [SD-BR-109](business-rules/SD/sales-invoice.md), [SD-BR-110](business-rules/SD/sales-invoice.md), [SD-BR-111](business-rules/SD/sales-invoice.md), [SD-BR-112](business-rules/SD/sales-invoice.md), [SD-BR-113](business-rules/SD/sales-invoice.md), [SD-BR-114](business-rules/SD/sales-invoice.md), [SD-BR-115](business-rules/SD/sales-invoice.md), [SD-BR-116](business-rules/SD/sales-invoice.md), [SD-BR-117](business-rules/SD/sales-invoice.md), [SD-BR-118](business-rules/SD/sales-invoice.md), [MM-BR-001](business-rules/MM/inventory.md), [MM-BR-002](business-rules/MM/inventory.md), [MM-BR-003](business-rules/MM/inventory.md), [MM-BR-004](business-rules/MM/inventory.md) |
+| SD | SD-UC-004 | Credit Memo (매출 반품·취소) | SM | [credit-memo](specifications/SD/credit-memo.md) | [SD-BR-201](business-rules/SD/credit-memo.md), [SD-BR-202](business-rules/SD/credit-memo.md), [SD-BR-203](business-rules/SD/credit-memo.md), [SD-BR-204](business-rules/SD/credit-memo.md), [SD-BR-205](business-rules/SD/credit-memo.md), [SD-BR-206](business-rules/SD/credit-memo.md), [SD-BR-207](business-rules/SD/credit-memo.md), [SD-BR-208](business-rules/SD/credit-memo.md), [SD-BR-209](business-rules/SD/credit-memo.md), [SD-BR-210](business-rules/SD/credit-memo.md), [MM-BR-001](business-rules/MM/inventory.md), [MM-BR-002](business-rules/MM/inventory.md), [MM-BR-003](business-rules/MM/inventory.md), [MM-BR-004](business-rules/MM/inventory.md) |
+| SD | SD-UC-005 | 수주 마감 | S | [sales-order-closing](specifications/SD/sales-order-closing.md) | [SD-BR-013](business-rules/SD/sales-order.md), [SD-BR-014](business-rules/SD/sales-order.md), [SD-BR-015](business-rules/SD/sales-order.md) |
 | SD | SD-UC-006 | 미결 수주 현황 | M | [report-open-sales-order](specifications/SD/report-open-sales-order.md) |  |
 | SD | SD-UC-007 | 미결 수주 상세 | M | [report-open-sales-order-detail](specifications/SD/report-open-sales-order-detail.md) |  |
 | SD | SD-UC-008 | 실주 현황 | M | [report-lost-sales-order](specifications/SD/report-lost-sales-order.md) |  |
@@ -93,7 +93,10 @@
 - [MM - 재고 공통](business-rules/MM/inventory.md)
 - [MM 업무 규칙 (구매·재고)](business-rules/MM/README.md)
 - [PP 업무 규칙 (생산)](business-rules/PP/README.md)
+- [SD - Credit Memo](business-rules/SD/credit-memo.md)
 - [SD 업무 규칙 (영업)](business-rules/SD/README.md)
+- [SD - 매출 송장(출고)](business-rules/SD/sales-invoice.md)
+- [SD - 수주](business-rules/SD/sales-order.md)
 
 ## 용어
 

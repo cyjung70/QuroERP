@@ -12,7 +12,11 @@
   "specs": [
     "docs/specifications/SD/sales-order-closing.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-013",
+    "SD-BR-014",
+    "SD-BR-015"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
