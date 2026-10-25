@@ -16,6 +16,7 @@ public class ProjectReferenceTests
         { "QuroErp.Domain", [] },
         { "QuroErp.Infrastructure", ["QuroErp.Application", "QuroErp.Domain"] },
         { "QuroErp.Contracts", [] },
+        { "QuroERP.Database", [] },
     };
 
     [Theory, Trait("Id", "CORE-001-T01")]

@@ -40,6 +40,10 @@ src/
   QuroErp.Application/     유스케이스 서비스, Repository 인터페이스, 트랜잭션 경계
   QuroErp.Domain/          엔티티, 값 객체, 비즈니스 규칙 (외부 의존 없음)
   QuroErp.Infrastructure/  Dapper Repository, SQL, 외부 연동
+  QuroERP.Database/        DB 마이그레이션 콘솔 (DbUp). 다른 프로젝트를 참조하지 않는다
+    Scripts/Schema/        테이블·인덱스 (0001~ 공통, 0100~ BC, 0200~ MM, 0300~ SD)
+    Scripts/Seed/          모든 환경에 넣는 기초자료: 코드, 번역 (0500~)
+    Scripts/Demo/          샘플 품목·거래처. `--demo`로만 실행
 tests/
   QuroErp.Domain.Tests/  QuroErp.Application.Tests/  QuroErp.Infrastructure.Tests/
 ```
@@ -64,6 +68,7 @@ tests/
 - 상세 테이블: `<헤더>_line`, `<헤더>_id` + `seq`.
 - 감사 컬럼: `created_at`, `created_by`, `updated_at`, `updated_by`.
 - 이름: 테이블·컬럼 `snake_case`, C# `PascalCase`.
+- 마이그레이션: `src/QuroERP.Database/Scripts/<Schema|Seed|Demo>/<번호4자리>_<설명>.sql`. 적용된 스크립트는 고치지 않고 새 번호로 추가한다.
 
 자세히: `docs/architecture/database.md`, 테이블 정의: `docs/architecture/database-tables.md`
 
