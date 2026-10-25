@@ -33,9 +33,22 @@ public class LoginServiceTests
     {
         var response = await Service.LoginAsync(new LoginRequest("kim", "secret"), IpAddr, CancellationToken.None);
 
-        response.Should().BeEquivalentTo(new LoginResponse("token-7", Now.AddHours(24), "kim", "Kim", "admin", false));
+        response.Should().BeEquivalentTo(new LoginResponse("token-7", Now.AddHours(24), "kim", "Kim", "admin", false, null));
         _logs.Logs.Should().ContainSingle().Which.Should().Be(new UserLoginLog(Now, 7, "kim", IpAddr, Success: true));
         _unitOfWork.Commits.Should().Be(1);
+    }
+
+    [Fact, Trait("Id", "CORE-004-T09")]
+    public async Task LoginAsync_UserHasLangCode_ReturnsLangCode()
+    {
+        _users.Users.Add(new AppUser
+        {
+            Id = 8, UserId = "lee", PasswordHash = "hash:secret", ValidFlag = "Y", LangCode = "en",
+        });
+
+        var response = await Service.LoginAsync(new LoginRequest("lee", "secret"), IpAddr, CancellationToken.None);
+
+        response!.LangCode.Should().Be("en");
     }
 
     [Fact, Trait("Id", "CORE-003-T12")]

@@ -92,6 +92,8 @@
 
         var sessionId = Tokens.Add(login);
         await HttpContext.SignInAsync(WebAuthClaims.CreatePrincipal(sessionId, login));
+        // 사용자 언어 설정이 있으면 그 언어로 바꾼다 (사용자 설정 → 브라우저 언어 → ko)
+        WebLocalization.SetCultureCookie(HttpContext, login.LangCode);
         Navigation.NavigateTo(LocalUrl.OrRoot(ReturnUrl));
     }
 

@@ -63,6 +63,7 @@ public sealed class LoginService(
     {
         var token = tokens.Issue(user, now);
         return new LoginResponse(
-            token.Token, token.ExpiresAt, user.UserId, user.UserName, user.RoleCode, user.RequiresPasswordChange(today));
+            token.Token, token.ExpiresAt, user.UserId, user.UserName, user.RoleCode, user.RequiresPasswordChange(today),
+            user.LangCode);
     }
 }

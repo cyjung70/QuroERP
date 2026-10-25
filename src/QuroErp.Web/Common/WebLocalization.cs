@@ -35,6 +35,26 @@ public static class WebLocalization
             ];
         });
 
+    /// <summary>언어 쿠키를 저장한다. 지원하지 않는 언어나 null은 무시한다.</summary>
+    public static void SetCultureCookie(HttpContext context, string? culture)
+    {
+        if (culture is null || !Cultures.Contains(culture))
+        {
+            return;
+        }
+        context.Response.Cookies.Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+            new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddYears(1),
+                IsEssential = true,
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                Secure = context.Request.IsHttps,
+            });
+    }
+
     /// <summary>언어 쿠키를 저장하고 원래 화면으로 돌아간다. 지원하지 않는 언어는 무시한다.</summary>
     public static IEndpointRouteBuilder MapCulture(this IEndpointRouteBuilder endpoints)
     {
@@ -45,21 +65,7 @@ public static class WebLocalization
                     return AntiforgeryCheck.Rejected();
                 }
                 var form = await context.Request.ReadFormAsync(context.RequestAborted);
-                var culture = form["culture"].ToString();
-                if (Cultures.Contains(culture))
-                {
-                    context.Response.Cookies.Append(
-                        CookieRequestCultureProvider.DefaultCookieName,
-                        CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
-                        new CookieOptions
-                        {
-                            Expires = DateTimeOffset.UtcNow.AddYears(1),
-                            IsEssential = true,
-                            HttpOnly = true,
-                            SameSite = SameSiteMode.Lax,
-                            Secure = context.Request.IsHttps,
-                        });
-                }
+                SetCultureCookie(context, form["culture"]);
                 return Results.LocalRedirect(LocalUrl.OrRoot(form["returnUrl"]));
             })
             .AllowAnonymous() // 로그인 전(로그인 화면)에도 언어를 바꾼다
