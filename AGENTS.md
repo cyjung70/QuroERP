@@ -109,3 +109,25 @@ tests/
 - `.claude/skills/`는 `.agents/skills/`의 복사본이다. 직접 고치지 않는다.
 - 명세에 없는 기능을 추가하지 않는다. 명세가 모호하면 `[확인 필요]`로 질문을 남긴다.
 - 레거시 이름(`S_SO_HDR`, `c_name` 등)을 코드에 쓰지 않는다. glossary의 이름을 쓴다.
+
+## 11. Reporting language (English + Korean)
+
+Every report addressed to the user must be written in English first,
+followed by a full Korean translation. This applies to the end-of-task
+summary, progress updates, questions and decisions for the user, and
+PR descriptions.
+
+Format:
+1. English section as usual.
+2. A horizontal rule (`---`), then the heading `### 한국어 번역`.
+3. The Korean translation, with the same structure as the English part:
+   same headings, bullets and order, nothing added or left out.
+
+Translation rules:
+- Do not translate code, file names, paths, table/column names
+  (e.g. `sys_app_user`, `lang_code`), migration names, commands,
+  test names, use-case IDs (e.g. BC-UC-003), or URLs. Keep them as-is.
+- Translate faithfully. Do not summarize or shorten the Korean part.
+- Decisions or questions for the user ("Decisions for you") must appear
+  in both languages. Number them identically so the user can answer by number.
+- Commit messages and code comments stay English-only.

@@ -92,6 +92,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/sd/sales-invoices | 신규 |
 | PUT | /api/sd/sales-invoices/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/sd/sales-invoices/{id} | 삭제 |
+| GET | /api/sd/sales-invoices/{id}/print/sales-invoice.pdf | 송장 인쇄 (FastReport PDF) |
 
 ## 관련 테이블
 
@@ -130,6 +131,12 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_credit`, `delete_mov_in
 - [SD-BR-116](../../business-rules/SD/sales-invoice.md)
 - [SD-BR-117](../../business-rules/SD/sales-invoice.md)
 - [SD-BR-118](../../business-rules/SD/sales-invoice.md)
+- [SD-BR-401](../../business-rules/SD/pricing.md)
+- [SD-BR-402](../../business-rules/SD/pricing.md)
+- [SD-BR-403](../../business-rules/SD/pricing.md)
+- [SD-BR-404](../../business-rules/SD/pricing.md)
+- [SD-BR-405](../../business-rules/SD/pricing.md)
+- [SD-BR-406](../../business-rules/SD/pricing.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
@@ -158,7 +165,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_credit`, `delete_mov_in
 ## AS IS 근거
 
 - 레거시 화면·SQL 분석 자료는 비공개 Harness 저장소(QuroHarness)에 있다. 유즈케이스 ID로 찾는다.
-- 레거시 출력물 5개 → FastReport로 옮긴다 (`docs/architecture/reports.md`)
+- 출력 문서: 송장 (`sales-invoice`) (`docs/architecture/print-documents.md`)
 - 화면유형 판정 근거: '수주 불러오기' 대화상자로 수주 상세를 가져온다 (자동 판정: 그리드 1, 입력 필드 30, 헤더·상세 저장 (S_DN_HDR, S_DN_DTL). 원천 문서 상세(S_SO_DTL)를 갱신 → MM 검토)
 
 ## 메모

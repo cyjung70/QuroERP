@@ -5,6 +5,7 @@
 
 - `/api/{module}/{resource}` — 모듈은 `bc`, `sd`, `mm`, `common`. 리소스는 복수형 kebab-case (`/api/sd/sales-orders`).
 - 리포트: `GET /api/{module}/reports/{report-name}?...` (JSON), `GET .../{report-name}.pdf` (FastReport PDF).
+- 출력 문서: `GET /api/{module}/{resource}/{id}/print/{document}.pdf` ([출력 문서](print-documents.md)).
 - 코드 목록: `GET /api/codes/{majorCode}`.
 
 ## 메서드
