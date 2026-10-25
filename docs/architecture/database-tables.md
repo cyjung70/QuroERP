@@ -58,7 +58,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `sys_api_client` | 외부 API 클라이언트 | BC | security.md | id, client_code UNIQUE, key_hash, role_id, revoked_at |
 | `sys_ui_setting` | 화면 설정 | BC | codes.md (AS IS 코드 BA00) | id, screen_code UNIQUE, default_rows |
 | `sd_discount_rate` | 할인율 | SD | codes.md (AS IS 코드 SC00) | id, discount_code UNIQUE, rate numeric |
-| `mm_inventory_setting` | 재고 설정 | MM | inventory.md | id, company_id, plant_id, warehouse_id, allow_negative_stock |
+| `mm_inventory_setting` | 재고 설정 | MM | inventory.md | id, negative_stock_mode (ALLOW, ALLOW_IN_MONTH, DENY). 1행 |
 
 - `sys_code_major`, `sys_code_minor` 구조 규칙은 `codes.md`에 있다. 아래 `sys_code_major`·`sys_code_minor`는 AS IS B_MAJOR·B_MINOR를 그 구조로 옮긴 것이다.
 
@@ -205,6 +205,8 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `represent` | varchar |  | 미사용 후보 [확인 필요] | Represent Person Name |
 | `email` | varchar |  | NOT NULL 후보 [확인 필요] | Email Address |
 | `close_year_month` | varchar |  | NOT NULL 후보 [확인 필요] | Close Year & Month |
+| `logo_image` | bytea |  | 출력 문서 회사 로고 (print-documents.md) |  |
+| `logo_content_type` | varchar |  | 로고 MIME 타입 (`image/png`, `image/jpeg`) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |

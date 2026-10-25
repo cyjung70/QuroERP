@@ -6,7 +6,7 @@ Credit Memo(`sd_sales_invoice` `type = 'CM'`, `sd_sales_invoice_line`) 규칙이
 - 서버(Domain)에서 검사한다. 한 번의 저장은 한 트랜잭션이다.
 - "TO BE 변경"은 AS IS 동작을 바꾼 규칙이다 (스테이블영 확정).
 - Credit Memo 상태는 SB00 코드다: `OP` 미적용, `PA` 일부 적용, `CL` 전액 적용, `VO` Void.
-- 송장에 적용하는 처리는 회계(FI, Enterprise) 범위다 [확인 필요 — MVP에서 적용 화면을 둘지].
+- 송장에 적용하는 처리는 입금 처리와 함께 회계(FI, Enterprise) 범위다. MVP에는 적용 화면이 없고, 송장 화면은 사용 가능 Credit만 보여 준다 (SD-BR-118).
 
 | ID | 규칙 | 조건 | 위반 시 처리 | AS IS 근거 | 테스트 |
 |---|---|---|---|---|---|
