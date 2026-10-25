@@ -205,6 +205,8 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `represent` | varchar |  | 미사용 후보 [확인 필요] | Represent Person Name |
 | `email` | varchar |  | NOT NULL 후보 [확인 필요] | Email Address |
 | `close_year_month` | varchar |  | NOT NULL 후보 [확인 필요] | Close Year & Month |
+| `logo_image` | bytea |  | 출력 문서 회사 로고 (print-documents.md) |  |
+| `logo_content_type` | varchar |  | 로고 MIME 타입 (`image/png`, `image/jpeg`) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
