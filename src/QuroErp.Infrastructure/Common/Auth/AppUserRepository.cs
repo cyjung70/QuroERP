@@ -9,7 +9,7 @@ internal sealed class AppUserRepository : IAppUserRepository
 {
     private const string SelectUser = """
         SELECT u.id, u.userid AS user_id, u.password_hash, u.must_change_password, u.username AS user_name,
-               r.role_code, u.valid_flag, u.user_valid_dt, u.password_valid_dt
+               r.role_code, u.valid_flag, u.user_valid_dt, u.password_valid_dt, u.lang_code
         FROM sys_app_user u
         LEFT JOIN sys_role r ON r.id = u.role_id
         """;

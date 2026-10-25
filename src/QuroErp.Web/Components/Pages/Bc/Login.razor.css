@@ -80,8 +80,16 @@
     font: .95rem Arial, sans-serif;
 }
 
-.login-copyright {
+.login-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1rem;
     padding: .1rem .4rem .2rem;
+}
+
+.login-copyright {
     font-size: clamp(.85rem, 2vw, 1.5rem);
 }
 
