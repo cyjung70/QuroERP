@@ -15,6 +15,8 @@
   <data name="Common.Language.ko" xml:space="preserve"><value>한국어</value></data>
   <data name="Common.Language.en" xml:space="preserve"><value>English</value></data>
   <data name="Common-E-001" xml:space="preserve"><value>The request could not be processed. Please try again later.</value></data>
+  <data name="Common-E-002" xml:space="preserve"><value>'{1}' is not a valid {0} code.</value></data>
+  <data name="Common-E-003" xml:space="preserve"><value>The code group {0} does not exist.</value></data>
   <data name="BC-E-001" xml:space="preserve"><value>The user ID or password is incorrect.</value></data>
   <data name="BC-E-002" xml:space="preserve"><value>Enter your user ID and password.</value></data>
   <data name="BC-E-003" xml:space="preserve"><value>Cannot connect to the server. Try again later.</value></data>

@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Common.Auth;
+using QuroErp.Application.Common.Codes;
+using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Domain.Common.Auth;
 
@@ -39,6 +41,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IUnitOfWorkFactory, FakeUnitOfWorkFactory>();
             services.AddSingleton<IAppUserRepository>(new FakeAppUserRepository(user));
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
+            services.AddSingleton<ICodeRepository, FakeCodeRepository>();
+            services.AddSingleton<ITranslationRepository, FakeTranslationRepository>();
+            services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
             {
                 [ApiKeyHash.Compute(ApiKey)] = new() { ClientCode = "edi", RoleCode = "manager" },
@@ -79,6 +84,32 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             logs.Enqueue(log);
             return Task.CompletedTask;
         }
+    }
+
+    /// <summary>VALID_FLAG = Y, N, S (S has no translation).</summary>
+    private sealed class FakeCodeRepository : ICodeRepository
+    {
+        private static readonly List<CodeMinorRow> ValidFlag = [new(1, "Y", 10), new(2, "N", 20), new(3, "S", 30)];
+
+        public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(
+            string majorCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<CodeMinorRow>?>(majorCode == "VALID_FLAG" ? ValidFlag : null);
+
+        public Task<bool> ExistsActiveAsync(string majorCode, string minorCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(majorCode == "VALID_FLAG" && ValidFlag.Any(m => m.MinorCode == minorCode));
+    }
+
+    private sealed class FakeTranslationRepository : ITranslationRepository
+    {
+        private static readonly List<TranslationRow> Rows =
+        [
+            new(1, "ko", "사용"), new(1, "en", "Used"),
+            new(2, "ko", "사용 안 함"), new(2, "en", "Not Used"),
+        ];
+
+        public Task<IReadOnlyList<TranslationRow>> FindAsync(
+            TranslationTarget target, IReadOnlyCollection<long> ownerIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<TranslationRow>>(Rows.Where(r => ownerIds.Contains(r.OwnerId)).ToList());
     }
 
     private sealed class FakeApiClientRepository(Dictionary<string, ApiClient> clients) : IApiClientRepository
