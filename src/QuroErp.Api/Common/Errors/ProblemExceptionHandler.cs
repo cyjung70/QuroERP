@@ -1,0 +1,38 @@
+using Microsoft.AspNetCore.Diagnostics;
+using QuroErp.Application.Common;
+using QuroErp.Domain.Common;
+
+namespace QuroErp.Api.Common.Errors;
+
+/// <summary>
+/// Maps known exceptions to ProblemDetails with code and args (api.md "오류", quro-api step 5):
+/// DomainException → 422, NotFoundException → 404. Other exceptions fall through to the default handler (500).
+/// </summary>
+public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetails) : IExceptionHandler
+{
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    {
+        var (status, code, args) = exception switch
+        {
+            DomainException e => (StatusCodes.Status422UnprocessableEntity, e.Code, e.Args),
+            NotFoundException e => (StatusCodes.Status404NotFound, e.Code, e.Args),
+            _ => (0, null, null),
+        };
+        if (code is null)
+        {
+            return false;
+        }
+
+        httpContext.Response.StatusCode = status;
+        return await problemDetails.TryWriteAsync(new ProblemDetailsContext
+        {
+            HttpContext = httpContext,
+            Exception = exception,
+            ProblemDetails =
+            {
+                Status = status,
+                Extensions = { ["code"] = code, ["args"] = args },
+            },
+        });
+    }
+}
