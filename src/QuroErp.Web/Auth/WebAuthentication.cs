@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Auth;
 
@@ -68,6 +69,10 @@ public static class WebAuthentication
     {
         endpoints.MapPost(LogoutPath, async (HttpContext context, AccessTokenStore store) =>
             {
+                if (!AntiforgeryCheck.IsValid(context))
+                {
+                    return AntiforgeryCheck.Rejected();
+                }
                 if (context.User.FindFirst(WebAuthClaims.SessionId)?.Value is { } sessionId)
                 {
                     store.Remove(sessionId);
