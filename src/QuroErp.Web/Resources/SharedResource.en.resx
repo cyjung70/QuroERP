@@ -8,6 +8,8 @@
   <data name="Bc.Login.UserId" xml:space="preserve"><value>User ID</value></data>
   <data name="Bc.Login.Password" xml:space="preserve"><value>Password</value></data>
   <data name="Bc.Login.Submit" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Bc.Login.Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Bc.Login.Copyright" xml:space="preserve"><value>© 2026 QuroSYS Co., Ltd. All Rights Reserved.</value></data>
   <data name="Common.Logout" xml:space="preserve"><value>Sign out</value></data>
   <data name="BC-E-001" xml:space="preserve"><value>The user ID or password is incorrect.</value></data>
   <data name="BC-E-002" xml:space="preserve"><value>Enter your user ID and password.</value></data>
