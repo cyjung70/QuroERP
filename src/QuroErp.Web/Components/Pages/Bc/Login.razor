@@ -1,0 +1,106 @@
+@page "/bc/login"
+@attribute [AllowAnonymous]
+@using System.Net.Http
+@using Microsoft.AspNetCore.Authentication
+@using QuroErp.Contracts.Common.Auth
+@using QuroErp.Web.Auth
+@inject AuthApiClient AuthApi
+@inject AccessTokenStore Tokens
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* BC-UC-001 로그인. 쿠키를 써야 해서 정적 SSR로 렌더링한다 (rendermode 없음) *@
+
+<PageTitle>@L["Bc.Login.Title"]</PageTitle>
+
+<main class="login-page">
+    <section class="login-frame" aria-label="@L["Bc.Login.Title"]">
+        <div class="login-hero" aria-hidden="true"></div>
+
+        <EditForm class="login-form" Model="Input" FormName="login" OnSubmit="LoginAsync" method="post">
+            @if (_errorCode is not null)
+            {
+                <p class="login-error" role="alert">@L[_errorCode]</p>
+            }
+            <div class="login-field">
+                <label for="user-id">@L["Bc.Login.UserId"]</label>
+                <InputText id="user-id" @bind-Value="Input!.UserId" autocomplete="username" required />
+            </div>
+            <div class="login-field">
+                <label for="password">@L["Bc.Login.Password"]</label>
+                <InputText id="password" type="password" @bind-Value="Input!.Password" autocomplete="current-password" required />
+            </div>
+            <div class="login-actions">
+                <button class="login-submit" type="submit">@L["Bc.Login.Submit"]</button>
+                <button class="login-clear" type="reset">@L["Bc.Login.Clear"]</button>
+            </div>
+        </EditForm>
+
+        <footer class="login-copyright">@L["Bc.Login.Copyright"]</footer>
+    </section>
+</main>
+
+@code {
+    private const string RequiredCode = "BC-E-002";
+    private const string UnavailableCode = "BC-E-003";
+
+    private string? _errorCode;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private LoginInput? Input { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override void OnInitialized() => Input ??= new LoginInput();
+
+    private async Task LoginAsync()
+    {
+        if (Input is null || string.IsNullOrWhiteSpace(Input.UserId) || string.IsNullOrEmpty(Input.Password))
+        {
+            _errorCode = RequiredCode;
+            return;
+        }
+
+        LoginResponse? login;
+        try
+        {
+            login = await AuthApi.LoginAsync(
+                new LoginRequest(Input.UserId.Trim(), Input.Password),
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                HttpContext.RequestAborted);
+        }
+        catch (HttpRequestException)
+        {
+            _errorCode = UnavailableCode;
+            return;
+        }
+
+        if (login is null)
+        {
+            _errorCode = AuthRoutes.LoginFailedCode;
+            return;
+        }
+
+        var sessionId = Tokens.Add(login);
+        await HttpContext.SignInAsync(WebAuthClaims.CreatePrincipal(sessionId, login));
+        Navigation.NavigateTo(LocalReturnUrl(ReturnUrl));
+    }
+
+    // 다른 사이트로 보내지 않도록 같은 사이트 경로만 허용한다
+    private static string LocalReturnUrl(string? returnUrl) =>
+        returnUrl is not null && returnUrl.StartsWith('/') && !returnUrl.StartsWith("//", StringComparison.Ordinal)
+            && !returnUrl.StartsWith("/\\", StringComparison.Ordinal)
+            ? returnUrl
+            : "/";
+
+    private sealed class LoginInput
+    {
+        public string UserId { get; set; } = "";
+
+        public string Password { get; set; } = "";
+    }
+}

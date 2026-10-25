@@ -1,4 +1,18 @@
 ﻿@inherits LayoutComponentBase
+@using QuroErp.Web.Auth
+@inject IStringLocalizer<SharedResource> L
+
+<AuthorizeView>
+    <Authorized>
+        <header>
+            <span>@context.User.Identity?.Name</span>
+            <form method="post" action="@WebAuthentication.LogoutPath">
+                <AntiforgeryToken />
+                <button type="submit">@L["Common.Logout"]</button>
+            </form>
+        </header>
+    </Authorized>
+</AuthorizeView>
 
 @Body
 
