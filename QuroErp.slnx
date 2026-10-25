@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/QuroErp.Api/QuroErp.Api.csproj" />
+    <Project Path="src/QuroErp.Application/QuroErp.Application.csproj" />
+    <Project Path="src/QuroErp.Contracts/QuroErp.Contracts.csproj" />
+    <Project Path="src/QuroErp.Domain/QuroErp.Domain.csproj" />
+    <Project Path="src/QuroErp.Infrastructure/QuroErp.Infrastructure.csproj" />
+    <Project Path="src/QuroErp.Web/QuroErp.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/QuroErp.Application.Tests/QuroErp.Application.Tests.csproj" />
+    <Project Path="tests/QuroErp.Domain.Tests/QuroErp.Domain.Tests.csproj" />
+    <Project Path="tests/QuroErp.Infrastructure.Tests/QuroErp.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>
