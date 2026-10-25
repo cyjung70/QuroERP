@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
+using QuroErp.Application.Mm.Inventory;
 
 namespace QuroErp.Application;
 
@@ -15,6 +17,8 @@ public static class DependencyInjection
         services.AddScoped<TranslationService>();
         services.AddScoped<ICodeValidator, CodeValidator>();
         services.AddScoped<CodeService>();
+        services.AddScoped<CompanyLogoService>();
+        services.AddScoped<InventorySettingService>();
         return services;
     }
 }
