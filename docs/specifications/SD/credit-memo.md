@@ -93,11 +93,24 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_nu
 
 ## 관련 BR
 
+- [SD-BR-201](../../business-rules/SD/credit-memo.md)
+- [SD-BR-202](../../business-rules/SD/credit-memo.md)
+- [SD-BR-203](../../business-rules/SD/credit-memo.md)
+- [SD-BR-204](../../business-rules/SD/credit-memo.md)
+- [SD-BR-205](../../business-rules/SD/credit-memo.md)
+- [SD-BR-206](../../business-rules/SD/credit-memo.md)
+- [SD-BR-207](../../business-rules/SD/credit-memo.md)
+- [SD-BR-208](../../business-rules/SD/credit-memo.md)
+- [SD-BR-209](../../business-rules/SD/credit-memo.md)
+- [SD-BR-210](../../business-rules/SD/credit-memo.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
 - [MM-BR-004](../../business-rules/MM/inventory.md)
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [MM-BR-005](../../business-rules/MM/inventory.md)
+- [MM-BR-006](../../business-rules/MM/inventory.md)
+- [MM-BR-007](../../business-rules/MM/inventory.md)
+- [MM-BR-008](../../business-rules/MM/inventory.md)
 
 ## 다국어 리소스 키
 
@@ -111,8 +124,9 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_nu
 - `SD-UC-004-T02` 상세 행 추가·수정·삭제 저장
 - `SD-UC-004-T03` 저장 중 오류 시 전체 롤백
 - `SD-UC-004-T04` 동시 수정 충돌 409
-- `SD-UC-004-T05` 마이너스 재고 OFF: 가용재고 부족 시 저장 차단 (MM-BR-001)
-- `SD-UC-004-T06` 마이너스 재고 ON: 저장되고 이력 표시 (MM-BR-002)
+- `SD-UC-004-T05` 관련 BR마다 단위 테스트 (`SD-UT-` + BR 번호, 예: SD-BR-201 → SD-UT-201)
+- `SD-UC-004-T06` 마이너스 재고 OFF: 가용재고 부족 시 저장 차단 (MM-BR-001)
+- `SD-UC-004-T07` 마이너스 재고 ON: 저장되고 이력 표시 (MM-BR-002)
 
 ## AS IS 근거
 

@@ -12,7 +12,20 @@
   "specs": [
     "docs/specifications/SD/sales-order.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-001",
+    "SD-BR-002",
+    "SD-BR-003",
+    "SD-BR-004",
+    "SD-BR-005",
+    "SD-BR-006",
+    "SD-BR-007",
+    "SD-BR-008",
+    "SD-BR-009",
+    "SD-BR-010",
+    "SD-BR-011",
+    "SD-BR-012"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

@@ -13,10 +13,32 @@
     "docs/specifications/SD/sales-invoice.md"
   ],
   "rules": [
+    "SD-BR-101",
+    "SD-BR-102",
+    "SD-BR-103",
+    "SD-BR-104",
+    "SD-BR-105",
+    "SD-BR-106",
+    "SD-BR-107",
+    "SD-BR-108",
+    "SD-BR-109",
+    "SD-BR-110",
+    "SD-BR-111",
+    "SD-BR-112",
+    "SD-BR-113",
+    "SD-BR-114",
+    "SD-BR-115",
+    "SD-BR-116",
+    "SD-BR-117",
+    "SD-BR-118",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
-    "MM-BR-004"
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008"
   ],
   "skills": [
     "quro-api",

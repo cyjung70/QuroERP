@@ -10,7 +10,7 @@
 | 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
 | 사전조건 | 로그인 (security.md) |
 
-> 미결 수요 목록 → 선택 → 발주 라인 편집.
+> 재주문점 대상 품목의 추천 발주 수량을 계산해 보여 주고(원천 목록), 선택한 줄과 공급자로 발주(`PO` 상태)를 만든다. 시뮬레이션 결과는 저장하지 않는다. 엑셀 내보내기는 서버에서 만든다.
 
 ## 기본 흐름
 
@@ -58,12 +58,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/mm/purchase-simulations/sources?조건 | 원천 목록 조회 |
-| GET | /api/mm/purchase-simulations?조건 | 목록·찾기 (대화상자) |
-| GET | /api/mm/purchase-simulations/{id} | 1건 조회 |
-| POST | /api/mm/purchase-simulations | 신규 |
-| PUT | /api/mm/purchase-simulations/{id} | 수정 (updatedAt 필수) |
-| DELETE | /api/mm/purchase-simulations/{id} | 삭제 |
+| GET | /api/mm/purchase-simulations/sources?조건 | 원천 목록 조회 (추천 발주 수량 계산) |
+| GET | /api/mm/purchase-simulations/sources.xlsx?조건 | 엑셀 내보내기 (추천 수량 > 0인 줄) |
+| POST | /api/mm/purchase-simulations/purchase-orders | 선택한 줄로 발주 생성 (vendorId, lines) |
 
 ## 관련 테이블
 
@@ -71,8 +68,10 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | --- | --- | --- |
 | `bc_item` | `B_ITEM` | R |
 | `sys_code_minor` | `B_MINOR` | R |
-| `mm_purchase_simulation_line` | `M_PS_DTL` | CRD |
-| `mm_purchase_simulation` | `M_PS_HDR` | CRUD |
+| `bc_vendor` | `B_VENDOR` | R |
+| `bc_purchase_price` | `B_VENDOR_PRICE` | R |
+| `mm_purchase_order_line` | `M_PO_DTL` | CR |
+| `mm_purchase_order` | `M_PO_HDR` | C |
 | `sd_sales_invoice_line` | `S_DN_DTL` | R |
 | `sd_sales_invoice` | `S_DN_HDR` | R |
 | `sd_sales_order_line` | `S_SO_DTL` | R |
@@ -82,7 +81,15 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `get_auto_num`, `hceil`
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [MM-BR-501](../../business-rules/MM/purchase-simulation.md)
+- [MM-BR-502](../../business-rules/MM/purchase-simulation.md)
+- [MM-BR-503](../../business-rules/MM/purchase-simulation.md)
+- [MM-BR-504](../../business-rules/MM/purchase-simulation.md)
+- [MM-BR-505](../../business-rules/MM/purchase-simulation.md)
+- [MM-BR-506](../../business-rules/MM/purchase-simulation.md)
+- [MM-BR-507](../../business-rules/MM/purchase-simulation.md)
+- [MM-BR-508](../../business-rules/MM/purchase-simulation.md)
+- [MM-BR-509](../../business-rules/MM/purchase-simulation.md)
 
 ## 다국어 리소스 키
 
@@ -95,6 +102,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `get_auto_num`, `hceil`
 - `MM-UC-002-T01` 선택한 원천 행만 대상에 들어간다
 - `MM-UC-002-T02` 대상 저장 성공
 - `MM-UC-002-T03` 저장 중 오류 시 전체 롤백
+- `MM-UC-002-T04` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-501 → MM-UT-501)
 
 ## AS IS 근거
 

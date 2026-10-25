@@ -97,7 +97,18 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`, 
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [SD-BR-001](../../business-rules/SD/sales-order.md)
+- [SD-BR-002](../../business-rules/SD/sales-order.md)
+- [SD-BR-003](../../business-rules/SD/sales-order.md)
+- [SD-BR-004](../../business-rules/SD/sales-order.md)
+- [SD-BR-005](../../business-rules/SD/sales-order.md)
+- [SD-BR-006](../../business-rules/SD/sales-order.md)
+- [SD-BR-007](../../business-rules/SD/sales-order.md)
+- [SD-BR-008](../../business-rules/SD/sales-order.md)
+- [SD-BR-009](../../business-rules/SD/sales-order.md)
+- [SD-BR-010](../../business-rules/SD/sales-order.md)
+- [SD-BR-011](../../business-rules/SD/sales-order.md)
+- [SD-BR-012](../../business-rules/SD/sales-order.md)
 
 ## 다국어 리소스 키
 
@@ -111,6 +122,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`, 
 - `SD-UC-002-T02` 상세 행 추가·수정·삭제 저장
 - `SD-UC-002-T03` 저장 중 오류 시 전체 롤백
 - `SD-UC-002-T04` 동시 수정 충돌 409
+- `SD-UC-002-T05` 관련 BR마다 단위 테스트 (`SD-UT-` + BR 번호, 예: SD-BR-001 → SD-UT-001)
 
 ## AS IS 근거
 
