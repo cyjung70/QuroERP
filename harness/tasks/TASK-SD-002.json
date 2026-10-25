@@ -9,7 +9,17 @@
   "specs": [
     "docs/specifications/SD/customer.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-301",
+    "SD-BR-302",
+    "SD-BR-303",
+    "SD-BR-304",
+    "SD-BR-305",
+    "SD-BR-306",
+    "SD-BR-307",
+    "SD-BR-308",
+    "SD-BR-309"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",
