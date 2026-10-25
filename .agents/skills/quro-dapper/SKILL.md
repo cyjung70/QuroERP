@@ -21,7 +21,7 @@ Dapper와 PostgreSQL로 안전하고(파라미터만) 일관된(트랜잭션·�
 
 ## 절차
 
-1. **마이그레이션**: `db/migrations/V<번호>__<설명>.sql`. `database-tables.md`의 컬럼·키를 그대로 쓴다. 감사 컬럼, `UNIQUE`, 외래 키, 인덱스(외래 키 컬럼마다)를 넣는다.
+1. **마이그레이션**: `src/QuroERP.Database/Scripts/Schema/<번호4자리>_<설명>.sql` (기초자료는 `Scripts/Seed/`, 샘플은 `Scripts/Demo/`, `database.md` "마이그레이션"). `database-tables.md`의 컬럼·키를 그대로 쓴다. 감사 컬럼, `UNIQUE`, 외래 키, 인덱스(외래 키 컬럼마다)를 넣는다.
 2. **인터페이스**: `QuroErp.Application/<Module>/<Feature>/I<Entity>Repository.cs`. 메서드는 업무 단위로 (`GetWithLinesAsync`, `InsertAsync`).
 3. **구현**: `QuroErp.Infrastructure/<Module>/<Entity>Repository.cs`. SQL은 클래스 안 `const string`으로 둔다.
 4. 모든 메서드는 `IDbTransaction`(또는 UnitOfWork)과 `CancellationToken`을 받는다. `CommandDefinition`을 쓴다.

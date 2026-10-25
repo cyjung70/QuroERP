@@ -3,6 +3,7 @@
     <Project Path="src/QuroErp.Api/QuroErp.Api.csproj" />
     <Project Path="src/QuroErp.Application/QuroErp.Application.csproj" />
     <Project Path="src/QuroErp.Contracts/QuroErp.Contracts.csproj" />
+    <Project Path="src/QuroERP.Database/QuroERP.Database.csproj" />
     <Project Path="src/QuroErp.Domain/QuroErp.Domain.csproj" />
     <Project Path="src/QuroErp.Infrastructure/QuroErp.Infrastructure.csproj" />
     <Project Path="src/QuroErp.Web/QuroErp.Web.csproj" />
