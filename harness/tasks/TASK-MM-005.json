@@ -12,7 +12,16 @@
   "specs": [
     "docs/specifications/MM/purchase-order.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-011",
+    "MM-BR-012",
+    "MM-BR-013",
+    "MM-BR-014",
+    "MM-BR-015",
+    "MM-BR-016",
+    "MM-BR-017",
+    "MM-BR-018"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

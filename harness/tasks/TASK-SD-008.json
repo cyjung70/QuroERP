@@ -10,10 +10,24 @@
     "docs/specifications/SD/credit-memo.md"
   ],
   "rules": [
+    "SD-BR-201",
+    "SD-BR-202",
+    "SD-BR-203",
+    "SD-BR-204",
+    "SD-BR-205",
+    "SD-BR-206",
+    "SD-BR-207",
+    "SD-BR-208",
+    "SD-BR-209",
+    "SD-BR-210",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
-    "MM-BR-004"
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008"
   ],
   "skills": [
     "quro-blazor",

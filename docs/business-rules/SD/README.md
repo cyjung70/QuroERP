@@ -6,11 +6,11 @@
 ## 작성 상태
 
 - AS IS JSP·프로시저 로직 분석 결과를 주제별 파일로 추가한다 [작성 중].
+- [수주](sales-order.md): SD-BR-001 ~ SD-BR-015
+- [매출 송장](sales-invoice.md): SD-BR-101 ~ SD-BR-118
+- [Credit Memo](credit-memo.md): SD-BR-201 ~ SD-BR-210
 
 ## 주제 (예정)
 
-- sales-order.md 수주
-- sales-invoice.md 송장·출고
-- credit-memo.md Credit Memo
-- pricing.md 단가·할인
-- closing.md 수주 마감
+- customer.md 고객 마스터
+- pricing.md 단가·할인 (수주·송장 공통 규칙 SD-BR-005·010 외)

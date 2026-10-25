@@ -9,7 +9,17 @@
   "specs": [
     "docs/specifications/MM/purchase-simulation.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-501",
+    "MM-BR-502",
+    "MM-BR-503",
+    "MM-BR-504",
+    "MM-BR-505",
+    "MM-BR-506",
+    "MM-BR-507",
+    "MM-BR-508",
+    "MM-BR-509"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

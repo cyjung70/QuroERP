@@ -81,11 +81,22 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `delete_mov_inv`
 
 ## 관련 BR
 
+- [MM-BR-301](../../business-rules/MM/stock-count.md)
+- [MM-BR-302](../../business-rules/MM/stock-count.md)
+- [MM-BR-303](../../business-rules/MM/stock-count.md)
+- [MM-BR-304](../../business-rules/MM/stock-count.md)
+- [MM-BR-305](../../business-rules/MM/stock-count.md)
+- [MM-BR-306](../../business-rules/MM/stock-count.md)
+- [MM-BR-307](../../business-rules/MM/stock-count.md)
+- [MM-BR-308](../../business-rules/MM/stock-count.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
 - [MM-BR-004](../../business-rules/MM/inventory.md)
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [MM-BR-005](../../business-rules/MM/inventory.md)
+- [MM-BR-006](../../business-rules/MM/inventory.md)
+- [MM-BR-007](../../business-rules/MM/inventory.md)
+- [MM-BR-008](../../business-rules/MM/inventory.md)
 
 ## 다국어 리소스 키
 
@@ -99,8 +110,9 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `delete_mov_inv`
 - `MM-UC-006-T02` 상세 행 추가·수정·삭제 저장
 - `MM-UC-006-T03` 저장 중 오류 시 전체 롤백
 - `MM-UC-006-T04` 동시 수정 충돌 409
-- `MM-UC-006-T05` 마이너스 재고 OFF: 가용재고 부족 시 저장 차단 (MM-BR-001)
-- `MM-UC-006-T06` 마이너스 재고 ON: 저장되고 이력 표시 (MM-BR-002)
+- `MM-UC-006-T05` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-301 → MM-UT-301)
+- `MM-UC-006-T06` 마이너스 재고 OFF: 가용재고 부족 시 저장 차단 (MM-BR-001)
+- `MM-UC-006-T07` 마이너스 재고 ON: 저장되고 이력 표시 (MM-BR-002)
 
 ## AS IS 근거
 

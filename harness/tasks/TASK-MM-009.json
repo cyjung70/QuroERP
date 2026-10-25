@@ -13,10 +13,22 @@
     "docs/specifications/MM/unplanned-receipt.md"
   ],
   "rules": [
+    "MM-BR-201",
+    "MM-BR-202",
+    "MM-BR-203",
+    "MM-BR-204",
+    "MM-BR-205",
+    "MM-BR-206",
+    "MM-BR-207",
+    "MM-BR-208",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
-    "MM-BR-004"
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008"
   ],
   "skills": [
     "quro-api",

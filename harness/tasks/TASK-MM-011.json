@@ -13,10 +13,22 @@
     "docs/specifications/MM/stock-count.md"
   ],
   "rules": [
+    "MM-BR-301",
+    "MM-BR-302",
+    "MM-BR-303",
+    "MM-BR-304",
+    "MM-BR-305",
+    "MM-BR-306",
+    "MM-BR-307",
+    "MM-BR-308",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
-    "MM-BR-004"
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008"
   ],
   "skills": [
     "quro-api",
