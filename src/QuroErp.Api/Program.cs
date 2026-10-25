@@ -1,14 +1,25 @@
+using Microsoft.AspNetCore.HttpOverrides;
+using QuroErp.Api.Common.Auth;
+using QuroErp.Application;
+using QuroErp.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddQuroAuthentication(builder.Configuration);
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+
+// Web 서버가 보낸 X-Forwarded-For로 사용자 IP를 남긴다. 기본은 loopback 프록시만 믿는다 [확인 필요: 배포 때 KnownProxies]
+builder.Services.Configure<ForwardedHeadersOptions>(o => o.ForwardedHeaders = ForwardedHeaders.XForwardedFor);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -16,8 +27,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// 401·403 등 본문 없는 오류를 ProblemDetails로 돌려준다 (api.md "오류")
+app.UseStatusCodePages();
+
+app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+/// <summary>통합 테스트(WebApplicationFactory)에서 쓴다.</summary>
+public partial class Program;
