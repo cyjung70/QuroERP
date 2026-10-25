@@ -76,7 +76,7 @@
     },
     {
       "path": "docs/architecture/layers.md",
-      "sha256": "5e6062d6fd08ad6ab09ac79cffd2329e11a613fcdad09144de269e21c13fb267"
+      "sha256": "aab1d7c893c17c10e967c0774f9350ba4e409e0aa7ff918cfdcfac179bc93fcc"
     },
     {
       "path": "docs/architecture/print-documents.md",
@@ -148,7 +148,7 @@
     },
     {
       "path": "docs/business-rules/SD/pricing.md",
-      "sha256": "5b9cba1b7dce2f054b86a1b6e1e193994ca13f3a119805cada68c54b43a0d976"
+      "sha256": "1697c5ca730146a68e57a58dc7a2595db32bd4656cec1bc7a0c150f38ec1cd04"
     },
     {
       "path": "docs/business-rules/SD/README.md",
@@ -224,7 +224,7 @@
     },
     {
       "path": "docs/specifications/BC/sales-price.md",
-      "sha256": "c6199980ca7ccbce88e1ab84244555b0debe1d05390dc9edf683bff0502679dc"
+      "sha256": "67eb4ee1fd647022a37393ed07fe798fc9343c2acbabfd9bb021487e1ca77fb8"
     },
     {
       "path": "docs/specifications/BC/set-item.md",
@@ -244,19 +244,19 @@
     },
     {
       "path": "docs/specifications/MM/goods-receipt.md",
-      "sha256": "9a147f1369825d3583ee8f5b3552e09e9524ebdcd97a50b82b44275c0dcbc0f3"
+      "sha256": "69a1eaa74d78430852f4f4cb8b5f224284af29dc6854bccab3c52fae04cf0031"
     },
     {
       "path": "docs/specifications/MM/inventory-closing.md",
-      "sha256": "f6c4676bb9d1624c481e401f7fea4be16e5b248f68d8405c86279c6b871c6116"
+      "sha256": "aaa68fd7fb2a4df05f42b06c0a9ac51605df13298ef7ea27dd2769c6b323a81a"
     },
     {
       "path": "docs/specifications/MM/purchase-order.md",
-      "sha256": "ff51bb1e21c34264ac647f6e517ae2a2a04e4f4ded0b49460b88a533a7da8285"
+      "sha256": "2d120cd31b8cdd2dfdecfb8ce89d54071e814100a9bbc5ae0dfc464158ea8f23"
     },
     {
       "path": "docs/specifications/MM/purchase-simulation.md",
-      "sha256": "ed9f293c619764da5ff7d3da0463e3d29e964bb635243ab0b8b81031c0e08c9d"
+      "sha256": "22c5c93128573c2fb606c173c163076af3402d9773639a73b46ac1a67cc2cee7"
     },
     {
       "path": "docs/specifications/MM/report-inventory-aging-detail.md",
@@ -292,11 +292,11 @@
     },
     {
       "path": "docs/specifications/MM/stock-count.md",
-      "sha256": "56e413a303a2357e6f60614da5f4612acd5295de87c0c61f75481348757b66b6"
+      "sha256": "5a28cf9931fbca0ca2c6e063f486f8be2d94bf6bf9ff6c5252047654102d90a3"
     },
     {
       "path": "docs/specifications/MM/unplanned-receipt.md",
-      "sha256": "71f5d30c8e4506c49d46084f6d56bba88bd6b20f2871c37ca025200358839bc4"
+      "sha256": "95cd9f67077484406aecd405806386ec9c802e48a641d30ffc17c9862f5281bd"
     },
     {
       "path": "docs/specifications/MM/vendor.md",
@@ -304,11 +304,11 @@
     },
     {
       "path": "docs/specifications/SD/credit-memo.md",
-      "sha256": "e3b3d08d3e396317b2a9eff61f515f78884c1b8e4be82669f54a124c8c08a8aa"
+      "sha256": "0b2988469a22655a0d7229755438fbedcf37fe4da216002c9787b95b679d2937"
     },
     {
       "path": "docs/specifications/SD/customer.md",
-      "sha256": "22ba855d36e3a3f32aac827733649ce1773aacaa9906bb9fa2a8ab6240b9182e"
+      "sha256": "b57d344a89c1d387a0a91442fbe29ed32df039ba2ca44f19c125dcb57d6aa5c3"
     },
     {
       "path": "docs/specifications/SD/report-credit-memo-reason.md",
@@ -400,15 +400,15 @@
     },
     {
       "path": "docs/specifications/SD/sales-invoice.md",
-      "sha256": "2a59aeb9d8893a6e1e423edcd61215df5640ad1fb5a6cd9de87b96d815f21de6"
+      "sha256": "70ca234cf986802e7ec046dddf805927b0aa3936aaa5ba1c5beb23db0bfe21ec"
     },
     {
       "path": "docs/specifications/SD/sales-order-closing.md",
-      "sha256": "9922932df4c390bb4ea4462e5731feb8cfba2b858fa291cefcd790ab62113bec"
+      "sha256": "a815fbdcafc4b7e808ac006225a1a42822bb36424c9e49ab775032c45a4890b8"
     },
     {
       "path": "docs/specifications/SD/sales-order.md",
-      "sha256": "2f94ab43634bab3d189a890211e6ccaed878c5452af68d0a37743f78488c7aea"
+      "sha256": "95d114e2516dd012e016da7d4d274ff0a7025fcae951953a3136dd6ecb89b933"
     },
     {
       "path": "GEMINI.md",
