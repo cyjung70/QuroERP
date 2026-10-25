@@ -64,10 +64,10 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | R |
-| `code_minor` | `B_MINOR` | R |
-| `sales_invoice_line` | `S_DN_DTL` | R |
-| `sales_invoice` | `S_DN_HDR` | R |
+| `bc_item` | `B_ITEM` | R |
+| `sys_code_minor` | `B_MINOR` | R |
+| `sd_sales_invoice_line` | `S_DN_DTL` | R |
+| `sd_sales_invoice` | `S_DN_HDR` | R |
 
 ## 관련 BR
 

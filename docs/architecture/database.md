@@ -23,18 +23,22 @@
 
 ## 이름
 
-- 테이블·컬럼은 `snake_case` 영문. 기존 컬럼 이름은 `database-tables.md`를 따른다 (AS IS 이름을 소문자로 옮긴 것이 많다). 새 컬럼은 약어를 쓰지 않는다.
-- 테이블 이름은 단수 (`sales_order`, `item`).
-- C# 엔티티·속성은 `PascalCase` (`SalesOrder.OrderNo`). Dapper 매핑은 `DefaultTypeMap.MatchNamesWithUnderscores = true`.
+- 테이블·컬럼은 `snake_case` 영문.
+- **테이블 이름**은 `<모듈 접두어>_<영문 업무 이름>`이다. 업무 이름은 단수다.
+  - 접두어: `bc_`(기초정보), `sd_`(영업), `mm_`(구매·재고), `fi_`(회계), `pp_`(생산), `co_`(관리회계), `sys_`(코드·역할·메뉴·설정 등 공통).
+  - 예: `bc_item`, `sd_sales_order`, `sd_sales_order_line`, `mm_goods_movement`, `sys_code_minor`.
+- **컬럼 이름**은 AS IS 이름을 소문자로 옮긴 것이다 (예: `so_no`, `so_dt`, `so_qty`). `database-tables.md`를 따른다.
+  - 기본 키 `id`, 외래 키 `<참조 테이블 업무 이름>_id`(접두어 없음, 예: `item_id`, `sales_order_id`), 감사 컬럼, 새로 추가하는 컬럼만 새 이름을 짓는다. 새 컬럼은 약어를 쓰지 않는다.
+- C# 엔티티는 접두어 없는 업무 이름의 `PascalCase`, 속성은 컬럼 이름의 `PascalCase`다 (`sd_sales_order.so_no` → `SalesOrder.SoNo`). Dapper 매핑은 `DefaultTypeMap.MatchNamesWithUnderscores = true`.
 
 ## 공통 컬럼
 
 | 컬럼 | 타입 | 설명 |
 | --- | --- | --- |
 | `created_at` | `timestamptz NOT NULL DEFAULT now()` | 생성 시각 |
-| `created_by` | `varchar(50) NOT NULL` | 생성 사용자 ID |
+| `created_by` | `varchar NOT NULL` | 생성 사용자 ID |
 | `updated_at` | `timestamptz NOT NULL DEFAULT now()` | 수정 시각 |
-| `updated_by` | `varchar(50) NOT NULL` | 수정 사용자 ID |
+| `updated_by` | `varchar NOT NULL` | 수정 사용자 ID |
 | `company_id` | `bigint` | 회사 구분이 필요한 테이블만 [확인 필요 — 다중 회사 지원 범위] |
 
 - 동시 수정 검사는 `updated_at`을 낙관적 잠금으로 쓴다 (`WHERE id = @Id AND updated_at = @UpdatedAt`, 영향 행 0이면 충돌).
@@ -43,17 +47,32 @@
 
 | 용도 | 타입 |
 | --- | --- |
-| 금액·단가·수량 | `numeric(15,4)` (AS IS 정밀도 유지) |
-| 날짜 | 업무 일자는 `date`, 시각은 `timestamptz` |
-| 코드 | `varchar(20)` |
+| 문자 | `varchar` (크기를 정하지 않는다) |
+| 금액·단가·수량·비율 | `numeric` (정밀도를 정하지 않는다) |
+| 정수 키·순번·건수 | `integer`, `bigint` |
+| 날짜 | 업무 일자(수주일, 납기일 등)는 `date`, 시각(감사 컬럼, 로그)은 `timestamptz` |
+| 코드 | `varchar` (`minor_code` 문자열) |
 | 예/아니오 | `boolean` (AS IS `Y`/`N` 플래그) |
 | 긴 텍스트·이미지 | `text`, `bytea` (이미지는 파일 저장소 사용을 우선 검토 [확인 필요]) |
+
+- 길이와 소수 자릿수는 DB가 아니라 Domain 규칙에서 검사한다. 금액·수량의 자릿수와 반올림 규칙은 업무 규칙(`business-rules/`)에 적는다.
 
 ## Oracle에서 옮길 때 주의
 
 - Oracle은 빈 문자열을 NULL로 본다. PostgreSQL은 다르다. 입력 단계에서 빈 문자열을 NULL로 정규화한다.
 - 정렬에서 NULL 위치가 다르다. `ORDER BY ... NULLS LAST`를 명시한다.
 - `NVL`→`COALESCE`, `DECODE`→`CASE`, `SYSDATE`→`now()`, `ROWNUM`→`LIMIT`, `(+)`→ANSI JOIN.
+
+## AS IS 데이터 이관
+
+- 범위: AS IS 데이터가 남아 있는 테이블만 옮긴다 — 회사, 환율, 코드, 메뉴·역할별 메뉴, 사용자, 로그인 이력, 수주 마감 이력. 고객·품목·공급자·단가와 영업·구매·재고 문서는 빈 상태로 시작해 화면에서 새로 입력한다. 회계·생산 테이블은 Enterprise 때 옮긴다.
+- 참조 대상이 빈 상태로 시작해서 생기는 거부(예: 고객이 없는 고객 기초 잔액)는 예상된 거부로 보고, 0건 목표에서 뺀다.
+- id는 이관 때 직접 넣고, 외래 키(`*_id`)는 AS IS 업무 키로 참조 테이블의 `id`를 찾아 채운다.
+- 감사 컬럼이 없던 AS IS 테이블은 시각을 이관 시각, 사용자를 `migration`으로 채운다.
+- 정제: 문자열 앞뒤 공백을 지우고, 빈 문자열은 NULL로 바꾼다. `Y`/`N`은 `true`/`false`로 바꾼다. 문자는 UTF-8로 저장한다.
+- 정제로도 바꿀 수 없는 행(참조 대상 없음, 코드로 바꿀 수 없는 값, Y/N 이외 플래그 값 등)은 넣지 않고 거부 목록(테이블, AS IS 키, 사유)에 남긴다. 거부 목록이 0건이 될 때까지 매핑을 보완한다.
+- 넣는 순서는 참조되는 테이블이 먼저다. 끝나면 테이블마다 `setval`로 시퀀스를 맞춘다.
+- 이관 도구는 이 저장소에 두지 않는다.
 
 ## 마이그레이션
 

@@ -10,7 +10,7 @@
 | 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
 | 사전조건 | 로그인 (security.md) |
 
-> `code_major`/`code_minor` + 번역 테이블 (`docs/architecture/codes.md`).
+> `sys_code_major`/`sys_code_minor` + 번역 테이블 (`docs/architecture/codes.md`).
 
 ## 기본 흐름
 
@@ -30,7 +30,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 영역 | AS IS 필드 | TO BE 속성 (제안) | 입력 형식 | 상태 | 대·소문자 | 코드 (major_code)·참조 | 기본값 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 조회 조건 | `cmajor_cd` | MajorId | text | 필수 | 대문자 | `code_major` 찾기 대화상자 (`major_id`) |  |
+| 조회 조건 | `cmajor_cd` | MajorId | text | 필수 | 대문자 | `sys_code_major` 찾기 대화상자 (`major_id`) |  |
 | 조회 조건 | `cmajor_nm` | MajorNm | text | 잠김 |  |  |  |
 
 ## 그리드 열
@@ -55,8 +55,8 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `code_major` | `B_MAJOR` | R |
-| `code_minor` | `B_MINOR` | CRUD |
+| `sys_code_major` | `B_MAJOR` | R |
+| `sys_code_minor` | `B_MINOR` | CRUD |
 
 ## 관련 BR
 

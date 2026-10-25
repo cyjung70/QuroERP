@@ -28,7 +28,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 영역 | AS IS 필드 | TO BE 속성 (제안) | 입력 형식 | 상태 | 대·소문자 | 코드 (major_code)·참조 | 기본값 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 조회 조건 | `calt_item_group_cd` | AlternateItemGroupId | text | 필수 |  | `alternate_item_group` 찾기 대화상자 (`alternate_item_group_id`) |  |
+| 조회 조건 | `calt_item_group_cd` | AlternateItemGroupId | text | 필수 |  | `bc_alternate_item_group` 찾기 대화상자 (`alternate_item_group_id`) |  |
 | 조회 조건 | `calt_item_group_name` | AltItemGroupName | text | 잠김 |  |  |  |
 
 ## 그리드 열
@@ -51,8 +51,8 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `alternate_item_group` | `B_ALT_ITEM` | R |
-| `item` | `B_ITEM` | RU |
+| `bc_alternate_item_group` | `B_ALT_ITEM` | R |
+| `bc_item` | `B_ITEM` | RU |
 
 ## 관련 BR
 

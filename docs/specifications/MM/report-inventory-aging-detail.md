@@ -57,9 +57,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | R |
-| `code_minor` | `B_MINOR` | R |
-| `goods_movement` | `I_GOODS_MOVEMENT` | R |
+| `bc_item` | `B_ITEM` | R |
+| `sys_code_minor` | `B_MINOR` | R |
+| `mm_goods_movement` | `I_GOODS_MOVEMENT` | R |
 
 ## 관련 BR
 

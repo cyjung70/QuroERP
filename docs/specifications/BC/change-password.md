@@ -50,7 +50,7 @@
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `app_user` | `Z_USR_INFO` | U |
+| `sys_app_user` | `Z_USR_INFO` | U |
 
 ## 관련 BR
 

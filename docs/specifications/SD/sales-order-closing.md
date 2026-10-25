@@ -55,9 +55,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `sales_order_closing` | `S_SO_CLOSE_HIST` | CRD |
-| `sales_order_line` | `S_SO_DTL` | R |
-| `sales_order` | `S_SO_HDR` | RU |
+| `sd_sales_order_closing` | `S_SO_CLOSE_HIST` | CRD |
+| `sd_sales_order_line` | `S_SO_DTL` | R |
+| `sd_sales_order` | `S_SO_HDR` | RU |
 
 ## 관련 BR
 

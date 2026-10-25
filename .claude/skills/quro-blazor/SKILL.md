@@ -36,7 +36,7 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
    - 필수 → `Required`, 잠김 상태 → `LockMode` (`NewOnly`, `Always`, `AfterLoad`), 대·소문자 → `TextCase`
    - 코드 필드 → `<QuroCodeSelect Major="..." />` (값은 `minor_code`)
    - 고객·품목·공급자 → `<QuroLookup Kind="Customer" />` 대화상자
-4. 라벨·제목·메시지는 모두 `L["Sd.SalesOrder.OrderDate"]` 형식 리소스 키. `ko`, `en` 두 `.resx`에 모두 넣는다.
+4. 라벨·제목·메시지는 모두 `L["Sd.SalesOrder.SoDt"]` 형식 리소스 키. `ko`, `en` 두 `.resx`에 모두 넣는다.
 5. 데이터는 `Contracts`의 API 클라이언트 인터페이스로만 읽고 쓴다.
 6. 서버 오류(ProblemDetails `code`)는 `QuroMessage.ShowAsync(code, args)`로 표시한다.
 7. 메뉴 경로 `/<module>/<feature-kebab>`를 `@page`로 둔다.
@@ -52,14 +52,14 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
                   Title="@L["Sd.SalesOrder.Title"]"
                   Load="id => Api.GetAsync(id)" Save="Api.SaveAsync" Delete="Api.DeleteAsync">
     <Header Context="h">
-        <QuroText Label="@L["Sd.SalesOrder.OrderNo"]" @bind-Value="h.OrderNo" LockMode="LockMode.Always" />
+        <QuroText Label="@L["Sd.SalesOrder.SoNo"]" @bind-Value="h.SoNo" LockMode="LockMode.Always" />
         <QuroLookup Kind="LookupKind.Customer" Label="@L["Sd.SalesOrder.Customer"]" @bind-Value="h.CustomerId" Required />
-        <QuroDate Label="@L["Sd.SalesOrder.OrderDate"]" @bind-Value="h.OrderDate" Required />
+        <QuroDate Label="@L["Sd.SalesOrder.SoDt"]" @bind-Value="h.SoDt" Required />
         <QuroCodeSelect Major="SHIPMENT_VIA" Label="@L["Sd.SalesOrder.ShipVia"]" @bind-Value="h.ShipVia" />
     </Header>
     <Columns>
         <QuroColumn Field="ItemId" Title="@L["Sd.SalesOrder.Item"]" Editor="LookupKind.Item" />
-        <QuroColumn Field="Quantity" Title="@L["Sd.SalesOrder.Quantity"]" Format="N2" />
+        <QuroColumn Field="SoQty" Title="@L["Sd.SalesOrder.SoQty"]" Format="N2" />
     </Columns>
 </QuroHeaderDetail>
 ```
