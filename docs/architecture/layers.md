@@ -27,9 +27,11 @@ Browser ──SignalR──▶ QuroErp.Web (Blazor Interactive Server)
 | `QuroErp.Domain` | (없음) | 엔티티, 값 객체, 도메인 서비스, 비즈니스 규칙(BR) |
 | `QuroErp.Infrastructure` | Application, Domain | Dapper Repository, SQL, UnitOfWork 구현, 리포트(FastReport) |
 | `QuroErp.Contracts` | (없음) | 요청·응답 DTO, API 경로 상수 |
+| `QuroERP.Database` | (없음) | DB 마이그레이션 콘솔 (DbUp). 스크립트를 실행 파일에 포함해 적용한다 |
 
 - 호출 방향은 `Web → Api → Application → Domain`이고, Infrastructure는 Application이 정의한 인터페이스를 구현한다 (의존성 역전).
 - Domain은 Dapper, ASP.NET Core, PostgreSQL을 모른다.
+- `QuroERP.Database`는 배포·개발 도구다. 앱(Web·Api)은 이 프로젝트를 참조하지 않고, 앱 시작 때 마이그레이션을 실행하지 않는다.
 - [확인 필요] "Application → Domain → Infrastructure" 순서를 위와 같이 의존성 역전 방식으로 해석했다.
 
 ## 레이어별 금지 사항

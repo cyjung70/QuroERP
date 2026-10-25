@@ -76,5 +76,26 @@
 
 ## 마이그레이션
 
-- `db/migrations/V<번호>__<설명>.sql` 순서 파일로 관리한다. [확인 필요 — 도구 선택: DbUp 제안]
-- 한 번 적용된 마이그레이션 파일은 고치지 않는다.
+- 도구: **DbUp**. 별도 콘솔 프로젝트 `src/QuroERP.Database`가 실행한다. 웹 프로젝트(Web·Api)에 넣지 않는다.
+- 스크립트 위치와 번호
+
+| 폴더 | 내용 | 번호 | 실행 | 적용 기록 테이블 |
+| --- | --- | --- | --- | --- |
+| `Scripts/Schema/` | 테이블·인덱스·제약 | `0001`~`0499` | 항상 | `schemaversions` |
+| `Scripts/Seed/` | 모든 환경에 넣는 기초자료 (코드, 번역 등) | `0500`~ | 항상 (Schema 다음) | `schemaversions` |
+| `Scripts/Demo/` | 샘플 품목·거래처 등 시연용 데이터 | 자유 | `--demo`를 줄 때만 | `schemaversions_demo` |
+
+- Schema 번호대 (외래 키 때문에 참조되는 모듈이 먼저 온다): `0001`~`0099` 공통(코드·다국어·보안), `0100`~ BC, `0200`~ MM, `0300`~ SD. Seed도 같은 순서로 `0500`~ 공통, `0600`~ BC, `0700`~ MM, `0800`~ SD.
+- 파일 이름: `<번호4자리>_<설명>.sql` (예: `0001_common_code.sql`, `0500_seed_common_code.sql`). 같은 폴더 안에서 이름 순서로 실행한다.
+- 스크립트마다 트랜잭션 하나로 적용한다. 실패하면 그 스크립트는 롤백되고 실행이 멈춘다.
+- 한 번 적용된 스크립트는 고치지 않는다. 바꿀 것은 새 번호의 스크립트로 추가한다.
+- Seed에는 운영에도 필요한 값만 넣는다. 실제 고객·담당자 이름 같은 업무 데이터는 넣지 않는다 (공개 저장소).
+- 실행
+
+```bash
+dotnet run --project src/QuroERP.Database                       # Schema → Seed
+dotnet run --project src/QuroERP.Database -- --demo             # + Demo
+dotnet run --project src/QuroERP.Database -- --connection "<연결 문자열>"
+```
+
+- 연결 문자열 우선순위: `--connection` 인자 > 환경변수 `ConnectionStrings__QuroErp` > `dotnet user-secrets` (`ConnectionStrings:QuroErp`). 연결 문자열을 저장소 파일에 쓰지 않는다.
