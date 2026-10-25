@@ -5,9 +5,9 @@
 
 | ID | 규칙 | 조건 | 위반 시 처리 | AS IS 근거 | 테스트 |
 |---|---|---|---|---|---|
-| MM-BR-001 | 마이너스 재고 허용이 꺼져 있으면 가용재고보다 많이 출고·이동할 수 없다 | `!setting.AllowNegativeStock && onhand_qty - qty < 0` | 저장 차단, 메시지 MM-E-001 (품목, 현재고, 요청 수량) | TO BE 신규 요구 (MVP 필수 기능) | MM-UT-001 |
-| MM-BR-002 | 마이너스 재고 허용이 켜져 있으면 저장하고, 음수가 된 이동을 이력으로 표시한다 | `setting.AllowNegativeStock && onhand_qty - qty < 0` | 저장, `goods_movement.negative_stock = true` | TO BE 신규 요구 (MVP 필수 기능) | MM-UT-002 |
-| MM-BR-003 | 마이너스 재고 설정은 창고 → 플랜트 → 회사 순으로 가장 구체적인 값을 쓴다. 없으면 허용 안 함 | 설정 조회 | (규칙 적용 순서) | inventory.md | MM-UT-003 |
+| MM-BR-001 | 마이너스 재고 모드가 `DENY`이면 현재고보다 많이 출고·이동할 수 없다 | `mode = DENY && onhand_qty - qty < 0` | 저장 차단, 메시지 MM-E-001 (품목, 현재고, 요청 수량) | TO BE 신규 요구 (MVP 필수 기능) | MM-UT-001 |
+| MM-BR-002 | 마이너스 재고 모드가 `ALLOW`·`ALLOW_IN_MONTH`이면 저장하고, 음수가 된 이동을 이력으로 표시한다. `ALLOW_IN_MONTH`의 월말 검사는 [월 마감](closing.md) MM-BR-407이다 | `mode ≠ DENY && onhand_qty - qty < 0` | 저장, `goods_movement.negative_stock = true` | TO BE 신규 요구 (MVP 필수 기능) | MM-UT-002 |
+| MM-BR-003 | 마이너스 재고 모드는 시스템 전체 설정 하나(`mm_inventory_setting` 1행)다. 행이 없으면 `DENY`다 | 설정 조회 | (설정 규칙) | inventory.md | MM-UT-003 |
 | MM-BR-004 | 마감한 월의 재고 이동은 추가·수정·삭제할 수 없다 (마감 기준: [월 마감](closing.md)) | `movement_date <= 마지막 마감 월말` | 저장 차단, 메시지 MM-E-002 | AS IS 마감 검사(`check_closing`)가 모든 재고 루틴에서 주석 처리되어 있었다 — TO BE에서 적용 | MM-UT-004 |
 | MM-BR-005 | 이동평균원가는 재고가 늘어나는 이동 뒤에 다시 계산한다. 이동 뒤 재고수량 > 0이면 `재고금액 / 재고수량`, 0 이하이면 직전 원가를 유지한다. 이동 전 재고가 0 이하이고 이동 뒤 0보다 크면 원가 = 이번 반입 단가로 하고 재고금액 = 재고수량 × 원가로 맞춘다 | 반입·반입 취소 | (계산 규칙) | AS IS는 `abs(재고금액 / 재고수량)` — 음수 재고에서 틀렸다. 결함 수정 | MM-UT-005 |
 | MM-BR-006 | 월 재고(기초·입고·출고·기말)는 재고 이동 합계로 계산한다. 기초 = 전월 기말이고, 이동이 없는 달도 이월된다. 마감할 때 그 달 값을 확정 저장한다 | 조회·마감 | (계산 규칙) | AS IS 월 재고 행 생성이 앞뒤 달 행을 합산·누락했다 [추정] — 결함 수정 | MM-UT-006 |

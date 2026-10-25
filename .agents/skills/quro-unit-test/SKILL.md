@@ -53,5 +53,5 @@ public class SalesOrderTests
 
 - [ ] 관련 BR마다 `Trait("Rule", ...)` 테스트가 있다
 - [ ] 명세 "테스트 시나리오"마다 테스트가 있다
-- [ ] 마이너스 재고 ON/OFF 두 경우를 모두 테스트했다 (재고를 줄이는 기능)
+- [ ] 마이너스 재고 모드 `ALLOW`·`ALLOW_IN_MONTH`·`DENY`를 모두 테스트했다 (재고를 줄이는 기능)
 - [ ] `dotnet test`가 모두 통과한다
