@@ -32,7 +32,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | 영역 | AS IS 필드 | TO BE 속성 (제안) | 입력 형식 | 상태 | 대·소문자 | 코드 (major_code)·참조 | 기본값 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 조회 조건 | `citem_class` | ItemClass | combo2 | 선택 |  | `ITEM_CLASS` |  |
-| 조회 조건 | `citem_cd` | ItemId | text | 선택 | 대문자 | `item` 찾기 대화상자 (`item_id`) |  |
+| 조회 조건 | `citem_cd` | ItemId | text | 선택 | 대문자 | `bc_item` 찾기 대화상자 (`item_id`) |  |
 | 입력 내용 | `cvalid_flag` | CvalidFlag | radio | 선택 |  | `DISPLAY_OPTIONS` | Y |
 | 조회 조건 | `coff_set` | OffSet | combo | 선택 |  | `OFFSET` |  |
 
@@ -69,14 +69,14 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | R |
-| `code_minor` | `B_MINOR` | R |
-| `purchase_simulation_line` | `M_PS_DTL` | CRD |
-| `purchase_simulation` | `M_PS_HDR` | CRUD |
-| `sales_invoice_line` | `S_DN_DTL` | R |
-| `sales_invoice` | `S_DN_HDR` | R |
-| `sales_order_line` | `S_SO_DTL` | R |
-| `sales_order` | `S_SO_HDR` | R |
+| `bc_item` | `B_ITEM` | R |
+| `sys_code_minor` | `B_MINOR` | R |
+| `mm_purchase_simulation_line` | `M_PS_DTL` | CRD |
+| `mm_purchase_simulation` | `M_PS_HDR` | CRUD |
+| `sd_sales_invoice_line` | `S_DN_DTL` | R |
+| `sd_sales_invoice` | `S_DN_HDR` | R |
+| `sd_sales_order_line` | `S_SO_DTL` | R |
+| `sd_sales_order` | `S_SO_HDR` | R |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `get_auto_num`, `hceil`
 

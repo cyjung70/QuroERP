@@ -36,7 +36,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 조회 조건 | `cgr_no` | GrNo | text | 필수 | 대문자 |  |  |
 | 입력 내용 | `statustext` | Statustext | text | 잠김 |  |  | Issue |
-| 입력 내용 | `v_name` | VendorId | combo2 | 신규 필수, 조회 후 잠김 |  | `vendor` 찾기 대화상자 (`vendor_id`) |  |
+| 입력 내용 | `v_name` | VendorId | combo2 | 신규 필수, 조회 후 잠김 |  | `bc_vendor` 찾기 대화상자 (`vendor_id`) |  |
 | 입력 내용 | `gr_dt` | GrDt | date | 필수 | 대문자 |  | 오늘 |
 | 입력 내용 | `due_dt` | DueDt | date | 필수 | 대문자 |  | sysdate+30 |
 | 입력 내용 | `ref_no` | RefNo | text | 필수 | 대문자 |  |  |
@@ -75,13 +75,13 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | RU |
-| `code_minor` | `B_MINOR` | R |
-| `vendor` | `B_VENDOR` | R |
-| `goods_receipt_line` | `M_GR_DTL` | CRD |
-| `goods_receipt` | `M_GR_HDR` | CRUD |
-| `purchase_order_line` | `M_PO_DTL` | RU |
-| `purchase_order` | `M_PO_HDR` | RU |
+| `bc_item` | `B_ITEM` | RU |
+| `sys_code_minor` | `B_MINOR` | R |
+| `bc_vendor` | `B_VENDOR` | R |
+| `mm_goods_receipt_line` | `M_GR_DTL` | CRD |
+| `mm_goods_receipt` | `M_GR_HDR` | CRUD |
+| `mm_purchase_order_line` | `M_PO_DTL` | RU |
+| `mm_purchase_order` | `M_PO_HDR` | RU |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_num`, `get_gr_status`, `receipt_inv`, `update_hdr_amt`
 

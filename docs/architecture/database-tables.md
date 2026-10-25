@@ -3,942 +3,1021 @@
 
 PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes.md`를 따른다.
 
-> - 테이블 이름은 영문 업무 이름이다. 컬럼 이름은 AS IS 이름을 소문자로 옮겼다 (외래 키·감사 컬럼 제외). [확인 필요 — 컬럼 영문 이름 정리]
-> - 타입은 Oracle 타입을 변환 규칙으로 바꾼 것이다. `CHAR(1)` Y/N 플래그는 `boolean`으로, 시각이 필요 없는 업무 일자(`*_dt`)는 `date`로 바꾸는 것을 검토한다 [확인 필요].
+> - 테이블 이름은 `<모듈 접두어>_<영문 업무 이름>`이다. 컬럼 이름은 AS IS 이름을 소문자로 옮겼다 (`id`, 외래 키, 감사 컬럼 제외).
+> - 문자는 `varchar`, 소수는 `numeric`으로 크기를 정하지 않는다. 업무 일자는 `date`, 시각은 `timestamptz`, Y/N 플래그는 `boolean`이다.
 > - 외래 키 중 `[추정]`은 AS IS DDL에 없어 컬럼 이름으로 추정한 것이다. 이관 전 실제 데이터로 확인한다.
+> - 비고의 `[확인 필요]`: "NOT NULL 후보"는 AS IS 데이터에 NULL이 없는 컬럼, "미사용 후보"는 데이터가 모두 NULL이거나 쓰는 곳이 없는 컬럼이다. 확인 전에는 표의 제약대로 만든다.
 
 ## 목록
 
-- [`alternate_item_group`](#alternate_item_group) — 대체 품목 그룹 (AS IS `B_ALT_ITEM`)
-- [`document_number`](#document_number) — 문서 번호 채번 (AS IS `B_AUTO_NUM`)
-- [`cart_item`](#cart_item) — 장바구니 (AS IS `B_CART`)
-- [`company`](#company) — 회사 (AS IS `B_COMPANY`)
-- [`exchange_rate`](#exchange_rate) — 환율 (AS IS `B_CURRENCY`)
-- [`customer`](#customer) — 고객 (AS IS `B_CUSTOMER`)
-- [`item`](#item) — 품목 (AS IS `B_ITEM`)
-- [`code_major`](#code_major) — Major 코드 (AS IS `B_MAJOR`)
-- [`code_minor`](#code_minor) — Minor 코드 (AS IS `B_MINOR`)
-- [`sales_price`](#sales_price) — 판매 단가 (AS IS `B_PRICE_LEVEL`)
-- [`vendor`](#vendor) — 공급자 (AS IS `B_VENDOR`)
-- [`purchase_price`](#purchase_price) — 구매 단가 (AS IS `B_VENDOR_PRICE`)
-- [`goods_movement`](#goods_movement) — 재고 이동 (AS IS `I_GOODS_MOVEMENT`)
-- [`monthly_inventory`](#monthly_inventory) — 월별 재고 (AS IS `I_MONTH_INV`)
-- [`stock_count_line`](#stock_count_line) — 재고 실사 상세 (AS IS `M_CT_DTL`)
-- [`stock_count`](#stock_count) — 재고 실사 (AS IS `M_CT_HDR`)
-- [`goods_issue_line`](#goods_issue_line) — 출고(불출) 상세 (AS IS `M_GI_DTL`)
-- [`goods_issue`](#goods_issue) — 출고(불출) (AS IS `M_GI_HDR`)
-- [`goods_receipt_line`](#goods_receipt_line) — 입고 상세 (AS IS `M_GR_DTL`)
-- [`goods_receipt`](#goods_receipt) — 입고 (AS IS `M_GR_HDR`)
-- [`purchase_order_line`](#purchase_order_line) — 발주 상세 (AS IS `M_PO_DTL`)
-- [`purchase_order`](#purchase_order) — 발주 (AS IS `M_PO_HDR`)
-- [`purchase_simulation_line`](#purchase_simulation_line) — 구매 시뮬레이션 상세 (AS IS `M_PS_DTL`)
-- [`purchase_simulation`](#purchase_simulation) — 구매 시뮬레이션 (AS IS `M_PS_HDR`)
-- [`goods_return_line`](#goods_return_line) — 반품 상세 (AS IS `M_RET_DTL`)
-- [`goods_return`](#goods_return) — 반품 (AS IS `M_RET_HDR`)
-- [`unplanned_receipt_line`](#unplanned_receipt_line) — 예외 입고 상세 (AS IS `M_UR_DTL`)
-- [`unplanned_receipt`](#unplanned_receipt) — 예외 입고 (AS IS `M_UR_HDR`)
-- [`sales_invoice_line`](#sales_invoice_line) — 매출 송장 상세 (AS IS `S_DN_DTL`)
-- [`sales_invoice`](#sales_invoice) — 매출 송장 (AS IS `S_DN_HDR`)
-- [`customer_opening_balance`](#customer_opening_balance) — 고객 기초 잔액 (AS IS `S_INIT_BAL`)
-- [`sales_order_closing`](#sales_order_closing) — 수주 마감 이력 (AS IS `S_SO_CLOSE_HIST`)
-- [`sales_order_line`](#sales_order_line) — 수주 상세 (AS IS `S_SO_DTL`)
-- [`sales_order`](#sales_order) — 수주 (AS IS `S_SO_HDR`)
-- [`menu`](#menu) — 메뉴 (AS IS `Z_MENU`)
-- [`role_menu`](#role_menu) — 역할별 메뉴 (AS IS `Z_MENU_TO_ROLE`)
-- [`app_user`](#app_user) — 사용자 (AS IS `Z_USR_INFO`)
-- [`user_login_log`](#user_login_log) — 로그인 이력 (AS IS `Z_USR_LOG`)
+- [`bc_alternate_item_group`](#bc_alternate_item_group) — 대체 품목 그룹 (AS IS `B_ALT_ITEM`)
+- [`sys_document_number`](#sys_document_number) — 문서 번호 채번 (AS IS `B_AUTO_NUM`)
+- [`bc_cart_item`](#bc_cart_item) — 장바구니 (AS IS `B_CART`)
+- [`bc_company`](#bc_company) — 회사 (AS IS `B_COMPANY`)
+- [`bc_exchange_rate`](#bc_exchange_rate) — 환율 (AS IS `B_CURRENCY`)
+- [`bc_customer`](#bc_customer) — 고객 (AS IS `B_CUSTOMER`)
+- [`bc_item`](#bc_item) — 품목 (AS IS `B_ITEM`)
+- [`sys_code_major`](#sys_code_major) — Major 코드 (AS IS `B_MAJOR`)
+- [`sys_code_minor`](#sys_code_minor) — Minor 코드 (AS IS `B_MINOR`)
+- [`bc_sales_price`](#bc_sales_price) — 판매 단가 (AS IS `B_PRICE_LEVEL`)
+- [`bc_vendor`](#bc_vendor) — 공급자 (AS IS `B_VENDOR`)
+- [`bc_purchase_price`](#bc_purchase_price) — 구매 단가 (AS IS `B_VENDOR_PRICE`)
+- [`mm_goods_movement`](#mm_goods_movement) — 재고 이동 (AS IS `I_GOODS_MOVEMENT`)
+- [`mm_monthly_inventory`](#mm_monthly_inventory) — 월별 재고 (AS IS `I_MONTH_INV`)
+- [`mm_stock_count_line`](#mm_stock_count_line) — 재고 실사 상세 (AS IS `M_CT_DTL`)
+- [`mm_stock_count`](#mm_stock_count) — 재고 실사 (AS IS `M_CT_HDR`)
+- [`mm_goods_issue_line`](#mm_goods_issue_line) — 출고(불출) 상세 (AS IS `M_GI_DTL`)
+- [`mm_goods_issue`](#mm_goods_issue) — 출고(불출) (AS IS `M_GI_HDR`)
+- [`mm_goods_receipt_line`](#mm_goods_receipt_line) — 입고 상세 (AS IS `M_GR_DTL`)
+- [`mm_goods_receipt`](#mm_goods_receipt) — 입고 (AS IS `M_GR_HDR`)
+- [`mm_purchase_order_line`](#mm_purchase_order_line) — 발주 상세 (AS IS `M_PO_DTL`)
+- [`mm_purchase_order`](#mm_purchase_order) — 발주 (AS IS `M_PO_HDR`)
+- [`mm_purchase_simulation_line`](#mm_purchase_simulation_line) — 구매 시뮬레이션 상세 (AS IS `M_PS_DTL`)
+- [`mm_purchase_simulation`](#mm_purchase_simulation) — 구매 시뮬레이션 (AS IS `M_PS_HDR`)
+- [`mm_goods_return_line`](#mm_goods_return_line) — 반품 상세 (AS IS `M_RET_DTL`)
+- [`mm_goods_return`](#mm_goods_return) — 반품 (AS IS `M_RET_HDR`)
+- [`mm_unplanned_receipt_line`](#mm_unplanned_receipt_line) — 예외 입고 상세 (AS IS `M_UR_DTL`)
+- [`mm_unplanned_receipt`](#mm_unplanned_receipt) — 예외 입고 (AS IS `M_UR_HDR`)
+- [`sd_sales_invoice_line`](#sd_sales_invoice_line) — 매출 송장 상세 (AS IS `S_DN_DTL`)
+- [`sd_sales_invoice`](#sd_sales_invoice) — 매출 송장 (AS IS `S_DN_HDR`)
+- [`sd_customer_opening_balance`](#sd_customer_opening_balance) — 고객 기초 잔액 (AS IS `S_INIT_BAL`)
+- [`sd_sales_order_closing`](#sd_sales_order_closing) — 수주 마감 이력 (AS IS `S_SO_CLOSE_HIST`)
+- [`sd_sales_order_line`](#sd_sales_order_line) — 수주 상세 (AS IS `S_SO_DTL`)
+- [`sd_sales_order`](#sd_sales_order) — 수주 (AS IS `S_SO_HDR`)
+- [`sys_menu`](#sys_menu) — 메뉴 (AS IS `Z_MENU`)
+- [`sys_role_menu`](#sys_role_menu) — 역할별 메뉴 (AS IS `Z_MENU_TO_ROLE`)
+- [`sys_app_user`](#sys_app_user) — 사용자 (AS IS `Z_USR_INFO`)
+- [`sys_user_login_log`](#sys_user_login_log) — 로그인 이력 (AS IS `Z_USR_LOG`)
 
 ## 새 테이블 (TO BE에서 추가)
 
 | 테이블 | 용도 | 모듈 | 근거 | 주요 컬럼 |
 | --- | --- | --- | --- | --- |
-| `code_major_translation` | Major 코드 번역 | BC | codes.md, i18n.md | id, major_id, lang_code, name |
-| `code_minor_translation` | Minor 코드 번역 | BC | codes.md, i18n.md | id, minor_id, lang_code, name |
-| `item_translation` | 품목 번역 | BC | i18n.md | id, item_id, lang_code, item_name, item_desc |
-| `role` | 역할 | BC | security.md (AS IS 코드 S700) | id, role_code UNIQUE, use_yn |
-| `api_client` | 외부 API 클라이언트 | BC | security.md | id, client_code UNIQUE, key_hash, role_id, revoked_at |
-| `ui_setting` | 화면 설정 | BC | codes.md (AS IS 코드 BA00) | id, screen_code UNIQUE, default_rows |
-| `discount_rate` | 할인율 | SD | codes.md (AS IS 코드 SC00) | id, discount_code UNIQUE, rate numeric(7,4) |
-| `inventory_setting` | 재고 설정 | MM | inventory.md | id, company_id, plant_id, warehouse_id, allow_negative_stock |
+| `sys_code_major_translation` | Major 코드 번역 | BC | codes.md, i18n.md | id, major_id, lang_code, name |
+| `sys_code_minor_translation` | Minor 코드 번역 | BC | codes.md, i18n.md | id, minor_id, lang_code, name |
+| `bc_item_translation` | 품목 번역 | BC | i18n.md | id, item_id, lang_code, item_name, item_desc |
+| `sys_role` | 역할 | BC | security.md (AS IS 코드 S700) | id, role_code UNIQUE, use_yn |
+| `sys_api_client` | 외부 API 클라이언트 | BC | security.md | id, client_code UNIQUE, key_hash, role_id, revoked_at |
+| `sys_ui_setting` | 화면 설정 | BC | codes.md (AS IS 코드 BA00) | id, screen_code UNIQUE, default_rows |
+| `sd_discount_rate` | 할인율 | SD | codes.md (AS IS 코드 SC00) | id, discount_code UNIQUE, rate numeric |
+| `mm_inventory_setting` | 재고 설정 | MM | inventory.md | id, company_id, plant_id, warehouse_id, allow_negative_stock |
 
-- `code_major`, `code_minor` 구조는 `codes.md`에 있다. 아래 목록의 `code_major`·`code_minor`는 AS IS B_MAJOR·B_MINOR를 옮긴 것이다.
+- `sys_code_major`, `sys_code_minor` 구조 규칙은 `codes.md`에 있다. 아래 `sys_code_major`·`sys_code_minor`는 AS IS B_MAJOR·B_MINOR를 그 구조로 옮긴 것이다.
 
-## alternate_item_group
+### sys_code_major_translation
+
+| 컬럼 | 타입 | 제약 | 비고 |
+| --- | --- | --- | --- |
+| `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |
+| `major_id` | bigint | FK NOT NULL | → `sys_code_major.id` |
+| `lang_code` | varchar | NOT NULL |  |
+| `name` | varchar | NOT NULL |  |
+| `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |
+| `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |
+
+- UNIQUE: (major_id, lang_code)
+
+### sys_code_minor_translation
+
+| 컬럼 | 타입 | 제약 | 비고 |
+| --- | --- | --- | --- |
+| `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |
+| `minor_id` | bigint | FK NOT NULL | → `sys_code_minor.id` |
+| `lang_code` | varchar | NOT NULL |  |
+| `name` | varchar | NOT NULL |  |
+| `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |
+| `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |
+
+- UNIQUE: (minor_id, lang_code)
+
+### sys_role
+
+| 컬럼 | 타입 | 제약 | 비고 |
+| --- | --- | --- | --- |
+| `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |
+| `role_code` | varchar | NOT NULL |  |
+| `sort_order` | integer |  |  |
+| `use_yn` | boolean | NOT NULL DEFAULT true |  |
+| `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |
+| `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |
+
+- UNIQUE: (role_code)
+
+### sys_ui_setting
+
+| 컬럼 | 타입 | 제약 | 비고 |
+| --- | --- | --- | --- |
+| `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |
+| `screen_code` | varchar | NOT NULL |  |
+| `default_rows` | integer | NOT NULL |  |
+| `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |
+| `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |
+
+- UNIQUE: (screen_code)
+
+### sd_discount_rate
+
+| 컬럼 | 타입 | 제약 | 비고 |
+| --- | --- | --- | --- |
+| `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |
+| `discount_code` | varchar | NOT NULL |  |
+| `rate` | numeric | NOT NULL | AS IS attr1 값 그대로 (예: -33 = 33% 할인) [확인 필요 — 단위·부호] |
+| `sort_order` | integer |  |  |
+| `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |
+| `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |
+
+- UNIQUE: (discount_code)
+
+## bc_alternate_item_group
 
 대체 품목 그룹 — AS IS `B_ALT_ITEM`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `alt_item_group_cd` | varchar(18) |  |  |  |
-| `alt_item_group_name` | varchar(50) |  |  |  |
-| `class` | varchar(16) |  |  |  |
+| `alt_item_group_cd` | varchar | NOT NULL |  |  |
+| `alt_item_group_name` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `class` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (alt_item_group_cd)
 
-## document_number
+## sys_document_number
 
 문서 번호 채번 — AS IS `B_AUTO_NUM` (Auto Numbering)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `trans_type` | varchar(2) |  |  | Transaction Type |
-| `trans_no` | varchar(18) |  |  | Transaction Maximum No |
+| `trans_type` | varchar | NOT NULL |  | Transaction Type |
+| `trans_no` | varchar |  | NOT NULL 후보 [확인 필요] | Transaction Maximum No |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (trans_type)
 
-## cart_item
+## bc_cart_item
 
 장바구니 — AS IS `B_CART`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `app_user_id` | bigint | FK [추정] | → `app_user.id` | AS IS userid |
-| `cart_no` | integer |  |  |  |
-| `seq` | integer |  |  |  |
-| `item_id` | bigint | FK [추정] | → `item.id` | AS IS item_cd |
-| `qty` | numeric(15,4) |  |  |  |
+| `app_user_id` | bigint | FK [추정] | → `sys_app_user.id` | AS IS userid |
+| `cart_no` | integer | NOT NULL |  |  |
+| `seq` | integer | NOT NULL |  |  |
+| `item_id` | bigint | FK [추정] | → `bc_item.id` | AS IS item_cd |
+| `qty` | numeric |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (app_user_id, cart_no, seq)
 
-## company
+## bc_company
 
 회사 — AS IS `B_COMPANY` (Company)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `name` | varchar(40) |  |  | Company Name |
-| `billto` | varchar(200) |  |  | Bill To |
-| `shipto` | varchar(200) |  |  | Ship To |
-| `contact` | varchar(40) |  |  | Contact Name |
-| `tel_no` | varchar(20) |  |  | Telephone No |
-| `fax_no` | varchar(20) |  |  | Fax No |
-| `register_no` | varchar(30) |  |  | Registration No |
-| `represent` | varchar(30) |  |  | Represent Person Name |
-| `email` | varchar(30) |  |  | Email Address |
-| `close_year_month` | varchar(30) |  |  | Close Year & Month |
+| `name` | varchar | NOT NULL |  | Company Name |
+| `billto` | varchar |  | NOT NULL 후보 [확인 필요] | Bill To |
+| `shipto` | varchar |  | NOT NULL 후보 [확인 필요] | Ship To |
+| `contact` | varchar |  | 미사용 후보 [확인 필요] | Contact Name |
+| `tel_no` | varchar |  | NOT NULL 후보 [확인 필요] | Telephone No |
+| `fax_no` | varchar |  | NOT NULL 후보 [확인 필요] | Fax No |
+| `register_no` | varchar |  | 미사용 후보 [확인 필요] | Registration No |
+| `represent` | varchar |  | 미사용 후보 [확인 필요] | Represent Person Name |
+| `email` | varchar |  | NOT NULL 후보 [확인 필요] | Email Address |
+| `close_year_month` | varchar |  | NOT NULL 후보 [확인 필요] | Close Year & Month |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (name)
 
-## exchange_rate
+## bc_exchange_rate
 
 환율 — AS IS `B_CURRENCY` (Currency Code)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `cur_dt` | timestamp |  |  | Currency Date |
-| `cur_rp` | numeric(15,4) |  |  | Currency RP |
-| `cur_won` | numeric(15,4) |  |  | Currency Won |
+| `cur_dt` | date | NOT NULL |  | Currency Date |
+| `cur_rp` | numeric |  | NOT NULL 후보 [확인 필요] | Currency RP |
+| `cur_won` | numeric |  | NOT NULL 후보 [확인 필요] | Currency Won |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (cur_dt)
 
-## customer
+## bc_customer
 
 고객 — AS IS `B_CUSTOMER` (Customer Master)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `c_name` | varchar(40) |  |  | Customer Name |
-| `contact` | varchar(50) |  |  | Contact Name |
-| `contact2` | varchar(50) |  |  | Alternate Contact Name |
-| `fax_no` | varchar(30) |  |  | Fax No |
-| `email` | varchar(60) |  |  | email address |
-| `valid_flag` | varchar(1) |  |  | Valid Flag |
-| `terms` | varchar(20) |  |  | Terms Condition |
-| `remarks` | varchar(200) |  |  | Memo |
-| `rep` | varchar(30) |  |  |  |
-| `price_level` | varchar(40) |  |  |  |
-| `freight_charge` | varchar(10) |  |  |  |
-| `addr1` | varchar(80) |  |  |  |
-| `addr2` | varchar(80) |  |  |  |
-| `city` | varchar(40) |  |  |  |
-| `state` | varchar(4) |  |  |  |
-| `country` | varchar(20) |  |  |  |
-| `zip_code` | varchar(20) |  |  |  |
-| `ship_addr1` | varchar(80) |  |  |  |
-| `ship_addr2` | varchar(80) |  |  |  |
-| `ship_city` | varchar(40) |  |  |  |
-| `ship_state` | varchar(4) |  |  |  |
-| `ship_country` | varchar(20) |  |  |  |
-| `ship_zip_code` | varchar(20) |  |  |  |
-| `phone1` | varchar(30) |  |  |  |
-| `phone2` | varchar(30) |  |  |  |
-| `phone3` | varchar(30) |  |  |  |
-| `upload_flag` | varchar(1) |  |  |  |
-| `merge_flag` | varchar(1) |  |  |  |
-| `ship_phone` | varchar(30) |  |  |  |
-| `ship_fax` | varchar(30) |  |  |  |
-| `credit_limit` | numeric(15,4) |  |  |  |
-| `dc_status` | varchar(20) |  |  |  |
-| `start_dt` | timestamp |  |  |  |
-| `memo2` | varchar(200) |  |  |  |
-| `memo3` | varchar(200) |  |  |  |
-| `ship_name` | varchar(40) |  |  |  |
+| `c_name` | varchar | NOT NULL |  | Customer Name |
+| `contact` | varchar |  |  | Contact Name |
+| `contact2` | varchar |  |  | Alternate Contact Name |
+| `fax_no` | varchar |  |  | Fax No |
+| `email` | varchar |  |  | email address |
+| `valid_flag` | varchar |  | NOT NULL 후보 [확인 필요] | Valid Flag |
+| `terms` | varchar |  |  | Terms Condition |
+| `remarks` | varchar |  |  | Memo |
+| `rep` | varchar |  |  |  |
+| `price_level` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `freight_charge` | varchar |  |  |  |
+| `addr1` | varchar |  |  |  |
+| `addr2` | varchar |  |  |  |
+| `city` | varchar |  |  |  |
+| `state` | varchar |  |  |  |
+| `country` | varchar |  |  |  |
+| `zip_code` | varchar |  |  |  |
+| `ship_addr1` | varchar |  |  |  |
+| `ship_addr2` | varchar |  |  |  |
+| `ship_city` | varchar |  |  |  |
+| `ship_state` | varchar |  |  |  |
+| `ship_country` | varchar |  |  |  |
+| `ship_zip_code` | varchar |  |  |  |
+| `phone1` | varchar |  |  |  |
+| `phone2` | varchar |  |  |  |
+| `phone3` | varchar |  | 미사용 후보 [확인 필요] |  |
+| `upload_flag` | boolean |  | Y/N → boolean [추정 — 데이터 없음]; 미사용 후보 [확인 필요] |  |
+| `merge_flag` | boolean |  | Y/N → boolean [추정 — 데이터 없음]; 미사용 후보 [확인 필요] |  |
+| `ship_phone` | varchar |  |  |  |
+| `ship_fax` | varchar |  |  |  |
+| `credit_limit` | numeric |  |  |  |
+| `dc_status` | varchar |  |  |  |
+| `start_dt` | date |  |  |  |
+| `memo2` | varchar |  |  |  |
+| `memo3` | varchar |  |  |  |
+| `ship_name` | varchar |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (c_name)
 
-## item
+## bc_item
 
 품목 — AS IS `B_ITEM` (Item)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `item_cd` | varchar(18) |  |  | Item Code |
-| `item_name` | varchar(50) |  |  | Item Name |
-| `type` | varchar(10) |  |  | Product, Part, Subsidary |
-| `unit` | varchar(5) |  |  | Unit |
-| `class` | varchar(16) |  |  | Class |
-| `valid_flag` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 | Valid Flag |
-| `mvg_cost` | numeric(15,4) |  |  | Moving Average Cost(US Doallar) |
-| `usd_prc` | numeric(15,4) |  |  | Purchase Order USD Price |
-| `onhand_qty` | numeric(15,4) |  |  | Onhand Qty |
-| `item_desc` | varchar(40) |  |  | Item Description |
-| `stk_val` | numeric(15,4) |  |  | Total Stock Value |
-| `so_usd_prc` | numeric(15,4) |  |  | Sales Order USD Price |
-| `upc_code` | varchar(20) |  |  | Barcode |
+| `item_cd` | varchar | NOT NULL |  | Item Code |
+| `item_name` | varchar |  | NOT NULL 후보 [확인 필요] | Item Name |
+| `type` | varchar |  | NOT NULL 후보 [확인 필요] | Product, Part, Subsidary |
+| `unit` | varchar |  | NOT NULL 후보 [확인 필요] | Unit |
+| `class` | varchar |  | NOT NULL 후보 [확인 필요] | Class |
+| `valid_flag` | varchar |  | NOT NULL 후보 [확인 필요] | Valid Flag |
+| `mvg_cost` | numeric |  | NOT NULL 후보 [확인 필요] | Moving Average Cost(US Doallar) |
+| `usd_prc` | numeric |  |  | Purchase Order USD Price |
+| `onhand_qty` | numeric |  | NOT NULL 후보 [확인 필요] | Onhand Qty |
+| `item_desc` | varchar |  | 미사용 후보 [확인 필요] | Item Description |
+| `stk_val` | numeric |  |  | Total Stock Value |
+| `so_usd_prc` | numeric |  |  | Sales Order USD Price |
+| `upc_code` | varchar |  | 미사용 후보 [확인 필요] | Barcode |
 | `img` | bytea |  |  | Picture |
-| `location` | varchar(15) |  |  |  |
-| `reorder_point` | numeric(15,4) |  |  |  |
-| `sales_mvg_cost` | numeric(15,4) |  |  |  |
-| `memo1` | varchar(50) |  |  |  |
-| `memo2` | varchar(50) |  |  |  |
-| `memo3` | varchar(50) |  |  |  |
-| `plating` | varchar(10) |  |  |  |
-| `item_grade` | varchar(10) |  |  |  |
-| `item_group_cd` | varchar(18) |  |  |  |
-| `alternate_item_group_id` | bigint | FK [추정] | → `alternate_item_group.id` | AS IS alt_item_group_cd |
-| `item_name2` | varchar(50) |  |  |  |
-| `memo4` | varchar(50) |  |  |  |
-| `memo5` | varchar(50) |  |  |  |
+| `location` | varchar |  |  |  |
+| `reorder_point` | numeric |  |  |  |
+| `sales_mvg_cost` | numeric |  |  |  |
+| `memo1` | varchar |  |  |  |
+| `memo2` | varchar |  |  |  |
+| `memo3` | varchar |  |  |  |
+| `plating` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `item_grade` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `item_group_cd` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `alternate_item_group_id` | bigint | FK [추정] | → `bc_alternate_item_group.id` | AS IS alt_item_group_cd |
+| `item_name2` | varchar |  |  |  |
+| `memo4` | varchar |  |  |  |
+| `memo5` | varchar |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (item_cd)
 
-## code_major
+## sys_code_major
 
 Major 코드 — AS IS `B_MAJOR` (Major Code)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `major_cd` | varchar(5) |  |  | Major Code |
-| `major_nm` | varchar(30) |  |  | Major Name |
-| `type` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 | Type |
+| `major_code` | varchar | NOT NULL | AS IS major_cd → TO BE major_code (codes.md) | Major Code |
+| `use_yn` | boolean | NOT NULL DEFAULT true |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
-- UNIQUE: (major_cd)
+- UNIQUE: (major_code)
+- AS IS `major_nm`는 옮기지 않는다: `sys_code_major_translation.name`(en)으로 옮긴다
+- AS IS `type`는 옮기지 않는다: 값이 모두 `U`라 TO BE에서 쓰지 않는다
 
-## code_minor
+## sys_code_minor
 
 Minor 코드 — AS IS `B_MINOR` (Minor Code)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `major_id` | bigint | FK | → `code_major.id` | AS IS major_cd |
-| `seq` | integer |  |  |  |
-| `minor_nm` | varchar(40) |  |  | Minor Name |
-| `attr1` | varchar(10) |  |  |  |
-| `attr2` | varchar(10) |  |  |  |
+| `major_id` | bigint | FK | → `sys_code_major.id` | AS IS major_cd |
+| `minor_code` | varchar | NOT NULL | AS IS attr1 또는 minor_nm → minor_code (codes.md) |  |
+| `sort_order` | integer | NOT NULL |  |  |
+| `use_yn` | boolean | NOT NULL DEFAULT true |  |  |
+| `attr1` | varchar |  |  |  |
+| `attr2` | varchar |  | 미사용 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
-- UNIQUE: (major_id, seq)
+- UNIQUE: (major_id, minor_code)
+- AS IS `minor_nm`는 옮기지 않는다: `sys_code_minor_translation.name`(en)으로 옮긴다
 
-## sales_price
+## bc_sales_price
 
 판매 단가 — AS IS `B_PRICE_LEVEL`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `price_level` | varchar(40) |  |  |  |
-| `item_id` | bigint | FK [추정] | → `item.id` | AS IS item_cd |
-| `sales_prc` | numeric(15,4) |  |  |  |
+| `price_level` | varchar | NOT NULL |  |  |
+| `item_id` | bigint | FK [추정] | → `bc_item.id` | AS IS item_cd |
+| `sales_prc` | numeric |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (price_level, item_id)
 
-## vendor
+## bc_vendor
 
 공급자 — AS IS `B_VENDOR` (Vendor Master)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `v_name` | varchar(40) |  |  | Vendor Name |
-| `contact` | varchar(50) |  |  | Contact Name |
-| `contact2` | varchar(50) |  |  | Alternate Contact Name |
-| `fax_no` | varchar(18) |  |  | Fax No |
-| `email` | varchar(30) |  |  | email address |
-| `valid_flag` | varchar(1) |  |  | Valid Flag |
-| `terms` | varchar(20) |  |  | Terms Condition |
-| `remarks` | varchar(200) |  |  | Memo |
-| `addr1` | varchar(80) |  |  |  |
-| `addr2` | varchar(80) |  |  |  |
-| `city` | varchar(40) |  |  |  |
-| `state` | varchar(4) |  |  |  |
-| `country` | varchar(20) |  |  |  |
-| `zip_code` | varchar(20) |  |  |  |
-| `ship_addr1` | varchar(80) |  |  |  |
-| `ship_addr2` | varchar(80) |  |  |  |
-| `ship_city` | varchar(40) |  |  |  |
-| `ship_state` | varchar(4) |  |  |  |
-| `ship_country` | varchar(20) |  |  |  |
-| `ship_zip_code` | varchar(20) |  |  |  |
-| `phone1` | varchar(18) |  |  |  |
-| `phone2` | varchar(18) |  |  |  |
-| `phone3` | varchar(18) |  |  |  |
-| `vendor_price` | varchar(40) |  |  |  |
+| `v_name` | varchar | NOT NULL |  | Vendor Name |
+| `contact` | varchar |  |  | Contact Name |
+| `contact2` | varchar |  |  | Alternate Contact Name |
+| `fax_no` | varchar |  |  | Fax No |
+| `email` | varchar |  |  | email address |
+| `valid_flag` | varchar |  | NOT NULL 후보 [확인 필요] | Valid Flag |
+| `terms` | varchar |  |  | Terms Condition |
+| `remarks` | varchar |  | 미사용 후보 [확인 필요] | Memo |
+| `addr1` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `addr2` | varchar |  |  |  |
+| `city` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `state` | varchar |  |  |  |
+| `country` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `zip_code` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_addr1` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_addr2` | varchar |  |  |  |
+| `ship_city` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_state` | varchar |  |  |  |
+| `ship_country` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_zip_code` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `phone1` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `phone2` | varchar |  |  |  |
+| `phone3` | varchar |  |  |  |
+| `vendor_price` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (v_name)
 
-## purchase_price
+## bc_purchase_price
 
 구매 단가 — AS IS `B_VENDOR_PRICE`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `vendor_price` | varchar(40) |  |  |  |
-| `item_id` | bigint | FK [추정] | → `item.id` | AS IS item_cd |
-| `purchase_prc` | numeric(15,4) |  |  |  |
+| `vendor_price` | varchar | NOT NULL |  |  |
+| `item_id` | bigint | FK [추정] | → `bc_item.id` | AS IS item_cd |
+| `purchase_prc` | numeric |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (vendor_price, item_id)
 
-## goods_movement
+## mm_goods_movement
 
 재고 이동 — AS IS `I_GOODS_MOVEMENT` (Goods Movement)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `document_no` | varchar(18) |  |  | Document No |
-| `document_dt` | timestamp |  |  | Document Date |
-| `mov_type` | varchar(3) |  |  | Movement Type |
-| `dc_flag` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 | Debit Credit Flag |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `qty` | numeric(15,4) |  |  | Quantity |
-| `prc` | numeric(15,4) |  |  | Price |
-| `amount` | numeric(15,4) |  |  | Amount |
-| `ref_key` | varchar(18) |  |  | Reference Key |
-| `ref_seq` | integer |  |  | Reference Sequence No |
+| `document_no` | varchar | NOT NULL |  | Document No |
+| `document_dt` | date |  | NOT NULL 후보 [확인 필요] | Document Date |
+| `mov_type` | varchar |  | NOT NULL 후보 [확인 필요] | Movement Type |
+| `dc_flag` | varchar |  | NOT NULL 후보 [확인 필요] | Debit Credit Flag |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `qty` | numeric |  | NOT NULL 후보 [확인 필요] | Quantity |
+| `prc` | numeric |  | NOT NULL 후보 [확인 필요] | Price |
+| `amount` | numeric |  | NOT NULL 후보 [확인 필요] | Amount |
+| `ref_key` | varchar |  | NOT NULL 후보 [확인 필요] | Reference Key |
+| `ref_seq` | integer |  | NOT NULL 후보 [확인 필요] | Reference Sequence No |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (document_no)
 
-## monthly_inventory
+## mm_monthly_inventory
 
 월별 재고 — AS IS `I_MONTH_INV` (Monthly Inventory)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `year_month` | varchar(6) | NOT NULL |  | Year and Month |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `bas_qty` | numeric(15,4) |  |  | base inventory Quantity |
-| `bas_amt` | numeric(15,4) |  |  | base inventory Amount |
-| `rcpt_qty` | numeric(15,4) |  |  | Receipt Quantity |
-| `rcpt_amt` | numeric(15,4) |  |  | Receipt Amount |
-| `issue_qty` | numeric(15,4) |  |  | Issue Quantity |
-| `issue_amt` | numeric(15,4) |  |  | Issue Amount |
-| `bal_qty` | numeric(15,4) |  |  | Balance Quantity |
-| `bal_amt` | numeric(15,4) |  |  | Balance Amount |
+| `year_month` | varchar | NOT NULL |  | Year and Month |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `bas_qty` | numeric |  | NOT NULL 후보 [확인 필요] | base inventory Quantity |
+| `bas_amt` | numeric |  | NOT NULL 후보 [확인 필요] | base inventory Amount |
+| `rcpt_qty` | numeric |  | NOT NULL 후보 [확인 필요] | Receipt Quantity |
+| `rcpt_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Receipt Amount |
+| `issue_qty` | numeric |  | NOT NULL 후보 [확인 필요] | Issue Quantity |
+| `issue_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Issue Amount |
+| `bal_qty` | numeric |  | NOT NULL 후보 [확인 필요] | Balance Quantity |
+| `bal_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Balance Amount |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (year_month, item_id)
 
-## stock_count_line
+## mm_stock_count_line
 
 재고 실사 상세 — AS IS `M_CT_DTL`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `stock_count_id` | bigint | FK [추정] | → `stock_count.id` | AS IS ct_no |
-| `seq` | integer |  |  |  |
-| `item_id` | bigint | FK [추정] | → `item.id` | AS IS item_cd |
-| `old_qty` | numeric(15,4) |  |  |  |
-| `old_amt` | numeric(15,4) |  |  |  |
-| `new_qty` | numeric(15,4) |  |  |  |
-| `new_amt` | numeric(15,4) |  |  |  |
-| `dif_qty` | numeric(15,4) |  |  |  |
-| `dif_amt` | numeric(15,4) |  |  |  |
+| `stock_count_id` | bigint | FK [추정] | → `mm_stock_count.id` | AS IS ct_no |
+| `seq` | integer | NOT NULL |  |  |
+| `item_id` | bigint | FK [추정] | → `bc_item.id` | AS IS item_cd |
+| `old_qty` | numeric |  |  |  |
+| `old_amt` | numeric |  |  |  |
+| `new_qty` | numeric |  |  |  |
+| `new_amt` | numeric |  |  |  |
+| `dif_qty` | numeric |  |  |  |
+| `dif_amt` | numeric |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (stock_count_id, seq)
 
-## stock_count
+## mm_stock_count
 
 재고 실사 — AS IS `M_CT_HDR`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `ct_no` | varchar(18) |  |  |  |
-| `ct_dt` | timestamp |  |  |  |
-| `remarks` | varchar(200) |  |  |  |
+| `ct_no` | varchar | NOT NULL |  |  |
+| `ct_dt` | date |  |  |  |
+| `remarks` | varchar |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (ct_no)
 
-## goods_issue_line
+## mm_goods_issue_line
 
 출고(불출) 상세 — AS IS `M_GI_DTL` (Goods Issue Detail)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `goods_issue_id` | bigint | FK | → `goods_issue.id` | AS IS gi_no |
-| `seq` | integer |  |  |  |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `gi_qty` | numeric(15,4) |  |  | G/I Quantity |
-| `gi_unit` | varchar(5) |  |  |  |
-| `gi_prc` | numeric(15,4) |  |  |  |
-| `gi_amt` | numeric(15,4) |  |  |  |
+| `goods_issue_id` | bigint | FK | → `mm_goods_issue.id` | AS IS gi_no |
+| `seq` | integer | NOT NULL |  |  |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `gi_qty` | numeric |  |  | G/I Quantity |
+| `gi_unit` | varchar |  |  |  |
+| `gi_prc` | numeric |  |  |  |
+| `gi_amt` | numeric |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (goods_issue_id, seq)
 
-## goods_issue
+## mm_goods_issue
 
 출고(불출) — AS IS `M_GI_HDR` (Goods Issue Header)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `gi_no` | varchar(18) |  |  | Goods Issue No |
-| `dept` | varchar(20) |  |  | Department |
-| `shop_order` | varchar(40) |  |  | Shop Order |
-| `gi_dt` | timestamp |  |  | Goods Issue Date |
-| `requestor` | varchar(18) |  |  | Requestor User ID |
-| `remarks` | varchar(200) |  |  | Remarks |
+| `gi_no` | varchar | NOT NULL |  | Goods Issue No |
+| `dept` | varchar |  |  | Department |
+| `shop_order` | varchar |  |  | Shop Order |
+| `gi_dt` | date |  |  | Goods Issue Date |
+| `requestor` | varchar |  |  | Requestor User ID |
+| `remarks` | varchar |  |  | Remarks |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (gi_no)
 
-## goods_receipt_line
+## mm_goods_receipt_line
 
 입고 상세 — AS IS `M_GR_DTL` (Goods Receipt Detail)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `goods_receipt_id` | bigint | FK | → `goods_receipt.id` | AS IS gr_no |
-| `seq` | integer |  |  | Sequence |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `gr_qty` | numeric(15,4) |  |  | G/R Quantity |
-| `gr_prc` | numeric(15,4) |  |  | G/R Unit Price |
-| `gr_amt` | numeric(15,4) |  |  | G/R Amount |
-| `purchase_order_line_id` | bigint | FK [추정] | → `purchase_order_line.id` | AS IS po_no, po_seq |
-| `item_name` | varchar(40) |  |  |  |
+| `goods_receipt_id` | bigint | FK | → `mm_goods_receipt.id` | AS IS gr_no |
+| `seq` | integer | NOT NULL |  | Sequence |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `gr_qty` | numeric |  | NOT NULL 후보 [확인 필요] | G/R Quantity |
+| `gr_prc` | numeric |  | NOT NULL 후보 [확인 필요] | G/R Unit Price |
+| `gr_amt` | numeric |  | NOT NULL 후보 [확인 필요] | G/R Amount |
+| `purchase_order_line_id` | bigint | FK [추정] | → `mm_purchase_order_line.id` | AS IS po_no, po_seq |
+| `item_name` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (goods_receipt_id, seq)
 
-## goods_receipt
+## mm_goods_receipt
 
 입고 — AS IS `M_GR_HDR` (Goods Receipt Header)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `gr_no` | varchar(18) |  |  | Goods Receipt No |
-| `vendor_id` | bigint | FK | → `vendor.id` | AS IS v_name |
-| `gr_dt` | timestamp |  |  | Goods Receipt Date |
-| `ref_no` | varchar(18) |  |  | Reference No(=InvoiceNo) |
-| `tot_gr_amt` | numeric(15,4) |  |  | Total G/R Amount |
-| `due_dt` | timestamp |  |  |  |
-| `cls_amt` | numeric(15,4) |  |  | AP Clear Amount |
-| `bal_amt` | numeric(15,4) |  |  | Balance Amount |
-| `type` | varchar(10) |  |  | Expense or Item |
-| `remarks` | varchar(200) |  |  | Remarks |
-| `terms` | varchar(20) |  |  |  |
+| `gr_no` | varchar | NOT NULL |  | Goods Receipt No |
+| `vendor_id` | bigint | FK | → `bc_vendor.id` | AS IS v_name |
+| `gr_dt` | date |  | NOT NULL 후보 [확인 필요] | Goods Receipt Date |
+| `ref_no` | varchar |  | NOT NULL 후보 [확인 필요] | Reference No(=InvoiceNo) |
+| `tot_gr_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Total G/R Amount |
+| `due_dt` | date |  | NOT NULL 후보 [확인 필요] |  |
+| `cls_amt` | numeric |  | NOT NULL 후보 [확인 필요] | AP Clear Amount |
+| `bal_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Balance Amount |
+| `type` | varchar |  | NOT NULL 후보 [확인 필요] | Expense or Item |
+| `remarks` | varchar |  | NOT NULL 후보 [확인 필요] | Remarks |
+| `terms` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (gr_no)
 
-## purchase_order_line
+## mm_purchase_order_line
 
 발주 상세 — AS IS `M_PO_DTL` (Purchase Order Detail)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `purchase_order_id` | bigint | FK | → `purchase_order.id` | AS IS po_no |
-| `seq` | integer |  |  |  |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `po_qty` | numeric(15,4) |  |  | P/O Quantity |
-| `po_prc` | numeric(15,4) |  |  | P/O Unit Price |
-| `po_amt` | numeric(15,4) |  |  | P/O Amount |
-| `receipt_qty` | numeric(15,4) |  |  | Actual Receipt Quantity |
-| `item_name` | varchar(40) |  |  |  |
+| `purchase_order_id` | bigint | FK | → `mm_purchase_order.id` | AS IS po_no |
+| `seq` | integer | NOT NULL |  |  |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `po_qty` | numeric |  | NOT NULL 후보 [확인 필요] | P/O Quantity |
+| `po_prc` | numeric |  | NOT NULL 후보 [확인 필요] | P/O Unit Price |
+| `po_amt` | numeric |  | NOT NULL 후보 [확인 필요] | P/O Amount |
+| `receipt_qty` | numeric |  | NOT NULL 후보 [확인 필요] | Actual Receipt Quantity |
+| `item_name` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (purchase_order_id, seq)
 
-## purchase_order
+## mm_purchase_order
 
 발주 — AS IS `M_PO_HDR` (Purchase Order Header)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `po_no` | varchar(18) |  |  | Purchase Order No |
-| `status` | varchar(2) |  |  | current status 'PO' - PO Entry 'RE'- Released 'CF'- Confirmed |
-| `vendor_id` | bigint | FK | → `vendor.id` | AS IS v_name |
-| `po_dt` | timestamp |  |  | P/O Date |
-| `tot_po_amt` | numeric(15,4) |  |  | Total P/O Amount |
-| `release_dt` | timestamp |  |  | Release Date |
-| `confirm_dt` | timestamp |  |  | Confirm Date-Goods Receipt Date |
-| `remarks` | varchar(200) |  |  | Vendor Message |
+| `po_no` | varchar | NOT NULL |  | Purchase Order No |
+| `status` | varchar |  | NOT NULL 후보 [확인 필요] | current status 'PO' - PO Entry 'RE'- Released 'CF'- Confirmed |
+| `vendor_id` | bigint | FK | → `bc_vendor.id` | AS IS v_name |
+| `po_dt` | date |  | NOT NULL 후보 [확인 필요] | P/O Date |
+| `tot_po_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Total P/O Amount |
+| `release_dt` | date |  | 미사용 후보 [확인 필요] | Release Date |
+| `confirm_dt` | date |  | 미사용 후보 [확인 필요] | Confirm Date-Goods Receipt Date |
+| `remarks` | varchar |  |  | Vendor Message |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (po_no)
 
-## purchase_simulation_line
+## mm_purchase_simulation_line
 
 구매 시뮬레이션 상세 — AS IS `M_PS_DTL`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `purchase_simulation_id` | bigint | FK | → `purchase_simulation.id` | AS IS ps_no |
-| `seq` | integer |  |  |  |
-| `item_id` | bigint | FK [추정] | → `item.id` | AS IS item_cd |
-| `m2_qty` | numeric(15,4) |  |  |  |
-| `m1_qty` | numeric(15,4) |  |  |  |
-| `m0_qty` | numeric(15,4) |  |  |  |
-| `open_so_qty` | numeric(15,4) |  |  |  |
-| `rop_qty` | numeric(15,4) |  |  |  |
-| `onhand_qty` | numeric(15,4) |  |  |  |
-| `estimated_po_qty` | numeric(15,4) |  |  |  |
+| `purchase_simulation_id` | bigint | FK | → `mm_purchase_simulation.id` | AS IS ps_no |
+| `seq` | integer | NOT NULL |  |  |
+| `item_id` | bigint | FK [추정] | → `bc_item.id` | AS IS item_cd |
+| `m2_qty` | numeric |  |  |  |
+| `m1_qty` | numeric |  |  |  |
+| `m0_qty` | numeric |  |  |  |
+| `open_so_qty` | numeric |  |  |  |
+| `rop_qty` | numeric |  |  |  |
+| `onhand_qty` | numeric |  |  |  |
+| `estimated_po_qty` | numeric |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (purchase_simulation_id, seq)
 
-## purchase_simulation
+## mm_purchase_simulation
 
 구매 시뮬레이션 — AS IS `M_PS_HDR`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `ps_no` | varchar(18) |  |  |  |
-| `ps_dt` | timestamp |  |  |  |
-| `remarks` | varchar(200) |  |  |  |
+| `ps_no` | varchar | NOT NULL |  |  |
+| `ps_dt` | date |  |  |  |
+| `remarks` | varchar |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (ps_no)
 
-## goods_return_line
+## mm_goods_return_line
 
 반품 상세 — AS IS `M_RET_DTL` (Return Detail)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `goods_return_id` | bigint | FK | → `goods_return.id` | AS IS ret_no |
-| `seq` | integer |  |  | Sequence |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `ret_qty` | numeric(15,4) |  |  | Return Quantity |
-| `ret_unit` | varchar(5) |  |  |  |
-| `ret_prc` | numeric(15,4) |  |  |  |
-| `ret_amt` | numeric(15,4) |  |  |  |
+| `goods_return_id` | bigint | FK | → `mm_goods_return.id` | AS IS ret_no |
+| `seq` | integer | NOT NULL |  | Sequence |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `ret_qty` | numeric |  |  | Return Quantity |
+| `ret_unit` | varchar |  |  |  |
+| `ret_prc` | numeric |  |  |  |
+| `ret_amt` | numeric |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (goods_return_id, seq)
 
-## goods_return
+## mm_goods_return
 
 반품 — AS IS `M_RET_HDR` (Return Header)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `ret_no` | varchar(18) |  |  | Return No |
-| `dept` | varchar(20) |  |  | Department |
-| `ret_dt` | timestamp |  |  | Return Date |
-| `requestor` | varchar(18) |  |  | Requestor User ID |
-| `remarks` | varchar(200) |  |  | Remarks |
+| `ret_no` | varchar | NOT NULL |  | Return No |
+| `dept` | varchar |  |  | Department |
+| `ret_dt` | date |  |  | Return Date |
+| `requestor` | varchar |  |  | Requestor User ID |
+| `remarks` | varchar |  |  | Remarks |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (ret_no)
 
-## unplanned_receipt_line
+## mm_unplanned_receipt_line
 
 예외 입고 상세 — AS IS `M_UR_DTL` (Unplanned Receipt Detail)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `unplanned_receipt_id` | bigint | FK [추정] | → `unplanned_receipt.id` | AS IS ur_no |
-| `seq` | integer |  |  | Sequence |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `ur_qty` | numeric(15,4) |  |  | Unplanned Receipt Quantity |
-| `ur_amt` | numeric(15,4) |  |  | Unplanned Receipt Amount |
+| `unplanned_receipt_id` | bigint | FK [추정] | → `mm_unplanned_receipt.id` | AS IS ur_no |
+| `seq` | integer | NOT NULL |  | Sequence |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `ur_qty` | numeric |  |  | Unplanned Receipt Quantity |
+| `ur_amt` | numeric |  |  | Unplanned Receipt Amount |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (unplanned_receipt_id, seq)
 
-## unplanned_receipt
+## mm_unplanned_receipt
 
 예외 입고 — AS IS `M_UR_HDR` (Unplanned Receipt Header)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `ur_no` | varchar(18) |  |  | Unplanned Receipt No |
-| `dept` | varchar(40) |  |  | Department |
-| `ur_dt` | timestamp |  |  | Unplanned Receipt Date |
-| `requestor` | varchar(18) |  |  | Requestor |
-| `remarks` | varchar(200) |  |  | Remarks |
+| `ur_no` | varchar | NOT NULL |  | Unplanned Receipt No |
+| `dept` | varchar |  |  | Department |
+| `ur_dt` | date |  |  | Unplanned Receipt Date |
+| `requestor` | varchar |  |  | Requestor |
+| `remarks` | varchar |  |  | Remarks |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (ur_no)
 
-## sales_invoice_line
+## sd_sales_invoice_line
 
 매출 송장 상세 — AS IS `S_DN_DTL`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `sales_invoice_id` | bigint | FK | → `sales_invoice.id` | AS IS dn_no |
-| `seq` | integer |  |  |  |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `dn_qty` | numeric(15,4) |  |  |  |
-| `dn_prc` | numeric(15,4) |  |  |  |
-| `dn_amt` | numeric(15,4) |  |  |  |
-| `sales_order_line_id` | bigint | FK [추정] | → `sales_order_line.id` | AS IS so_no, so_seq |
-| `item_name` | varchar(50) |  |  |  |
-| `dc_cd` | varchar(10) |  |  |  |
-| `dc_rate` | numeric(15,4) |  |  |  |
+| `sales_invoice_id` | bigint | FK | → `sd_sales_invoice.id` | AS IS dn_no |
+| `seq` | integer | NOT NULL |  |  |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `dn_qty` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `dn_prc` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `dn_amt` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `sales_order_line_id` | bigint | FK [추정] | → `sd_sales_order_line.id` | AS IS so_no, so_seq |
+| `item_name` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `dc_cd` | varchar |  |  |  |
+| `dc_rate` | numeric |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (sales_invoice_id, seq)
 
-## sales_invoice
+## sd_sales_invoice
 
 매출 송장 — AS IS `S_DN_HDR`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `dn_no` | varchar(18) |  |  |  |
-| `customer_id` | bigint | FK | → `customer.id` | AS IS c_name |
-| `sales_order_id` | bigint | FK [추정] | → `sales_order.id` | AS IS so_no |
-| `dn_dt` | timestamp |  |  |  |
-| `ship_dt` | timestamp |  |  |  |
-| `due_dt` | timestamp |  |  |  |
-| `tot_dn_amt` | numeric(15,4) |  |  |  |
-| `remarks` | varchar(200) |  |  |  |
-| `bal_amt` | numeric(15,4) |  |  |  |
-| `terms` | varchar(20) |  |  |  |
-| `type` | varchar(2) |  |  |  |
-| `rep` | varchar(30) |  |  |  |
-| `ship_via` | varchar(14) |  |  |  |
-| `freight_charge` | varchar(10) |  |  |  |
-| `ship_addr1` | varchar(80) |  |  |  |
-| `ship_addr2` | varchar(80) |  |  |  |
-| `ship_city` | varchar(40) |  |  |  |
-| `ship_state` | varchar(22) |  |  |  |
-| `ship_country` | varchar(23) |  |  |  |
-| `ship_zip_code` | varchar(20) |  |  |  |
-| `status` | varchar(2) |  |  |  |
-| `ship_phone` | varchar(30) |  |  |  |
-| `ship_fax` | varchar(30) |  |  |  |
-| `cm_reason01` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `cm_reason02` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `cm_reason03` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `cm_reason04` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `cm_reason05` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `cm_reason06` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `cm_reason07` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `cm_reason08` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `ship_name` | varchar(40) |  |  |  |
+| `dn_no` | varchar | NOT NULL |  |  |
+| `customer_id` | bigint | FK | → `bc_customer.id` | AS IS c_name |
+| `sales_order_id` | bigint | FK [추정] | → `sd_sales_order.id` | AS IS so_no |
+| `dn_dt` | date |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_dt` | date |  | 미사용 후보 [확인 필요] |  |
+| `due_dt` | date |  |  |  |
+| `tot_dn_amt` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `remarks` | varchar |  |  |  |
+| `bal_amt` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `terms` | varchar |  |  |  |
+| `type` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `rep` | varchar |  |  |  |
+| `ship_via` | varchar |  |  |  |
+| `freight_charge` | varchar |  |  |  |
+| `ship_addr1` | varchar |  |  |  |
+| `ship_addr2` | varchar |  |  |  |
+| `ship_city` | varchar |  |  |  |
+| `ship_state` | varchar |  |  |  |
+| `ship_country` | varchar |  |  |  |
+| `ship_zip_code` | varchar |  |  |  |
+| `status` | varchar |  |  |  |
+| `ship_phone` | varchar |  |  |  |
+| `ship_fax` | varchar |  |  |  |
+| `cm_reason01` | boolean |  | 0/1 → boolean |  |
+| `cm_reason02` | boolean |  | 0/1 → boolean |  |
+| `cm_reason03` | boolean |  | 0/1 → boolean |  |
+| `cm_reason04` | boolean |  | 0/1 → boolean |  |
+| `cm_reason05` | boolean |  | 0/1 → boolean |  |
+| `cm_reason06` | boolean |  | 0/1 → boolean |  |
+| `cm_reason07` | boolean |  | 0/1 → boolean |  |
+| `cm_reason08` | boolean |  | 0/1 → boolean |  |
+| `ship_name` | varchar |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (dn_no)
 
-## customer_opening_balance
+## sd_customer_opening_balance
 
 고객 기초 잔액 — AS IS `S_INIT_BAL`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `customer_id` | bigint | FK [추정] | → `customer.id` | AS IS c_name |
-| `type` | varchar(2) |  |  |  |
-| `bal_amt` | numeric(15,4) |  |  |  |
-| `amt` | numeric(15,4) |  |  |  |
-| `dn_dt` | timestamp |  |  |  |
-| `due_dt` | timestamp |  |  |  |
-| `no` | varchar(18) |  |  |  |
+| `customer_id` | bigint | FK [추정] | → `bc_customer.id` | AS IS c_name |
+| `type` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `bal_amt` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `amt` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `dn_dt` | date |  | NOT NULL 후보 [확인 필요] |  |
+| `due_dt` | date |  | NOT NULL 후보 [확인 필요] |  |
+| `no` | varchar | NOT NULL |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (no)
 
-## sales_order_closing
+## sd_sales_order_closing
 
 수주 마감 이력 — AS IS `S_SO_CLOSE_HIST`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `close_dt` | timestamp |  |  |  |
-| `from_dt` | timestamp |  |  |  |
+| `close_dt` | date | NOT NULL |  |  |
+| `from_dt` | date |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (close_dt)
 
-## sales_order_line
+## sd_sales_order_line
 
 수주 상세 — AS IS `S_SO_DTL` (Sales Order Detail)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `sales_order_id` | bigint | FK [추정] | → `sales_order.id` | AS IS so_no |
-| `seq` | integer |  |  |  |
-| `item_id` | bigint | FK | → `item.id` | AS IS item_cd |
-| `so_qty` | numeric(15,4) |  |  | S/O Quantity |
-| `so_prc` | numeric(15,4) |  |  | S/O Unit Price |
-| `so_amt` | numeric(15,4) |  |  | S/O Amount |
-| `dn_qty` | numeric(15,4) |  |  |  |
-| `item_name` | varchar(50) |  |  |  |
-| `dc_cd` | varchar(10) |  |  |  |
-| `dc_rate` | numeric(15,4) |  |  |  |
+| `sales_order_id` | bigint | FK [추정] | → `sd_sales_order.id` | AS IS so_no |
+| `seq` | integer | NOT NULL |  |  |
+| `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
+| `so_qty` | numeric |  | NOT NULL 후보 [확인 필요] | S/O Quantity |
+| `so_prc` | numeric |  | NOT NULL 후보 [확인 필요] | S/O Unit Price |
+| `so_amt` | numeric |  | NOT NULL 후보 [확인 필요] | S/O Amount |
+| `dn_qty` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `item_name` | varchar |  |  |  |
+| `dc_cd` | varchar |  |  |  |
+| `dc_rate` | numeric |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (sales_order_id, seq)
 
-## sales_order
+## sd_sales_order
 
 수주 — AS IS `S_SO_HDR` (Sales Order Header)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `so_no` | varchar(18) |  |  | Sales Order No |
-| `status` | varchar(2) |  |  | current status 'SO' - SO Entry 'RE'- Released 'CF'- Confirmed |
-| `customer_id` | bigint | FK | → `customer.id` | AS IS c_name |
-| `so_dt` | timestamp |  |  | S/O Date |
-| `exp_ship_dt` | timestamp |  |  |  |
-| `tot_so_amt` | numeric(15,4) |  |  | Total S/O Amount |
-| `release_dt` | timestamp |  |  | Release Date |
-| `confirm_dt` | timestamp |  |  | Confirm Date |
-| `remarks` | varchar(200) |  |  | Remarks |
-| `due_dt` | timestamp |  |  | Due Date |
-| `rep` | varchar(30) |  |  |  |
-| `terms` | varchar(20) |  |  |  |
-| `ship_via` | varchar(14) |  |  |  |
-| `freight_charge` | varchar(10) |  |  |  |
-| `ship_addr1` | varchar(80) |  |  |  |
-| `ship_addr2` | varchar(80) |  |  |  |
-| `ship_city` | varchar(40) |  |  |  |
-| `ship_state` | varchar(2) |  |  |  |
-| `ship_country` | varchar(20) |  |  |  |
-| `ship_zip_code` | varchar(20) |  |  |  |
-| `upload_flag` | varchar(1) |  |  |  |
-| `merge_flag` | varchar(1) |  |  |  |
-| `src_no` | varchar(18) |  |  |  |
-| `ship_phone` | varchar(30) |  |  |  |
-| `ship_fax` | varchar(30) |  |  |  |
-| `ship_name` | varchar(40) |  |  |  |
+| `so_no` | varchar | NOT NULL |  | Sales Order No |
+| `status` | varchar |  | NOT NULL 후보 [확인 필요] | current status 'SO' - SO Entry 'RE'- Released 'CF'- Confirmed |
+| `customer_id` | bigint | FK | → `bc_customer.id` | AS IS c_name |
+| `so_dt` | date |  | NOT NULL 후보 [확인 필요] | S/O Date |
+| `exp_ship_dt` | date |  | NOT NULL 후보 [확인 필요] |  |
+| `tot_so_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Total S/O Amount |
+| `release_dt` | date |  | 미사용 후보 [확인 필요] | Release Date |
+| `confirm_dt` | date |  | 미사용 후보 [확인 필요] | Confirm Date |
+| `remarks` | varchar |  |  | Remarks |
+| `due_dt` | date |  | NOT NULL 후보 [확인 필요] | Due Date |
+| `rep` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `terms` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_via` | varchar |  |  |  |
+| `freight_charge` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_addr1` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_addr2` | varchar |  | 미사용 후보 [확인 필요] |  |
+| `ship_city` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_state` | varchar |  |  |  |
+| `ship_country` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `ship_zip_code` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `upload_flag` | boolean |  | Y/N → boolean [추정 — 데이터 없음]; 미사용 후보 [확인 필요] |  |
+| `merge_flag` | boolean |  | Y/N → boolean [추정 — 데이터 없음]; 미사용 후보 [확인 필요] |  |
+| `src_no` | varchar |  | 미사용 후보 [확인 필요] |  |
+| `ship_phone` | varchar |  |  |  |
+| `ship_fax` | varchar |  |  |  |
+| `ship_name` | varchar |  |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (so_no)
 
-## menu
+## sys_menu
 
 메뉴 — AS IS `Z_MENU`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `menu_code` | varchar(10) |  |  |  |
-| `name` | varchar(30) |  |  |  |
-| `type` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
-| `program_id` | varchar(30) |  |  |  |
-| `module` | varchar(10) |  |  |  |
-| `parent_menu_id` | bigint | FK [추정] | → `menu.id` | AS IS upper_id |
-| `valid_flag` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 |  |
+| `menu_code` | varchar | NOT NULL |  |  |
+| `name` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `type` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `program_id` | varchar |  |  |  |
+| `module` | varchar |  |  |  |
+| `parent_menu_id` | bigint | FK [추정] | → `sys_menu.id` | AS IS upper_id |
+| `valid_flag` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (menu_code)
 
-## role_menu
+## sys_role_menu
 
 역할별 메뉴 — AS IS `Z_MENU_TO_ROLE`
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `role` | varchar(10) |  |  |  |
-| `menu_id` | bigint | FK | → `menu.id` | AS IS id |
-| `full_access` | varchar(10) |  |  |  |
+| `role_id` | bigint | FK NOT NULL | → `sys_role.id` |  |
+| `menu_id` | bigint | FK | → `sys_menu.id` | AS IS id |
+| `full_access` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
-- UNIQUE: (role, menu_id)
+- UNIQUE: (role_id, menu_id)
 
-## app_user
+## sys_app_user
 
 사용자 — AS IS `Z_USR_INFO` (User Information)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `userid` | varchar(18) |  |  | User Id |
-| `password` | varchar(30) |  |  | Password |
-| `username` | varchar(40) |  |  | User Name |
-| `role` | varchar(10) |  |  | 'admin', 'user', 'guest' |
-| `email` | varchar(30) |  |  | email address |
-| `phone` | varchar(18) |  |  | telephone no |
-| `valid_flag` | varchar(1) |  | CHAR는 변환 규칙에 없음. 공백 채움 차이 확인 필요 | Valid Flag |
-| `user_valid_dt` | timestamp |  |  | User Valid Date |
-| `password_valid_dt` | timestamp |  |  | Password Valid Date |
+| `userid` | varchar | NOT NULL |  | User Id |
+| `password_hash` | varchar | NOT NULL | PBKDF2 해시 (ASP.NET Core Identity 형식) | Password |
+| `must_change_password` | boolean | NOT NULL DEFAULT false | 첫 로그인 때 비밀번호 변경 |  |
+| `username` | varchar |  | NOT NULL 후보 [확인 필요] | User Name |
+| `role_id` | bigint | FK | → `sys_role.id` | 'admin', 'user', 'guest' |
+| `email` | varchar |  |  | email address |
+| `phone` | varchar |  |  | telephone no |
+| `valid_flag` | varchar |  | NOT NULL 후보 [확인 필요] | Valid Flag |
+| `user_valid_dt` | date |  | NOT NULL 후보 [확인 필요] | User Valid Date |
+| `password_valid_dt` | date |  | NOT NULL 후보 [확인 필요] | Password Valid Date |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (userid)
 
-## user_login_log
+## sys_user_login_log
 
 로그인 이력 — AS IS `Z_USR_LOG` (User Login History)
 
 | 컬럼 | 타입 | 제약 | 비고 | 설명 (AS IS 정의서) |
 | --- | --- | --- | --- | --- |
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
-| `log_dt` | timestamp |  |  | Login date & time |
-| `app_user_id` | bigint | FK [추정] | → `app_user.id` | AS IS userid |
-| `ip_addr` | varchar(18) |  |  | IP Address |
+| `log_dt` | timestamptz | NOT NULL | AS IS 값에 시각이 있다 — 업무 일자인지 [확인 필요] | Login date & time |
+| `app_user_id` | bigint | FK [추정] | → `sys_app_user.id` | AS IS userid |
+| `ip_addr` | varchar |  | NOT NULL 후보 [확인 필요] | IP Address |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `created_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
-| `updated_by` | varchar(50) | NOT NULL | 감사 컬럼 |  |
+| `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (log_dt)

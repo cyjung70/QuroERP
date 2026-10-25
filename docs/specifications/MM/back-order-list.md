@@ -52,11 +52,11 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | R |
-| `goods_receipt_line` | `M_GR_DTL` | R |
-| `goods_receipt` | `M_GR_HDR` | R |
-| `sales_order_line` | `S_SO_DTL` | R |
-| `sales_order` | `S_SO_HDR` | R |
+| `bc_item` | `B_ITEM` | R |
+| `mm_goods_receipt_line` | `M_GR_DTL` | R |
+| `mm_goods_receipt` | `M_GR_HDR` | R |
+| `sd_sales_order_line` | `S_SO_DTL` | R |
+| `sd_sales_order` | `S_SO_HDR` | R |
 
 ## 관련 BR
 
