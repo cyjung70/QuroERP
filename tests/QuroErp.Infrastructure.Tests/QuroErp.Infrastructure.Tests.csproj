@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\src\QuroErp.Infrastructure\QuroErp.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\QuroErp.Application\QuroErp.Application.csproj" />
     <ProjectReference Include="..\..\src\QuroErp.Domain\QuroErp.Domain.csproj" />
+    <ProjectReference Include="..\..\src\QuroERP.Database\QuroERP.Database.csproj" />
   </ItemGroup>
 
 </Project>
