@@ -4,56 +4,57 @@
 한글 업무 용어와 C# 영문 식별자, DB 이름의 대응표다. 코드는 이 이름을 그대로 쓴다.
 
 > - 테이블 이름·C# 이름은 Harness 생성기(QuroHarness)가 제안한 것이다. 바꾸려면 생성기의 이름 정의를 고쳐 다시 생성한다.
+> - C# 엔티티 이름은 테이블 이름에서 모듈 접두어를 뺀 것이다 (`sd_sales_order` → `SalesOrder`).
 > - 한글 용어는 제안이다 [확인 필요].
 
 | 한글 용어 | 영문 식별자(PascalCase) | DB 컬럼(snake_case) | 모듈 | 설명 |
 | --- | --- | --- | --- | --- |
-| 대체 품목 그룹 | AlternateItemGroup | alternate_item_group | BC | AS IS `B_ALT_ITEM` |
-| 문서 번호 채번 | DocumentNumber | document_number | BC | AS IS `B_AUTO_NUM` |
-| 장바구니 | CartItem | cart_item | BC | AS IS `B_CART` |
-| 회사 | Company | company | BC | AS IS `B_COMPANY` |
-| 환율 | ExchangeRate | exchange_rate | BC | AS IS `B_CURRENCY` |
-| 고객 | Customer | customer | SD | AS IS `B_CUSTOMER` |
-| 품목 | Item | item | BC | AS IS `B_ITEM` |
-| Major 코드 | CodeMajor | code_major | BC | AS IS `B_MAJOR` |
-| Minor 코드 | CodeMinor | code_minor | BC | AS IS `B_MINOR` |
-| 판매 단가 | SalesPrice | sales_price | BC | AS IS `B_PRICE_LEVEL` |
-| 공급자 | Vendor | vendor | MM | AS IS `B_VENDOR` |
-| 구매 단가 | PurchasePrice | purchase_price | BC | AS IS `B_VENDOR_PRICE` |
-| 재고 이동 | GoodsMovement | goods_movement | MM | AS IS `I_GOODS_MOVEMENT` |
-| 월별 재고 | MonthlyInventory | monthly_inventory | MM | AS IS `I_MONTH_INV` |
-| 재고 실사 상세 | StockCountLine | stock_count_line | MM | AS IS `M_CT_DTL` |
-| 재고 실사 | StockCount | stock_count | MM | AS IS `M_CT_HDR` |
-| 출고(불출) 상세 | GoodsIssueLine | goods_issue_line | MM | AS IS `M_GI_DTL` |
-| 출고(불출) | GoodsIssue | goods_issue | MM | AS IS `M_GI_HDR` |
-| 입고 상세 | GoodsReceiptLine | goods_receipt_line | MM | AS IS `M_GR_DTL` |
-| 입고 | GoodsReceipt | goods_receipt | MM | AS IS `M_GR_HDR` |
-| 발주 상세 | PurchaseOrderLine | purchase_order_line | MM | AS IS `M_PO_DTL` |
-| 발주 | PurchaseOrder | purchase_order | MM | AS IS `M_PO_HDR` |
-| 구매 시뮬레이션 상세 | PurchaseSimulationLine | purchase_simulation_line | MM | AS IS `M_PS_DTL` |
-| 구매 시뮬레이션 | PurchaseSimulation | purchase_simulation | MM | AS IS `M_PS_HDR` |
-| 반품 상세 | GoodsReturnLine | goods_return_line | MM | AS IS `M_RET_DTL` |
-| 반품 | GoodsReturn | goods_return | MM | AS IS `M_RET_HDR` |
-| 예외 입고 상세 | UnplannedReceiptLine | unplanned_receipt_line | MM | AS IS `M_UR_DTL` |
-| 예외 입고 | UnplannedReceipt | unplanned_receipt | MM | AS IS `M_UR_HDR` |
-| 매출 송장 상세 | SalesInvoiceLine | sales_invoice_line | SD | AS IS `S_DN_DTL` |
-| 매출 송장 | SalesInvoice | sales_invoice | SD | AS IS `S_DN_HDR` |
-| 고객 기초 잔액 | CustomerOpeningBalance | customer_opening_balance | SD | AS IS `S_INIT_BAL` |
-| 수주 마감 이력 | SalesOrderClosing | sales_order_closing | SD | AS IS `S_SO_CLOSE_HIST` |
-| 수주 상세 | SalesOrderLine | sales_order_line | SD | AS IS `S_SO_DTL` |
-| 수주 | SalesOrder | sales_order | SD | AS IS `S_SO_HDR` |
-| 메뉴 | Menu | menu | BC | AS IS `Z_MENU` |
-| 역할별 메뉴 | RoleMenu | role_menu | BC | AS IS `Z_MENU_TO_ROLE` |
-| 사용자 | AppUser | app_user | BC | AS IS `Z_USR_INFO` |
-| 로그인 이력 | UserLoginLog | user_login_log | BC | AS IS `Z_USR_LOG` |
-| Major 코드 번역 | CodeMajorTranslation | code_major_translation | BC | TO BE 신규 |
-| Minor 코드 번역 | CodeMinorTranslation | code_minor_translation | BC | TO BE 신규 |
-| 품목 번역 | ItemTranslation | item_translation | BC | TO BE 신규 |
-| 역할 | Role | role | BC | TO BE 신규 |
-| 외부 API 클라이언트 | ApiClient | api_client | BC | TO BE 신규 |
-| 화면 설정 | UiSetting | ui_setting | BC | TO BE 신규 |
-| 할인율 | DiscountRate | discount_rate | SD | TO BE 신규 |
-| 재고 설정 | InventorySetting | inventory_setting | MM | TO BE 신규 |
+| 대체 품목 그룹 | AlternateItemGroup | bc_alternate_item_group | BC | AS IS `B_ALT_ITEM` |
+| 문서 번호 채번 | DocumentNumber | sys_document_number | BC | AS IS `B_AUTO_NUM` |
+| 장바구니 | CartItem | bc_cart_item | BC | AS IS `B_CART` |
+| 회사 | Company | bc_company | BC | AS IS `B_COMPANY` |
+| 환율 | ExchangeRate | bc_exchange_rate | BC | AS IS `B_CURRENCY` |
+| 고객 | Customer | bc_customer | SD | AS IS `B_CUSTOMER` |
+| 품목 | Item | bc_item | BC | AS IS `B_ITEM` |
+| Major 코드 | CodeMajor | sys_code_major | BC | AS IS `B_MAJOR` |
+| Minor 코드 | CodeMinor | sys_code_minor | BC | AS IS `B_MINOR` |
+| 판매 단가 | SalesPrice | bc_sales_price | BC | AS IS `B_PRICE_LEVEL` |
+| 공급자 | Vendor | bc_vendor | MM | AS IS `B_VENDOR` |
+| 구매 단가 | PurchasePrice | bc_purchase_price | BC | AS IS `B_VENDOR_PRICE` |
+| 재고 이동 | GoodsMovement | mm_goods_movement | MM | AS IS `I_GOODS_MOVEMENT` |
+| 월별 재고 | MonthlyInventory | mm_monthly_inventory | MM | AS IS `I_MONTH_INV` |
+| 재고 실사 상세 | StockCountLine | mm_stock_count_line | MM | AS IS `M_CT_DTL` |
+| 재고 실사 | StockCount | mm_stock_count | MM | AS IS `M_CT_HDR` |
+| 출고(불출) 상세 | GoodsIssueLine | mm_goods_issue_line | MM | AS IS `M_GI_DTL` |
+| 출고(불출) | GoodsIssue | mm_goods_issue | MM | AS IS `M_GI_HDR` |
+| 입고 상세 | GoodsReceiptLine | mm_goods_receipt_line | MM | AS IS `M_GR_DTL` |
+| 입고 | GoodsReceipt | mm_goods_receipt | MM | AS IS `M_GR_HDR` |
+| 발주 상세 | PurchaseOrderLine | mm_purchase_order_line | MM | AS IS `M_PO_DTL` |
+| 발주 | PurchaseOrder | mm_purchase_order | MM | AS IS `M_PO_HDR` |
+| 구매 시뮬레이션 상세 | PurchaseSimulationLine | mm_purchase_simulation_line | MM | AS IS `M_PS_DTL` |
+| 구매 시뮬레이션 | PurchaseSimulation | mm_purchase_simulation | MM | AS IS `M_PS_HDR` |
+| 반품 상세 | GoodsReturnLine | mm_goods_return_line | MM | AS IS `M_RET_DTL` |
+| 반품 | GoodsReturn | mm_goods_return | MM | AS IS `M_RET_HDR` |
+| 예외 입고 상세 | UnplannedReceiptLine | mm_unplanned_receipt_line | MM | AS IS `M_UR_DTL` |
+| 예외 입고 | UnplannedReceipt | mm_unplanned_receipt | MM | AS IS `M_UR_HDR` |
+| 매출 송장 상세 | SalesInvoiceLine | sd_sales_invoice_line | SD | AS IS `S_DN_DTL` |
+| 매출 송장 | SalesInvoice | sd_sales_invoice | SD | AS IS `S_DN_HDR` |
+| 고객 기초 잔액 | CustomerOpeningBalance | sd_customer_opening_balance | SD | AS IS `S_INIT_BAL` |
+| 수주 마감 이력 | SalesOrderClosing | sd_sales_order_closing | SD | AS IS `S_SO_CLOSE_HIST` |
+| 수주 상세 | SalesOrderLine | sd_sales_order_line | SD | AS IS `S_SO_DTL` |
+| 수주 | SalesOrder | sd_sales_order | SD | AS IS `S_SO_HDR` |
+| 메뉴 | Menu | sys_menu | BC | AS IS `Z_MENU` |
+| 역할별 메뉴 | RoleMenu | sys_role_menu | BC | AS IS `Z_MENU_TO_ROLE` |
+| 사용자 | AppUser | sys_app_user | BC | AS IS `Z_USR_INFO` |
+| 로그인 이력 | UserLoginLog | sys_user_login_log | BC | AS IS `Z_USR_LOG` |
+| Major 코드 번역 | CodeMajorTranslation | sys_code_major_translation | BC | TO BE 신규 |
+| Minor 코드 번역 | CodeMinorTranslation | sys_code_minor_translation | BC | TO BE 신규 |
+| 품목 번역 | ItemTranslation | bc_item_translation | BC | TO BE 신규 |
+| 역할 | Role | sys_role | BC | TO BE 신규 |
+| 외부 API 클라이언트 | ApiClient | sys_api_client | BC | TO BE 신규 |
+| 화면 설정 | UiSetting | sys_ui_setting | BC | TO BE 신규 |
+| 할인율 | DiscountRate | sd_discount_rate | SD | TO BE 신규 |
+| 재고 설정 | InventorySetting | mm_inventory_setting | MM | TO BE 신규 |
 | 지급 방법 | ApPaymentMethod | code_major 'AP_PAYMENT_METHOD' | BC | 코드 (AS IS A100) |
 | 입금 방법 | ArPaymentMethod | code_major 'AR_PAYMENT_METHOD' | BC | 코드 (AS IS A200) |
 | 장바구니 번호 | CartNo | code_major 'CART_NO' | BC | 코드 (AS IS B700) |

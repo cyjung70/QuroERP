@@ -76,7 +76,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `sales_invoice` | `S_DN_HDR` | R |
+| `sd_sales_invoice` | `S_DN_HDR` | R |
 
 ## 관련 BR
 

@@ -34,13 +34,13 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 조회 조건 | `cct_no` | CtNo | text | 필수 | 대문자 |  |  |
 | 조회 조건 | `citem_class` | ItemClass | combo2 | 선택 |  | `ITEM_CLASS` |  |
-| 조회 조건 | `citem_cd` | ItemId | text | 선택 | 대문자 | `item` 찾기 대화상자 (`item_id`) |  |
+| 조회 조건 | `citem_cd` | ItemId | text | 선택 | 대문자 | `bc_item` 찾기 대화상자 (`item_id`) |  |
 | 입력 내용 | `cvalid_flag` | CvalidFlag | radio | 선택 |  | `DISPLAY_OPTIONS` | Y |
 | 입력 내용 | `ct_dt` | CtDt | date | 필수 | 대문자 |  | 오늘 |
 | 입력 내용 | `remarks` | Remarks | textarea | 선택 |  |  |  |
 | 조회 조건 | `cct_no` | CtNo | text | 필수 | 대문자 |  |  |
 | 조회 조건 | `citem_class` | ItemClass | combo2 | 선택 |  | `ITEM_CLASS` |  |
-| 조회 조건 | `citem_cd` | ItemId | text | 선택 | 대문자 | `item` 찾기 대화상자 (`item_id`) |  |
+| 조회 조건 | `citem_cd` | ItemId | text | 선택 | 대문자 | `bc_item` 찾기 대화상자 (`item_id`) |  |
 | 입력 내용 | `cvalid_flag` | CvalidFlag | radio | 선택 |  | `DISPLAY_OPTIONS` | Y |
 | 입력 내용 | `ct_dt` | CtDt | date | 필수 | 대문자 |  | 오늘 |
 | 입력 내용 | `remarks` | Remarks | textarea | 선택 |  |  |  |
@@ -72,10 +72,10 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | R |
-| `code_minor` | `B_MINOR` | R |
-| `stock_count_line` | `M_CT_DTL` | CRUD |
-| `stock_count` | `M_CT_HDR` | CRUD |
+| `bc_item` | `B_ITEM` | R |
+| `sys_code_minor` | `B_MINOR` | R |
+| `mm_stock_count_line` | `M_CT_DTL` | CRUD |
+| `mm_stock_count` | `M_CT_HDR` | CRUD |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `delete_mov_inv`, `get_auto_num`, `get_mvg_cost`, `receipt_inv`
 

@@ -4,16 +4,16 @@
 ## 테이블
 
 ```sql
-code_major(id, major_code varchar(30) UNIQUE, use_yn boolean, 감사 컬럼)
-code_major_translation(id, major_id, lang_code varchar(10), name, UNIQUE(major_id, lang_code))
-code_minor(id, major_id, minor_code varchar(20), sort_order integer, use_yn boolean,
-           attr1 varchar(20), attr2 varchar(20), 감사 컬럼, UNIQUE(major_id, minor_code))
-code_minor_translation(id, minor_id, lang_code varchar(10), name, UNIQUE(minor_id, lang_code))
+sys_code_major(id, major_code varchar UNIQUE, use_yn boolean, 감사 컬럼)
+sys_code_major_translation(id, major_id, lang_code varchar, name, UNIQUE(major_id, lang_code))
+sys_code_minor(id, major_id, minor_code varchar, sort_order integer, use_yn boolean,
+               attr1 varchar, attr2 varchar, 감사 컬럼, UNIQUE(major_id, minor_code))
+sys_code_minor_translation(id, minor_id, lang_code varchar, name, UNIQUE(minor_id, lang_code))
 ```
 
 ## 업무 테이블에 저장하는 값
 
-- 코드 컬럼에는 `minor_code` **문자열**을 저장한다 (예: `item.item_type = 'INVENTORY'`, `sales_order.status = 'CL'`).
+- 코드 컬럼에는 `minor_code` **문자열**을 저장한다 (예: `bc_item.type = 'INVENTORY'`, `sd_sales_order.status = 'CL'`).
 - 코드 컬럼은 외래 키를 두지 않는다. Application 서비스가 저장 전에 검사한다.
 
 ```csharp
@@ -42,9 +42,9 @@ AS IS 코드 테이블에 있었지만 TO BE에서는 코드로 만들지 않는
 
 | AS IS | TO BE |
 | --- | --- |
-| Default Rows (화면별 기본 행 수) | `ui_setting` |
-| Menu Role | `role` |
-| Discount Rate (할인 코드별 할인율) | `discount_rate` |
+| Default Rows (화면별 기본 행 수) | `sys_ui_setting` |
+| Menu Role | `sys_role` |
+| Discount Rate (할인 코드별 할인율) | `sd_discount_rate` |
 | Inventory View Options (재고 조회 옵션) | C# 열거형 `StockViewOption { Minus, Zero, MinusZero, All }`, 조건은 Repository에서 파라미터로 만든다 |
 
 Major 목록과 초기 데이터는 데이터 이관 태스크에서 함께 제공한다.
