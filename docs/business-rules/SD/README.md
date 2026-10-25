@@ -9,8 +9,5 @@
 - [수주](sales-order.md): SD-BR-001 ~ SD-BR-015
 - [매출 송장](sales-invoice.md): SD-BR-101 ~ SD-BR-118
 - [Credit Memo](credit-memo.md): SD-BR-201 ~ SD-BR-210
-
-## 주제 (예정)
-
-- customer.md 고객 마스터
-- pricing.md 단가·할인 (수주·송장 공통 규칙 SD-BR-005·010 외)
+- [고객 마스터](customer.md): SD-BR-301 ~ SD-BR-309
+- [판매 단가·할인](pricing.md): SD-BR-401 ~ SD-BR-406

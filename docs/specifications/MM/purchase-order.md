@@ -12,18 +12,20 @@
 
 ## 기본 흐름
 
-화면유형 표준 흐름이다. AS IS 로직 분석으로 BR이 정해지면 갱신된다.
+관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
-1. 조회 조건(문서 번호)으로 헤더와 상세를 조회한다.
-2. 신규면 헤더를 입력하고 상세 행을 추가한다.
-3. 저장하면 헤더·상세(·재고 이동·채번)를 한 트랜잭션으로 저장한다.
-4. 상태 전이(확정·마감·취소)는 별도 버튼으로 한다.
+1. 발주 번호로 조회하거나 신규를 누른다. 신규 상태는 `PO`다.
+2. 공급자를 고르고 줄을 추가한다. 품목은 Inventory·Service다 (MM-BR-014).
+3. 저장하면 서버가 수량·단가를 검사하고(MM-BR-011·012) 줄 금액과 합계를 계산한다 (MM-BR-015).
+4. 단가가 표준 구매단가·공급자 단가와 다르면 공급자 단가도 바꿀지 묻는다 (MM-BR-016).
+5. 헤더·줄·채번(MM-BR-017)을 한 트랜잭션으로 저장하고 발주 번호를 보여 준다.
+6. 인쇄 버튼으로 발주서 PDF를 연다.
 
 ## 대체 흐름
 
-- 상세가 없으면 저장하지 않는다 [확인 필요].
-- 마감·취소된 문서는 수정할 수 없다 [확인 필요].
-- 동시 수정 충돌 409.
+- 상태가 `PO`가 아니면(입고 시작) 수정·삭제를 막는다 (MM-BR-013).
+- 발주 상태는 입고 줄이 바뀔 때 서버가 다시 계산한다 (MM-BR-018).
+- 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
 
 ## 화면 필드
 
@@ -59,6 +61,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/mm/purchase-orders | 신규 |
 | PUT | /api/mm/purchase-orders/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/mm/purchase-orders/{id} | 삭제 |
+| GET | /api/mm/purchase-orders/{id}/print/purchase-order.pdf | 발주서 인쇄 (FastReport PDF) |
 
 ## 관련 테이블
 
@@ -101,7 +104,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 ## AS IS 근거
 
 - 레거시 화면·SQL 분석 자료는 비공개 Harness 저장소(QuroHarness)에 있다. 유즈케이스 ID로 찾는다.
-- 레거시 출력물 1개 → FastReport로 옮긴다 (`docs/architecture/reports.md`)
+- 출력 문서: 발주서 (`purchase-order`) (`docs/architecture/print-documents.md`)
 - 화면유형 판정 근거: 그리드 1, 입력 필드 4, 헤더·상세 저장 (M_PO_HDR, M_PO_DTL)
 
 ## 메모

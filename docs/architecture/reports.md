@@ -5,4 +5,5 @@
 - 리포트 템플릿: `src/QuroErp.Infrastructure/Reports/Templates/<module>/<name>.frx`.
 - 데이터는 Repository가 DTO 목록으로 만들고, FastReport에는 DTO만 넘긴다 (템플릿 안에 SQL을 두지 않는다).
 - 화면 조회용 리포트(유형 M)는 같은 DTO를 JSON으로도 제공한다.
-- 출력 문서(수주서, 송장, 발주서 등)의 Jasper → FastReport 매핑은 아직 정리하지 않았다. [확인 필요 — 리포트 매핑 후 갱신]
+- 업무 문서의 인쇄 양식(수주서, 피킹 리스트, 송장, 발주서 등)은 [출력 문서](print-documents.md)에 있다.
+- 조회 리포트의 인쇄본은 그 리포트 명세의 `.pdf` API가 만든다 (화면 조회와 같은 DTO).

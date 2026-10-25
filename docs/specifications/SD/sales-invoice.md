@@ -10,22 +10,27 @@
 | 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
 | 사전조건 | 로그인 (security.md) |
 
-> '수주 불러오기' 대화상자로 수주 상세를 가져온다. 고객 신용 확인(AS IS `check_credit`, 회계 테이블 읽기)은 MVP 최소 기능이다 [확인 필요].
+> '수주 불러오기' 대화상자로 수주 상세를 가져온다. 고객 신용 한도는 검사하지 않는다 (SD-BR-309, 입금 처리와 함께 Enterprise).
 
 ## 기본 흐름
 
-화면유형 표준 흐름이다. AS IS 로직 분석으로 BR이 정해지면 갱신된다.
+관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
-1. 조회 조건(문서 번호)으로 헤더와 상세를 조회한다.
-2. 신규면 헤더를 입력하고 상세 행을 추가한다.
-3. 저장하면 헤더·상세(·재고 이동·채번)를 한 트랜잭션으로 저장한다.
-4. 상태 전이(확정·마감·취소)는 별도 버튼으로 한다.
+1. 송장 번호로 조회하거나 신규를 누른다.
+2. 고객을 고르면 고객 정보와 사용 가능 Credit(SD-BR-118)을 보여 준다.
+3. 수주 가져오기로 같은 고객의 남은 수주 줄을 고르거나(SD-BR-115), 품목을 직접 넣는다 (SD-BR-116). 수주 줄은 단가·할인을 그대로 가져온다 (SD-BR-406).
+4. 저장하면 서버가 수량·남은 수량·단가·원가를 검사하고(SD-BR-101·102·103·114) 합계·잔액을 계산한다 (SD-BR-109).
+5. 배송지·단가 갱신 확인은 수주와 같다 (SD-BR-117).
+6. 한 트랜잭션에서 헤더·줄·채번(SD-BR-106), 수주 줄 송장 수량(SD-BR-108), 재고 출고(SD-BR-111·112), 수주 상태(SD-BR-110)를 저장한다.
+7. 인쇄 버튼으로 송장 PDF를 연다. 할인 줄이 있으면 할인 열이 보인다.
 
 ## 대체 흐름
 
-- 상세가 없으면 저장하지 않는다 [확인 필요].
-- 마감·취소된 문서는 수정할 수 없다 [확인 필요].
-- 동시 수정 충돌 409.
+- 입금된 송장은 수정·삭제·Void할 수 없다 (SD-BR-104).
+- 저장한 줄은 고칠 수 없다. 지우고 다시 넣는다 (SD-BR-107). 줄을 지우면 출고와 수주 송장 수량을 되돌린다.
+- Void는 출고 취소, 수주 송장 수량 되돌리기, 헤더 `VO`·금액 0, 수주 상태 재계산을 한 트랜잭션으로 한다 (SD-BR-113).
+- 고객 신용 한도는 검사하지 않는다 (SD-BR-309).
+- 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
 - 재고를 줄이는 저장은 마이너스 재고 설정을 따른다 (MM-BR-001, MM-BR-002).
 
 ## 화면 필드
@@ -92,6 +97,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/sd/sales-invoices | 신규 |
 | PUT | /api/sd/sales-invoices/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/sd/sales-invoices/{id} | 삭제 |
+| GET | /api/sd/sales-invoices/{id}/print/sales-invoice.pdf | 송장 인쇄 (FastReport PDF) |
 
 ## 관련 테이블
 
@@ -130,6 +136,12 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_credit`, `delete_mov_in
 - [SD-BR-116](../../business-rules/SD/sales-invoice.md)
 - [SD-BR-117](../../business-rules/SD/sales-invoice.md)
 - [SD-BR-118](../../business-rules/SD/sales-invoice.md)
+- [SD-BR-401](../../business-rules/SD/pricing.md)
+- [SD-BR-402](../../business-rules/SD/pricing.md)
+- [SD-BR-403](../../business-rules/SD/pricing.md)
+- [SD-BR-404](../../business-rules/SD/pricing.md)
+- [SD-BR-405](../../business-rules/SD/pricing.md)
+- [SD-BR-406](../../business-rules/SD/pricing.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
@@ -158,7 +170,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_credit`, `delete_mov_in
 ## AS IS 근거
 
 - 레거시 화면·SQL 분석 자료는 비공개 Harness 저장소(QuroHarness)에 있다. 유즈케이스 ID로 찾는다.
-- 레거시 출력물 5개 → FastReport로 옮긴다 (`docs/architecture/reports.md`)
+- 출력 문서: 송장 (`sales-invoice`) (`docs/architecture/print-documents.md`)
 - 화면유형 판정 근거: '수주 불러오기' 대화상자로 수주 상세를 가져온다 (자동 판정: 그리드 1, 입력 필드 30, 헤더·상세 저장 (S_DN_HDR, S_DN_DTL). 원천 문서 상세(S_SO_DTL)를 갱신 → MM 검토)
 
 ## 메모

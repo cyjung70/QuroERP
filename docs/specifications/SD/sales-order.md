@@ -12,18 +12,22 @@
 
 ## 기본 흐름
 
-화면유형 표준 흐름이다. AS IS 로직 분석으로 BR이 정해지면 갱신된다.
+관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
-1. 조회 조건(문서 번호)으로 헤더와 상세를 조회한다.
-2. 신규면 헤더를 입력하고 상세 행을 추가한다.
-3. 저장하면 헤더·상세(·재고 이동·채번)를 한 트랜잭션으로 저장한다.
-4. 상태 전이(확정·마감·취소)는 별도 버튼으로 한다.
+1. 수주 번호로 조회하거나 신규를 누른다. 신규 상태는 `SO`다.
+2. 고객을 고르면 배송지·운송비·담당자·결제 조건·할인 상태를 고객 마스터에서 채운다. 결제 예정일 기본값은 결제 조건으로 계산한다 (SD-BR-008).
+3. 줄을 추가한다. 품목을 고르면 기본 단가(SD-BR-401)와 할인 코드 기본값(SD-BR-405)을 채운다. 장바구니에서 줄을 가져올 수도 있다.
+4. 저장하면 서버가 줄 수량·단가·품목·할인 코드를 검사하고(SD-BR-001·002·004·404) 줄 금액과 합계를 다시 계산한다 (SD-BR-005·007).
+5. 배송지나 단가가 마스터와 다르면 마스터도 바꿀지 묻는다 (SD-BR-009·010).
+6. 헤더·줄·채번(SD-BR-006)·장바구니 비우기(SD-BR-011)를 한 트랜잭션으로 저장하고 수주 번호를 보여 준다.
+7. 인쇄 버튼으로 수주서·피킹 리스트·세트 구성품 목록 PDF를 연다.
 
 ## 대체 흐름
 
-- 상세가 없으면 저장하지 않는다 [확인 필요].
-- 마감·취소된 문서는 수정할 수 없다 [확인 필요].
-- 동시 수정 충돌 409.
+- 상태가 `SO`가 아니면(송장 발행·마감) 수정·삭제를 막는다 (SD-BR-003).
+- 수량 ≤ 0, 단가 0, 없는 품목·할인 코드가 있으면 저장하지 않고 그 줄을 표시한다.
+- 수주 상태는 송장 줄이 바뀔 때 서버가 다시 계산한다. 화면에서 바꾸지 않는다 (SD-BR-012).
+- 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
 
 ## 화면 필드
 
@@ -79,6 +83,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/sd/sales-orders | 신규 |
 | PUT | /api/sd/sales-orders/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/sd/sales-orders/{id} | 삭제 |
+| GET | /api/sd/sales-orders/{id}/print/sales-order.pdf | 수주서 인쇄 (FastReport PDF) |
+| GET | /api/sd/sales-orders/{id}/print/picking-list.pdf | 피킹 리스트 인쇄 (FastReport PDF) |
+| GET | /api/sd/sales-orders/{id}/print/set-component-list.pdf | 세트 구성품 목록 인쇄 (FastReport PDF) |
 
 ## 관련 테이블
 
@@ -109,6 +116,11 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`, 
 - [SD-BR-010](../../business-rules/SD/sales-order.md)
 - [SD-BR-011](../../business-rules/SD/sales-order.md)
 - [SD-BR-012](../../business-rules/SD/sales-order.md)
+- [SD-BR-401](../../business-rules/SD/pricing.md)
+- [SD-BR-402](../../business-rules/SD/pricing.md)
+- [SD-BR-403](../../business-rules/SD/pricing.md)
+- [SD-BR-404](../../business-rules/SD/pricing.md)
+- [SD-BR-405](../../business-rules/SD/pricing.md)
 
 ## 다국어 리소스 키
 
@@ -127,7 +139,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`, 
 ## AS IS 근거
 
 - 레거시 화면·SQL 분석 자료는 비공개 Harness 저장소(QuroHarness)에 있다. 유즈케이스 ID로 찾는다.
-- 레거시 출력물 3개 → FastReport로 옮긴다 (`docs/architecture/reports.md`)
+- 출력 문서: 수주서 (`sales-order`), 피킹 리스트 (`picking-list`), 세트 구성품 목록 (`set-component-list`) (`docs/architecture/print-documents.md`)
 - 화면유형 판정 근거: 그리드 1, 입력 필드 20, 헤더·상세 저장 (S_SO_HDR, S_SO_DTL)
 
 ## 메모
