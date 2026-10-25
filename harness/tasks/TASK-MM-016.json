@@ -10,10 +10,20 @@
     "docs/specifications/MM/inventory-closing.md"
   ],
   "rules": [
+    "MM-BR-401",
+    "MM-BR-402",
+    "MM-BR-403",
+    "MM-BR-404",
+    "MM-BR-405",
+    "MM-BR-406",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
-    "MM-BR-004"
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008"
   ],
   "skills": [
     "quro-blazor",

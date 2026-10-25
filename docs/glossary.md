@@ -31,8 +31,6 @@
 | 입고 | GoodsReceipt | mm_goods_receipt | MM | AS IS `M_GR_HDR` |
 | 발주 상세 | PurchaseOrderLine | mm_purchase_order_line | MM | AS IS `M_PO_DTL` |
 | 발주 | PurchaseOrder | mm_purchase_order | MM | AS IS `M_PO_HDR` |
-| 구매 시뮬레이션 상세 | PurchaseSimulationLine | mm_purchase_simulation_line | MM | AS IS `M_PS_DTL` |
-| 구매 시뮬레이션 | PurchaseSimulation | mm_purchase_simulation | MM | AS IS `M_PS_HDR` |
 | 반품 상세 | GoodsReturnLine | mm_goods_return_line | MM | AS IS `M_RET_DTL` |
 | 반품 | GoodsReturn | mm_goods_return | MM | AS IS `M_RET_HDR` |
 | 예외 입고 상세 | UnplannedReceiptLine | mm_unplanned_receipt_line | MM | AS IS `M_UR_DTL` |

@@ -12,7 +12,17 @@
   "specs": [
     "docs/specifications/MM/purchase-simulation.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-501",
+    "MM-BR-502",
+    "MM-BR-503",
+    "MM-BR-504",
+    "MM-BR-505",
+    "MM-BR-506",
+    "MM-BR-507",
+    "MM-BR-508",
+    "MM-BR-509"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
@@ -22,9 +32,11 @@
   "dependsOn": [
     "TASK-BC-015",
     "TASK-BC-017",
+    "TASK-BC-029",
     "TASK-CORE-003",
     "TASK-CORE-005",
-    "TASK-CORE-007"
+    "TASK-CORE-007",
+    "TASK-MM-005"
   ],
   "acceptance": [
     "명세 REST API 구현",
