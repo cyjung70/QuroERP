@@ -32,7 +32,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | 영역 | AS IS 필드 | TO BE 속성 (제안) | 입력 형식 | 상태 | 대·소문자 | 코드 (major_code)·참조 | 기본값 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 조회 조건 | `cso_no` | SoNo | text | 필수 | 대문자 |  |  |
-| 입력 내용 | `c_name` | CustomerId | combo2 | 필수 |  | `customer` 찾기 대화상자 (`customer_id`) |  |
+| 입력 내용 | `c_name` | CustomerId | combo2 | 필수 |  | `bc_customer` 찾기 대화상자 (`customer_id`) |  |
 | 입력 내용 | `so_dt` | SoDt | date | 필수 |  |  | 오늘 |
 | 입력 내용 | `exp_ship_dt` | ExpShipDt | date | 필수 |  |  | 오늘 |
 | 입력 내용 | `tot_so_amt` | TotSoAmt | money | 잠김 |  |  | 0 |
@@ -84,14 +84,14 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `cart_item` | `B_CART` | RD |
-| `customer` | `B_CUSTOMER` | RU |
-| `item` | `B_ITEM` | R |
-| `code_minor` | `B_MINOR` | R |
-| `sales_price` | `B_PRICE_LEVEL` | CRU |
-| `sales_invoice_line` | `S_DN_DTL` | R |
-| `sales_order_line` | `S_SO_DTL` | CRUD |
-| `sales_order` | `S_SO_HDR` | CRUD |
+| `bc_cart_item` | `B_CART` | RD |
+| `bc_customer` | `B_CUSTOMER` | RU |
+| `bc_item` | `B_ITEM` | R |
+| `sys_code_minor` | `B_MINOR` | R |
+| `bc_sales_price` | `B_PRICE_LEVEL` | CRU |
+| `sd_sales_invoice_line` | `S_DN_DTL` | R |
+| `sd_sales_order_line` | `S_SO_DTL` | CRUD |
+| `sd_sales_order` | `S_SO_HDR` | CRUD |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`, `get_price_level`
 

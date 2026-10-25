@@ -32,7 +32,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | 영역 | AS IS 필드 | TO BE 속성 (제안) | 입력 형식 | 상태 | 대·소문자 | 코드 (major_code)·참조 | 기본값 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 조회 조건 | `cpo_no` | PoNo | text | 필수 | 대문자 |  |  |
-| 입력 내용 | `v_name` | VendorId | combo2 | 필수 |  | `vendor` 찾기 대화상자 (`vendor_id`) |  |
+| 입력 내용 | `v_name` | VendorId | combo2 | 필수 |  | `bc_vendor` 찾기 대화상자 (`vendor_id`) |  |
 | 입력 내용 | `po_dt` | PoDt | date | 필수 |  |  | 오늘 |
 | 입력 내용 | `tot_po_amt` | TotPoAmt | money | 잠김 |  |  | 0 |
 | 입력 내용 | `remarks` | Remarks | textarea | 선택 |  |  |  |
@@ -64,12 +64,12 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | R |
-| `code_minor` | `B_MINOR` | R |
-| `vendor` | `B_VENDOR` | R |
-| `purchase_price` | `B_VENDOR_PRICE` | CRU |
-| `purchase_order_line` | `M_PO_DTL` | CRUD |
-| `purchase_order` | `M_PO_HDR` | CRUD |
+| `bc_item` | `B_ITEM` | R |
+| `sys_code_minor` | `B_MINOR` | R |
+| `bc_vendor` | `B_VENDOR` | R |
+| `bc_purchase_price` | `B_VENDOR_PRICE` | CRU |
+| `mm_purchase_order_line` | `M_PO_DTL` | CRUD |
+| `mm_purchase_order` | `M_PO_HDR` | CRUD |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 

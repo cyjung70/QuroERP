@@ -4,11 +4,11 @@
   "files": [
     {
       "path": ".agents/skills/quro-api/SKILL.md",
-      "sha256": "5377af6da474fa6cd5e35174158a9bef50b74d36d11a9a842214a9f7a2701d24"
+      "sha256": "2d31941c6f80afd7db339448881d97fd00f329a283b6f937635cb13c9f01d3f1"
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "75527a98193f1dc6caf7af714fa0ab17a6da6a52c71f511afc55480af1a8f2bb"
+      "sha256": "e3eb747ee7d6f93c5613a6cc5fbec26540527376674c37031853783ec2f14217"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
@@ -16,7 +16,7 @@
     },
     {
       "path": ".agents/skills/quro-dapper/SKILL.md",
-      "sha256": "67e687d96a2fa1799b032ffa70a4a3d690b5e8f9b3668023792d0cb6a590f0e5"
+      "sha256": "c0bc8f20ba8e5d81aadf0ec5dace0b8a930268a1e9f6f89c67d16e97842a30fa"
     },
     {
       "path": ".agents/skills/quro-unit-test/SKILL.md",
@@ -24,11 +24,11 @@
     },
     {
       "path": ".claude/skills/quro-api/SKILL.md",
-      "sha256": "5377af6da474fa6cd5e35174158a9bef50b74d36d11a9a842214a9f7a2701d24"
+      "sha256": "2d31941c6f80afd7db339448881d97fd00f329a283b6f937635cb13c9f01d3f1"
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "75527a98193f1dc6caf7af714fa0ab17a6da6a52c71f511afc55480af1a8f2bb"
+      "sha256": "e3eb747ee7d6f93c5613a6cc5fbec26540527376674c37031853783ec2f14217"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
@@ -36,7 +36,7 @@
     },
     {
       "path": ".claude/skills/quro-dapper/SKILL.md",
-      "sha256": "67e687d96a2fa1799b032ffa70a4a3d690b5e8f9b3668023792d0cb6a590f0e5"
+      "sha256": "c0bc8f20ba8e5d81aadf0ec5dace0b8a930268a1e9f6f89c67d16e97842a30fa"
     },
     {
       "path": ".claude/skills/quro-unit-test/SKILL.md",
@@ -44,7 +44,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "290950ef888576db6f7256bc11dd23fe0af68e4307fa985a6716e10c2423a511"
+      "sha256": "504e43735f30c018724977c60a440c421d3d1b579dd8e8b88fcd18ff57a204b3"
     },
     {
       "path": "CLAUDE.md",
@@ -52,27 +52,27 @@
     },
     {
       "path": "docs/architecture/api.md",
-      "sha256": "c31c1eddee05c4b20639200c76ce906ab6009567e8420205ef4b5bf720157026"
+      "sha256": "0dd39be5e875727cb224ce6ba9c60f3a8001e629d795d7d204f02f6066696c89"
     },
     {
       "path": "docs/architecture/codes.md",
-      "sha256": "f93d10fbd360dfd851dafd635c87706424be4ef3cb0895b3d5c9beac4864c780"
+      "sha256": "7ae8d2a48f998cece06e6f916f1f8526bc4cec89921342e5f276c8ad86b919a2"
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "41264467e00979c26b02257f7df7764b6fd4d8a9affeeb3de842d7fca43eace8"
+      "sha256": "8f92eaa4972c7a2e185aa9a040c37f9b603f8a15b734645b34db4442a3e7bbb0"
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "0200653c7ae33d178ddda2151b4af922576dc1efc153e101b96278a861f441b8"
+      "sha256": "40d7312a7264fcafa26688aae124df4ebe93647aa04cd43125757f2a811da961"
     },
     {
       "path": "docs/architecture/i18n.md",
-      "sha256": "5a5515023d8b03e8b188017ad4ebae2758d6ec45dbd6db646f1b92f4332b3133"
+      "sha256": "45213d03fc567e1bd784840458cd9dd23d8324eaf1fe9a76fe9541b64041acb4"
     },
     {
       "path": "docs/architecture/inventory.md",
-      "sha256": "e716522c5d18a501eedac998ffc07b8442782f442d0de0533247bf4214257365"
+      "sha256": "60914669dd3d530e78056ea393bb3bf9ca2feb06829340ec3f248943cea0b7aa"
     },
     {
       "path": "docs/architecture/layers.md",
@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/architecture/security.md",
-      "sha256": "a568456f93dc0dc44cd047cab1d31f79dc1f56e57d770c5ae9102207700f8adc"
+      "sha256": "8fa8bb076b96120e1e53b89ded709c2cfe3c6163bf9466b73aae85a2dde6a4bb"
     },
     {
       "path": "docs/business-rules/CO/README.md",
@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/glossary.md",
-      "sha256": "f609dbf2ff7378e629ba1263ae250e36a23a00ada36612ce3a391c9a1006b883"
+      "sha256": "699496e5c273741c0524db81a0d5f89d141ffc70b0bba6a3acfe210e19210486"
     },
     {
       "path": "docs/INDEX.md",
@@ -124,243 +124,243 @@
     },
     {
       "path": "docs/specifications/BC/alternate-item.md",
-      "sha256": "8785c229e409310e38ee32f6e33aed469081c7b3cd64ca412feb3d04ae3ba5fc"
+      "sha256": "7a472f13ecb61f7bf5b0e9199b96d9b775d575b3e123b07daaf83be170371ebd"
     },
     {
       "path": "docs/specifications/BC/cart.md",
-      "sha256": "58d405ef459a9d05a6269149188653cda68a14d8dc70fc0587eb430020d9fff6"
+      "sha256": "440b0aea15d17e2d68cb0bcd2c60623698421ab97e2fa02c00b527a8a687225c"
     },
     {
       "path": "docs/specifications/BC/change-customer-name.md",
-      "sha256": "5fff71a200252a6f595261a35a7da98f2f904891da4757176ab24ce5cab0017f"
+      "sha256": "f24779067ea7d74a6292ee9ddbba844e8dbccfdc3204f03f51accb1684dcedd1"
     },
     {
       "path": "docs/specifications/BC/change-password.md",
-      "sha256": "73641fc0be607aea28f8f66e31c5c671e3304213d8ddd4619fb0e113492f612e"
+      "sha256": "defa224ad337115da767e5789dc1865308d7c047378003ab36311803a0057af5"
     },
     {
       "path": "docs/specifications/BC/code.md",
-      "sha256": "40470edc57f4eed314902e86e66af6d998cb8e16274b001d865b49c05ac3c32e"
+      "sha256": "570bdd6366a3fc72de361b4fd1b3b8cebdc8931f41d08bc8e0bf4f47fb79b788"
     },
     {
       "path": "docs/specifications/BC/company-menu.md",
-      "sha256": "b4c39b1dbf666f0c275c31573291a6d68ac95d7d3cf03e70d458c5d2a287964d"
+      "sha256": "a4b3cdba82459eef4b256b9660fe6b17c9542060a9570a959aaba8f0e6065262"
     },
     {
       "path": "docs/specifications/BC/company.md",
-      "sha256": "a9283daa3f160f065e0cdb9fd5d4b985c0ab480206efa43a423b6f22d6fbb2b2"
+      "sha256": "5219b5da4cb961ded32f3712f2a5f61139801d8be47bb7c4807e23c4109168a2"
     },
     {
       "path": "docs/specifications/BC/item-barcode.md",
-      "sha256": "12b2cf3dae075f1f308a76f47f4288876b9aebc843454eb619df086522034c3f"
+      "sha256": "4a9ff3062a3f9289517194068fe48ee87cea370ca3869594e7b7059bc1841521"
     },
     {
       "path": "docs/specifications/BC/item-image-upload.md",
-      "sha256": "1131c520aa5b710e92a4151dbbbc93e11af1abfc4c4a2db87c5742c4cb184e1f"
+      "sha256": "d1bddf7cd6376935a6f100a3b1eb7de3900306593abf37f4fcb43e6183000c19"
     },
     {
       "path": "docs/specifications/BC/item.md",
-      "sha256": "237318b61cbd4efcf09c30f33c18e2ec54a038fadb6596ef44fb760312340992"
+      "sha256": "04475c13535424bd5e2801f475f911dc0587de7861411f8359ccd0f024d392b8"
     },
     {
       "path": "docs/specifications/BC/login.md",
-      "sha256": "71c53b45f4f7ed637c18b2ecc7c3f99f2fa88f2e7fef8af3d920c1143e20f4e1"
+      "sha256": "bbe991d52748b36baf6d9ffba34a654e342e95976a2377e3a5ff43d4bb2ecbbe"
     },
     {
       "path": "docs/specifications/BC/purchase-price.md",
-      "sha256": "542aeaea0491a4d9cd0650ce1585e604684013c3ed5e0e15e3bae881c8c302f0"
+      "sha256": "d247e449349b076eb67bad7b47878199d5d9f154785ddf2a65a3f8e81a6d9508"
     },
     {
       "path": "docs/specifications/BC/role-menu.md",
-      "sha256": "e458bd53fa07879fa8658cf85d31911f9a11a6da90339b88cdc71fe4cc87094c"
+      "sha256": "630d78c4f8966f75b8e7767750dac26426ef96a17fda8288fadb1c37f9be9229"
     },
     {
       "path": "docs/specifications/BC/sales-price.md",
-      "sha256": "120831ad41b2fe3c67a6019dc4d1a47310805b74369451ce0b8add07d36a4aef"
+      "sha256": "4aff856bb304e50c0a43c87d510e7d62ff3835c5617e511244decaf5493c4d8a"
     },
     {
       "path": "docs/specifications/BC/set-item.md",
-      "sha256": "851ab0ef92836f05d422c0057e8b3efee0c40351be57058a90ae5e21a28ef022"
+      "sha256": "4df01efd91484ee18a6b164fd411dd5919707e4027100468744a67b58ebde66d"
     },
     {
       "path": "docs/specifications/BC/user-profile.md",
-      "sha256": "6048517b35d9ebb124e9fed7b4892eb87213437a88c54581293eeb58cbc98d9a"
+      "sha256": "f5b83a013f6bbffd77278f90eeab2b4ae058b4fda4fd02a9d4e105084a3a7e06"
     },
     {
       "path": "docs/specifications/BC/user.md",
-      "sha256": "95d99011d9a45d849ee24f363b57554eb6aba0c9352f55f1dad101fe2d938e0e"
+      "sha256": "76b68146779fef3cb65078d14ec21d78d4d93d598e5bf993eb04c079d6073fac"
     },
     {
       "path": "docs/specifications/MM/back-order-list.md",
-      "sha256": "ef600641226cb2aca36555c2f85e746b555573727af7ec3b6c91d54c41b3220e"
+      "sha256": "19289f7796cf332b662f83a205084a3e5604982a1e96deecb433fa4c97d89bdf"
     },
     {
       "path": "docs/specifications/MM/goods-receipt.md",
-      "sha256": "1d37ac87bf95415eb3b426fcd2107f5db71f058f16c98111f79e3f0d445919bc"
+      "sha256": "03f2d6db8d19e94b2818de0ae6c74ab57480c80290ca0d74d9dfb900a6df734d"
     },
     {
       "path": "docs/specifications/MM/inventory-closing.md",
-      "sha256": "424cdb112c2a550b5518f8a16d69c8412cadc718a0117dff8258b005a789bb99"
+      "sha256": "fae17cee1277e705fa326a14601ebf2c1d471236e22b6b54f8913b991176d6ce"
     },
     {
       "path": "docs/specifications/MM/purchase-order.md",
-      "sha256": "1dbbe846ea54df3cf9cdee681b094156d790be281342049bfa2722344c5e896c"
+      "sha256": "20e803611ab2ab4fc5fba4ca4393b0022769ce1516573b52d21fcc14a0f91601"
     },
     {
       "path": "docs/specifications/MM/purchase-simulation.md",
-      "sha256": "d61ac9c77316c2d15288a18803173b701babd2ffa8abd30405c361eef4002302"
+      "sha256": "79b4957a2aac7172191b83caad5928a0f7d15a105a0280776867f4a6a4ba6043"
     },
     {
       "path": "docs/specifications/MM/report-inventory-aging-detail.md",
-      "sha256": "ddc5b37e643b0737ec116e3f7a7a32e02b10a3f90faffe04b578c706f1a1cf63"
+      "sha256": "fac0ac8a51eab87badce31ccc5b5ff4cf61aca6d8c8aa2b5124af4fe8eb0581d"
     },
     {
       "path": "docs/specifications/MM/report-inventory-aging.md",
-      "sha256": "8fe88b2c901aa91272872403c2c04ddc13154a815f66f815e5cbdfde9869b14f"
+      "sha256": "72edfa2865dd49281ada51055b42b86653868b55521c29462fe5a1f8f3866f0c"
     },
     {
       "path": "docs/specifications/MM/report-inventory-statement-detail.md",
-      "sha256": "a624cadf745368c5dffdb036786c26c2e036eb6764287d838ecb9638406dce84"
+      "sha256": "cbb9113ccd7d773458924989f4c802bf3a82860d6c4be1178c3372a49a41f2a7"
     },
     {
       "path": "docs/specifications/MM/report-inventory-statement.md",
-      "sha256": "4f9b8b40c0d991498d8ab04a50f813f6556d3f7a83e9bdf8e66e467886f0de44"
+      "sha256": "0f690401f95ead53a0b75c654cab1bf72aedde03798017448158e50d66b14ed3"
     },
     {
       "path": "docs/specifications/MM/report-item-list-excel.md",
-      "sha256": "7359cd2fa01ed87baf181145233667fa8b556eb25b9fba6b6b145fcf65f32ac2"
+      "sha256": "41a5e5280da123a8cf67151c76b6d230cb5da4edc65e08369ea5b79a58e8eddd"
     },
     {
       "path": "docs/specifications/MM/report-item-list.md",
-      "sha256": "a946c0d75f304088f97e060a74186a34cf010ffc9b91f5691ce3723316689ee9"
+      "sha256": "f261a9b6d578f06cfdf0ec585e18e85fdd0050f0a9874e361b4b0cfca70ee596"
     },
     {
       "path": "docs/specifications/MM/report-ptp-item-list.md",
-      "sha256": "2f5f07d4165f2108c2a9a73471be696a9b767de30782ac5951da20187d92ed8a"
+      "sha256": "36c3bbec05b7885d233d6dae3d22f5f22fdd4be2a0a8bb42f9740a31053c7bef"
     },
     {
       "path": "docs/specifications/MM/report-vendor-balance.md",
-      "sha256": "84c977b1d72ba21102e965bbd953fd4e9e37a94d38bf24bc45d86f8820310cea"
+      "sha256": "78471bcb2916c00c490e40a0aa1617b5f9e1f249a6cfdd771c8983ef3f1e4a9b"
     },
     {
       "path": "docs/specifications/MM/stock-count.md",
-      "sha256": "161e58735328fd858102b01c4ed3bf29a4a378e646c7dd667a77044365868560"
+      "sha256": "c9edf44af57bc2e2a1d0ee877fc37c3614554a18897b2d5ea47790748c75de7b"
     },
     {
       "path": "docs/specifications/MM/unplanned-receipt.md",
-      "sha256": "2254e8234634d874b822655a4055dd7abb40dd5e79801c409d4b8d1beed1217a"
+      "sha256": "e5f2a98abc9a54cf3694c12019c2aa0be934a0d87727fa9dbfbaccbd0565e97b"
     },
     {
       "path": "docs/specifications/MM/vendor.md",
-      "sha256": "ed8f716be3ab7501a2a1e0145029e38f986ffd7ebf64144c63864db017f1d5f6"
+      "sha256": "60a325585ab4d9ea21bfe61312c84f926c6cd8e6554298339c9bb4053a4dbfe0"
     },
     {
       "path": "docs/specifications/SD/credit-memo.md",
-      "sha256": "2405a4b431c415e4775e2a85800bb0824063d0e6cba87f2e566a6cf59ad55aeb"
+      "sha256": "a2b0d50fe96a3d03abaec14865663443dbdc5065ad3fdcdccde892fe521d386a"
     },
     {
       "path": "docs/specifications/SD/customer.md",
-      "sha256": "fd25544b6a32ca3ba67ef7f5ac47ed6f5652063afdb70a971c0176ca477853a8"
+      "sha256": "6d394f2372e2d222f3c6fb139e620df67776db98391bec8604b556cbc5b97cec"
     },
     {
       "path": "docs/specifications/SD/report-credit-memo-reason.md",
-      "sha256": "748e6902022d84ae569c6c697e2fed9ebc4416c8c01174351d24bb11995f9e87"
+      "sha256": "430c5e58d5d1bce3a57b94520cbce72e2c6f3208d9c873a84074cb890ef58d6a"
     },
     {
       "path": "docs/specifications/SD/report-lost-sales-order-detail.md",
-      "sha256": "cccce13d0c97e6dd1e57d311a7f1827a93d69e9df31f6f0a61babcb091cbfc62"
+      "sha256": "830fd12032c9558d51b6f1160f0bc770f7da4c36a0da93b55d03b1617e471712"
     },
     {
       "path": "docs/specifications/SD/report-lost-sales-order.md",
-      "sha256": "48300fb0e0a17d6766a8d09b8b9d8e3494a7ddca08711e28518dcf379c91347d"
+      "sha256": "762e060ee69be87e8211b53e19782cf2dffbaa6b0e1ca17bb22b84efae94be30"
     },
     {
       "path": "docs/specifications/SD/report-monthly-average-sales-detail.md",
-      "sha256": "7598b98e243ce83f882e5d4f0caa154fa6ac1622e1118f2bed559b92ecc58002"
+      "sha256": "4876178531af7f54faa4969b1023b7eec9a0609fd9387059b6fc17e48de5814b"
     },
     {
       "path": "docs/specifications/SD/report-monthly-average-sales.md",
-      "sha256": "3751cdfa66366a01e46ca4ecaf5f0f07ef9d49de3c0167c0c9b6217b5705e35a"
+      "sha256": "f4075cd978e53a93b97a3f734c8201b74a6170e1037163b6b670b2b5825c548c"
     },
     {
       "path": "docs/specifications/SD/report-open-sales-order-detail.md",
-      "sha256": "512d0219dedef9ec99a7770cb9be297e312943597702ea3213fb4c02163be5b2"
+      "sha256": "329c1f4f2cd91c58075cd4b4e838f4b66d1edaf1f4c24d217441d5b740fb2c79"
     },
     {
       "path": "docs/specifications/SD/report-open-sales-order.md",
-      "sha256": "09fd210c7eeee04e3de4e39f39e522f6bc504a17e312c13f0a2180152b92e557"
+      "sha256": "c2c6476df4c4551eb10adaa72eeb6f24f64c9715ac2354a482bc1b3b9b99dc88"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-class-region.md",
-      "sha256": "2e46cc0a5f4bbed1b2745bb8aca697e41eec337682b63135ac19b08c1c7004ad"
+      "sha256": "5813cc702ccfe61ca078f9459ebf33d4a1be99081497856022cfe6af38a82788"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-class.md",
-      "sha256": "154ea46dd5237bbfeb3e8b86c951029d8f213f19e8f0dfcf2bc3fef9c3c42dec"
+      "sha256": "d59d5d816670a9c7d983c989f84d316b339079921e2d4a1f20a721477c4fcaa0"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-customer.md",
-      "sha256": "bb1d23589bea14bba525b9e8f44d2510e34e652bc2a202d1dbf30a1e2fb0e6a6"
+      "sha256": "1b53d8c66803ae2223ea1172f5dfff671634807856920954a8c16977187bb528"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-region-class.md",
-      "sha256": "208eb41d61fdfbdf1b0ed7d5c2c99e53f1b4644b7ba52b49605372315424dcba"
+      "sha256": "81672dd3769541a9d249af495509ffda369002adad03f14d49f5da9149a7def9"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-region.md",
-      "sha256": "438a11a8f6f4d7f12ea21a4992458af8e310727a341929a8d1893d70dc7a10d3"
+      "sha256": "a2536220f7d290f129decea35384332088ab2ad0a4fdffee50f146b444bb4714"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-rep.md",
-      "sha256": "7abd647ce18c88fb2793917e1eda22747a519af22b396c076528b7b685bfa05b"
+      "sha256": "64fa1a7f808603dcac0e58498a33bfbcb122fa8438c9801c47bd4d5050a91394"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-class.md",
-      "sha256": "3a3dffaba83ad848b6a6488475f285f6d6d17a4c57ca74bc46a8a1829b209d02"
+      "sha256": "e602916cec8db5780074b1ffa3b6a1b1c7e93afdf78a98344473da2a1f76c012"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-customer-detail.md",
-      "sha256": "5605a12099433c6f08b6b28ec877278eaf33d219aa507a01e6d4c2274e72e251"
+      "sha256": "249405f19eef7e84c2988c69c1f8f7858c640361273a781407025e08271bfd32"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-customer.md",
-      "sha256": "c1a8698ffe6b338031b9b07a84b286e49a0a2459d4ad890b7d2e5380c61e2a49"
+      "sha256": "0244704f0c333c0af439317aed49927a5befb7718362cdc00219b9be90ccce0e"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-item-2.md",
-      "sha256": "a490beee5091d78ebecd50bbde3a11ebea8fdf6f7ad4570583e099e9070e7335"
+      "sha256": "7a9df734108d6f6629b2aacbe9ae343257e73fcfe83799273830f40c8748d5c0"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-item-customer.md",
-      "sha256": "6e1c2ecb3302e50f50d596bfdd72e670eade311b3f70cfe60297bc1d367cdae8"
+      "sha256": "af6a50b46a755a216d08f7e60122d10f6ed0caf2802df17d4775e2215ba8eb36"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-item-detail.md",
-      "sha256": "f462e28eb92068981abde37964c78600a3a1a6ca01ddc408dfc0c0bde0bba621"
+      "sha256": "169e47a8f2f301a986376b7a475ac1ba9a4dc3aaaada495b83bcaf7b8461028a"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-item.md",
-      "sha256": "c295da5bf5f30cb59a8ab4e19ee175c837a9629116c7eb5a17923dbdeb853731"
+      "sha256": "cf7e3103e3fe240eb67f12ced11f6c2180c0f1421d888b856f39458eead9f922"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-rep-detail.md",
-      "sha256": "cc2e3aaab387b46dfdfef023c75e006b3864d9111872e532a6e48e35e1d6a7df"
+      "sha256": "97ddf4d884eff403916fa03f05b44f91dd9b34d1931cc82b6baa57f88a0b5826"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-rep.md",
-      "sha256": "67aaefac3ac4d2583753c1d31dacffc7a8d089ff8e55ac3104641915048ef002"
+      "sha256": "5411b1c202d13fab4528527998c0c509cfd7fafca269a3fb32abfa5582996e0b"
     },
     {
       "path": "docs/specifications/SD/sales-invoice.md",
-      "sha256": "90613b54357b870c276a14d897a5eb7c6a75c2f4ab342e4d4621376c4ac83fd9"
+      "sha256": "50b903b1ad32007417c97eaeb01014c48bd9c780c8118ef689c7d78b9e3abd48"
     },
     {
       "path": "docs/specifications/SD/sales-order-closing.md",
-      "sha256": "a90b74126bf0eda45f39f8108d750bae7c1b46b993f7b709d11329c4ba4c4d8b"
+      "sha256": "fc9be78de1d67a096c0ce51d3aeba73584a06dec9db52d4429eba096b2033c1b"
     },
     {
       "path": "docs/specifications/SD/sales-order.md",
-      "sha256": "af1e312d2d872c2fc7c0168d4ac6ce94c8e7df3c0cddf80518e22b4d74c07709"
+      "sha256": "dda2cd0c2e4540bce4ec0f7f23208843d6b57ffaf2e680620099102f54853b12"
     },
     {
       "path": "GEMINI.md",
@@ -372,7 +372,7 @@
     },
     {
       "path": "harness/plans/mvp-plan.md",
-      "sha256": "aad181a0da939dc854c597cabb28cb142e24665a68b6b97cc809548d3a57a279"
+      "sha256": "bbff3f3ee1746687e60b4ef85773fd709fa2ace3734ae0617b246432451742ca"
     },
     {
       "path": "harness/tasks/TASK-BC-001.json",

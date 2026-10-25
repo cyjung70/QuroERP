@@ -50,9 +50,9 @@
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `company` | `B_COMPANY` | R |
-| `app_user` | `Z_USR_INFO` | R |
-| `user_login_log` | `Z_USR_LOG` | C |
+| `bc_company` | `B_COMPANY` | R |
+| `sys_app_user` | `Z_USR_INFO` | R |
+| `sys_user_login_log` | `Z_USR_LOG` | C |
 
 ## 관련 BR
 
