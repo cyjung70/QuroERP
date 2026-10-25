@@ -9,6 +9,7 @@
     <Project Path="src/QuroErp.Web/QuroErp.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/QuroErp.Api.Tests/QuroErp.Api.Tests.csproj" />
     <Project Path="tests/QuroErp.Application.Tests/QuroErp.Application.Tests.csproj" />
     <Project Path="tests/QuroERP.Database.Tests/QuroERP.Database.Tests.csproj" />
     <Project Path="tests/QuroErp.Domain.Tests/QuroErp.Domain.Tests.csproj" />

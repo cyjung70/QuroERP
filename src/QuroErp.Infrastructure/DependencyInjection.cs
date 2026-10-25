@@ -1,7 +1,9 @@
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Persistence;
+using QuroErp.Infrastructure.Common.Auth;
 using QuroErp.Infrastructure.Common.Persistence;
 
 namespace QuroErp.Infrastructure;
@@ -27,6 +29,10 @@ public static class DependencyInjection
         services.AddNpgsqlDataSource(connectionString);
         services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
         services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
+        services.AddSingleton<IAppUserRepository, AppUserRepository>();
+        services.AddSingleton<IUserLoginLogRepository, UserLoginLogRepository>();
+        services.AddSingleton<IApiClientRepository, ApiClientRepository>();
+        services.AddSingleton<IPasswordHashService, PasswordHashService>();
         return services;
     }
 }
