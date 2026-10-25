@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
+using QuroErp.Application.Mm.Inventory;
 using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Tests;
@@ -24,6 +26,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public const string RevokedApiKey = "revoked-api-key-0123456789";
 
     public ConcurrentQueue<UserLoginLog> LoginLogs { get; } = new();
+
+    /// <summary>Company logo state; there is one company and no logo at start.</summary>
+    public InMemoryCompanyRepository Companies { get; } = new();
+
+    /// <summary>Inventory setting state; DENY at start.</summary>
+    public InMemoryInventorySettingRepository InventorySettings { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -43,6 +51,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
             services.AddSingleton<ITranslationRepository, FakeTranslationRepository>();
+            services.AddSingleton<ICompanyRepository>(Companies);
+            services.AddSingleton<IInventorySettingRepository>(InventorySettings);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
             {
@@ -116,5 +126,41 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         public Task<ApiClient?> FindByKeyHashAsync(string keyHash, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(clients.GetValueOrDefault(keyHash));
+    }
+
+    public sealed class InMemoryCompanyRepository : ICompanyRepository
+    {
+        public CompanyLogoRow? Logo { get; set; }
+
+        public string? UpdatedBy { get; private set; }
+
+        public Task<CompanyLogoRow?> FindLogoAsync(IDbTransaction transaction, CancellationToken cancellationToken) => Task.FromResult(Logo);
+
+        public Task<bool> UpdateLogoAsync(
+            byte[] image, string contentType, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            Logo = new CompanyLogoRow(image, contentType);
+            UpdatedBy = updatedBy;
+            return Task.FromResult(true);
+        }
+    }
+
+    public sealed class InMemoryInventorySettingRepository : IInventorySettingRepository
+    {
+        public InventorySettingRow Row { get; private set; } = new("DENY", new DateTimeOffset(2026, 10, 25, 0, 0, 0, TimeSpan.Zero), "system");
+
+        public Task<InventorySettingRow?> GetAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<InventorySettingRow?>(Row);
+
+        public Task<InventorySettingRow?> UpdateAsync(
+            string negativeStockMode, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            if (expectedUpdatedAt != Row.UpdatedAt)
+            {
+                return Task.FromResult<InventorySettingRow?>(null);
+            }
+            Row = new InventorySettingRow(negativeStockMode, Row.UpdatedAt.AddSeconds(1), updatedBy);
+            return Task.FromResult<InventorySettingRow?>(Row);
+        }
     }
 }

@@ -29,6 +29,18 @@ public sealed class DatabaseFactAttribute : FactAttribute
     }
 }
 
+/// <summary>Data-driven DB integration test, skipped when there is no connection string.</summary>
+public sealed class DatabaseTheoryAttribute : TheoryAttribute
+{
+    public DatabaseTheoryAttribute()
+    {
+        if (string.IsNullOrWhiteSpace(TestDatabase.ConnectionString))
+        {
+            Skip = TestDatabase.SkipReason;
+        }
+    }
+}
+
 /// <summary>
 /// 테스트 실행마다 임시 스키마(t_&lt;guid&gt;)와 확인용 테이블을 만들고, AddInfrastructure로 서비스를 구성한다.
 /// 끝나면 스키마를 지운다.

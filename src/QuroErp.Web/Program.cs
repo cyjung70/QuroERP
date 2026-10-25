@@ -10,6 +10,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddWebAuthentication(builder.Configuration);
+builder.Services.AddWebApiClients(builder.Configuration);
 
 // i18n.md: 리소스는 Resources/, 언어는 ko(기본)·en
 builder.Services.AddWebLocalization();
