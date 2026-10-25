@@ -36,7 +36,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 조회 조건 | `cdn_no` | DnNo | text | 필수 | 대문자 |  |  |
 | 입력 내용 | `statustext` | Statustext | text | 잠김 |  |  | Open |
-| 입력 내용 | `c_name` | CustomerId | combo2 | 필수 |  | `customer` 찾기 대화상자 (`customer_id`) |  |
+| 입력 내용 | `c_name` | CustomerId | combo2 | 필수 |  | `bc_customer` 찾기 대화상자 (`customer_id`) |  |
 | 입력 내용 | `addr1` | Addr1 | text | 잠김 |  |  |  |
 | 입력 내용 | `addr2` | Addr2 | text | 잠김 |  |  |  |
 | 입력 내용 | `city` | City | text | 잠김 |  |  |  |
@@ -97,16 +97,16 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `credit_application` | `A_AC_HDR` | R |
-| `ar_receipt_line` | `A_AR_CLS` | R |
-| `customer` | `B_CUSTOMER` | RU |
-| `item` | `B_ITEM` | R |
-| `code_minor` | `B_MINOR` | R |
-| `sales_price` | `B_PRICE_LEVEL` | CRU |
-| `sales_invoice_line` | `S_DN_DTL` | CRD |
-| `sales_invoice` | `S_DN_HDR` | CRUD |
-| `sales_order_line` | `S_SO_DTL` | RU |
-| `sales_order` | `S_SO_HDR` | RU |
+| `fi_credit_application` | `A_AC_HDR` | R |
+| `fi_ar_receipt_line` | `A_AR_CLS` | R |
+| `bc_customer` | `B_CUSTOMER` | RU |
+| `bc_item` | `B_ITEM` | R |
+| `sys_code_minor` | `B_MINOR` | R |
+| `bc_sales_price` | `B_PRICE_LEVEL` | CRU |
+| `sd_sales_invoice_line` | `S_DN_DTL` | CRD |
+| `sd_sales_invoice` | `S_DN_HDR` | CRUD |
+| `sd_sales_order_line` | `S_SO_DTL` | RU |
+| `sd_sales_order` | `S_SO_HDR` | RU |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `check_credit`, `delete_mov_inv`, `get_auto_num`, `get_dn_status`, `issue_inv`, `update_hdr_amt`, `void_dn`
 

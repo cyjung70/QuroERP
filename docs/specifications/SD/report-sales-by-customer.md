@@ -55,8 +55,8 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `customer` | `B_CUSTOMER` | R |
-| `sales_invoice` | `S_DN_HDR` | R |
+| `bc_customer` | `B_CUSTOMER` | R |
+| `sd_sales_invoice` | `S_DN_HDR` | R |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `get_dn_status`
 

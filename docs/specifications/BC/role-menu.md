@@ -10,7 +10,7 @@
 | 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
 | 사전조건 | 로그인 (security.md) |
 
-> 역할은 `role` 테이블로 옮긴다.
+> 역할은 `sys_role` 테이블로 옮긴다.
 
 ## 기본 흐름
 
@@ -54,9 +54,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `code_minor` | `B_MINOR` | R |
-| `menu` | `Z_MENU` | R |
-| `role_menu` | `Z_MENU_TO_ROLE` | CRD |
+| `sys_code_minor` | `B_MINOR` | R |
+| `sys_menu` | `Z_MENU` | R |
+| `sys_role_menu` | `Z_MENU_TO_ROLE` | CRD |
 
 ## 관련 BR
 

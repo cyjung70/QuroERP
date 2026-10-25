@@ -34,7 +34,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 조회 조건 | `cdn_no` | DnNo | text | 필수 | 대문자 |  |  |
 | 입력 내용 | `statustext` | Statustext | text | 잠김 |  |  | Open |
-| 입력 내용 | `c_name` | CustomerId | combo2 | 필수 |  | `customer` 찾기 대화상자 (`customer_id`) |  |
+| 입력 내용 | `c_name` | CustomerId | combo2 | 필수 |  | `bc_customer` 찾기 대화상자 (`customer_id`) |  |
 | 입력 내용 | `addr1` | Addr1 | text | 잠김 |  |  |  |
 | 입력 내용 | `addr2` | Addr2 | text | 잠김 |  |  |  |
 | 입력 내용 | `city` | City | text | 잠김 |  |  |  |
@@ -82,12 +82,12 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `customer` | `B_CUSTOMER` | R |
-| `item` | `B_ITEM` | R |
-| `code_minor` | `B_MINOR` | R |
-| `sales_invoice_line` | `S_DN_DTL` | CRD |
-| `sales_invoice` | `S_DN_HDR` | CRUD |
-| `sales_order_line` | `S_SO_DTL` | R |
+| `bc_customer` | `B_CUSTOMER` | R |
+| `bc_item` | `B_ITEM` | R |
+| `sys_code_minor` | `B_MINOR` | R |
+| `sd_sales_invoice_line` | `S_DN_DTL` | CRD |
+| `sd_sales_invoice` | `S_DN_HDR` | CRUD |
+| `sd_sales_order_line` | `S_SO_DTL` | R |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_num`, `get_dn_status`, `issue_inv`, `update_hdr_amt`
 

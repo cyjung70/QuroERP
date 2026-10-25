@@ -48,7 +48,7 @@
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `item` | `B_ITEM` | RU |
+| `bc_item` | `B_ITEM` | RU |
 
 ## 관련 BR
 

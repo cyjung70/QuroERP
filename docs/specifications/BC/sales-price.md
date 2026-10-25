@@ -52,9 +52,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `customer` | `B_CUSTOMER` | R |
-| `item` | `B_ITEM` | R |
-| `sales_price` | `B_PRICE_LEVEL` | CRUD |
+| `bc_customer` | `B_CUSTOMER` | R |
+| `bc_item` | `B_ITEM` | R |
+| `bc_sales_price` | `B_PRICE_LEVEL` | CRUD |
 
 ## 관련 BR
 

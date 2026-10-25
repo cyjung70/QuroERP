@@ -46,7 +46,7 @@ public sealed class SalesOrderService(ISalesOrderRepository orders, ICodeValidat
         await codes.EnsureValidAsync(CodeMajors.ShipmentVia, req.ShipVia, ct);
         await using var tx = await uow.BeginAsync(ct);
         var no = await numbers.NextAsync(DocumentType.SalesOrder, tx, ct);
-        var order = SalesOrder.Create(no, req.CustomerId, req.OrderDate, req.Lines.Select(l => l.ToDomain()), userId, clock);
+        var order = SalesOrder.Create(no, req.CustomerId, req.SoDt, req.Lines.Select(l => l.ToDomain()), userId, clock);
         await orders.InsertAsync(order, tx, ct);
         await tx.CommitAsync(ct);
         return order.ToDto();
