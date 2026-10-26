@@ -1,6 +1,6 @@
 {
   "id": "TASK-CORE-008",
-  "title": "재고 공통: 재고 이동, 마이너스 재고 설정",
+  "title": "재고 공통: 창고별 현재고, 재고 이동, 마이너스 재고 설정",
   "module": "CORE",
   "layer": [
     "Domain",
@@ -10,7 +10,9 @@
   "screenType": "-",
   "specs": [
     "docs/architecture/inventory.md",
-    "docs/business-rules/MM/inventory.md"
+    "docs/business-rules/MM/inventory.md",
+    "docs/business-rules/MM/ledger.md",
+    "docs/business-rules/MM/warehouse.md"
   ],
   "rules": [],
   "skills": [
@@ -22,8 +24,12 @@
     "TASK-CORE-002"
   ],
   "acceptance": [
-    "MM-BR-001~008 테스트 통과",
-    "동시 출고 시 재고가 음수로 새지 않는다 (DENY)",
+    "MM-BR-001~008, MM-BR-601~603 테스트 통과",
+    "`bc_warehouse`·`mm_onhand` 테이블과 기본 창고 1행 (MM-BR-702)",
+    "동시 출고 시 같은 품목+창고 재고가 음수로 새지 않는다 (DENY, `mm_onhand` FOR UPDATE)",
+    "재고를 줄이는 모든 이동(입고 취소 포함)이 같은 검사를 거친다 (MM-BR-602)",
+    "취소·수정은 반대 부호 이동 + parent_movement_id (MM-BR-601)",
+    "`bc_item.onhand_qty` = 창고 합계",
     "재고 설정 조회·변경 API",
     "세트 출고가 구성품 재고를 이동 수량 × 구성 수량만큼 줄인다"
   ],
