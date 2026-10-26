@@ -1,0 +1,31 @@
+{
+  "id": "TASK-CORE-009",
+  "title": "재고 공통: 시점별·월말 마이너스 재고 검사",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/inventory.md",
+    "docs/business-rules/MM/inventory.md",
+    "docs/business-rules/MM/ledger.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-008"
+  ],
+  "acceptance": [
+    "MM-BR-009·010·604 테스트 통과",
+    "DENY: 과거 일자 출고로 그날 또는 이후 일자 잔고가 음수가 되면 차단",
+    "ALLOW_IN_MONTH: 월중 음수는 저장, 어느 달이든 월말 잔고 음수는 차단 (말일에 거래가 없는 달, 당월, 미래 달 포함)",
+    "시점 잔고는 창 함수 1회 조회, 인덱스 (item_id, warehouse_id, document_dt)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

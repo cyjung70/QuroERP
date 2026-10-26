@@ -1,0 +1,48 @@
+{
+  "id": "TASK-MM-028",
+  "title": "창고 간 재고 이동 화면 (SM)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/MM/stock-transfer.md"
+  ],
+  "rules": [
+    "MM-BR-705",
+    "MM-BR-706",
+    "MM-BR-707",
+    "MM-BR-001",
+    "MM-BR-002",
+    "MM-BR-003",
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008",
+    "MM-BR-009",
+    "MM-BR-010",
+    "MM-BR-601",
+    "MM-BR-602",
+    "MM-BR-603",
+    "MM-BR-604",
+    "MM-BR-703"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-MM-027"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
