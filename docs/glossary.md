@@ -35,6 +35,12 @@
 | 반품 | GoodsReturn | mm_goods_return | MM | AS IS `M_RET_HDR` |
 | 예외 입고 상세 | UnplannedReceiptLine | mm_unplanned_receipt_line | MM | AS IS `M_UR_DTL` |
 | 예외 입고 | UnplannedReceipt | mm_unplanned_receipt | MM | AS IS `M_UR_HDR` |
+| 세트 품목 구성 | Bom | sd_bom | SD | AS IS `P_BOM` |
+| MRP 실행 | MrpRun | sd_mrp_run | SD | AS IS `P_MRP` |
+| MRP 부품 | MrpPart | sd_mrp_part | SD | AS IS `P_MRP_PART` |
+| MRP 제품 | MrpProduct | sd_mrp_product | SD | AS IS `P_MRP_PRODUCT` |
+| 생산 실적 상세 | ProductionResultLine | sd_production_result_line | SD | AS IS `P_PROD_RESULTS_DTL` |
+| 생산 실적 | ProductionResult | sd_production_result | SD | AS IS `P_PROD_RESULTS_HDR` |
 | 매출 송장 상세 | SalesInvoiceLine | sd_sales_invoice_line | SD | AS IS `S_DN_DTL` |
 | 매출 송장 | SalesInvoice | sd_sales_invoice | SD | AS IS `S_DN_HDR` |
 | 고객 기초 잔액 | CustomerOpeningBalance | sd_customer_opening_balance | SD | AS IS `S_INIT_BAL` |
