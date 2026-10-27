@@ -10,18 +10,18 @@
 
 @if (_store is not null)
 {
-    <QuroMultiGrid TRow="SampleItem" Title="@L["Samples.Multi.Title"]" TestId="sample-multi" LoadOnStart="true"
+    <QuroMultiGrid TRow="SampleItem" Title="@L["Samples.Multi.Title"]" TestId="multi" LoadOnStart="true"
                    Load="() => Task.FromResult(_store.Items())" CreateRow="() => new SampleItem()" Save="SaveAsync">
         <Columns>
             <QuroColumn Title="@L["Samples.Code"]" Value="r => r.Code" Context="row">
-                <QuroText Label="@L["Samples.Code"]" HideLabel @bind-Value="row.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="code" />
+                <QuroText Label="@L["Samples.Code"]" HideLabel @bind-Value="row.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="multi-grid-code" />
             </QuroColumn>
             <QuroColumn Title="@L["Samples.Name"]" Value="r => r.Name" Context="row">
-                <QuroText Label="@L["Samples.Name"]" HideLabel @bind-Value="row.Name" Required TestId="name" />
+                <QuroText Label="@L["Samples.Name"]" HideLabel @bind-Value="row.Name" Required TestId="multi-grid-name" />
             </QuroColumn>
             <QuroColumn Title="@L["Samples.ValidFrom"]" Value="r => r.ValidFrom" Format="yyyy-MM-dd" />
             <QuroColumn Title="@L["Samples.Qty"]" Value="r => r.Qty" Format="N2" Context="row">
-                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="row.Qty" TestId="qty" />
+                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="row.Qty" TestId="multi-grid-qty" />
             </QuroColumn>
         </Columns>
     </QuroMultiGrid>

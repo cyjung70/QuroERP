@@ -1,5 +1,6 @@
-@* Grid on QuickGrid. Editable grids show the row state (I/U/D) and a delete button per row;
-   each row has its own form context, so lock rules and the required check work per row. *@
+@* Grid as a plain table: QuickGrid cannot put data-row-index on its rows (TASK-CORE-013).
+   Editable grids show the row state (I/U/D) and a delete button per row; each row has its own
+   form context, so lock rules and the required check work per row. *@
 @typeparam TRow where TRow : class
 @attribute [CascadingTypeParameter(nameof(TRow))]
 @inject IStringLocalizer<SharedResource> L
@@ -13,36 +14,63 @@
     {
         <button type="button" class="quro-add-row" disabled="@Busy" data-testid="@Id("add-row")" @onclick="OnAddRow">@L["Common.AddRow"]</button>
     }
-    <QuickGrid TGridItem="GridRow<TRow>" Items="Rows.All.AsQueryable()" RowClass="RowClass">
-        @if (Editable)
-        {
-            <TemplateColumn Title="@L["Common.RowState"]">
-                <span class="quro-row-state" data-state="@StateCode(context.State)">@StateText(context.State)</span>
-            </TemplateColumn>
-        }
-        @if (OnSelect.HasDelegate)
-        {
-            <TemplateColumn Title="@L["Common.Select"]">
-                <button type="button" disabled="@Busy" data-testid="select-row" @onclick="() => OnSelect.InvokeAsync(context.Item)">@L["Common.Select"]</button>
-            </TemplateColumn>
-        }
-        @foreach (var column in _columns.Items)
-        {
-            <TemplateColumn Title="@column.Title">
-                <CascadingValue Value="FormOf(context)" IsFixed="true">
-                    @column.Cell(context.Item)
-                </CascadingValue>
-            </TemplateColumn>
-        }
-        @if (Editable)
-        {
-            <TemplateColumn Title="@L["Common.Delete"]">
-                <button type="button" disabled="@Busy" data-testid="delete-row" @onclick="() => ToggleDeleteAsync(context)">
-                    @(context.IsDeleted ? L["Common.RestoreRow"] : L["Common.DeleteRow"])
-                </button>
-            </TemplateColumn>
-        }
-    </QuickGrid>
+    <table>
+        <thead>
+            <tr>
+                @if (Editable)
+                {
+                    <th scope="col">@L["Common.RowState"]</th>
+                }
+                @if (OnSelect.HasDelegate)
+                {
+                    <th scope="col">@L["Common.Select"]</th>
+                }
+                @foreach (var column in _columns.Items)
+                {
+                    <th scope="col">@column.Title</th>
+                }
+                @if (Editable)
+                {
+                    <th scope="col">@L["Common.Delete"]</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Rows.All.Count; i++)
+            {
+                var row = Rows.All[i];
+                @* Cells keep the column test id; the row index is on the row (quro-blazor rule) *@
+                <tr @key="row" class="@RowClass(row)" data-row-index="@i">
+                    @if (Editable)
+                    {
+                        <td><span class="quro-row-state" data-state="@StateCode(row.State)">@StateText(row.State)</span></td>
+                    }
+                    @if (OnSelect.HasDelegate)
+                    {
+                        <td>
+                            <button type="button" disabled="@Busy" data-testid="@Id("select")" @onclick="() => OnSelect.InvokeAsync(row.Item)">@L["Common.Select"]</button>
+                        </td>
+                    }
+                    @foreach (var column in _columns.Items)
+                    {
+                        <td>
+                            <CascadingValue Value="FormOf(row)" IsFixed="true">
+                                @column.Cell(row.Item)
+                            </CascadingValue>
+                        </td>
+                    }
+                    @if (Editable)
+                    {
+                        <td>
+                            <button type="button" disabled="@Busy" data-testid="@Id("delete-row")" @onclick="() => ToggleDeleteAsync(row)">
+                                @(row.IsDeleted ? L["Common.RestoreRow"] : L["Common.DeleteRow"])
+                            </button>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
     @if (Rows.All.Count == 0)
     {
         <p class="quro-no-data">@L["Common.NoData"]</p>

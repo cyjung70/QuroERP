@@ -10,18 +10,18 @@
 
 @if (_store is not null)
 {
-    <QuroSingleForm TModel="SampleItem" Title="@L["Samples.Single.Title"]" TestId="sample-single"
+    <QuroSingleForm TModel="SampleItem" Title="@L["Samples.Single.Title"]" TestId="single"
                     Load="() => Task.FromResult(_store.FindItem(_code))" Create="NewItem"
                     Save="(item, _) => Task.FromResult(_store.SaveItem(item))"
                     Delete="item => { _store.DeleteItem(item.Id); return Task.CompletedTask; }">
         <SearchContent>
-            <QuroText Label="@L["Samples.Code"]" @bind-Value="_code" TextCase="TextCase.Upper" TestId="sample-single-search-code" />
+            <QuroText Label="@L["Samples.Code"]" @bind-Value="_code" TextCase="TextCase.Upper" TestId="single-search-code" />
         </SearchContent>
         <Fields Context="item">
-            <QuroText Label="@L["Samples.Code"]" @bind-Value="item.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="sample-single-code" />
-            <QuroText Label="@L["Samples.Name"]" @bind-Value="item.Name" Required TestId="sample-single-name" />
-            <QuroDate Label="@L["Samples.ValidFrom"]" @bind-Value="item.ValidFrom" TestId="sample-single-valid-from" />
-            <QuroNumber Label="@L["Samples.Qty"]" @bind-Value="item.Qty" TestId="sample-single-qty" />
+            <QuroText Label="@L["Samples.Code"]" @bind-Value="item.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="single-header-code" />
+            <QuroText Label="@L["Samples.Name"]" @bind-Value="item.Name" Required TestId="single-header-name" />
+            <QuroDate Label="@L["Samples.ValidFrom"]" @bind-Value="item.ValidFrom" TestId="single-header-valid-from" />
+            <QuroNumber Label="@L["Samples.Qty"]" @bind-Value="item.Qty" TestId="single-header-qty" />
         </Fields>
     </QuroSingleForm>
 }
