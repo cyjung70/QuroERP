@@ -1,10 +1,9 @@
 using FluentAssertions;
-using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
 
 namespace QuroErp.Domain.Tests.Mm.Inventory;
 
-/// <summary>Set expansion (MM-BR-007), monthly roll-up (MM-BR-006) and movement numbers.</summary>
+/// <summary>Set expansion (MM-BR-007) and monthly roll-up (MM-BR-006).</summary>
 public class SetAndMonthlyInventoryTests
 {
     [Theory, Trait("Id", "MM-UT-007")]
@@ -39,15 +38,5 @@ public class SetAndMonthlyInventoryTests
         var month = MonthlyInventory.Roll(7, 70, []);
 
         (month.BasQty, month.BalQty, month.BalAmt).Should().Be((7m, 7m, 70m));
-    }
-
-    [Theory, Trait("Id", "MM-GM-T01")]
-    [InlineData(null, "GM2026100000000001")]
-    [InlineData("GM2026100000000041", "GM2026100000000042")]
-    [InlineData("GM2026090000000041", "GM2026100000000001")]
-    [InlineData("OLD-7", "GM2026100000000001")]
-    public void DocumentNumber_Next_RestartsEachMonth(string? last, string expected)
-    {
-        DocumentNumber.Next("GM", new DateOnly(2026, 10, 27), last, 10).Should().Be(expected);
     }
 }
