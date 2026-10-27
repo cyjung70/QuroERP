@@ -9,7 +9,12 @@
   "specs": [
     "docs/specifications/BC/item-barcode.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-815",
+    "MM-BR-816",
+    "MM-BR-817",
+    "MM-BR-818"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",
