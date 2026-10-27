@@ -13,7 +13,12 @@
   "specs": [
     "docs/specifications/SD/report-monthly-average-sales-detail.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-968",
+    "SD-BR-967",
+    "SD-BR-951",
+    "SD-BR-969"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

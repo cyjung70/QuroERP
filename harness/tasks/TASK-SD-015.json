@@ -13,7 +13,12 @@
   "specs": [
     "docs/specifications/SD/report-credit-memo-reason.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-964",
+    "SD-BR-208",
+    "SD-BR-951",
+    "SD-BR-969"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

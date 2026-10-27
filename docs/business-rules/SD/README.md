@@ -17,3 +17,4 @@
 - [입금 처리](ar-receipt.md): SD-BR-701 ~ SD-BR-713
 - [매출채권 리포트](ar-report.md): SD-BR-801 ~ SD-BR-813
 - [코드·환율](master-data.md): SD-BR-901 ~ SD-BR-909
+- [매출 리포트](sales-report.md): SD-BR-951 ~ SD-BR-970

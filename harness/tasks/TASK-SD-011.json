@@ -13,7 +13,11 @@
   "specs": [
     "docs/specifications/SD/report-open-sales-order.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-960",
+    "SD-BR-961",
+    "SD-BR-969"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
