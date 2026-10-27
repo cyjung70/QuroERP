@@ -67,6 +67,9 @@
 | 화면 설정 | UiSetting | sys_ui_setting | BC | TO BE 신규 |
 | 할인율 | DiscountRate | sd_discount_rate | SD | TO BE 신규 |
 | 재고 설정 | InventorySetting | mm_inventory_setting | MM | TO BE 신규 |
+| 인증 설정 | AuthSetting | sys_auth_setting | BC | TO BE 신규 |
+| 자동 로그인 토큰 | AutoLoginToken | sys_auto_login_token | BC | TO BE 신규 |
+| 비밀번호 이력 | PasswordHistory | sys_password_history | BC | TO BE 신규 |
 | 창고 | Warehouse | bc_warehouse | MM | TO BE 신규 |
 | 창고별 현재고 | Onhand | mm_onhand | MM | TO BE 신규 |
 | 창고 이동 | StockTransfer | mm_stock_transfer | MM | TO BE 신규 |

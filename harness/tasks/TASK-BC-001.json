@@ -27,7 +27,13 @@
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
-    "관련 BR마다 테스트"
+    "관련 BR마다 테스트",
+    "사용자·로그인 이력 컬럼 추가와 `sys_auth_setting`·`sys_auto_login_token`·`sys_password_history` 마이그레이션 (login.md)",
+    "잠금: 기준 횟수에 잠금, 마지막 실패 + 잠금 시간에 자동 해제, 잠금 중 시도는 횟수·시간을 늘리지 않음 (TimeProvider로 시간 조작)",
+    "자동 로그인 토큰 SHA-256 해시 저장·교체, 폐기 토큰 재사용 시 그 사용자 토큰 전체 폐기",
+    "`/api/auth/*` IP당 분당 요청 제한 429 AUTH-008",
+    "오류는 Problem Details `code` AUTH-xxx, 요청 언어 문구",
+    "비밀번호·토큰 원문이 로그에 없음"
   ],
   "estimateHours": 2,
   "status": "todo"

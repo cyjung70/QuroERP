@@ -120,6 +120,7 @@
 - [다국어](architecture/i18n.md)
 - [재고 처리 공통 규칙](architecture/inventory.md)
 - [레이어드 아키텍처](architecture/layers.md)
+- [로그인·세션 정책](architecture/login.md)
 - [출력 문서](architecture/print-documents.md)
 - [리포트](architecture/reports.md)
 - [화면유형 표준](architecture/screens.md)
