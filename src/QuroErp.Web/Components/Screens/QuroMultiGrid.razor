@@ -1,0 +1,113 @@
+@* Screen type M: search conditions → grid (view or row edit) → batch save of changed rows (screens.md). *@
+@typeparam TRow where TRow : class
+@attribute [CascadingTypeParameter(nameof(TRow))]
+@inherits QuroScreenBase
+@inject IJSRuntime JS
+
+<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+    <Toolbar>
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync"
+                     OnNew="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)"
+                     OnSave="@(Editable ? EventCallback.Factory.Create(this, SaveAsync) : default)"
+                     OnPrint="OnPrint" OnExport="ExportAsync" />
+    </Toolbar>
+    <ChildContent>
+        <QuroGrid @ref="_grid" TRow="TRow" Rows="_rows" Columns="Columns" Editable="Editable" Busy="Busy" TestId="@Id("grid")"
+                  OnAddRow="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)" OnChanged="StateHasChanged" />
+    </ChildContent>
+</QuroScreenFrame>
+
+@code {
+    private readonly GridRows<TRow> _rows = new();
+    private QuroGrid<TRow>? _grid;
+
+    /// <summary>QuroColumn declarations.</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment Columns { get; set; } = default!;
+
+    /// <summary>Reads the rows for the current search conditions.</summary>
+    [Parameter, EditorRequired]
+    public Func<Task<IReadOnlyList<TRow>>> Load { get; set; } = default!;
+
+    /// <summary>A new row. Required for an editable grid.</summary>
+    [Parameter]
+    public Func<TRow>? CreateRow { get; set; }
+
+    /// <summary>Saves the changed rows. Without it the grid is view only.</summary>
+    [Parameter]
+    public Func<BatchChanges<TRow>, Task>? Save { get; set; }
+
+    /// <summary>Searches when the screen opens.</summary>
+    [Parameter]
+    public bool LoadOnStart { get; set; }
+
+    [Parameter]
+    public EventCallback OnPrint { get; set; }
+
+    public override bool IsDirty => _rows.IsDirty;
+
+    private bool Editable => Save is not null && CreateRow is not null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (LoadOnStart)
+        {
+            await RunAsync(LoadRowsAsync);
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        if (await ConfirmDiscardAsync())
+        {
+            await RunAsync(LoadRowsAsync);
+        }
+    }
+
+    private void AddRow() => _rows.Add(CreateRow!());
+
+    private async Task SaveAsync()
+    {
+        var changes = _rows.Changes();
+        if (changes.IsEmpty)
+        {
+            Error = null;
+            Notice = L["Common.NoChanges"];
+            return;
+        }
+        if (!CheckRequired(_grid?.FirstMissing()))
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            await Save!(changes);
+            await LoadRowsAsync();
+            Notice = L["Common.Saved"];
+        });
+    }
+
+    private async Task ExportAsync()
+    {
+        if (_grid is null)
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            var rows = _rows.All.Where(r => !r.IsDeleted).Select(r => r.Item);
+            var content = QuroExcel.Create(Title, _grid.ColumnList, rows);
+            await QuroExcel.DownloadAsync(JS, $"{Title}.xlsx", content);
+        });
+    }
+
+    private async Task LoadRowsAsync()
+    {
+        _rows.Load(await Load());
+        if (_rows.All.Count == 0)
+        {
+            Notice = L["Common.NoData"];
+        }
+    }
+}

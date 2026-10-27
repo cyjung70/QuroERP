@@ -1,0 +1,50 @@
+@page "/samples/master-detail"
+@rendermode InteractiveServer
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* Screen type MM sample (TASK-CORE-006). Development only, in-memory data. *@
+
+<PageTitle>@L["Samples.MasterDetail.Title"]</PageTitle>
+
+@if (_store is not null)
+{
+    <QuroMasterMultiDetail TSource="SampleGroup" TTarget="SampleLine" Title="@L["Samples.MasterDetail.Title"]" TestId="sample-mm"
+                           LoadOnStart="true" LoadSources="() => Task.FromResult(_store.Groups())"
+                           LoadTargets="group => Task.FromResult(_store.Members(group.Id))"
+                           CreateTarget="group => new SampleLine { OwnerId = group.Id, Qty = 1 }"
+                           SaveTargets="SaveAsync">
+        <SourceColumns>
+            <QuroColumn TRow="SampleGroup" Title="@L["Samples.Group"]" Value="g => g.Code" />
+            <QuroColumn TRow="SampleGroup" Title="@L["Samples.Name"]" Value="g => g.Name" />
+        </SourceColumns>
+        <TargetColumns>
+            <QuroColumn TRow="SampleLine" Title="@L["Samples.Item"]" Value="l => l.ItemCode" Context="line">
+                <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" Required TextCase="TextCase.Upper" TestId="item" />
+            </QuroColumn>
+            <QuroColumn TRow="SampleLine" Title="@L["Samples.Qty"]" Value="l => l.Qty" Format="N2" Context="line">
+                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" TestId="qty" />
+            </QuroColumn>
+        </TargetColumns>
+    </QuroMasterMultiDetail>
+}
+
+@code {
+    private SampleStore? _store;
+
+    protected override void OnInitialized()
+    {
+        _store = Services.GetService<SampleStore>();
+        if (_store is null)
+        {
+            Navigation.NotFound();
+        }
+    }
+
+    private Task SaveAsync(SampleGroup group, BatchChanges<SampleLine> changes)
+    {
+        _store!.SaveMembers(group.Id, changes.Added, changes.Updated, changes.Deleted);
+        return Task.CompletedTask;
+    }
+}

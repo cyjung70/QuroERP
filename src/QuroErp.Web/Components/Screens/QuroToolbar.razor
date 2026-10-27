@@ -1,0 +1,48 @@
+@* Toolbar in a fixed order: search, new, save, delete, print, Excel export (screens.md "툴바").
+   A button appears only when the screen handles it. *@
+@inject IStringLocalizer<SharedResource> L
+
+<div class="quro-toolbar" role="toolbar" aria-label="@L["Common.Toolbar"]">
+    @Button(OnSearch, "Common.Search", "search")
+    @Button(OnNew, "Common.New", "new")
+    @Button(OnSave, "Common.Save", "save")
+    @Button(OnDelete, "Common.Delete", "delete", !CanDelete)
+    @Button(OnPrint, "Common.Print", "print")
+    @Button(OnExport, "Common.ExportExcel", "export")
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnSearch { get; set; }
+
+    [Parameter]
+    public EventCallback OnNew { get; set; }
+
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    [Parameter]
+    public EventCallback OnPrint { get; set; }
+
+    [Parameter]
+    public EventCallback OnExport { get; set; }
+
+    /// <summary>False while there is nothing to delete (a new record).</summary>
+    [Parameter]
+    public bool CanDelete { get; set; } = true;
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private RenderFragment? Button(EventCallback handler, string label, string id, bool disabled = false) =>
+        handler.HasDelegate
+            ? @<button type="button" disabled="@(Busy || disabled)" data-testid="@(TestId is null ? null : $"{TestId}-{id}")"
+                       @onclick="handler">@L[label]</button>
+            : null;
+}

@@ -1,6 +1,8 @@
 using QuroErp.Web.Auth;
 using QuroErp.Web.Common;
 using QuroErp.Web.Components;
+using QuroErp.Web.Components.Pages.Samples;
+using QuroErp.Web.Components.Screens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,14 @@ builder.Services.AddWebApiClients(builder.Configuration);
 
 // i18n.md: 리소스는 Resources/, 언어는 ko(기본)·en
 builder.Services.AddWebLocalization();
+
+// Screen type components (screens.md)
+builder.Services.AddScoped<IQuroConfirm, JsQuroConfirm>();
+if (builder.Environment.IsDevelopment())
+{
+    // In-memory data of the screen type sample pages (/samples/*)
+    builder.Services.AddSingleton<SampleStore>();
+}
 
 var app = builder.Build();
 

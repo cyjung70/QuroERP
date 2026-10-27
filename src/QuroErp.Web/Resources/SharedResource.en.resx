@@ -49,4 +49,37 @@
   <data name="MM-E-009" xml:space="preserve"><value>Item {0} in warehouse {1} would have {3} on {2}, below zero, so the movement cannot be saved.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>Item {0} in warehouse {1} would end month {2} at {3}, below zero, so the movement cannot be saved.</value></data>
   <data name="SD-E-006" xml:space="preserve"><value>All document numbers for {0} are used, so no more documents can be saved.</value></data>
+  <data name="Common.Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Common.New" xml:space="preserve"><value>New</value></data>
+  <data name="Common.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Common.Print" xml:space="preserve"><value>Print</value></data>
+  <data name="Common.ExportExcel" xml:space="preserve"><value>Excel</value></data>
+  <data name="Common.Toolbar" xml:space="preserve"><value>Toolbar</value></data>
+  <data name="Common.SearchConditions" xml:space="preserve"><value>Search conditions</value></data>
+  <data name="Common.AddRow" xml:space="preserve"><value>Add Row</value></data>
+  <data name="Common.DeleteRow" xml:space="preserve"><value>Delete Row</value></data>
+  <data name="Common.RestoreRow" xml:space="preserve"><value>Restore</value></data>
+  <data name="Common.Select" xml:space="preserve"><value>Select</value></data>
+  <data name="Common.RowState" xml:space="preserve"><value>Status</value></data>
+  <data name="Common.RowState.Added" xml:space="preserve"><value>New</value></data>
+  <data name="Common.RowState.Modified" xml:space="preserve"><value>Edited</value></data>
+  <data name="Common.RowState.Deleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="Common.NoData" xml:space="preserve"><value>No data found.</value></data>
+  <data name="Common.NoChanges" xml:space="preserve"><value>There are no changes to save.</value></data>
+  <data name="Common.Deleted" xml:space="preserve"><value>Deleted.</value></data>
+  <data name="Common.ConfirmUnsaved" xml:space="preserve"><value>You have unsaved changes. If you continue, they will be lost. Continue?</value></data>
+  <data name="Common.ConfirmDelete" xml:space="preserve"><value>Delete this record?</value></data>
+  <data name="Samples.Single.Title" xml:space="preserve"><value>Sample: Single (S)</value></data>
+  <data name="Samples.Multi.Title" xml:space="preserve"><value>Sample: Multi (M)</value></data>
+  <data name="Samples.HeaderDetail.Title" xml:space="preserve"><value>Sample: Header and Lines (SM)</value></data>
+  <data name="Samples.MasterDetail.Title" xml:space="preserve"><value>Sample: List and Target (MM)</value></data>
+  <data name="Samples.Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Samples.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Samples.ValidFrom" xml:space="preserve"><value>Valid From</value></data>
+  <data name="Samples.Qty" xml:space="preserve"><value>Quantity</value></data>
+  <data name="Samples.OrderNo" xml:space="preserve"><value>Document No.</value></data>
+  <data name="Samples.OrderDt" xml:space="preserve"><value>Document Date</value></data>
+  <data name="Samples.Item" xml:space="preserve"><value>Item</value></data>
+  <data name="Samples.Group" xml:space="preserve"><value>Group</value></data>
+  <data name="Common-E-005" xml:space="preserve"><value>Please enter {0}.</value></data>
 </root>

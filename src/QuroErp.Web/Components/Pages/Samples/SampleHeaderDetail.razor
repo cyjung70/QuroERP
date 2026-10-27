@@ -1,0 +1,56 @@
+@page "/samples/header-detail"
+@rendermode InteractiveServer
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* Screen type SM sample (TASK-CORE-006). Development only, in-memory data. *@
+
+<PageTitle>@L["Samples.HeaderDetail.Title"]</PageTitle>
+
+@if (_store is not null)
+{
+    <QuroHeaderDetail THeader="SampleOrder" TLine="SampleLine" Title="@L["Samples.HeaderDetail.Title"]" TestId="sample-sm"
+                      Load="LoadAsync" Create="() => new SampleOrder()" CreateLine="() => new SampleLine { Qty = 1 }"
+                      Save="SaveAsync" Delete="order => { _store.DeleteOrder(order.Id); return Task.CompletedTask; }">
+        <SearchContent>
+            <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="_orderNo" TextCase="TextCase.Upper" TestId="sample-sm-search-no" />
+        </SearchContent>
+        <HeaderFields Context="order">
+            <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="order.OrderNo" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="sample-sm-no" />
+            <QuroDate Label="@L["Samples.OrderDt"]" @bind-Value="order.OrderDt" Required TestId="sample-sm-date" />
+        </HeaderFields>
+        <LineColumns>
+            <QuroColumn TRow="SampleLine" Title="@L["Samples.Item"]" Value="l => l.ItemCode" Context="line">
+                <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" Required TextCase="TextCase.Upper" TestId="item" />
+            </QuroColumn>
+            <QuroColumn TRow="SampleLine" Title="@L["Samples.Qty"]" Value="l => l.Qty" Format="N2" Context="line">
+                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" Required TestId="qty" />
+            </QuroColumn>
+        </LineColumns>
+    </QuroHeaderDetail>
+}
+
+@code {
+    private SampleStore? _store;
+    private string? _orderNo;
+
+    protected override void OnInitialized()
+    {
+        _store = Services.GetService<SampleStore>();
+        if (_store is null)
+        {
+            Navigation.NotFound();
+        }
+    }
+
+    private Task<HeaderLines<SampleOrder, SampleLine>?> LoadAsync() =>
+        Task.FromResult(_store!.FindOrder(_orderNo) is { } found ? new HeaderLines<SampleOrder, SampleLine>(found.Order, found.Lines) : null);
+
+    // A real screen sends the header with a lines array in one request (screens.md "SM")
+    private Task<HeaderLines<SampleOrder, SampleLine>> SaveAsync(SampleOrder order, bool isNew, BatchChanges<SampleLine> lines)
+    {
+        var saved = _store!.SaveOrder(order, lines.Added, lines.Updated, lines.Deleted);
+        return Task.FromResult(new HeaderLines<SampleOrder, SampleLine>(saved.Order, saved.Lines));
+    }
+}
