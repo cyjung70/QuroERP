@@ -66,7 +66,7 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             """);
 
         Query<long>("SELECT count(*) FROM sys_code_major").Single().Should().Be(24);
-        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(121);
+        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(122);
         majorsWithout.Should().BeEmpty();
         minorsWithout.Should().BeEmpty();
     }

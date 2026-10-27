@@ -4,12 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
+using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Infrastructure.Bc.Companies;
 using QuroErp.Infrastructure.Common.Auth;
 using QuroErp.Infrastructure.Common.Codes;
+using QuroErp.Infrastructure.Common.DocumentNumbers;
 using QuroErp.Infrastructure.Common.I18n;
 using QuroErp.Infrastructure.Common.Persistence;
 using QuroErp.Infrastructure.Mm.Inventory;
@@ -45,6 +47,8 @@ public static class DependencyInjection
         services.AddSingleton<ICodeRepository, CodeRepository>();
         services.AddSingleton<ICompanyRepository, CompanyRepository>();
         services.AddSingleton<IInventorySettingRepository, InventorySettingRepository>();
+        services.AddSingleton<IDocumentNumberRepository, DocumentNumberRepository>();
+        services.AddSingleton<IInventoryRepository, InventoryRepository>();
         return services;
     }
 }
