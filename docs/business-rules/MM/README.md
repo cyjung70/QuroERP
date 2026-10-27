@@ -16,7 +16,7 @@
 - [재고 원장](ledger.md): MM-BR-601 ~ MM-BR-607
 - [재고 리포트](inventory-report.md): MM-BR-651 ~ MM-BR-659
 - [창고](warehouse.md): MM-BR-701 ~ MM-BR-708
-- [품목 마스터·대체 품목](item.md): MM-BR-801 ~ MM-BR-820
+- [품목 마스터·대체 품목](item.md): MM-BR-801 ~ MM-BR-824
 - [공급자 마스터](vendor.md): MM-BR-851 ~ MM-BR-858
 - [구매 단가](purchase-price.md): MM-BR-901 ~ MM-BR-905
 - [지급 처리](ap-payment.md): MM-BR-951 ~ MM-BR-963

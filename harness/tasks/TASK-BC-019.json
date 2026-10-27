@@ -13,7 +13,13 @@
   "specs": [
     "docs/specifications/BC/item-image-upload.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-821",
+    "MM-BR-822",
+    "MM-BR-823",
+    "MM-BR-824",
+    "MM-BR-820"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

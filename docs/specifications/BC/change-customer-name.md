@@ -10,7 +10,7 @@
 | 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
 | 사전조건 | 로그인 (security.md) |
 
-> TO BE는 고객을 `customer_id`로 참조하므로 이름 변경이 `customer.c_name` 한 곳만 바꾸면 된다 (`docs/architecture/database.md`). AS IS의 '고객 합치기'로 쓰였는지 [확인 필요].
+> 새 이름의 고객이 없으면 이름 변경(고객 id 참조라 `c_name` 한 곳만), 있으면 고객 합치기(거래·기초 잔액을 대상 고객으로 옮기고 원 고객은 사용 안 함)다 (SD-BR-311~312) [확인 필요].
 
 ## 기본 흐름
 
@@ -61,7 +61,11 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [SD-BR-310](../../business-rules/SD/customer.md)
+- [SD-BR-311](../../business-rules/SD/customer.md)
+- [SD-BR-312](../../business-rules/SD/customer.md)
+- [SD-BR-313](../../business-rules/SD/customer.md)
+- [SD-BR-302](../../business-rules/SD/customer.md)
 
 ## 다국어 리소스 키
 
@@ -75,6 +79,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - `BC-UC-016-T02` 필수 값 누락 시 저장 차단
 - `BC-UC-016-T03` 동시 수정 충돌 409
 - `BC-UC-016-T04` 없는 코드 값 저장 시 422
+- `BC-UC-016-T05` 관련 BR마다 단위 테스트 (`SD-UT-` + BR 번호, 예: SD-BR-310 → SD-UT-310)
 
 ## AS IS 근거
 
