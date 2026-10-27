@@ -15,7 +15,8 @@ QuroERP 저장소에서 일하는 모든 AI 에이전트(Claude, Gemini, Codex �
 
 - MVP(Community, 오픈소스): **MM(구매·재고), SD(영업)**와 이를 위한 기초정보(BC)·공통 기능.
 - FI, CO, PP는 Enterprise 범위다. 문서는 골격만 있고 코드는 만들지 않는다.
-- MVP 필수: **마이너스 재고 허용 옵션**, **다국어(ko, en)**.
+- MVP 1.0: 미국·한국 중소기업용. 회사 국가(`US`·`KR`)가 세금·통화·형식을 정한다.
+- MVP 필수: **마이너스 재고 허용 옵션**, **다국어(en, ko, sw)**, **지역화(문서 통화, 자릿수)**, **세금(Sales Tax, VAT)**.
 
 ## 3. 기술 스택 (변경 금지 — 바꾸려면 사람의 결정이 필요하다)
 
@@ -60,6 +61,7 @@ tests/
 6. 코드 값(상태·구분 등)은 `sys_code_minor.minor_code` 문자열로 저장하고, 저장 전에 해당 Major의 코드인지 검사한다.
 7. 재고를 줄이는 처리는 반드시 마이너스 재고 설정을 확인한다 (`docs/architecture/inventory.md`).
 8. 한 트랜잭션 안에서 헤더·상세·재고 이동을 함께 저장한다. 부분 저장을 남기지 않는다.
+9. 금액 반올림은 `IAmountRounder`, 세액은 `ITaxCalculator`만 한다. 국가별 동작은 `ICountryProfile`에 둔다 (`docs/architecture/localization.md`, `tax.md`).
 
 ## 6. DB 규칙 요약
 

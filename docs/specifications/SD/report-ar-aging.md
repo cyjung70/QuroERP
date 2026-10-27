@@ -77,6 +77,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - [SD-BR-801](../../business-rules/SD/ar-report.md)
 - [SD-BR-802](../../business-rules/SD/ar-report.md)
 - [SD-BR-803](../../business-rules/SD/ar-report.md)
+- [SD-BR-821](../../business-rules/SD/ar-report.md)
 
 ## 다국어 리소스 키
 

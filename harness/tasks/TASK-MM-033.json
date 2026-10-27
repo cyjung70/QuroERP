@@ -16,7 +16,8 @@
   "rules": [
     "MM-BR-971",
     "MM-BR-972",
-    "MM-BR-974"
+    "MM-BR-974",
+    "MM-BR-981"
   ],
   "skills": [
     "quro-api",

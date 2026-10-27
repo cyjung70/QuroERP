@@ -35,7 +35,21 @@
     "SD-BR-403",
     "SD-BR-404",
     "SD-BR-405",
-    "SD-BR-309"
+    "SD-BR-309",
+    "SD-BR-031",
+    "SD-BR-032",
+    "SD-BR-033",
+    "SD-BR-034",
+    "BC-BR-412",
+    "BC-BR-413",
+    "BC-BR-421",
+    "BC-BR-541",
+    "BC-BR-542",
+    "BC-BR-543",
+    "BC-BR-544",
+    "BC-BR-545",
+    "BC-BR-525",
+    "BC-BR-547"
   ],
   "skills": [
     "quro-blazor",

@@ -58,6 +58,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 - [MM-BR-862](../../business-rules/MM/vendor.md)
 - [MM-BR-863](../../business-rules/MM/vendor.md)
 - [MM-BR-859](../../business-rules/MM/vendor.md)
+- [MM-BR-872](../../business-rules/MM/vendor.md)
 
 ## 다국어 리소스 키
 

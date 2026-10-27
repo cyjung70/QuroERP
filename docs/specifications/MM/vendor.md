@@ -94,6 +94,12 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - [MM-BR-857](../../business-rules/MM/vendor.md)
 - [MM-BR-858](../../business-rules/MM/vendor.md)
 - [MM-BR-859](../../business-rules/MM/vendor.md)
+- [MM-BR-871](../../business-rules/MM/vendor.md)
+- [MM-BR-872](../../business-rules/MM/vendor.md)
+- [BC-BR-415](../../business-rules/BC/localization.md)
+- [BC-BR-521](../../business-rules/BC/tax.md)
+- [BC-BR-522](../../business-rules/BC/tax.md)
+- [BC-BR-523](../../business-rules/BC/tax.md)
 
 ## 다국어 리소스 키
 

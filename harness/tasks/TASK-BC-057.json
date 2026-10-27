@@ -1,0 +1,41 @@
+{
+  "id": "TASK-BC-057",
+  "project": "core",
+  "title": "세율 지역 (US) API (Application·Domain·Infrastructure)",
+  "module": "BC",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/BC/tax-area.md"
+  ],
+  "rules": [
+    "BC-BR-511",
+    "BC-BR-512",
+    "BC-BR-513",
+    "BC-BR-514",
+    "BC-BR-507"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

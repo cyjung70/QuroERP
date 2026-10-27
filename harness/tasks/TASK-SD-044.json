@@ -15,7 +15,8 @@
   ],
   "rules": [
     "SD-BR-801",
-    "SD-BR-805"
+    "SD-BR-805",
+    "SD-BR-821"
   ],
   "skills": [
     "quro-api",
