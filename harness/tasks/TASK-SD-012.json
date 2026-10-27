@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-012",
+  "project": "core",
   "title": "미결 수주 상세 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [

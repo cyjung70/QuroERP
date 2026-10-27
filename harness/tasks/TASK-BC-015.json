@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-015",
+  "project": "core",
   "title": "코드 관리 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

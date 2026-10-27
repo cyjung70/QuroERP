@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-011",
+  "project": "core",
   "title": "재고 실사 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

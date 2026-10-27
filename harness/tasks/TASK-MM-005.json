@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-005",
+  "project": "core",
   "title": "발주 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

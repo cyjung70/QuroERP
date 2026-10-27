@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-011",
+  "project": "core",
   "title": "재고 공통: 세트 구성품 출고와 재고 서비스 등록",
   "module": "CORE",
   "layer": [

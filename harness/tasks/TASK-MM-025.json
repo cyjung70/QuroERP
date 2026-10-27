@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-025",
+  "project": "core",
   "title": "창고 마스터 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

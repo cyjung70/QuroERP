@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-008",
+  "project": "core",
   "title": "입고 (Bill) 화면 (SM)",
   "module": "MM",
   "layer": [

@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-016",
+  "project": "core",
   "title": "코드 관리 화면 (M)",
   "module": "BC",
   "layer": [

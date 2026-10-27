@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-015",
+  "project": "core",
   "title": "Credit Memo 사유 현황 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [

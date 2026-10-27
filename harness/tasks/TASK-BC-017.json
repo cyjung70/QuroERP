@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-017",
+  "project": "core",
   "title": "품목 마스터 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

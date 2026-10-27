@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-014",
+  "project": "core",
   "title": "실주 현황 상세 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [

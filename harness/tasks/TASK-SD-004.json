@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-004",
+  "project": "core",
   "title": "수주 화면 (SM)",
   "module": "SD",
   "layer": [

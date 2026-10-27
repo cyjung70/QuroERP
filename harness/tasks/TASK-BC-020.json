@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-020",
+  "project": "core",
   "title": "품목 이미지 업로드 화면 (S)",
   "module": "BC",
   "layer": [
