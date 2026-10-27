@@ -7,7 +7,7 @@
 | 모듈 | MM (구매·재고) |
 | 화면유형 | **SM** (TO BE 신규) |
 | 화면 경로 | `/mm/stock-transfer` (`Pages/Mm/StockTransfer.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > AS IS에 없는 TO BE 신규 기능이다. 이동 유형 `TR`로 보내는 창고 출고와 받는 창고 입고를 남긴다.

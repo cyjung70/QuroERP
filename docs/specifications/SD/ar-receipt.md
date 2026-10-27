@@ -7,7 +7,7 @@
 | 모듈 | SD (영업) |
 | 화면유형 | **SM** (확정) |
 | 화면 경로 | `/sd/ar-receipt` (`Pages/Sd/ArReceipt.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > '송장 불러오기' 대화상자로 고객의 미입금 송장을 가져온다. 그리드의 Credit 열은 그 송장에 적용한 Credit Memo 합계다. 'Credit 적용' 버튼으로 [Credit Memo 적용 (입금)](credit-memo-apply-receipt.md) 창을 연다 (SD-BR-260). 입금 방법은 `AR_PAYMENT_METHOD` 코드다.

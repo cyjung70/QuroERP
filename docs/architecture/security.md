@@ -17,6 +17,8 @@
 
 - API는 `FallbackPolicy = RequireAuthenticatedUser`로 모든 엔드포인트를 막는다. `[AllowAnonymous]`는 로그인 API만.
 - 메뉴·화면 권한은 역할(`sys_role`)과 `sys_role_menu`로 정한다. API는 `[Authorize(Policy = "Menu:<menu_code>")]`로 검사한다.
+- 판정: 역할에 배정된 메뉴는 조회(GET), Full Access면 변경(그 밖의 메서드)까지 한다. 사용 안 함 메뉴는 거부한다 ([BC-BR-206, BC-BR-214](../business-rules/BC/menu-role.md)).
+- 비밀번호 변경·내 정보 변경은 메뉴 배정 없이 로그인한 본인이 쓴다 ([BC-BR-051](../business-rules/BC/password.md), [BC-BR-101](../business-rules/BC/user.md)).
 - API 키 호출자는 API 키에 붙은 역할로 검사한다.
 
 ## 비밀번호

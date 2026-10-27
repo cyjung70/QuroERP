@@ -7,7 +7,7 @@
 | 모듈 | MM (구매·재고) |
 | 화면유형 | **SM** (확정) |
 | 화면 경로 | `/mm/goods-receipt` (`Pages/Mm/GoodsReceipt.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > '발주 불러오기' 대화상자로 발주 상세를 가져온다. 고정자산 자동 생성·비용 전표는 만들지 않는다 (Enterprise).

@@ -7,7 +7,7 @@
 | 모듈 | BC (기초정보·공통) |
 | 화면유형 | **S** (확정) |
 | 화면 경로 | `/bc/item-image-upload` (`Pages/Bc/ItemImageUpload.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > 업로드한 원본을 `bc_item.img`(bytea)에 저장한다. 표시 크기는 화면에서 줄이고 서버에서 축소하지 않는다. 파일은 JPEG, 10MB 이하다 (MM-BR-821).

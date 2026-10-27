@@ -20,7 +20,7 @@ function Fail($msg) { $errors.Add($msg) }
 
 $required = @(
   'AGENTS.md', 'CLAUDE.md', 'GEMINI.md', 'docs/INDEX.md', 'docs/glossary.md', 'docs/architecture',
-  'docs/business-rules/MM', 'docs/business-rules/SD', 'docs/business-rules/FI', 'docs/business-rules/PP', 'docs/business-rules/CO',
+  'docs/business-rules/BC', 'docs/business-rules/MM', 'docs/business-rules/SD', 'docs/business-rules/FI', 'docs/business-rules/PP', 'docs/business-rules/CO',
   'docs/specifications', '.agents/skills', '.claude/skills', 'harness/tasks', 'harness/plans', 'harness/manifests',
   'scripts/generate-harness.ps1', 'scripts/validate-harness.ps1', 'src', 'tests',
   'docs/architecture/subprojects.md',

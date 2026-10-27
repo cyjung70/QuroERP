@@ -1,0 +1,36 @@
+{
+  "id": "TASK-MM-041",
+  "project": "core",
+  "title": "공급자 일괄 등록 화면 (M)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "M",
+  "specs": [
+    "docs/specifications/MM/vendor-upload.md"
+  ],
+  "rules": [
+    "MM-BR-860",
+    "MM-BR-861",
+    "MM-BR-862",
+    "MM-BR-863",
+    "MM-BR-859"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-MM-040"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

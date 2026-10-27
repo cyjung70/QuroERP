@@ -7,7 +7,7 @@
 | 모듈 | SD (영업) |
 | 화면유형 | **SM** (확정) |
 | 화면 경로 | `/sd/sales-invoice` (`Pages/Sd/SalesInvoice.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > '수주 불러오기' 대화상자로 수주 상세를 가져온다. 고객 신용 한도를 넘으면 경고한다 (SD-BR-309). 'Credit 적용' 버튼으로 [Credit Memo 적용 (송장)](credit-memo-apply.md) 창을 연다.

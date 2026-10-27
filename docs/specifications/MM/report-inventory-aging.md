@@ -7,7 +7,7 @@
 | 모듈 | MM (구매·재고) |
 | 화면유형 | **M** (자동) |
 | 화면 경로 | `/mm/report-inventory-aging` (`Pages/Mm/InventoryAgingReport.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > 조회 조건에 창고(전체 또는 창고 하나)가 있다. 수량은 품목+창고 기준(`mm_onhand`, 창고별 재고 이동)이고, 금액·원가는 품목 단위다.

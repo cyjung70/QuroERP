@@ -13,7 +13,25 @@
   "specs": [
     "docs/specifications/BC/login.md"
   ],
-  "rules": [],
+  "rules": [
+    "BC-BR-001",
+    "BC-BR-002",
+    "BC-BR-003",
+    "BC-BR-004",
+    "BC-BR-005",
+    "BC-BR-006",
+    "BC-BR-007",
+    "BC-BR-008",
+    "BC-BR-009",
+    "BC-BR-010",
+    "BC-BR-011",
+    "BC-BR-012",
+    "BC-BR-013",
+    "BC-BR-014",
+    "BC-BR-015",
+    "BC-BR-016",
+    "BC-BR-017"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

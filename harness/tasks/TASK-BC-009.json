@@ -13,7 +13,14 @@
   "specs": [
     "docs/specifications/BC/role-menu.md"
   ],
-  "rules": [],
+  "rules": [
+    "BC-BR-211",
+    "BC-BR-212",
+    "BC-BR-213",
+    "BC-BR-214",
+    "BC-BR-215",
+    "BC-BR-216"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

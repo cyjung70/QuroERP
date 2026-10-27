@@ -7,7 +7,7 @@
 | 모듈 | MM (구매·재고) |
 | 화면유형 | **M** (TO BE 신규) |
 | 화면 경로 | `/mm/warehouse` (`Pages/Mm/Warehouse.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > AS IS에 없는 TO BE 신규 기능이다. 설치·이관 때 기본 창고 1개가 만들어진다.
