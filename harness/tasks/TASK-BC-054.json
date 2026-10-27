@@ -1,0 +1,41 @@
+{
+  "id": "TASK-BC-054",
+  "project": "core",
+  "title": "지역화 설정 화면 (S)",
+  "module": "BC",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "S",
+  "specs": [
+    "docs/specifications/BC/localization-setting.md"
+  ],
+  "rules": [
+    "BC-BR-401",
+    "BC-BR-402",
+    "BC-BR-403",
+    "BC-BR-422",
+    "BC-BR-423",
+    "BC-BR-424",
+    "BC-BR-425",
+    "BC-BR-426",
+    "BC-BR-427",
+    "BC-BR-543"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-053",
+    "TASK-CORE-006"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

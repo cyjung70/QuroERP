@@ -96,6 +96,8 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `get_price_level`
 - [MM-BR-808](../../business-rules/MM/item.md)
 - [MM-BR-809](../../business-rules/MM/item.md)
 - [MM-BR-825](../../business-rules/MM/item.md)
+- [MM-BR-831](../../business-rules/MM/item.md)
+- [MM-BR-832](../../business-rules/MM/item.md)
 
 ## 다국어 리소스 키
 

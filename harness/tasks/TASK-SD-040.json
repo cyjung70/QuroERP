@@ -21,7 +21,9 @@
     "SD-BR-258",
     "SD-BR-260",
     "SD-BR-261",
-    "SD-BR-118"
+    "SD-BR-118",
+    "SD-BR-262",
+    "BC-BR-414"
   ],
   "skills": [
     "quro-blazor",

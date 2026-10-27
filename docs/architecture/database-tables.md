@@ -80,6 +80,15 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `mm_onhand` | 창고별 현재고 | MM | inventory.md, MM ledger.md | id, item_id, warehouse_id, onhand_qty. UNIQUE (item_id, warehouse_id) |
 | `mm_stock_transfer` | 창고 이동 | MM | MM warehouse.md | id, transfer_no UNIQUE, transfer_dt, from_warehouse_id, to_warehouse_id |
 | `mm_stock_transfer_line` | 창고 이동 상세 | MM | MM warehouse.md | id, stock_transfer_id, seq, item_id, qty |
+| `sys_language` | 언어 | BC | i18n.md, BC localization.md | id, lang_code UNIQUE (en, ko, sw), sort_order, use_yn |
+| `bc_currency` | 통화 | BC | localization.md, BC localization.md | id, currency_code UNIQUE (ISO 4217), decimals (0~4), use_yn |
+| `bc_currency_translation` | 통화 번역 | BC | i18n.md | id, currency_id, lang_code, name. UNIQUE (currency_id, lang_code) |
+| `sys_decimal_setting` | 모듈 자릿수 설정 | BC | localization.md, BC localization.md | id, module UNIQUE (MM, SD), unit_price_decimals, qty_decimals, rounding_mode (HALF_UP, DOWN) |
+| `bc_tax_code` | 세금 코드 | BC | tax.md, BC tax.md | id, tax_code UNIQUE, tax_kind, rate, tax_area_id, price_included, use_yn |
+| `bc_tax_code_translation` | 세금 코드 번역 | BC | i18n.md | id, tax_code_id, lang_code, name. UNIQUE (tax_code_id, lang_code) |
+| `bc_tax_area` | 세율 지역 (US) | BC | tax.md, BC tax.md | id, tax_area_code UNIQUE, tax_area_name, state_code |
+| `bc_tax_area_rate` | 세율 지역 세율 (US) | BC | tax.md, BC tax.md | id, tax_area_id, effective_from, rate. UNIQUE (tax_area_id, effective_from) |
+| `sd_customer_tax_exemption` | 고객 면세 증명서 (US) | SD | tax.md, BC tax.md | id, customer_id, certificate_no, state_code, valid_to. 고객·주마다 유효 증명서 1개 |
 
 - `sys_code_major`, `sys_code_minor` 구조 규칙은 `codes.md`에 있다. 아래 `sys_code_major`·`sys_code_minor`는 AS IS B_MAJOR·B_MINOR를 그 구조로 옮긴 것이다.
 
@@ -234,6 +243,7 @@ Credit Memo 적용 반제 — AS IS `A_AC_DTL`
 | `cls_dt` | date | NOT NULL | 적용 일자. 기준일 잔액 기준 (SD-BR-257·801) |  |
 | `cls_amt` | numeric | NOT NULL | 적용 금액 > 0 (SD-BR-252) |  |
 | `credit_amt` | numeric | NOT NULL | 적용할 때의 Credit Memo 남은 크레딧 (SD-BR-258) |  |
+| `fx_diff_base_amt` | numeric | NOT NULL DEFAULT 0 | 환율 차이 기준 통화 금액 (BC-BR-414) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -272,6 +282,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `goods_receipt_id` | bigint | FK [추정] | → `mm_goods_receipt.id` | AS IS gr_no |
 | `cls_dt` | date | NOT NULL | 헤더 지급일과 같다 (MM-BR-960) | Payment Date |
 | `cls_amt` | numeric | NOT NULL | 지급 금액 > 0 (MM-BR-954) | Payment Amount |
+| `fx_diff_base_amt` | numeric | NOT NULL DEFAULT 0 | 환율 차이 기준 통화 금액 (BC-BR-414) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -295,6 +306,8 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `remarks` | varchar |  |  | Remarks |
 | `total_amt` | numeric | NOT NULL DEFAULT 0 | 지급 합계 = 줄 지급 금액 합 (MM-BR-957) | Total Payment Amount |
 | `pay_amt` | numeric | NOT NULL DEFAULT 0 | 지급액 ≥ 0. 차이는 미적용 금액 (MM-BR-958) |  |
+| `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
+| `exchange_rate` | numeric | NOT NULL | 기준 통화 1단위당 문서 통화, > 0, 소수 6자리. 기준 통화면 1 (BC-BR-412) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -316,6 +329,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `cls_dt` | date | NOT NULL | 헤더 입금일과 같다 (SD-BR-710) | Receipt Date |
 | `cls_amt` | numeric | NOT NULL DEFAULT 0 | 적용 금액 ≥ 0 (SD-BR-704) | Receipt Amount |
 | `dc_amt` | numeric | NOT NULL DEFAULT 0 | 할인 ≥ 0. 적용 금액 + 할인 > 0 (SD-BR-704) |  |
+| `fx_diff_base_amt` | numeric | NOT NULL DEFAULT 0 | 환율 차이 기준 통화 금액 (BC-BR-414) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -340,6 +354,8 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `ref_no` | varchar |  |  | Reference No |
 | `dc_amt` | numeric | NOT NULL DEFAULT 0 | 할인 합계 = 줄 할인 합 (SD-BR-707) |  |
 | `receive_amt` | numeric | NOT NULL DEFAULT 0 | 받은 금액 ≥ 0. 차이는 미적용 금액 (SD-BR-708) |  |
+| `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
+| `exchange_rate` | numeric | NOT NULL | 기준 통화 1단위당 문서 통화, > 0, 소수 6자리. 기준 통화면 1 (BC-BR-412) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -418,9 +434,14 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `represent` | varchar |  | 미사용 후보 [확인 필요] | Represent Person Name |
 | `email` | varchar |  | NOT NULL 후보 [확인 필요] | Email Address |
 | `close_year_month` | varchar |  | NOT NULL 후보 [확인 필요] | Close Year & Month |
-| `base_currency_code` | varchar | NOT NULL DEFAULT 'USD' | 기준 통화 ISO 4217 (BC-BR-312) |  |
+| `base_currency_code` | varchar | NOT NULL | 기준 통화 ISO 4217. 국가 기본값 US = USD, KR = KRW (BC-BR-312) |  |
 | `logo_image` | bytea |  | 출력 문서 회사 로고 (print-documents.md) |  |
 | `logo_content_type` | varchar |  | 로고 MIME 타입 (`image/png`, `image/jpeg`) |  |
+| `country_code` | varchar | NOT NULL | ISO 3166-1 alpha-2 `US`·`KR` (BC-BR-313) |  |
+| `default_lang_code` | varchar | NOT NULL | 회사 기본 언어 → `sys_language` (BC-BR-314) |  |
+| `tax_calc_mode` | varchar | NOT NULL DEFAULT 'DOCUMENT' | `DOCUMENT`·`LINE` (BC-BR-543) |  |
+| `business_type` | varchar |  | 업태 (KR 세금계산서, BC-BR-315) |  |
+| `business_item` | varchar |  | 종목 (KR 세금계산서, BC-BR-315) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -490,6 +511,13 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `memo2` | varchar |  |  |  |
 | `memo3` | varchar |  |  |  |
 | `ship_name` | varchar |  |  |  |
+| `currency_code` | varchar |  | 거래 통화. NULL이면 기준 통화 (BC-BR-415) |  |
+| `tax_code_id` | bigint | FK | → `bc_tax_code.id` 기본 세금 코드 (BC-BR-523) |  |
+| `tax_party_type` | varchar |  | KR `BUSINESS`·`INDIVIDUAL` (BC-BR-522) |  |
+| `business_reg_no` | varchar |  | KR 사업자등록번호 숫자 10자리 (BC-BR-521) |  |
+| `ceo_name` | varchar |  | 대표자 (BC-BR-522) |  |
+| `business_type` | varchar |  | 업태 |  |
+| `business_item` | varchar |  | 종목 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -531,6 +559,8 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `item_name2` | varchar |  |  |  |
 | `memo4` | varchar |  |  |  |
 | `memo5` | varchar |  |  |  |
+| `taxable` | boolean | NOT NULL DEFAULT true | US Sales Tax 대상 (MM-BR-831) |  |
+| `vat_kind` | varchar | NOT NULL DEFAULT 'TAXABLE' | KR `TAXABLE`·`EXEMPT` (MM-BR-831) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -626,6 +656,13 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `phone2` | varchar |  |  |  |
 | `phone3` | varchar |  |  |  |
 | `vendor_price` | varchar |  | NOT NULL 후보 [확인 필요] |  |
+| `currency_code` | varchar |  | 거래 통화. NULL이면 기준 통화 (BC-BR-415) |  |
+| `tax_code_id` | bigint | FK | → `bc_tax_code.id` 기본 세금 코드 (BC-BR-523) |  |
+| `tax_party_type` | varchar |  | KR `BUSINESS`·`INDIVIDUAL` (BC-BR-522) |  |
+| `business_reg_no` | varchar |  | KR 사업자등록번호 숫자 10자리 (BC-BR-521) |  |
+| `ceo_name` | varchar |  | 대표자 (BC-BR-522) |  |
+| `business_type` | varchar |  | 업태 |  |
+| `business_item` | varchar |  | 종목 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -801,6 +838,10 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `gr_qty` | numeric |  | NOT NULL 후보 [확인 필요] | G/R Quantity |
 | `gr_prc` | numeric |  | NOT NULL 후보 [확인 필요] | G/R Unit Price |
 | `gr_amt` | numeric |  | NOT NULL 후보 [확인 필요] | G/R Amount |
+| `tax_code_id` | bigint | FK NOT NULL | → `bc_tax_code.id` (BC-BR-542) |  |
+| `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 (가격 포함 코드는 역산, BC-BR-544) |  |
+| `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 (BC-BR-543·545) |  |
+| `deductible` | boolean | NOT NULL DEFAULT true | KR 매입세액 공제. false면 원가 산입 (MM-BR-163·164) |  |
 | `purchase_order_line_id` | bigint | FK [추정] | → `mm_purchase_order_line.id` | AS IS po_no, po_seq |
 | `item_name` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -822,7 +863,13 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `gr_dt` | date |  | NOT NULL 후보 [확인 필요] | Goods Receipt Date |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 줄 창고의 기본값 (MM-BR-703) |  |
 | `ref_no` | varchar |  | NOT NULL 후보 [확인 필요] | Reference No(=InvoiceNo) |
+| `tax_invoice_received` | boolean | NOT NULL DEFAULT false | 공급자 세금계산서·청구서 수취 (MM-BR-163) |  |
 | `tot_gr_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Total G/R Amount |
+| `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
+| `exchange_rate` | numeric | NOT NULL | 기준 통화 1단위당 문서 통화, > 0, 소수 6자리. 기준 통화면 1 (BC-BR-412) |  |
+| `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 = 줄 공급가액 합 (BC-BR-541) |  |
+| `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 = 줄 세액 합 (BC-BR-541) |  |
+| `tot_base_amt` | numeric | NOT NULL DEFAULT 0 | 합계의 기준 통화 금액 (BC-BR-413) |  |
 | `due_dt` | date |  | NOT NULL 후보 [확인 필요] |  |
 | `cls_amt` | numeric |  | NOT NULL 후보 [확인 필요] | AP Clear Amount |
 | `bal_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Balance Amount |
@@ -849,6 +896,9 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `po_qty` | numeric |  | NOT NULL 후보 [확인 필요] | P/O Quantity |
 | `po_prc` | numeric |  | NOT NULL 후보 [확인 필요] | P/O Unit Price |
 | `po_amt` | numeric |  | NOT NULL 후보 [확인 필요] | P/O Amount |
+| `tax_code_id` | bigint | FK NOT NULL | → `bc_tax_code.id` (BC-BR-542) |  |
+| `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 (가격 포함 코드는 역산, BC-BR-544) |  |
+| `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 (BC-BR-543·545) |  |
 | `receipt_qty` | numeric |  | NOT NULL 후보 [확인 필요] | Actual Receipt Quantity |
 | `item_name` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -870,6 +920,11 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `vendor_id` | bigint | FK | → `bc_vendor.id` | AS IS v_name |
 | `po_dt` | date |  | NOT NULL 후보 [확인 필요] | P/O Date |
 | `tot_po_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Total P/O Amount |
+| `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
+| `exchange_rate` | numeric | NOT NULL | 기준 통화 1단위당 문서 통화, > 0, 소수 6자리. 기준 통화면 1 (BC-BR-412) |  |
+| `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 = 줄 공급가액 합 (BC-BR-541) |  |
+| `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 = 줄 세액 합 (BC-BR-541) |  |
+| `tot_base_amt` | numeric | NOT NULL DEFAULT 0 | 합계의 기준 통화 금액 (BC-BR-413) |  |
 | `release_dt` | date |  | 미사용 후보 [확인 필요] | Release Date |
 | `confirm_dt` | date |  | 미사용 후보 [확인 필요] | Confirm Date-Goods Receipt Date |
 | `remarks` | varchar |  |  | Vendor Message |
@@ -1136,6 +1191,9 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `dn_qty` | numeric |  | NOT NULL 후보 [확인 필요] |  |
 | `dn_prc` | numeric |  | NOT NULL 후보 [확인 필요] |  |
 | `dn_amt` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `tax_code_id` | bigint | FK NOT NULL | → `bc_tax_code.id` (BC-BR-542) |  |
+| `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 (가격 포함 코드는 역산, BC-BR-544) |  |
+| `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 (BC-BR-543·545) |  |
 | `sales_order_line_id` | bigint | FK [추정] | → `sd_sales_order_line.id` | AS IS so_no, so_seq |
 | `item_name` | varchar |  | NOT NULL 후보 [확인 필요] |  |
 | `dc_cd` | varchar |  |  |  |
@@ -1163,6 +1221,12 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `ship_dt` | date |  | 미사용 후보 [확인 필요] |  |
 | `due_dt` | date |  |  |  |
 | `tot_dn_amt` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
+| `exchange_rate` | numeric | NOT NULL | 기준 통화 1단위당 문서 통화, > 0, 소수 6자리. 기준 통화면 1 (BC-BR-412) |  |
+| `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 = 줄 공급가액 합 (BC-BR-541) |  |
+| `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 = 줄 세액 합 (BC-BR-541) |  |
+| `tot_base_amt` | numeric | NOT NULL DEFAULT 0 | 합계의 기준 통화 금액 (BC-BR-413) |  |
+| `tax_exemption_cert_no` | varchar |  | US 면세 증명서 번호 (BC-BR-525, SD-BR-133) |  |
 | `remarks` | varchar |  |  |  |
 | `bal_amt` | numeric |  | NOT NULL 후보 [확인 필요] |  |
 | `terms` | varchar |  |  |  |
@@ -1245,6 +1309,9 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `so_qty` | numeric |  | NOT NULL 후보 [확인 필요] | S/O Quantity |
 | `so_prc` | numeric |  | NOT NULL 후보 [확인 필요] | S/O Unit Price |
 | `so_amt` | numeric |  | NOT NULL 후보 [확인 필요] | S/O Amount |
+| `tax_code_id` | bigint | FK NOT NULL | → `bc_tax_code.id` (BC-BR-542) |  |
+| `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 (가격 포함 코드는 역산, BC-BR-544) |  |
+| `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 (BC-BR-543·545) |  |
 | `dn_qty` | numeric |  | NOT NULL 후보 [확인 필요] |  |
 | `item_name` | varchar |  |  |  |
 | `dc_cd` | varchar |  |  |  |
@@ -1269,6 +1336,11 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `so_dt` | date |  | NOT NULL 후보 [확인 필요] | S/O Date |
 | `exp_ship_dt` | date |  | NOT NULL 후보 [확인 필요] |  |
 | `tot_so_amt` | numeric |  | NOT NULL 후보 [확인 필요] | Total S/O Amount |
+| `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
+| `exchange_rate` | numeric | NOT NULL | 기준 통화 1단위당 문서 통화, > 0, 소수 6자리. 기준 통화면 1 (BC-BR-412) |  |
+| `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 = 줄 공급가액 합 (BC-BR-541) |  |
+| `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 = 줄 세액 합 (BC-BR-541) |  |
+| `tot_base_amt` | numeric | NOT NULL DEFAULT 0 | 합계의 기준 통화 금액 (BC-BR-413) |  |
 | `release_dt` | date |  | 미사용 후보 [확인 필요] | Release Date |
 | `confirm_dt` | date |  | 미사용 후보 [확인 필요] | Confirm Date |
 | `remarks` | varchar |  |  | Remarks |

@@ -23,7 +23,15 @@
     "SD-BR-307",
     "SD-BR-308",
     "SD-BR-309",
-    "SD-BR-314"
+    "SD-BR-314",
+    "SD-BR-331",
+    "SD-BR-332",
+    "SD-BR-333",
+    "BC-BR-415",
+    "BC-BR-521",
+    "BC-BR-522",
+    "BC-BR-523",
+    "BC-BR-524"
   ],
   "skills": [
     "quro-api",

@@ -62,6 +62,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - [SD-BR-907](../../business-rules/SD/master-data.md)
 - [SD-BR-908](../../business-rules/SD/master-data.md)
 - [SD-BR-909](../../business-rules/SD/master-data.md)
+- [BC-BR-412](../../business-rules/BC/localization.md)
 
 ## 다국어 리소스 키
 

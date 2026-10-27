@@ -66,6 +66,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - [MM-BR-971](../../business-rules/MM/ap-report.md)
 - [MM-BR-972](../../business-rules/MM/ap-report.md)
 - [MM-BR-973](../../business-rules/MM/ap-report.md)
+- [MM-BR-981](../../business-rules/MM/ap-report.md)
 
 ## 다국어 리소스 키
 
