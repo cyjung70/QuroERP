@@ -20,6 +20,7 @@
     "MM-BR-405",
     "MM-BR-406",
     "MM-BR-407",
+    "MM-BR-408",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
@@ -27,7 +28,14 @@
     "MM-BR-005",
     "MM-BR-006",
     "MM-BR-007",
-    "MM-BR-008"
+    "MM-BR-008",
+    "MM-BR-009",
+    "MM-BR-010",
+    "MM-BR-601",
+    "MM-BR-602",
+    "MM-BR-603",
+    "MM-BR-604",
+    "MM-BR-606"
   ],
   "skills": [
     "quro-api",
@@ -40,13 +48,15 @@
     "TASK-CORE-003",
     "TASK-CORE-005",
     "TASK-CORE-007",
-    "TASK-CORE-008"
+    "TASK-CORE-008",
+    "TASK-CORE-009"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
-    "마이너스 재고 모드 3종 테스트"
+    "마이너스 재고 모드 3종 테스트 (현재고·시점별·월말)",
+    "마감 전 재고 대사 점검 (MM-BR-408)"
   ],
   "estimateHours": 2,
   "status": "todo"

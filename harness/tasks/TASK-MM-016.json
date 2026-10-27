@@ -17,6 +17,7 @@
     "MM-BR-405",
     "MM-BR-406",
     "MM-BR-407",
+    "MM-BR-408",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
@@ -24,7 +25,14 @@
     "MM-BR-005",
     "MM-BR-006",
     "MM-BR-007",
-    "MM-BR-008"
+    "MM-BR-008",
+    "MM-BR-009",
+    "MM-BR-010",
+    "MM-BR-601",
+    "MM-BR-602",
+    "MM-BR-603",
+    "MM-BR-604",
+    "MM-BR-606"
   ],
   "skills": [
     "quro-blazor",
