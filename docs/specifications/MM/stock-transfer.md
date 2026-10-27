@@ -84,6 +84,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 - [MM-BR-602](../../business-rules/MM/ledger.md)
 - [MM-BR-603](../../business-rules/MM/ledger.md)
 - [MM-BR-604](../../business-rules/MM/ledger.md)
+- [MM-BR-606](../../business-rules/MM/ledger.md)
 - [MM-BR-703](../../business-rules/MM/warehouse.md)
 
 ## 다국어 리소스 키

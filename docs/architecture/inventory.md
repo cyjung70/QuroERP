@@ -7,8 +7,21 @@
 - 현재고는 품목+창고 단위 `mm_onhand(item_id, warehouse_id, onhand_qty)`다. 같은 트랜잭션에서 갱신한다. `bc_item.onhand_qty`는 모든 창고 합계이고 같은 트랜잭션에서 함께 바꾼다 (목록·리포트 조회용, 대사 MM-BR-605로 맞는지 본다).
 - 재고 금액·이동평균원가(`bc_item.stk_val`, `mvg_cost`)는 품목 단위다 (모든 창고 합산). 창고 간 이동은 바꾸지 않는다.
 - 원장은 고치거나 지우지 않는다. 취소·수정은 반대 부호 이동을 새로 넣고 `parent_movement_id`로 원 이동을 가리킨다 (MM-BR-601).
-- 이동 유형(`mov_type`, 코드 `MOVEMENT_TYPE`): 입고 `GR`, 출고(송장) `DN`, 출고(불출) `GI`, 반품 `RT`, 예외 입고 `UR`, 실사 조정 `CT`, 세트 조립 `BP`, 창고 이동 `TR`. [추정 — AS IS `I_GOODS_MOVEMENT.MOV_TYPE` 값, `TR`은 TO BE 신규]
-- 증감 방향(`dc_flag`)은 AS IS의 `C`/`D` 대신 수량 부호(+/−)로 저장한다. [확인 필요]
+- 이동 유형(`mov_type`, 코드 `MOVEMENT_TYPE`)과 원 이동 부호 (MM-BR-606):
+
+| 유형 | 뜻 | 원 이동 `qty` |
+| --- | --- | --- |
+| `GR` | 입고 (Bill) | + |
+| `RT` | 반입 (Credit Memo 재고 반입) | + |
+| `BP` | 세트 조립 | + |
+| `UR` | 예외 입고 | + |
+| `CT` | 실사 조정 | 차이 부호 (+/−) |
+| `GI` | 출고 (불출) | − |
+| `DN` | 출고 (송장) | − |
+| `TR` | 창고 이동 (TO BE 신규) | 보내는 창고 −, 받는 창고 + |
+
+- 증감 방향은 `qty`(와 `amount`) 부호로 저장한다. AS IS의 입출고 구분 컬럼(`C`/`D`)은 옮기지 않는다. 취소 이동은 같은 유형에 반대 부호다.
+- 출처 문서는 `ref_key`(문서 번호)·`ref_seq`(줄 순번)로 찾는다. 품목 이름·규격·단위는 원장에 복사하지 않는다 (품목 마스터에서 읽는다).
 - AS IS 프로시저 `receipt_inv`(입고), `issue_inv`(출고), `insert_inv`, `update_inv`, `run_closing`(월 마감)의 로직은 `Application/Mm/Inventory`의 `InventoryService`로 옮긴다.
 
 ## 창고

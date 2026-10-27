@@ -13,5 +13,5 @@
 - [재고 실사](stock-count.md): MM-BR-301 ~ MM-BR-308
 - [재고 월 마감](closing.md): MM-BR-401 ~ MM-BR-408
 - [구매 시뮬레이션](purchase-simulation.md): MM-BR-501 ~ MM-BR-509
-- [재고 원장](ledger.md): MM-BR-601 ~ MM-BR-605
+- [재고 원장](ledger.md): MM-BR-601 ~ MM-BR-606
 - [창고](warehouse.md): MM-BR-701 ~ MM-BR-707

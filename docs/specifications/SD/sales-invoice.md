@@ -157,6 +157,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_credit`, `delete_mov_in
 - [MM-BR-602](../../business-rules/MM/ledger.md)
 - [MM-BR-603](../../business-rules/MM/ledger.md)
 - [MM-BR-604](../../business-rules/MM/ledger.md)
+- [MM-BR-606](../../business-rules/MM/ledger.md)
 - [MM-BR-703](../../business-rules/MM/warehouse.md)
 
 ## 다국어 리소스 키
