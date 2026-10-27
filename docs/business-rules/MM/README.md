@@ -17,3 +17,5 @@
 - [창고](warehouse.md): MM-BR-701 ~ MM-BR-708
 - [품목 마스터·대체 품목](item.md): MM-BR-801 ~ MM-BR-818
 - [구매 단가](purchase-price.md): MM-BR-901 ~ MM-BR-905
+- [지급 처리](ap-payment.md): MM-BR-951 ~ MM-BR-963
+- [매입채무 리포트](ap-report.md): MM-BR-971 ~ MM-BR-975
