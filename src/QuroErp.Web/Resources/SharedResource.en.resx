@@ -37,4 +37,7 @@
   <data name="BC-E-001" xml:space="preserve"><value>The user ID or password is incorrect.</value></data>
   <data name="BC-E-002" xml:space="preserve"><value>Enter your user ID and password.</value></data>
   <data name="BC-E-003" xml:space="preserve"><value>Cannot connect to the server. Try again later.</value></data>
+  <data name="MM-E-001" xml:space="preserve"><value>Item {0} in warehouse {1} has {2} on hand and cannot be reduced by {3}.</value></data>
+  <data name="MM-E-002" xml:space="preserve"><value>{0} is in a closed month (closed through {1}), so stock movements cannot be saved.</value></data>
+  <data name="MM-E-606" xml:space="preserve"><value>The stock movement quantity does not match its type, or the movement is already cancelled. Type: {0}, quantity: {1}</value></data>
 </root>

@@ -37,4 +37,7 @@
   <data name="BC-E-001" xml:space="preserve"><value>사용자 ID 또는 비밀번호가 올바르지 않습니다.</value></data>
   <data name="BC-E-002" xml:space="preserve"><value>사용자 ID와 비밀번호를 입력하세요.</value></data>
   <data name="BC-E-003" xml:space="preserve"><value>서버에 연결할 수 없습니다. 잠시 후 다시 시도하세요.</value></data>
+  <data name="MM-E-001" xml:space="preserve"><value>품목 {0}의 창고 {1} 현재고({2})보다 많이 줄일 수 없습니다. 요청 수량: {3}</value></data>
+  <data name="MM-E-002" xml:space="preserve"><value>{0}은(는) 마감된 기간({1}까지)의 날짜라 재고 이동을 저장할 수 없습니다.</value></data>
+  <data name="MM-E-606" xml:space="preserve"><value>재고 이동 수량이 이동 유형과 맞지 않거나 이미 취소된 이동입니다. 유형: {0}, 수량: {1}</value></data>
 </root>
