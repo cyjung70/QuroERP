@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using Dapper;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Domain.Mm.Inventory;
@@ -53,6 +54,29 @@ internal sealed class InventoryRepository : IInventoryRepository
         VALUES (@DocumentNo, @DocumentDt, @MovType, @ItemId, @WarehouseId, @Qty, @Prc, @Amount,
                 @RefKey, @RefSeq, @ParentMovementId, @NegativeStock, @User, @User)
         RETURNING id
+        """;
+
+    // MM-BR-604: closing balance of the last closed month + daily sums, one window pass. The LEFT JOIN keeps the
+    // opening row when there are no movements. Rows start at the last day on or before @MovementDate
+    private const string SelectDailyBalances = """
+        WITH base AS (
+          SELECT coalesce(sum(bal_qty), 0) AS qty FROM mm_monthly_inventory
+           WHERE item_id = @ItemId AND warehouse_id = @WarehouseId AND year_month = @LastClosedYearMonth
+        ), daily AS (
+          SELECT document_dt, sum(qty) AS day_qty FROM mm_goods_movement
+           WHERE item_id = @ItemId AND warehouse_id = @WarehouseId AND document_dt > @LastClosedMonthEnd
+           GROUP BY document_dt
+        ), running AS (
+          SELECT document_dt,
+                 (SELECT qty FROM base) + sum(day_qty) OVER (ORDER BY document_dt) AS balance,
+                 row_number() OVER (PARTITION BY date_trunc('month', document_dt) ORDER BY document_dt DESC) AS rn_desc
+            FROM daily
+        )
+        SELECT b.qty AS opening, r.document_dt, r.balance, r.rn_desc = 1 AS month_end
+          FROM base b
+          LEFT JOIN running r
+            ON r.document_dt >= coalesce((SELECT max(document_dt) FROM daily WHERE document_dt <= @MovementDate), @MovementDate)
+         ORDER BY r.document_dt
         """;
 
     private const string LockMovements = """
@@ -113,6 +137,27 @@ internal sealed class InventoryRepository : IInventoryRepository
             cancellationToken: cancellationToken));
     }
 
+    public async Task<(decimal Opening, IReadOnlyList<DailyStockBalance> Balances)> GetDailyBalancesAsync(
+        long itemId, long warehouseId, DateOnly? lastClosedMonthEnd, DateOnly movementDate, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var rows = (await transaction.Connection!.QueryAsync<BalanceRow>(new CommandDefinition(
+            SelectDailyBalances,
+            new
+            {
+                ItemId = itemId,
+                WarehouseId = warehouseId,
+                LastClosedYearMonth = lastClosedMonthEnd?.ToString("yyyyMM", CultureInfo.InvariantCulture),
+                // No closed month: every movement counts
+                LastClosedMonthEnd = lastClosedMonthEnd ?? DateOnly.MinValue,
+                MovementDate = movementDate,
+            },
+            transaction,
+            cancellationToken: cancellationToken))).ToList();
+        var balances = rows.Where(r => r.DocumentDt is not null)
+            .Select(r => new DailyStockBalance(r.DocumentDt!.Value, r.Balance!.Value, r.MonthEnd == true)).ToList();
+        return (rows[0].Opening, balances);
+    }
+
     public async Task<IReadOnlyList<SavedMovement>> LockMovementsAsync(
         IReadOnlyCollection<long> movementIds, IDbTransaction transaction, CancellationToken cancellationToken)
     {
@@ -125,6 +170,8 @@ internal sealed class InventoryRepository : IInventoryRepository
     }
 
     private sealed record ItemRow(long ItemId, string ItemCd, string? Type, decimal OnhandQty, decimal StkVal, decimal MvgCost);
+
+    private sealed record BalanceRow(decimal Opening, DateOnly? DocumentDt, decimal? Balance, bool? MonthEnd);
 
     private sealed record OnHandDbRow(long ItemId, long WarehouseId, string WarehouseCode, decimal OnhandQty);
 
