@@ -7,7 +7,7 @@
 | 모듈 | SD (영업) |
 | 화면유형 | **SM** (자동) |
 | 화면 경로 | `/sd/credit-memo-apply-receipt` (`Pages/Sd/CreditMemoApplyReceipt.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > 입금 화면의 'Credit 적용' 버튼으로 여는 창이다. 적용 경로 `C`. 입금 줄 송장들의 적용 이력(모든 경로)을 두 번째 그리드에 보인다.

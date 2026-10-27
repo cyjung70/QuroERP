@@ -7,10 +7,10 @@
 | 모듈 | BC (기초정보·공통) |
 | 화면유형 | **S** (확정) |
 | 화면 경로 | `/bc/change-password` (`Pages/Bc/ChangePassword.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 로그인한 모든 사용자 (본인 정보만) |
 | 사전조건 | 로그인 (security.md) |
 
-> PBKDF2 해시로 저장한다. 최소 길이·종류 수, 직전 비밀번호 재사용 금지, 사용자 ID와 같은 비밀번호 금지, 변경 후 자동 로그인 토큰 모두 폐기 (`docs/architecture/login.md` 비밀번호). 변경이 필요한 계정은 이 화면을 마치기 전에 다른 화면을 쓸 수 없다 (AUTH-005).
+> 현재 비밀번호와 새 비밀번호(두 번 입력)를 받는다 (BC-BR-051~059). PBKDF2 해시로 저장한다. 변경이 필요한 계정은 이 화면을 마치기 전에 다른 화면을 쓸 수 없다 (AUTH-005, BC-BR-009).
 
 ## 기본 흐름
 
@@ -40,11 +40,7 @@
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/change-password?조건 | 목록·찾기 (대화상자) |
-| GET | /api/bc/change-password/{id} | 1건 조회 |
-| POST | /api/bc/change-password | 신규 |
-| PUT | /api/bc/change-password/{id} | 수정 (updatedAt 필수) |
-| DELETE | /api/bc/change-password/{id} | 삭제 |
+| POST | /api/auth/change-password | { currentPassword, newPassword } → 204. 400 AUTH-011~015 (BC-BR-051~059) |
 
 ## 관련 테이블
 
@@ -54,7 +50,16 @@
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [BC-BR-051](../../business-rules/BC/password.md)
+- [BC-BR-052](../../business-rules/BC/password.md)
+- [BC-BR-053](../../business-rules/BC/password.md)
+- [BC-BR-054](../../business-rules/BC/password.md)
+- [BC-BR-055](../../business-rules/BC/password.md)
+- [BC-BR-056](../../business-rules/BC/password.md)
+- [BC-BR-057](../../business-rules/BC/password.md)
+- [BC-BR-058](../../business-rules/BC/password.md)
+- [BC-BR-059](../../business-rules/BC/password.md)
+- [BC-BR-009](../../business-rules/BC/auth.md)
 
 ## 다국어 리소스 키
 
@@ -68,6 +73,7 @@
 - `BC-UC-002-T02` 필수 값 누락 시 저장 차단
 - `BC-UC-002-T03` 동시 수정 충돌 409
 - `BC-UC-002-T04` 없는 코드 값 저장 시 422
+- `BC-UC-002-T05` 관련 BR마다 단위 테스트 (`BC-UT-` + BR 번호, 예: BC-BR-051 → BC-UT-051)
 
 ## AS IS 근거
 

@@ -7,7 +7,7 @@
 | 모듈 | MM (구매·재고) |
 | 화면유형 | **M** (자동) |
 | 화면 경로 | `/mm/report-vendor-center` (`Pages/Mm/VendorCenterReport.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > 공급자를 눌러 [공급자 마스터](vendor.md)나 [공급자 거래 내역](report-vendor-transactions.md)을 연다.

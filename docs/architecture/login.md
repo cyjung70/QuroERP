@@ -3,6 +3,8 @@
 
 로그인 화면([로그인 명세](../specifications/BC/login.md))과 인증 API가 따르는 정책이다. 인증 경로·권한은 [security.md](security.md)를 따른다.
 
+검증할 규칙은 업무 규칙이 원본이다: 로그인·세션 [BC-BR-001~017](../business-rules/BC/auth.md), 비밀번호 [BC-BR-051~059](../business-rules/BC/password.md), 사용자 관리 [BC-BR-121~132](../business-rules/BC/user.md). 이 문서는 설계 설명이다. 둘이 다르면 업무 규칙을 따른다.
+
 ## 결정
 
 - 회사 코드 없음: 단일 회사로 운영한다. 로그인 화면에 회사 선택·입력이 없고, 인증·업무 데이터에 회사 구분 키가 없다.
@@ -74,9 +76,8 @@
 ## 비밀번호
 
 - `PasswordHasher<T>`(PBKDF2) 해시만 저장한다. 평문·복호화 가능한 암호화는 금지다.
-- 새 비밀번호: 최소 길이·종류 수(설정), 직전 `password_history_count`개와 다름(`sys_password_history`), 사용자 ID와 다름. 바꾸면 `password_changed_at`을 갱신하고 그 사용자의 자동 로그인 토큰을 모두 폐기한다.
-- 관리자가 만들거나 초기화한 계정은 첫 로그인 때 변경을 강제한다 (`must_change_password = true`).
-- `password_expire_days > 0`이면 `password_changed_at + 일수`가 지난 계정은 변경을 강제한다.
+- 변경 API, 길이·종류·재사용·사용자 ID 검사, 변경 후 토큰 폐기는 [비밀번호 업무 규칙](../business-rules/BC/password.md)을 따른다.
+- 관리자가 만들거나 초기화한 계정과 만료된 계정은 변경을 강제한다 (BC-BR-009, BC-BR-123, BC-BR-129).
 
 ## 보안·감사
 
@@ -99,5 +100,10 @@
 | AUTH-008 | 폼 위 | 요청이 너무 많습니다. 잠시 후 다시 시도하세요. | Too many requests. Please try again shortly. |
 | AUTH-009 | 비밀번호 칸 아래 | Caps Lock이 켜져 있습니다. | Caps Lock is on. |
 | AUTH-010 | 체크박스 아래 | 공용 PC에서는 로그인 상태 유지를 사용하지 마세요. | Do not use "Keep me signed in" on a shared computer. |
+| AUTH-011 | 입력칸 아래 | 비밀번호는 {min}자 이상 128자 이하여야 합니다. | Password must be {min} to 128 characters long. |
+| AUTH-012 | 입력칸 아래 | 영문 대문자, 소문자, 숫자, 특수문자 중 {n}가지 이상을 쓰세요. | Use at least {n} of: uppercase, lowercase, digits, symbols. |
+| AUTH-013 | 입력칸 아래 | 최근에 쓴 비밀번호는 다시 쓸 수 없습니다. | You cannot reuse a recent password. |
+| AUTH-014 | 입력칸 아래 | 비밀번호는 사용자 ID와 같을 수 없습니다. | Password cannot be the same as your user ID. |
+| AUTH-015 | 입력칸 아래 | 현재 비밀번호가 올바르지 않습니다. | Current password is incorrect. |
 
 - AUTH-003의 시각은 사용자 시간대 기준이다.

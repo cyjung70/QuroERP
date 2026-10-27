@@ -7,7 +7,7 @@
 | 모듈 | MM (구매·재고) |
 | 화면유형 | **SM** (확정) |
 | 화면 경로 | `/mm/ap-payment` (`Pages/Mm/ApPayment.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > '입고 불러오기' 대화상자로 공급자의 미지급 입고를 가져온다. 지급 방법은 `AP_PAYMENT_METHOD` 코드다.
