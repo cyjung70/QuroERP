@@ -7,7 +7,7 @@
 | 모듈 | SD (영업) |
 | 화면유형 | **S** (확정) |
 | 화면 경로 | `/sd/sales-order-line-upload` (`Pages/Sd/SalesOrderLineUpload.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > [수주](sales-order.md) 화면의 '파일 올리기' 버튼으로 여는 대화상자다. 읽은 줄은 수주 그리드에 추가만 하고 저장하지 않는다 (SD-BR-021).

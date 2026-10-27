@@ -10,7 +10,22 @@
   "specs": [
     "docs/specifications/BC/user.md"
   ],
-  "rules": [],
+  "rules": [
+    "BC-BR-121",
+    "BC-BR-122",
+    "BC-BR-123",
+    "BC-BR-124",
+    "BC-BR-125",
+    "BC-BR-126",
+    "BC-BR-127",
+    "BC-BR-128",
+    "BC-BR-129",
+    "BC-BR-130",
+    "BC-BR-131",
+    "BC-BR-132",
+    "BC-BR-007",
+    "BC-BR-214"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

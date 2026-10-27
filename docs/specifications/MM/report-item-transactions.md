@@ -7,7 +7,7 @@
 | 모듈 | MM (구매·재고) |
 | 화면유형 | **M** (자동) |
 | 화면 경로 | `/mm/report-item-transactions` (`Pages/Mm/ItemTransactionReport.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > 재고 리포트(품목 목록, 재고 수불부 상세)에서 품목을 눌러 연다. 창고 간 재고 이동(`mm_stock_transfer`, `mm_stock_transfer_line`)도 읽는다. 문서 번호는 MVP 문서 화면으로만 연결한다 (MM-BR-819).

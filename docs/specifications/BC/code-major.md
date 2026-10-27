@@ -7,7 +7,7 @@
 | 모듈 | BC (기초정보·공통) |
 | 화면유형 | **M** (자동) |
 | 화면 경로 | `/bc/code-major` (`Pages/Bc/CodeMajor.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
 > [코드 관리](code.md)의 Major 코드 화면이다. 테이블 구조는 `docs/architecture/codes.md`다. Minor 코드는 [코드 관리](code.md)에서 바꾼다.

@@ -13,7 +13,18 @@
   "specs": [
     "docs/specifications/BC/change-password.md"
   ],
-  "rules": [],
+  "rules": [
+    "BC-BR-051",
+    "BC-BR-052",
+    "BC-BR-053",
+    "BC-BR-054",
+    "BC-BR-055",
+    "BC-BR-056",
+    "BC-BR-057",
+    "BC-BR-058",
+    "BC-BR-059",
+    "BC-BR-009"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

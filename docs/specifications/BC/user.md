@@ -7,10 +7,10 @@
 | 모듈 | BC (기초정보·공통) |
 | 화면유형 | **S** (자동) |
 | 화면 경로 | `/bc/user` (`Pages/Bc/User.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
-> 잠긴 계정 해제(`UNLOCK` 이력), 비밀번호 초기화(첫 로그인 때 변경 강제), 자동 로그인 토큰 강제 폐기를 이 화면에서 한다. 비밀번호 찾기는 관리자 초기화만 한다 (`docs/architecture/login.md`).
+> 사용자 ID는 소문자로 저장하고 바꾸지 않는다 (BC-BR-121). 삭제 대신 사용 안 함이다 (BC-BR-125). 잠금 해제·비밀번호 초기화·자동 로그인 토큰 강제 폐기는 별도 동작 버튼이다 (BC-BR-128~130). 수정 화면에는 비밀번호·비밀번호 만료일 칸이 없다 — 아래 AS IS 필드 중 이 둘은 옮기지 않는다 (BC-BR-124, BC-BR-127).
 
 ## 기본 흐름
 
@@ -55,11 +55,13 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/users?조건 | 목록·찾기 (대화상자) |
+| GET | /api/bc/users?조건 | 사용자 목록·찾기 (비밀번호 해시 없음) |
 | GET | /api/bc/users/{id} | 1건 조회 |
-| POST | /api/bc/users | 신규 |
-| PUT | /api/bc/users/{id} | 수정 (updatedAt 필수) |
-| DELETE | /api/bc/users/{id} | 삭제 |
+| POST | /api/bc/users | 신규 (초기 비밀번호 포함, BC-BR-121~123) |
+| PUT | /api/bc/users/{id} | 수정 (updatedAt 필수, 비밀번호 없음, BC-BR-124~126·131) |
+| POST | /api/bc/users/{id}/unlock | 잠금 해제 (BC-BR-128) |
+| POST | /api/bc/users/{id}/reset-password | 비밀번호 초기화 { newPassword } (BC-BR-129) |
+| POST | /api/bc/users/{id}/revoke-tokens | 자동 로그인 토큰 강제 폐기 (BC-BR-130) |
 
 ## 관련 테이블
 
@@ -70,7 +72,20 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [BC-BR-121](../../business-rules/BC/user.md)
+- [BC-BR-122](../../business-rules/BC/user.md)
+- [BC-BR-123](../../business-rules/BC/user.md)
+- [BC-BR-124](../../business-rules/BC/user.md)
+- [BC-BR-125](../../business-rules/BC/user.md)
+- [BC-BR-126](../../business-rules/BC/user.md)
+- [BC-BR-127](../../business-rules/BC/user.md)
+- [BC-BR-128](../../business-rules/BC/user.md)
+- [BC-BR-129](../../business-rules/BC/user.md)
+- [BC-BR-130](../../business-rules/BC/user.md)
+- [BC-BR-131](../../business-rules/BC/user.md)
+- [BC-BR-132](../../business-rules/BC/user.md)
+- [BC-BR-007](../../business-rules/BC/auth.md)
+- [BC-BR-214](../../business-rules/BC/menu-role.md)
 
 ## 다국어 리소스 키
 
@@ -84,6 +99,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - `BC-UC-004-T02` 필수 값 누락 시 저장 차단
 - `BC-UC-004-T03` 동시 수정 충돌 409
 - `BC-UC-004-T04` 없는 코드 값 저장 시 422
+- `BC-UC-004-T05` 관련 BR마다 단위 테스트 (`BC-UT-` + BR 번호, 예: BC-BR-121 → BC-UT-121)
 
 ## AS IS 근거
 

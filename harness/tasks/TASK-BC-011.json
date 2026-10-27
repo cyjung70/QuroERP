@@ -13,7 +13,16 @@
   "specs": [
     "docs/specifications/BC/company-menu.md"
   ],
-  "rules": [],
+  "rules": [
+    "BC-BR-201",
+    "BC-BR-202",
+    "BC-BR-203",
+    "BC-BR-204",
+    "BC-BR-205",
+    "BC-BR-206",
+    "BC-BR-207",
+    "BC-BR-214"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

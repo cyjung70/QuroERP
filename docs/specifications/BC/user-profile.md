@@ -7,10 +7,10 @@
 | 모듈 | BC (기초정보·공통) |
 | 화면유형 | **S** (자동) |
 | 화면 경로 | `/bc/user-profile` (`Pages/Bc/UserProfile.razor`) |
-| 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
+| 액터 | 로그인한 모든 사용자 (본인 정보만) |
 | 사전조건 | 로그인 (security.md) |
 
-> 기본 언어·기본 창고를 바꾸고, '모든 기기에서 로그아웃'(내 자동 로그인 토큰 모두 폐기)을 할 수 있다 (`docs/architecture/login.md`).
+> 로그인한 본인 정보만 다룬다 (BC-BR-101). 이름·이메일·전화·기본 언어·기본 창고를 바꾸고, '모든 기기에서 로그아웃'(내 자동 로그인 토큰 모두 폐기)을 할 수 있다. 아래 AS IS 필드 중 조회 조건과 비밀번호 칸은 옮기지 않는다 — 비밀번호는 [비밀번호 변경](change-password.md) 화면이다 (BC-BR-103).
 
 ## 기본 흐름
 
@@ -51,11 +51,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/user-profile?조건 | 목록·찾기 (대화상자) |
-| GET | /api/bc/user-profile/{id} | 1건 조회 |
-| POST | /api/bc/user-profile | 신규 |
-| PUT | /api/bc/user-profile/{id} | 수정 (updatedAt 필수) |
-| DELETE | /api/bc/user-profile/{id} | 삭제 |
+| GET | /api/bc/user-profile | 내 정보 (BC-BR-101) |
+| PUT | /api/bc/user-profile | 내 정보 수정 (updatedAt 필수, BC-BR-102·105) |
+| POST | /api/bc/user-profile/revoke-tokens | 모든 기기에서 로그아웃 (BC-BR-106). 204 |
 
 ## 관련 테이블
 
@@ -65,7 +63,13 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [BC-BR-101](../../business-rules/BC/user.md)
+- [BC-BR-102](../../business-rules/BC/user.md)
+- [BC-BR-103](../../business-rules/BC/user.md)
+- [BC-BR-104](../../business-rules/BC/user.md)
+- [BC-BR-105](../../business-rules/BC/user.md)
+- [BC-BR-106](../../business-rules/BC/user.md)
+- [BC-BR-013](../../business-rules/BC/auth.md)
 
 ## 다국어 리소스 키
 
@@ -79,6 +83,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - `BC-UC-003-T02` 필수 값 누락 시 저장 차단
 - `BC-UC-003-T03` 동시 수정 충돌 409
 - `BC-UC-003-T04` 없는 코드 값 저장 시 422
+- `BC-UC-003-T05` 관련 BR마다 단위 테스트 (`BC-UT-` + BR 번호, 예: BC-BR-101 → BC-UT-101)
 
 ## AS IS 근거
 
