@@ -9,7 +9,7 @@
   - MD 안의 상대 경로 링크가 실제 파일을 가리키는지
   - .claude/skills 가 .agents/skills 와 같은지
   - harness/tasks/*.json 필수 필드
-  - 서브 프로젝트 tester/: 필수 파일, AGENTS.md 150줄, tester/docs/INDEX.md 등록, 태스크 필드
+  - 서브 프로젝트 tester/, game-academy/: 필수 파일, AGENTS.md 150줄, docs/INDEX.md 등록, 태스크 필드
 #>
 param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 
@@ -25,14 +25,17 @@ $required = @(
   'docs/architecture/subprojects.md',
   'tester/AGENTS.md', 'tester/CLAUDE.md', 'tester/docs/INDEX.md', 'tester/docs/architecture.md',
   'tester/docs/scenarios/MM', 'tester/docs/scenarios/SD', 'tester/docs/scenarios/migration',
-  'tester/harness/tasks', 'tester/src', 'tester/tests'
+  'tester/harness/tasks', 'tester/src', 'tester/tests',
+  'game-academy/AGENTS.md', 'game-academy/CLAUDE.md', 'game-academy/docs/INDEX.md', 'game-academy/docs/architecture.md',
+  'game-academy/docs/assets-guide.md', 'game-academy/docs/i18n.md', 'game-academy/docs/missions/MM', 'game-academy/docs/missions/SD',
+  'game-academy/harness/tasks', 'game-academy/src', 'game-academy/tests'
 )
 foreach ($p in $required) { if (-not (Test-Path (Join-Path $Root $p))) { Fail "필수 경로 없음: $p" } }
-foreach ($s in 'quro-api', 'quro-blazor', 'quro-dapper', 'quro-unit-test', 'quro-code-review', 'quro-pytest') {
+foreach ($s in 'quro-api', 'quro-blazor', 'quro-dapper', 'quro-unit-test', 'quro-code-review', 'quro-pytest', 'quro-game') {
   if (-not (Test-Path (Join-Path $Root ".agents/skills/$s/SKILL.md"))) { Fail "스킬 없음: $s" }
 }
 
-foreach ($a in 'AGENTS.md', 'tester/AGENTS.md') {
+foreach ($a in 'AGENTS.md', 'tester/AGENTS.md', 'game-academy/AGENTS.md') {
   $agents = Join-Path $Root $a
   if (Test-Path $agents) {
     $n = (Get-Content $agents -Encoding utf8).Count
@@ -40,7 +43,7 @@ foreach ($a in 'AGENTS.md', 'tester/AGENTS.md') {
   }
 }
 
-foreach ($d in 'docs', 'tester/docs') {
+foreach ($d in 'docs', 'tester/docs', 'game-academy/docs') {
   $docs = Join-Path $Root $d
   $index = Join-Path $docs 'INDEX.md'
   if (Test-Path $index) {
@@ -82,7 +85,9 @@ $taskSets = @(
   @{ Dir = 'harness/tasks'; Project = 'core'; Docs = 'specs'
      Fields = 'id', 'project', 'title', 'module', 'layer', 'screenType', 'specs', 'rules', 'skills', 'dependsOn', 'acceptance', 'estimateHours', 'status' },
   @{ Dir = 'tester/harness/tasks'; Project = 'tester'; Docs = 'scenarios'
-     Fields = 'id', 'project', 'title', 'module', 'layer', 'scenarios', 'rules', 'skills', 'dependsOn', 'acceptance', 'estimateHours', 'status' }
+     Fields = 'id', 'project', 'title', 'module', 'layer', 'scenarios', 'rules', 'skills', 'dependsOn', 'acceptance', 'estimateHours', 'status' },
+  @{ Dir = 'game-academy/harness/tasks'; Project = 'game-academy'; Docs = 'missions'
+     Fields = 'id', 'project', 'title', 'module', 'layer', 'missions', 'rules', 'skills', 'dependsOn', 'acceptance', 'estimateHours', 'status' }
 )
 $taskIds = @{}
 foreach ($set in $taskSets) {

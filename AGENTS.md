@@ -95,8 +95,9 @@ tests/
 | `quro-unit-test` | 테스트를 만들 때 (모든 태스크) |
 | `quro-code-review` | 작업을 끝내기 전 자체 점검 |
 | `quro-pytest` | Tester(`tester/`) 테스트를 만들 때 |
+| `quro-game` | Game ERP Academy(`game-academy/`)를 만들 때 |
 
-서브 프로젝트(`tester/` 등)는 REST API로만 본체와 연결한다. 그 폴더의 `AGENTS.md`를 함께 따른다: `docs/architecture/subprojects.md`
+서브 프로젝트(`tester/`, `game-academy/`)는 REST API로만 본체와 연결한다. 그 폴더의 `AGENTS.md`를 함께 따른다: `docs/architecture/subprojects.md`
 
 ## 9. 작업 완료 조건
 
