@@ -22,6 +22,7 @@
 
 - 줄이 있는 문서는 일자를 바꿀 수 없다 (MM-BR-205).
 - 저장한 줄은 고칠 수 없다. 지우고 다시 넣는다 (MM-BR-206).
+- 줄 파일(`품목 코드,수량,금액`)을 올려 줄을 넣을 수 있다. 오류 줄이 있으면 아무 줄도 넣지 않는다 (MM-BR-209~211).
 - 문서를 지우면 모든 줄의 반입을 취소한다 (MM-BR-207).
 - 세트 품목은 구성품으로 반입한다 (MM-BR-007).
 - 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
@@ -83,6 +84,9 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `delete_mov_inv`
 - [MM-BR-206](../../business-rules/MM/unplanned-receipt.md)
 - [MM-BR-207](../../business-rules/MM/unplanned-receipt.md)
 - [MM-BR-208](../../business-rules/MM/unplanned-receipt.md)
+- [MM-BR-209](../../business-rules/MM/unplanned-receipt.md)
+- [MM-BR-210](../../business-rules/MM/unplanned-receipt.md)
+- [MM-BR-211](../../business-rules/MM/unplanned-receipt.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
