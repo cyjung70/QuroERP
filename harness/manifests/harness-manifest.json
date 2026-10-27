@@ -19,6 +19,10 @@
       "sha256": "93582c8feae0d05b8203fbd7f623b15c5ec75eb3a7580a41a05d5fefda455149"
     },
     {
+      "path": ".agents/skills/quro-game/SKILL.md",
+      "sha256": "41bbd96e415149ca6ea309e7920291f6e4db7ccd46f4b9242ab57588743c26bb"
+    },
+    {
       "path": ".agents/skills/quro-pytest/SKILL.md",
       "sha256": "0ba97e095810219e8d4d5a6437f735776ddd9eb12393f6f2c06516a5afb9c0b1"
     },
@@ -43,6 +47,10 @@
       "sha256": "93582c8feae0d05b8203fbd7f623b15c5ec75eb3a7580a41a05d5fefda455149"
     },
     {
+      "path": ".claude/skills/quro-game/SKILL.md",
+      "sha256": "41bbd96e415149ca6ea309e7920291f6e4db7ccd46f4b9242ab57588743c26bb"
+    },
+    {
       "path": ".claude/skills/quro-pytest/SKILL.md",
       "sha256": "0ba97e095810219e8d4d5a6437f735776ddd9eb12393f6f2c06516a5afb9c0b1"
     },
@@ -52,7 +60,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "1d29c29e7cb64f8d3d92f1a63d044a0089e5f1123810436b5fc6ab08a8ee83d4"
+      "sha256": "c51084f9cd413e40f2655a426a9eb9a5c40d9f8392fe0d08701995d75cb12737"
     },
     {
       "path": "CLAUDE.md",
@@ -108,7 +116,7 @@
     },
     {
       "path": "docs/architecture/subprojects.md",
-      "sha256": "fccdc9a069b5bb07cdd691c8e6d26f4be33b5d173e97cb30899b5a4333259bf4"
+      "sha256": "5524035e6ce8832955b66dd6ba64654011e269fb699dcacf2c42890b771e5cec"
     },
     {
       "path": "docs/business-rules/CO/README.md",
@@ -232,7 +240,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "2bd954c16e96db5019786d4c4482a081b0ca0ddee0a40764a7426bb2b6ab0750"
+      "sha256": "1ae11e3621c29ad3ce87b664b3e38d2c4468456d6b94956234d4b40688febf91"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -625,6 +633,58 @@
     {
       "path": "docs/specifications/SD/sales-order.md",
       "sha256": "8380d24efdf63b3047372f23ccf1ea8e134cc53bbbf6d2e8a6451de383dd95ec"
+    },
+    {
+      "path": "game-academy/AGENTS.md",
+      "sha256": "24f2adccc887895486c4c2bbc0c304ae7088c0c58075dd737eedfca31b101f6e"
+    },
+    {
+      "path": "game-academy/CLAUDE.md",
+      "sha256": "7d426180ba440a354f4e39b3a06f66ed56a2d654ad2b77793a91a58b7414fa1f"
+    },
+    {
+      "path": "game-academy/docs/architecture.md",
+      "sha256": "fc73b5e7fbb79d3d6c6051661418bb7065c6b07dd57b69b4fb3a2650308c2e46"
+    },
+    {
+      "path": "game-academy/docs/assets-guide.md",
+      "sha256": "e7f44513d5319503e8f0a11b6559c75ce548d97fdd72f10448cac45abb221e62"
+    },
+    {
+      "path": "game-academy/docs/i18n.md",
+      "sha256": "8d31099d6f4a2d0c059bce1a0342d7c48bceddeed7b5edcef79f6eabb6e6bf2f"
+    },
+    {
+      "path": "game-academy/docs/INDEX.md",
+      "sha256": "50fe6d5f5cfb381c8f63ba2995a75324766710928e868f2d1a2fa158f9b94bf3"
+    },
+    {
+      "path": "game-academy/docs/missions/MM/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "game-academy/docs/missions/SD/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "game-academy/harness/tasks/TASK-GAME-001.json",
+      "sha256": "7bccc44420a2254c88a1121c2091dbb41398c3607583c5a1e02cd5b81a7c9293"
+    },
+    {
+      "path": "game-academy/harness/tasks/TASK-GAME-002.json",
+      "sha256": "7eb3ed2233bd05c14d29a22d18d9ae9507f1c57ceed3ab53b970700388ea01aa"
+    },
+    {
+      "path": "game-academy/harness/tasks/TASK-GAME-003.json",
+      "sha256": "fc08e0fb204f8679182f7e0ee02f5e64c7f7ff608e3ed0e683fdb23b2bd0d59a"
+    },
+    {
+      "path": "game-academy/src/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "game-academy/tests/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "path": "GEMINI.md",
@@ -1268,7 +1328,7 @@
     },
     {
       "path": "scripts/validate-harness.ps1",
-      "sha256": "8fc1259230c9b4d3721796f7aed201ae20428ef09df9a681f40f5baf283a9191"
+      "sha256": "a06d62c02804fda3c96db2503b112b5d52b53f41dd6e2fd4fa03d9a1efab3214"
     },
     {
       "path": "src/.gitkeep",

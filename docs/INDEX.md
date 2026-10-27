@@ -114,6 +114,7 @@
 ## 서브 프로젝트
 
 - [Tester 문서 지도](../tester/docs/INDEX.md) — REST API·화면·업무 시나리오·이관 검증 (Python)
+- [Game ERP Academy 문서 지도](../game-academy/docs/INDEX.md) — 게임으로 MM·SD 업무 학습 (TypeScript, PixiJS)
 - 경계 규칙: [서브 프로젝트 경계](architecture/subprojects.md)
 
 ## 아키텍처
