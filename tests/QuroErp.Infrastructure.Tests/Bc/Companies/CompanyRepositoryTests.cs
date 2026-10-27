@@ -35,7 +35,8 @@ public class CompanyRepositoryTests(AuthSchemaFixture db)
         var connection = uow.Transaction.Connection!;
         await connection.ExecuteAsync(
             """
-            INSERT INTO bc_company (id, name, created_by, updated_by) VALUES (1, 'Quro', 'system', 'system'), (2, 'Other', 'system', 'system')
+            INSERT INTO bc_company (id, name, country_code, base_currency_code, default_lang_code, created_by, updated_by)
+            VALUES (1, 'Quro', 'US', 'USD', 'en', 'system', 'system'), (2, 'Other', 'US', 'USD', 'en', 'system', 'system')
             """,
             transaction: uow.Transaction);
 
@@ -65,7 +66,7 @@ public class CompanyRepositoryTests(AuthSchemaFixture db)
 
         // Test values only (InlineData), not external input
         var act = () => uow.Transaction.Connection!.ExecuteAsync(
-            $"INSERT INTO bc_company (name, logo_image, logo_content_type, created_by, updated_by) VALUES ('Quro', {image}, {contentType}, 's', 's')",
+            $"INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, logo_image, logo_content_type, created_by, updated_by) VALUES ('Quro', 'US', 'USD', 'en', {image}, {contentType}, 's', 's')",
             transaction: uow.Transaction);
 
         (await act.Should().ThrowAsync<PostgresException>()).Which.SqlState.Should().Be(PostgresErrorCodes.CheckViolation);

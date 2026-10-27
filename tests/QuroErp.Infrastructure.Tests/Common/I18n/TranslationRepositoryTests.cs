@@ -1,5 +1,6 @@
 using Dapper;
 using FluentAssertions;
+using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Infrastructure.Tests.Common.Auth;
@@ -45,7 +46,7 @@ public class TranslationRepositoryTests(AuthSchemaFixture db)
             "INSERT INTO sys_code_minor_translation (minor_id, lang_code, name, created_by, updated_by) VALUES (@MinorId, 'en', 'Only English', 't', 't')",
             new { MinorId = minorId }, uow.Transaction);
 
-        var service = new TranslationService(db.Get<ITranslationRepository>());
+        var service = new TranslationService(db.Get<ITranslationRepository>(), db.Get<ILocalizationRepository>());
         var names = await service.GetNamesAsync(TranslationTarget.CodeMinor, [minorId], "ko", uow.Transaction, CancellationToken.None);
 
         names.Should().BeEquivalentTo(new Dictionary<long, string> { [minorId] = "Only English" });

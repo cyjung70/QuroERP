@@ -8,7 +8,7 @@ namespace QuroErp.Application.Common.Codes;
 public sealed class CodeService(ICodeRepository codes, TranslationService translations, IUnitOfWorkFactory unitOfWork)
 {
     /// <summary>
-    /// Active Minor codes of majorCode in sort_order, with names in langCode (ko → en fallback).
+    /// Active Minor codes of majorCode in sort_order, with names in langCode (company default language → en fallback).
     /// A code without any translation uses its minor_code as the name.
     /// </summary>
     /// <exception cref="NotFoundException">Common-E-003 when the Major does not exist or is not in use.</exception>

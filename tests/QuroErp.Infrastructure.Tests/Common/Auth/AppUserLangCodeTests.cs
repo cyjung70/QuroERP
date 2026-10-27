@@ -30,14 +30,14 @@ public class AppUserLangCodeTests(AuthSchemaFixture db)
     }
 
     [DatabaseFact, Trait("Id", "CORE-004-IT-05")]
-    public async Task Update_UnsupportedLangCode_IsRejectedByCheckConstraint()
+    public async Task Update_LangCodeNotInLanguageMaster_IsRejectedByForeignKey()
     {
         await AdminAccount.CreateOrResetAsync(db.ConnectionString, "lang_ja", "Pass-1", CancellationToken.None);
 
         var act = () => SetLangCodeAsync("lang_ja", "ja");
 
         (await act.Should().ThrowAsync<PostgresException>())
-            .Which.ConstraintName.Should().Be("ck_sys_app_user_lang_code");
+            .Which.ConstraintName.Should().Be("fk_sys_app_user_lang_code");
     }
 
     private async Task SetLangCodeAsync(string userId, string langCode)

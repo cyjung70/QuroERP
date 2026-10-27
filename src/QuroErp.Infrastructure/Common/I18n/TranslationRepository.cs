@@ -18,6 +18,10 @@ internal sealed class TranslationRepository : ITranslationRepository
         SELECT item_id AS owner_id, lang_code, item_name AS name FROM bc_item_translation WHERE item_id = ANY(@OwnerIds)
         """;
 
+    private const string SelectCurrencyName = """
+        SELECT currency_id AS owner_id, lang_code, name FROM bc_currency_translation WHERE currency_id = ANY(@OwnerIds)
+        """;
+
     public async Task<IReadOnlyList<TranslationRow>> FindAsync(
         TranslationTarget target, IReadOnlyCollection<long> ownerIds, IDbTransaction transaction, CancellationToken cancellationToken)
     {
@@ -26,6 +30,7 @@ internal sealed class TranslationRepository : ITranslationRepository
             TranslationTarget.CodeMajor => SelectCodeMajor,
             TranslationTarget.CodeMinor => SelectCodeMinor,
             TranslationTarget.ItemName => SelectItemName,
+            TranslationTarget.CurrencyName => SelectCurrencyName,
             _ => throw new ArgumentOutOfRangeException(nameof(target), target, null),
         };
         var rows = await transaction.Connection!.QueryAsync<TranslationRow>(
