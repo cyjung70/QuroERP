@@ -1,0 +1,31 @@
+{
+  "id": "TASK-GAME-001",
+  "project": "game-academy",
+  "title": "게임 클라이언트 골격: Vite + TypeScript + PixiJS v8 + Howler.js, core 판정 모듈, 다국어",
+  "module": "CORE",
+  "layer": [
+    "GameClient"
+  ],
+  "missions": [],
+  "rules": [],
+  "skills": [
+    "quro-game"
+  ],
+  "dependsOn": [
+    "TASK-BC-001"
+  ],
+  "acceptance": [
+    "game-academy/src/client에 Vite + TypeScript(strict) 프로젝트, package-lock.json 커밋",
+    "폴더 core/, render/, audio/, net/, locales/, assets/ (game-academy/docs/architecture.md)",
+    "core/는 PixiJS·Howler·DOM을 import하지 않는다 (lint 규칙으로 막는다)",
+    "core/에 미션 상태 기계와 판정 함수(상태 코드·오류 코드 비교), Vitest 단위 테스트",
+    "미션 YAML 스키마와 형식 검사 (game-academy/tests/missions/)",
+    "PixiJS v8으로 128×64 아이소메트릭 바닥 타일 격자를 그리는 첫 장면",
+    "Howler.js로 배경음·효과음 음량을 따로 조절",
+    "locales/ko.json, en.json, 두 파일의 키 목록이 같은지 검사",
+    "net/: QuroERP API 클라이언트가 Problem Details code를 꺼낸다",
+    "npm run lint, npm test, npm run build 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

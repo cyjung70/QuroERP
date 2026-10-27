@@ -1,0 +1,30 @@
+{
+  "id": "TASK-GAME-002",
+  "project": "game-academy",
+  "title": "게임 서버 골격: ASP.NET Core + SignalR Hub, 게임 DB(학습자·진도·점수), Blazor 셸",
+  "module": "CORE",
+  "layer": [
+    "GameServer"
+  ],
+  "missions": [],
+  "rules": [],
+  "skills": [
+    "quro-game",
+    "quro-dapper",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-001"
+  ],
+  "acceptance": [
+    "game-academy/src/server에 ASP.NET Core 프로젝트. 본체 C# 프로젝트를 참조하지 않는다",
+    "SignalR Hub: 미션 진행 이벤트(시작, 단계 결과, 완료)를 받아 게임 DB에 저장",
+    "게임 DB 마이그레이션(game_ 테이블: 학습자, 미션 진도, 시도 기록, 점수). 루트 database.md 규칙",
+    "Blazor 셸: 미션 목록과 학습자 진도 화면 (ko·en 리소스)",
+    "연결 문자열은 환경변수·user-secrets로만 받는다",
+    "학습자 환경(DB + API 인스턴스) 관리는 이 태스크에서 만들지 않는다 (TASK-GAME-003)",
+    "game-academy/tests/server에 xUnit + FluentAssertions 테스트, dotnet test 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
