@@ -14,7 +14,8 @@
 ## 2. 하는 일
 
 - 실행 중인 QuroERP를 밖에서 검사한다: REST API, Blazor 화면, MM·SD 업무 흐름, AS IS 이관 데이터.
-- 본체의 xUnit 테스트(`tests/`)를 대신하지 않는다. 같은 BR을 다른 층에서 한 번 더 검사한다.
+- 본체의 xUnit 테스트(`tests/`)를 대신하지 않는다. 단일 필드 검사(예: 수량 > 0)는 xUnit에 맡기고, Tester는 업무 흐름·API 오류 코드·화면·이관·보안 회귀를 검사한다. 범위와 우선순위: [테스트 계획](docs/qa/test-plan.md).
+- QA 절차: [결함 관리](docs/qa/defects.md), [품질 게이트](docs/qa/quality-gate.md), [인수 테스트 체크리스트](docs/qa/uat-checklist.md).
 - FI, CO, PP 시나리오는 만들지 않는다 (Enterprise 범위).
 
 ## 3. 기술 스택 (변경 금지 — 바꾸려면 사람의 결정이 필요하다)
@@ -39,6 +40,7 @@
 | Migration | 이관 데이터 건수·합계·코드 변환 | psycopg | `@pytest.mark.migration` |
 
 - 모든 테스트는 BR ID 또는 시나리오 ID 마커를 단다: `@pytest.mark.br("SD-BR-001")`, `@pytest.mark.ts("SD-TS-001")`.
+- 회사 전체 상태(재고 월 마감, 마이너스 재고 모드, 인증 요청 수 제한)를 바꾸는 테스트는 `@pytest.mark.serial`을 단다. 병렬 실행(pytest-xdist)에서 빠지고 마지막에 따로 실행한다.
 - 시나리오 ID는 `{모듈}-TS-XXX`이고, 시나리오 1개 = 문서 1개다 (`tester/docs/scenarios/<모듈>/`).
 
 ## 5. 반드시 지킬 규칙
@@ -46,7 +48,7 @@
 1. **운영 DB에 접속하지 않는다.** 테스트 전용 PostgreSQL에서만 실행한다. DB 이름이 `_test`로 끝나지 않으면 테스트를 시작하지 않는다.
 2. **데이터는 API로만 바꾼다.** DB 연결은 읽기 전용 계정으로 조회(SELECT)만 한다. `INSERT`·`UPDATE`·`DELETE`·DDL을 쓰지 않는다.
 3. **업무 로직을 다시 만들지 않는다.** 기대값은 시나리오 문서에 적힌 값이나 API 응답에서 얻는다. 단가·재고 계산식을 테스트 코드에 옮겨 적지 않는다.
-4. **오류는 문구가 아니라 오류 코드·리소스 키로 검사한다.** 메시지 검사는 `ko`, `en` 둘 다 실행한다 (`Accept-Language`).
+4. **오류는 문구가 아니라 오류 코드·리소스 키로 검사한다.** 오류를 내는 테스트는 `ko`, `en` 둘 다 실행한다 (`Accept-Language`). 정상 흐름 테스트는 한 번만 실행한다.
 5. **마이너스 재고 모드 3종을 모두 검사한다.** 재고를 줄이는 시나리오는 `ALLOW`, `ALLOW_IN_MONTH`, `DENY`마다 실행하고, `ALLOW_IN_MONTH`는 월 마감 차단까지 본다. 모드는 재고 설정 API로 바꾸고 테스트가 끝나면 되돌린다.
 6. **테스트끼리 데이터를 나눠 쓰지 않는다.** 테스트마다 고유한 업무 키(예: `T` + 실행 ID + 순번)로 데이터를 만든다.
 7. **로그인은 세션마다 한 번만 한다.** 인증 API는 요청 수 제한이 있다 (`docs/architecture/login.md`).
@@ -59,11 +61,11 @@
 - `uv run pytest`(태스크가 정한 마커)가 테스트 환경에서 통과한다.
 - 새 테스트마다 `br` 또는 `ts` 마커가 있다.
 - `uv run ruff check`가 통과한다.
-- 테스트로 업무 규칙 위반(본체 버그)을 찾으면 테스트를 고쳐 통과시키지 말고, 실패를 남긴 채 PR 설명에 적는다.
+- 테스트로 업무 규칙 위반(본체 버그)을 찾으면 테스트를 고쳐 통과시키지 말고, [결함 관리](docs/qa/defects.md)대로 GitHub Issue를 만들고 PR 설명에 적는다.
 - 태스크 JSON의 `status`를 `done`으로 바꾼다.
 
 ## 7. 하지 말 것
 
 - `tester/docs/`, `tester/harness/`의 문서를 코드 작업 중에 고치지 않는다. 고칠 점은 PR 설명에 적는다.
 - 본체 C# 프로젝트를 참조하거나 본체 코드를 Python으로 옮기지 않는다.
-- 실패하는 테스트를 `skip`·`xfail`로 숨기지 않는다. 필요하면 사유와 시나리오 ID를 적고 사람에게 묻는다.
+- 실패하는 테스트를 `skip`·`xfail`로 숨기지 않는다. 예외는 GitHub Issue 번호가 있는 알려진 버그뿐이다: `@pytest.mark.xfail(strict=True, reason="#123")`.

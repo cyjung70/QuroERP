@@ -8,7 +8,7 @@
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "e3eb747ee7d6f93c5613a6cc5fbec26540527376674c37031853783ec2f14217"
+      "sha256": "9588adc387e27b0534d257e683dc471a701af58c205f7d0edcd67479367028ac"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
@@ -24,7 +24,7 @@
     },
     {
       "path": ".agents/skills/quro-pytest/SKILL.md",
-      "sha256": "0ba97e095810219e8d4d5a6437f735776ddd9eb12393f6f2c06516a5afb9c0b1"
+      "sha256": "b5c092f060e3283fd577ddba466ad58bba9c2434833c0d0341cf77ad7c5968ba"
     },
     {
       "path": ".agents/skills/quro-unit-test/SKILL.md",
@@ -36,7 +36,7 @@
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "e3eb747ee7d6f93c5613a6cc5fbec26540527376674c37031853783ec2f14217"
+      "sha256": "9588adc387e27b0534d257e683dc471a701af58c205f7d0edcd67479367028ac"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
@@ -52,7 +52,7 @@
     },
     {
       "path": ".claude/skills/quro-pytest/SKILL.md",
-      "sha256": "0ba97e095810219e8d4d5a6437f735776ddd9eb12393f6f2c06516a5afb9c0b1"
+      "sha256": "b5c092f060e3283fd577ddba466ad58bba9c2434833c0d0341cf77ad7c5968ba"
     },
     {
       "path": ".claude/skills/quro-unit-test/SKILL.md",
@@ -920,7 +920,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-006.json",
-      "sha256": "d9e335f781afdbb23beba771d6b27f67fadcb76354ab730b884007f37626eb7c"
+      "sha256": "6ca8276699e9ded2732a1b4892c7bc0460b4f20360c7c25d6c16f6f975d1d474"
     },
     {
       "path": "harness/tasks/TASK-CORE-007.json",
@@ -941,6 +941,10 @@
     {
       "path": "harness/tasks/TASK-CORE-011.json",
       "sha256": "5923c9b9ca25c3df3867828082eeb5ae178c7977bca5796f441cad3cc09966f8"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-012.json",
+      "sha256": "c72c54be5afe548eb5fdd1c9b920ed1b66290145b52d79749461cf05134a4213"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
@@ -1336,7 +1340,7 @@
     },
     {
       "path": "scripts/validate-harness.ps1",
-      "sha256": "a06d62c02804fda3c96db2503b112b5d52b53f41dd6e2fd4fa03d9a1efab3214"
+      "sha256": "4519167c24280e2484a2f59688cfa6b93742c431d7bc88a6b89622930f3d2591"
     },
     {
       "path": "src/.gitkeep",
@@ -1344,7 +1348,7 @@
     },
     {
       "path": "tester/AGENTS.md",
-      "sha256": "b4c70735052742d96b646cba64fee0c4388e162d8c79e38fc354fba7f660e3fe"
+      "sha256": "395c8ced515a9894cff942dc5261f09f6f0eb299d2f9bf2538e1223424f49917"
     },
     {
       "path": "tester/CLAUDE.md",
@@ -1352,11 +1356,27 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "6ac6a54dfb9bc20be24bd11e9a80cdb2994bbe9d4f8a701901681dd2669cff43"
+      "sha256": "3dd0095da356215c53d837f258637bba784ffa05e4f1afb307b765efda185c4b"
     },
     {
       "path": "tester/docs/INDEX.md",
-      "sha256": "375a8c069b3fb1be128f964bbd85e003d4e16c44229bf40f94e1b3b951c92479"
+      "sha256": "25e27d78c7a68b4d018a49f4fcadce703da02996282dd351c6514d4b0e7fc4e9"
+    },
+    {
+      "path": "tester/docs/qa/defects.md",
+      "sha256": "7a31770dff982824f47917d8df739a419cf2ab415aac5caa1bc89680d5c84928"
+    },
+    {
+      "path": "tester/docs/qa/quality-gate.md",
+      "sha256": "c0900e6cdbd1c0dfb99fb74417be60815048697481ed7ba37dc509073627ba2f"
+    },
+    {
+      "path": "tester/docs/qa/test-plan.md",
+      "sha256": "6701ec089077c0dbea1a9d222ac2a6a2ed10146c15486a349b999b0621c927d7"
+    },
+    {
+      "path": "tester/docs/qa/uat-checklist.md",
+      "sha256": "95e350a0ecccec964ece2009c2a944fe08d66a6c1fa240bdafdcb211aad12e32"
     },
     {
       "path": "tester/docs/scenarios/migration/.gitkeep",
@@ -1372,7 +1392,7 @@
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-001.json",
-      "sha256": "33c04691a74cab2ccde67b449a55505add35b5bd9b7fb9746b2e65cf9eecbcae"
+      "sha256": "dd6fe6fc9206f1cb780ee3b3a0593e959ffad1d50670e116e0f5ac645a00ed6a"
     },
     {
       "path": "tester/src/.gitkeep",
