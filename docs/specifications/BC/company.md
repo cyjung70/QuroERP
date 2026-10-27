@@ -10,7 +10,7 @@
 | 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
-> 시스템의 유일한 회사다 (다중 회사 미지원). 재고 설정(마이너스 재고 모드, `docs/architecture/inventory.md`)도 이 화면에서 바꾼다. 레거시의 거래 데이터 일괄 삭제(Truncate) 기능은 옮기지 않는다 — 쓰지 않는 품목은 사용 안 함으로 바꾼다. 보안 설정(`sys_auth_setting` — 잠금, 자동 로그인, 세션, 비밀번호 정책, `docs/architecture/login.md`)도 이 화면에서 바꾼다. 출력 문서의 회사 로고를 이 화면에서 올리고 바꾼다 (`logo_image`, `logo_content_type` — PNG·JPEG). 로고는 `GET /api/bc/company/logo`로 읽는다 (`docs/architecture/print-documents.md`). 회사는 1행이고 신규·삭제가 없다 (BC-BR-301). 기준 통화(ISO 4217, 기본 USD)는 설치 때 정하고, 문서·재고 이동·환율이 생긴 뒤에는 바꿀 수 없다 (BC-BR-312).
+> 시스템의 유일한 회사다 (다중 회사 미지원). 재고 설정(마이너스 재고 모드, `docs/architecture/inventory.md`)도 이 화면에서 바꾼다. 레거시의 거래 데이터 일괄 삭제(Truncate) 기능은 옮기지 않는다 — 쓰지 않는 품목은 사용 안 함으로 바꾼다. 보안 설정(`sys_auth_setting` — 잠금, 자동 로그인, 세션, 비밀번호 정책, `docs/architecture/login.md`)도 이 화면에서 바꾼다. 출력 문서의 회사 로고를 이 화면에서 올리고 바꾼다 (`logo_image`, `logo_content_type` — PNG·JPEG). 로고는 `GET /api/bc/company/logo`로 읽는다 (`docs/architecture/print-documents.md`). 회사는 1행이고 신규·삭제가 없다 (BC-BR-301). 국가(US·KR)와 기준 통화는 설치 때 정하고, 문서·재고 이동·환율이 생긴 뒤에는 바꿀 수 없다 (BC-BR-312·313). KR 회사는 사업자등록번호·업태·종목을 넣는다 (BC-BR-315). 언어·자릿수·세금 계산 단위는 [지역화 설정](localization-setting.md)에서 바꾼다.
 
 ## 기본 흐름
 
@@ -83,6 +83,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - [BC-BR-310](../../business-rules/BC/company.md)
 - [BC-BR-311](../../business-rules/BC/company.md)
 - [BC-BR-312](../../business-rules/BC/company.md)
+- [BC-BR-313](../../business-rules/BC/company.md)
+- [BC-BR-314](../../business-rules/BC/company.md)
+- [BC-BR-315](../../business-rules/BC/company.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
 
 ## 다국어 리소스 키

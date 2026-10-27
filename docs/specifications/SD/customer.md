@@ -107,6 +107,14 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - [SD-BR-308](../../business-rules/SD/customer.md)
 - [SD-BR-309](../../business-rules/SD/customer.md)
 - [SD-BR-314](../../business-rules/SD/customer.md)
+- [SD-BR-331](../../business-rules/SD/customer.md)
+- [SD-BR-332](../../business-rules/SD/customer.md)
+- [SD-BR-333](../../business-rules/SD/customer.md)
+- [BC-BR-415](../../business-rules/BC/localization.md)
+- [BC-BR-521](../../business-rules/BC/tax.md)
+- [BC-BR-522](../../business-rules/BC/tax.md)
+- [BC-BR-523](../../business-rules/BC/tax.md)
+- [BC-BR-524](../../business-rules/BC/tax.md)
 
 ## 다국어 리소스 키
 

@@ -20,7 +20,9 @@
     "MM-BR-807",
     "MM-BR-808",
     "MM-BR-809",
-    "MM-BR-825"
+    "MM-BR-825",
+    "MM-BR-831",
+    "MM-BR-832"
   ],
   "skills": [
     "quro-blazor",

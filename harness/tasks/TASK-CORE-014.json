@@ -1,0 +1,38 @@
+{
+  "id": "TASK-CORE-014",
+  "project": "core",
+  "title": "지역화 기반: 국가 프로필, 언어 마스터, 통화·자릿수 설정, 금액 반올림",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/localization.md",
+    "docs/architecture/i18n.md",
+    "docs/business-rules/BC/localization.md",
+    "docs/business-rules/BC/company.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-002",
+    "TASK-CORE-004"
+  ],
+  "acceptance": [
+    "`sys_language`·`bc_currency`·`sys_decimal_setting` 마이그레이션과 국가별 기본값 시드 (en·ko·sw, USD·KRW)",
+    "`bc_company`에 `country_code`·`default_lang_code`·`tax_calc_mode`, `ICountryProfile`(US·KR)",
+    "`IAmountRounder`(통화 자릿수)·`IDecimalPolicy`(모듈 단가·수량 자릿수, HALF_UP·DOWN) 단위 테스트 — USD 2, KRW 0",
+    "`GET /api/bc/localization`, 번역 대체 순서 요청 언어 → 회사 기본 언어 → en (BC-BR-402)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

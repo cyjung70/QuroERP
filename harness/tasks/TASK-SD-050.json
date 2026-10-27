@@ -14,7 +14,8 @@
     "docs/specifications/SD/report-open-balance.md"
   ],
   "rules": [
-    "SD-BR-809"
+    "SD-BR-809",
+    "SD-BR-821"
   ],
   "skills": [
     "quro-api",

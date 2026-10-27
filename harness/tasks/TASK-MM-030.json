@@ -26,7 +26,12 @@
     "MM-BR-960",
     "MM-BR-961",
     "MM-BR-962",
-    "MM-BR-963"
+    "MM-BR-963",
+    "MM-BR-964",
+    "MM-BR-965",
+    "BC-BR-412",
+    "BC-BR-414",
+    "BC-BR-421"
   ],
   "skills": [
     "quro-api",
@@ -38,7 +43,9 @@
     "TASK-BC-015",
     "TASK-CORE-003",
     "TASK-CORE-005",
-    "TASK-CORE-007"
+    "TASK-CORE-007",
+    "TASK-CORE-014",
+    "TASK-CORE-015"
   ],
   "acceptance": [
     "명세 REST API 구현",

@@ -23,7 +23,12 @@
     "MM-BR-960",
     "MM-BR-961",
     "MM-BR-962",
-    "MM-BR-963"
+    "MM-BR-963",
+    "MM-BR-964",
+    "MM-BR-965",
+    "BC-BR-412",
+    "BC-BR-414",
+    "BC-BR-421"
   ],
   "skills": [
     "quro-blazor",

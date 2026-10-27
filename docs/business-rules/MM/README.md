@@ -7,8 +7,8 @@
 
 - AS IS JSP·프로시저 로직 분석 결과를 주제별 파일로 추가한다 [작성 중].
 - [재고 공통](inventory.md): MM-BR-001 ~ MM-BR-010
-- [발주](purchase-order.md): MM-BR-011 ~ MM-BR-018
-- [입고](goods-receipt.md): MM-BR-101 ~ MM-BR-152
+- [발주](purchase-order.md): MM-BR-011 ~ MM-BR-032
+- [입고](goods-receipt.md): MM-BR-101 ~ MM-BR-165
 - [예외 입고](unplanned-receipt.md): MM-BR-201 ~ MM-BR-211
 - [재고 실사](stock-count.md): MM-BR-301 ~ MM-BR-308
 - [재고 월 마감](closing.md): MM-BR-401 ~ MM-BR-408
@@ -16,8 +16,8 @@
 - [재고 원장](ledger.md): MM-BR-601 ~ MM-BR-607
 - [재고 리포트](inventory-report.md): MM-BR-651 ~ MM-BR-659
 - [창고](warehouse.md): MM-BR-701 ~ MM-BR-708
-- [품목 마스터·대체 품목](item.md): MM-BR-801 ~ MM-BR-829
-- [공급자 마스터](vendor.md): MM-BR-851 ~ MM-BR-863
+- [품목 마스터·대체 품목](item.md): MM-BR-801 ~ MM-BR-832
+- [공급자 마스터](vendor.md): MM-BR-851 ~ MM-BR-872
 - [구매 단가](purchase-price.md): MM-BR-901 ~ MM-BR-905
-- [지급 처리](ap-payment.md): MM-BR-951 ~ MM-BR-963
-- [매입채무 리포트](ap-report.md): MM-BR-971 ~ MM-BR-978
+- [지급 처리](ap-payment.md): MM-BR-951 ~ MM-BR-965
+- [매입채무 리포트](ap-report.md): MM-BR-971 ~ MM-BR-982

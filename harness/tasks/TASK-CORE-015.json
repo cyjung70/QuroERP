@@ -1,0 +1,33 @@
+{
+  "id": "TASK-CORE-015",
+  "project": "core",
+  "title": "세금 계산 서비스: 세금 코드, 세율 지역, ITaxCalculator",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/tax.md",
+    "docs/business-rules/BC/tax.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-014"
+  ],
+  "acceptance": [
+    "`bc_tax_code`·`bc_tax_area`·`bc_tax_area_rate`·`sd_customer_tax_exemption` 마이그레이션, 국가별 기본 세금 코드 시드 (BC-BR-505)",
+    "`ITaxCalculator`: DOCUMENT·LINE 계산 단위, 가격 포함 역산, 나머지 배분, 반올림 방식 (BC-BR-541~545) 단위 테스트",
+    "`ITaxRateProvider` 기본 구현(세율 지역 유효 행, BC-BR-513), 면세 증명서 기본값 (BC-BR-525)",
+    "사업자등록번호 검증 숫자 (BC-BR-521) 단위 테스트"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

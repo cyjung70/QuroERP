@@ -58,6 +58,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 - [SD-BR-317](../../business-rules/SD/customer.md)
 - [SD-BR-318](../../business-rules/SD/customer.md)
 - [SD-BR-314](../../business-rules/SD/customer.md)
+- [SD-BR-334](../../business-rules/SD/customer.md)
 
 ## 다국어 리소스 키
 
