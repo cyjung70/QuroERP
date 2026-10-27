@@ -60,7 +60,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "86ce81a317f2a248dc051ee81ef298ac2d19ab69defc768ed86d7352e16aea36"
+      "sha256": "4f7b2eb82025a735d82c5103101590907d9d14625ccb84f9aeb0f2aa165b2d5d"
     },
     {
       "path": "docs/architecture/database.md",
@@ -79,6 +79,10 @@
       "sha256": "7e872aeb737f910b4e17135186bbb0404116efee123c1c23e0d1a7092efdbfba"
     },
     {
+      "path": "docs/architecture/login.md",
+      "sha256": "c98c856b798dae5fa63ef44d41a68a38fec6f2af81a285b6cef6bca10c490d4e"
+    },
+    {
       "path": "docs/architecture/print-documents.md",
       "sha256": "6d63585200039a2ee769134fd7696686697f26aedd14b8ac8c323f0bf54b4b08"
     },
@@ -92,7 +96,7 @@
     },
     {
       "path": "docs/architecture/security.md",
-      "sha256": "8fa8bb076b96120e1e53b89ded709c2cfe3c6163bf9466b73aae85a2dde6a4bb"
+      "sha256": "2ebd67d002c0922e54471056d86b3a97df3ec3301fb0fa5c7ee81485f1bc8c8e"
     },
     {
       "path": "docs/business-rules/CO/README.md",
@@ -156,7 +160,7 @@
     },
     {
       "path": "docs/business-rules/MM/warehouse.md",
-      "sha256": "4c56f9d133ae644524df29f022befe5d278df532820abf1943ce689603310793"
+      "sha256": "45cddfd847e8036a554a101f1c7cdfec3d22574bebb3f54c7fbcc5e8a0208a30"
     },
     {
       "path": "docs/business-rules/PP/README.md",
@@ -212,11 +216,11 @@
     },
     {
       "path": "docs/glossary.md",
-      "sha256": "eca5faff20aa7b1495fdb6fbb0c47db69895f439347f8c0010611570cf1ef310"
+      "sha256": "8041f50030a41fbc9f6d3c8b5432efec8388a9c4b4a33577c97e1da108a28a2b"
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "d74940558f33bb1b1d1d3e919c0ad56fd0ee43dcec1f8ee76d70b28cd8199f46"
+      "sha256": "42eb91a08265d0c6f8e265c1c945048e378c36dbe133b4b60bd268341c457a50"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -244,7 +248,7 @@
     },
     {
       "path": "docs/specifications/BC/change-password.md",
-      "sha256": "defa224ad337115da767e5789dc1865308d7c047378003ab36311803a0057af5"
+      "sha256": "8e11add1f7e19e4345ec32dce66de84d7c0c4a34ddf9d73e1d16bc3c960cf3f0"
     },
     {
       "path": "docs/specifications/BC/code-major.md",
@@ -260,7 +264,7 @@
     },
     {
       "path": "docs/specifications/BC/company.md",
-      "sha256": "0b84eab47cf8bc36bab0cb528b76a7452c6276dcbf27f40f695f16d39d63ae14"
+      "sha256": "ab30b2da56c6e66c9962980da5968da81da48ae86252f4d1db9c2b5f72ebc93f"
     },
     {
       "path": "docs/specifications/BC/exchange-rate.md",
@@ -284,7 +288,7 @@
     },
     {
       "path": "docs/specifications/BC/login.md",
-      "sha256": "bbe991d52748b36baf6d9ffba34a654e342e95976a2377e3a5ff43d4bb2ecbbe"
+      "sha256": "a0d06344eec164bd446f545f275d5b6e86703b932d752a62915ac73c019a5e73"
     },
     {
       "path": "docs/specifications/BC/purchase-price.md",
@@ -308,11 +312,11 @@
     },
     {
       "path": "docs/specifications/BC/user-profile.md",
-      "sha256": "f5b83a013f6bbffd77278f90eeab2b4ae058b4fda4fd02a9d4e105084a3a7e06"
+      "sha256": "8be2cd8162be369c795c35543eb3b1617e7b2b5cf5e60824836cb3937181238c"
     },
     {
       "path": "docs/specifications/BC/user.md",
-      "sha256": "76b68146779fef3cb65078d14ec21d78d4d93d598e5bf993eb04c079d6073fac"
+      "sha256": "bb09bf0562a1db6600dc4cc76bb678acaa4f2c7e122188e9fec9275b253ba776"
     },
     {
       "path": "docs/specifications/MM/ap-payment.md",
@@ -624,11 +628,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-001.json",
-      "sha256": "2fe73d41418a47d45b23c2ee679177b6de946dacae442ec1778aec66b2bc815c"
+      "sha256": "13d58942f38052ef6fc76de130390a20d640bf58768381eccf7c1eb4e6b88c66"
     },
     {
       "path": "harness/tasks/TASK-BC-002.json",
-      "sha256": "8bcc344ad2162bfbe2dcf2a4e6f93cdb9e00c2b035304a0e9a4f83c84366cfcd"
+      "sha256": "a43f5a843bd9e66e9f0bce8925770c2e8a827ac6673c9bec73dcb0c70ef427ee"
     },
     {
       "path": "harness/tasks/TASK-BC-003.json",
@@ -856,7 +860,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-011.json",
-      "sha256": "142fcc55e0c26223bf3c8afa12c19353cbab8d300229629a77f1ef5453e4aa3c"
+      "sha256": "13d9742c1f2a92b02a941c141ce663960f74952d709227e42e6d52413fdc4f65"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
