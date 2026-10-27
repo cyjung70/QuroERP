@@ -33,7 +33,8 @@ public sealed class InventoryService(
     /// (MM-BR-007, MM-BR-008).
     /// </summary>
     /// <exception cref="QuroErp.Domain.Common.DomainException">
-    /// MM-E-002 closed month, MM-E-606 wrong sign or zero qty, MM-E-001 not enough stock in DENY mode.
+    /// MM-E-002 closed month, MM-E-606 wrong sign or zero qty, MM-E-001 not enough stock in DENY mode,
+    /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end.
     /// </exception>
     public async Task<IReadOnlyList<GoodsMovement>> PostAsync(
         IReadOnlyList<StockMovementRequest> requests, string user, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -61,7 +62,7 @@ public sealed class InventoryService(
             var item = items[request.ItemId];
             if (!item.IsSet)
             {
-                lines.Add(new Line(request.ItemId, request.WarehouseId, stock => GoodsMovement.Create(
+                lines.Add(new Line(request.ItemId, request.WarehouseId, request.DocumentDt, stock => GoodsMovement.Create(
                     request.MovType, request.DocumentDt, request.ItemId, request.WarehouseId, request.Qty,
                     request.Price ?? stock.MovingAverageCost, request.RefKey, request.RefSeq)));
                 continue;
@@ -69,14 +70,14 @@ public sealed class InventoryService(
             // Components move at their own moving average cost (MM-BR-007)
             foreach (var (componentId, qty) in SetComponent.Expand(request.Qty, components.Where(c => c.SetItemId == item.ItemId)))
             {
-                lines.Add(new Line(componentId, request.WarehouseId, stock => GoodsMovement.Create(
+                lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, stock => GoodsMovement.Create(
                     request.MovType, request.DocumentDt, componentId, request.WarehouseId, qty,
                     stock.MovingAverageCost, request.RefKey, request.RefSeq)));
             }
         }
 
         var stockLines = lines.Where(l => items[l.ItemId].IsStockManaged).ToList();
-        return await ApplyAsync(stockLines, items, user, transaction, cancellationToken);
+        return await ApplyAsync(stockLines, items, closeYearMonth, user, transaction, cancellationToken);
     }
 
     /// <summary>
@@ -84,7 +85,8 @@ public sealed class InventoryService(
     /// (MM-BR-601). A reversal that decreases stock (e.g. a receipt reversal) is checked like an issue (MM-BR-602).
     /// </summary>
     /// <exception cref="QuroErp.Domain.Common.DomainException">
-    /// MM-E-002 closed month, MM-E-606 already reversed or a reversal, MM-E-001 not enough stock in DENY mode.
+    /// MM-E-002 closed month, MM-E-606 already reversed or a reversal, MM-E-001 not enough stock in DENY mode,
+    /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end.
     /// </exception>
     public async Task<IReadOnlyList<GoodsMovement>> ReverseAsync(
         IReadOnlyList<long> movementIds, DateOnly reversalDt, string user, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -103,13 +105,14 @@ public sealed class InventoryService(
         }
 
         var items = await LockItemsAsync(reversals.Select(r => r.ItemId), transaction, cancellationToken);
-        var lines = reversals.Select(r => new Line(r.ItemId, r.WarehouseId, _ => r)).ToList();
-        return await ApplyAsync(lines, items, user, transaction, cancellationToken);
+        var lines = reversals.Select(r => new Line(r.ItemId, r.WarehouseId, r.DocumentDt, _ => r)).ToList();
+        return await ApplyAsync(lines, items, closeYearMonth, user, transaction, cancellationToken);
     }
 
-    // MM-BR-603: ① lock on-hand ② on-hand check ③ point-in-time check ④ update on-hand, item and ledger
+    // MM-BR-603: ① lock on-hand ② on-hand check ③ point-in-time and month-end check ④ update on-hand, item and ledger
     private async Task<IReadOnlyList<GoodsMovement>> ApplyAsync(
-        IReadOnlyList<Line> lines, Dictionary<long, ItemStock> items, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+        IReadOnlyList<Line> lines, Dictionary<long, ItemStock> items, string? closeYearMonth, string user,
+        IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var mode = StockPolicy.ModeOrDefault((await settings.GetAsync(transaction, cancellationToken))?.NegativeStockMode);
 
@@ -121,25 +124,30 @@ public sealed class InventoryService(
         }
         var qty = onHand.ToDictionary(e => e.Key, e => e.Value.OnHandQty);
 
+        var lastClosedMonthEnd = InventoryClosing.LastClosedMonthEnd(closeYearMonth);
+        var documentNos = await numbers.NextAsync(
+            MovementNumberPrefix, MovementNumberDigits, lines.Select(l => l.DocumentDt).ToList(), user, transaction, cancellationToken);
         var posted = new List<GoodsMovement>(lines.Count);
-        foreach (var line in lines)
+        foreach (var (line, documentNo) in lines.Zip(documentNos))
         {
             var key = (line.ItemId, line.WarehouseId);
             var item = items[line.ItemId];
+            var warehouseCode = onHand[key].WarehouseCode;
             var movement = line.Build(item);
-            movement.NegativeStock = StockPolicy.CheckOnHand(mode, qty[key], movement.Qty, item.ItemCd, onHand[key].WarehouseCode);
-            // ③ Point-in-time and month-end balances (MM-BR-009, MM-BR-010): TASK-CORE-009
+            movement.NegativeStock = StockPolicy.CheckOnHand(mode, qty[key], movement.Qty, item.ItemCd, warehouseCode);
+            if (movement.Qty < 0 && mode != NegativeStockMode.Allow)
+            {
+                // Earlier lines of this document are already in the ledger, so they count
+                var (opening, balances) = await inventory.GetDailyBalancesAsync(
+                    line.ItemId, line.WarehouseId, lastClosedMonthEnd, movement.DocumentDt, transaction, cancellationToken);
+                movement.NegativeStock |= PointInTimeStock.Check(
+                    mode, movement.DocumentDt, movement.Qty, opening, balances, item.ItemCd, warehouseCode);
+            }
             qty[key] += movement.Qty;
             item.Apply(movement.Qty, movement.Amount, movement.Prc, MovementType.RecalculatesCost(movement.MovType, movement.Qty));
-            posted.Add(movement);
-        }
-
-        var documentNos = await numbers.NextAsync(
-            MovementNumberPrefix, MovementNumberDigits, posted.Select(m => m.DocumentDt).ToList(), user, transaction, cancellationToken);
-        foreach (var (movement, documentNo) in posted.Zip(documentNos))
-        {
             movement.DocumentNo = documentNo;
             await inventory.InsertMovementAsync(movement, user, transaction, cancellationToken);
+            posted.Add(movement);
         }
 
         foreach (var ((itemId, warehouseId), onHandQty) in qty)
@@ -170,5 +178,5 @@ public sealed class InventoryService(
     }
 
     // Build runs at posting time so an issue takes the moving average cost after the lines before it
-    private sealed record Line(long ItemId, long WarehouseId, Func<ItemStock, GoodsMovement> Build);
+    private sealed record Line(long ItemId, long WarehouseId, DateOnly DocumentDt, Func<ItemStock, GoodsMovement> Build);
 }

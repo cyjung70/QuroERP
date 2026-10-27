@@ -40,4 +40,6 @@
   <data name="MM-E-001" xml:space="preserve"><value>품목 {0}의 창고 {1} 현재고({2})보다 많이 줄일 수 없습니다. 요청 수량: {3}</value></data>
   <data name="MM-E-002" xml:space="preserve"><value>{0}은(는) 마감된 기간({1}까지)의 날짜라 재고 이동을 저장할 수 없습니다.</value></data>
   <data name="MM-E-606" xml:space="preserve"><value>재고 이동 수량이 이동 유형과 맞지 않거나 이미 취소된 이동입니다. 유형: {0}, 수량: {1}</value></data>
+  <data name="MM-E-009" xml:space="preserve"><value>품목 {0}의 창고 {1} 재고가 {2}에 {3}(으)로 음수가 되어 저장할 수 없습니다.</value></data>
+  <data name="MM-E-010" xml:space="preserve"><value>품목 {0}의 창고 {1} 재고가 {2} 월말에 {3}(으)로 음수가 되어 저장할 수 없습니다.</value></data>
 </root>

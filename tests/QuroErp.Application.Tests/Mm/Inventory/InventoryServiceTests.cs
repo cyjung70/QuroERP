@@ -43,12 +43,10 @@ public class InventoryServiceTests
         _inventory.OnHand[(10, Main)].Should().Be(5);
     }
 
-    [Theory, Trait("Id", "MM-UT-002")]
-    [InlineData("ALLOW")]
-    [InlineData("ALLOW_IN_MONTH")]
-    public async Task PostAsync_AllowModesIssueAboveOnHand_SavesNegativeAndFlagsMovement(string mode)
+    [Fact, Trait("Id", "MM-UT-002")]
+    public async Task PostAsync_AllowIssueAboveOnHand_SavesNegativeAndFlagsMovement()
     {
-        _settings.Mode = mode;
+        _settings.Mode = "ALLOW";
         _inventory.AddItem(10, "A", onHand: (Main, 5m), cost: 2);
 
         var posted = await Post(new StockMovementRequest("DN", Day, 10, Main, -6));
@@ -257,6 +255,78 @@ public class InventoryServiceTests
         (_inventory.Items[10].OnHandQty, _inventory.Items[10].MovingAverageCost).Should().Be((15m, 15m));
     }
 
+    [Fact, Trait("Id", "MM-UT-603")]
+    public async Task PostAsync_DenyIssueAboveOnHandAndALaterDay_OnHandCheckComesFirst()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 1);
+        await Post(
+            new StockMovementRequest("GR", new DateOnly(2026, 10, 1), 10, Main, 5, Price: 1),
+            new StockMovementRequest("DN", new DateOnly(2026, 10, 20), 10, Main, -4));
+
+        // On-hand is 1 and 10/5 has 5, but 10/20 would drop to -2
+        var act = () => Post(new StockMovementRequest("DN", new DateOnly(2026, 10, 5), 10, Main, -3));
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-001");
+    }
+
+    [Fact, Trait("Id", "MM-UT-009")]
+    public async Task PostAsync_DenyBackDatedIssueBeforeTheStockArrived_ThrowsMmE009()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 1);
+        await Post(new StockMovementRequest("GR", new DateOnly(2026, 10, 10), 10, Main, 5, Price: 1));
+
+        var act = () => Post(new StockMovementRequest("DN", new DateOnly(2026, 10, 5), 10, Main, -2));
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-009");
+        error.Args.Should().Equal("A", "WH1", "2026-10-05", -2m);
+    }
+
+    [Fact, Trait("Id", "MM-UT-010")]
+    public async Task PostAsync_AllowInMonthIssueNegativeOnlyMidMonth_IsSavedAndFlagged()
+    {
+        _settings.Mode = "ALLOW_IN_MONTH";
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 1);
+        await Post(new StockMovementRequest("GR", new DateOnly(2026, 10, 20), 10, Main, 5, Price: 1));
+
+        var issue = (await Post(new StockMovementRequest("DN", new DateOnly(2026, 10, 5), 10, Main, -3))).Single();
+
+        issue.NegativeStock.Should().BeTrue("10/5 to 10/19 is negative (MM-BR-002)");
+        _inventory.OnHand[(10, Main)].Should().Be(2);
+    }
+
+    [Fact, Trait("Id", "MM-UT-010")]
+    public async Task PostAsync_AllowInMonthIssueLeavingAMonthEndNegative_ThrowsMmE010()
+    {
+        _settings.Mode = "ALLOW_IN_MONTH";
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 1);
+        await Post(new StockMovementRequest("GR", new DateOnly(2026, 11, 3), 10, Main, 5, Price: 1));
+
+        var act = () => Post(new StockMovementRequest("DN", new DateOnly(2026, 10, 5), 10, Main, -3));
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-010");
+        error.Args.Should().Equal("A", "WH1", "202610", -3m);
+    }
+
+    [Fact, Trait("Id", "MM-UT-603")]
+    public async Task PostAsync_SecondLineOfTheSameDocument_SeesTheFirstLineInPointInTimeCheck()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 1);
+        await Post(new StockMovementRequest("GR", new DateOnly(2026, 10, 1), 10, Main, 5, Price: 1));
+        await Post(new StockMovementRequest("GR", new DateOnly(2026, 10, 20), 10, Main, 5, Price: 1));
+
+        // On-hand 10 covers both lines, but on 10/5 only 5 exists
+        var act = () => Post(
+            new StockMovementRequest("DN", new DateOnly(2026, 10, 5), 10, Main, -3),
+            new StockMovementRequest("DN", new DateOnly(2026, 10, 6), 10, Main, -3));
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-009");
+        error.Args.Should().Equal("A", "WH1", "2026-10-06", -1m);
+    }
+
     private sealed class FakeInventoryRepository : IInventoryRepository
     {
         public string? CloseYearMonth { get; set; }
@@ -269,6 +339,9 @@ public class InventoryServiceTests
 
         public List<(long ItemId, long WarehouseId)> Locked { get; } = [];
 
+        /// <summary>Starting stock, read as the closing balance of a closed month (keeps ledger = on-hand, MM-BR-605).</summary>
+        public Dictionary<(long ItemId, long WarehouseId), decimal> Opening { get; } = [];
+
         public void AddItem(long id, string itemCd, (long WarehouseId, decimal Qty)? onHand = null, decimal cost = 0, string type = "INVENTORY")
         {
             var qty = onHand?.Qty ?? 0;
@@ -276,12 +349,14 @@ public class InventoryServiceTests
             if (onHand is { } o)
             {
                 OnHand[(id, o.WarehouseId)] = o.Qty;
+                Opening[(id, o.WarehouseId)] = o.Qty;
             }
         }
 
         public void AddOnHand(long itemId, long warehouseId, decimal qty)
         {
             OnHand[(itemId, warehouseId)] = qty;
+            Opening[(itemId, warehouseId)] = qty;
             var item = Items[itemId];
             Items[itemId] = new ItemStock(itemId, item.ItemCd, item.Type, item.OnHandQty + qty, item.StockValue + qty * item.MovingAverageCost, item.MovingAverageCost);
         }
@@ -316,6 +391,20 @@ public class InventoryServiceTests
             movement.Id = Movements.Count + 1;
             Movements.Add(movement);
             return Task.CompletedTask;
+        }
+
+        // Same result as the SQL in InventoryRepository, without closed months
+        public Task<(decimal Opening, IReadOnlyList<DailyStockBalance> Balances)> GetDailyBalancesAsync(
+            long itemId, long warehouseId, DateOnly? lastClosedMonthEnd, DateOnly movementDate, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            var days = Movements.Where(m => m.ItemId == itemId && m.WarehouseId == warehouseId)
+                .GroupBy(m => m.DocumentDt).OrderBy(g => g.Key).ToList();
+            var opening = Opening.GetValueOrDefault((itemId, warehouseId));
+            var running = opening;
+            var all = days.Select((g, i) => new DailyStockBalance(g.Key, running += g.Sum(m => m.Qty),
+                i == days.Count - 1 || days[i + 1].Key.Month != g.Key.Month || days[i + 1].Key.Year != g.Key.Year)).ToList();
+            var start = all.LastOrDefault(b => b.Date <= movementDate)?.Date ?? movementDate;
+            return Task.FromResult<(decimal, IReadOnlyList<DailyStockBalance>)>((opening, all.Where(b => b.Date >= start).ToList()));
         }
 
         public Task<IReadOnlyList<SavedMovement>> LockMovementsAsync(IReadOnlyCollection<long> movementIds, IDbTransaction transaction, CancellationToken cancellationToken) =>

@@ -27,5 +27,5 @@
     "시점 잔고는 창 함수 1회 조회, 인덱스 (item_id, warehouse_id, document_dt)"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
