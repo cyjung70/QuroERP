@@ -10,22 +10,22 @@
 
 @if (_store is not null)
 {
-    <QuroHeaderDetail THeader="SampleOrder" TLine="SampleLine" Title="@L["Samples.HeaderDetail.Title"]" TestId="sample-sm"
+    <QuroHeaderDetail THeader="SampleOrder" TLine="SampleLine" Title="@L["Samples.HeaderDetail.Title"]" TestId="header-detail"
                       Load="LoadAsync" Create="() => new SampleOrder()" CreateLine="() => new SampleLine { Qty = 1 }"
                       Save="SaveAsync" Delete="order => { _store.DeleteOrder(order.Id); return Task.CompletedTask; }">
         <SearchContent>
-            <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="_orderNo" TextCase="TextCase.Upper" TestId="sample-sm-search-no" />
+            <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="_orderNo" TextCase="TextCase.Upper" TestId="header-detail-search-order-no" />
         </SearchContent>
         <HeaderFields Context="order">
-            <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="order.OrderNo" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="sample-sm-no" />
-            <QuroDate Label="@L["Samples.OrderDt"]" @bind-Value="order.OrderDt" Required TestId="sample-sm-date" />
+            <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="order.OrderNo" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="header-detail-header-order-no" />
+            <QuroDate Label="@L["Samples.OrderDt"]" @bind-Value="order.OrderDt" Required TestId="header-detail-header-order-dt" />
         </HeaderFields>
         <LineColumns>
             <QuroColumn TRow="SampleLine" Title="@L["Samples.Item"]" Value="l => l.ItemCode" Context="line">
-                <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" Required TextCase="TextCase.Upper" TestId="item" />
+                <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" Required TextCase="TextCase.Upper" TestId="header-detail-line-item-code" />
             </QuroColumn>
             <QuroColumn TRow="SampleLine" Title="@L["Samples.Qty"]" Value="l => l.Qty" Format="N2" Context="line">
-                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" Required TestId="qty" />
+                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" Required TestId="header-detail-line-qty" />
             </QuroColumn>
         </LineColumns>
     </QuroHeaderDetail>

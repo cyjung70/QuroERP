@@ -12,12 +12,12 @@
     </Toolbar>
     <ChildContent>
         <div class="quro-master-detail">
-            <QuroGrid TRow="TSource" Rows="_sources" Columns="SourceColumns" Busy="Busy" TestId="@Id("sources")"
+            <QuroGrid TRow="TSource" Rows="_sources" Columns="SourceColumns" Busy="Busy" TestId="@Id("grid")"
                       Selected="_selected" OnSelect="SelectAsync" />
             @if (_selected is not null)
             {
                 <QuroGrid @ref="_grid" TRow="TTarget" Rows="_targets" Columns="TargetColumns" Editable="true" Busy="Busy"
-                          TestId="@Id("targets")" OnAddRow="AddTarget" OnChanged="StateHasChanged" />
+                          TestId="@Id("line")" OnAddRow="AddTarget" OnChanged="StateHasChanged" />
             }
         </div>
     </ChildContent>

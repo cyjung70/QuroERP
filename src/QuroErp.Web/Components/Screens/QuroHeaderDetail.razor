@@ -13,11 +13,11 @@
     </Toolbar>
     <ChildContent>
         <CascadingValue Value="_form" IsFixed="true">
-            <div class="quro-form" data-testid="@Id("form")">
+            <div class="quro-form" data-testid="@Id("header")">
                 @HeaderFields(_header)
             </div>
         </CascadingValue>
-        <QuroGrid @ref="_grid" TRow="TLine" Rows="_lines" Columns="LineColumns" Editable="true" Busy="Busy" TestId="@Id("lines")"
+        <QuroGrid @ref="_grid" TRow="TLine" Rows="_lines" Columns="LineColumns" Editable="true" Busy="Busy" TestId="@Id("line")"
                   OnAddRow="AddLine" OnChanged="StateHasChanged" />
     </ChildContent>
 </QuroScreenFrame>
