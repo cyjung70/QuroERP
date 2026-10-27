@@ -1,0 +1,34 @@
+{
+  "id": "TASK-BC-048",
+  "title": "환율 관리 화면 (M)",
+  "module": "BC",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "M",
+  "specs": [
+    "docs/specifications/BC/exchange-rate.md"
+  ],
+  "rules": [
+    "SD-BR-906",
+    "SD-BR-907",
+    "SD-BR-908",
+    "SD-BR-909"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-047",
+    "TASK-CORE-006"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

@@ -9,13 +9,13 @@
 - [재고 공통](inventory.md): MM-BR-001 ~ MM-BR-010
 - [발주](purchase-order.md): MM-BR-011 ~ MM-BR-018
 - [입고](goods-receipt.md): MM-BR-101 ~ MM-BR-115
-- [예외 입고](unplanned-receipt.md): MM-BR-201 ~ MM-BR-208
+- [예외 입고](unplanned-receipt.md): MM-BR-201 ~ MM-BR-211
 - [재고 실사](stock-count.md): MM-BR-301 ~ MM-BR-308
 - [재고 월 마감](closing.md): MM-BR-401 ~ MM-BR-408
-- [구매 시뮬레이션](purchase-simulation.md): MM-BR-501 ~ MM-BR-509
+- [구매 시뮬레이션](purchase-simulation.md): MM-BR-501 ~ MM-BR-513
 - [재고 원장](ledger.md): MM-BR-601 ~ MM-BR-607
 - [창고](warehouse.md): MM-BR-701 ~ MM-BR-708
-- [품목 마스터·대체 품목](item.md): MM-BR-801 ~ MM-BR-818
+- [품목 마스터·대체 품목](item.md): MM-BR-801 ~ MM-BR-820
 - [구매 단가](purchase-price.md): MM-BR-901 ~ MM-BR-905
 - [지급 처리](ap-payment.md): MM-BR-951 ~ MM-BR-963
-- [매입채무 리포트](ap-report.md): MM-BR-971 ~ MM-BR-975
+- [매입채무 리포트](ap-report.md): MM-BR-971 ~ MM-BR-977

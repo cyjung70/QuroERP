@@ -1,0 +1,36 @@
+{
+  "id": "TASK-MM-036",
+  "title": "예외 입고 줄 파일 올리기 화면 (S)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "S",
+  "specs": [
+    "docs/specifications/MM/unplanned-receipt-line-upload.md"
+  ],
+  "rules": [
+    "MM-BR-209",
+    "MM-BR-210",
+    "MM-BR-211",
+    "MM-BR-201",
+    "MM-BR-202",
+    "MM-BR-203"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-MM-035"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}
