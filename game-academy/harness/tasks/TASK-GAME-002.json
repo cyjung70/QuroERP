@@ -26,5 +26,5 @@
     "game-academy/tests/server에 xUnit + FluentAssertions 테스트, dotnet test 통과"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "blocked"
 }
