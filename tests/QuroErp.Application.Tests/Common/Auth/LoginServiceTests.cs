@@ -132,7 +132,7 @@ public class LoginServiceTests
         error.Code.Should().Be(AuthCodes.InvalidCredentials);
         error.RemainingAttempts.Should().BeNull("show_remaining_attempts is off");
         Kim.FailedCount.Should().Be(1);
-        _users.Saved.Should().ContainSingle().Which.Should().Be((7L, (short)1, (DateTimeOffset?)null, (string?)null));
+        _users.Saved.Should().ContainSingle().Which.Should().Be((7L, 1, (DateTimeOffset?)null, (string?)null));
         _logs.Logs.Single().Should().Be(
             new UserLoginLog(Now, 7, "kim", IpAddr, false, LoginEvents.LoginFail, AuthCodes.InvalidCredentials, UserAgent));
         _unitOfWork.Commits.Should().Be(1, "the failure count is committed before the error");
