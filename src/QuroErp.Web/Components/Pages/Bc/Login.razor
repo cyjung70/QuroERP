@@ -1,5 +1,6 @@
 @page "/bc/login"
 @attribute [AllowAnonymous]
+@using System.Globalization
 @using System.Net.Http
 @using Microsoft.AspNetCore.Authentication
 @using QuroErp.Contracts.Common.Auth
@@ -74,13 +75,14 @@
         try
         {
             login = await AuthApi.LoginAsync(
-                new LoginRequest(Input.UserId.Trim(), Input.Password),
+                new LoginRequest(Input.UserId, Input.Password, Language: CultureInfo.CurrentUICulture.TwoLetterISOLanguageName),
                 HttpContext.Connection.RemoteIpAddress?.ToString(),
+                HttpContext.Request.Headers.UserAgent.ToString(),
                 HttpContext.RequestAborted);
         }
         catch (ApiProblemException e)
         {
-            // 로그인 실패는 401 + code BC-E-001
+            // Login failure: Problem Details with code AUTH-xxx
             _error = Messages.Get(e.Problem);
             return;
         }
@@ -93,7 +95,7 @@
         var sessionId = Tokens.Add(login);
         await HttpContext.SignInAsync(WebAuthClaims.CreatePrincipal(sessionId, login));
         // 사용자 언어 설정이 있으면 그 언어로 바꾼다 (사용자 설정 → 브라우저 언어 → ko)
-        WebLocalization.SetCultureCookie(HttpContext, login.LangCode);
+        WebLocalization.SetCultureCookie(HttpContext, login.Language);
         Navigation.NavigateTo(LocalUrl.OrRoot(ReturnUrl));
     }
 

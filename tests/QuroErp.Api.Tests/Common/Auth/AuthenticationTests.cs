@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Tests.Common.Auth;
 
@@ -55,16 +56,17 @@ public class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        problem.RootElement.GetProperty("code").GetString().Should().Be(AuthRoutes.LoginFailedCode);
+        problem.RootElement.GetProperty("code").GetString().Should().Be(AuthCodes.InvalidCredentials);
         factory.LoginLogs.Should().Contain(l => l.LoginUserId == ApiFactory.UserId && !l.Success);
     }
 
     [Fact, Trait("Id", "CORE-003-IT-14")]
-    public async Task Login_MissingPassword_Returns400()
+    public async Task Login_MissingPassword_Returns400Auth001()
     {
-        using var response = await factory.CreateClient().PostAsJsonAsync(AuthRoutes.Login, new { UserId = ApiFactory.UserId });
+        using var response = await factory.CreateClient().PostAsJsonAsync(AuthRoutes.Login, new { LoginId = ApiFactory.UserId });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be(AuthCodes.Required);
     }
 
     [Fact, Trait("Id", "CORE-003-IT-15")]

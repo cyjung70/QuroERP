@@ -8,7 +8,7 @@ namespace QuroErp.Api.Tests;
 /// <summary>Clients for each kind of caller: admin user (JWT), non-admin API client (X-Api-Key, role manager).</summary>
 public static class ApiClients
 {
-    // Login is rate limited (10 per minute per IP), so the tests share one token. Every factory uses the same signing key
+    // Login writes a login log each time, so the tests share one token. Every factory uses the same signing key
     private static string? _adminToken;
 
     public static async Task<HttpClient> AdminAsync(this ApiFactory factory)

@@ -41,6 +41,8 @@ public static class DependencyInjection
         services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
         services.AddSingleton<IAppUserRepository, AppUserRepository>();
         services.AddSingleton<IUserLoginLogRepository, UserLoginLogRepository>();
+        services.AddSingleton<IAuthSettingRepository, AuthSettingRepository>();
+        services.AddSingleton<IAutoLoginTokenRepository, AutoLoginTokenRepository>();
         services.AddSingleton<IApiClientRepository, ApiClientRepository>();
         services.AddSingleton<IPasswordHashService, PasswordHashService>();
         services.AddSingleton<ITranslationRepository, TranslationRepository>();
