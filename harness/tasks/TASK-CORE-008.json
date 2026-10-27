@@ -31,9 +31,8 @@
     "취소·수정은 반대 부호 이동 + parent_movement_id (MM-BR-601)",
     "이동 유형별 수량 부호 검사, 같은 원 이동 두 번 취소 차단 (MM-BR-606)",
     "`bc_item.onhand_qty` = 창고 합계",
-    "재고 설정 조회·변경 API",
-    "세트 출고가 구성품 재고를 이동 수량 × 구성 수량만큼 줄인다"
+    "재고 설정 조회·변경 API"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
