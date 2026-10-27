@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using QuroErp.Application.Bc.Companies;
+using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
@@ -48,6 +49,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Company logo state; there is one company and no logo at start.</summary>
     public InMemoryCompanyRepository Companies { get; } = new();
 
+    /// <summary>Localization state: a KR company (default language ko), languages en/ko (sw off), KRW and USD.</summary>
+    public InMemoryLocalizationRepository Localization { get; } = new();
+
     /// <summary>Inventory setting state; DENY at start.</summary>
     public InMemoryInventorySettingRepository InventorySettings { get; } = new();
 
@@ -76,6 +80,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
             services.AddSingleton<ITranslationRepository, FakeTranslationRepository>();
             services.AddSingleton<ICompanyRepository>(Companies);
+            services.AddSingleton<ILocalizationRepository>(Localization);
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
@@ -216,6 +221,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         [
             new(1, "ko", "사용"), new(1, "en", "Used"),
             new(2, "ko", "사용 안 함"), new(2, "en", "Not Used"),
+            new(101, "ko", "대한민국 원"), new(101, "en", "Korean Won"),
+            new(102, "en", "US Dollar"),
         ];
 
         public Task<IReadOnlyList<TranslationRow>> FindAsync(
@@ -244,6 +251,29 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             UpdatedBy = updatedBy;
             return Task.FromResult(true);
         }
+    }
+
+    public sealed class InMemoryLocalizationRepository : ILocalizationRepository
+    {
+        public CompanyLocalizationRow? Company { get; set; } = new("KR", "KRW", "ko", "DOCUMENT");
+
+        public List<LanguageRow> Languages { get; } = [new("en", 1, true), new("ko", 2, true), new("sw", 3, false)];
+
+        public List<CurrencyRow> Currencies { get; } = [new(101, "KRW", 0, true), new(102, "USD", 2, true)];
+
+        public List<DecimalSettingRow> DecimalSettings { get; } = [new("MM", 2, 2, "HALF_UP"), new("SD", 0, 0, "DOWN")];
+
+        public Task<CompanyLocalizationRow?> FindCompanyAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Company);
+
+        public Task<IReadOnlyList<LanguageRow>> FindLanguagesAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<LanguageRow>>(Languages);
+
+        public Task<IReadOnlyList<CurrencyRow>> FindCurrenciesAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<CurrencyRow>>(Currencies);
+
+        public Task<IReadOnlyList<DecimalSettingRow>> FindDecimalSettingsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<DecimalSettingRow>>(DecimalSettings);
     }
 
     public sealed class InMemoryInventorySettingRepository : IInventorySettingRepository

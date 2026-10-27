@@ -27,7 +27,7 @@ public class CodeApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData(null, "사용")]
     [InlineData("en-US", "Used")]
     [InlineData("ja", "사용")]
-    public async Task GetCodes_NoLangQuery_UsesAcceptLanguageThenKo(string? acceptLanguage, string expectedFirstName)
+    public async Task GetCodes_NoLangQuery_UsesAcceptLanguageThenCompanyDefault(string? acceptLanguage, string expectedFirstName)
     {
         var client = await SignedInClientAsync();
         if (acceptLanguage is not null)

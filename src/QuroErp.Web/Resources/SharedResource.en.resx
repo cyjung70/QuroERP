@@ -82,4 +82,11 @@
   <data name="Samples.Item" xml:space="preserve"><value>Item</value></data>
   <data name="Samples.Group" xml:space="preserve"><value>Group</value></data>
   <data name="Common-E-005" xml:space="preserve"><value>Please enter {0}.</value></data>
+  <data name="BC-E-313" xml:space="preserve"><value>Country {0} is not supported. Choose US or KR.</value></data>
+  <data name="BC-E-401" xml:space="preserve"><value>Language code '{0}' is not valid. Enter 2 or 3 lower-case letters.</value></data>
+  <data name="BC-E-411" xml:space="preserve"><value>Currency '{0}' is not valid. Use 3 upper-case letters and 0 to 4 decimals.</value></data>
+  <data name="BC-E-412" xml:space="preserve"><value>Currency '{0}' is not in use.</value></data>
+  <data name="BC-E-422" xml:space="preserve"><value>{0} decimals are out of range. Unit price allows 0 to 6, quantity 0 to 4.</value></data>
+  <data name="BC-E-423" xml:space="preserve"><value>{0} allows up to {1} decimal places.</value></data>
+  <data name="BC-E-424" xml:space="preserve"><value>Rounding mode '{0}' is not valid. Choose HALF_UP or DOWN.</value></data>
 </root>

@@ -82,4 +82,11 @@
   <data name="Samples.Item" xml:space="preserve"><value>품목</value></data>
   <data name="Samples.Group" xml:space="preserve"><value>그룹</value></data>
   <data name="Common-E-005" xml:space="preserve"><value>{0}을(를) 입력하세요.</value></data>
+  <data name="BC-E-313" xml:space="preserve"><value>지원하지 않는 국가 {0}입니다. US 또는 KR을 고르세요.</value></data>
+  <data name="BC-E-401" xml:space="preserve"><value>언어 코드 '{0}'이(가) 올바르지 않습니다. 소문자 2~3자로 입력하세요.</value></data>
+  <data name="BC-E-411" xml:space="preserve"><value>통화 '{0}'이(가) 올바르지 않습니다. 통화 코드는 영문 대문자 3자, 자릿수는 0~4입니다.</value></data>
+  <data name="BC-E-412" xml:space="preserve"><value>통화 '{0}'은(는) 사용 중인 통화가 아닙니다.</value></data>
+  <data name="BC-E-422" xml:space="preserve"><value>{0} 자릿수가 범위를 벗어났습니다. 단가는 0~6, 수량은 0~4입니다.</value></data>
+  <data name="BC-E-423" xml:space="preserve"><value>{0}은(는) 소수 {1}자리까지 입력할 수 있습니다.</value></data>
+  <data name="BC-E-424" xml:space="preserve"><value>반올림 방식 '{0}'이(가) 올바르지 않습니다. HALF_UP 또는 DOWN을 고르세요.</value></data>
 </root>

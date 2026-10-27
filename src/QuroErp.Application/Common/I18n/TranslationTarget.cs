@@ -11,4 +11,7 @@ public enum TranslationTarget
 
     /// <summary>bc_item_translation.item_name</summary>
     ItemName,
+
+    /// <summary>bc_currency_translation.name</summary>
+    CurrencyName,
 }

@@ -1,6 +1,7 @@
 using System.Data;
 using FluentAssertions;
 using QuroErp.Application.Common;
+using QuroErp.Application.Tests.Bc.Localization;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Tests.Common.Auth;
@@ -24,7 +25,7 @@ public class CodeServiceTests
         new(2, "ko", "사용 안 함"), new(2, "en", "Not Used"),
     ]);
 
-    private CodeService Service => new(_codes, new TranslationService(_translations), _unitOfWork);
+    private CodeService Service => new(_codes, new TranslationService(_translations, new FakeLocalizationRepository()), _unitOfWork);
 
     private CodeValidator Validator => new(_codes, _unitOfWork);
 

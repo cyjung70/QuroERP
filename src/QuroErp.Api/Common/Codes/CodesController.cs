@@ -10,8 +10,8 @@ namespace QuroErp.Api.Common.Codes;
 public sealed class CodesController(CodeService service) : ControllerBase
 {
     /// <summary>Active codes of majorCode in sort_order with translated names.</summary>
-    /// <param name="lang">ko or en. When omitted, the request language (Accept-Language) is used, then ko.
-    /// Unsupported values fall back to ko (normalized in Application).</param>
+    /// <param name="lang">Language code. When omitted, the request language (Accept-Language) is used.
+    /// Names without that translation fall back to the company default language, then en (BC-BR-402).</param>
     [HttpGet("{majorCode}")]
     public async Task<IReadOnlyList<CodeItemDto>> Get(string majorCode, [FromQuery] string? lang, CancellationToken cancellationToken) =>
         await service.GetCodesAsync(majorCode, lang ?? CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, cancellationToken);

@@ -34,5 +34,5 @@
     "`GET /api/bc/localization`, 번역 대체 순서 요청 언어 → 회사 기본 언어 → en (BC-BR-402)"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
