@@ -33,8 +33,21 @@ tester/
 - 값은 저장소에 쓰지 않는다. 로컬은 `tester/.env`(커밋 금지), CI는 비밀 변수로 준다.
 - 주소 예시는 [추정]이다. 실제 포트는 본체 `launchSettings.json`을 따른다.
 
+## 실행 환경
+
+| 환경 | 구성 | 실행 범위 |
+| --- | --- | --- |
+| 로컬 | 저장소 루트 `docker-compose.test.yml`: PostgreSQL + API + Blazor | 필요한 계층 |
+| CI — PR | GitHub Actions, 같은 compose 파일 | `-m "(api or scenario) and not migration"` |
+| CI — 매일 밤 | GitHub Actions | `-m "not migration"` (E2E 포함 전체) |
+| 이관 검증 | 이관 원본 덤프가 있는 담당자 PC | `-m migration` |
+
+- 이관 원본 데이터는 개인정보가 있어 저장소와 CI에 없다. 그래서 `migration` 계층은 CI에서 실행하지 않는다.
+- 실행 순서: 병렬 묶음 `-m "not serial" -n auto` → 직렬 묶음 `-m serial`. 직렬 묶음은 회사 전체 상태를 바꾸므로 병렬 묶음이 끝난 뒤 실행한다.
+
 ## 테스트 DB
 
+- 실행마다 새로 만든다 (compose를 내렸다 올리거나 DB를 지우고 마이그레이션 콘솔로 다시 만든다). 이것은 환경 준비이고, 테스트 코드는 여전히 DB에 쓰지 않는다.
 - 테스트 전용 PostgreSQL 데이터베이스다. 이름은 `_test`로 끝난다 (예: `quroerp_test`). `conftest.py`가 시작할 때 `current_database()`를 확인하고, 아니면 전체 실행을 멈춘다.
 - 준비: 본체 마이그레이션 콘솔로 Schema·Seed를 적용한다 (`dotnet run --project src/QuroERP.Database -- --connection "<테스트 DB>"`). Demo 데이터는 넣지 않는다. 테스트가 쓸 데이터는 API로 만든다.
 - 조회 계정은 읽기 전용 역할이다 (`default_transaction_read_only = on`, SELECT 권한만).
@@ -47,9 +60,10 @@ tester/
 | `settings` | session | 환경변수 검사, 빠지면 실행 중지 |
 | `db` | session | 읽기 전용 연결, DB 이름 `_test` 검사 |
 | `api` | session | 로그인 1회(`POST /api/auth/login`), 내부 토큰을 `Authorization: Bearer`로 붙인 httpx 클라이언트 |
-| `lang` | function | `QURO_LANGS`로 매개변수화. `Accept-Language` 설정 |
+| `lang` | function | 기본 언어(`QURO_LANGS`의 첫 값) 1개. `Accept-Language` 설정 |
 | `run_id` | session | 이번 실행의 고유 접두어. 테스트 데이터 업무 키에 붙인다 |
-| `negative_stock_mode` | function | 재고 설정 API로 모드를 바꾸고, 끝나면 원래 값으로 되돌린다. `ALLOW`·`ALLOW_IN_MONTH`·`DENY`로 매개변수화 |
+| `negative_stock_mode` | function | 재고 설정 API로 모드를 바꾸고, 끝나면 원래 값으로 되돌린다. `ALLOW`·`ALLOW_IN_MONTH`·`DENY`로 매개변수화. 이 fixture를 쓰는 테스트는 `serial` |
+| `error_lang` | function | 오류를 내는 테스트용. `ko`, `en`으로 매개변수화해 `Accept-Language`를 바꾼다. 정상 흐름 테스트는 쓰지 않는다 |
 | `page` | function | Playwright 페이지. 로그인 상태를 세션에서 한 번 저장해 재사용한다 |
 
 ## 검사 방법
@@ -80,7 +94,8 @@ uv sync
 uv run playwright install chromium
 uv run pytest -m api                      # 계층별
 uv run pytest -m "scenario and not e2e"
-uv run pytest --junitxml=reports/junit.xml --html=reports/report.html
+uv run pytest -m "not serial and not migration" -n auto --junitxml=reports/junit.xml --html=reports/report.html
+uv run pytest -m "serial and not migration" --junitxml=reports/junit-serial.xml
 ```
 
 ## 리포트

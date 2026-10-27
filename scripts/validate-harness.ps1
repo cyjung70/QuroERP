@@ -10,6 +10,7 @@
   - .claude/skills 가 .agents/skills 와 같은지
   - harness/tasks/*.json 필수 필드
   - 서브 프로젝트 tester/, game-academy/: 필수 파일, AGENTS.md 150줄, docs/INDEX.md 등록, 태스크 필드
+  - Tester 시나리오·게임 미션이 docs/business-rules 에 없는 BR ID를 참조하지 않는지
 #>
 param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 
@@ -25,6 +26,7 @@ $required = @(
   'docs/architecture/subprojects.md',
   'tester/AGENTS.md', 'tester/CLAUDE.md', 'tester/docs/INDEX.md', 'tester/docs/architecture.md',
   'tester/docs/scenarios/MM', 'tester/docs/scenarios/SD', 'tester/docs/scenarios/migration',
+  'tester/docs/qa/test-plan.md', 'tester/docs/qa/defects.md', 'tester/docs/qa/quality-gate.md', 'tester/docs/qa/uat-checklist.md',
   'tester/harness/tasks', 'tester/src', 'tester/tests',
   'game-academy/AGENTS.md', 'game-academy/CLAUDE.md', 'game-academy/docs/INDEX.md', 'game-academy/docs/architecture.md',
   'game-academy/docs/assets-guide.md', 'game-academy/docs/i18n.md', 'game-academy/docs/missions/MM', 'game-academy/docs/missions/SD',
@@ -78,6 +80,18 @@ Get-ChildItem $Root -Recurse -File -Include *.md, *.json | Where-Object { $_.Ful
   $text = Get-Content $_.FullName -Raw -Encoding utf8
   foreach ($p in $private) {
     if ($text -match $p) { Fail "공개 불가 내용: $([IO.Path]::GetRelativePath($Root, $_.FullName)) — '$($Matches[0])'" }
+  }
+}
+
+$brIds = @{}
+Get-ChildItem (Join-Path $Root 'docs/business-rules') -Recurse -Filter *.md -ErrorAction SilentlyContinue | ForEach-Object {
+  foreach ($m in [regex]::Matches((Get-Content $_.FullName -Raw -Encoding utf8), '(?m)^\| ([A-Z]{2}-BR-\d{3}) \|')) { $brIds[$m.Groups[1].Value] = $true }
+}
+foreach ($d in 'tester/docs/scenarios', 'game-academy/docs/missions') {
+  Get-ChildItem (Join-Path $Root $d) -Recurse -Filter *.md -ErrorAction SilentlyContinue | ForEach-Object {
+    foreach ($m in [regex]::Matches((Get-Content $_.FullName -Raw -Encoding utf8), '[A-Z]{2}-BR-\d{3}')) {
+      if (-not $brIds.ContainsKey($m.Value)) { Fail "없는 BR 참조: $([IO.Path]::GetRelativePath($Root, $_.FullName)) → $($m.Value)" }
+    }
   }
 }
 
