@@ -62,8 +62,6 @@ CREATE TABLE sys_auto_login_token (
     updated_by varchar NOT NULL,
     CONSTRAINT pk_sys_auto_login_token PRIMARY KEY (id),
     CONSTRAINT uq_sys_auto_login_token_token_hash UNIQUE (token_hash),
-    -- database-tables.md says char(64); columns carry no size (database.md), so the length is a CHECK
-    CONSTRAINT ck_sys_auto_login_token_token_hash CHECK (char_length(token_hash) = 64),
     CONSTRAINT fk_sys_auto_login_token_app_user_id FOREIGN KEY (app_user_id) REFERENCES sys_app_user (id)
 );
 CREATE INDEX ix_sys_auto_login_token_app_user_id ON sys_auto_login_token (app_user_id);
