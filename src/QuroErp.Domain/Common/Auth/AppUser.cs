@@ -39,7 +39,7 @@ public sealed class AppUser
     public long? DefaultWarehouseId { get; init; }
 
     /// <summary>Consecutive failed logins. Reset to 0 on success.</summary>
-    public short FailedCount { get; private set; }
+    public int FailedCount { get; private set; }
 
     /// <summary>Null means not locked.</summary>
     public DateTimeOffset? LockedUntil { get; private set; }
