@@ -20,21 +20,21 @@ public class SampleScreenTests : ScreenContext
         var page = Render<SampleSingle>();
 
         page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
-            .Should().Equal("sample-single-search", "sample-single-new", "sample-single-save", "sample-single-delete");
+            .Should().Equal("single-toolbar-search", "single-toolbar-new", "single-toolbar-save", "single-toolbar-delete");
     }
 
     [Fact]
     public void Single_Search_LoadsRecord_AndLocksNewOnlyField()
     {
         var page = Render<SampleSingle>();
-        page.Find("[data-testid=sample-single-code]").HasAttribute("readonly").Should().BeFalse();
+        page.Find("[data-testid=single-header-code]").HasAttribute("readonly").Should().BeFalse();
 
-        page.Find("[data-testid=sample-single-search-code]").Change("a100");
-        page.Find("[data-testid=sample-single-search]").Click();
+        page.Find("[data-testid=single-search-code]").Change("a100");
+        page.Find("[data-testid=single-toolbar-search]").Click();
 
-        page.Find("[data-testid=sample-single-name]").GetAttribute("value").Should().Be("Apple");
-        page.Find("[data-testid=sample-single-code]").HasAttribute("readonly").Should().BeTrue();
-        page.Find("[data-testid=sample-single-delete]").HasAttribute("disabled").Should().BeFalse();
+        page.Find("[data-testid=single-header-name]").GetAttribute("value").Should().Be("Apple");
+        page.Find("[data-testid=single-header-code]").HasAttribute("readonly").Should().BeTrue();
+        page.Find("[data-testid=single-toolbar-delete]").HasAttribute("disabled").Should().BeFalse();
     }
 
     [Fact]
@@ -42,20 +42,20 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SampleSingle>();
 
-        page.Find("[data-testid=sample-single-code]").Change("abc");
+        page.Find("[data-testid=single-header-code]").Change("abc");
 
-        page.Find("[data-testid=sample-single-code]").GetAttribute("value").Should().Be("ABC");
+        page.Find("[data-testid=single-header-code]").GetAttribute("value").Should().Be("ABC");
     }
 
     [Fact]
     public void Single_SaveWithEmptyRequired_ShowsRequiredMessage_AndDoesNotSave()
     {
         var page = Render<SampleSingle>();
-        page.Find("[data-testid=sample-single-code]").Change("C300");
+        page.Find("[data-testid=single-header-code]").Change("C300");
 
-        page.Find("[data-testid=sample-single-save]").Click();
+        page.Find("[data-testid=single-toolbar-save]").Click();
 
-        page.Find("[data-testid=sample-single-error]").TextContent.Should().Contain("이름을(를) 입력하세요.");
+        page.Find("[data-testid=single-message]").TextContent.Should().Contain("이름을(를) 입력하세요.");
         Store.FindItem("C300").Should().BeNull();
     }
 
@@ -63,27 +63,27 @@ public class SampleScreenTests : ScreenContext
     public void Single_SaveNew_StoresRecord()
     {
         var page = Render<SampleSingle>();
-        page.Find("[data-testid=sample-single-code]").Change("c300");
-        page.Find("[data-testid=sample-single-name]").Change("Cherry");
+        page.Find("[data-testid=single-header-code]").Change("c300");
+        page.Find("[data-testid=single-header-name]").Change("Cherry");
 
-        page.Find("[data-testid=sample-single-save]").Click();
+        page.Find("[data-testid=single-toolbar-save]").Click();
 
         Store.FindItem("C300")!.Name.Should().Be("Cherry");
-        page.Find("[data-testid=sample-single-notice]").TextContent.Should().Contain("저장했습니다.");
-        page.Find("[data-testid=sample-single-code]").HasAttribute("readonly").Should().BeTrue();
+        page.Find("[data-testid=single-message]").TextContent.Should().Contain("저장했습니다.");
+        page.Find("[data-testid=single-header-code]").HasAttribute("readonly").Should().BeTrue();
     }
 
     [Fact]
     public void Single_NewWithUnsavedChanges_AsksAndKeepsInputWhenCancelled()
     {
         var page = Render<SampleSingle>();
-        page.Find("[data-testid=sample-single-name]").Change("Draft");
+        page.Find("[data-testid=single-header-name]").Change("Draft");
         Confirm.Answer = false;
 
-        page.Find("[data-testid=sample-single-new]").Click();
+        page.Find("[data-testid=single-toolbar-new]").Click();
 
         Confirm.Questions.Should().Equal(Unsaved);
-        page.Find("[data-testid=sample-single-name]").GetAttribute("value").Should().Be("Draft");
+        page.Find("[data-testid=single-header-name]").GetAttribute("value").Should().Be("Draft");
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SampleSingle>();
 
-        page.Find("[data-testid=sample-single-new]").Click();
+        page.Find("[data-testid=single-toolbar-new]").Click();
 
         Confirm.Questions.Should().BeEmpty();
     }
@@ -100,10 +100,10 @@ public class SampleScreenTests : ScreenContext
     public void Single_Delete_AsksThenDeletes()
     {
         var page = Render<SampleSingle>();
-        page.Find("[data-testid=sample-single-search-code]").Change("A100");
-        page.Find("[data-testid=sample-single-search]").Click();
+        page.Find("[data-testid=single-search-code]").Change("A100");
+        page.Find("[data-testid=single-toolbar-search]").Click();
 
-        page.Find("[data-testid=sample-single-delete]").Click();
+        page.Find("[data-testid=single-toolbar-delete]").Click();
 
         Confirm.Questions.Should().Equal("삭제할까요?");
         Store.FindItem("A100").Should().BeNull();
@@ -116,20 +116,20 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SampleMulti>();
 
-        page.WaitForAssertion(() => page.FindAll("[data-testid=name]").Should().HaveCount(2));
+        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
         page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
-            .Should().Equal("sample-multi-search", "sample-multi-new", "sample-multi-save", "sample-multi-export");
+            .Should().Equal("multi-toolbar-search", "multi-toolbar-new", "multi-toolbar-save", "multi-toolbar-export");
     }
 
     [Fact]
     public void Multi_RowStates_AreShownAsIUD()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=name]").Should().HaveCount(2));
+        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
 
-        page.FindAll("[data-testid=name]")[0].Change("Apricot");
-        page.FindAll("[data-testid=delete-row]")[1].Click();
-        page.Find("[data-testid=sample-multi-new]").Click();
+        page.FindAll("[data-testid=multi-grid-name]")[0].Change("Apricot");
+        page.FindAll("[data-testid=multi-grid-delete-row]")[1].Click();
+        page.Find("[data-testid=multi-toolbar-new]").Click();
 
         page.FindAll("[data-state]").Select(s => s.GetAttribute("data-state")).Should().Equal("U", "D", "I");
     }
@@ -138,17 +138,17 @@ public class SampleScreenTests : ScreenContext
     public void Multi_Save_SendsBatch_AndReloads()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=name]").Should().HaveCount(2));
-        page.FindAll("[data-testid=name]")[0].Change("Apricot");
-        page.FindAll("[data-testid=delete-row]")[1].Click();
-        page.Find("[data-testid=sample-multi-new]").Click();
-        page.FindAll("[data-testid=code]")[2].Change("c300");
-        page.FindAll("[data-testid=name]")[2].Change("Cherry");
+        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        page.FindAll("[data-testid=multi-grid-name]")[0].Change("Apricot");
+        page.FindAll("[data-testid=multi-grid-delete-row]")[1].Click();
+        page.Find("[data-testid=multi-toolbar-new]").Click();
+        page.FindAll("[data-testid=multi-grid-code]")[2].Change("c300");
+        page.FindAll("[data-testid=multi-grid-name]")[2].Change("Cherry");
 
-        page.Find("[data-testid=sample-multi-save]").Click();
+        page.Find("[data-testid=multi-toolbar-save]").Click();
 
         Store.Items().Select(i => (i.Code, i.Name)).Should().Equal(("A100", "Apricot"), ("C300", "Cherry"));
-        page.FindAll("[data-testid=name]").Should().HaveCount(2);
+        page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2);
         page.FindAll("[data-state]").Should().BeEmpty();
     }
 
@@ -156,12 +156,12 @@ public class SampleScreenTests : ScreenContext
     public void Multi_SaveWithEmptyRequiredCell_ShowsRequiredMessage()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=name]").Should().HaveCount(2));
-        page.Find("[data-testid=sample-multi-new]").Click();
+        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        page.Find("[data-testid=multi-toolbar-new]").Click();
 
-        page.Find("[data-testid=sample-multi-save]").Click();
+        page.Find("[data-testid=multi-toolbar-save]").Click();
 
-        page.Find("[data-testid=sample-multi-error]").TextContent.Should().Contain("을(를) 입력하세요.");
+        page.Find("[data-testid=multi-message]").TextContent.Should().Contain("을(를) 입력하세요.");
         Store.Items().Should().HaveCount(2);
     }
 
@@ -169,22 +169,22 @@ public class SampleScreenTests : ScreenContext
     public void Multi_SaveWithoutChanges_SaysNoChanges()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=name]").Should().HaveCount(2));
+        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
 
-        page.Find("[data-testid=sample-multi-save]").Click();
+        page.Find("[data-testid=multi-toolbar-save]").Click();
 
-        page.Find("[data-testid=sample-multi-notice]").TextContent.Should().Contain("저장할 변경 내용이 없습니다.");
+        page.Find("[data-testid=multi-message]").TextContent.Should().Contain("저장할 변경 내용이 없습니다.");
     }
 
     [Fact]
     public void Multi_SearchWithUnsavedChanges_Asks()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=name]").Should().HaveCount(2));
-        page.FindAll("[data-testid=name]")[0].Change("Apricot");
+        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        page.FindAll("[data-testid=multi-grid-name]")[0].Change("Apricot");
         Confirm.Answer = false;
 
-        page.Find("[data-testid=sample-multi-search]").Click();
+        page.Find("[data-testid=multi-toolbar-search]").Click();
 
         Confirm.Questions.Should().Equal(Unsaved);
         page.Find("[data-state=U]").Should().NotBeNull();
@@ -196,30 +196,30 @@ public class SampleScreenTests : ScreenContext
     public void HeaderDetail_SaveHeaderAndLines_InOneSave()
     {
         var page = Render<SampleHeaderDetail>();
-        page.Find("[data-testid=sample-sm-search-no]").Change("SO261000001");
-        page.Find("[data-testid=sample-sm-search]").Click();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=item]").Should().HaveCount(2));
+        page.Find("[data-testid=header-detail-search-order-no]").Change("SO261000001");
+        page.Find("[data-testid=header-detail-toolbar-search]").Click();
+        page.WaitForAssertion(() => page.FindAll("[data-testid=header-detail-line-item-code]").Should().HaveCount(2));
 
-        page.FindAll("[data-testid=delete-row]")[0].Click();
-        page.Find("[data-testid=sample-sm-lines-add-row]").Click();
-        page.FindAll("[data-testid=item]")[2].Change("c300");
-        page.Find("[data-testid=sample-sm-save]").Click();
+        page.FindAll("[data-testid=header-detail-line-delete-row]")[0].Click();
+        page.Find("[data-testid=header-detail-line-add-row]").Click();
+        page.FindAll("[data-testid=header-detail-line-item-code]")[2].Change("c300");
+        page.Find("[data-testid=header-detail-toolbar-save]").Click();
 
         Store.FindOrder("SO261000001")!.Value.Lines.Select(l => l.ItemCode).Should().Equal("B200", "C300");
-        page.FindAll("[data-testid=item]").Should().HaveCount(2);
+        page.FindAll("[data-testid=header-detail-line-item-code]").Should().HaveCount(2);
     }
 
     [Fact]
     public void HeaderDetail_LineChangeOnly_IsUnsavedChange()
     {
         var page = Render<SampleHeaderDetail>();
-        page.Find("[data-testid=sample-sm-search-no]").Change("SO261000001");
-        page.Find("[data-testid=sample-sm-search]").Click();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=item]").Should().HaveCount(2));
-        page.FindAll("[data-testid=qty]")[0].Change("9");
+        page.Find("[data-testid=header-detail-search-order-no]").Change("SO261000001");
+        page.Find("[data-testid=header-detail-toolbar-search]").Click();
+        page.WaitForAssertion(() => page.FindAll("[data-testid=header-detail-line-item-code]").Should().HaveCount(2));
+        page.FindAll("[data-testid=header-detail-line-qty]")[0].Change("9");
         Confirm.Answer = false;
 
-        page.Find("[data-testid=sample-sm-new]").Click();
+        page.Find("[data-testid=header-detail-toolbar-new]").Click();
 
         Confirm.Questions.Should().Equal(Unsaved);
     }
@@ -230,29 +230,29 @@ public class SampleScreenTests : ScreenContext
     public void MasterDetail_SelectSource_LoadsTargets_AndAsksWhenTargetsChanged()
     {
         var page = Render<SampleMasterDetail>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=select-row]").Should().HaveCount(2));
+        page.WaitForAssertion(() => page.FindAll("[data-testid=master-detail-grid-select]").Should().HaveCount(2));
 
-        page.FindAll("[data-testid=select-row]")[0].Click();
-        page.FindAll("[data-testid=item]").Should().ContainSingle();
+        page.FindAll("[data-testid=master-detail-grid-select]")[0].Click();
+        page.FindAll("[data-testid=master-detail-line-item-code]").Should().ContainSingle();
 
-        page.FindAll("[data-testid=qty]")[0].Change("5");
+        page.FindAll("[data-testid=master-detail-line-qty]")[0].Change("5");
         Confirm.Answer = false;
-        page.FindAll("[data-testid=select-row]")[1].Click();
+        page.FindAll("[data-testid=master-detail-grid-select]")[1].Click();
 
         Confirm.Questions.Should().Equal(Unsaved);
-        page.FindAll("[data-testid=item]").Should().ContainSingle();
+        page.FindAll("[data-testid=master-detail-line-item-code]").Should().ContainSingle();
     }
 
     [Fact]
     public void MasterDetail_SaveTargets_StoresForSelectedSource()
     {
         var page = Render<SampleMasterDetail>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=select-row]").Should().HaveCount(2));
-        page.FindAll("[data-testid=select-row]")[1].Click();
+        page.WaitForAssertion(() => page.FindAll("[data-testid=master-detail-grid-select]").Should().HaveCount(2));
+        page.FindAll("[data-testid=master-detail-grid-select]")[1].Click();
 
-        page.Find("[data-testid=sample-mm-new]").Click();
-        page.FindAll("[data-testid=item]")[0].Change("b200");
-        page.Find("[data-testid=sample-mm-save]").Click();
+        page.Find("[data-testid=master-detail-toolbar-new]").Click();
+        page.FindAll("[data-testid=master-detail-line-item-code]")[0].Change("b200");
+        page.Find("[data-testid=master-detail-toolbar-save]").Click();
 
         Store.Members(2).Should().ContainSingle(m => m.ItemCode == "B200");
     }

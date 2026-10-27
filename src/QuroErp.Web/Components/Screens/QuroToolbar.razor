@@ -2,7 +2,7 @@
    A button appears only when the screen handles it. *@
 @inject IStringLocalizer<SharedResource> L
 
-<div class="quro-toolbar" role="toolbar" aria-label="@L["Common.Toolbar"]">
+<div class="quro-toolbar" role="toolbar" data-testid="@(TestId is null ? null : $"{TestId}-toolbar")" aria-label="@L["Common.Toolbar"]">
     @Button(OnSearch, "Common.Search", "search")
     @Button(OnNew, "Common.New", "new")
     @Button(OnSave, "Common.Save", "save")
@@ -42,7 +42,7 @@
 
     private RenderFragment? Button(EventCallback handler, string label, string id, bool disabled = false) =>
         handler.HasDelegate
-            ? @<button type="button" disabled="@(Busy || disabled)" data-testid="@(TestId is null ? null : $"{TestId}-{id}")"
+            ? @<button type="button" disabled="@(Busy || disabled)" data-testid="@(TestId is null ? null : $"{TestId}-toolbar-{id}")"
                        @onclick="handler">@L[label]</button>
             : null;
 }
