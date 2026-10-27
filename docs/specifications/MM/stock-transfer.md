@@ -19,7 +19,7 @@
 1. 이동 번호로 조회하거나 신규를 누른다. 보내는 창고 기본값은 기본 창고다.
 2. 받는 창고를 고르고 줄에 품목과 수량을 넣는다. 줄마다 보내는 창고 현재고를 보여 준다.
 3. 저장하면 서버가 창고·수량·품목을 검사하고(MM-BR-705) 보내는 창고에 마이너스 재고 검사를 한다 (MM-BR-602).
-4. 헤더·줄·채번과 줄마다 보내는 창고 출고·받는 창고 입고 이동(같은 금액, MM-BR-706)을 한 트랜잭션으로 저장한다.
+4. 헤더·줄·채번(이동일 기준 `TR` + yymm + 10자리, MM-BR-708)과 줄마다 보내는 창고 출고·받는 창고 입고 이동(같은 금액, MM-BR-706)을 한 트랜잭션으로 저장한다.
 
 ## 대체 흐름
 
@@ -35,7 +35,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 
 | 영역 | TO BE 속성 (제안) | 입력 형식 | 비고 |
 | --- | --- | --- | --- |
-| 헤더 | `TransferNo` | text | 채번 (조회 키) |
+| 헤더 | `TransferNo` | text | 채번 `TR` + yymm + 10자리 (조회 키, MM-BR-708) |
 | 헤더 | `TransferDt` | date | 기본 오늘 |
 | 헤더 | `FromWarehouseId` | `bc_warehouse` 찾기 | 기본 창고 |
 | 헤더 | `ToWarehouseId` | `bc_warehouse` 찾기 | 필수 |
@@ -70,6 +70,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 - [MM-BR-705](../../business-rules/MM/warehouse.md)
 - [MM-BR-706](../../business-rules/MM/warehouse.md)
 - [MM-BR-707](../../business-rules/MM/warehouse.md)
+- [MM-BR-708](../../business-rules/MM/warehouse.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
@@ -85,6 +86,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 - [MM-BR-603](../../business-rules/MM/ledger.md)
 - [MM-BR-604](../../business-rules/MM/ledger.md)
 - [MM-BR-606](../../business-rules/MM/ledger.md)
+- [MM-BR-607](../../business-rules/MM/ledger.md)
 - [MM-BR-703](../../business-rules/MM/warehouse.md)
 
 ## 다국어 리소스 키
@@ -96,14 +98,15 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 ## 테스트 시나리오
 
 - `MM-UC-018-T01` 이동 저장 시 보내는 창고 −, 받는 창고 + 이동 두 줄
-- `MM-UC-018-T02` 같은 창고 이동 차단
-- `MM-UC-018-T03` 품목 재고 금액·원가 불변
-- `MM-UC-018-T04` 삭제 시 반대 부호 이동
-- `MM-UC-018-T05` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-705 → MM-UT-705)
-- `MM-UC-018-T06` 마이너스 재고 DENY: 그 창고 현재고 부족 시 저장 차단 (MM-BR-001)
-- `MM-UC-018-T07` 마이너스 재고 ALLOW·ALLOW_IN_MONTH: 저장되고 이력 표시 (MM-BR-002)
-- `MM-UC-018-T08` DENY: 과거 일자 출고로 이후 일자 잔고가 음수가 되면 차단 (MM-BR-009)
-- `MM-UC-018-T09` ALLOW_IN_MONTH: 월중 음수는 저장, 월말 잔고 음수는 차단 — 말일에 거래가 없는 달 포함 (MM-BR-010)
+- `MM-UC-018-T02` 이동 번호는 이동일 연월의 `TR` + yymm + 10자리
+- `MM-UC-018-T03` 같은 창고 이동 차단
+- `MM-UC-018-T04` 품목 재고 금액·원가 불변
+- `MM-UC-018-T05` 삭제 시 반대 부호 이동
+- `MM-UC-018-T06` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-705 → MM-UT-705)
+- `MM-UC-018-T07` 마이너스 재고 DENY: 그 창고 현재고 부족 시 저장 차단 (MM-BR-001)
+- `MM-UC-018-T08` 마이너스 재고 ALLOW·ALLOW_IN_MONTH: 저장되고 이력 표시 (MM-BR-002)
+- `MM-UC-018-T09` DENY: 과거 일자 출고로 이후 일자 잔고가 음수가 되면 차단 (MM-BR-009)
+- `MM-UC-018-T10` ALLOW_IN_MONTH: 월중 음수는 저장, 월말 잔고 음수는 차단 — 말일에 거래가 없는 달 포함 (MM-BR-010)
 
 ## AS IS 근거
 
