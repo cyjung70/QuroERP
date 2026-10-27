@@ -13,7 +13,13 @@
   "specs": [
     "docs/specifications/SD/report-period-sales-by-rep.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-965",
+    "SD-BR-966",
+    "SD-BR-951",
+    "SD-BR-969",
+    "SD-BR-970"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
