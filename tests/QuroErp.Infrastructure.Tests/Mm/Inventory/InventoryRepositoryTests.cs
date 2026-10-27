@@ -59,8 +59,8 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
 
         rows.Select(r => (r.MovType, r.Qty, r.Amount, r.ParentMovementId)).Should().Equal(
             ("GR", 4m, 10m, null), ("DN", -1m, -2.5m, null), ("DN", 1m, 2.5m, (long?)issue.Id));
-        rows.Select(r => r.DocumentNo[..8]).Should().Equal("GM202610", "GM202610", "GM202610");
-        rows.Should().OnlyContain(r => r.DocumentNo.Length == "GM".Length + 6 + 10);
+        rows.Select(r => r.DocumentNo[..6]).Should().Equal("ID2610", "ID2610", "ID2610");
+        rows.Should().OnlyContain(r => r.DocumentNo.Length == "ID".Length + 4 + 10);
         rows.Select(r => r.DocumentNo).Should().OnlyHaveUniqueItems();
         rows[2].DocumentNo.Should().Be(reversal.DocumentNo);
         onHand.Should().Be(4);

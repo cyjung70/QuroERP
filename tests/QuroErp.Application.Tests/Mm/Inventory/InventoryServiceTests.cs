@@ -1,6 +1,7 @@
 using System.Data;
 using FluentAssertions;
 using QuroErp.Application.Common.DocumentNumbers;
+using QuroErp.Application.Tests.Common.DocumentNumbers;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
@@ -130,8 +131,8 @@ public class InventoryServiceTests
 
         (reversal.MovType, reversal.Qty, reversal.Amount, reversal.ParentMovementId).Should().Be(("GR", -4m, -20m, receipt.Id));
         reversal.DocumentDt.Should().Be(new DateOnly(2026, 10, 20));
-        reversal.DocumentNo.Should().Be("GM2026100000000002");
-        receipt.DocumentNo.Should().Be("GM2026100000000001");
+        reversal.DocumentNo.Should().Be("ID26100000000002");
+        receipt.DocumentNo.Should().Be("ID26100000000001");
         _inventory.OnHand[(10, Main)].Should().Be(0);
     }
 
@@ -225,7 +226,7 @@ public class InventoryServiceTests
         _inventory.Items[10].OnHandQty.Should().Be(9);
     }
 
-    [Fact, Trait("Id", "MM-GM-T02")]
+    [Fact, Trait("Id", "MM-UT-607"), Trait("Rule", "MM-BR-607")]
     public async Task PostAsync_MovementNumberUsesTheDocumentDateMonthWithOneSequencePerMonth()
     {
         _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 0);
@@ -238,8 +239,8 @@ public class InventoryServiceTests
             new StockMovementRequest("GR", new DateOnly(2026, 10, 31), 10, Main, 1, Price: 1));
 
         first.Concat(second).Select(m => m.DocumentNo).Should().Equal(
-            "GM2026100000000001", "GM2026090000000001", "GM2026090000000002", "GM2026100000000002");
-        _numbers.Last.Keys.Should().BeEquivalentTo("GM202609", "GM202610");
+            "ID26100000000001", "ID26090000000001", "ID26090000000002", "ID26100000000002");
+        _numbers.Last.Keys.Should().BeEquivalentTo([("ID", "2609"), ("ID", "2610")]);
     }
 
     [Fact, Trait("Id", "MM-UT-005")]
@@ -430,19 +431,5 @@ public class InventoryServiceTests
 
         public Task<IReadOnlyList<SetComponent>> GetComponentsAsync(IReadOnlyCollection<long> setItemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<SetComponent>>(Components.Where(c => setItemIds.Contains(c.SetItemId)).ToList());
-    }
-
-    private sealed class FakeDocumentNumbers : IDocumentNumberRepository
-    {
-        public Dictionary<string, string> Last { get; } = [];
-
-        public Task<string?> LockLastAsync(string transType, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(Last.GetValueOrDefault(transType));
-
-        public Task SaveLastAsync(string transType, string lastNo, string user, IDbTransaction transaction, CancellationToken cancellationToken)
-        {
-            Last[transType] = lastNo;
-            return Task.CompletedTask;
-        }
     }
 }

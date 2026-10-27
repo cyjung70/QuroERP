@@ -42,4 +42,5 @@
   <data name="MM-E-606" xml:space="preserve"><value>The stock movement quantity does not match its type, or the movement is already cancelled. Type: {0}, quantity: {1}</value></data>
   <data name="MM-E-009" xml:space="preserve"><value>Item {0} in warehouse {1} would have {3} on {2}, below zero, so the movement cannot be saved.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>Item {0} in warehouse {1} would end month {2} at {3}, below zero, so the movement cannot be saved.</value></data>
+  <data name="SD-E-006" xml:space="preserve"><value>All document numbers for {0} are used, so no more documents can be saved.</value></data>
 </root>
