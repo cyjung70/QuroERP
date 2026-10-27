@@ -1,12 +1,11 @@
 {
   "id": "TASK-MM-018",
   "project": "core",
-  "title": "품목 재고 목록 (엑셀) 리포트 조회·PDF·화면",
+  "title": "품목 재고 목록 (엑셀) — 품목 재고 목록에 통합",
   "module": "MM",
   "layer": [
     "Api",
     "Application",
-    "Infrastructure",
     "Blazor"
   ],
   "screenType": "M",
@@ -20,25 +19,17 @@
   ],
   "skills": [
     "quro-api",
-    "quro-dapper",
     "quro-blazor",
     "quro-unit-test",
     "quro-code-review"
   ],
   "dependsOn": [
-    "TASK-BC-015",
-    "TASK-BC-017",
-    "TASK-CORE-003",
-    "TASK-CORE-005",
-    "TASK-CORE-006",
-    "TASK-CORE-007"
+    "TASK-MM-017"
   ],
   "acceptance": [
-    "명세 REST API 구현",
-    "명세 테스트 시나리오 통과",
-    "FastReport PDF 출력",
-    "창고 조건 (전체 또는 창고 하나), 수량은 품목+창고 기준"
+    "품목 재고 목록 화면에 엑셀 내보내기 버튼 (MM-BR-653)",
+    "별도 화면·API를 만들지 않는다"
   ],
-  "estimateHours": 2,
+  "estimateHours": 1,
   "status": "todo"
 }
