@@ -91,10 +91,9 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
         await using (var setup = await units.BeginAsync(CancellationToken.None))
         {
             warehouseId = await DefaultWarehouseAsync(setup.Transaction);
-            itemId = await InsertItemAsync(setup.Transaction, onHand: 5, cost: 1);
-            await setup.Transaction.Connection!.ExecuteAsync(
-                "INSERT INTO mm_onhand (item_id, warehouse_id, onhand_qty, created_by, updated_by) VALUES (@itemId, @warehouseId, 5, 't', 't')",
-                new { itemId, warehouseId }, setup.Transaction);
+            itemId = await InsertItemAsync(setup.Transaction, onHand: 0, cost: 0);
+            await Service().PostAsync(
+                [new StockMovementRequest("GR", Day, itemId, warehouseId, 5, Price: 1)], "setup", setup.Transaction, CancellationToken.None);
             await setup.CommitAsync(CancellationToken.None);
         }
         var issue = new StockMovementRequest("DN", Day, itemId, warehouseId, -3);
@@ -115,6 +114,84 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
         error.Code.Should().Be("MM-E-001");
         error.Args.Should().Equal($"IT-{itemId}", "MAIN", 2m, 3m);
     }
+
+    [DatabaseFact, Trait("Id", "MM-UT-604")]
+    public async Task GetDailyBalancesAsync_ClosedMonthOpeningPlusDailySumsWithMonthEnds()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+        var tx = uow.Transaction;
+        var warehouseId = await DefaultWarehouseAsync(tx);
+        var itemId = await InsertItemAsync(tx, onHand: 0, cost: 0);
+        await tx.Connection!.ExecuteAsync(
+            """
+            INSERT INTO mm_monthly_inventory (year_month, item_id, warehouse_id, bal_qty, created_by, updated_by)
+            VALUES ('202609', @itemId, @warehouseId, 3, 't', 't')
+            """, new { itemId, warehouseId }, tx);
+        foreach (var (date, qty) in new[] { ("2026-09-15", 100m), ("2026-10-01", 5m), ("2026-10-01", -1m), ("2026-10-20", -2m), ("2026-11-03", 4m) })
+        {
+            await InsertMovementAsync(tx, itemId, warehouseId, DateOnly.Parse(date, System.Globalization.CultureInfo.InvariantCulture), qty);
+        }
+
+        var (opening, balances) = await db.Get<IInventoryRepository>().GetDailyBalancesAsync(
+            itemId, warehouseId, new DateOnly(2026, 9, 30), new DateOnly(2026, 10, 10), tx, CancellationToken.None);
+
+        // 9/15 is in the closed month and is already in the 202609 closing balance
+        opening.Should().Be(3);
+        balances.Should().Equal(
+            new DailyStockBalance(new DateOnly(2026, 10, 1), 7, false),
+            new DailyStockBalance(new DateOnly(2026, 10, 20), 5, true),
+            new DailyStockBalance(new DateOnly(2026, 11, 3), 9, true));
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-604")]
+    public async Task GetDailyBalancesAsync_NoClosedMonthAndNoMovements_ReturnsZeroOpeningOnly()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+        var tx = uow.Transaction;
+        var itemId = await InsertItemAsync(tx, onHand: 0, cost: 0);
+
+        var (opening, balances) = await db.Get<IInventoryRepository>().GetDailyBalancesAsync(
+            itemId, await DefaultWarehouseAsync(tx), null, new DateOnly(2026, 10, 10), tx, CancellationToken.None);
+
+        opening.Should().Be(0);
+        balances.Should().BeEmpty();
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-604")]
+    public async Task Migration_HasTheItemWarehouseDateIndexForBalances()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+
+        var definition = await uow.Transaction.Connection!.QuerySingleAsync<string>(
+            "SELECT indexdef FROM pg_indexes WHERE schemaname = current_schema() AND indexname = 'ix_mm_goods_movement_item_id_warehouse_id_document_dt'",
+            transaction: uow.Transaction);
+
+        definition.Should().EndWith("(item_id, warehouse_id, document_dt)");
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-009")]
+    public async Task PostAsync_DenyBackDatedIssueBeforeTheReceipt_ThrowsMmE009()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+        var tx = uow.Transaction;
+        var warehouseId = await DefaultWarehouseAsync(tx);
+        var itemId = await InsertItemAsync(tx, onHand: 0, cost: 0);
+        await Service().PostAsync([new StockMovementRequest("GR", Day, itemId, warehouseId, 5, Price: 1)], "kim", tx, CancellationToken.None);
+
+        var act = () => Service().PostAsync(
+            [new StockMovementRequest("DN", Day.AddDays(-1), itemId, warehouseId, -2)], "kim", tx, CancellationToken.None);
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-009");
+        error.Args.Should().Equal($"IT-{itemId}", "MAIN", "2026-10-09", -2m);
+    }
+
+    private static Task<int> InsertMovementAsync(IDbTransaction tx, long itemId, long warehouseId, DateOnly date, decimal qty) =>
+        tx.Connection!.ExecuteAsync(
+            """
+            INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, qty, prc, amount, created_by, updated_by)
+            VALUES (gen_random_uuid()::text, @date, CASE WHEN @qty > 0 THEN 'UR' ELSE 'GI' END, @itemId, @warehouseId, @qty, 1, @qty, 't', 't')
+            """, new { itemId, warehouseId, date, qty }, tx);
 
     private InventoryService Service() => new(
         db.Get<IInventoryRepository>(),

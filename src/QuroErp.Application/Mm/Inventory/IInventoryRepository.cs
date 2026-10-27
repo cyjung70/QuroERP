@@ -33,6 +33,14 @@ public interface IInventoryRepository
     /// <summary>Inserts the movement and sets its Id.</summary>
     Task InsertMovementAsync(GoodsMovement movement, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Ledger balances of item + warehouse for the point-in-time checks (MM-BR-604), read in one query before the
+    /// new movement is inserted. Opening is the closing balance of lastClosedMonthEnd's month (0 when null).
+    /// Balances start at the last day with movements on or before movementDate and include every later day.
+    /// </summary>
+    Task<(decimal Opening, IReadOnlyList<DailyStockBalance> Balances)> GetDailyBalancesAsync(
+        long itemId, long warehouseId, DateOnly? lastClosedMonthEnd, DateOnly movementDate, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <summary>Reads and locks (FOR UPDATE) movements to reverse.</summary>
     /// <returns>Only the movements that exist.</returns>
     Task<IReadOnlyList<SavedMovement>> LockMovementsAsync(IReadOnlyCollection<long> movementIds, IDbTransaction transaction, CancellationToken cancellationToken);
