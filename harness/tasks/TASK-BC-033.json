@@ -12,7 +12,12 @@
   "specs": [
     "docs/specifications/BC/cart.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-601",
+    "SD-BR-602",
+    "SD-BR-603",
+    "SD-BR-604"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
