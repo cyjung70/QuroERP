@@ -15,10 +15,10 @@ namespace QuroErp.Web.Tests;
 /// </summary>
 public sealed partial class WebFactory : WebApplicationFactory<Program>
 {
-    /// <summary>인증 API가 돌려줄 응답. 기본은 로그인 실패(401 ProblemDetails, BC-E-001).</summary>
+    /// <summary>인증 API가 돌려줄 응답. 기본은 로그인 실패(401 ProblemDetails, AUTH-002).</summary>
     public Func<HttpResponseMessage> ApiResponse { get; set; } = () => new HttpResponseMessage(HttpStatusCode.Unauthorized)
     {
-        Content = new StringContent("""{"status":401,"code":"BC-E-001"}""", null, "application/problem+json"),
+        Content = new StringContent("""{"status":401,"code":"AUTH-002"}""", null, "application/problem+json"),
     };
 
     /// <summary>Response of business APIs (company, inventory setting) by request. Default: 404 without body.</summary>

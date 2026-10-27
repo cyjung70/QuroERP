@@ -14,6 +14,7 @@ builder.Services.AddQuroAuthentication(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
+builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
 builder.Services.AddExceptionHandler<ProblemExceptionHandler>();
 builder.Services.AddOpenApi();
 
