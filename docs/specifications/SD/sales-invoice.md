@@ -10,7 +10,7 @@
 | 액터 | 메뉴 권한이 있는 로그인 사용자 [확인 필요 — 역할별 권한은 role_menu] |
 | 사전조건 | 로그인 (security.md) |
 
-> '수주 불러오기' 대화상자로 수주 상세를 가져온다. 고객 신용 한도는 검사하지 않는다 (SD-BR-309, 입금 처리와 함께 Enterprise).
+> '수주 불러오기' 대화상자로 수주 상세를 가져온다. 고객 신용 한도를 넘으면 경고한다 (SD-BR-309). 'Credit 적용' 버튼으로 [Credit Memo 적용 (송장)](credit-memo-apply.md) 창을 연다.
 
 ## 기본 흐름
 
@@ -26,10 +26,11 @@
 
 ## 대체 흐름
 
-- 입금된 송장은 수정·삭제·Void할 수 없다 (SD-BR-104).
+- 입금·Credit 적용이 있는 송장은 수정·삭제·Void할 수 없다 (SD-BR-104, SD-BR-261).
+- Credit 적용 버튼으로 고객의 Credit Memo를 이 송장에 적용한다 (Credit Memo 적용 명세, SD-BR-251~259).
 - 저장한 줄은 고칠 수 없다. 지우고 다시 넣는다 (SD-BR-107). 줄을 지우면 출고와 수주 송장 수량을 되돌린다.
 - Void는 출고 취소, 수주 송장 수량 되돌리기, 헤더 `VO`·금액 0, 수주 상태 재계산을 한 트랜잭션으로 한다 (SD-BR-113).
-- 고객 신용 한도는 검사하지 않는다 (SD-BR-309).
+- 고객 미수 잔액 + 이 문서 금액이 신용 한도를 넘으면 경고하고, 확인하면 저장한다 (SD-BR-309).
 - 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
 - 재고를 줄이는 저장은 마이너스 재고 모드를 따른다. 품목+창고 현재고(MM-BR-001·002)와 수불일자 시점·이후 일자 잔고(MM-BR-009·010)를 본다.
 - 줄 창고는 헤더 창고가 기본값이고 줄마다 바꿀 수 있다. 줄을 바꾸거나 지우면 원 이동의 반대 부호 이동을 넣는다 (MM-BR-703, MM-BR-601).
@@ -104,8 +105,8 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
-| `fi_credit_application` | `A_AC_HDR` | R |
-| `fi_ar_receipt_line` | `A_AR_CLS` | R |
+| `sd_cm_apply` | `A_AC_HDR` | R |
+| `sd_ar_clear` | `A_AR_CLS` | R |
 | `bc_customer` | `B_CUSTOMER` | RU |
 | `bc_item` | `B_ITEM` | R |
 | `sys_code_minor` | `B_MINOR` | R |
@@ -143,6 +144,8 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_credit`, `delete_mov_in
 - [SD-BR-404](../../business-rules/SD/pricing.md)
 - [SD-BR-405](../../business-rules/SD/pricing.md)
 - [SD-BR-406](../../business-rules/SD/pricing.md)
+- [SD-BR-309](../../business-rules/SD/customer.md)
+- [SD-BR-261](../../business-rules/SD/credit-apply.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)

@@ -1,0 +1,46 @@
+{
+  "id": "TASK-SD-037",
+  "title": "Credit Memo 적용 (송장) API (Application·Domain·Infrastructure)",
+  "module": "SD",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/SD/credit-memo-apply.md"
+  ],
+  "rules": [
+    "SD-BR-251",
+    "SD-BR-252",
+    "SD-BR-253",
+    "SD-BR-254",
+    "SD-BR-255",
+    "SD-BR-256",
+    "SD-BR-257",
+    "SD-BR-258",
+    "SD-BR-259",
+    "SD-BR-261",
+    "SD-BR-118"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

@@ -9,6 +9,12 @@
 
 | 한글 용어 | 영문 식별자(PascalCase) | DB 컬럼(snake_case) | 모듈 | 설명 |
 | --- | --- | --- | --- | --- |
+| Credit Memo 적용 반제 | CmClear | sd_cm_clear | SD | AS IS `A_AC_DTL` |
+| Credit Memo 적용 | CmApply | sd_cm_apply | SD | AS IS `A_AC_HDR` |
+| 지급 반제 | ApClear | mm_ap_clear | MM | AS IS `A_AP_CLS` |
+| 지급 | ApPayment | mm_ap_payment | MM | AS IS `A_AP_PAYMENT` |
+| 입금 반제 | ArClear | sd_ar_clear | SD | AS IS `A_AR_CLS` |
+| 입금 | ArReceipt | sd_ar_receipt | SD | AS IS `A_AR_RECEIPT` |
 | 대체 품목 그룹 | AlternateItemGroup | bc_alternate_item_group | BC | AS IS `B_ALT_ITEM` |
 | 문서 번호 채번 | DocumentNumber | sys_document_number | BC | AS IS `B_AUTO_NUM` |
 | 장바구니 | CartItem | bc_cart_item | BC | AS IS `B_CART` |
