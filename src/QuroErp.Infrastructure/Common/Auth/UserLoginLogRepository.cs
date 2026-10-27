@@ -11,14 +11,19 @@ internal sealed class UserLoginLogRepository : IUserLoginLogRepository
     public const string AuditUser = "system";
 
     private const string Insert = """
-        INSERT INTO sys_user_login_log (log_dt, app_user_id, login_userid, ip_addr, success, created_by, updated_by)
-        VALUES (@LogDt, @AppUserId, @LoginUserId, @IpAddr, @Success, @AuditUser, @AuditUser)
+        INSERT INTO sys_user_login_log (log_dt, app_user_id, login_userid, ip_addr, success, event_type, result_code, user_agent,
+                                        created_by, updated_by)
+        VALUES (@LogDt, @AppUserId, @LoginUserId, @IpAddr, @Success, @EventType, @ResultCode, @UserAgent, @AuditUser, @AuditUser)
         """;
 
     public Task InsertAsync(UserLoginLog log, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteAsync(new CommandDefinition(
             Insert,
-            new { log.LogDt, log.AppUserId, log.LoginUserId, IpAddr = NullIfEmpty(log.IpAddr), log.Success, AuditUser },
+            new
+            {
+                log.LogDt, log.AppUserId, log.LoginUserId, IpAddr = NullIfEmpty(log.IpAddr), log.Success, log.EventType, log.ResultCode,
+                UserAgent = NullIfEmpty(log.UserAgent), AuditUser,
+            },
             transaction,
             cancellationToken: cancellationToken));
 

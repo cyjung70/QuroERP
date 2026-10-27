@@ -64,8 +64,8 @@ public class AuthRepositoryTests(AuthSchemaFixture db)
         await using (var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None))
         {
             var logs = db.Get<IUserLoginLogRepository>();
-            await logs.InsertAsync(new UserLoginLog(logDt, userId, "admin4", "10.0.0.1", true), uow.Transaction, CancellationToken.None);
-            await logs.InsertAsync(new UserLoginLog(logDt, null, "ghost", "", false), uow.Transaction, CancellationToken.None);
+            await logs.InsertAsync(new UserLoginLog(logDt, userId, "admin4", "10.0.0.1", true, LoginEvents.LoginOk, null, "Mozilla/5.0"), uow.Transaction, CancellationToken.None);
+            await logs.InsertAsync(new UserLoginLog(logDt, null, "ghost", "", false, LoginEvents.LoginFail, AuthCodes.InvalidCredentials, ""), uow.Transaction, CancellationToken.None);
             await uow.CommitAsync(CancellationToken.None);
         }
 

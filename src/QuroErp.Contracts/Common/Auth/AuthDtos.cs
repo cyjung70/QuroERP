@@ -1,14 +1,22 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace QuroErp.Contracts.Common.Auth;
 
-/// <summary>로그인 요청 (POST /api/common/auth/login).</summary>
-public sealed record LoginRequest(
-    [Required, StringLength(100)] string UserId,
-    [Required, StringLength(200)] string Password);
+/// <summary>Login request (POST /api/auth/login). Empty fields return 400 AUTH-001.</summary>
+/// <param name="LoginId">Typed user ID. The server trims and lowercases it (max 50 characters).</param>
+/// <param name="Password">Not trimmed (max 128 characters).</param>
+/// <param name="AutoLogin">"Keep me signed in". Ignored while auto login is off in the settings.</param>
+/// <param name="Language">Language chosen on the login screen (ko, en). Messages use it and the user's language is updated.</param>
+public sealed record LoginRequest(string? LoginId, string? Password, bool AutoLogin = false, string? Language = null);
+
+/// <summary>Auto-login request (POST /api/auth/auto-login) with the raw token from the token cookie.</summary>
+public sealed record AutoLoginRequest(string? Token);
+
+/// <summary>Logout request (POST /api/auth/logout). The token of this device, if any, is revoked.</summary>
+public sealed record LogoutRequest(string? AutoLoginToken);
 
 /// <summary>로그인·재발급 응답. AccessToken은 Web 서버만 보관하고 브라우저에 보내지 않는다.</summary>
-/// <param name="LangCode">사용자 언어 설정 (ko, en). null이면 설정하지 않았다.</param>
+/// <param name="Language">User language (ko, en). Null when not set.</param>
+/// <param name="LastLoginAt">Previous login before this one, shown on the main screen.</param>
+/// <param name="AutoLoginToken">New raw auto-login token for the token cookie. Null when none was issued.</param>
 public sealed record LoginResponse(
     string AccessToken,
     DateTimeOffset ExpiresAt,
@@ -16,4 +24,26 @@ public sealed record LoginResponse(
     string? UserName,
     string? RoleCode,
     bool MustChangePassword,
-    string? LangCode);
+    string? Language,
+    DateTimeOffset? LastLoginAt = null,
+    string? LastLoginIp = null,
+    string? AutoLoginToken = null,
+    DateTimeOffset? AutoLoginExpiresAt = null);
+
+/// <summary>Signed-in user (GET /api/auth/me).</summary>
+/// <param name="Menus">Menus the role may open, with the access level of each (the user's permissions).</param>
+public sealed record MeResponse(
+    string UserId,
+    string? UserName,
+    string? RoleCode,
+    string? Language,
+    bool MustChangePassword,
+    DateTimeOffset? LastLoginAt,
+    string? LastLoginIp,
+    AuthWarehouse? DefaultWarehouse,
+    IReadOnlyList<AuthMenu> Menus);
+
+/// <summary>A menu of the user's role (sys_role_menu, sys_menu).</summary>
+public sealed record AuthMenu(string MenuCode, string? Name, string? ProgramId, string? Module, string? ParentMenuCode, string? FullAccess);
+
+public sealed record AuthWarehouse(long Id, string WarehouseCode, string WarehouseName);

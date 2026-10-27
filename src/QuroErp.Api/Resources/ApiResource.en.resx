@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AUTH-001" xml:space="preserve"><value>Please enter your {0}.</value></data>
+  <data name="AUTH-002" xml:space="preserve"><value>Incorrect user ID or password.</value></data>
+  <data name="AUTH-003" xml:space="preserve"><value>Your account is locked after repeated failed attempts. Try again after {0} or contact your administrator.</value></data>
+  <data name="AUTH-004" xml:space="preserve"><value>This account is not active. Please contact your administrator.</value></data>
+  <data name="AUTH-005" xml:space="preserve"><value>Please change your password to continue.</value></data>
+  <data name="AUTH-006" xml:space="preserve"><value>You were signed out due to inactivity. Please sign in again.</value></data>
+  <data name="AUTH-007" xml:space="preserve"><value>Your saved sign-in has expired. Please sign in again.</value></data>
+  <data name="AUTH-008" xml:space="preserve"><value>Too many requests. Please try again shortly.</value></data>
+  <data name="Auth.Field.LoginId" xml:space="preserve"><value>user ID</value></data>
+  <data name="Auth.Field.Password" xml:space="preserve"><value>password</value></data>
+</root>

@@ -41,8 +41,8 @@ public class ProblemMessageTests(WebFactory factory) : IClassFixture<WebFactory>
     }
 
     [Theory, Trait("Id", "CORE-004-WT-09")]
-    [InlineData("ko", "BC-E-001", "사용자 ID 또는 비밀번호가 올바르지 않습니다.")]
-    [InlineData("en", "BC-E-001", "The user ID or password is incorrect.")]
+    [InlineData("ko", "AUTH-002", "아이디 또는 비밀번호가 올바르지 않습니다.")]
+    [InlineData("en", "AUTH-002", "Incorrect user ID or password.")]
     [InlineData("ko", "XX-E-999", "요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요.")]
     [InlineData("en", null, "The request could not be processed. Please try again later.")]
     public void Get_Code_ReturnsMessageInUserLanguageOrUnknown(string culture, string? code, string expected)
@@ -81,13 +81,13 @@ public class ProblemMessageTests(WebFactory factory) : IClassFixture<WebFactory>
     }
 
     [Theory, Trait("Id", "CORE-004-WT-10")]
-    [InlineData("en", "The user ID or password is incorrect.")]
-    [InlineData("ko", "사용자 ID 또는 비밀번호가 올바르지 않습니다.")]
+    [InlineData("en", "Incorrect user ID or password.")]
+    [InlineData("ko", "아이디 또는 비밀번호가 올바르지 않습니다.")]
     public async Task LoginPost_ApiReturns401Problem_ShowsMessageForCode(string culture, string expected)
     {
         factory.ApiResponse = () => new HttpResponseMessage(HttpStatusCode.Unauthorized)
         {
-            Content = new StringContent("""{"status":401,"code":"BC-E-001"}""", null, "application/problem+json"),
+            Content = new StringContent("""{"status":401,"code":"AUTH-002"}""", null, "application/problem+json"),
         };
 
         var html = await PostLoginAsync(culture);
