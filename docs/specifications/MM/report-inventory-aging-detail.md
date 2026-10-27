@@ -65,7 +65,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [MM-BR-656](../../business-rules/MM/inventory-report.md)
+- [MM-BR-655](../../business-rules/MM/inventory-report.md)
+- [MM-BR-604](../../business-rules/MM/ledger.md)
 
 ## 다국어 리소스 키
 
@@ -77,6 +79,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 - `MM-UC-013-T01` 조건별 집계 값이 AS IS 리포트와 같다 (이관 데이터로 비교)
 - `MM-UC-013-T02` 조건 없는 조회는 기본 기간으로 제한된다
+- `MM-UC-013-T03` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-656 → MM-UT-656)
 
 ## AS IS 근거
 

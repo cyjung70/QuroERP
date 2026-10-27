@@ -13,7 +13,11 @@
   "specs": [
     "docs/specifications/MM/report-item-list-excel.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-651",
+    "MM-BR-652",
+    "MM-BR-653"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

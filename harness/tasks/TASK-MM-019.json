@@ -13,7 +13,11 @@
   "specs": [
     "docs/specifications/MM/report-ptp-item-list.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-654",
+    "MM-BR-651",
+    "MM-BR-652"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

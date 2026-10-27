@@ -10,7 +10,10 @@
   "specs": [
     "docs/specifications/MM/back-order-list.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-151",
+    "MM-BR-152"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

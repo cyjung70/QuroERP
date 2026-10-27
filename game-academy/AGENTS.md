@@ -45,7 +45,7 @@
 
 | 대상 | 도구 | 위치 |
 | --- | --- | --- |
-| 판정·점수·진행 로직 (`core/`) | Vitest [제안] | `game-academy/tests/client/` |
+| 판정·점수·진행 로직 (`core/`) | Vitest | `game-academy/tests/client/` |
 | 게임 서버 | xUnit + FluentAssertions | `game-academy/tests/server/` |
 | 미션 YAML 형식 | 스키마 검사 (빌드 단계) | `game-academy/tests/missions/` |
 | 미션 전체 흐름 (게임 → API → 결과) | Tester `scenario` 계층 | `tester/` |
@@ -57,6 +57,7 @@
 - 서버: `dotnet build`가 경고 없이, `dotnet test`가 모두 통과한다.
 - 새 미션은 문서·YAML·리소스 키(`ko`, `en`)가 모두 있다.
 - 태스크 JSON의 `status`를 `done`으로 바꾼다.
+- `status`가 `blocked`인 태스크는 시작하지 않는다. 사람이 `todo`로 바꾼 뒤에 한다.
 
 ## 7. 하지 말 것
 

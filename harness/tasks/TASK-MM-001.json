@@ -13,7 +13,16 @@
   "specs": [
     "docs/specifications/MM/vendor.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-851",
+    "MM-BR-852",
+    "MM-BR-853",
+    "MM-BR-854",
+    "MM-BR-855",
+    "MM-BR-856",
+    "MM-BR-857",
+    "MM-BR-858"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
