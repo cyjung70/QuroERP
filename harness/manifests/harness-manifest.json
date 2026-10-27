@@ -152,7 +152,7 @@
     },
     {
       "path": "docs/business-rules/MM/item.md",
-      "sha256": "67ce4a9f78b1d6560d663ff655b2ba11a133aa2484f0806f86731470802a8bce"
+      "sha256": "7cb85ae9292b7c41fffccf53e0aebc6c6764b3b96c2106df8bd9ef074b93796f"
     },
     {
       "path": "docs/business-rules/MM/ledger.md",
@@ -172,7 +172,7 @@
     },
     {
       "path": "docs/business-rules/MM/README.md",
-      "sha256": "8b4147b80d63433636a00dbc5b2c9a3a7707db18c89aafd273408498c28b60ef"
+      "sha256": "5a7acda7e16869817c2654e0580375253d269dbe5476bb2f58ad378431ab0874"
     },
     {
       "path": "docs/business-rules/MM/stock-count.md",
@@ -216,11 +216,11 @@
     },
     {
       "path": "docs/business-rules/SD/customer.md",
-      "sha256": "2bbda4988954840e9e419ee25a89ad33b5e2b6647e695f56722b57f1379e17b3"
+      "sha256": "5ee05a325df55bac2dcd7f9323effdaa090a79ff511aa88f6fbfec12b20bb433"
     },
     {
       "path": "docs/business-rules/SD/master-data.md",
-      "sha256": "5d81cb46c305b2f9f7e45a16755c9d4105419f192a335c0ddcc866d89e9ac652"
+      "sha256": "2ee29317cfe2f419734a1a7d6c36dcb2a21419538cb3047676f98835fda16d34"
     },
     {
       "path": "docs/business-rules/SD/pricing.md",
@@ -228,7 +228,7 @@
     },
     {
       "path": "docs/business-rules/SD/README.md",
-      "sha256": "4217a334e55ea835041ad79921b606135849b1180943ffe637abc0bc7c226bf2"
+      "sha256": "83dcadf71c18b22e3251813051702c79f79d248b7424073938e6f58b6a7d04da"
     },
     {
       "path": "docs/business-rules/SD/sales-invoice.md",
@@ -252,7 +252,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "cc9b3e9302bd95f769d877b9443b155c06e76fe282c6dd6da9b702f8621834a8"
+      "sha256": "d3ad8bcb2f03d5bb88a912603767232645de58200767130434e3a45af5661e49"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -276,7 +276,7 @@
     },
     {
       "path": "docs/specifications/BC/change-customer-name.md",
-      "sha256": "a64e967727104cbd5e4682a02ef41455ca01aa320f6ddbde044295aac93c1c66"
+      "sha256": "27c3737003b6721a384bac01d9890213b5b8f0e920a1b01e1cb855d2980f2658"
     },
     {
       "path": "docs/specifications/BC/change-password.md",
@@ -288,7 +288,7 @@
     },
     {
       "path": "docs/specifications/BC/code.md",
-      "sha256": "570bdd6366a3fc72de361b4fd1b3b8cebdc8931f41d08bc8e0bf4f47fb79b788"
+      "sha256": "1b793425f9833506e77e5a22524361c5fb50fa16051ba10d78fafb98db0055c1"
     },
     {
       "path": "docs/specifications/BC/company-menu.md",
@@ -308,7 +308,7 @@
     },
     {
       "path": "docs/specifications/BC/item-image-upload.md",
-      "sha256": "eca661232b0afe14876bea01cb29e3e5bdbc1f34609be02a18dce9797577d4b2"
+      "sha256": "f881681af1a94a8800816c8f473a92bbe2eca053108567cf9853ea7c1933e75d"
     },
     {
       "path": "docs/specifications/BC/item-image.md",
@@ -568,31 +568,31 @@
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-class-region.md",
-      "sha256": "d84bb5ff1eee62d9fe213fcdd6688a6559bc95fe6191c5c2f6ab2f32c3bbfb42"
+      "sha256": "5833443300fa2da7dcb7c87ef944f40d2fa83b74d320295466ce754135a11d82"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-class.md",
-      "sha256": "14a08829b1f9f58689c9cd8851112f4e11f59b5dd45ac2ea9974fd8d2325d872"
+      "sha256": "3bd3849735e99bb40900d24bde8cbb0cdff3c925a2e7983d7c64f53d810b0de7"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-customer.md",
-      "sha256": "9b33c161dbabb4e1cbec93de03b1026814eb74788eea5ee9070256bcb10336e3"
+      "sha256": "6933c041ec26fef5184d39658dc37e11493dab400c67b29325f4f01074df7ac0"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-region-class.md",
-      "sha256": "696b3e7bba2474113d647372af1d6ed11426b3af9703ff528469173c6a162b15"
+      "sha256": "091a275f4502d4d5d2cada0c315639ee5be84101a25ae5d2228e39694fa40aed"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-region.md",
-      "sha256": "9fbc0602d4f69bbebaacce2de7f2417d4bb8fbbfa91482678a669b5a81e2361b"
+      "sha256": "6656ec351f517014fac28af96f6f7b0b5651c9e8eb251862b80d8ff938a1dd82"
     },
     {
       "path": "docs/specifications/SD/report-period-sales-by-rep.md",
-      "sha256": "2ccb5634ad661259631e2df2453c94c11129c1e0fc74ab80a59b1e33bfccaad4"
+      "sha256": "4561d6495520fc51049c867cf93b2ee2ee22e068904f68964b74c4c5f83a9770"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-class.md",
-      "sha256": "375d0135dba26d5cab3c3e3e5a65473efc4185414853f6a0568a3059f79a4463"
+      "sha256": "77b04bcbc18708137db1428cb45057e235d58b63ca1fe378eca52da55a091b8f"
     },
     {
       "path": "docs/specifications/SD/report-sales-by-customer-detail.md",
@@ -768,11 +768,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-015.json",
-      "sha256": "7ae0e47de5c18cf3755efbc60e96034c02a55c478f2f32319592c9b6fae3f5c7"
+      "sha256": "95f0b4b85a09d85c12a539321489ac92ea5ab3b04f790d10412bf5fda6e99a2a"
     },
     {
       "path": "harness/tasks/TASK-BC-016.json",
-      "sha256": "1b9d52172b6244564358bf5f5c4277e84a5c8b5ac752b9dfd68c411245e21e43"
+      "sha256": "a70aee8d12e56a3205d7ab21ebdcd670fa851ac4ec2443d67c0d6a14d2b4ef5b"
     },
     {
       "path": "harness/tasks/TASK-BC-017.json",
@@ -784,11 +784,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-019.json",
-      "sha256": "43684637563d489421b22e2f39ab38785c2acefe4e89f39402997671774fcbf0"
+      "sha256": "ffc056c2a0b0c05cc13f3fe0ad05b2f77989468ae4e14b1987d50ab4cb3b506e"
     },
     {
       "path": "harness/tasks/TASK-BC-020.json",
-      "sha256": "658e001acb528ad0f7dc2a4dd7e1550cd9a3b74037e765d70e5b8f96a119670a"
+      "sha256": "76f0b58fd6752fe35854061bc746368833badae072bd85c6167239d7600682cb"
     },
     {
       "path": "harness/tasks/TASK-BC-021.json",
@@ -832,11 +832,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-031.json",
-      "sha256": "7889b26abef2750118cf58d85eb57c40fd8b6f9dfcc1dccd6201ced40e57c903"
+      "sha256": "0d349643badd5bc1716aecfc66908b856ded13e045dc85252e394d99ce07ce9d"
     },
     {
       "path": "harness/tasks/TASK-BC-032.json",
-      "sha256": "5ed5857f192520fd57b7758a106c87aaf7bcc49c45ad2d7b563a326c8de3b065"
+      "sha256": "dbbd8fa96226941fb90cd8f93f3775ab8c08e3ae52353267c5a02c60b1f531cf"
     },
     {
       "path": "harness/tasks/TASK-BC-033.json",
