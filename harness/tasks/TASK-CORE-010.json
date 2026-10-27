@@ -1,0 +1,28 @@
+{
+  "id": "TASK-CORE-010",
+  "title": "SD 세트 구성·MRP·생산 실적 테이블 마이그레이션",
+  "module": "CORE",
+  "layer": [
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/database.md",
+    "docs/architecture/database-tables.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-002"
+  ],
+  "acceptance": [
+    "`sd_bom`, `sd_mrp_run`, `sd_mrp_part`, `sd_mrp_product`, `sd_production_result`, `sd_production_result_line`이 database-tables.md와 같다",
+    "DB-IT-03 (마이그레이션 테이블 = database-tables.md) 통과",
+    "외래 키 컬럼마다 인덱스가 있다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
