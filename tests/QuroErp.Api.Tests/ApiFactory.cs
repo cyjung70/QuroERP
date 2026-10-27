@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Tests;
@@ -25,6 +27,22 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public const string ApiKey = "test-api-key-0123456789";
     public const string RevokedApiKey = "revoked-api-key-0123456789";
 
+    /// <summary>User for lock tests, so the admin user above never gets locked.</summary>
+    public const string LockUserId = "lock";
+
+    /// <summary>User who must change the password (first login).</summary>
+    public const string NewUserId = "newbie";
+
+    /// <summary>Requests per minute per IP on /api/auth/*. High here; the rate limit test lowers it to the real 10.</summary>
+    public const string TestRateLimit = "1000";
+
+    /// <summary>Every log message the host wrote, at every level (no raw password or token may appear).</summary>
+    public ConcurrentQueue<string> LogMessages { get; } = new();
+
+    public AuthSetting AuthSetting { get; set; } = new();
+
+    public InMemoryAutoLoginTokenRepository AutoLoginTokens { get; } = new();
+
     public ConcurrentQueue<UserLoginLog> LoginLogs { get; } = new();
 
     /// <summary>Company logo state; there is one company and no logo at start.</summary>
@@ -38,16 +56,22 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         // 연결은 열지 않는다 (Repository를 가짜로 바꾼다)
         builder.UseSetting("ConnectionStrings:QuroErp", "Host=localhost;Database=unused");
         builder.UseSetting("Jwt:SigningKey", "test-signing-key-0123456789-abcdefghij");
+        builder.UseSetting("Auth:RateLimit:PerMinute", TestRateLimit);
+        builder.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Trace).AddProvider(new CollectingLoggerProvider(LogMessages)));
 
         builder.ConfigureTestServices(services =>
         {
-            var user = new AppUser
-            {
-                Id = 7, UserId = UserId, UserName = "Kim", RoleCode = "admin", ValidFlag = "Y",
-                PasswordHash = new PasswordHasher<AppUser>().HashPassword(new AppUser(), Password),
-            };
+            var hash = new PasswordHasher<AppUser>().HashPassword(new AppUser(), Password);
+            AppUser[] users =
+            [
+                new() { Id = 7, UserId = UserId, UserName = "Kim", RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash },
+                new() { Id = 11, UserId = LockUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash },
+                new() { Id = 12, UserId = NewUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash, MustChangePassword = true },
+            ];
             services.AddSingleton<IUnitOfWorkFactory, FakeUnitOfWorkFactory>();
-            services.AddSingleton<IAppUserRepository>(new FakeAppUserRepository(user));
+            services.AddSingleton<IAppUserRepository>(new FakeAppUserRepository(users));
+            services.AddSingleton<IAuthSettingRepository>(new FakeAuthSettingRepository(this));
+            services.AddSingleton<IAutoLoginTokenRepository>(AutoLoginTokens);
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
             services.AddSingleton<ITranslationRepository, FakeTranslationRepository>();
@@ -78,13 +102,90 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
     }
 
-    private sealed class FakeAppUserRepository(AppUser user) : IAppUserRepository
+    private sealed class FakeAppUserRepository(AppUser[] users) : IAppUserRepository
     {
         public Task<AppUser?> FindByUserIdAsync(string userId, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(userId == user.UserId ? user : null);
+            Task.FromResult(users.SingleOrDefault(u => u.UserId == userId));
 
         public Task<AppUser?> FindByIdAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(id == user.Id ? user : null);
+            Task.FromResult(users.SingleOrDefault(u => u.Id == id));
+
+        public Task<AppUser?> LockByUserIdAsync(string userId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            FindByUserIdAsync(userId, transaction, cancellationToken);
+
+        public Task<AppUser?> LockByIdAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            FindByIdAsync(id, transaction, cancellationToken);
+
+        // The users are kept in memory, so their state is already saved
+        public Task SaveLoginStateAsync(AppUser user, string? langCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<AuthMenu>>([new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y")]);
+
+        public Task<AuthWarehouse?> FindDefaultWarehouseAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<AuthWarehouse?>(new AuthWarehouse(1, "W01", "Main"));
+    }
+
+    private sealed class FakeAuthSettingRepository(ApiFactory factory) : IAuthSettingRepository
+    {
+        public Task<AuthSetting?> GetAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<AuthSetting?>(factory.AuthSetting);
+    }
+
+    public sealed class InMemoryAutoLoginTokenRepository : IAutoLoginTokenRepository
+    {
+        public ConcurrentDictionary<string, AutoLoginTokenRow> Tokens { get; } = new();
+
+        public Task<AutoLoginTokenRow?> FindByHashAsync(
+            string tokenHash, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Tokens.GetValueOrDefault(tokenHash));
+
+        public Task InsertAsync(
+            long appUserId, string tokenHash, DateTimeOffset expiresAt, string? userAgent, DateTimeOffset now,
+            IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            Tokens[tokenHash] = new AutoLoginTokenRow(Tokens.Count + 1, appUserId, expiresAt, null, now);
+            return Task.CompletedTask;
+        }
+
+        public Task RevokeAsync(long appUserId, string tokenHash, DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            if (Tokens.TryGetValue(tokenHash, out var token) && token.AppUserId == appUserId && token.RevokedAt is null)
+            {
+                Tokens[tokenHash] = token with { RevokedAt = now };
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task RevokeAllAsync(long appUserId, DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            foreach (var (hash, token) in Tokens.Where(t => t.Value.AppUserId == appUserId && t.Value.RevokedAt is null))
+            {
+                Tokens[hash] = token with { RevokedAt = now };
+            }
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class CollectingLoggerProvider(ConcurrentQueue<string> messages) : ILoggerProvider
+    {
+        public ILogger CreateLogger(string categoryName) => new CollectingLogger(messages);
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class CollectingLogger(ConcurrentQueue<string> messages) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(
+                LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+                messages.Enqueue(formatter(state, exception) + exception);
+        }
     }
 
     private sealed class FakeUserLoginLogRepository(ConcurrentQueue<UserLoginLog> logs) : IUserLoginLogRepository

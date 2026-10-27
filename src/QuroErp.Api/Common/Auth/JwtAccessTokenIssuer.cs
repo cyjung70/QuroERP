@@ -13,7 +13,7 @@ internal sealed class JwtAccessTokenIssuer(IOptions<JwtOptions> options) : IAcce
 {
     private readonly JsonWebTokenHandler _handler = new();
 
-    public AccessToken Issue(AppUser user, DateTimeOffset now)
+    public AccessToken Issue(AppUser user, bool mustChangePassword, DateTimeOffset now)
     {
         var jwt = options.Value;
         var expiresAt = now + jwt.Lifetime;
@@ -25,6 +25,10 @@ internal sealed class JwtAccessTokenIssuer(IOptions<JwtOptions> options) : IAcce
         if (user.RoleCode is not null)
         {
             claims.Add(new Claim(AuthClaims.Role, user.RoleCode));
+        }
+        if (mustChangePassword)
+        {
+            claims.Add(new Claim(AuthClaims.MustChangePassword, AuthClaims.True));
         }
 
         var token = _handler.CreateToken(new SecurityTokenDescriptor

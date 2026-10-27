@@ -5,17 +5,22 @@ using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Auth;
 
-/// <summary>인증 API 클라이언트 (POST api/common/auth/login, refresh).</summary>
+/// <summary>인증 API 클라이언트 (POST api/auth/login, refresh).</summary>
 public sealed class AuthApiClient(HttpClient http)
 {
     /// <param name="clientIp">브라우저 IP. Api가 로그인 이력에 남기도록 X-Forwarded-For로 보낸다.</param>
-    /// <exception cref="ApiProblemException">ID·비밀번호가 맞지 않으면 401, code BC-E-001.</exception>
-    public async Task<LoginResponse> LoginAsync(LoginRequest request, string? clientIp, CancellationToken cancellationToken)
+    /// <param name="userAgent">Browser User-Agent, stored in the login log.</param>
+    /// <exception cref="ApiProblemException">Login failed: code AUTH-002 (401), AUTH-003 (423), AUTH-004 (403) or AUTH-008 (429).</exception>
+    public async Task<LoginResponse> LoginAsync(LoginRequest request, string? clientIp, string? userAgent, CancellationToken cancellationToken)
     {
         using var message = new HttpRequestMessage(HttpMethod.Post, AuthRoutes.Login) { Content = JsonContent.Create(request) };
         if (!string.IsNullOrEmpty(clientIp))
         {
             message.Headers.Add("X-Forwarded-For", clientIp);
+        }
+        if (!string.IsNullOrEmpty(userAgent))
+        {
+            message.Headers.TryAddWithoutValidation("User-Agent", userAgent);
         }
         return await SendAsync(message, cancellationToken);
     }
