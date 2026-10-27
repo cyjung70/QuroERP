@@ -1,0 +1,40 @@
+{
+  "id": "TASK-BC-045",
+  "title": "Major 코드 관리 API (Application·Domain·Infrastructure)",
+  "module": "BC",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "M",
+  "specs": [
+    "docs/specifications/BC/code-major.md"
+  ],
+  "rules": [
+    "SD-BR-901",
+    "SD-BR-902",
+    "SD-BR-903",
+    "SD-BR-904",
+    "SD-BR-905"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}
