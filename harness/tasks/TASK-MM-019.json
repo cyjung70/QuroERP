@@ -1,12 +1,11 @@
 {
   "id": "TASK-MM-019",
   "project": "core",
-  "title": "품목 목록 (PTP) 리포트 조회·PDF·화면",
+  "title": "품목 목록 (PTP) — 품목 재고 목록에 통합",
   "module": "MM",
   "layer": [
     "Api",
     "Application",
-    "Infrastructure",
     "Blazor"
   ],
   "screenType": "M",
@@ -20,24 +19,17 @@
   ],
   "skills": [
     "quro-api",
-    "quro-dapper",
     "quro-blazor",
     "quro-unit-test",
     "quro-code-review"
   ],
   "dependsOn": [
-    "TASK-BC-015",
-    "TASK-BC-017",
-    "TASK-CORE-003",
-    "TASK-CORE-005",
-    "TASK-CORE-006",
-    "TASK-CORE-007"
+    "TASK-MM-017"
   ],
   "acceptance": [
-    "명세 REST API 구현",
-    "명세 테스트 시나리오 통과",
-    "FastReport PDF 출력"
+    "품목 재고 목록에 재주문점 열과 쪽 넘김(한 쪽 100행) 추가 (MM-BR-654)",
+    "별도 화면·API를 만들지 않는다"
   ],
-  "estimateHours": 2,
+  "estimateHours": 1,
   "status": "todo"
 }
