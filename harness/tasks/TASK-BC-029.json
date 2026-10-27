@@ -12,7 +12,13 @@
   "specs": [
     "docs/specifications/BC/purchase-price.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-901",
+    "MM-BR-902",
+    "MM-BR-903",
+    "MM-BR-904",
+    "MM-BR-905"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
