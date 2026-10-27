@@ -10,5 +10,6 @@
 - [매출 송장](sales-invoice.md): SD-BR-101 ~ SD-BR-118
 - [Credit Memo](credit-memo.md): SD-BR-201 ~ SD-BR-210
 - [고객 마스터](customer.md): SD-BR-301 ~ SD-BR-309
-- [판매 단가·할인](pricing.md): SD-BR-401 ~ SD-BR-406
+- [판매 단가·할인](pricing.md): SD-BR-401 ~ SD-BR-409
 - [세트 품목 구성](set-item.md): SD-BR-501 ~ SD-BR-510
+- [장바구니·품목 카탈로그](cart.md): SD-BR-601 ~ SD-BR-608
