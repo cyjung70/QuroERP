@@ -27,5 +27,5 @@
     "npm run lint, npm test, npm run build 통과"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "blocked"
 }

@@ -60,7 +60,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "c51084f9cd413e40f2655a426a9eb9a5c40d9f8392fe0d08701995d75cb12737"
+      "sha256": "07a1addd4708dedbbd03f12b3fc3e5f3634f00594cf11f4aa6c3d021506ecd1b"
     },
     {
       "path": "CLAUDE.md",
@@ -132,7 +132,7 @@
     },
     {
       "path": "docs/business-rules/MM/ap-report.md",
-      "sha256": "2dff3a47c778263a1815b36b52bd0a089b5b825ea2b1f17a789ba8aba9fbd6ab"
+      "sha256": "57a4a7dbd5c2588390fb435f5ce5923921ff83c6728e244c83d88f1d2997d5fd"
     },
     {
       "path": "docs/business-rules/MM/closing.md",
@@ -140,7 +140,11 @@
     },
     {
       "path": "docs/business-rules/MM/goods-receipt.md",
-      "sha256": "274952a365da7f22e1d55d6492bad8512371e0765cb9ced96a2a23910802969a"
+      "sha256": "e2cf46bd3f495b46673c18c66510da02b543ec128c2633db132561353b8390c7"
+    },
+    {
+      "path": "docs/business-rules/MM/inventory-report.md",
+      "sha256": "8d685dbcfa620a96a5089e018ed7ce7d1360a05ef6fb7a87353e6aa272d786b9"
     },
     {
       "path": "docs/business-rules/MM/inventory.md",
@@ -168,7 +172,7 @@
     },
     {
       "path": "docs/business-rules/MM/README.md",
-      "sha256": "021f1d013aedc538bbe61c8888ea9d55291a4ea76b98647dc00b30cdc23ea145"
+      "sha256": "8b4147b80d63433636a00dbc5b2c9a3a7707db18c89aafd273408498c28b60ef"
     },
     {
       "path": "docs/business-rules/MM/stock-count.md",
@@ -177,6 +181,10 @@
     {
       "path": "docs/business-rules/MM/unplanned-receipt.md",
       "sha256": "c9426d7ef5708c30bafbdde636f34a682b8dd07e6366bc2350d4761b4e8872a2"
+    },
+    {
+      "path": "docs/business-rules/MM/vendor.md",
+      "sha256": "640bf9ecb639512e17eb8679df40500d5dfa3d0608fdc8caf95d645b784a702c"
     },
     {
       "path": "docs/business-rules/MM/warehouse.md",
@@ -240,7 +248,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "1ae11e3621c29ad3ce87b664b3e38d2c4468456d6b94956234d4b40688febf91"
+      "sha256": "4e9b8b61d12498b82e36a589cd2baac83e3db833c4b9bbe98358e2fd4bbe95c5"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -344,7 +352,7 @@
     },
     {
       "path": "docs/specifications/MM/back-order-list.md",
-      "sha256": "19289f7796cf332b662f83a205084a3e5604982a1e96deecb433fa4c97d89bdf"
+      "sha256": "a44c56721fe1180cbed13e9a79283f6c9032f6f034db2d1e56e86540df400471"
     },
     {
       "path": "docs/specifications/MM/goods-receipt.md",
@@ -372,27 +380,27 @@
     },
     {
       "path": "docs/specifications/MM/report-inventory-aging-detail.md",
-      "sha256": "756951f77140983fe5a05f55c21a8877f2e8dcea64bad17df03e56d06369ff1e"
+      "sha256": "0fbdd2d43f06078b5c9f2529cc77030f0d45f04eb949fa2feba9e859128f2b91"
     },
     {
       "path": "docs/specifications/MM/report-inventory-aging.md",
-      "sha256": "844c3c69365e2b5efa2fd49d2919955014734ea9e3398d9be9dc66a3647d5812"
+      "sha256": "cffee54551f9bc8291577fcc7a59cb929da932cfe5a648059a79987e8439c6fa"
     },
     {
       "path": "docs/specifications/MM/report-inventory-statement-detail.md",
-      "sha256": "24b366a1dcfb9e00b44900ea046fedbde69f4d55042c28b79fd87c79e36462fe"
+      "sha256": "1e6c4b3a90f694839c3b84ddd2f4e3061ba585d5f6926e7c1e069f485a27d796"
     },
     {
       "path": "docs/specifications/MM/report-inventory-statement.md",
-      "sha256": "d1aa79dcdc80421fd36244f4e4f74d90d95389f844407a57abbbfeba38f5c2ea"
+      "sha256": "f7eaf83f5c28b4cefba0979ee8ea391162276ea6395e62ee75aeac32f5421a23"
     },
     {
       "path": "docs/specifications/MM/report-item-list-excel.md",
-      "sha256": "14465104f74fe871fafbc0c0eca3abd224eb5e7659cffae91df4592b5b2824f8"
+      "sha256": "ffef70ee4c2210fd1d6d25179b94f5c9a2c6c6a22d654ddb634a752cd876f229"
     },
     {
       "path": "docs/specifications/MM/report-item-list.md",
-      "sha256": "690b33518811348af2b85664f4a0df1fda2898c5273921176316d400f29d5e16"
+      "sha256": "d7db4157c4175c00537555d6c66d5a2f115d3bc17ab8c74dc80089ef0e07c8b9"
     },
     {
       "path": "docs/specifications/MM/report-item-transactions.md",
@@ -400,7 +408,7 @@
     },
     {
       "path": "docs/specifications/MM/report-ptp-item-list.md",
-      "sha256": "36c3bbec05b7885d233d6dae3d22f5f22fdd4be2a0a8bb42f9740a31053c7bef"
+      "sha256": "d4b9712d108b9d24f8e27ed474483d1f42e184ef5911f0dcbf733d2eef7abc3d"
     },
     {
       "path": "docs/specifications/MM/report-vendor-balance-detail.md",
@@ -408,7 +416,7 @@
     },
     {
       "path": "docs/specifications/MM/report-vendor-balance.md",
-      "sha256": "78471bcb2916c00c490e40a0aa1617b5f9e1f249a6cfdd771c8983ef3f1e4a9b"
+      "sha256": "b303db72f65ecda0a8e31b34339e27dea281859c49e26ba268601c3dda67cd30"
     },
     {
       "path": "docs/specifications/MM/report-vendor-center.md",
@@ -440,7 +448,7 @@
     },
     {
       "path": "docs/specifications/MM/vendor.md",
-      "sha256": "60a325585ab4d9ea21bfe61312c84f926c6cd8e6554298339c9bb4053a4dbfe0"
+      "sha256": "61bbe605c81bb2d31c7af08aae66b1f73c76869fba62f3df6afbc3cc2313d88d"
     },
     {
       "path": "docs/specifications/MM/warehouse.md",
@@ -636,7 +644,7 @@
     },
     {
       "path": "game-academy/AGENTS.md",
-      "sha256": "24f2adccc887895486c4c2bbc0c304ae7088c0c58075dd737eedfca31b101f6e"
+      "sha256": "edf98d1bfe3cb84355a8cdbf194a733fa0b2b192735da88e4917a58e22fa580a"
     },
     {
       "path": "game-academy/CLAUDE.md",
@@ -644,15 +652,15 @@
     },
     {
       "path": "game-academy/docs/architecture.md",
-      "sha256": "fc73b5e7fbb79d3d6c6051661418bb7065c6b07dd57b69b4fb3a2650308c2e46"
+      "sha256": "2b4bd5f32d954ebc3a2d9efa3ba7c2a74f30c5a6082808a3bb20e2967bef677b"
     },
     {
       "path": "game-academy/docs/assets-guide.md",
-      "sha256": "e7f44513d5319503e8f0a11b6559c75ce548d97fdd72f10448cac45abb221e62"
+      "sha256": "4ff6d34653936bb9474513e14a06b5a4b90fb680cc61e2741df398bb7912699a"
     },
     {
       "path": "game-academy/docs/i18n.md",
-      "sha256": "8d31099d6f4a2d0c059bce1a0342d7c48bceddeed7b5edcef79f6eabb6e6bf2f"
+      "sha256": "b6612230441ba781ac997ad27806f2743f01d1cb44f9697d776ff66132c0019c"
     },
     {
       "path": "game-academy/docs/INDEX.md",
@@ -668,15 +676,15 @@
     },
     {
       "path": "game-academy/harness/tasks/TASK-GAME-001.json",
-      "sha256": "7bccc44420a2254c88a1121c2091dbb41398c3607583c5a1e02cd5b81a7c9293"
+      "sha256": "e078f226b4b23ad8102d30ff27e5c26c9f8aa0b0bfe4e30aee2f869ea8361441"
     },
     {
       "path": "game-academy/harness/tasks/TASK-GAME-002.json",
-      "sha256": "7eb3ed2233bd05c14d29a22d18d9ae9507f1c57ceed3ab53b970700388ea01aa"
+      "sha256": "ee76bc3a18bfe19a1ab249c9b3543254ccfe3799870bb1c8a0e8a250c9c5aa2e"
     },
     {
       "path": "game-academy/harness/tasks/TASK-GAME-003.json",
-      "sha256": "fc08e0fb204f8679182f7e0ee02f5e64c7f7ff608e3ed0e683fdb23b2bd0d59a"
+      "sha256": "fc3fdcf4ab7a1934ebb259855f56bf5dcabe5a0415dac601e15455e2929e6eba"
     },
     {
       "path": "game-academy/src/.gitkeep",
@@ -936,11 +944,11 @@
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
-      "sha256": "cc4d8a726b6097a74b5000be6e9097f575db1386825efe2a3fb097d6490d76eb"
+      "sha256": "c961180b72e1b8b3e5fe89be6fa2a5d7453bbb1eeb26db1524c4710a4e52fd38"
     },
     {
       "path": "harness/tasks/TASK-MM-002.json",
-      "sha256": "69de5144fa06a344d71f394ff512d151336c2d9d9f8f21aab15171adc5e640bd"
+      "sha256": "6346d5bc20c7f55f397022b2d1237ddf2dc2201064f94f676e558a0ed6d442ae"
     },
     {
       "path": "harness/tasks/TASK-MM-003.json",
@@ -984,11 +992,11 @@
     },
     {
       "path": "harness/tasks/TASK-MM-013.json",
-      "sha256": "a5d9408aa1c22a15e90461b57b0327d9cc65e9982f71e751c133cc2a66393121"
+      "sha256": "b2403dd94de028e91334eb7dbaf7ff6294cab6e7e3c9895439d077705a82aac1"
     },
     {
       "path": "harness/tasks/TASK-MM-014.json",
-      "sha256": "4de5786032a31a560f649d04d581b3c7b3178ac8657c13c6b5c6d9eebddde92b"
+      "sha256": "fb45c780f8625f306c8e67fbf25e67a8615e549258649d917705c46289046218"
     },
     {
       "path": "harness/tasks/TASK-MM-015.json",
@@ -1000,35 +1008,35 @@
     },
     {
       "path": "harness/tasks/TASK-MM-017.json",
-      "sha256": "a3d45090e766cf51d29fdc9c22330a477abed603c8efa32218eedcc6a758736c"
+      "sha256": "13b7c11dc52b6d403f9c22bd7a7f815f22957303a969dbd4cd740a0db3a886b8"
     },
     {
       "path": "harness/tasks/TASK-MM-018.json",
-      "sha256": "027db99cb8c15eec5718c224377f0f2c63363f298c61018170b8955e1de323b0"
+      "sha256": "745565035880331c6b11947057b4dc456de9ac10ffc8c5027c0872ba1978f1f9"
     },
     {
       "path": "harness/tasks/TASK-MM-019.json",
-      "sha256": "6af7669334cd5288bfda524e1bfab980f55772c9617e88ca658971789ec3efc4"
+      "sha256": "b610e952e460a53d409fd24823eefc939b7eaddd358a8a49d24398adc96638c6"
     },
     {
       "path": "harness/tasks/TASK-MM-020.json",
-      "sha256": "eee293b5331f5394ca9a7ec87aa7c73d5d7814e1cc99a35713ba0597e21f39d6"
+      "sha256": "7b6001a94d5bc5de007acf42ec5f97954943e8c404072c179eecdb33cecc6cfb"
     },
     {
       "path": "harness/tasks/TASK-MM-021.json",
-      "sha256": "3379bd646517938eaf912f3553bbfb16ef2c872035f3b4fe583df4c8cf956231"
+      "sha256": "e4455a7a8bebd614c4923a6b626512e5eb955e2c126dda6aee360f1c690bab0b"
     },
     {
       "path": "harness/tasks/TASK-MM-022.json",
-      "sha256": "a1a7c1566a7dadd51e0480b17f6412565015941c1ebfc5f32831b47137e399a1"
+      "sha256": "57692084f305b07e6f935c7ff6b513a3b561df1af8b3eff5e3a8463ecee7d4e7"
     },
     {
       "path": "harness/tasks/TASK-MM-023.json",
-      "sha256": "b390b05032c5e43672ba1ed581e1a5d5b50cd9c00f9b0ed38b738a9e8660ded3"
+      "sha256": "4df9bc8c7b7580814bfccaecf66a773e8b6efc0920aaa130f0aa0c7644ff3065"
     },
     {
       "path": "harness/tasks/TASK-MM-024.json",
-      "sha256": "8f5abd8231baf2d48701c0654dfc698a34d997b32811c34df6cdba74d3448cde"
+      "sha256": "b2a240c71724ef2162377bc22a65e0dd740f0c3efa11e700f4b8d595cd15eb9f"
     },
     {
       "path": "harness/tasks/TASK-MM-025.json",
