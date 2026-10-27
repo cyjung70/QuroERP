@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-019",
+  "project": "core",
   "title": "품목 목록 (PTP) 리포트 조회·PDF·화면",
   "module": "MM",
   "layer": [

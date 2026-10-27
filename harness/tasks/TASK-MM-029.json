@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-029",
+  "project": "core",
   "title": "재고 대사 점검 리포트 조회·PDF·화면",
   "module": "MM",
   "layer": [

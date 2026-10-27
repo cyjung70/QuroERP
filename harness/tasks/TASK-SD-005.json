@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-005",
+  "project": "core",
   "title": "매출 송장(출고) API (Application·Domain·Infrastructure)",
   "module": "SD",
   "layer": [

@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-002",
+  "project": "core",
   "title": "DB 마이그레이션 기반과 공통 테이블",
   "module": "CORE",
   "layer": [

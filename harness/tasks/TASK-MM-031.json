@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-031",
+  "project": "core",
   "title": "지급 처리 화면 (SM)",
   "module": "MM",
   "layer": [

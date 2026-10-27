@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-004",
+  "project": "core",
   "title": "비밀번호 변경 화면 (S)",
   "module": "BC",
   "layer": [

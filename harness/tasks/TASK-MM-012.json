@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-012",
+  "project": "core",
   "title": "재고 실사 화면 (SM)",
   "module": "MM",
   "layer": [

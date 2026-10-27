@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-025",
+  "project": "core",
   "title": "세트 품목 구성 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

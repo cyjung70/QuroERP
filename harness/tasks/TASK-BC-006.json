@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-006",
+  "project": "core",
   "title": "내 정보 변경 화면 (S)",
   "module": "BC",
   "layer": [

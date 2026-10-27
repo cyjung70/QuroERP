@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-037",
+  "project": "core",
   "title": "품목 거래 내역 리포트 조회·PDF·화면",
   "module": "MM",
   "layer": [

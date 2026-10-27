@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-015",
+  "project": "core",
   "title": "재고 월 마감 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-026",
+  "project": "core",
   "title": "창고 마스터 화면 (M)",
   "module": "MM",
   "layer": [

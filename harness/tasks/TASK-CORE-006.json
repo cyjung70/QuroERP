@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-006",
+  "project": "core",
   "title": "화면유형 공통 컴포넌트 S/M/SM/MM",
   "module": "CORE",
   "layer": [

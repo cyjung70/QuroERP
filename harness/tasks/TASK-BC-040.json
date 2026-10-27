@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-040",
+  "project": "core",
   "title": "장바구니 내용 화면 (M)",
   "module": "BC",
   "layer": [

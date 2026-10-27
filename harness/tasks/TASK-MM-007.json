@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-007",
+  "project": "core",
   "title": "입고 (Bill) API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

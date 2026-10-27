@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-024",
+  "project": "core",
   "title": "대체 품목 화면 (M)",
   "module": "BC",
   "layer": [

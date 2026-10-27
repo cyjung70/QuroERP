@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-058",
+  "project": "core",
   "title": "고객 목록 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [

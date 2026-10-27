@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-016",
+  "project": "core",
   "title": "재고 월 마감 화면 (S)",
   "module": "MM",
   "layer": [

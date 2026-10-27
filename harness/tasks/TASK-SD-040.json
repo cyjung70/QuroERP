@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-040",
+  "project": "core",
   "title": "Credit Memo 적용 (입금) 화면 (SM)",
   "module": "SD",
   "layer": [

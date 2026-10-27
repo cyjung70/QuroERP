@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-010",
+  "project": "core",
   "title": "SD 세트 구성·MRP·생산 실적 테이블 마이그레이션",
   "module": "CORE",
   "layer": [

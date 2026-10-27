@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-024",
+  "project": "core",
   "title": "공급자 잔액 리포트 조회·PDF·화면",
   "module": "MM",
   "layer": [

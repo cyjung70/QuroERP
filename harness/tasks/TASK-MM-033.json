@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-033",
+  "project": "core",
   "title": "매입채무 현황 리포트 조회·PDF·화면",
   "module": "MM",
   "layer": [

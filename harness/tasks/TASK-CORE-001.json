@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-001",
+  "project": "core",
   "title": "솔루션 구조와 프로젝트 참조",
   "module": "CORE",
   "layer": [

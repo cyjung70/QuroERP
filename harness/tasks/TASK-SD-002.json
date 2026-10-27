@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-002",
+  "project": "core",
   "title": "고객 마스터 화면 (S)",
   "module": "SD",
   "layer": [

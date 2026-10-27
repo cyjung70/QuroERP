@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-023",
+  "project": "core",
   "title": "대체 품목 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

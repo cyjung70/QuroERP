@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-036",
+  "project": "core",
   "title": "예외 입고 줄 파일 올리기 화면 (S)",
   "module": "MM",
   "layer": [

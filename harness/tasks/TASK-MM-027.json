@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-027",
+  "project": "core",
   "title": "창고 간 재고 이동 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

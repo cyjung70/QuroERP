@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-005",
+  "project": "core",
   "title": "코드 API와 코드 값 검사 (ICodeValidator)",
   "module": "CORE",
   "layer": [

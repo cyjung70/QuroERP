@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-020",
+  "project": "core",
   "title": "재고 연령 분석 리포트 조회·PDF·화면",
   "module": "MM",
   "layer": [

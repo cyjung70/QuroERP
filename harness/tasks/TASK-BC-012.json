@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-012",
+  "project": "core",
   "title": "회사 메뉴 화면 (M)",
   "module": "BC",
   "layer": [

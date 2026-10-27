@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-031",
+  "project": "core",
   "title": "기간별 지역 매출 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [
