@@ -60,7 +60,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "379b82294661c93332ce3a5a0aaa39d8200442ac14bf2c2dcf3626a182fa8cd8"
+      "sha256": "0cbe5f21cfef242be33ac816aa0dae7237fa6ea0de5a6f328b93e61c0b71138a"
     },
     {
       "path": "docs/architecture/database.md",
@@ -116,11 +116,11 @@
     },
     {
       "path": "docs/business-rules/MM/item.md",
-      "sha256": "c73fa0682bff0690f13dd715cf91c7a7c776e718b797636ec4ad911bfde5c04f"
+      "sha256": "7b3f831d1f84e16c25737d7e76bf04e9edf2dc2b064988e2d06a73c6347f972c"
     },
     {
       "path": "docs/business-rules/MM/ledger.md",
-      "sha256": "089e98ee30b1efa723b7d450a205699cf89109351383ad8d22bb92a82bf1c592"
+      "sha256": "4c6380ec38ace4327e7efce95acdff5936788c4f83bd1f2f9b878d8b6c155f80"
     },
     {
       "path": "docs/business-rules/MM/purchase-order.md",
@@ -136,7 +136,7 @@
     },
     {
       "path": "docs/business-rules/MM/README.md",
-      "sha256": "3e220be36abb15f463bce635accd96e146705f355eb939eae6da9c2762c22040"
+      "sha256": "50ea182e7c640c004fe047c7056a899c50b202774fbed4b838ff18dc65d29714"
     },
     {
       "path": "docs/business-rules/MM/stock-count.md",
@@ -148,7 +148,7 @@
     },
     {
       "path": "docs/business-rules/MM/warehouse.md",
-      "sha256": "705c9c4eb512d559060c6ac2dfb4a45e01c271f1f297aedabb1f936fa9214b07"
+      "sha256": "a1a1c7667ef86b88f315434b358be4c1ea75bd357782e533a8df9242b3a641d4"
     },
     {
       "path": "docs/business-rules/PP/README.md",
@@ -176,7 +176,7 @@
     },
     {
       "path": "docs/business-rules/SD/sales-order.md",
-      "sha256": "bf5a537f3caf1c0a4dc8f09f352c51648dc2cef3719bfa6ae415a286dd4484a9"
+      "sha256": "689f0385d48ed6cb18cc442aac79785d77078590380141c417fa81c72d9b69c5"
     },
     {
       "path": "docs/business-rules/SD/set-item.md",
@@ -188,7 +188,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "80def49767d9139ad10d2eaba0c6ca352f45d331a67cc7c61ad254974008b770"
+      "sha256": "be7c5d3447cbc7c86542293d57548b78c3ebbcea56745e81d20c735444ba4507"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -272,11 +272,11 @@
     },
     {
       "path": "docs/specifications/MM/goods-receipt.md",
-      "sha256": "783d35b5a42be5e65647c1298d84179faf8d2ae6129b3a751048384fde5b112f"
+      "sha256": "20f86bb10f53777aaca4a592380c1a935f137fe1da89b2111f8d868ddf6cde25"
     },
     {
       "path": "docs/specifications/MM/inventory-closing.md",
-      "sha256": "141a8a1637c74fcfc8300864fd1fcfccdcc99d7e2a22bbcf1b0cd9f68e9de7c5"
+      "sha256": "e874bfc32ab4eda34a238000a3de7d0f4fd6d95928ae8540fbc8f7f0bedd859e"
     },
     {
       "path": "docs/specifications/MM/purchase-order.md",
@@ -320,7 +320,7 @@
     },
     {
       "path": "docs/specifications/MM/stock-count.md",
-      "sha256": "e7f8a9821a837f77dc538bef4f6879f29bccce20d73ca797d817d151cee339d5"
+      "sha256": "2a8baad695f6eefd1ddb43d6dddcf528f4628febdb090a8f5a6560f31fa09eae"
     },
     {
       "path": "docs/specifications/MM/stock-reconciliation.md",
@@ -328,11 +328,11 @@
     },
     {
       "path": "docs/specifications/MM/stock-transfer.md",
-      "sha256": "dd3cc7f80fa3c50c725f886387962a5a47c5edf077c758a615da429cd650af74"
+      "sha256": "114368cf82e571e7df3ebe0727199b114e9d96d7b00b875364ef95d1b92cbe27"
     },
     {
       "path": "docs/specifications/MM/unplanned-receipt.md",
-      "sha256": "f01ebf25a790a08bd65793c4b083e1d68ae33c58e26ebb951c9cd465881229f2"
+      "sha256": "a927f696bc5a9351891a316574baa4b5dc473932fffe3fe21192d1837bbe2c4b"
     },
     {
       "path": "docs/specifications/MM/vendor.md",
@@ -344,7 +344,7 @@
     },
     {
       "path": "docs/specifications/SD/credit-memo.md",
-      "sha256": "da0a2a0cbb373a723d2a5626dcfd9241ff57887646a7742a40fce07dfb9e982e"
+      "sha256": "4e5cfd187c9500ea658552a5307e4caba0b144249d4ae0ea0cfcb8515abf7573"
     },
     {
       "path": "docs/specifications/SD/customer.md",
@@ -440,7 +440,7 @@
     },
     {
       "path": "docs/specifications/SD/sales-invoice.md",
-      "sha256": "c8d3b963d4785d939799f49e5e71f796943fde86553da002fd165f52ad4bbebd"
+      "sha256": "de23032e40519388600c08fa3849593219d56957ea38e8a1efd60a86c32a512e"
     },
     {
       "path": "docs/specifications/SD/sales-order-closing.md",
@@ -676,27 +676,27 @@
     },
     {
       "path": "harness/tasks/TASK-MM-007.json",
-      "sha256": "6ee03b73b81f9dd258869e87ab891f1540821f52b5867f2bf39ac3fd576d9174"
+      "sha256": "f14891274f1b4ed070f54290e9b1f6ae40460ea128738f4e65a4e30cf4e34e8d"
     },
     {
       "path": "harness/tasks/TASK-MM-008.json",
-      "sha256": "7726cf8053fec965a99ed6446e8825722c4144cc1ab90dc4ef42b606089bf08f"
+      "sha256": "65fdb82761836ecd339d2d4cdfdc099d082108a5b2c3807f5d2a3ec024a00ca7"
     },
     {
       "path": "harness/tasks/TASK-MM-009.json",
-      "sha256": "5d80cd6d3b4ca5af4a430ee4f1ab9f8d5690ac9b7bdd72a2ed4b224329f58f57"
+      "sha256": "5a958a209120d12ba6605176ad81a9fd7b2a944169aee09585e54ece91be54e1"
     },
     {
       "path": "harness/tasks/TASK-MM-010.json",
-      "sha256": "58db4130dbfc4ce52176e854fb3a17000aea81ae7770f52fe4050937c7f44f8b"
+      "sha256": "570e3155c13e971cdf53c8442008ef533c538bcda468b65512d9bb97bb8c830c"
     },
     {
       "path": "harness/tasks/TASK-MM-011.json",
-      "sha256": "1412ee8a785d70d765acf416129e6fd0ecb02c0ab0ef2e1a24b60f43abe05ee3"
+      "sha256": "cc9fb8aebf259d7a73c6922ff21194520cc4c4264432d48641298b2974a2ce2c"
     },
     {
       "path": "harness/tasks/TASK-MM-012.json",
-      "sha256": "430b3153404e1b9a9bfc84cf9b676cfd71c6e8e5017ed0f1adc5f8304051d85d"
+      "sha256": "c583f97296a782b3e5e4db3794ea027e5439471cb1b93c0a3021032d87b4c919"
     },
     {
       "path": "harness/tasks/TASK-MM-013.json",
@@ -708,11 +708,11 @@
     },
     {
       "path": "harness/tasks/TASK-MM-015.json",
-      "sha256": "8d5c37ee0d00bc347a121f2e101656ccce6860e553840bdfee544e908c008595"
+      "sha256": "727444d5c4decaef93851ff9f875b96ecaac5fc7ea065e43dcf73e367c6777af"
     },
     {
       "path": "harness/tasks/TASK-MM-016.json",
-      "sha256": "9f0df75f10b7e28586a3f3b591a4f0eabe7fbef900b7ec8fd4b0925cd177fcff"
+      "sha256": "d80484a3a57f324f8f941406a6777a4ff24f10ae6a8da98efef23304657db4ee"
     },
     {
       "path": "harness/tasks/TASK-MM-017.json",
@@ -756,11 +756,11 @@
     },
     {
       "path": "harness/tasks/TASK-MM-027.json",
-      "sha256": "1dad8add8aa8729c22d36083bef3359a4337b64e8e00f71e6ee2a8fde2aea753"
+      "sha256": "82ac658e2fe85135d363eab066e68fce6d1be2a76a0277f49969fd26bf83909d"
     },
     {
       "path": "harness/tasks/TASK-MM-028.json",
-      "sha256": "1bd85ea2d2487c247885c096f4fd12a6708d88c9221b89636f99953184aa765e"
+      "sha256": "1a0e1ada650998a677057d5d3bfbaf4bc901e1c302d91f3b7758fdcd2236311b"
     },
     {
       "path": "harness/tasks/TASK-MM-029.json",
@@ -784,19 +784,19 @@
     },
     {
       "path": "harness/tasks/TASK-SD-005.json",
-      "sha256": "0083b219f8e100b4383a185f69e445591f662d52406d522208533ee2aecdadbf"
+      "sha256": "99fbf310f81e20cdbfd621d78cd0b04936c189d72b962dcb0bd0dada051f75bc"
     },
     {
       "path": "harness/tasks/TASK-SD-006.json",
-      "sha256": "9e501aa04293ebb1ea77ed6c14cf16c62ca9b92d40bcff7ae4cfdf2bed6d93c2"
+      "sha256": "4bcefa6b17cdc79e2d3fa0cac324685644271ad9fcfde1c42cf8c87c01aacdf3"
     },
     {
       "path": "harness/tasks/TASK-SD-007.json",
-      "sha256": "13e4ab66f43c08b05d845fd75bde3b20db9920381833f6b8188e2ec88a38f942"
+      "sha256": "8293966ce029781725eb1e3ef602180656be74032647848d44fc4dbb7340e731"
     },
     {
       "path": "harness/tasks/TASK-SD-008.json",
-      "sha256": "baada789fb4b388962d6273ab85b4cdf2e82061942b9f1cd6cddcd3988824001"
+      "sha256": "c0db5e49f72676d044747e8c86d7a913ad773fa39014b9d7752fa5a79c6064d5"
     },
     {
       "path": "harness/tasks/TASK-SD-009.json",
