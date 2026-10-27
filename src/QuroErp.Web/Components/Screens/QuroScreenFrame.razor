@@ -1,0 +1,59 @@
+@* Layout shared by the four screen types: title, unsaved-changes lock, toolbar, messages, search area, body. *@
+@inject IStringLocalizer<SharedResource> L
+
+<section class="quro-screen" data-testid="@TestId">
+    <h1>@Title</h1>
+    <NavigationLock ConfirmExternalNavigation="IsDirty" OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+    @Toolbar
+    @if (Error is not null)
+    {
+        <p class="page-error" role="alert" data-testid="@Id("error")">@Error</p>
+    }
+    @if (Notice is not null)
+    {
+        <p class="page-notice" role="status" data-testid="@Id("notice")">@Notice</p>
+    }
+    @if (SearchContent is not null)
+    {
+        <form class="quro-search" role="search" aria-label="@L["Common.SearchConditions"]" @onsubmit="OnSearch" @onsubmit:preventDefault>
+            @SearchContent
+            @* Enter in a search field submits the form *@
+            <button type="submit" hidden></button>
+        </form>
+    }
+    @ChildContent
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    [Parameter]
+    public bool IsDirty { get; set; }
+
+    [Parameter]
+    public EventCallback<LocationChangingContext> OnBeforeInternalNavigation { get; set; }
+
+    [Parameter]
+    public EventCallback OnSearch { get; set; }
+
+    [Parameter]
+    public RenderFragment? Toolbar { get; set; }
+
+    [Parameter]
+    public RenderFragment? SearchContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? Error { get; set; }
+
+    [Parameter]
+    public string? Notice { get; set; }
+
+    private string? Id(string part) => TestId is null ? null : $"{TestId}-{part}";
+}
