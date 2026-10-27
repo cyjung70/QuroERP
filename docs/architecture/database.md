@@ -62,6 +62,7 @@
 ## Oracle에서 옮길 때 주의
 
 - Oracle은 빈 문자열을 NULL로 본다. PostgreSQL은 다르다. 입력 단계에서 빈 문자열을 NULL로 정규화한다.
+  - 예외: NOT NULL 업무 키(UNIQUE)의 일부인 컬럼은 "값 없음"을 빈 문자열로 저장한다. NULL은 UNIQUE에서 서로 다른 값으로 보기 때문이다. 해당 컬럼: `sys_document_number.period`(연속 번호 문서, SD-BR-006)
 - 정렬에서 NULL 위치가 다르다. `ORDER BY ... NULLS LAST`를 명시한다.
 - `NVL`→`COALESCE`, `DECODE`→`CASE`, `SYSDATE`→`now()`, `ROWNUM`→`LIMIT`, `(+)`→ANSI JOIN.
 

@@ -16,7 +16,7 @@
 
 1. 수주 번호로 조회하거나 신규를 누른다. 신규 상태는 `SO`다.
 2. 고객을 고르면 배송지·운송비·담당자·결제 조건·할인 상태를 고객 마스터에서 채운다. 결제 예정일 기본값은 결제 조건으로 계산한다 (SD-BR-008).
-3. 줄을 추가한다. 품목을 고르면 수량 1(SD-BR-016), 기본 단가(SD-BR-401), 할인 코드 기본값(SD-BR-405)을 채운다. 장바구니에서 줄을 가져올 수도 있다.
+3. 줄을 추가한다. 품목을 고르면 수량 1(SD-BR-016), 기본 단가(SD-BR-401), 할인 코드 기본값(SD-BR-405)을 채운다. 장바구니에서 줄을 가져오거나, 줄 파일·바코드 파일을 올려 줄을 넣을 수도 있다 (SD-BR-017~022).
 4. 저장하면 서버가 줄 수량·단가·품목·할인 코드를 검사하고(SD-BR-001·002·004·404) 줄 금액과 합계를 다시 계산한다 (SD-BR-005·007).
 5. 배송지나 단가가 마스터와 다르면 마스터도 바꿀지 묻는다 (SD-BR-009·010).
 6. 헤더·줄·채번(SD-BR-006)·장바구니 비우기(SD-BR-011)를 한 트랜잭션으로 저장하고 수주 번호를 보여 준다.
@@ -118,6 +118,12 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`, 
 - [SD-BR-011](../../business-rules/SD/sales-order.md)
 - [SD-BR-012](../../business-rules/SD/sales-order.md)
 - [SD-BR-016](../../business-rules/SD/sales-order.md)
+- [SD-BR-017](../../business-rules/SD/sales-order.md)
+- [SD-BR-018](../../business-rules/SD/sales-order.md)
+- [SD-BR-019](../../business-rules/SD/sales-order.md)
+- [SD-BR-020](../../business-rules/SD/sales-order.md)
+- [SD-BR-021](../../business-rules/SD/sales-order.md)
+- [SD-BR-022](../../business-rules/SD/sales-order.md)
 - [SD-BR-401](../../business-rules/SD/pricing.md)
 - [SD-BR-402](../../business-rules/SD/pricing.md)
 - [SD-BR-403](../../business-rules/SD/pricing.md)
