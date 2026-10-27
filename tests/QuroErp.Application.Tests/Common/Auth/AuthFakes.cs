@@ -36,7 +36,7 @@ internal sealed class FakeAppUserRepository : IAppUserRepository
     public List<string> Locked { get; } = [];
 
     /// <summary>Saved login states: (user id, failed count, locked until, lang code).</summary>
-    public List<(long Id, short FailedCount, DateTimeOffset? LockedUntil, string? LangCode)> Saved { get; } = [];
+    public List<(long Id, int FailedCount, DateTimeOffset? LockedUntil, string? LangCode)> Saved { get; } = [];
 
     public List<AuthMenu> Menus { get; } = [];
 
