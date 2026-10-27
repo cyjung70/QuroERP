@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-027",
+  "project": "core",
   "title": "판매 단가 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

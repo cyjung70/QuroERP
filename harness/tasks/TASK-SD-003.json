@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-003",
+  "project": "core",
   "title": "수주 API (Application·Domain·Infrastructure)",
   "module": "SD",
   "layer": [

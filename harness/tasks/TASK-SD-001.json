@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-001",
+  "project": "core",
   "title": "고객 마스터 API (Application·Domain·Infrastructure)",
   "module": "SD",
   "layer": [

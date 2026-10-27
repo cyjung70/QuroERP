@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-044",
+  "project": "core",
   "title": "품목 이미지 조회 화면 (S)",
   "module": "BC",
   "layer": [

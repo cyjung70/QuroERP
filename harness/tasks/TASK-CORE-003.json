@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-003",
+  "project": "core",
   "title": "인증: 로그인, 내부 토큰, API 키, 기본 권한 정책",
   "module": "CORE",
   "layer": [

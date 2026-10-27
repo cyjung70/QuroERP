@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-006",
+  "project": "core",
   "title": "발주 화면 (SM)",
   "module": "MM",
   "layer": [

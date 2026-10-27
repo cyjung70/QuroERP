@@ -111,6 +111,11 @@
 | SD | SD-UC-046 | 고객 센터 | M | [report-customer-center](specifications/SD/report-customer-center.md) | [SD-BR-812](business-rules/SD/ar-report.md), [SD-BR-308](business-rules/SD/customer.md) |
 | SD | SD-UC-047 | 고객 목록 | M | [report-customer-list](specifications/SD/report-customer-list.md) | [SD-BR-813](business-rules/SD/ar-report.md), [SD-BR-308](business-rules/SD/customer.md) |
 
+## 서브 프로젝트
+
+- [Tester 문서 지도](../tester/docs/INDEX.md) — REST API·화면·업무 시나리오·이관 검증 (Python)
+- 경계 규칙: [서브 프로젝트 경계](architecture/subprojects.md)
+
 ## 아키텍처
 
 - [REST API 규칙](architecture/api.md)
@@ -125,6 +130,7 @@
 - [리포트](architecture/reports.md)
 - [화면유형 표준](architecture/screens.md)
 - [인증·권한·보안](architecture/security.md)
+- [서브 프로젝트 경계](architecture/subprojects.md)
 
 ## 업무 규칙
 

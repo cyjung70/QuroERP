@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-018",
+  "project": "core",
   "title": "품목 재고 목록 (엑셀) 리포트 조회·PDF·화면",
   "module": "MM",
   "layer": [

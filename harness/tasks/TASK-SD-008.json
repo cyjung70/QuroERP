@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-008",
+  "project": "core",
   "title": "Credit Memo (매출 반품·취소) 화면 (SM)",
   "module": "SD",
   "layer": [

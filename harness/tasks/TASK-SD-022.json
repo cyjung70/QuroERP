@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-022",
+  "project": "core",
   "title": "담당자별 매출 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [

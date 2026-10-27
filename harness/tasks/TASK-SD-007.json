@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-007",
+  "project": "core",
   "title": "Credit Memo (매출 반품·취소) API (Application·Domain·Infrastructure)",
   "module": "SD",
   "layer": [

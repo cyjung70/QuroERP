@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-038",
+  "project": "core",
   "title": "공급자 센터 리포트 조회·PDF·화면",
   "module": "MM",
   "layer": [

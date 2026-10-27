@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-010",
+  "project": "core",
   "title": "예외 입고 화면 (SM)",
   "module": "MM",
   "layer": [

@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-049",
+  "project": "core",
   "title": "고객 거래 내역 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [

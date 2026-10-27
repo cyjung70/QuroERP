@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-013",
+  "project": "core",
   "title": "Back Order 목록 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

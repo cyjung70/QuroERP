@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-001",
+  "project": "core",
   "title": "로그인 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

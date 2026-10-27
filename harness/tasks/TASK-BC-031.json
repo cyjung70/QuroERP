@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-031",
+  "project": "core",
   "title": "고객 이름 변경 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

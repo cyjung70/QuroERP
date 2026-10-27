@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-033",
+  "project": "core",
   "title": "품목 카탈로그 API (Application·Domain·Infrastructure)",
   "module": "SD",
   "layer": [

@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-004",
+  "project": "core",
   "title": "다국어 기반 (resx, 번역 테이블 조회)",
   "module": "CORE",
   "layer": [

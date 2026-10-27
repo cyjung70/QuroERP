@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-002",
+  "project": "core",
   "title": "공급자 마스터 화면 (S)",
   "module": "MM",
   "layer": [

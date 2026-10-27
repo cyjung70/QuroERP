@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-007",
+  "project": "core",
   "title": "문서 번호 채번 서비스",
   "module": "CORE",
   "layer": [

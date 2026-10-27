@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-009",
+  "project": "core",
   "title": "예외 입고 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

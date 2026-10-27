@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-009",
+  "project": "core",
   "title": "재고 공통: 시점별·월말 마이너스 재고 검사",
   "module": "CORE",
   "layer": [

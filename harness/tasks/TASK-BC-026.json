@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-026",
+  "project": "core",
   "title": "세트 품목 구성 화면 (M)",
   "module": "BC",
   "layer": [

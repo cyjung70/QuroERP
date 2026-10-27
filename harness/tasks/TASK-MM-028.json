@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-028",
+  "project": "core",
   "title": "창고 간 재고 이동 화면 (SM)",
   "module": "MM",
   "layer": [

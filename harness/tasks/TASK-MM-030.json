@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-030",
+  "project": "core",
   "title": "지급 처리 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

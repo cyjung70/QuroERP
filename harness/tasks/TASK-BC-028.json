@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-028",
+  "project": "core",
   "title": "판매 단가 화면 (M)",
   "module": "BC",
   "layer": [

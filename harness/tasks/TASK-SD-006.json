@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-006",
+  "project": "core",
   "title": "매출 송장(출고) 화면 (SM)",
   "module": "SD",
   "layer": [

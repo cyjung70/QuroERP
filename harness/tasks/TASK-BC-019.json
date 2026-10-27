@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-019",
+  "project": "core",
   "title": "품목 이미지 업로드 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

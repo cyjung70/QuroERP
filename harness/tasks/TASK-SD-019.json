@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-019",
+  "project": "core",
   "title": "품목별 매출 2 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [
