@@ -13,7 +13,11 @@
   "specs": [
     "docs/specifications/MM/report-inventory-aging.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-655",
+    "MM-BR-604",
+    "MM-BR-659"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

@@ -13,7 +13,10 @@
   "specs": [
     "docs/specifications/MM/report-vendor-balance.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-978",
+    "MM-BR-975"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
