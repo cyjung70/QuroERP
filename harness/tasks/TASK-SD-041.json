@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-041",
+  "project": "core",
   "title": "매출채권 연령 분석 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [

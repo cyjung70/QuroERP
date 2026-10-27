@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-008",
+  "project": "core",
   "title": "사용자 관리 화면 (S)",
   "module": "BC",
   "layer": [

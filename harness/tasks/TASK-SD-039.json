@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-039",
+  "project": "core",
   "title": "Credit Memo 적용 (입금) API (Application·Domain·Infrastructure)",
   "module": "SD",
   "layer": [

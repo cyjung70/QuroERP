@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-032",
+  "project": "core",
   "title": "고객 이름 변경 화면 (S)",
   "module": "BC",
   "layer": [

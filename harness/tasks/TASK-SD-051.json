@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-051",
+  "project": "core",
   "title": "일일 리포트 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [

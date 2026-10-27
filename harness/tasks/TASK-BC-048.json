@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-048",
+  "project": "core",
   "title": "환율 관리 화면 (M)",
   "module": "BC",
   "layer": [

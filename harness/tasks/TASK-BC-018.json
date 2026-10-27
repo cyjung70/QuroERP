@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-018",
+  "project": "core",
   "title": "품목 마스터 화면 (S)",
   "module": "BC",
   "layer": [

@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-021",
+  "project": "core",
   "title": "품목 바코드 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

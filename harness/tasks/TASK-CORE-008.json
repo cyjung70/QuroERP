@@ -1,5 +1,6 @@
 {
   "id": "TASK-CORE-008",
+  "project": "core",
   "title": "재고 공통: 창고별 현재고, 재고 이동, 마이너스 재고 설정",
   "module": "CORE",
   "layer": [

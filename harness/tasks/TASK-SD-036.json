@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-036",
+  "project": "core",
   "title": "입금 처리 화면 (SM)",
   "module": "SD",
   "layer": [

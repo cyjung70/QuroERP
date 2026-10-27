@@ -1,5 +1,6 @@
 {
   "id": "TASK-SD-056",
+  "project": "core",
   "title": "수주 줄 바코드 파일 올리기 화면 (S)",
   "module": "SD",
   "layer": [

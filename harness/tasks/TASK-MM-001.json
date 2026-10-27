@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-001",
+  "project": "core",
   "title": "공급자 마스터 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [

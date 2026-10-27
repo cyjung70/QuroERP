@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-010",
+  "project": "core",
   "title": "역할별 메뉴 권한 화면 (M)",
   "module": "BC",
   "layer": [

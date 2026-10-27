@@ -1,5 +1,6 @@
 {
   "id": "TASK-MM-014",
+  "project": "core",
   "title": "Back Order 목록 화면 (M)",
   "module": "MM",
   "layer": [

@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-022",
+  "project": "core",
   "title": "품목 바코드 화면 (M)",
   "module": "BC",
   "layer": [

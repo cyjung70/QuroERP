@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-039",
+  "project": "core",
   "title": "장바구니 내용 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [

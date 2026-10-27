@@ -1,5 +1,6 @@
 {
   "id": "TASK-BC-009",
+  "project": "core",
   "title": "역할별 메뉴 권한 API (Application·Domain·Infrastructure)",
   "module": "BC",
   "layer": [
