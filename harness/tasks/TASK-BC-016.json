@@ -10,7 +10,16 @@
   "specs": [
     "docs/specifications/BC/code.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-910",
+    "SD-BR-911",
+    "SD-BR-912",
+    "SD-BR-913",
+    "SD-BR-914",
+    "SD-BR-915",
+    "SD-BR-916",
+    "SD-BR-905"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

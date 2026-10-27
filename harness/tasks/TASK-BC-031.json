@@ -13,7 +13,13 @@
   "specs": [
     "docs/specifications/BC/change-customer-name.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-310",
+    "SD-BR-311",
+    "SD-BR-312",
+    "SD-BR-313",
+    "SD-BR-302"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
