@@ -1,0 +1,43 @@
+@page "/samples/single"
+@rendermode InteractiveServer
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* Screen type S sample (TASK-CORE-006). Development only, in-memory data. *@
+
+<PageTitle>@L["Samples.Single.Title"]</PageTitle>
+
+@if (_store is not null)
+{
+    <QuroSingleForm TModel="SampleItem" Title="@L["Samples.Single.Title"]" TestId="sample-single"
+                    Load="() => Task.FromResult(_store.FindItem(_code))" Create="NewItem"
+                    Save="(item, _) => Task.FromResult(_store.SaveItem(item))"
+                    Delete="item => { _store.DeleteItem(item.Id); return Task.CompletedTask; }">
+        <SearchContent>
+            <QuroText Label="@L["Samples.Code"]" @bind-Value="_code" TextCase="TextCase.Upper" TestId="sample-single-search-code" />
+        </SearchContent>
+        <Fields Context="item">
+            <QuroText Label="@L["Samples.Code"]" @bind-Value="item.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="sample-single-code" />
+            <QuroText Label="@L["Samples.Name"]" @bind-Value="item.Name" Required TestId="sample-single-name" />
+            <QuroDate Label="@L["Samples.ValidFrom"]" @bind-Value="item.ValidFrom" TestId="sample-single-valid-from" />
+            <QuroNumber Label="@L["Samples.Qty"]" @bind-Value="item.Qty" TestId="sample-single-qty" />
+        </Fields>
+    </QuroSingleForm>
+}
+
+@code {
+    private SampleStore? _store;
+    private string? _code;
+
+    protected override void OnInitialized()
+    {
+        _store = Services.GetService<SampleStore>();
+        if (_store is null)
+        {
+            Navigation.NotFound();
+        }
+    }
+
+    private static SampleItem NewItem() => new() { Qty = 0 };
+}

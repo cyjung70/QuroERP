@@ -1,0 +1,17 @@
+@using System.Globalization
+@inherits QuroInputBase<decimal?>
+
+<div class="quro-field">
+    <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+    <input id="@InputId" type="number" step="any" value="@Value?.ToString(CultureInfo.InvariantCulture)" readonly="@IsLocked"
+           aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+</div>
+
+@code {
+    public override bool IsEmpty => Value is null;
+
+    private Task OnChangeAsync(ChangeEventArgs e) =>
+        SetValueAsync(decimal.TryParse(e.Value?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var number)
+            ? number
+            : null);
+}

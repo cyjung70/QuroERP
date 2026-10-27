@@ -1,0 +1,49 @@
+@page "/samples/multi"
+@rendermode InteractiveServer
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* Screen type M sample (TASK-CORE-006). Development only, in-memory data. *@
+
+<PageTitle>@L["Samples.Multi.Title"]</PageTitle>
+
+@if (_store is not null)
+{
+    <QuroMultiGrid TRow="SampleItem" Title="@L["Samples.Multi.Title"]" TestId="sample-multi" LoadOnStart="true"
+                   Load="() => Task.FromResult(_store.Items())" CreateRow="() => new SampleItem()" Save="SaveAsync">
+        <Columns>
+            <QuroColumn Title="@L["Samples.Code"]" Value="r => r.Code" Context="row">
+                <QuroText Label="@L["Samples.Code"]" HideLabel @bind-Value="row.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="code" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Samples.Name"]" Value="r => r.Name" Context="row">
+                <QuroText Label="@L["Samples.Name"]" HideLabel @bind-Value="row.Name" Required TestId="name" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Samples.ValidFrom"]" Value="r => r.ValidFrom" Format="yyyy-MM-dd" />
+            <QuroColumn Title="@L["Samples.Qty"]" Value="r => r.Qty" Format="N2" Context="row">
+                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="row.Qty" TestId="qty" />
+            </QuroColumn>
+        </Columns>
+    </QuroMultiGrid>
+}
+
+@code {
+    private SampleStore? _store;
+
+    protected override void OnInitialized()
+    {
+        _store = Services.GetService<SampleStore>();
+        if (_store is null)
+        {
+            Navigation.NotFound();
+        }
+    }
+
+    // A real screen sends changes.ToRequest(r => r.Id) to POST /api/{module}/{resource}/batch
+    private Task SaveAsync(BatchChanges<SampleItem> changes)
+    {
+        var request = changes.ToRequest(r => r.Id);
+        _store!.SaveItems(request.Added, request.Updated, request.Deleted);
+        return Task.CompletedTask;
+    }
+}
