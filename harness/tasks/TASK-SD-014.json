@@ -13,7 +13,11 @@
   "specs": [
     "docs/specifications/SD/report-lost-sales-order-detail.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-963",
+    "SD-BR-962",
+    "SD-BR-969"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",

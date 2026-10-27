@@ -13,7 +13,13 @@
   "specs": [
     "docs/specifications/SD/report-sales-by-customer.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-952",
+    "SD-BR-953",
+    "SD-BR-951",
+    "SD-BR-969",
+    "SD-BR-970"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
