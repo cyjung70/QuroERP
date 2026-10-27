@@ -57,16 +57,19 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/bc/companies | 신규 |
 | PUT | /api/bc/companies/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/bc/companies/{id} | 삭제 |
+| GET | /api/mm/inventory-setting | 재고 설정 조회 { negativeStockMode } (행이 없으면 DENY, MM-BR-003). TASK-CORE-008에서 구현 |
+| PUT | /api/mm/inventory-setting | 마이너스 재고 모드 변경 (ALLOW, ALLOW_IN_MONTH, DENY). 관리자 권한. TASK-CORE-008에서 구현 |
 
 ## 관련 테이블
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
 | `bc_company` | `B_COMPANY` | CRUD |
+| `mm_inventory_setting` | (TO BE 신규) | RU |
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [MM-BR-003](../../business-rules/MM/inventory.md)
 
 ## 다국어 리소스 키
 
@@ -80,6 +83,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - `BC-UC-007-T02` 필수 값 누락 시 저장 차단
 - `BC-UC-007-T03` 동시 수정 충돌 409
 - `BC-UC-007-T04` 없는 코드 값 저장 시 422
+- `BC-UC-007-T05` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-003 → MM-UT-003)
 
 ## AS IS 근거
 

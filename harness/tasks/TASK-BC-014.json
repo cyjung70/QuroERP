@@ -10,7 +10,9 @@
   "specs": [
     "docs/specifications/BC/company.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-003"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

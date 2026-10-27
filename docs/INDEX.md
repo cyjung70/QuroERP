@@ -18,7 +18,7 @@
 | BC | BC-UC-004 | 사용자 관리 | S | [user](specifications/BC/user.md) |  |
 | BC | BC-UC-005 | 역할별 메뉴 권한 | M | [role-menu](specifications/BC/role-menu.md) |  |
 | BC | BC-UC-006 | 회사 메뉴 | M | [company-menu](specifications/BC/company-menu.md) |  |
-| BC | BC-UC-007 | 회사 정보 | S | [company](specifications/BC/company.md) |  |
+| BC | BC-UC-007 | 회사 정보 | S | [company](specifications/BC/company.md) | [MM-BR-003](business-rules/MM/inventory.md) |
 | BC | BC-UC-008 | 코드 관리 | M | [code](specifications/BC/code.md) | [SD-BR-910](business-rules/SD/master-data.md), [SD-BR-911](business-rules/SD/master-data.md), [SD-BR-912](business-rules/SD/master-data.md), [SD-BR-913](business-rules/SD/master-data.md), [SD-BR-914](business-rules/SD/master-data.md), [SD-BR-915](business-rules/SD/master-data.md), [SD-BR-916](business-rules/SD/master-data.md), [SD-BR-905](business-rules/SD/master-data.md) |
 | BC | BC-UC-009 | 품목 마스터 | S | [item](specifications/BC/item.md) | [MM-BR-801](business-rules/MM/item.md), [MM-BR-802](business-rules/MM/item.md), [MM-BR-803](business-rules/MM/item.md), [MM-BR-804](business-rules/MM/item.md), [MM-BR-805](business-rules/MM/item.md), [MM-BR-806](business-rules/MM/item.md), [MM-BR-807](business-rules/MM/item.md), [MM-BR-808](business-rules/MM/item.md), [MM-BR-809](business-rules/MM/item.md) |
 | BC | BC-UC-010 | 품목 이미지 업로드 | S | [item-image-upload](specifications/BC/item-image-upload.md) | [MM-BR-821](business-rules/MM/item.md), [MM-BR-822](business-rules/MM/item.md), [MM-BR-823](business-rules/MM/item.md), [MM-BR-824](business-rules/MM/item.md), [MM-BR-820](business-rules/MM/item.md) |

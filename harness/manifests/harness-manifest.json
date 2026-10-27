@@ -252,7 +252,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "d3ad8bcb2f03d5bb88a912603767232645de58200767130434e3a45af5661e49"
+      "sha256": "884e44a07c8d1744a47b638a8414d37495622da21aa1bd066e6014f76668b4c5"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -296,7 +296,7 @@
     },
     {
       "path": "docs/specifications/BC/company.md",
-      "sha256": "ab30b2da56c6e66c9962980da5968da81da48ae86252f4d1db9c2b5f72ebc93f"
+      "sha256": "6ff1622645b098bdeb874042023028b6a7b76ad00ce19d1ddb28d071c3375ae2"
     },
     {
       "path": "docs/specifications/BC/exchange-rate.md",
@@ -760,11 +760,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-013.json",
-      "sha256": "370c76323b76087091c9d6e9834ba3154e85fac8cf671a330e24acb9b2a87785"
+      "sha256": "e05d72225731d95074778add328f5311046593f04527e3de24fa36b5bf90398d"
     },
     {
       "path": "harness/tasks/TASK-BC-014.json",
-      "sha256": "3e7828e548e8cba1ea42840776756ee744a4b9aba893a119430f02bb8b2b9cea"
+      "sha256": "a54608deb3c4bf9365ef9b801afccc8836295660f8ab8122628ac9c250bbfc62"
     },
     {
       "path": "harness/tasks/TASK-BC-015.json",
