@@ -1,0 +1,28 @@
+{
+  "id": "TASK-CORE-013",
+  "project": "core",
+  "title": "화면유형 공통 컴포넌트 data-testid",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screens.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006"
+  ],
+  "acceptance": [
+    "공통 컴포넌트가 `TestId` 매개변수를 받아 실제 입력 요소에 `data-testid`를 붙인다 (quro-blazor 규칙)",
+    "이름은 `{화면}-{영역}-{필드}` kebab-case, 그리드 줄은 `data-row-index`",
+    "4개 유형 샘플 화면의 입력·버튼·그리드·메시지에 `data-testid`가 있다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
