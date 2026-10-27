@@ -1,0 +1,30 @@
+@inherits QuroInputBase<string>
+
+<div class="quro-field">
+    <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+    <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked"
+           aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+</div>
+
+@code {
+    [Parameter]
+    public TextCase TextCase { get; set; }
+
+    [Parameter]
+    public bool Password { get; set; }
+
+    public override bool IsEmpty => string.IsNullOrWhiteSpace(Value);
+
+    private Task OnChangeAsync(ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? "";
+        text = TextCase switch
+        {
+            TextCase.Upper => text.ToUpperInvariant(),
+            TextCase.Lower => text.ToLowerInvariant(),
+            _ => text,
+        };
+        // database.md: empty strings are stored as NULL
+        return SetValueAsync(text.Length == 0 ? null : text);
+    }
+}

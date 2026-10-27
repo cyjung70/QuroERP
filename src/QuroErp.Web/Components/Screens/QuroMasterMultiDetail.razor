@@ -1,0 +1,120 @@
+@* Screen type MM: pick a row in the source list → edit the target grid for it → save (screens.md). *@
+@typeparam TSource where TSource : class
+@typeparam TTarget where TTarget : class
+@inherits QuroScreenBase
+
+<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+    <Toolbar>
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync"
+                     OnNew="@(_selected is null ? default : EventCallback.Factory.Create(this, AddTarget))"
+                     OnSave="@(_selected is null ? default : EventCallback.Factory.Create(this, SaveAsync))" />
+    </Toolbar>
+    <ChildContent>
+        <div class="quro-master-detail">
+            <QuroGrid TRow="TSource" Rows="_sources" Columns="SourceColumns" Busy="Busy" TestId="@Id("sources")"
+                      Selected="_selected" OnSelect="SelectAsync" />
+            @if (_selected is not null)
+            {
+                <QuroGrid @ref="_grid" TRow="TTarget" Rows="_targets" Columns="TargetColumns" Editable="true" Busy="Busy"
+                          TestId="@Id("targets")" OnAddRow="AddTarget" OnChanged="StateHasChanged" />
+            }
+        </div>
+    </ChildContent>
+</QuroScreenFrame>
+
+@code {
+    private readonly GridRows<TSource> _sources = new();
+    private readonly GridRows<TTarget> _targets = new();
+    private QuroGrid<TTarget>? _grid;
+    private TSource? _selected;
+
+    /// <summary>QuroColumn declarations of the source list (give TRow explicitly).</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment SourceColumns { get; set; } = default!;
+
+    /// <summary>QuroColumn declarations of the target grid (give TRow explicitly).</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment TargetColumns { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Func<Task<IReadOnlyList<TSource>>> LoadSources { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Func<TSource, Task<IReadOnlyList<TTarget>>> LoadTargets { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Func<TSource, TTarget> CreateTarget { get; set; } = default!;
+
+    /// <summary>Saves the changed target rows of the selected source.</summary>
+    [Parameter, EditorRequired]
+    public Func<TSource, BatchChanges<TTarget>, Task> SaveTargets { get; set; } = default!;
+
+    [Parameter]
+    public bool LoadOnStart { get; set; }
+
+    public override bool IsDirty => _targets.IsDirty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (LoadOnStart)
+        {
+            await RunAsync(LoadSourcesAsync);
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        if (await ConfirmDiscardAsync())
+        {
+            await RunAsync(LoadSourcesAsync);
+        }
+    }
+
+    private async Task SelectAsync(TSource source)
+    {
+        if (ReferenceEquals(source, _selected) || !await ConfirmDiscardAsync())
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            _selected = source;
+            _targets.Load(await LoadTargets(source));
+        });
+    }
+
+    private void AddTarget() => _targets.Add(CreateTarget(_selected!));
+
+    private async Task SaveAsync()
+    {
+        var changes = _targets.Changes();
+        if (changes.IsEmpty)
+        {
+            Error = null;
+            Notice = L["Common.NoChanges"];
+            return;
+        }
+        if (!CheckRequired(_grid?.FirstMissing()))
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            await SaveTargets(_selected!, changes);
+            _targets.Load(await LoadTargets(_selected!));
+            Notice = L["Common.Saved"];
+        });
+    }
+
+    private async Task LoadSourcesAsync()
+    {
+        _selected = null;
+        _targets.Clear();
+        _sources.Load(await LoadSources());
+        if (_sources.All.Count == 0)
+        {
+            Notice = L["Common.NoData"];
+        }
+    }
+}

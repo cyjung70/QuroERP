@@ -1,0 +1,138 @@
+@* Screen type SM: search conditions → header form → line grid → saved together (screens.md). *@
+@typeparam THeader where THeader : class
+@typeparam TLine where TLine : class
+@inherits QuroScreenBase
+
+<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+    <Toolbar>
+        <QuroToolbar TestId="@TestId" Busy="Busy" CanDelete="!_form.IsNew"
+                     OnSearch="SearchAsync" OnNew="NewAsync" OnSave="SaveAsync"
+                     OnDelete="@(Delete is null ? default : EventCallback.Factory.Create(this, DeleteAsync))"
+                     OnPrint="OnPrint" />
+    </Toolbar>
+    <ChildContent>
+        <CascadingValue Value="_form" IsFixed="true">
+            <div class="quro-form" data-testid="@Id("form")">
+                @HeaderFields(_header)
+            </div>
+        </CascadingValue>
+        <QuroGrid @ref="_grid" TRow="TLine" Rows="_lines" Columns="LineColumns" Editable="true" Busy="Busy" TestId="@Id("lines")"
+                  OnAddRow="AddLine" OnChanged="StateHasChanged" />
+    </ChildContent>
+</QuroScreenFrame>
+
+@code {
+    private readonly QuroFormContext _form = new();
+    private readonly GridRows<TLine> _lines = new();
+    private QuroGrid<TLine>? _grid;
+    private THeader _header = default!;
+    private string _snapshot = "";
+
+    [Parameter, EditorRequired]
+    public RenderFragment<THeader> HeaderFields { get; set; } = default!;
+
+    /// <summary>QuroColumn declarations of the lines (give TRow explicitly).</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment LineColumns { get; set; } = default!;
+
+    /// <summary>Reads the document for the current search conditions; null when there is none.</summary>
+    [Parameter, EditorRequired]
+    public Func<Task<HeaderLines<THeader, TLine>?>> Load { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Func<THeader> Create { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Func<TLine> CreateLine { get; set; } = default!;
+
+    /// <summary>
+    /// Saves the header (second argument: it is new) with the changed lines in one request and returns the stored document.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public Func<THeader, bool, BatchChanges<TLine>, Task<HeaderLines<THeader, TLine>>> Save { get; set; } = default!;
+
+    [Parameter]
+    public Func<THeader, Task>? Delete { get; set; }
+
+    [Parameter]
+    public EventCallback OnPrint { get; set; }
+
+    public override bool IsDirty => Snapshot.Of(_header) != _snapshot || _lines.IsDirty;
+
+    protected override void OnInitialized() => StartNew();
+
+    private async Task SearchAsync()
+    {
+        if (!await ConfirmDiscardAsync())
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            var loaded = await Load();
+            if (loaded is null)
+            {
+                StartNew();
+                Notice = L["Common.NoData"];
+                return;
+            }
+            SetLoaded(loaded);
+        });
+    }
+
+    private async Task NewAsync()
+    {
+        if (await ConfirmDiscardAsync())
+        {
+            Error = null;
+            Notice = null;
+            StartNew();
+        }
+    }
+
+    private void AddLine() => _lines.Add(CreateLine());
+
+    private async Task SaveAsync()
+    {
+        if (!CheckRequired(_form.FirstMissing(), _grid?.FirstMissing()))
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            SetLoaded(await Save(_header, _form.IsNew, _lines.Changes()));
+            Notice = L["Common.Saved"];
+        });
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_form.IsNew || !await Confirm.ConfirmAsync(L["Common.ConfirmDelete"]))
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            await Delete!(_header);
+            StartNew();
+            Notice = L["Common.Deleted"];
+        });
+    }
+
+    private void StartNew()
+    {
+        _header = Create();
+        _form.IsNew = true;
+        _snapshot = Snapshot.Of(_header);
+        _lines.Clear();
+    }
+
+    private void SetLoaded(HeaderLines<THeader, TLine> document)
+    {
+        _header = document.Header;
+        _form.IsNew = false;
+        _snapshot = Snapshot.Of(_header);
+        _lines.Load(document.Lines);
+    }
+}

@@ -1,0 +1,125 @@
+@* Screen type S: search conditions → one record form → save/delete (screens.md). *@
+@typeparam TModel where TModel : class
+@inherits QuroScreenBase
+
+<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+    <Toolbar>
+        <QuroToolbar TestId="@TestId" Busy="Busy" CanDelete="!_form.IsNew"
+                     OnSearch="SearchAsync" OnNew="NewAsync" OnSave="SaveAsync"
+                     OnDelete="@(Delete is null ? default : EventCallback.Factory.Create(this, DeleteAsync))"
+                     OnPrint="OnPrint" />
+    </Toolbar>
+    <ChildContent>
+        <CascadingValue Value="_form" IsFixed="true">
+            <div class="quro-form" data-testid="@Id("form")">
+                @Fields(_model)
+            </div>
+        </CascadingValue>
+    </ChildContent>
+</QuroScreenFrame>
+
+@code {
+    private readonly QuroFormContext _form = new();
+    private TModel _model = default!;
+    private string _snapshot = "";
+
+    /// <summary>Input fields of the record.</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment<TModel> Fields { get; set; } = default!;
+
+    /// <summary>Reads the record for the current search conditions; null when there is none.</summary>
+    [Parameter, EditorRequired]
+    public Func<Task<TModel?>> Load { get; set; } = default!;
+
+    /// <summary>A new empty record (with defaults).</summary>
+    [Parameter, EditorRequired]
+    public Func<TModel> Create { get; set; } = default!;
+
+    /// <summary>Saves the record (second argument: it is new) and returns it as stored, e.g. with the new updatedAt.</summary>
+    [Parameter, EditorRequired]
+    public Func<TModel, bool, Task<TModel>> Save { get; set; } = default!;
+
+    /// <summary>Deletes the loaded record. Without it there is no delete button.</summary>
+    [Parameter]
+    public Func<TModel, Task>? Delete { get; set; }
+
+    [Parameter]
+    public EventCallback OnPrint { get; set; }
+
+    public override bool IsDirty => Snapshot.Of(_model) != _snapshot;
+
+    public bool IsNew => _form.IsNew;
+
+    protected override void OnInitialized() => StartNew();
+
+    private async Task SearchAsync()
+    {
+        if (!await ConfirmDiscardAsync())
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            var loaded = await Load();
+            if (loaded is null)
+            {
+                StartNew();
+                Notice = L["Common.NoData"];
+                return;
+            }
+            SetLoaded(loaded);
+        });
+    }
+
+    private async Task NewAsync()
+    {
+        if (await ConfirmDiscardAsync())
+        {
+            Error = null;
+            Notice = null;
+            StartNew();
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!CheckRequired(_form.FirstMissing()))
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            SetLoaded(await Save(_model, _form.IsNew));
+            Notice = L["Common.Saved"];
+        });
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_form.IsNew || !await Confirm.ConfirmAsync(L["Common.ConfirmDelete"]))
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            await Delete!(_model);
+            StartNew();
+            Notice = L["Common.Deleted"];
+        });
+    }
+
+    private void StartNew()
+    {
+        _model = Create();
+        _form.IsNew = true;
+        _snapshot = Snapshot.Of(_model);
+    }
+
+    private void SetLoaded(TModel model)
+    {
+        _model = model;
+        _form.IsNew = false;
+        _snapshot = Snapshot.Of(_model);
+    }
+}
