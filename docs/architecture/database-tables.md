@@ -256,7 +256,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `cart_no` | integer | NOT NULL |  |  |
 | `seq` | integer | NOT NULL |  |  |
 | `item_id` | bigint | FK [추정] | → `bc_item.id` | AS IS item_cd |
-| `qty` | numeric |  | NOT NULL 후보 [확인 필요] |  |
+| `qty` | numeric | NOT NULL | 0보다 크다 (SD-BR-602) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -376,7 +376,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `item_desc` | varchar |  | 미사용 후보 [확인 필요] | Item Description |
 | `stk_val` | numeric |  |  | Total Stock Value |
 | `so_usd_prc` | numeric |  |  | Sales Order USD Price |
-| `upc_code` | varchar |  | 미사용 후보 [확인 필요] | Barcode |
+| `upc_code` | varchar |  | 바코드. 값이 있으면 모든 품목에서 겹치지 않는다 (MM-BR-817, 부분 UNIQUE 인덱스 `WHERE upc_code IS NOT NULL`). 10자리 이하 (MM-BR-816) | Barcode |
 | `img` | bytea |  |  | Picture |
 | `location` | varchar |  |  |  |
 | `reorder_point` | numeric |  |  |  |
@@ -397,6 +397,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (item_cd)
+- INDEX: (upc_code)
 
 ## sys_code_major
 

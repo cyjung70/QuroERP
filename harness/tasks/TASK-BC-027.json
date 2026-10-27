@@ -13,7 +13,10 @@
     "docs/specifications/BC/sales-price.md"
   ],
   "rules": [
-    "SD-BR-403"
+    "SD-BR-403",
+    "SD-BR-407",
+    "SD-BR-408",
+    "SD-BR-409"
   ],
   "skills": [
     "quro-api",
