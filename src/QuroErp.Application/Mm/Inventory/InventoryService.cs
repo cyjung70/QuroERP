@@ -1,5 +1,6 @@
 using System.Data;
 using QuroErp.Application.Common.DocumentNumbers;
+using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
 
 namespace QuroErp.Application.Mm.Inventory;
@@ -23,11 +24,6 @@ public sealed class InventoryService(
     ISetComponentRepository sets,
     DocumentNumberService numbers)
 {
-    /// <summary>Movement numbers: GM + yyyyMM of the movement date + 10 digits.</summary>
-    public const string MovementNumberPrefix = "GM";
-
-    public const int MovementNumberDigits = 10;
-
     /// <summary>
     /// Posts original movements. Service items are skipped and set items are expanded into their components
     /// (MM-BR-007, MM-BR-008).
@@ -126,7 +122,7 @@ public sealed class InventoryService(
 
         var lastClosedMonthEnd = InventoryClosing.LastClosedMonthEnd(closeYearMonth);
         var documentNos = await numbers.NextAsync(
-            MovementNumberPrefix, MovementNumberDigits, lines.Select(l => l.DocumentDt).ToList(), user, transaction, cancellationToken);
+            DocumentNumberFormat.GoodsMovement, lines.Select(l => l.DocumentDt).ToList(), user, transaction, cancellationToken);
         var posted = new List<GoodsMovement>(lines.Count);
         foreach (var (line, documentNo) in lines.Zip(documentNos))
         {
