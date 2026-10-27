@@ -9,7 +9,17 @@
   "specs": [
     "docs/specifications/BC/set-item.md"
   ],
-  "rules": [],
+  "rules": [
+    "SD-BR-501",
+    "SD-BR-502",
+    "SD-BR-503",
+    "SD-BR-504",
+    "SD-BR-505",
+    "SD-BR-506",
+    "SD-BR-507",
+    "SD-BR-508",
+    "SD-BR-509"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

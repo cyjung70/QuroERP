@@ -9,7 +9,12 @@
   "specs": [
     "docs/specifications/BC/alternate-item.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-811",
+    "MM-BR-812",
+    "MM-BR-813",
+    "MM-BR-814"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

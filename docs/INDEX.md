@@ -20,13 +20,13 @@
 | BC | BC-UC-006 | 회사 메뉴 | M | [company-menu](specifications/BC/company-menu.md) |  |
 | BC | BC-UC-007 | 회사 정보 | S | [company](specifications/BC/company.md) |  |
 | BC | BC-UC-008 | 코드 관리 | M | [code](specifications/BC/code.md) |  |
-| BC | BC-UC-009 | 품목 마스터 | S | [item](specifications/BC/item.md) |  |
+| BC | BC-UC-009 | 품목 마스터 | S | [item](specifications/BC/item.md) | [MM-BR-801](business-rules/MM/item.md), [MM-BR-802](business-rules/MM/item.md), [MM-BR-803](business-rules/MM/item.md), [MM-BR-804](business-rules/MM/item.md), [MM-BR-805](business-rules/MM/item.md), [MM-BR-806](business-rules/MM/item.md), [MM-BR-807](business-rules/MM/item.md), [MM-BR-808](business-rules/MM/item.md), [MM-BR-809](business-rules/MM/item.md) |
 | BC | BC-UC-010 | 품목 이미지 업로드 | S | [item-image-upload](specifications/BC/item-image-upload.md) |  |
 | BC | BC-UC-011 | 품목 바코드 | M | [item-barcode](specifications/BC/item-barcode.md) |  |
-| BC | BC-UC-012 | 대체 품목 | M | [alternate-item](specifications/BC/alternate-item.md) |  |
-| BC | BC-UC-013 | 세트 품목 구성 | M | [set-item](specifications/BC/set-item.md) |  |
+| BC | BC-UC-012 | 대체 품목 | M | [alternate-item](specifications/BC/alternate-item.md) | [MM-BR-811](business-rules/MM/item.md), [MM-BR-812](business-rules/MM/item.md), [MM-BR-813](business-rules/MM/item.md), [MM-BR-814](business-rules/MM/item.md) |
+| BC | BC-UC-013 | 세트 품목 구성 | M | [set-item](specifications/BC/set-item.md) | [SD-BR-501](business-rules/SD/set-item.md), [SD-BR-502](business-rules/SD/set-item.md), [SD-BR-503](business-rules/SD/set-item.md), [SD-BR-504](business-rules/SD/set-item.md), [SD-BR-505](business-rules/SD/set-item.md), [SD-BR-506](business-rules/SD/set-item.md), [SD-BR-507](business-rules/SD/set-item.md), [SD-BR-508](business-rules/SD/set-item.md), [SD-BR-509](business-rules/SD/set-item.md) |
 | BC | BC-UC-014 | 판매 단가 | M | [sales-price](specifications/BC/sales-price.md) | [SD-BR-403](business-rules/SD/pricing.md) |
-| BC | BC-UC-015 | 구매 단가 | M | [purchase-price](specifications/BC/purchase-price.md) |  |
+| BC | BC-UC-015 | 구매 단가 | M | [purchase-price](specifications/BC/purchase-price.md) | [MM-BR-901](business-rules/MM/purchase-price.md), [MM-BR-902](business-rules/MM/purchase-price.md), [MM-BR-903](business-rules/MM/purchase-price.md), [MM-BR-904](business-rules/MM/purchase-price.md), [MM-BR-905](business-rules/MM/purchase-price.md) |
 | BC | BC-UC-016 | 고객 이름 변경 | S | [change-customer-name](specifications/BC/change-customer-name.md) |  |
 | BC | BC-UC-017 | 장바구니 | S | [cart](specifications/BC/cart.md) |  |
 | SD | SD-UC-001 | 고객 마스터 | S | [customer](specifications/SD/customer.md) | [SD-BR-301](business-rules/SD/customer.md), [SD-BR-302](business-rules/SD/customer.md), [SD-BR-303](business-rules/SD/customer.md), [SD-BR-304](business-rules/SD/customer.md), [SD-BR-305](business-rules/SD/customer.md), [SD-BR-306](business-rules/SD/customer.md), [SD-BR-307](business-rules/SD/customer.md), [SD-BR-308](business-rules/SD/customer.md), [SD-BR-309](business-rules/SD/customer.md) |
@@ -72,6 +72,8 @@
 | MM | MM-UC-014 | 재고 수불부 | M | [report-inventory-statement](specifications/MM/report-inventory-statement.md) |  |
 | MM | MM-UC-015 | 재고 수불부 상세 | M | [report-inventory-statement-detail](specifications/MM/report-inventory-statement-detail.md) |  |
 | MM | MM-UC-016 | 공급자 잔액 | M | [report-vendor-balance](specifications/MM/report-vendor-balance.md) |  |
+| BC | BC-UC-018 | 세트 품목 구성 내려받기 | M | [set-item-download](specifications/BC/set-item-download.md) | [SD-BR-510](business-rules/SD/set-item.md) |
+| BC | BC-UC-019 | 대체 품목 그룹 | M | [alternate-item-group](specifications/BC/alternate-item-group.md) | [MM-BR-810](business-rules/MM/item.md), [MM-BR-813](business-rules/MM/item.md), [MM-BR-814](business-rules/MM/item.md) |
 | MM | MM-UC-017 | 창고 마스터 | M | [warehouse](specifications/MM/warehouse.md) | [MM-BR-701](business-rules/MM/warehouse.md), [MM-BR-702](business-rules/MM/warehouse.md), [MM-BR-703](business-rules/MM/warehouse.md), [MM-BR-704](business-rules/MM/warehouse.md) |
 | MM | MM-UC-018 | 창고 간 재고 이동 | SM | [stock-transfer](specifications/MM/stock-transfer.md) | [MM-BR-705](business-rules/MM/warehouse.md), [MM-BR-706](business-rules/MM/warehouse.md), [MM-BR-707](business-rules/MM/warehouse.md), [MM-BR-001](business-rules/MM/inventory.md), [MM-BR-002](business-rules/MM/inventory.md), [MM-BR-003](business-rules/MM/inventory.md), [MM-BR-004](business-rules/MM/inventory.md), [MM-BR-005](business-rules/MM/inventory.md), [MM-BR-006](business-rules/MM/inventory.md), [MM-BR-007](business-rules/MM/inventory.md), [MM-BR-008](business-rules/MM/inventory.md), [MM-BR-009](business-rules/MM/inventory.md), [MM-BR-010](business-rules/MM/inventory.md), [MM-BR-601](business-rules/MM/ledger.md), [MM-BR-602](business-rules/MM/ledger.md), [MM-BR-603](business-rules/MM/ledger.md), [MM-BR-604](business-rules/MM/ledger.md), [MM-BR-606](business-rules/MM/ledger.md), [MM-BR-703](business-rules/MM/warehouse.md) |
 | MM | MM-UC-019 | 재고 대사 점검 | M | [stock-reconciliation](specifications/MM/stock-reconciliation.md) | [MM-BR-605](business-rules/MM/ledger.md), [MM-BR-408](business-rules/MM/closing.md) |
@@ -97,8 +99,10 @@
 - [MM - 재고 월 마감](business-rules/MM/closing.md)
 - [MM - 입고 (Bill)](business-rules/MM/goods-receipt.md)
 - [MM - 재고 공통](business-rules/MM/inventory.md)
+- [MM - 품목 마스터](business-rules/MM/item.md)
 - [MM - 재고 원장](business-rules/MM/ledger.md)
 - [MM - 발주](business-rules/MM/purchase-order.md)
+- [MM - 구매 단가](business-rules/MM/purchase-price.md)
 - [MM - 구매 시뮬레이션](business-rules/MM/purchase-simulation.md)
 - [MM 업무 규칙 (구매·재고)](business-rules/MM/README.md)
 - [MM - 재고 실사](business-rules/MM/stock-count.md)
@@ -111,6 +115,7 @@
 - [SD 업무 규칙 (영업)](business-rules/SD/README.md)
 - [SD - 매출 송장(출고)](business-rules/SD/sales-invoice.md)
 - [SD - 수주](business-rules/SD/sales-order.md)
+- [SD - 세트 품목 구성](business-rules/SD/set-item.md)
 
 ## 용어
 

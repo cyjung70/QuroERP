@@ -9,7 +9,17 @@
   "specs": [
     "docs/specifications/BC/item.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-801",
+    "MM-BR-802",
+    "MM-BR-803",
+    "MM-BR-804",
+    "MM-BR-805",
+    "MM-BR-806",
+    "MM-BR-807",
+    "MM-BR-808",
+    "MM-BR-809"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

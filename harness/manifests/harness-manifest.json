@@ -60,11 +60,11 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "5484899122db21cf0facd1bd3457ad45fa989c051266c9fb62fa7e476dc80db4"
+      "sha256": "379b82294661c93332ce3a5a0aaa39d8200442ac14bf2c2dcf3626a182fa8cd8"
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "1f9861921b7db62167e57630faa4ce20cb0b23209a85a51d22ae3ea8e075f7d7"
+      "sha256": "e032b23b9230108dec25cec2ff97e16b16ec8c115d7d4e23ca0b32d1bfcd2ad0"
     },
     {
       "path": "docs/architecture/i18n.md",
@@ -115,6 +115,10 @@
       "sha256": "d1495e6b49ab97ac3212a07179bbf6a7dad74c08147f8df75185e78cbc3eb465"
     },
     {
+      "path": "docs/business-rules/MM/item.md",
+      "sha256": "c73fa0682bff0690f13dd715cf91c7a7c776e718b797636ec4ad911bfde5c04f"
+    },
+    {
       "path": "docs/business-rules/MM/ledger.md",
       "sha256": "089e98ee30b1efa723b7d450a205699cf89109351383ad8d22bb92a82bf1c592"
     },
@@ -123,12 +127,16 @@
       "sha256": "ea3a4f867f96986f264ba805d2c3114c624919efe69cc6ff704490508911766c"
     },
     {
+      "path": "docs/business-rules/MM/purchase-price.md",
+      "sha256": "853fe58ff9ae696eef7084adee4582647de47913287056b1aaefb6bb07b8afb1"
+    },
+    {
       "path": "docs/business-rules/MM/purchase-simulation.md",
       "sha256": "08b2f4b9ec9ae875f4e80fdc261b3870291066f24b5b7fb1019fff22ccf97646"
     },
     {
       "path": "docs/business-rules/MM/README.md",
-      "sha256": "5aab521b40d5cf486b17aff5e1dca6729907d49c03beb001d26cd1554db53633"
+      "sha256": "3e220be36abb15f463bce635accd96e146705f355eb939eae6da9c2762c22040"
     },
     {
       "path": "docs/business-rules/MM/stock-count.md",
@@ -160,7 +168,7 @@
     },
     {
       "path": "docs/business-rules/SD/README.md",
-      "sha256": "053a0f0044eae594aad0f75c6a7afc00685be10a7343263fd91c196e454d5a1f"
+      "sha256": "5090e0f6bb7bd59abb585534559fd826ac2f60c5ce3c6c9c03dee72cfdb7c20a"
     },
     {
       "path": "docs/business-rules/SD/sales-invoice.md",
@@ -171,16 +179,24 @@
       "sha256": "bf5a537f3caf1c0a4dc8f09f352c51648dc2cef3719bfa6ae415a286dd4484a9"
     },
     {
+      "path": "docs/business-rules/SD/set-item.md",
+      "sha256": "1b51c8cd712c7bd9144f6c0f762499fb70c8fc24a83838f0ae4c6a7d5bf6c6a7"
+    },
+    {
       "path": "docs/glossary.md",
-      "sha256": "0b1ad1f823e7921bb5d671099565db140b08e1df4a2f624225e04d70d95977e2"
+      "sha256": "6326ced6e19f16406b9d7670c8a15727adea030d5e9339e3895556232776d73b"
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "f10834bfd0da49cffee04de82d824c558edc982ffe305b43b0d3fe5c87fd7c53"
+      "sha256": "80def49767d9139ad10d2eaba0c6ca352f45d331a67cc7c61ad254974008b770"
+    },
+    {
+      "path": "docs/specifications/BC/alternate-item-group.md",
+      "sha256": "10852bab2bb36c76a17e3d3b510ee6f62fa774accb7e0b2574ff533a1ba201f6"
     },
     {
       "path": "docs/specifications/BC/alternate-item.md",
-      "sha256": "7a472f13ecb61f7bf5b0e9199b96d9b775d575b3e123b07daaf83be170371ebd"
+      "sha256": "90f833729946415994e213dc30da08bab444c21b7a12d8cfda809515f55eca62"
     },
     {
       "path": "docs/specifications/BC/cart.md",
@@ -216,7 +232,7 @@
     },
     {
       "path": "docs/specifications/BC/item.md",
-      "sha256": "04475c13535424bd5e2801f475f911dc0587de7861411f8359ccd0f024d392b8"
+      "sha256": "72655da8ccd56f032a5a545e98d70344a58595b3f66d2ad217d87bd7bb15db4a"
     },
     {
       "path": "docs/specifications/BC/login.md",
@@ -224,7 +240,7 @@
     },
     {
       "path": "docs/specifications/BC/purchase-price.md",
-      "sha256": "d247e449349b076eb67bad7b47878199d5d9f154785ddf2a65a3f8e81a6d9508"
+      "sha256": "3785077c07e7a1a8bc11e5ecc579e74d87bc65adff46db9974ef70d13322ca74"
     },
     {
       "path": "docs/specifications/BC/role-menu.md",
@@ -235,8 +251,12 @@
       "sha256": "67eb4ee1fd647022a37393ed07fe798fc9343c2acbabfd9bb021487e1ca77fb8"
     },
     {
+      "path": "docs/specifications/BC/set-item-download.md",
+      "sha256": "107ba9bb84d16972552c52da444310b61b900f346e5decd5a51e196bde2bc833"
+    },
+    {
       "path": "docs/specifications/BC/set-item.md",
-      "sha256": "4df01efd91484ee18a6b164fd411dd5919707e4027100468744a67b58ebde66d"
+      "sha256": "ebd731ff166daa73c02583d03522941ac6c651ff9487026c5ea1f84b9aab9007"
     },
     {
       "path": "docs/specifications/BC/user-profile.md",
@@ -508,11 +528,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-017.json",
-      "sha256": "d6974d06551469dc4fb62859918f2d387721541b5357bf1e724f5075bb0f0129"
+      "sha256": "93719cd369c6c981d68d41a743eee9ee42c5c73e57d8cd8f7c57d99722f3ad80"
     },
     {
       "path": "harness/tasks/TASK-BC-018.json",
-      "sha256": "a67ed5050e75c41d7e5b34c7ce04ea9a5e0bc35dd88b401decbbadad6531743f"
+      "sha256": "884238231d2479a0952a3704bb9ec0ed2fbbcd68027f571076d48d1c5f2bb027"
     },
     {
       "path": "harness/tasks/TASK-BC-019.json",
@@ -532,19 +552,19 @@
     },
     {
       "path": "harness/tasks/TASK-BC-023.json",
-      "sha256": "4b53d5dc0214e5f6622e668f432a270c29536aa427859d8d5db5795a6ca75ec9"
+      "sha256": "f2348d5c1a4175a7b7fa3acf7c48c43d9435ee542bf5f53e483784455a51cfa6"
     },
     {
       "path": "harness/tasks/TASK-BC-024.json",
-      "sha256": "8777f95cfddbed56c4fad01280bb69847ca48c0c19a9ff9f2e558e5ac824971d"
+      "sha256": "41dacca659469b73cf3606a8aca674ca11993984ce65e98919134bcfeadc5baa"
     },
     {
       "path": "harness/tasks/TASK-BC-025.json",
-      "sha256": "e9d59c79b9677297b50650997874aec56bea7108e8c310d228a926a5a21065b3"
+      "sha256": "dcc1fb38fcb9ceee39dfcda1437a15b4ee3dfa13f906037f8e79f779c96fc27e"
     },
     {
       "path": "harness/tasks/TASK-BC-026.json",
-      "sha256": "a9764c879799df49a259181d794bd81c7a293c1fb52534c5c48054f9c6620f2f"
+      "sha256": "4bf91b51c0315c59cb329812a94468afc5f923a36524b77af26884ba4c30f457"
     },
     {
       "path": "harness/tasks/TASK-BC-027.json",
@@ -556,11 +576,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-029.json",
-      "sha256": "60c4169c49b2f9ee2ae36d4a417956ee1196bc8ddd4cdc5f5e8a82be4e79544e"
+      "sha256": "0cad121f78c5ea4c25d178f2b4014cf20e58756d4ebe05dffdb4795776b66baf"
     },
     {
       "path": "harness/tasks/TASK-BC-030.json",
-      "sha256": "afb4ed514729c44e2d941648db97777cbbbc79b40a0e71e88156409b49573618"
+      "sha256": "81c1d3a60ab69e783a423d666f2a6d181a0fb4d7f098d4d268d65c0f8a773ed2"
     },
     {
       "path": "harness/tasks/TASK-BC-031.json",
@@ -577,6 +597,22 @@
     {
       "path": "harness/tasks/TASK-BC-034.json",
       "sha256": "bcbd55f1ce029de57203378b0bce5dff2852ffbbb329426b83126e9f28f52c43"
+    },
+    {
+      "path": "harness/tasks/TASK-BC-035.json",
+      "sha256": "cee107552e3136a440c5515d7b268ec7bfa90ff6033bd9bc7c220054a19b558a"
+    },
+    {
+      "path": "harness/tasks/TASK-BC-036.json",
+      "sha256": "5de736b6f18043ad1ea98d8d28b8eabe237ad4a52778dab4d35aa79c92d5dc35"
+    },
+    {
+      "path": "harness/tasks/TASK-BC-037.json",
+      "sha256": "4bfe3a18113ae2d342e68f7471389a2f16cc776fc13af790c3e81ee68944f681"
+    },
+    {
+      "path": "harness/tasks/TASK-BC-038.json",
+      "sha256": "4e17a8de56656a99f85bd78762706456870c87f8e8b0e589ba79c93458f20170"
     },
     {
       "path": "harness/tasks/TASK-CORE-001.json",
