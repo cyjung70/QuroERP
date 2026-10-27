@@ -5,17 +5,18 @@
     <h1>@Title</h1>
     <NavigationLock ConfirmExternalNavigation="IsDirty" OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
     @Toolbar
+    @* One message area: an error or a notice (data-level tells which) *@
     @if (Error is not null)
     {
-        <p class="page-error" role="alert" data-testid="@Id("error")">@Error</p>
+        <p class="page-error" role="alert" data-level="error" data-testid="@Id("message")">@Error</p>
     }
-    @if (Notice is not null)
+    else if (Notice is not null)
     {
-        <p class="page-notice" role="status" data-testid="@Id("notice")">@Notice</p>
+        <p class="page-notice" role="status" data-level="info" data-testid="@Id("message")">@Notice</p>
     }
     @if (SearchContent is not null)
     {
-        <form class="quro-search" role="search" aria-label="@L["Common.SearchConditions"]" @onsubmit="OnSearch" @onsubmit:preventDefault>
+        <form class="quro-search" role="search" aria-label="@L["Common.SearchConditions"]" data-testid="@Id("search")" @onsubmit="OnSearch" @onsubmit:preventDefault>
             @SearchContent
             @* Enter in a search field submits the form *@
             <button type="submit" hidden></button>

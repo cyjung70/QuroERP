@@ -10,7 +10,7 @@
 
 @if (_store is not null)
 {
-    <QuroMasterMultiDetail TSource="SampleGroup" TTarget="SampleLine" Title="@L["Samples.MasterDetail.Title"]" TestId="sample-mm"
+    <QuroMasterMultiDetail TSource="SampleGroup" TTarget="SampleLine" Title="@L["Samples.MasterDetail.Title"]" TestId="master-detail"
                            LoadOnStart="true" LoadSources="() => Task.FromResult(_store.Groups())"
                            LoadTargets="group => Task.FromResult(_store.Members(group.Id))"
                            CreateTarget="group => new SampleLine { OwnerId = group.Id, Qty = 1 }"
@@ -21,10 +21,10 @@
         </SourceColumns>
         <TargetColumns>
             <QuroColumn TRow="SampleLine" Title="@L["Samples.Item"]" Value="l => l.ItemCode" Context="line">
-                <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" Required TextCase="TextCase.Upper" TestId="item" />
+                <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" Required TextCase="TextCase.Upper" TestId="master-detail-line-item-code" />
             </QuroColumn>
             <QuroColumn TRow="SampleLine" Title="@L["Samples.Qty"]" Value="l => l.Qty" Format="N2" Context="line">
-                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" TestId="qty" />
+                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" TestId="master-detail-line-qty" />
             </QuroColumn>
         </TargetColumns>
     </QuroMasterMultiDetail>
