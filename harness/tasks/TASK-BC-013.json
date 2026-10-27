@@ -13,7 +13,9 @@
   "specs": [
     "docs/specifications/BC/company.md"
   ],
-  "rules": [],
+  "rules": [
+    "MM-BR-003"
+  ],
   "skills": [
     "quro-api",
     "quro-dapper",
