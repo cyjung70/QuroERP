@@ -1,0 +1,42 @@
+{
+  "id": "TASK-MM-040",
+  "project": "core",
+  "title": "공급자 일괄 등록 API (Application·Domain·Infrastructure)",
+  "module": "MM",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "M",
+  "specs": [
+    "docs/specifications/MM/vendor-upload.md"
+  ],
+  "rules": [
+    "MM-BR-860",
+    "MM-BR-861",
+    "MM-BR-862",
+    "MM-BR-863",
+    "MM-BR-859"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007",
+    "TASK-MM-001"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

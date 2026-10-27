@@ -10,7 +10,21 @@
   "specs": [
     "docs/specifications/BC/company.md"
   ],
-  "rules": [],
+  "rules": [
+    "BC-BR-301",
+    "BC-BR-302",
+    "BC-BR-303",
+    "BC-BR-304",
+    "BC-BR-305",
+    "BC-BR-306",
+    "BC-BR-307",
+    "BC-BR-308",
+    "BC-BR-309",
+    "BC-BR-310",
+    "BC-BR-311",
+    "BC-BR-312",
+    "MM-BR-003"
+  ],
   "skills": [
     "quro-blazor",
     "quro-unit-test",

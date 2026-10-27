@@ -10,7 +10,7 @@
 | 액터 | 모든 사용자 (로그인 전) |
 | 사전조건 | 없음 |
 
-> 레거시 로그인 방식은 옮기지 않는다. 처리 순서·잠금·자동 로그인·세션·메시지(AUTH-001~010)는 `docs/architecture/login.md`, 인증 경로는 `docs/architecture/security.md`를 따른다. 회사 선택은 없다 (단일 회사).
+> 레거시 로그인 방식은 옮기지 않는다. 업무 규칙은 BC-BR-001~017이고, 인증 구조·설정·메시지(AUTH-001~015)는 `docs/architecture/login.md`, 인증 경로는 `docs/architecture/security.md`를 따른다. 회사 선택은 없다 (단일 회사).
 
 ## 기본 흐름
 
@@ -84,7 +84,23 @@
 
 ## 관련 BR
 
-- 업무 규칙은 AS IS 로직 분석 후 추가된다 [확인 필요].
+- [BC-BR-001](../../business-rules/BC/auth.md)
+- [BC-BR-002](../../business-rules/BC/auth.md)
+- [BC-BR-003](../../business-rules/BC/auth.md)
+- [BC-BR-004](../../business-rules/BC/auth.md)
+- [BC-BR-005](../../business-rules/BC/auth.md)
+- [BC-BR-006](../../business-rules/BC/auth.md)
+- [BC-BR-007](../../business-rules/BC/auth.md)
+- [BC-BR-008](../../business-rules/BC/auth.md)
+- [BC-BR-009](../../business-rules/BC/auth.md)
+- [BC-BR-010](../../business-rules/BC/auth.md)
+- [BC-BR-011](../../business-rules/BC/auth.md)
+- [BC-BR-012](../../business-rules/BC/auth.md)
+- [BC-BR-013](../../business-rules/BC/auth.md)
+- [BC-BR-014](../../business-rules/BC/auth.md)
+- [BC-BR-015](../../business-rules/BC/auth.md)
+- [BC-BR-016](../../business-rules/BC/auth.md)
+- [BC-BR-017](../../business-rules/BC/auth.md)
 
 ## 다국어 리소스 키
 
@@ -117,6 +133,7 @@
 - `BC-UC-001-T21` 언어를 English로 바꾸고 오류 → 화면 문구와 오류 메시지 모두 영어
 - `BC-UC-001-T22` `returnUrl`에 외부 주소 → 무시하고 메인 화면
 - `BC-UC-001-T23` 로그 파일 검사 → 비밀번호·토큰 원문이 없음
+- `BC-UC-001-T24` 관련 BR마다 단위 테스트 (`BC-UT-` + BR 번호, 예: BC-BR-001 → BC-UT-001)
 
 ## AS IS 근거
 
