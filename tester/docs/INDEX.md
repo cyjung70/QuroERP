@@ -13,6 +13,13 @@
 
 - [Tester 구조](architecture.md)
 
+## QA 절차
+
+- [결함 관리](qa/defects.md)
+- [품질 게이트](qa/quality-gate.md)
+- [테스트 계획](qa/test-plan.md)
+- [인수 테스트(UAT) 체크리스트](qa/uat-checklist.md)
+
 ## MM 시나리오
 
 - (아직 없음)

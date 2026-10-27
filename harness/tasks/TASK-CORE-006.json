@@ -20,7 +20,8 @@
   ],
   "acceptance": [
     "4개 유형 샘플 화면이 동작한다",
-    "저장하지 않은 변경 확인, 행 상태(I/U/D)가 동작한다"
+    "저장하지 않은 변경 확인, 행 상태(I/U/D)가 동작한다",
+    "공통 컴포넌트가 `TestId` 매개변수를 받아 `data-testid`를 붙인다 (quro-blazor 규칙)"
   ],
   "estimateHours": 3,
   "status": "done"
