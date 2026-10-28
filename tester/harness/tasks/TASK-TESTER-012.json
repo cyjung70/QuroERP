@@ -1,0 +1,46 @@
+{
+  "id": "TASK-TESTER-012",
+  "project": "tester",
+  "title": "MM 재고·매입채무 리포트 테스트: 품목 목록·거래 내역·연령 분석·수불부, 매입채무 현황·연령·공급자 잔액",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-011.md",
+    "tester/docs/scenarios/MM/MM-TS-012.md"
+  ],
+  "rules": [
+    "MM-BR-604",
+    "MM-BR-651",
+    "MM-BR-655",
+    "MM-BR-657",
+    "MM-BR-819",
+    "MM-BR-971",
+    "MM-BR-972",
+    "MM-BR-973",
+    "MM-BR-974",
+    "MM-BR-975",
+    "MM-BR-978"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-MM-005",
+    "TASK-MM-007",
+    "TASK-MM-009",
+    "TASK-MM-030",
+    "TASK-SD-003",
+    "TASK-SD-005"
+  ],
+  "acceptance": [
+    "tests/scenario/MM/test_inventory_reports.py: MM-TS-011, serial. 연령 분석·수불부는 데이터를 만들기 전 합계 행을 저장하고 증가분으로 비교한다",
+    "tests/scenario/MM/test_ap_reports.py: MM-TS-012. 결과에서 공급자 V의 행만 본다",
+    "일자(Dn, 지난달 15일)는 실행일 기준으로 계산하고, 기대 수량·금액은 시나리오 문서 값을 상수로 쓴다",
+    "uv run pytest -k \"inventory_reports or ap_reports\" 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

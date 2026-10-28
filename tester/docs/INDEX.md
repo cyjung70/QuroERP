@@ -26,6 +26,7 @@
 - [BC-TS-002 첫 로그인 비밀번호 변경 강제와 비밀번호 규칙](scenarios/BC/BC-TS-002.md)
 - [BC-TS-003 메뉴 권한 — 미인증·미배정·조회 전용·Full Access와 내 정보 변경 범위](scenarios/BC/BC-TS-003.md)
 - [BC-TS-004 인증 API 요청 수 제한](scenarios/BC/BC-TS-004.md)
+- [BC-TS-005 입력값은 데이터로만 처리, 쓰는 품목은 지우지 않고 사용 안 함](scenarios/BC/BC-TS-005.md)
 
 ## MM 시나리오
 
@@ -37,6 +38,10 @@
 - [MM-TS-006 두 번 입고한 품목의 이동평균원가와 출고 원가](scenarios/MM/MM-TS-006.md)
 - [MM-TS-007 재고 월 마감 → 마감한 달 이동 차단 → 마감 취소](scenarios/MM/MM-TS-007.md)
 - [MM-TS-008 월말 음수 재고와 월 마감 — 마이너스 재고 모드별 결과](scenarios/MM/MM-TS-008.md)
+- [MM-TS-009 실사 장부 수량은 실사 일자 기준 — 차이 부호, 품목 유형, 일자 잠금](scenarios/MM/MM-TS-009.md)
+- [MM-TS-010 구매 시뮬레이션 — 부족분만 추천, 미입고 발주 반영, 정수 기준량](scenarios/MM/MM-TS-010.md)
+- [MM-TS-011 재고 리포트 — 품목 목록 All, 품목 거래 내역, 연령 분석, 재고 수불부](scenarios/MM/MM-TS-011.md)
+- [MM-TS-012 매입채무 리포트 — 현황 실행, 지급 예정일 기준 연령, 기간 안 공급자 잔액](scenarios/MM/MM-TS-012.md)
 
 ## SD 시나리오
 
@@ -49,6 +54,9 @@
 - [SD-TS-007 한국 VAT — 과세·영세율·면세 혼합 송장, 원 단위 배분, 세금계산서](scenarios/SD/SD-TS-007.md)
 - [SD-TS-008 외화 송장과 입금 — 기준 통화 금액, 환율 차이, 통화 불일치 차단](scenarios/SD/SD-TS-008.md)
 - [SD-TS-009 한국 회사의 USD 수출 송장과 입금 — 영세율, 원화 환산, 환율 차이](scenarios/SD/SD-TS-009.md)
+- [SD-TS-010 고객 이름 변경과 고객 합치기, 문서가 있는 고객 삭제](scenarios/SD/SD-TS-010.md)
+- [SD-TS-011 미결 수주·실주와 매출 리포트 합계 일치 — 송장 없는 수주, 마감 수주, 세트 품목, 송장 담당자](scenarios/SD/SD-TS-011.md)
+- [SD-TS-012 기준일 매출채권 잔액 — Credit 적용 줄 일자, 기준일 상세, 최대 고객 수](scenarios/SD/SD-TS-012.md)
 
 ## 이관 검증 시나리오
 

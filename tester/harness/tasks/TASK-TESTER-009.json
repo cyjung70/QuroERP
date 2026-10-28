@@ -1,0 +1,56 @@
+{
+  "id": "TASK-TESTER-009",
+  "project": "tester",
+  "title": "MM 재고 실사·예외 입고 검사와 구매 시뮬레이션 추천 수량 테스트",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-009.md",
+    "tester/docs/scenarios/MM/MM-TS-010.md"
+  ],
+  "rules": [
+    "MM-BR-008",
+    "MM-BR-201",
+    "MM-BR-202",
+    "MM-BR-204",
+    "MM-BR-205",
+    "MM-BR-301",
+    "MM-BR-302",
+    "MM-BR-303",
+    "MM-BR-305",
+    "MM-BR-306",
+    "MM-BR-307",
+    "MM-BR-501",
+    "MM-BR-503",
+    "MM-BR-504",
+    "MM-BR-505",
+    "MM-BR-506",
+    "MM-BR-507",
+    "MM-BR-508",
+    "MM-BR-601",
+    "MM-BR-604"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-BC-017",
+    "TASK-MM-003",
+    "TASK-MM-005",
+    "TASK-MM-009",
+    "TASK-MM-011",
+    "TASK-SD-003"
+  ],
+  "acceptance": [
+    "tests/scenario/MM/test_stock_count.py: MM-TS-009. 일자 D0·D1·D2는 실행일 기준으로 계산한다",
+    "tests/scenario/MM/test_purchase_simulation.py: MM-TS-010. 품목 코드 접두어 PS{run_id}로 다른 테스트 품목과 섞이지 않게 한다",
+    "기대 장부 수량·기준량·추천 수량은 시나리오 문서 값을 상수로 쓰고 공식을 다시 계산하지 않는다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k \"stock_count or purchase_simulation\" 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
