@@ -97,6 +97,14 @@ public partial class MigrationTests(MigratedSchemaFixture db)
         sized.Should().BeEmpty();
     }
 
+    [DatabaseFact, Trait("Id", "DB-IT-08")]
+    public void Languages_OnlyEnAndKoInUse()
+    {
+        // BC-BR-401: en and ko are the default languages; sw stays as a row that is turned off
+        Query<string>("SELECT lang_code FROM sys_language WHERE use_yn ORDER BY sort_order").Should().Equal("en", "ko");
+        Query<string>("SELECT lang_code FROM sys_language WHERE NOT use_yn").Should().Equal("sw");
+    }
+
     /// <summary>database-tables.md의 "목록"과 "새 테이블" 표에 있는 테이블 이름.</summary>
     private static IEnumerable<string> DocumentedTables()
     {

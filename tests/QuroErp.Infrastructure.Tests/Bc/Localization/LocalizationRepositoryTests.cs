@@ -24,7 +24,7 @@ public class LocalizationRepositoryTests(AuthSchemaFixture db)
         var decimals = await repository.FindDecimalSettingsAsync(uow.Transaction, CancellationToken.None);
         var company = await repository.FindCompanyAsync(uow.Transaction, CancellationToken.None);
 
-        languages.Should().Equal(new LanguageRow("en", 1, true), new LanguageRow("ko", 2, true), new LanguageRow("sw", 3, true));
+        languages.Should().Equal(new LanguageRow("en", 1, true), new LanguageRow("ko", 2, true), new LanguageRow("sw", 3, false));
         currencies.Select(c => (c.CurrencyCode, c.Decimals, c.UseYn)).Should().Equal(("KRW", 0, true), ("USD", 2, true));
         decimals.Should().Equal(new DecimalSettingRow("MM", 4, 2, "HALF_UP"), new DecimalSettingRow("SD", 2, 0, "HALF_UP"));
         company.Should().BeNull();
