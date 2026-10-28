@@ -81,3 +81,24 @@ csproj에는 패키지 이름이나 버전을 쓰지 않고 다음 한 줄만 �
 - QuroERP 세션에서 QuroGrid 소스는 **읽기 전용 참고 자료**다. `.claude/settings.json`의 `permissions.additionalDirectories`로 읽고, `Edit(//WRK/QuroGrid/**)` deny로 쓰기를 막는다.
 - QuroGrid의 `CLAUDE.md`·`.claude/rules`는 QuroERP 세션에 **로드하지 않는다** (`CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD`를 켜지 않는다). 두 저장소의 규칙(Spec 우선 원칙, 보고 언어 등)이 섞이지 않게 하기 위해서다.
 - QuroGrid 사용법은 consumer-contract.md와 CHANGELOG.md만 읽는다.
+
+## 9. 최초 설정 (QuroERP 저장소, 한 번만)
+
+`build/QuroGrid.props`, `build/QuroGrid.targets`, `nuget.config`, `setup/`은 코드 작업 세션이 커밋한다. 설정이 다음과 같아야 한다.
+
+1. **`nuget.config`**: 로컬 피드 `quro-local`(`/WRK/_nuget`, Windows는 예: `C:\WRK\_nuget`)를 추가하고, `Quro.Grid`·`Quro.Grid.*`는 이 피드에서만 받도록 `packageSourceMapping`을 둔다. 같은 이름의 공개 패키지가 섞이지 않게 하기 위해서다. 나머지 패키지(`*`)는 `nuget.org`.
+2. **`Directory.Build.props`** (저장소 루트)에 한 줄을 넣는다:
+   ```xml
+   <Import Project="$(MSBuildThisFileDirectory)build/QuroGrid.props" />
+   ```
+3. **`Directory.Build.targets`** (저장소 루트, 없으면 새로 만든다):
+   ```xml
+   <Project>
+     <Import Project="$(MSBuildThisFileDirectory)build/QuroGrid.targets" />
+   </Project>
+   ```
+4. **`QuroErp.Web.csproj`, `QuroErp.Web.Tests.csproj`**: `<UsesQuroGrid>true</UsesQuroGrid>` (2장).
+5. **`.claude/settings.json`**: `setup/claude-settings.json.example`의 `permissions` 블록을 병합한다 — `additionalDirectories`에 `/WRK/QuroGrid`, `deny`에 `Edit(//WRK/QuroGrid/**)` (8장). Windows에서 `/WRK`가 C 드라이브라면 deny 경로는 `Edit(//c/WRK/QuroGrid/**)`, `additionalDirectories`는 `C:\WRK\QuroGrid`.
+6. **CI**: `dotnet build -p:ContinuousIntegrationBuild=true`로 빌드한다 (`QuroGridSource=local`이면 실패, 3장). CI 러너에도 `/WRK/_nuget` 피드(또는 같은 패키지를 담은 사내 피드)가 있어야 한다.
+
+`build/QuroGrid.props`가 정하는 값: `QuroGridVersion`(6장), `QuroGridSource`(기본 `package`), `QuroGridRoot`(기본 저장소 옆 `../QuroGrid`). `build/QuroGrid.targets`는 모드에 따라 PackageReference 또는 ProjectReference를 넣고, 잘못된 모드·CI의 `local`·없는 소스 경로를 빌드 오류로, `local` 모드를 경고로 알린다. 중앙 패키지 버전 관리(`ManagePackageVersionsCentrally`)를 써도 동작한다.
