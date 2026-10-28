@@ -1,0 +1,63 @@
+{
+  "id": "TASK-TESTER-008",
+  "project": "tester",
+  "title": "BC 로그인·비밀번호·메뉴 권한 보안 회귀 테스트와 인증 요청 수 제한",
+  "module": "BC",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/BC/BC-TS-001.md",
+    "tester/docs/scenarios/BC/BC-TS-002.md",
+    "tester/docs/scenarios/BC/BC-TS-003.md",
+    "tester/docs/scenarios/BC/BC-TS-004.md"
+  ],
+  "rules": [
+    "BC-BR-002",
+    "BC-BR-003",
+    "BC-BR-004",
+    "BC-BR-005",
+    "BC-BR-006",
+    "BC-BR-009",
+    "BC-BR-016",
+    "BC-BR-051",
+    "BC-BR-052",
+    "BC-BR-053",
+    "BC-BR-054",
+    "BC-BR-055",
+    "BC-BR-056",
+    "BC-BR-058",
+    "BC-BR-059",
+    "BC-BR-101",
+    "BC-BR-123",
+    "BC-BR-128",
+    "BC-BR-214",
+    "BC-BR-215",
+    "BC-BR-216"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-001",
+    "TASK-BC-001",
+    "TASK-BC-003",
+    "TASK-BC-005",
+    "TASK-BC-007",
+    "TASK-BC-009",
+    "TASK-BC-017",
+    "TASK-MM-001",
+    "TASK-SD-001"
+  ],
+  "acceptance": [
+    "user_client fixture와 QURO_AUTH_RATE_LIMIT 설정 (tester/docs/architecture.md)",
+    "tests/api/BC/test_login_lockout.py: BC-TS-001, tests/api/BC/test_change_password.py: BC-TS-002, tests/api/BC/test_menu_permission.py: BC-TS-003, tests/api/BC/test_auth_rate_limit.py: BC-TS-004",
+    "모든 테스트에 serial 마커. BC-TS-004는 직렬 묶음 마지막에 실행한다",
+    "BC-TS-003은 역할 R의 배정을 저장했다가 끝나면 되돌린다",
+    "비밀번호·토큰 값을 assert 메시지·로그·리포트에 쓰지 않는다",
+    "오류 단계는 error_lang으로 ko·en (언어마다 새 사용자), BC-TS-004만 1회",
+    "uv run pytest -m serial -k BC 통과, uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

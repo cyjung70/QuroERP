@@ -1,0 +1,41 @@
+{
+  "id": "TASK-TESTER-003",
+  "project": "tester",
+  "title": "MM 입고 삭제의 마이너스 재고 모드별 결과와 이동평균원가 테스트",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-005.md",
+    "tester/docs/scenarios/MM/MM-TS-006.md"
+  ],
+  "rules": [
+    "MM-BR-001",
+    "MM-BR-002",
+    "MM-BR-005",
+    "MM-BR-010",
+    "MM-BR-110",
+    "MM-BR-111",
+    "MM-BR-602",
+    "MM-BR-603",
+    "SD-BR-111",
+    "SD-BR-114"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-CORE-009"
+  ],
+  "acceptance": [
+    "tests/scenario/MM/test_negative_stock_receipt_cancel.py: MM-TS-005 모드별 기대 결과 표 그대로 (parametrize indirect)",
+    "tests/scenario/MM/test_moving_average_cost.py: MM-TS-006, 단계 1은 ALLOW에서만",
+    "모드를 바꾸는 테스트는 모두 serial 마커, 모든 테스트에 country(\"US\")",
+    "기대 원가·수량은 시나리오 문서 값을 상수로 쓰고 공식을 다시 계산하지 않는다",
+    "uv run pytest -m serial -k MM 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}
