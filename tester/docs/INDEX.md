@@ -27,6 +27,7 @@
 - [BC-TS-003 메뉴 권한 — 미인증·미배정·조회 전용·Full Access와 내 정보 변경 범위](scenarios/BC/BC-TS-003.md)
 - [BC-TS-004 인증 API 요청 수 제한](scenarios/BC/BC-TS-004.md)
 - [BC-TS-005 입력값은 데이터로만 처리, 쓰는 품목은 지우지 않고 사용 안 함](scenarios/BC/BC-TS-005.md)
+- [BC-TS-006 코드 키 잠금과 사용 중 코드, 환율 소수·중복, 사용 기한 지난 계정, 사용 안 함 메뉴](scenarios/BC/BC-TS-006.md)
 
 ## MM 시나리오
 
@@ -42,6 +43,8 @@
 - [MM-TS-010 구매 시뮬레이션 — 부족분만 추천, 미입고 발주 반영, 정수 기준량](scenarios/MM/MM-TS-010.md)
 - [MM-TS-011 재고 리포트 — 품목 목록 All, 품목 거래 내역, 연령 분석, 재고 수불부](scenarios/MM/MM-TS-011.md)
 - [MM-TS-012 매입채무 리포트 — 현황 실행, 지급 예정일 기준 연령, 기간 안 공급자 잔액](scenarios/MM/MM-TS-012.md)
+- [MM-TS-013 품목 마스터 무결성 — 유형 변경, 재고 값 무시, 세트 구성, 대체 품목, 바코드, 이미지](scenarios/MM/MM-TS-013.md)
+- [MM-TS-014 예외 입고 줄 파일 검사, 지급 줄 수정 차단, 공급자 메모·삭제](scenarios/MM/MM-TS-014.md)
 
 ## SD 시나리오
 
@@ -57,6 +60,8 @@
 - [SD-TS-010 고객 이름 변경과 고객 합치기, 문서가 있는 고객 삭제](scenarios/SD/SD-TS-010.md)
 - [SD-TS-011 미결 수주·실주와 매출 리포트 합계 일치 — 송장 없는 수주, 마감 수주, 세트 품목, 송장 담당자](scenarios/SD/SD-TS-011.md)
 - [SD-TS-012 기준일 매출채권 잔액 — Credit 적용 줄 일자, 기준일 상세, 최대 고객 수](scenarios/SD/SD-TS-012.md)
+- [SD-TS-013 판매·구매 단가표 저장과 삭제, 신용 한도 경고, 장바구니 담기 검사](scenarios/SD/SD-TS-013.md)
+- [SD-TS-014 문서 번호 동시 채번과 입금 줄 수정 차단](scenarios/SD/SD-TS-014.md)
 
 ## 이관 검증 시나리오
 

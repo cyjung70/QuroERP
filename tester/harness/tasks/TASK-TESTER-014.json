@@ -1,0 +1,66 @@
+{
+  "id": "TASK-TESTER-014",
+  "project": "tester",
+  "title": "SD·BC 입력 검사 테스트: 단가표·신용 한도·장바구니, 동시 채번·입금 줄 수정, 코드·환율·사용 기한·메뉴 사용 여부",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-013.md",
+    "tester/docs/scenarios/SD/SD-TS-014.md",
+    "tester/docs/scenarios/BC/BC-TS-006.md"
+  ],
+  "rules": [
+    "BC-BR-007",
+    "BC-BR-206",
+    "MM-BR-901",
+    "MM-BR-903",
+    "MM-BR-904",
+    "SD-BR-006",
+    "SD-BR-308",
+    "SD-BR-309",
+    "SD-BR-403",
+    "SD-BR-407",
+    "SD-BR-408",
+    "SD-BR-409",
+    "SD-BR-602",
+    "SD-BR-706",
+    "SD-BR-902",
+    "SD-BR-903",
+    "SD-BR-905",
+    "SD-BR-906",
+    "SD-BR-907",
+    "SD-BR-911",
+    "SD-BR-912",
+    "SD-BR-914"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-004",
+    "TASK-TESTER-008",
+    "TASK-BC-007",
+    "TASK-BC-011",
+    "TASK-BC-015",
+    "TASK-BC-027",
+    "TASK-BC-029",
+    "TASK-BC-033",
+    "TASK-BC-045",
+    "TASK-BC-047",
+    "TASK-SD-001",
+    "TASK-SD-003",
+    "TASK-SD-005",
+    "TASK-SD-035"
+  ],
+  "acceptance": [
+    "tests/api/SD/test_price_credit_cart.py: SD-TS-013",
+    "tests/api/SD/test_numbering_receipt_lines.py: SD-TS-014. 1단계는 httpx.AsyncClient로 20건을 동시에 보낸다",
+    "tests/api/BC/test_code_rate_user_menu.py: BC-TS-006, serial. 메뉴 사용 여부·코드 이름 되돌리기는 fixture finally에서 한다",
+    "오류·경고 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k \"price_credit_cart or numbering_receipt_lines or code_rate_user_menu\" 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

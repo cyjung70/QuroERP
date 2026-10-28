@@ -140,7 +140,7 @@
     },
     {
       "path": "docs/business-rules/BC/auth.md",
-      "sha256": "240ab9cdbefc9d319074fe18b03772ee941017f44ef5c9eb0c47b0255803f46d"
+      "sha256": "ae2d246c45d8748e69ea76c16722f20f62d6524e8a8ef4ab134452763d6b1fea"
     },
     {
       "path": "docs/business-rules/BC/company.md",
@@ -152,7 +152,7 @@
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
-      "sha256": "caf01c20cfb217a2b46862b3566f7c3a7a882bc0e80561cba48f3d44970d777b"
+      "sha256": "f4126ce934a492505da09936d0d998692cca745999611fc638696c91a10bd718"
     },
     {
       "path": "docs/business-rules/BC/password.md",
@@ -180,7 +180,7 @@
     },
     {
       "path": "docs/business-rules/MM/ap-payment.md",
-      "sha256": "523f10a8eee06b752c8aca25893740055f5a8513f39accca6ad6c6bf87adcc24"
+      "sha256": "3ae8ec168177cbf2e4d82db98775188d3e00a084940f413c9cccc1b5782137c5"
     },
     {
       "path": "docs/business-rules/MM/ap-report.md",
@@ -204,7 +204,7 @@
     },
     {
       "path": "docs/business-rules/MM/item.md",
-      "sha256": "65458d312b5f4aa951efc2514010ef7e7c65ecb1c561156685a8f9501c4d6204"
+      "sha256": "4a7fb9b2ccd7805c492d78c9af73ffc176ae0991aae8dec39f553dbd54df2b8b"
     },
     {
       "path": "docs/business-rules/MM/ledger.md",
@@ -216,7 +216,7 @@
     },
     {
       "path": "docs/business-rules/MM/purchase-price.md",
-      "sha256": "853fe58ff9ae696eef7084adee4582647de47913287056b1aaefb6bb07b8afb1"
+      "sha256": "911230f13dd4e198058ce87f2d151fd5bd71ba9ffa9743e30988b4be019bcb88"
     },
     {
       "path": "docs/business-rules/MM/purchase-simulation.md",
@@ -232,11 +232,11 @@
     },
     {
       "path": "docs/business-rules/MM/unplanned-receipt.md",
-      "sha256": "94b2885e15088e8e61a549e4975ed9acb3433c0d5639b2d379099540b9ce7ca9"
+      "sha256": "5272a722988909d5e08de9c73dde0b8756d434a2c0972a3c3ce330df8040b69d"
     },
     {
       "path": "docs/business-rules/MM/vendor.md",
-      "sha256": "1c711cbb26acc74201f79b08b4250078978bae43c82c28ac48e897d398ef6d8b"
+      "sha256": "25ad1da86e88aaeab997702d7bfa8bff510e3daf2015c2b6de864cf739c85356"
     },
     {
       "path": "docs/business-rules/MM/warehouse.md",
@@ -248,7 +248,7 @@
     },
     {
       "path": "docs/business-rules/SD/ar-receipt.md",
-      "sha256": "0176840b28380fe3926cdfaaaa1bf23fe026214ec4a8e2c0f0c04d32e0af25c6"
+      "sha256": "17f72e1e7781b910f3cf8ce5d0be40862d70cfc19ee95cea6f617e9a6fbf7468"
     },
     {
       "path": "docs/business-rules/SD/ar-report.md",
@@ -256,7 +256,7 @@
     },
     {
       "path": "docs/business-rules/SD/cart.md",
-      "sha256": "5eaebc5e27848dbae50a746a2fc47772bde0972c5fb2a4d52e85bd044ec94084"
+      "sha256": "bc13a452f050f2b5a5b47ae44a2b830d4aceefdcd324ffde29f0979064f6aa85"
     },
     {
       "path": "docs/business-rules/SD/credit-apply.md",
@@ -268,15 +268,15 @@
     },
     {
       "path": "docs/business-rules/SD/customer.md",
-      "sha256": "9faa272e9ce04580c594561d3624e28b6ec7b867a41c423a2769245db45a597d"
+      "sha256": "9213385ecaa605e634ee7e7387986138c0f9bbaf9f53d0c0f21c1c24b21a294c"
     },
     {
       "path": "docs/business-rules/SD/master-data.md",
-      "sha256": "9aeca0c38972ccd78db6fa3a472ded013e5eb40435c7f99dd477c8f1eb4e4b3c"
+      "sha256": "24e5b5ebd47752e7941f732ec416cbe3493ef250be161a44e482c9080d593adb"
     },
     {
       "path": "docs/business-rules/SD/pricing.md",
-      "sha256": "92e15f17de78b1627f7b4060783395e61ac7e8a404cda297edf732a5c51fc8ce"
+      "sha256": "f75fda0b402fad5c97537e9b60a4c9268278fd2ab26ba12a2c85de2828133127"
     },
     {
       "path": "docs/business-rules/SD/README.md",
@@ -288,7 +288,7 @@
     },
     {
       "path": "docs/business-rules/SD/sales-order.md",
-      "sha256": "3ce017cd6360ea8b1f186956fe61cf5190333a90371cccaf262911d74efcee06"
+      "sha256": "b8870fba04015dfae6f9a16abbc0d12dbcd830b6526cd764d8475df0d8379ae3"
     },
     {
       "path": "docs/business-rules/SD/sales-report.md",
@@ -296,7 +296,7 @@
     },
     {
       "path": "docs/business-rules/SD/set-item.md",
-      "sha256": "1b51c8cd712c7bd9144f6c0f762499fb70c8fc24a83838f0ae4c6a7d5bf6c6a7"
+      "sha256": "011c95f3c95ac2b376a523186544094827ffb0f17aac16f272fde7a09b8713ca"
     },
     {
       "path": "docs/glossary.md",
@@ -364,7 +364,7 @@
     },
     {
       "path": "docs/specifications/BC/item-image-upload.md",
-      "sha256": "6e9e724e714b8977551b31be42a6415798f06d1ac99b6ee655c54ccce77acdb2"
+      "sha256": "93d4eb40f56cfc4c48d12b2df77369722c91fbe20c6b94c61b002ac163fbd7e8"
     },
     {
       "path": "docs/specifications/BC/item-image.md",
@@ -1552,7 +1552,7 @@
     },
     {
       "path": "tester/docs/INDEX.md",
-      "sha256": "d1ddadaaefd08c67bc6904c85b0b2f1af57266ed7e734336a8f1d74b31ad5e07"
+      "sha256": "b04d3cb08e92acc7da83be1ef87d7d6221c5ef689c1f2fa53a21f0bda10a6c38"
     },
     {
       "path": "tester/docs/qa/defects.md",
@@ -1593,6 +1593,10 @@
     {
       "path": "tester/docs/scenarios/BC/BC-TS-005.md",
       "sha256": "7051c259b0afec6bba3bdd4c9b1fa53411abbe2dd1b6b22dfaf5cfbd74f7e0eb"
+    },
+    {
+      "path": "tester/docs/scenarios/BC/BC-TS-006.md",
+      "sha256": "9f19923d2833e64644d0fa17d953aad6c9a856cf7c814ff9dd1cec13f45811b3"
     },
     {
       "path": "tester/docs/scenarios/migration/.gitkeep",
@@ -1667,6 +1671,14 @@
       "sha256": "e0eee205c122faea00c1186a08368187c303c5ee561856352528fb44b51060e8"
     },
     {
+      "path": "tester/docs/scenarios/MM/MM-TS-013.md",
+      "sha256": "f2c41b734c4259482affe0b46580e3455b77ae2a0b9a081f4ef46c2945440369"
+    },
+    {
+      "path": "tester/docs/scenarios/MM/MM-TS-014.md",
+      "sha256": "5cc0c11eb4a0e8491cbea0496820288d62f979b6206ac83185b76468c93822d9"
+    },
+    {
       "path": "tester/docs/scenarios/SD/.gitkeep",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -1719,6 +1731,14 @@
       "sha256": "72747a2e6954dac6b7c85329609d5b138341e85a59fa85f7a8bf34c89e498b15"
     },
     {
+      "path": "tester/docs/scenarios/SD/SD-TS-013.md",
+      "sha256": "1b0cac77b6a439a0c327442928d329ddc4f90b8c31cb1a35370f6483b9c958fd"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-014.md",
+      "sha256": "0ea13f26beba1d5c1a6cd5fdc32659a2a05aa005af267c4044930cbd02a83e03"
+    },
+    {
       "path": "tester/harness/tasks/TASK-TESTER-001.json",
       "sha256": "0caab432926d21233c2497b120636e51b5051501fc673df2e3f45da40580f7c2"
     },
@@ -1765,6 +1785,14 @@
     {
       "path": "tester/harness/tasks/TASK-TESTER-012.json",
       "sha256": "c456b28a0ed7660037e3fa5b9f74048ec7f88f5ac145be8cfd4c612dd82c2314"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-013.json",
+      "sha256": "7d4f71b65dc47e16a1bc077c8be2e58f2ab6cdf919ce21092acf24aed3329590"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-014.json",
+      "sha256": "09a8bad23610e1d4c033e03ed85243e0c70467d9d028c9800ebd4afd7cde30e8"
     },
     {
       "path": "tester/src/.gitkeep",

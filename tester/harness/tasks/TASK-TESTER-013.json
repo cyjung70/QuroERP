@@ -1,0 +1,60 @@
+{
+  "id": "TASK-TESTER-013",
+  "project": "tester",
+  "title": "MM 마스터 입력 검사 테스트: 품목·세트 구성·대체 품목·바코드·이미지, 예외 입고 줄 파일, 지급 줄 수정, 공급자",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-013.md",
+    "tester/docs/scenarios/MM/MM-TS-014.md"
+  ],
+  "rules": [
+    "MM-BR-209",
+    "MM-BR-210",
+    "MM-BR-804",
+    "MM-BR-806",
+    "MM-BR-811",
+    "MM-BR-812",
+    "MM-BR-813",
+    "MM-BR-814",
+    "MM-BR-816",
+    "MM-BR-817",
+    "MM-BR-821",
+    "MM-BR-822",
+    "MM-BR-856",
+    "MM-BR-857",
+    "MM-BR-956",
+    "SD-BR-501",
+    "SD-BR-502",
+    "SD-BR-503",
+    "SD-BR-504"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-BC-017",
+    "TASK-BC-019",
+    "TASK-BC-021",
+    "TASK-BC-023",
+    "TASK-BC-025",
+    "TASK-BC-037",
+    "TASK-MM-001",
+    "TASK-MM-007",
+    "TASK-MM-009",
+    "TASK-MM-030",
+    "TASK-MM-035"
+  ],
+  "acceptance": [
+    "tests/api/MM/test_item_master_integrity.py: MM-TS-013. 이미지 파일 3개(JPEG 약 20KB·2KB, 확장자만 jpg인 PNG)는 tests/data/에 두고 공개 가능한 직접 만든 이미지만 쓴다",
+    "tests/api/MM/test_line_upload_vendor.py: MM-TS-014",
+    "batch 저장 오류 단계는 한 행도 저장되지 않았는지 조회로 확인한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k \"item_master_integrity or line_upload_vendor\" 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
