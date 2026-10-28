@@ -23,7 +23,10 @@
 | 대문자 변환 | AS IS `tag` 셋째 자리 `U`/`L` → 입력 컴포넌트 `TextCase` |
 | 변경 감지 | 저장하지 않은 변경이 있으면 조회·신규·화면 이동 전에 확인 대화상자 |
 | 그리드 행 상태 | 행마다 신규(I)·수정(U)·삭제(D) 상태를 두고, 저장 때 변경 행만 보낸다 |
-| 팝업 | AS IS 팝업 JSP는 대화상자 컴포넌트 (`QuroLookupDialog<T>`: 품목·고객·공급자·문서 찾기) |
+| 행 되돌리기 | 수정한 조회 행에 되돌리기 버튼이 있다. 조회 때 값으로 돌아간다. 신규 행은 행 삭제로 지운다 |
+| 팝업 | AS IS 팝업 JSP는 대화상자 컴포넌트 `QuroLookupDialog<TItem>`(품목·고객·공급자·문서 찾기): 검색어 조회 → 행 선택. 열 때마다 전체 목록부터 보여 주고, 선택한 행이 무엇을 채울지는 화면이 정한다. 코드 입력 칸 옆 찾기 버튼으로 연다 |
+| 표시용 합계 | SM은 `LineSummary`로 헤더 아래에 상세 합계(삭제 표시 행 제외)를 보여 준다. 표시만 하고 저장 값은 API가 계산·반올림한다 |
+| 여러 줄 입력 | 메모 필드는 `QuroText`의 `Rows`(2 이상) |
 | 메시지 | 리소스 키로 표시 (`i18n.md`). 서버 오류는 ProblemDetails의 `code`로 메시지를 찾는다 |
 
 ## 유형별 저장 API 형태
@@ -39,3 +42,15 @@
 
 - `src/QuroErp.Web/Pages/<Module>/<Feature>.razor` (예: `Pages/Sd/SalesOrder.razor`)
 - 메뉴 경로: `/<module>/<feature-kebab>` (예: `/sd/sales-order`)
+
+## 샘플 화면 (개발 환경 전용)
+
+화면유형 공통 컴포넌트의 동작 예시다. 메모리 데이터를 쓰고 Development 환경에서만 열린다. 실제 화면은 Contracts API 클라이언트로 읽고 쓴다.
+
+| 경로 | 유형 | 보여 주는 것 |
+| --- | --- | --- |
+| `/samples/single` | S | 조회·신규·저장·삭제, `LockMode`, `TextCase`, 필수 검사 |
+| `/samples/multi` | M | 행 상태(I/U/D), 일괄 저장, 엑셀 내보내기 |
+| `/samples/header-detail` | SM | 헤더·상세 함께 저장 (최소 예) |
+| `/samples/po-entry` | SM | 구매오더 등록 예: 공급자·품목 찾기 대화상자, 코드 입력 시 이름 채우기, 표시용 합계, 행 되돌리기, 여러 줄 입력 |
+| `/samples/master-detail` | MM | 목록 선택 → 대상 편집·저장 |

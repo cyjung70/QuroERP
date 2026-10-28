@@ -37,8 +37,11 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
 3. 명세 "화면 필드" 표대로 입력 컴포넌트를 배치한다.
    - 필수 → `Required`, 잠김 상태 → `LockMode` (`NewOnly`, `Always`, `AfterLoad`), 대·소문자 → `TextCase`
    - 코드 필드 → `<QuroCodeSelect Major="..." />` (값은 `minor_code`)
-   - 고객·품목·공급자 → `<QuroLookup Kind="Customer" />` 대화상자
-4. 라벨·제목·메시지는 모두 `L["Sd.SalesOrder.SoDt"]` 형식 리소스 키. `en`(기본), `ko`, `sw` 세 `.resx`에 모두 넣는다 (`sw`는 초안이면 `[review]` 주석). 금액·단가·수량 입력 칸 자릿수는 `GET /api/bc/localization` 값으로 정한다.
+   - 고객·품목·공급자 → 코드 입력(`QuroText`) 옆 찾기 버튼 + `QuroLookupDialog<TItem>` (검색어 조회 → 행 선택, 선택한 행이 무엇을 채울지는 화면이 정한다). 코드를 직접 입력하면 `@bind-Value:after`로 이름을 채운다
+   - 메모 필드 → `QuroText Rows="3"` (여러 줄)
+   - SM 표시용 합계 → `QuroHeaderDetail`의 `LineSummary` (삭제 표시 행을 뺀 상세 행을 받는다). 표시만 하고 저장 값은 API가 계산·반올림한다
+   - 수정한 조회 행 되돌리기(Undo Row)는 그리드가 기본으로 준다. 화면에서 따로 만들지 않는다
+4. 라벨·제목·메시지는 모두 `L["Sd.SalesOrder.SoDt"]` 형식 리소스 키. `ko`(`SharedResource.resx`, 기본)와 `en`(`SharedResource.en.resx`) 두 파일에 모두 넣는다. 금액·단가·수량 입력 칸 자릿수는 `GET /api/bc/localization` 값으로 정한다.
 5. 데이터는 `Contracts`의 API 클라이언트 인터페이스로만 읽고 쓴다.
 6. 서버 오류(ProblemDetails `code`)는 `QuroMessage.ShowAsync(code, args)`로 표시한다.
 7. 메뉴 경로 `/<module>/<feature-kebab>`를 `@page`로 둔다.
@@ -51,25 +54,48 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
 ## 코드 예시
 
 ```razor
-@page "/sd/sales-order"
-@inject ISalesOrderApi Api
+@page "/mm/purchase-order"
+@inject IPurchaseOrderApi Api
 @inject IStringLocalizer<SharedResource> L
 
-<QuroHeaderDetail THeader="SalesOrderDto" TLine="SalesOrderLineDto"
-                  Title="@L["Sd.SalesOrder.Title"]"
-                  Load="id => Api.GetAsync(id)" Save="Api.SaveAsync" Delete="Api.DeleteAsync">
-    <Header Context="h">
-        <QuroText Label="@L["Sd.SalesOrder.SoNo"]" @bind-Value="h.SoNo" LockMode="LockMode.Always" />
-        <QuroLookup Kind="LookupKind.Customer" Label="@L["Sd.SalesOrder.Customer"]" @bind-Value="h.CustomerId" Required />
-        <QuroDate Label="@L["Sd.SalesOrder.SoDt"]" @bind-Value="h.SoDt" Required TestId="sales-order-header-so-dt" />
-        <QuroCodeSelect Major="SHIPMENT_VIA" Label="@L["Sd.SalesOrder.ShipVia"]" @bind-Value="h.ShipVia" />
-    </Header>
-    <Columns>
-        <QuroColumn Field="ItemId" Title="@L["Sd.SalesOrder.Item"]" Editor="LookupKind.Item" />
-        <QuroColumn Field="SoQty" Title="@L["Sd.SalesOrder.SoQty"]" Format="N2" />
-    </Columns>
+<QuroHeaderDetail THeader="PurchaseOrderDto" TLine="PurchaseOrderLineDto" Title="@L["Mm.PurchaseOrder.Title"]" TestId="purchase-order"
+                  Load="() => Api.FindAsync(_poNo)" Create="() => new()" CreateLine="() => new()"
+                  Save="Api.SaveAsync" Delete="po => Api.DeleteAsync(po.Id)">
+    <SearchContent>
+        <QuroText Label="@L["Mm.PurchaseOrder.PoNo"]" @bind-Value="_poNo" TextCase="TextCase.Upper" TestId="purchase-order-search-po-no" />
+    </SearchContent>
+    <HeaderFields Context="po">
+        <QuroText Label="@L["Mm.PurchaseOrder.PoNo"]" @bind-Value="po.PoNo" LockMode="LockMode.Always" TestId="purchase-order-header-po-no" />
+        <QuroDate Label="@L["Mm.PurchaseOrder.PoDt"]" @bind-Value="po.PoDt" Required TestId="purchase-order-header-po-dt" />
+        <div class="quro-lookup-field">
+            <QuroText Label="@L["Mm.PurchaseOrder.Vendor"]" @bind-Value="po.VendorCode" Required TestId="purchase-order-header-vendor-code" />
+            <button type="button" aria-label="@L["Mm.PurchaseOrder.FindVendor"]" @onclick="() => OpenVendorLookup(po)">…</button>
+        </div>
+        <QuroText Label="@L["Mm.PurchaseOrder.Remarks"]" @bind-Value="po.Remarks" Rows="3" TestId="purchase-order-header-remarks" />
+    </HeaderFields>
+    <LineSummary Context="lines">
+        <QuroText Label="@L["Mm.PurchaseOrder.TotalAmt"]" Value="@lines.Sum(l => l.Amount).ToString("N2")" LockMode="LockMode.Always" />
+    </LineSummary>
+    <LineColumns>
+        <QuroColumn TRow="PurchaseOrderLineDto" Title="@L["Mm.PurchaseOrder.Item"]" Value="l => l.ItemCode" Context="line">
+            <QuroText Label="@L["Mm.PurchaseOrder.Item"]" HideLabel @bind-Value="line.ItemCode" Required TestId="purchase-order-line-item-code" />
+        </QuroColumn>
+        <QuroColumn TRow="PurchaseOrderLineDto" Title="@L["Mm.PurchaseOrder.PoQty"]" Value="l => l.PoQty" Format="N2" Context="line">
+            <QuroNumber Label="@L["Mm.PurchaseOrder.PoQty"]" HideLabel @bind-Value="line.PoQty" Required TestId="purchase-order-line-po-qty" />
+        </QuroColumn>
+    </LineColumns>
 </QuroHeaderDetail>
+
+<QuroLookupDialog TItem="VendorLookupDto" Title="@L["Mm.PurchaseOrder.FindVendor"]" TestId="purchase-order-vendor-lookup"
+                  @bind-Visible="_vendorLookupOpen" Search="Api.FindVendorsAsync" OnSelected="SelectVendor">
+    <Columns>
+        <QuroColumn TRow="VendorLookupDto" Title="@L["Common.Code"]" Value="v => v.VendorCode" />
+        <QuroColumn TRow="VendorLookupDto" Title="@L["Common.Name"]" Value="v => v.VendorName" />
+    </Columns>
+</QuroLookupDialog>
 ```
+
+동작하는 전체 예제: QuroERP `src/QuroErp.Web/Components/Pages/Samples/SamplePoEntry.razor` (`/samples/po-entry`, 개발 환경 전용).
 
 ## 금지 사항
 
@@ -83,7 +109,7 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
 
 - [ ] 명세의 화면유형과 같은 공통 컴포넌트를 썼다
 - [ ] 명세 "화면 필드"의 필수·잠김·코드 속성을 모두 반영했다
-- [ ] 모든 문자열이 리소스 키이고 en·ko·sw가 모두 있다
+- [ ] 모든 문자열이 리소스 키이고 ko·en이 모두 있다
 - [ ] 금액·단가·수량 자릿수를 하드코딩하지 않았다
 - [ ] 저장하지 않은 변경 확인이 동작한다
 - [ ] 권한 없는 사용자는 메뉴·버튼이 보이지 않는다
