@@ -1,0 +1,58 @@
+{
+  "id": "TASK-TESTER-005",
+  "project": "tester",
+  "title": "SD 지역화 테스트: 미국 Sales Tax, 한국 VAT·세금계산서, 외화 송장·입금",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-006.md",
+    "tester/docs/scenarios/SD/SD-TS-007.md",
+    "tester/docs/scenarios/SD/SD-TS-008.md"
+  ],
+  "rules": [
+    "BC-BR-412",
+    "BC-BR-413",
+    "BC-BR-414",
+    "BC-BR-421",
+    "BC-BR-423",
+    "BC-BR-513",
+    "BC-BR-525",
+    "BC-BR-541",
+    "BC-BR-542",
+    "BC-BR-543",
+    "BC-BR-545",
+    "BC-BR-547",
+    "SD-BR-032",
+    "SD-BR-131",
+    "SD-BR-132",
+    "SD-BR-133",
+    "SD-BR-134",
+    "SD-BR-721",
+    "SD-BR-722"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-004",
+    "TASK-CORE-014",
+    "TASK-CORE-015",
+    "TASK-BC-047",
+    "TASK-BC-051",
+    "TASK-BC-053",
+    "TASK-BC-055",
+    "TASK-BC-057"
+  ],
+  "acceptance": [
+    "tests/scenario/SD/test_us_sales_tax.py: SD-TS-006, country(\"US\")",
+    "tests/scenario/SD/test_kr_vat.py: SD-TS-007, country(\"KR\"), 세금 계산 단위를 바꾸는 단계는 serial이고 끝나면 DOCUMENT로 되돌린다",
+    "tests/scenario/SD/test_foreign_currency.py: SD-TS-008, country(\"US\")",
+    "기대 세액·합계·환율 차이는 시나리오 문서 값을 상수로 쓰고 공식을 다시 계산하지 않는다",
+    "PDF 단계는 상태 코드와 Content-Type만 본다",
+    "uv run pytest -k SD 통과 (QURO_COUNTRY=US, KR 각각 — 다른 국가 테스트는 skipped), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

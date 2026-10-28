@@ -25,7 +25,7 @@ $required = @(
   'scripts/generate-harness.ps1', 'scripts/validate-harness.ps1', 'src', 'tests',
   'docs/architecture/subprojects.md',
   'tester/AGENTS.md', 'tester/CLAUDE.md', 'tester/docs/INDEX.md', 'tester/docs/architecture.md',
-  'tester/docs/scenarios/MM', 'tester/docs/scenarios/SD', 'tester/docs/scenarios/migration',
+  'tester/docs/scenarios/BC', 'tester/docs/scenarios/MM', 'tester/docs/scenarios/SD', 'tester/docs/scenarios/migration',
   'tester/docs/qa/test-plan.md', 'tester/docs/qa/defects.md', 'tester/docs/qa/quality-gate.md', 'tester/docs/qa/uat-checklist.md',
   'tester/harness/tasks', 'tester/src', 'tester/tests',
   'game-academy/AGENTS.md', 'game-academy/CLAUDE.md', 'game-academy/docs/INDEX.md', 'game-academy/docs/architecture.md',

@@ -17,7 +17,8 @@
   ],
   "acceptance": [
     "tester/pyproject.toml(Python 3.12+, pytest, httpx, playwright, psycopg[binary], pytest-html, pytest-xdist, ruff)과 uv.lock",
-    "pytest 마커 등록: api, e2e, scenario, migration, serial, br, ts (--strict-markers, xfail_strict = true)",
+    "pytest 마커 등록: api, e2e, scenario, migration, serial, br, ts, country (--strict-markers, xfail_strict = true)",
+    "QURO_COUNTRY(US·KR)와 GET /api/bc/localization 국가가 다르면 실행을 멈추고, country 마커가 다른 테스트는 건너뛴다 (tester/docs/architecture.md \"국가\")",
     "settings·db·api·lang·error_lang·run_id fixture (tester/docs/architecture.md)",
     "DB 이름이 _test로 끝나지 않거나 연결이 읽기 전용이 아니면 실행을 멈춘다",
     "api fixture는 세션마다 한 번 로그인하고 Bearer 토큰을 붙인다",

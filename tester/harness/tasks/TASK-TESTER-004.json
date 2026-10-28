@@ -1,0 +1,78 @@
+{
+  "id": "TASK-TESTER-004",
+  "project": "tester",
+  "title": "SD 수주 → 송장 → 입금·Credit Memo 흐름과 Void·수정 차단 테스트 (국가 공통)",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-001.md",
+    "tester/docs/scenarios/SD/SD-TS-002.md",
+    "tester/docs/scenarios/SD/SD-TS-003.md",
+    "tester/docs/scenarios/SD/SD-TS-004.md",
+    "tester/docs/scenarios/SD/SD-TS-005.md"
+  ],
+  "rules": [
+    "SD-BR-003",
+    "SD-BR-005",
+    "SD-BR-006",
+    "SD-BR-007",
+    "SD-BR-012",
+    "SD-BR-102",
+    "SD-BR-104",
+    "SD-BR-105",
+    "SD-BR-106",
+    "SD-BR-107",
+    "SD-BR-108",
+    "SD-BR-109",
+    "SD-BR-110",
+    "SD-BR-111",
+    "SD-BR-112",
+    "SD-BR-113",
+    "SD-BR-135",
+    "SD-BR-201",
+    "SD-BR-203",
+    "SD-BR-205",
+    "SD-BR-209",
+    "SD-BR-251",
+    "SD-BR-252",
+    "SD-BR-253",
+    "SD-BR-256",
+    "SD-BR-261",
+    "SD-BR-406",
+    "SD-BR-701",
+    "SD-BR-705",
+    "SD-BR-707",
+    "SD-BR-709",
+    "SD-BR-711",
+    "SD-BR-712",
+    "MM-BR-007",
+    "MM-BR-601"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-SD-001",
+    "TASK-SD-003",
+    "TASK-SD-005",
+    "TASK-SD-007",
+    "TASK-SD-035",
+    "TASK-SD-037",
+    "TASK-BC-025",
+    "TASK-CORE-011"
+  ],
+  "acceptance": [
+    "tests/scenario/SD/test_order_to_invoice.py: SD-TS-001, SD-TS-003",
+    "tests/api/SD/test_invoice_locks.py: SD-TS-002 (오류 단계 error_lang)",
+    "tests/scenario/SD/test_receipt_and_credit.py: SD-TS-004, SD-TS-005",
+    "country 마커 없음 — 거래처 세금 코드 NONE, 정수 단가로 US·KR 두 DB에서 같은 결과",
+    "사전 데이터 fixture는 tests/scenario/SD/conftest.py, 업무 키에 run_id",
+    "재고·잔액 검증은 db fixture SELECT로만 한다",
+    "uv run pytest -m \"scenario or api\" -k SD 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

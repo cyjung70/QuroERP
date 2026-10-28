@@ -1,0 +1,51 @@
+{
+  "id": "TASK-TESTER-006",
+  "project": "tester",
+  "title": "이관 검증 테스트: 건수·빈 테이블, 코드 변환, 회사·환율·마감 기준 월, 사용자·메뉴·로그인 이력·시퀀스",
+  "module": "CORE",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/migration/MG-TS-001.md",
+    "tester/docs/scenarios/migration/MG-TS-002.md",
+    "tester/docs/scenarios/migration/MG-TS-003.md",
+    "tester/docs/scenarios/migration/MG-TS-004.md"
+  ],
+  "rules": [
+    "BC-BR-009",
+    "BC-BR-016",
+    "BC-BR-121",
+    "BC-BR-123",
+    "BC-BR-301",
+    "BC-BR-312",
+    "BC-BR-313",
+    "BC-BR-314",
+    "BC-BR-404",
+    "BC-BR-411",
+    "MM-BR-003",
+    "MM-BR-004",
+    "MM-BR-702",
+    "SD-BR-404",
+    "SD-BR-909"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-001",
+    "TASK-CORE-014",
+    "TASK-BC-047",
+    "TASK-MM-009"
+  ],
+  "acceptance": [
+    "tests/migration/test_counts.py: MG-TS-001, tests/migration/test_codes.py: MG-TS-002, tests/migration/test_company_rates.py: MG-TS-003, tests/migration/test_users_menus.py: MG-TS-004",
+    "모든 테스트에 migration 마커와 country(\"US\")",
+    "기대 건수·합계는 시나리오 문서 값을 상수로 쓴다",
+    "사용자 ID·비밀번호 해시·IP 값을 assert 메시지·로그·리포트에 쓰지 않는다 (건수와 형식만)",
+    "MG-TS-003 5단계 외에는 db fixture SELECT만 쓴다",
+    "이관 검증 DB에서 uv run pytest -m migration 통과, uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

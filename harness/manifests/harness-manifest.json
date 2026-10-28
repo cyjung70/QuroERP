@@ -28,7 +28,7 @@
     },
     {
       "path": ".agents/skills/quro-pytest/SKILL.md",
-      "sha256": "b5c092f060e3283fd577ddba466ad58bba9c2434833c0d0341cf77ad7c5968ba"
+      "sha256": "dd4432f955087b9ea5596fa02d73e8eda031f550b7bb4d45ee82aa2c79501bdc"
     },
     {
       "path": ".agents/skills/quro-unit-test/SKILL.md",
@@ -60,7 +60,7 @@
     },
     {
       "path": ".claude/skills/quro-pytest/SKILL.md",
-      "sha256": "b5c092f060e3283fd577ddba466ad58bba9c2434833c0d0341cf77ad7c5968ba"
+      "sha256": "dd4432f955087b9ea5596fa02d73e8eda031f550b7bb4d45ee82aa2c79501bdc"
     },
     {
       "path": ".claude/skills/quro-unit-test/SKILL.md",
@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/architecture/qurogrid-integration.md",
-      "sha256": "00bb32232aa406cf5b7392de284790ea48905530c70b01504ce60edded103f02"
+      "sha256": "22610eb3360f8ec60a00e8c7a2d8ff9241a619bb70e68facc0eada777d2460ce"
     },
     {
       "path": "docs/architecture/reports.md",
@@ -140,23 +140,23 @@
     },
     {
       "path": "docs/business-rules/BC/auth.md",
-      "sha256": "e48c7ef9e5ca6988cab5195b27c7f147a77687c149f4cc627ebba780bc332b1f"
+      "sha256": "240ab9cdbefc9d319074fe18b03772ee941017f44ef5c9eb0c47b0255803f46d"
     },
     {
       "path": "docs/business-rules/BC/company.md",
-      "sha256": "e3a8bf2476beb7a48f7c630fdf0c5ba972ec902d9b88db971f3ad346f2cfcff7"
+      "sha256": "8e8c46208394754f992db9d6f43742083fa9ff786ad25a9a863ff9119aecf7cb"
     },
     {
       "path": "docs/business-rules/BC/localization.md",
-      "sha256": "b76bbb29ef72f89519565547d1d0404fe549a1cede6a3cf900652ac35731270b"
+      "sha256": "0d0e10b93e1eb2600c59a33885b097fb07c5418f6c9311bfbbec2237c51313c7"
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
-      "sha256": "3ef8457984e745e19a16498d9b159c76ddbe658ea9e69424997fa5694a0a6487"
+      "sha256": "caf01c20cfb217a2b46862b3566f7c3a7a882bc0e80561cba48f3d44970d777b"
     },
     {
       "path": "docs/business-rules/BC/password.md",
-      "sha256": "ced9fe8f0118a4cb4f809f4e850ac1d121dbe58f37fdcc0bf2ee1ad3355522c7"
+      "sha256": "69a85d4e1142eb28b4411dc6640844ce03ada16ea01249e332cb0bd23721a3fc"
     },
     {
       "path": "docs/business-rules/BC/README.md",
@@ -164,11 +164,11 @@
     },
     {
       "path": "docs/business-rules/BC/tax.md",
-      "sha256": "5f4d8d34917b2ac2df55597ebd889c7c91d9a39255a60ede370c79e31316d673"
+      "sha256": "55186a129aa820872437b24cc01cc421325ded3ec192e27b67b37c40932a223a"
     },
     {
       "path": "docs/business-rules/BC/user.md",
-      "sha256": "1d049399ddf81719024d0f4bfc02d20189f2e2e20724d5c3fc0ce47307921aef"
+      "sha256": "9dcd546cf44c45b7f0c169f0e32542acfa98af95059a929154c6eb5052bcd574"
     },
     {
       "path": "docs/business-rules/CO/README.md",
@@ -188,11 +188,11 @@
     },
     {
       "path": "docs/business-rules/MM/closing.md",
-      "sha256": "30f31ce3038efb68cd4b40d41c6c8b84bddfb99263f28e77b059668f5a35e509"
+      "sha256": "9ec14f16731fceb757971256292b111e8b1401dae31c6b9dfe1d8a8d88f68ba6"
     },
     {
       "path": "docs/business-rules/MM/goods-receipt.md",
-      "sha256": "61630eda086c520d7ce8670c297eb6ba547d980d99807652782ddd4211f27268"
+      "sha256": "4bc45c0706a5304b2280095c250747c1126ccf195f5ba99bee317c4506a8982d"
     },
     {
       "path": "docs/business-rules/MM/inventory-report.md",
@@ -200,7 +200,7 @@
     },
     {
       "path": "docs/business-rules/MM/inventory.md",
-      "sha256": "d1495e6b49ab97ac3212a07179bbf6a7dad74c08147f8df75185e78cbc3eb465"
+      "sha256": "f480e8a7eb51de74beb184896059c6a87c08cc5eaa3f5c9c6be034a4cc421287"
     },
     {
       "path": "docs/business-rules/MM/item.md",
@@ -208,11 +208,11 @@
     },
     {
       "path": "docs/business-rules/MM/ledger.md",
-      "sha256": "4c6380ec38ace4327e7efce95acdff5936788c4f83bd1f2f9b878d8b6c155f80"
+      "sha256": "e6e831fbdf6e6fede299be329d28f9f91a5bb09c322b434f459bab50ebe672f8"
     },
     {
       "path": "docs/business-rules/MM/purchase-order.md",
-      "sha256": "ee0f00b0e449e4effe202442b87c5a9c67535f343e2296c3af82cfdd7b040578"
+      "sha256": "fd46a8f40312389819b2e4cc59a12f26e4e8dd8fbb3ab32e1eac1e065497d01b"
     },
     {
       "path": "docs/business-rules/MM/purchase-price.md",
@@ -240,7 +240,7 @@
     },
     {
       "path": "docs/business-rules/MM/warehouse.md",
-      "sha256": "45cddfd847e8036a554a101f1c7cdfec3d22574bebb3f54c7fbcc5e8a0208a30"
+      "sha256": "b73894741cb48b029fc08581d04b3b98421ea57fb61cac8f85619f54af0e0d1f"
     },
     {
       "path": "docs/business-rules/PP/README.md",
@@ -248,7 +248,7 @@
     },
     {
       "path": "docs/business-rules/SD/ar-receipt.md",
-      "sha256": "81b99faed629cb90d692cc0e0e63152596e3a97715e0efca674544ac7dfa1541"
+      "sha256": "0c3e59f46385b26b292ab23b65fd6d74178892d853215f6d8dbfd3327e7119f8"
     },
     {
       "path": "docs/business-rules/SD/ar-report.md",
@@ -260,11 +260,11 @@
     },
     {
       "path": "docs/business-rules/SD/credit-apply.md",
-      "sha256": "69da6436bd269f3ba7d5716f5cf5f6b60e02098b654793310c362983ae958c15"
+      "sha256": "79f7e314473d9484a4651ecdf392a4613381c45516dc9c7af300e6f60a52a9ff"
     },
     {
       "path": "docs/business-rules/SD/credit-memo.md",
-      "sha256": "5f3a9e8223f6b253b2fd61f4c52436406a4c5b2f7a50b81c8e57350584dea7de"
+      "sha256": "ecaad3bf1d086fde7bb8abfe6149ce7e1e57e3bf7353ac8e833cd08d8a243366"
     },
     {
       "path": "docs/business-rules/SD/customer.md",
@@ -272,11 +272,11 @@
     },
     {
       "path": "docs/business-rules/SD/master-data.md",
-      "sha256": "94c8fb9744d187ea7eaf5bf66f9e04b967d1dd5e09c66e75612ccd7ef27aaecd"
+      "sha256": "6d499bfce4b8fe2856bf1f945e605fe95fec2f9f7fad1585a135c681d273353e"
     },
     {
       "path": "docs/business-rules/SD/pricing.md",
-      "sha256": "73239388c6fc4892cfced73b6cc60074177fd5ddd03c021560e2e230875f989d"
+      "sha256": "92e15f17de78b1627f7b4060783395e61ac7e8a404cda297edf732a5c51fc8ce"
     },
     {
       "path": "docs/business-rules/SD/README.md",
@@ -284,11 +284,11 @@
     },
     {
       "path": "docs/business-rules/SD/sales-invoice.md",
-      "sha256": "0692f3e0459c43fa5e4f8c1b58b29c689a80013c0790b0c0bc2306c289cac38b"
+      "sha256": "cc83a54d83131669ca3c3e4ba2ae4cb1e5f4f5716b5948b75f73c57c5328897d"
     },
     {
       "path": "docs/business-rules/SD/sales-order.md",
-      "sha256": "1d5e3aac7453034a5dfcef4a6c17c878944ec0509e6e4ffbb93630a07c2c15fa"
+      "sha256": "6b43ec51039b89da0146a97102b69781c3ed9909fcca5b7201aa8e295bf403f4"
     },
     {
       "path": "docs/business-rules/SD/sales-report.md",
@@ -436,7 +436,7 @@
     },
     {
       "path": "docs/specifications/MM/inventory-closing.md",
-      "sha256": "c855fd7cab45e8a0c79307e7f430194cfc52f3dc1cc9a2bcc143cf194550a144"
+      "sha256": "48ce401d3d706c99273928d8d879e969c8ab7208f282c240d6eb279eb0a7cb95"
     },
     {
       "path": "docs/specifications/MM/purchase-order.md",
@@ -552,7 +552,7 @@
     },
     {
       "path": "docs/specifications/SD/credit-memo.md",
-      "sha256": "9d84c2754037974601fae8f02478029df91fdd04681290d8ac7f959ef4493c77"
+      "sha256": "d862d5387a88e8efb8ec2e5f0c352aa0b30111627ec69099b19d6b051e527bb4"
     },
     {
       "path": "docs/specifications/SD/customer-upload.md",
@@ -720,7 +720,7 @@
     },
     {
       "path": "docs/specifications/SD/sales-invoice.md",
-      "sha256": "c40f3e89a9dbb33668dcc1e4c2d61647df82d100db24a7cc81d2ba0c7ecab930"
+      "sha256": "bb9bd042ec626cc49e85dec4a98124e4c142febfa970ecfb0e3be5904555c4c4"
     },
     {
       "path": "docs/specifications/SD/sales-order-barcode-upload.md",
@@ -1520,7 +1520,7 @@
     },
     {
       "path": "scripts/validate-harness.ps1",
-      "sha256": "e65959bdfdb8a9c84134fe3a23eb23155ab594e73dd6e32b7ec73652d13a5f9b"
+      "sha256": "cd4d20951e22f51924438268c48b4f14aa0e3c54c02f536b0ab1e85d2e5d19e6"
     },
     {
       "path": "src/.gitkeep",
@@ -1528,7 +1528,7 @@
     },
     {
       "path": "tester/AGENTS.md",
-      "sha256": "395c8ced515a9894cff942dc5261f09f6f0eb299d2f9bf2538e1223424f49917"
+      "sha256": "75614981542f11637b81b2bd5801c703b62725d8fe46eb9e2fd796003c926845"
     },
     {
       "path": "tester/CLAUDE.md",
@@ -1536,11 +1536,11 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "3dd0095da356215c53d837f258637bba784ffa05e4f1afb307b765efda185c4b"
+      "sha256": "7fbc4d4aaa7e876a313ed91a4f5725dc706968d1ea26e52a4c6d3046a8e5a617"
     },
     {
       "path": "tester/docs/INDEX.md",
-      "sha256": "25e27d78c7a68b4d018a49f4fcadce703da02996282dd351c6514d4b0e7fc4e9"
+      "sha256": "c93cf3e785dacd50970295e18d11def6bcf57c35a3bd65faa7a42abdaa6d76b6"
     },
     {
       "path": "tester/docs/qa/defects.md",
@@ -1559,20 +1559,148 @@
       "sha256": "95e350a0ecccec964ece2009c2a944fe08d66a6c1fa240bdafdcb211aad12e32"
     },
     {
+      "path": "tester/docs/scenarios/BC/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tester/docs/scenarios/BC/BC-TS-001.md",
+      "sha256": "0c894585b448bd8340f65757b3bf760e6e7e4b7c175b3f908c7e54de410dced8"
+    },
+    {
+      "path": "tester/docs/scenarios/BC/BC-TS-002.md",
+      "sha256": "badbd412e927d3e0d6e3db2a57f3aec225883c3ca9b00557e388a26965879931"
+    },
+    {
+      "path": "tester/docs/scenarios/BC/BC-TS-003.md",
+      "sha256": "971c82bee7bb97c610b05aa029868ef0509c02611c3c0f21d1695d8e2b1aa466"
+    },
+    {
+      "path": "tester/docs/scenarios/BC/BC-TS-004.md",
+      "sha256": "5aa491585a3468e5d32d25bf559a3611d4eb96a815e91d01b5d59d277606c131"
+    },
+    {
       "path": "tester/docs/scenarios/migration/.gitkeep",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tester/docs/scenarios/migration/MG-TS-001.md",
+      "sha256": "d1bf13c96c93875c4366099a10c574f91db8073ca5e61f45ae5db8622976c5f5"
+    },
+    {
+      "path": "tester/docs/scenarios/migration/MG-TS-002.md",
+      "sha256": "32f9b0bbf3f4bdc0fa6ff307d27b17fa0681efc5bcf057a2192ab43c1cbf75fd"
+    },
+    {
+      "path": "tester/docs/scenarios/migration/MG-TS-003.md",
+      "sha256": "577faaba89e22aed82520c5f439c671b1a754645426ad8976f183f3ea7418cdb"
+    },
+    {
+      "path": "tester/docs/scenarios/migration/MG-TS-004.md",
+      "sha256": "9a78c8c1463c80ff35e41071f8bd04548e1e9eccd93cf980b3093d5b86805d72"
     },
     {
       "path": "tester/docs/scenarios/MM/.gitkeep",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
+      "path": "tester/docs/scenarios/MM/MM-TS-001.md",
+      "sha256": "6604ebd6134d6dab7a3d7814c718d8237da4c3118a098a6b1f99a2bbddb5a77b"
+    },
+    {
+      "path": "tester/docs/scenarios/MM/MM-TS-002.md",
+      "sha256": "b244d7212b0b0a64f29200d1eb2421e0c2f8f635b486ec4f4365913b24e1720e"
+    },
+    {
+      "path": "tester/docs/scenarios/MM/MM-TS-003.md",
+      "sha256": "cde7d0a0f89567cbb5b0ffbfaf1cd9e1c4e89a981d7dbfe0412c8b7ec886ca0a"
+    },
+    {
+      "path": "tester/docs/scenarios/MM/MM-TS-004.md",
+      "sha256": "e1cb3d8db0034660af2580afe9d3db09fadadd2412d3e1b153772a22e5fbabd7"
+    },
+    {
+      "path": "tester/docs/scenarios/MM/MM-TS-005.md",
+      "sha256": "236ece148bd6f8560558fedd555c143239091c811ec9c6a466328d61acd9da79"
+    },
+    {
+      "path": "tester/docs/scenarios/MM/MM-TS-006.md",
+      "sha256": "e6013e2cc657bd1713cc6ddf0d14338075d9991802fc298914c944e0fc53e692"
+    },
+    {
+      "path": "tester/docs/scenarios/MM/MM-TS-007.md",
+      "sha256": "f362a124b675470667312fc7a77d5152847b37477eb493591e42a9d741631f51"
+    },
+    {
+      "path": "tester/docs/scenarios/MM/MM-TS-008.md",
+      "sha256": "82ca6d715f24ae6f426a62f02e27fa52dec8909431e625ac5a9f070f5c343bd1"
+    },
+    {
       "path": "tester/docs/scenarios/SD/.gitkeep",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
+      "path": "tester/docs/scenarios/SD/SD-TS-001.md",
+      "sha256": "66eb83c3113a9f11426d12c7a630231f75738385fdd17d66426b3b79736beda6"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-002.md",
+      "sha256": "4534ef4e0b4c5e4b143033cf95977210defcae989202b656d67c857df0648041"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-003.md",
+      "sha256": "e2416ef85f7c55107240dba482928213c0fde26c20174bc84760271e063b4dc2"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-004.md",
+      "sha256": "0c1be9a872bb5209575538cd98831c79e04f635a98df3e4984d36317014a3da0"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-005.md",
+      "sha256": "0f4457a8a92ed1458c26718ac4422a3deea4aa33b142780b065a6b44330b1f41"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-006.md",
+      "sha256": "4eb01057d2334e483726f4cfa6982fc483dd724b01d553751ef61963cd38f91b"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-007.md",
+      "sha256": "f515f4bcc1f18acf75741285ea7fc212418909279cbc07359513591a9270553f"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-008.md",
+      "sha256": "6610bd3fe94f70977a3195e76ea3d4ceb16a5f30c920e38987cdfbc810fe386a"
+    },
+    {
       "path": "tester/harness/tasks/TASK-TESTER-001.json",
-      "sha256": "dd6fe6fc9206f1cb780ee3b3a0593e959ffad1d50670e116e0f5ac645a00ed6a"
+      "sha256": "0caab432926d21233c2497b120636e51b5051501fc673df2e3f45da40580f7c2"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-002.json",
+      "sha256": "f6735acad8c400d359b8b22b25627f36ba8c95d6f2ea578b9865c5af1ce02862"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-003.json",
+      "sha256": "1b12b3282d1ac2e6fc649c488051173988e869894a80facecc898204545ffbe0"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-004.json",
+      "sha256": "1ca0a3aced0abd37d96896ba097c59b96d1d9cec91857db136128cf29bad162b"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-005.json",
+      "sha256": "82ea8795e2fa7e2b41e04eb17e33af9ef3c5fe346d442af845dd20aa3e6912fc"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-006.json",
+      "sha256": "7d56bbc6ba24723fb49fad3c14bc8de8c55413c6aad4dd7ba2bf9b219d366f0e"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-007.json",
+      "sha256": "cba976a6d23e8164f8164cb75e4da53fbc7f09150aaae7b37736c1d5751b5d2e"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-008.json",
+      "sha256": "8d6da566c11747cc29b020c95470eb24a36a416ee015bc4f89adfd2dcffbddb6"
     },
     {
       "path": "tester/src/.gitkeep",

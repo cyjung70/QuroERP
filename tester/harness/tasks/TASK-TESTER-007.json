@@ -1,0 +1,43 @@
+{
+  "id": "TASK-TESTER-007",
+  "project": "tester",
+  "title": "MM 재고 월 마감·취소와 월말 음수 재고 마감 차단 테스트",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-007.md",
+    "tester/docs/scenarios/MM/MM-TS-008.md"
+  ],
+  "rules": [
+    "MM-BR-002",
+    "MM-BR-004",
+    "MM-BR-006",
+    "MM-BR-010",
+    "MM-BR-401",
+    "MM-BR-402",
+    "MM-BR-403",
+    "MM-BR-406",
+    "MM-BR-407",
+    "SD-BR-111"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-003",
+    "TASK-MM-015",
+    "TASK-SD-005"
+  ],
+  "acceptance": [
+    "inventory_closing fixture (tester/docs/architecture.md \"Fixture\"): 시작 때 마감한 달 없음 확인, 끝나면 취소",
+    "tests/scenario/MM/test_inventory_closing.py: MM-TS-007 (DENY), MM-TS-008 (ALLOW·ALLOW_IN_MONTH parametrize indirect)",
+    "모든 테스트에 serial 마커, 날짜는 실행일 기준 지난 달로 계산한다 (M-1/10 등)",
+    "MM-TS-008은 모드마다 품목 J를 새로 만들고 끝에 J의 M-1 월말 잔고를 0으로 정리한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -m serial -k closing 통과, uv run ruff check 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}
