@@ -4,11 +4,11 @@
   "files": [
     {
       "path": ".agents/skills/quro-api/SKILL.md",
-      "sha256": "2d31941c6f80afd7db339448881d97fd00f329a283b6f937635cb13c9f01d3f1"
+      "sha256": "eff7f783a166288b54b83ab6102b081d7ff23ce999d13a899c06c8667a6aa7ef"
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "e6e0fbc247cdc4ebb85199058668a5a5d2d127b338be9a20983a7dfb262ce412"
+      "sha256": "73db16384af5d66e44ba223e3d7f6e9b4185f6937d0eb456dcbb53489955ecbc"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
@@ -23,20 +23,24 @@
       "sha256": "41bbd96e415149ca6ea309e7920291f6e4db7ccd46f4b9242ab57588743c26bb"
     },
     {
+      "path": ".agents/skills/quro-grid/SKILL.md",
+      "sha256": "88dc56532c7b76cacdfd9ce21b700c69d99320c4fcbdcacf4f296ea664e2d8aa"
+    },
+    {
       "path": ".agents/skills/quro-pytest/SKILL.md",
       "sha256": "b5c092f060e3283fd577ddba466ad58bba9c2434833c0d0341cf77ad7c5968ba"
     },
     {
       "path": ".agents/skills/quro-unit-test/SKILL.md",
-      "sha256": "f3df585ee4dad23f3ffecaf8a6a81e09304220ca89e3c33869214e60166b0236"
+      "sha256": "70076d5a96b24a4219d8c9dbc3e0fd5658d62ced1b601fe96bc21ccdeb1243a4"
     },
     {
       "path": ".claude/skills/quro-api/SKILL.md",
-      "sha256": "2d31941c6f80afd7db339448881d97fd00f329a283b6f937635cb13c9f01d3f1"
+      "sha256": "eff7f783a166288b54b83ab6102b081d7ff23ce999d13a899c06c8667a6aa7ef"
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "e6e0fbc247cdc4ebb85199058668a5a5d2d127b338be9a20983a7dfb262ce412"
+      "sha256": "73db16384af5d66e44ba223e3d7f6e9b4185f6937d0eb456dcbb53489955ecbc"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
@@ -51,16 +55,20 @@
       "sha256": "41bbd96e415149ca6ea309e7920291f6e4db7ccd46f4b9242ab57588743c26bb"
     },
     {
+      "path": ".claude/skills/quro-grid/SKILL.md",
+      "sha256": "88dc56532c7b76cacdfd9ce21b700c69d99320c4fcbdcacf4f296ea664e2d8aa"
+    },
+    {
       "path": ".claude/skills/quro-pytest/SKILL.md",
       "sha256": "b5c092f060e3283fd577ddba466ad58bba9c2434833c0d0341cf77ad7c5968ba"
     },
     {
       "path": ".claude/skills/quro-unit-test/SKILL.md",
-      "sha256": "f3df585ee4dad23f3ffecaf8a6a81e09304220ca89e3c33869214e60166b0236"
+      "sha256": "70076d5a96b24a4219d8c9dbc3e0fd5658d62ced1b601fe96bc21ccdeb1243a4"
     },
     {
       "path": "AGENTS.md",
-      "sha256": "8c004816ab811efcef24e61336df7bf166928a745c8bf642939a724f3cd00cb2"
+      "sha256": "7171968458a5da7267ca402d25f785cb63c991ebf01ca6752ff8d17701716794"
     },
     {
       "path": "CLAUDE.md",
@@ -76,7 +84,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "a5c60a894c38a578ab29fd549d3718f1f9ae07a6a2bf957e181c3b1d357d185b"
+      "sha256": "d71478c531684fdd8344045e95d0d2b884703ab3346f9afa4f8660bf330e36e0"
     },
     {
       "path": "docs/architecture/database.md",
@@ -92,7 +100,7 @@
     },
     {
       "path": "docs/architecture/layers.md",
-      "sha256": "7e872aeb737f910b4e17135186bbb0404116efee123c1c23e0d1a7092efdbfba"
+      "sha256": "35da1a87ccdfd536747739cce42df9748cd565ce35119351b197411307904a89"
     },
     {
       "path": "docs/architecture/localization.md",
@@ -107,16 +115,20 @@
       "sha256": "6d63585200039a2ee769134fd7696686697f26aedd14b8ac8c323f0bf54b4b08"
     },
     {
+      "path": "docs/architecture/qurogrid-integration.md",
+      "sha256": "00bb32232aa406cf5b7392de284790ea48905530c70b01504ce60edded103f02"
+    },
+    {
       "path": "docs/architecture/reports.md",
       "sha256": "acab8d3b8368d4fa5d940a533d6f487ebe469e36a232709d6f556437ff0e81cb"
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "0694ba401819fde72f5a1766457f427098a35387c2f61db1f2197f24988d9519"
+      "sha256": "2e789f529b2a75a5f0d6de7956f824a68b0fde8dec7cc6f87ce40a0419472d17"
     },
     {
       "path": "docs/architecture/security.md",
-      "sha256": "e590bc782ab37b2c64de6cc356830059596655f238eaeac7f1bc893bfe33dbe4"
+      "sha256": "b96dcd249a888e056601055d9cd157825d766069b6508fb465fcf06f731b9b5d"
     },
     {
       "path": "docs/architecture/subprojects.md",
@@ -156,7 +168,7 @@
     },
     {
       "path": "docs/business-rules/BC/user.md",
-      "sha256": "31fb082c847403e93ec8513e4ed6f7a78c962c8a3fe8c938f8c87f4073dd1bd4"
+      "sha256": "1d049399ddf81719024d0f4bfc02d20189f2e2e20724d5c3fc0ce47307921aef"
     },
     {
       "path": "docs/business-rules/CO/README.md",
@@ -292,7 +304,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "f572ede64a4fad17ed6b21b9e32ee64555eaccbbd6c8a33787eaa7a2a377c071"
+      "sha256": "596c551e8acc112af8fdc88a170ff542a7cf9c90da2152c27437eaf312a854d9"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -1083,6 +1095,10 @@
       "sha256": "8be2e2b98e7c49e632f25cc8afa0fac268b3b3458e99ce9566cb8d8afde23b87"
     },
     {
+      "path": "harness/tasks/TASK-CORE-016.json",
+      "sha256": "8881f2c143cf31e54eb154ef12208a0a09ff913f7c12d840b992a659fd28e33c"
+    },
+    {
       "path": "harness/tasks/TASK-MM-001.json",
       "sha256": "b379abcbcb9833b9d82d0f80339be974796be26971d858700dc6e6bea2021635"
     },
@@ -1504,7 +1520,7 @@
     },
     {
       "path": "scripts/validate-harness.ps1",
-      "sha256": "49f7a3522c42049b5cc3954525eb564f6b3f1f8c9942a82b56af1f2ddcb15791"
+      "sha256": "e65959bdfdb8a9c84134fe3a23eb23155ab594e73dd6e32b7ec73652d13a5f9b"
     },
     {
       "path": "src/.gitkeep",
