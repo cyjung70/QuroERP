@@ -14,7 +14,7 @@
 | BC-BR-502 | 세금 종류(`tax_kind`)는 회사 국가에 맞는 값만 쓴다. US: `SALES_TAX`, `SALES_TAX_EXEMPT`, `NONE` / KR: `VAT_STANDARD`, `VAT_ZERO`, `VAT_EXEMPT`, `NONE` | 저장 | 저장 차단, 메시지 BC-E-502 | TO BE 신규 | BC-UT-502 |
 | BC-BR-503 | 세율: `VAT_STANDARD`는 입력한 세율(기본 10%), `SALES_TAX`는 세율 지역(`tax_area_id` 필수)의 세율, 그 밖의 종류는 0%다. 세율은 0 이상 100 미만, 소수 4자리다 | 저장 | 저장 차단, 메시지 BC-E-503 | TO BE 신규 | BC-UT-503 |
 | BC-BR-504 | 가격 포함(`price_included`)은 `VAT_STANDARD`만 고를 수 있다 | 저장 | 저장 차단, 메시지 BC-E-504 | TO BE 신규 | BC-UT-504 |
-| BC-BR-505 | 설치 때 국가별 기본 세금 코드를 넣는다. US: `EXEMPT`(면세), `NONE` / KR: `VAT10`(과세 10%), `VAT0`(영세율), `VATEX`(면세), `NONE`. `NONE`은 지우거나 사용 안 함으로 바꿀 수 없다 | 설치·저장 | 409, 메시지 BC-E-505 | TO BE 신규 | BC-UT-505, SD-TS-007 |
+| BC-BR-505 | 설치 때 국가별 기본 세금 코드를 넣는다. US: `EXEMPT`(면세), `NONE` / KR: `VAT10`(과세 10%), `VAT0`(영세율), `VATEX`(면세), `NONE`. `NONE`은 지우거나 사용 안 함으로 바꿀 수 없다 | 설치·저장 | 409, 메시지 BC-E-505 | TO BE 신규 | BC-UT-505, SD-TS-007, SD-TS-009 |
 | BC-BR-506 | 문서에 쓴 세금 코드는 지우지 않고 사용 안 함으로 바꾼다. 세율·종류는 바꿀 수 없다 (세율이 바뀌면 새 코드를 만든다). US 세율 변경은 세율 지역의 새 유효 행으로 한다 (BC-BR-512) | 저장·삭제 | 409, 메시지 BC-E-506 | TO BE 신규 | BC-UT-506 |
 | BC-BR-507 | 세금 코드·세율 지역·면세 증명서를 바꾸는 요청은 해당 메뉴의 Full Access 권한이 있어야 한다 (BC-BR-214) | 저장 | 403 | TO BE 신규 | BC-UT-507 |
 

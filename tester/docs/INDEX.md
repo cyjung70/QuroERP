@@ -48,6 +48,7 @@
 - [SD-TS-006 미국 Sales Tax — 세율 변경, 면세 품목, 면세 증명서](scenarios/SD/SD-TS-006.md)
 - [SD-TS-007 한국 VAT — 과세·영세율·면세 혼합 송장, 원 단위 배분, 세금계산서](scenarios/SD/SD-TS-007.md)
 - [SD-TS-008 외화 송장과 입금 — 기준 통화 금액, 환율 차이, 통화 불일치 차단](scenarios/SD/SD-TS-008.md)
+- [SD-TS-009 한국 회사의 USD 수출 송장과 입금 — 영세율, 원화 환산, 환율 차이](scenarios/SD/SD-TS-009.md)
 
 ## 이관 검증 시나리오
 
