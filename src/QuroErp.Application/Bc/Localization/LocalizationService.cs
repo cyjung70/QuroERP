@@ -10,7 +10,7 @@ public sealed class LocalizationService(
     ILocalizationRepository localization, TranslationService translations, IUnitOfWorkFactory unitOfWork)
 {
     /// <summary>
-    /// Reads the company country values, languages and currencies in use, and module decimals.
+    /// Reads the company country values, languages and currencies in use, country unit price decimals and module decimals.
     /// Without a company the US profile defaults apply [추정].
     /// </summary>
     /// <param name="langCode">Language for currency names.</param>
@@ -21,6 +21,7 @@ public sealed class LocalizationService(
         var languages = await localization.FindLanguagesAsync(uow.Transaction, cancellationToken);
         var currencies = (await localization.FindCurrenciesAsync(uow.Transaction, cancellationToken)).Where(c => c.UseYn).ToList();
         var decimals = await localization.FindDecimalSettingsAsync(uow.Transaction, cancellationToken);
+        var countryDecimals = await localization.FindCountryDecimalsAsync(uow.Transaction, cancellationToken);
         var names = await translations.GetNamesAsync(
             TranslationTarget.CurrencyName, currencies.Select(c => c.Id).ToList(), langCode, uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
@@ -34,7 +35,8 @@ public sealed class LocalizationService(
             profile.DateFormat,
             company?.TaxCalcMode ?? TaxCalcMode.Document,
             languages.Where(l => l.UseYn).Select(l => new LanguageDto(l.LangCode, l.SortOrder)).ToList(),
-            currencies.Select(c => new CurrencyDto(c.CurrencyCode, names.GetValueOrDefault(c.Id, c.CurrencyCode), c.Decimals)).ToList(),
-            decimals.Select(d => new DecimalSettingDto(d.Module, d.UnitPriceDecimals, d.QtyDecimals, d.RoundingMode)).ToList());
+            currencies.Select(c => new CurrencyDto(c.CurrencyCode, names.GetValueOrDefault(c.Id, c.CurrencyCode), c.Decimals, c.CountryCode)).ToList(),
+            countryDecimals.Select(d => new CountryDecimalDto(d.CountryCode, d.Module, d.UnitPriceDecimals)).ToList(),
+            decimals.Select(d => new DecimalSettingDto(d.Module, d.QtyDecimals, d.RoundingMode)).ToList());
     }
 }

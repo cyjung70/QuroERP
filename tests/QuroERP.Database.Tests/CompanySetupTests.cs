@@ -21,13 +21,13 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
 
         created.Should().BeTrue();
         Company().Should().Be(("Quro Korea", "KR", "KRW", "ko"));
-        Decimals().Should().Equal(("MM", 2, 2, "HALF_UP"), ("SD", 0, 0, "HALF_UP"));
+        Decimals().Should().Equal(("MM", 2, "HALF_UP"), ("SD", 0, "HALF_UP"));
 
         var updated = await CompanySetup.SetCountryAsync(_db.ConnectionString, "US", null, CancellationToken.None);
 
         updated.Should().BeFalse();
         Company().Should().Be(("Quro Korea", "US", "USD", "en"));
-        Decimals().Should().Equal(("MM", 4, 2, "HALF_UP"), ("SD", 2, 0, "HALF_UP"));
+        Decimals().Should().Equal(("MM", 2, "HALF_UP"), ("SD", 0, "HALF_UP"));
     }
 
     [DatabaseFact, Trait("Id", "CORE-014-IT-21")]
@@ -48,7 +48,7 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
             defaults.Should().BeEquivalentTo(new CountryDefaults(
                 profile.CountryCode, profile.BaseCurrencyCode, profile.DefaultLangCode,
                 profile.DefaultDecimalSettings
-                    .Select(s => new DecimalDefaults(s.Module, s.UnitPriceDecimals, s.QtyDecimals, Rounding.ToCode(s.RoundingMode)))
+                    .Select(s => new DecimalDefaults(s.Module, s.QtyDecimals, Rounding.ToCode(s.RoundingMode)))
                     .ToList()));
         }
     }
@@ -65,16 +65,16 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
         return row;
     }
 
-    private List<(string, int, int, string)> Decimals()
+    private List<(string, int, string)> Decimals()
     {
         using var connection = _db.Open();
         using var command = new NpgsqlCommand(
-            "SELECT module, unit_price_decimals, qty_decimals, rounding_mode FROM sys_decimal_setting ORDER BY module", connection);
+            "SELECT module, qty_decimals, rounding_mode FROM sys_decimal_setting ORDER BY module", connection);
         using var reader = command.ExecuteReader();
-        var rows = new List<(string, int, int, string)>();
+        var rows = new List<(string, int, string)>();
         while (reader.Read())
         {
-            rows.Add((reader.GetString(0), reader.GetInt32(1), reader.GetInt32(2), reader.GetString(3)));
+            rows.Add((reader.GetString(0), reader.GetInt32(1), reader.GetString(2)));
         }
         return rows;
     }

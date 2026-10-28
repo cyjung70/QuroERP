@@ -19,11 +19,15 @@ internal sealed class LocalizationRepository : ILocalizationRepository
         """;
 
     private const string SelectCurrencies = """
-        SELECT id, currency_code, decimals, use_yn FROM bc_currency ORDER BY currency_code
+        SELECT id, currency_code, decimals, use_yn, country_code FROM bc_currency ORDER BY currency_code
         """;
 
     private const string SelectDecimalSettings = """
-        SELECT module, unit_price_decimals, qty_decimals, rounding_mode FROM sys_decimal_setting ORDER BY module
+        SELECT module, qty_decimals, rounding_mode FROM sys_decimal_setting ORDER BY module
+        """;
+
+    private const string SelectCountryDecimals = """
+        SELECT country_code, module, unit_price_decimals FROM bc_country_decimal ORDER BY country_code, module
         """;
 
     public Task<CompanyLocalizationRow?> FindCompanyAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -41,4 +45,8 @@ internal sealed class LocalizationRepository : ILocalizationRepository
     public async Task<IReadOnlyList<DecimalSettingRow>> FindDecimalSettingsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
         (await transaction.Connection!.QueryAsync<DecimalSettingRow>(
             new CommandDefinition(SelectDecimalSettings, transaction: transaction, cancellationToken: cancellationToken))).AsList();
+
+    public async Task<IReadOnlyList<CountryDecimalRow>> FindCountryDecimalsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<CountryDecimalRow>(
+            new CommandDefinition(SelectCountryDecimals, transaction: transaction, cancellationToken: cancellationToken))).AsList();
 }
