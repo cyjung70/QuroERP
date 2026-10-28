@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace QuroErp.Contracts.Bc.Localization;
 
 /// <summary>Localization API routes (BC-UC-027).</summary>
@@ -5,6 +7,9 @@ public static class LocalizationRoutes
 {
     /// <summary>GET: localization values every screen uses (BC-BR-426). Query lang selects currency names.</summary>
     public const string Base = "api/bc/localization";
+
+    /// <summary>GET, PUT: the localization setting screen (BC-UC-027). PUT needs Full Access (BC-BR-427).</summary>
+    public const string Setting = "api/bc/localization-setting";
 }
 
 /// <summary>
@@ -45,3 +50,33 @@ public sealed record CountryDecimalDto(string CountryCode, string Module, int Un
 /// <param name="Module">MM or SD.</param>
 /// <param name="RoundingMode">HALF_UP or DOWN (BC-BR-424).</param>
 public sealed record DecimalSettingDto(string Module, int QtyDecimals, string RoundingMode);
+
+/// <summary>
+/// The localization setting screen (BC-UC-027): company values (read only, changed on the company screen) and the
+/// values PUT changes, with every language whether in use or not.
+/// </summary>
+/// <param name="UpdatedAt">Latest change of the setting rows. Send it back on PUT to detect concurrent updates.</param>
+public sealed record LocalizationSettingDto(
+    string CountryCode,
+    string BaseCurrencyCode,
+    string DefaultLangCode,
+    string TaxCalcMode,
+    IReadOnlyList<LanguageSettingDto> Languages,
+    IReadOnlyList<CountryDecimalDto> CountryDecimals,
+    IReadOnlyList<DecimalSettingDto> DecimalSettings,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>Language use (BC-BR-401, BC-BR-403). en is always in use.</summary>
+public sealed record LanguageSettingDto([Required] string LangCode, bool UseYn);
+
+/// <summary>
+/// Changes the listed rows only; rows not listed keep their values. Reducing decimals that documents use is 409 BC-E-425 (BC-BR-425).
+/// </summary>
+/// <param name="TaxCalcMode">DOCUMENT or LINE (BC-BR-543).</param>
+/// <param name="UpdatedAt">The UpdatedAt from the last GET. A different value means someone else saved first (409 Common-E-004).</param>
+public sealed record UpdateLocalizationSettingRequest(
+    [Required] IReadOnlyList<LanguageSettingDto> Languages,
+    [Required] IReadOnlyList<CountryDecimalDto> CountryDecimals,
+    [Required] IReadOnlyList<DecimalSettingDto> DecimalSettings,
+    [Required, AllowedValues("DOCUMENT", "LINE")] string TaxCalcMode,
+    DateTimeOffset UpdatedAt);

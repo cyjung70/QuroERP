@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<CodeService>();
         services.AddScoped<CompanyLogoService>();
         services.AddScoped<LocalizationService>();
+        services.AddScoped<LocalizationSettingService>();
         services.AddScoped<InventorySettingService>();
         services.AddScoped<DocumentNumberService>();
         // InventoryService is registered once ISetComponentRepository has a table to read (sd_bom, not generated yet)

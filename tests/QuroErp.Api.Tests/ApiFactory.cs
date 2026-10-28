@@ -52,6 +52,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Localization state: a KR company (default language ko), languages en/ko (sw off), KRW and USD.</summary>
     public InMemoryLocalizationRepository Localization { get; } = new();
 
+    /// <summary>Applies localization setting writes to <see cref="Localization"/>. Documents exist for none of the modules.</summary>
+    public InMemoryLocalizationSettingRepository LocalizationSettings => _localizationSettings ??= new(Localization);
+
+    private InMemoryLocalizationSettingRepository? _localizationSettings;
+
     /// <summary>Inventory setting state; DENY at start.</summary>
     public InMemoryInventorySettingRepository InventorySettings { get; } = new();
 
@@ -81,6 +86,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ITranslationRepository, FakeTranslationRepository>();
             services.AddSingleton<ICompanyRepository>(Companies);
             services.AddSingleton<ILocalizationRepository>(Localization);
+            services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
@@ -280,6 +286,65 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public Task<IReadOnlyList<CountryDecimalRow>> FindCountryDecimalsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<CountryDecimalRow>>(CountryDecimals);
+    }
+
+    public sealed class InMemoryLocalizationSettingRepository(InMemoryLocalizationRepository localization) : ILocalizationSettingRepository
+    {
+        public DateTimeOffset Version { get; private set; } = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
+
+        public HashSet<string> ModulesWithDocuments { get; } = [];
+
+        public Task<DateTimeOffset> GetVersionAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Version);
+
+        public Task<bool> HasDocumentsAsync(string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(ModulesWithDocuments.Contains(moduleCode));
+
+        public Task UpdateLanguagesAsync(IReadOnlyList<LanguageUseRow> languages, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            foreach (var language in languages)
+            {
+                var index = localization.Languages.FindIndex(l => l.LangCode == language.LangCode);
+                localization.Languages[index] = localization.Languages[index] with { UseYn = language.UseYn };
+            }
+            return Touch();
+        }
+
+        public Task UpdateCountryDecimalsAsync(
+            IReadOnlyList<CountryDecimalRow> countryDecimals, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            foreach (var row in countryDecimals)
+            {
+                localization.CountryDecimals[localization.CountryDecimals.FindIndex(d => d.CountryCode == row.CountryCode && d.Module == row.Module)] = row;
+            }
+            return Touch();
+        }
+
+        public Task UpdateDecimalSettingsAsync(
+            IReadOnlyList<DecimalSettingRow> settings, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            foreach (var row in settings)
+            {
+                localization.DecimalSettings[localization.DecimalSettings.FindIndex(d => d.Module == row.Module)] = row;
+            }
+            return Touch();
+        }
+
+        public Task UpdateTaxCalcModeAsync(string taxCalcMode, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            localization.Company = localization.Company! with { TaxCalcMode = taxCalcMode };
+            return Touch();
+        }
+
+        public Task<int> MoveUserLanguagesAsync(
+            IReadOnlyList<string> fromLangCodes, string toLangCode, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(0);
+
+        private Task Touch()
+        {
+            Version = Version.AddSeconds(1);
+            return Task.CompletedTask;
+        }
     }
 
     public sealed class InMemoryInventorySettingRepository : IInventorySettingRepository
