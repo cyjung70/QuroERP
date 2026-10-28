@@ -17,6 +17,12 @@
                 @HeaderFields(_header)
             </div>
         </CascadingValue>
+        @if (LineSummary is not null)
+        {
+            <div class="quro-summary" data-testid="@Id("summary")">
+                @LineSummary(ActiveLines)
+            </div>
+        }
         <QuroGrid @ref="_grid" TRow="TLine" Rows="_lines" Columns="LineColumns" Editable="true" Busy="Busy" TestId="@Id("line")"
                   OnAddRow="AddLine" OnChanged="StateHasChanged" />
     </ChildContent>
@@ -58,7 +64,16 @@
     [Parameter]
     public EventCallback OnPrint { get; set; }
 
+    /// <summary>
+    /// Display-only totals of the lines that will be kept (deleted lines left out), e.g. a total amount.
+    /// Stored totals are calculated by the API.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<IReadOnlyList<TLine>>? LineSummary { get; set; }
+
     public override bool IsDirty => Snapshot.Of(_header) != _snapshot || _lines.IsDirty;
+
+    private IReadOnlyList<TLine> ActiveLines => [.. _lines.All.Where(r => !r.IsDeleted).Select(r => r.Item)];
 
     protected override void OnInitialized() => StartNew();
 

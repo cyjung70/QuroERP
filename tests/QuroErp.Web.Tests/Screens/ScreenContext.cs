@@ -31,9 +31,12 @@ public abstract class ScreenContext : BunitContext
         Services.AddWebLocalization();
         Services.AddSingleton<IQuroConfirm>(Confirm);
         Services.AddSingleton(Store);
+        Services.AddSingleton(PoStore);
     }
 
     protected FakeConfirm Confirm { get; } = new();
 
     protected SampleStore Store { get; } = new();
+
+    protected SamplePoStore PoStore { get; } = new();
 }

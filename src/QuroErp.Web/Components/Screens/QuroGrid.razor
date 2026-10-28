@@ -1,5 +1,5 @@
 @* Grid as a plain table: QuickGrid cannot put data-row-index on its rows (TASK-CORE-013).
-   Editable grids show the row state (I/U/D) and a delete button per row; each row has its own
+   Editable grids show the row state (I/U/D), a delete button and, on edited rows, an undo button per row; each row has its own
    form context, so lock rules and the required check work per row. *@
 @typeparam TRow where TRow : class
 @attribute [CascadingTypeParameter(nameof(TRow))]
@@ -65,6 +65,10 @@
                             <button type="button" disabled="@Busy" data-testid="@Id("delete-row")" @onclick="() => ToggleDeleteAsync(row)">
                                 @(row.IsDeleted ? L["Common.RestoreRow"] : L["Common.DeleteRow"])
                             </button>
+                            @if (row.State == RowState.Modified)
+                            {
+                                <button type="button" disabled="@Busy" data-testid="@Id("undo-row")" @onclick="() => UndoAsync(row)">@L["Common.UndoRow"]</button>
+                            }
                         </td>
                     }
                 </tr>
@@ -150,6 +154,12 @@
     private async Task ToggleDeleteAsync(GridRow<TRow> row)
     {
         Rows.ToggleDelete(row);
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task UndoAsync(GridRow<TRow> row)
+    {
+        Rows.Undo(row);
         await OnChanged.InvokeAsync();
     }
 

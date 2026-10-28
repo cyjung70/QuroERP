@@ -1,0 +1,85 @@
+@* Lookup dialog for items, customers, vendors and documents (screens.md "팝업"): keyword search,
+   result grid with a select button per row. The screen decides what the selected row fills in. *@
+@typeparam TItem where TItem : class
+@inject IStringLocalizer<SharedResource> L
+
+@if (Visible)
+{
+    <div class="quro-dialog-backdrop">
+        <div class="quro-dialog" role="dialog" aria-modal="true" aria-label="@Title" data-testid="@TestId">
+            <h2>@Title</h2>
+            <form class="quro-search" role="search" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+                <QuroText Label="@L["Common.Keyword"]" @bind-Value="_keyword" TestId="@Id("keyword")" />
+                <button type="submit" disabled="@_busy" data-testid="@Id("search")">@L["Common.Search"]</button>
+            </form>
+            <QuroGrid TRow="TItem" Rows="_rows" Columns="Columns" Busy="_busy" TestId="@Id("grid")" OnSelect="SelectAsync" />
+            <div class="quro-dialog-actions">
+                <button type="button" data-testid="@Id("close")" @onclick="CloseAsync">@L["Common.Close"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private readonly GridRows<TItem> _rows = new();
+    private string? _keyword;
+    private bool _busy;
+    private bool _wasVisible;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
+
+    /// <summary>Finds rows for a keyword (null = all). Real screens call a Contracts API client.</summary>
+    [Parameter, EditorRequired]
+    public Func<string?, Task<IReadOnlyList<TItem>>> Search { get; set; } = default!;
+
+    /// <summary>QuroColumn declarations of the result grid (give TRow explicitly).</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment Columns { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<TItem> OnSelected { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    // Each opening starts with an empty keyword and the full list
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && !_wasVisible)
+        {
+            _keyword = null;
+            await SearchAsync();
+        }
+        _wasVisible = Visible;
+    }
+
+    private async Task SearchAsync()
+    {
+        _busy = true;
+        try
+        {
+            _rows.Load(await Search(_keyword));
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SelectAsync(TItem item)
+    {
+        await OnSelected.InvokeAsync(item);
+        await CloseAsync();
+    }
+
+    private Task CloseAsync() => VisibleChanged.InvokeAsync(false);
+
+    private string? Id(string part) => TestId is null ? null : $"{TestId}-{part}";
+}

@@ -2,8 +2,16 @@
 
 <div class="quro-field">
     <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
-    <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked"
-           aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+    @if (Rows > 1)
+    {
+        <textarea id="@InputId" rows="@Rows" value="@Value" readonly="@IsLocked"
+                  aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync"></textarea>
+    }
+    else
+    {
+        <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked"
+               aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+    }
 </div>
 
 @code {
@@ -12,6 +20,10 @@
 
     [Parameter]
     public bool Password { get; set; }
+
+    /// <summary>More than 1 shows a multi-line text area (memo fields).</summary>
+    [Parameter]
+    public int Rows { get; set; } = 1;
 
     public override bool IsEmpty => string.IsNullOrWhiteSpace(Value);
 

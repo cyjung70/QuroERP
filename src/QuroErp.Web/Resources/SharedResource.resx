@@ -60,6 +60,9 @@
   <data name="Common.DeleteRow" xml:space="preserve"><value>행 삭제</value></data>
   <data name="Common.RestoreRow" xml:space="preserve"><value>되살리기</value></data>
   <data name="Common.Select" xml:space="preserve"><value>선택</value></data>
+  <data name="Common.UndoRow" xml:space="preserve"><value>되돌리기</value></data>
+  <data name="Common.Keyword" xml:space="preserve"><value>검색어</value></data>
+  <data name="Common.Close" xml:space="preserve"><value>닫기</value></data>
   <data name="Common.RowState" xml:space="preserve"><value>상태</value></data>
   <data name="Common.RowState.Added" xml:space="preserve"><value>신규</value></data>
   <data name="Common.RowState.Modified" xml:space="preserve"><value>수정</value></data>
@@ -81,6 +84,18 @@
   <data name="Samples.OrderDt" xml:space="preserve"><value>문서 일자</value></data>
   <data name="Samples.Item" xml:space="preserve"><value>품목</value></data>
   <data name="Samples.Group" xml:space="preserve"><value>그룹</value></data>
+  <data name="Samples.PoEntry.Title" xml:space="preserve"><value>샘플: 구매오더 등록 (SM)</value></data>
+  <data name="Samples.PoNo" xml:space="preserve"><value>구매오더 번호</value></data>
+  <data name="Samples.PoDt" xml:space="preserve"><value>구매오더 일자</value></data>
+  <data name="Samples.Vendor" xml:space="preserve"><value>공급자</value></data>
+  <data name="Samples.VendorName" xml:space="preserve"><value>공급자명</value></data>
+  <data name="Samples.VendorMessage" xml:space="preserve"><value>공급자 전달 사항</value></data>
+  <data name="Samples.FindVendor" xml:space="preserve"><value>공급자 찾기</value></data>
+  <data name="Samples.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
+  <data name="Samples.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Samples.Fob" xml:space="preserve"><value>F.O.B 단가</value></data>
+  <data name="Samples.Amount" xml:space="preserve"><value>금액</value></data>
+  <data name="Samples.TotalAmt" xml:space="preserve"><value>합계 금액</value></data>
   <data name="Common-E-005" xml:space="preserve"><value>{0}을(를) 입력하세요.</value></data>
   <data name="BC-E-313" xml:space="preserve"><value>지원하지 않는 국가 {0}입니다. US 또는 KR을 고르세요.</value></data>
   <data name="BC-E-401" xml:space="preserve"><value>언어 코드 '{0}'이(가) 올바르지 않습니다. 소문자 2~3자로 입력하세요.</value></data>
