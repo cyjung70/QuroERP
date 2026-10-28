@@ -7,6 +7,9 @@ using QuroERP.Database;
 //   --demo: 이어서 Scripts/Demo도 적용한다 (기록: schemaversions_demo)
 //   --create-admin <userid>: 마이그레이션 대신 관리자 계정을 만들거나 비밀번호를 초기화한다.
 //                            비밀번호는 콘솔에서 입력받는다 (화면에 보이지 않는다)
+//   --set-country <US|KR> [--company-name <name>]: sets the company country, base currency, default language
+//                            and module decimals from the country profile (BC-BR-313). Run after migration,
+//                            before any transaction. --company-name is required when there is no company yet
 // 연결 문자열 우선순위: --connection 인자 > 환경변수 ConnectionStrings__QuroErp > dotnet user-secrets
 
 const string ConnectionKey = "ConnectionStrings:QuroErp";
@@ -28,6 +31,12 @@ var adminUserId = configuration["create-admin"];
 if (adminUserId is not null)
 {
     return await CreateAdminAsync(connectionString, adminUserId);
+}
+
+var countryCode = configuration["set-country"];
+if (countryCode is not null)
+{
+    return await SetCountryAsync(connectionString, countryCode, configuration["company-name"]);
 }
 
 var includeDemo = args.Contains("--demo", StringComparer.OrdinalIgnoreCase);
@@ -63,6 +72,28 @@ static async Task<int> CreateAdminAsync(string connectionString, string userId)
             ? $"관리자 '{userId}'를 만들었습니다. 첫 로그인 때 비밀번호를 바꿔야 합니다."
             : $"'{userId}'의 비밀번호를 초기화했습니다. 다음 로그인 때 비밀번호를 바꿔야 합니다.");
         return 0;
+    }
+    catch (InvalidOperationException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return 1;
+    }
+}
+
+static async Task<int> SetCountryAsync(string connectionString, string countryCode, string? companyName)
+{
+    try
+    {
+        var created = await CompanySetup.SetCountryAsync(connectionString, countryCode.Trim().ToUpperInvariant(), companyName, CancellationToken.None);
+        Console.WriteLine(created
+            ? $"회사를 만들고 국가를 {countryCode.ToUpperInvariant()}로 설정했습니다."
+            : $"회사 국가를 {countryCode.ToUpperInvariant()}로 설정했습니다.");
+        return 0;
+    }
+    catch (ArgumentException)
+    {
+        Console.Error.WriteLine($"지원하지 않는 국가입니다: {countryCode}. {string.Join(", ", CompanySetup.Countries.Keys)} 중 하나를 입력하세요.");
+        return 2;
     }
     catch (InvalidOperationException ex)
     {
