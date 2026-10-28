@@ -49,17 +49,21 @@ csproj에는 패키지 이름이나 버전을 쓰지 않고 다음 한 줄만 �
 | queryId 해석 (`IQuroQueryResolver`) | `QuroErp.Web/Grid/ErpQueryResolver.cs` — queryId를 **Contracts API 클라이언트 메서드**로 매핑하는 표 (I-03). 범용 SQL 엔드포인트는 만들지 않는다 |
 | 정의 검증 카탈로그 (`IQuroDefinitionCatalog`) | `QuroErp.Web/Grid/ErpDefinitionCatalog.cs` — resx 키, 등록된 queryId·lookupId |
 | 저장 URL | 화면 코드에서 `QuroDataSet.SaveAsync(http, url)`에 Contracts의 경로 상수로 전달 |
-| 금액 계산 | `OnCellValueChanged` → Application/Domain 규칙을 API로 호출하거나 Domain의 순수 계산을 공유 (규칙 1: Domain에만) |
+| 저장 형식 | 그리드 변경분은 `{ inserted[], updated[], deleted[] }` (수정·삭제 행 `version`). 화면 정의 `screen.api`의 커맨드 DTO(`header + lines[{rowState}]` 등)로 옮기는 것은 화면 코드가 한다 |
+| 금액 계산 | 표시용: `OnCellValueChanged`에서 화면 정의 `rules`의 식을 `RuleExpression`(`Quro.Grid.Definition`)으로 계산. 저장값: API가 같은 식(또는 Domain Pricing)으로 다시 계산하고 요청의 금액은 무시한다 (규칙 1: Domain에만) |
 | 마이너스 재고 | 저장 API에서 최종 판정. 화면은 API 결과를 `SetCellMark(…, Error|Warning, 리소스 키)`로 표시 |
 
 인터페이스 이름은 consumer-contract.md 확정 시 그 이름을 따른다.
 
 ## 5. 화면 정의 (.toon)
 
-- 위치: `src/QuroErp.Web/Definitions/screens/<module>/<screen>.toon`, `lookups/<module>/<name>.toon`
-- 필드명은 **glossary 영문 식별자** (레거시 `c_name`, `dn_no` 금지). 예: `customer_code`, `invoice_no` — 실제 이름은 glossary를 따른다
-- `queryId`는 `<module>.<use_case>` (예: `sd.invoice.search`). 반드시 `ErpQueryResolver` 표에 등록한다
-- 표시 문구는 리소스 키. 코드 목록은 `src: code` + Major 코드
+- 스키마: QuroGrid `docs/QuroGrid_TOON_ScreenDef_v0.2.md` (읽기 전용). 섹션 `screen`·`toolbar`·`form{fields,readOnlyFor}`·`grids[]{columns,rules,validate}`
+- 위치: `src/QuroErp.Web/Definitions/screens/<module>/<module>.<doc>.<screen>.screen.toon`, `lookups/<module>/<name>.toon`. 파일명 = `screen.id`
+- id는 **glossary 영문 식별자의 camelCase** (레거시 열 이름 금지). 실제 이름은 glossary를 따른다
+- 파서·검증기·`FieldModeResolver`·`RuleExpression`은 QuroGrid `Quro.Grid.Definition`. API 서버도 같은 패키지로 요청을 검증한다
+- 데이터소스는 참조만: `code:<Major>`(공통코드), `lookup:<id>`(조회·팝업, `ILookupProvider`에 등록). SQL은 정의에 쓰지 않는다
+- 표시 문구는 리소스 키. 기본값 토큰 `@today`·`@company.<key>`·`@setting:<key>`는 앱이 해석한다
+- 레거시 화면 XML 변환(xml2toon)은 QuroHarness에서 한다. 이 저장소에는 결과 표만 온다
 - 화면 유형(S/M/SM/MM)별 배치는 Razor가 맡는다. 정의 파일에 레이아웃을 넣지 않는다
 - 검증: `dotnet test tests/QuroErp.Web.Tests --filter Category=ScreenDefinition` (모든 .toon을 로드·검증)
 

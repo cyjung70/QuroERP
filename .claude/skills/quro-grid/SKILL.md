@@ -16,17 +16,17 @@ description: QuroERP 화면에 QuroGrid(그리드 컴포넌트)를 붙이거나,
 1. 화면이 `QuroErp.Web`에 있는지 확인한다. 다른 프로젝트에서는 QuroGrid를 참조하지 않는다.
 2. `QuroErp.Web.csproj`에 `<UsesQuroGrid>true</UsesQuroGrid>`가 있는지 확인한다. 패키지 이름·버전을 csproj에 직접 쓰지 않는다.
 3. 화면 정의를 만든다 (2절). 정의 없이 Razor에서 열을 직접 선언하는 것은 M 유형의 단순 조회 화면만 허용한다.
-4. Razor에서 그리드를 배치하고, 업무 계산은 `OnCellValueChanged`에서 API·Domain 계산을 호출한다. 그리드 안에 규칙을 넣지 않는다.
-5. 저장: `QuroDataSet.SaveAsync(http, <Contracts 경로 상수>)`. 2xx 후 재조회는 화면이 한다. 409는 리소스 키 메시지로 충돌 안내.
+4. Razor에서 그리드를 배치한다 (`<QuroGrid Definition="@gridDef">`, QuroGrid가 구현하면). 표시용 계산은 `OnCellValueChanged`에서 정의의 `rules`를 `RuleExpression`으로 평가한다. 그리드 안에 규칙을 넣지 않는다. 저장 금액은 API가 다시 계산한다.
+5. 저장: 그리드 변경분(`inserted`·`updated`·`deleted`)을 `screen.api`의 커맨드 DTO로 옮겨 보낸다. 2xx 후 재조회는 화면이 한다. 409는 리소스 키 메시지로 충돌 안내.
 6. 마이너스 재고 등 판정 결과는 `SetCellMark`로 표시만 한다. 최종 판정은 API 트랜잭션.
 
 ## 2. 화면 정의(.toon) 만들기
 
-1. 위치: `src/QuroErp.Web/Definitions/screens/<module>/<screen>.toon` / `lookups/<module>/<name>.toon`
-2. 필드명은 `docs/glossary.md` 영문 식별자. 레거시 이름 금지. glossary에 없으면 `[확인 필요]`
-3. `queryId` = `<module>.<use_case>`. `ErpQueryResolver`의 매핑 표에 Contracts API 클라이언트 메서드와 함께 등록한다
-4. 라벨·헤더는 리소스 키를 resx(en, ko, sw)에 함께 추가한다
-5. 코드 목록은 `src: code`, `ref: <Major 코드>`. 저장 값은 `minor_code` (AGENTS.md 규칙 6)
+1. 스키마: `/WRK/QuroGrid/docs/QuroGrid_TOON_ScreenDef_v0.2.md` (읽기 전용). 위치: `src/QuroErp.Web/Definitions/screens/<module>/<module>.<doc>.<screen>.screen.toon` / `lookups/<module>/<name>.toon`
+2. id는 `docs/glossary.md` 영문 식별자의 camelCase. 레거시 이름 금지. glossary에 없으면 `[확인 필요]`
+3. 조회·팝업은 `lookup:<id>`, 저장·조회 경로는 `screen.api`. `lookup` id는 `ILookupProvider`에 등록한다. SQL은 쓰지 않는다
+4. 라벨·헤더·메시지는 리소스 키를 resx(ko, en)에 함께 추가한다
+5. 코드 목록은 `source: code:<Major 코드>`. 저장 값은 `minor_code` (AGENTS.md 규칙 6)
 6. 검증:
    ```bash
    dotnet test tests/QuroErp.Web.Tests --filter Category=ScreenDefinition

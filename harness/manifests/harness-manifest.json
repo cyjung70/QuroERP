@@ -8,11 +8,11 @@
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "73db16384af5d66e44ba223e3d7f6e9b4185f6937d0eb456dcbb53489955ecbc"
+      "sha256": "476635d1cda9babd7363d7bc975b858e9fa1f1aae9323434f7fd03a765808435"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
-      "sha256": "39af83739927288e2d43d32f3500c66322e3c2639f8761ffcba6a9ba32cb14d2"
+      "sha256": "6e545d67e36ccdd312578952f41e89b8c4d84cd6d6669942066e26b8525d82b0"
     },
     {
       "path": ".agents/skills/quro-dapper/SKILL.md",
@@ -24,7 +24,7 @@
     },
     {
       "path": ".agents/skills/quro-grid/SKILL.md",
-      "sha256": "88dc56532c7b76cacdfd9ce21b700c69d99320c4fcbdcacf4f296ea664e2d8aa"
+      "sha256": "1fdfade1dc2492e4f42fc0c72ae07746d59e66399a7a9a04176fcd47aa6e4f6f"
     },
     {
       "path": ".agents/skills/quro-pytest/SKILL.md",
@@ -40,11 +40,11 @@
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "73db16384af5d66e44ba223e3d7f6e9b4185f6937d0eb456dcbb53489955ecbc"
+      "sha256": "476635d1cda9babd7363d7bc975b858e9fa1f1aae9323434f7fd03a765808435"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
-      "sha256": "39af83739927288e2d43d32f3500c66322e3c2639f8761ffcba6a9ba32cb14d2"
+      "sha256": "6e545d67e36ccdd312578952f41e89b8c4d84cd6d6669942066e26b8525d82b0"
     },
     {
       "path": ".claude/skills/quro-dapper/SKILL.md",
@@ -56,7 +56,7 @@
     },
     {
       "path": ".claude/skills/quro-grid/SKILL.md",
-      "sha256": "88dc56532c7b76cacdfd9ce21b700c69d99320c4fcbdcacf4f296ea664e2d8aa"
+      "sha256": "1fdfade1dc2492e4f42fc0c72ae07746d59e66399a7a9a04176fcd47aa6e4f6f"
     },
     {
       "path": ".claude/skills/quro-pytest/SKILL.md",
@@ -68,7 +68,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "7171968458a5da7267ca402d25f785cb63c991ebf01ca6752ff8d17701716794"
+      "sha256": "4642ff9fb8a3b19b3a6b9f6ffc072b24ab138d57a2b6477dfec51a2e30648c41"
     },
     {
       "path": "CLAUDE.md",
@@ -92,7 +92,7 @@
     },
     {
       "path": "docs/architecture/i18n.md",
-      "sha256": "f50e58cabc681c9e5ac897266f7229fb3bcd97419930c051e40f990af96bb438"
+      "sha256": "313bbd839a7833493d90b72cc3a638ce092d2b177874c03ddc062bdb97bd27ea"
     },
     {
       "path": "docs/architecture/inventory.md",
@@ -104,7 +104,7 @@
     },
     {
       "path": "docs/architecture/localization.md",
-      "sha256": "1c960d5c3c40213b07954c68a02fbaf5e7b033ce4e39f740493c93170617a21a"
+      "sha256": "3663a1c988ea81e88f6d95cfa4c4514700e7276fd5c89cbeb6fab662e12fc59c"
     },
     {
       "path": "docs/architecture/login.md",
@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/architecture/qurogrid-integration.md",
-      "sha256": "22610eb3360f8ec60a00e8c7a2d8ff9241a619bb70e68facc0eada777d2460ce"
+      "sha256": "a43354624e266f1ae9e5483e63212f76c250e52bcb12a1c4d6e3b01846789307"
     },
     {
       "path": "docs/architecture/reports.md",
@@ -124,7 +124,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "2e789f529b2a75a5f0d6de7956f824a68b0fde8dec7cc6f87ce40a0419472d17"
+      "sha256": "66b758b2b18cbf899a4cb341bc9c64571ddf22847e25b2a7d3854bf3d53f6698"
     },
     {
       "path": "docs/architecture/security.md",
@@ -132,7 +132,7 @@
     },
     {
       "path": "docs/architecture/subprojects.md",
-      "sha256": "9834e56b3d55553c9dd4450ed2b7315950668ccbf6fe72ff70cf97734c7e21be"
+      "sha256": "f40908d3b0adbc3f3983950a31303034be12fae287f0abb63b814e96a6e3f107"
     },
     {
       "path": "docs/architecture/tax.md",
@@ -148,7 +148,7 @@
     },
     {
       "path": "docs/business-rules/BC/localization.md",
-      "sha256": "23aad742a6a460478c226c03b8ba955921f7c2e0bd841b7f5dc399a321cab773"
+      "sha256": "78854c5544963354f3784b7c57b3441b1380d3b312f53679bd84d6694de40d2a"
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
