@@ -81,9 +81,10 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `mm_stock_transfer` | 창고 이동 | MM | MM warehouse.md | id, transfer_no UNIQUE, transfer_dt, from_warehouse_id, to_warehouse_id |
 | `mm_stock_transfer_line` | 창고 이동 상세 | MM | MM warehouse.md | id, stock_transfer_id, seq, item_id, qty |
 | `sys_language` | 언어 | BC | i18n.md, BC localization.md | id, lang_code UNIQUE (en, ko, sw), sort_order, use_yn |
-| `bc_currency` | 통화 | BC | localization.md, BC localization.md | id, currency_code UNIQUE (ISO 4217), decimals (0~4), use_yn |
+| `bc_currency` | 통화 | BC | localization.md, BC localization.md | id, currency_code UNIQUE (ISO 4217), decimals (0~4), country_code (ISO 3166-1, NULL 허용), use_yn |
 | `bc_currency_translation` | 통화 번역 | BC | i18n.md | id, currency_id, lang_code, name. UNIQUE (currency_id, lang_code) |
-| `sys_decimal_setting` | 모듈 자릿수 설정 | BC | localization.md, BC localization.md | id, module UNIQUE (MM, SD), unit_price_decimals, qty_decimals, rounding_mode (HALF_UP, DOWN) |
+| `bc_country_decimal` | 국가별 단가 자릿수 | BC | localization.md, BC localization.md | id, country_code, module (MM, SD), unit_price_decimals (0~6). UNIQUE (country_code, module) |
+| `sys_decimal_setting` | 모듈 자릿수 설정 | BC | localization.md, BC localization.md | id, module UNIQUE (MM, SD), qty_decimals, rounding_mode (HALF_UP, DOWN) |
 | `bc_tax_code` | 세금 코드 | BC | tax.md, BC tax.md | id, tax_code UNIQUE, tax_kind, rate, tax_area_id, price_included, use_yn |
 | `bc_tax_code_translation` | 세금 코드 번역 | BC | i18n.md | id, tax_code_id, lang_code, name. UNIQUE (tax_code_id, lang_code) |
 | `bc_tax_area` | 세율 지역 (US) | BC | tax.md, BC tax.md | id, tax_area_code UNIQUE, tax_area_name, state_code |

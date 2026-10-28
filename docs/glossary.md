@@ -77,6 +77,7 @@
 | 언어 | Language | sys_language | BC | TO BE 신규 |
 | 통화 | Currency | bc_currency | BC | TO BE 신규 |
 | 통화 번역 | CurrencyTranslation | bc_currency_translation | BC | TO BE 신규 |
+| 국가별 단가 자릿수 | CountryDecimal | bc_country_decimal | BC | TO BE 신규 |
 | 모듈 자릿수 설정 | DecimalSetting | sys_decimal_setting | BC | TO BE 신규 |
 | 세금 코드 | TaxCode | bc_tax_code | BC | TO BE 신규 |
 | 세금 코드 번역 | TaxCodeTranslation | bc_tax_code_translation | BC | TO BE 신규 |
@@ -126,4 +127,5 @@
 | 면세 증명서 | TaxExemptionCertificate | tax_exemption_cert_no | SD | US 재판매 면세 증명서 (sd_customer_tax_exemption) |
 | 사업자등록번호 | BusinessRegNo | business_reg_no | 공통 | KR 10자리, 검증 숫자 (BC-BR-521) |
 | 세금 계산 단위 | TaxCalcMode | tax_calc_mode | BC | DOCUMENT, LINE (BC-BR-543) |
-| 자릿수 설정 | DecimalSetting | sys_decimal_setting | BC | 모듈별 단가·수량 자릿수, 반올림 방식 (BC-BR-422) |
+| 국가별 단가 자릿수 | CountryDecimal | bc_country_decimal | BC | 국가×모듈 단가 자릿수. 문서 통화의 국가 행을 쓴다 (BC-BR-422·429) |
+| 자릿수 설정 | DecimalSetting | sys_decimal_setting | BC | 모듈별 수량 자릿수, 반올림 방식 (BC-BR-422) |

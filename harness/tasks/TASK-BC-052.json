@@ -13,7 +13,8 @@
   "rules": [
     "BC-BR-411",
     "BC-BR-404",
-    "BC-BR-412"
+    "BC-BR-412",
+    "BC-BR-428"
   ],
   "skills": [
     "quro-blazor",

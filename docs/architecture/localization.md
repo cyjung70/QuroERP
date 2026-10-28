@@ -23,7 +23,7 @@ QuroERP MVP 1.0은 미국(`US`)과 한국(`KR`) 중소기업을 지원한다. �
 
 ## 통화
 
-- 통화 마스터 `bc_currency(currency_code, decimals, use_yn)` + 이름 번역. `currency_code`는 ISO 4217 대문자 3자다. `decimals`는 금액 자릿수(USD 2, KRW 0, 기본값은 ISO 4217)다.
+- 통화 마스터 `bc_currency(currency_code, decimals, country_code, use_yn)` + 이름 번역. `currency_code`는 ISO 4217 대문자 3자다. `decimals`는 금액 자릿수(USD 2, KRW 0, 기본값은 ISO 4217)다. `country_code`는 그 통화의 국가(USD `US`, KRW `KR`, 비울 수 있음)이고 단가 자릿수를 고르는 데 쓴다.
 - 기준 통화: 회사 설정 1개. 재고 금액·이동평균원가·재고 리포트는 기준 통화다.
 - 문서 통화: 수주, 매출 송장, Credit Memo, 입금, 발주, 입고(Bill), 지급에 `currency_code`, `exchange_rate`를 둔다.
   - 기본값: 거래처 통화 → 기준 통화. 기준 통화면 환율은 1이다.
@@ -37,13 +37,15 @@ QuroERP MVP 1.0은 미국(`US`)과 한국(`KR`) 중소기업을 지원한다. �
 | 종류 | 정하는 곳 | 기본값 |
 | --- | --- | --- |
 | 금액 (공급가액·세액·합계·잔액·반제) | 문서 통화 `bc_currency.decimals` | USD 2, KRW 0 |
-| 단가 | 모듈 설정 `sys_decimal_setting` (`MM`, `SD`) | US: MM 4, SD 2 / KR: MM 2, SD 0 |
-| 수량 | 모듈 설정 | MM 2, SD 0 |
+| 단가 | 국가×모듈 `bc_country_decimal` (BC 글로벌 테이블). 문서 통화의 국가 행, 없으면 회사 국가 행 | US: MM 4, SD 2 / KR: MM 2, SD 0 |
+| 수량 | 모듈 설정 `sys_decimal_setting` (`MM`, `SD`) | MM 2, SD 0 |
 | 환율 | 고정 | 10 |
 | 반올림 방식 | 모듈 설정 | `HALF_UP` (`DOWN` 선택 가능 — 한국 세액 원 미만 절사) |
 
-- DB 컬럼은 `numeric`(정밀도 없음)이다. 자릿수 검사와 반올림은 Domain의 `IAmountRounder`(통화 자릿수)와 `IDecimalPolicy`(모듈 자릿수)만 한다. Repository·화면에서 따로 반올림하지 않는다.
+- DB 컬럼은 `numeric`(정밀도 없음)이다. 자릿수 검사와 반올림은 Domain의 `IAmountRounder`(통화 자릿수)와 `IDecimalPolicy`(단가: 문서 통화 국가×모듈, 수량: 모듈)만 한다. Repository·화면에서 따로 반올림하지 않는다.
 - 금액 자릿수를 모듈 설정으로 두지 않는다. 같은 송장 금액을 모듈마다 다르게 반올림하면 반제 금액이 맞지 않기 때문이다.
+- 예: KR 회사의 USD 송장 단가는 US SD 2자리(12.50 가능), 같은 회사의 KRW 송장 단가는 KR SD 0자리다. US 회사의 KRW 송장 단가는 KR SD 0자리다. 품목 표준 단가(기준 통화)는 회사 국가 행을 쓴다.
+- 국가 행은 회사 국가와 무관하게 지원 국가(US, KR) 모두 Seed한다. 국가를 추가하면 그 국가 행을 함께 넣는다.
 - 화면은 같은 설정으로 입력 칸 자릿수와 표시 형식을 정한다 (`GET /api/bc/localization`).
 
 ## 표시 형식
