@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/architecture/inventory.md",
-      "sha256": "cbaf57e68b9eab91d354eb41b0b5e19f84f73c05a512e1896ce3391d10c33c2a"
+      "sha256": "1e0276c2a68d020e8d7d31041b35abe751448cd37c0ade84189bcaf35fb8806f"
     },
     {
       "path": "docs/architecture/layers.md",
@@ -336,7 +336,7 @@
     },
     {
       "path": "docs/specifications/BC/company.md",
-      "sha256": "8de00eefb452d3dfa922239e65e60412595a83ca8b08ad7ddba25fdc38be5c08"
+      "sha256": "be77973cb0d439de0b5df75028ae4b1f82535dac21c4ac2a554e6bdfbf0ebf8a"
     },
     {
       "path": "docs/specifications/BC/currency.md",
