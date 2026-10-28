@@ -1,0 +1,28 @@
+<Project>
+  <!-- Adds QuroGrid references to projects that set <UsesQuroGrid>true</UsesQuroGrid>.
+       Import from Directory.Build.targets. -->
+
+  <!-- package mode: NuGet package from the local feed -->
+  <ItemGroup Condition="'$(UsesQuroGrid)' == 'true' And '$(QuroGridSource)' != 'local'">
+    <PackageReference Include="Quro.Grid" Version="$(QuroGridVersion)" Condition="'$(ManagePackageVersionsCentrally)' != 'true'" />
+    <PackageReference Include="Quro.Grid" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
+    <PackageVersion Include="Quro.Grid" Version="$(QuroGridVersion)" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
+  </ItemGroup>
+
+  <!-- local mode: source projects from the QuroGrid repository (local verification only) -->
+  <ItemGroup Condition="'$(UsesQuroGrid)' == 'true' And '$(QuroGridSource)' == 'local'">
+    <ProjectReference Include="$(QuroGridRoot)/src/Quro.Grid/Quro.Grid.csproj" />
+  </ItemGroup>
+
+  <Target Name="QuroGridCheckSource" BeforeTargets="CollectPackageReferences;ResolveProjectReferences"
+          Condition="'$(UsesQuroGrid)' == 'true'">
+    <Error Condition="'$(QuroGridSource)' != 'package' And '$(QuroGridSource)' != 'local'"
+           Text="QuroGridSource must be 'package' or 'local' (was '$(QuroGridSource)')." />
+    <Error Condition="'$(QuroGridSource)' == 'local' And '$(ContinuousIntegrationBuild)' == 'true'"
+           Text="QuroGridSource=local is not allowed in CI. Build with the package." />
+    <Error Condition="'$(QuroGridSource)' == 'local' And !Exists('$(QuroGridRoot)/src/Quro.Grid/Quro.Grid.csproj')"
+           Text="QuroGrid source not found at $(QuroGridRoot). Set -p:QuroGridRoot=..." />
+    <Warning Condition="'$(QuroGridSource)' == 'local'"
+             Text="Building against local QuroGrid source ($(QuroGridRoot)). Do not commit or close tasks in this mode." />
+  </Target>
+</Project>

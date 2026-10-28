@@ -1,0 +1,11 @@
+<Project>
+  <!-- QuroGrid consumption settings. Import from Directory.Build.props.
+       "Pulling" a new QuroGrid = changing QuroGridVersion to a version published in the local feed. -->
+  <PropertyGroup>
+    <QuroGridVersion>0.1.0-alpha.1</QuroGridVersion>
+    <!-- package (default) | local -->
+    <QuroGridSource Condition="'$(QuroGridSource)' == ''">package</QuroGridSource>
+    <!-- Used only in local mode. Default: sibling folder /WRK/QuroGrid -->
+    <QuroGridRoot Condition="'$(QuroGridRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../QuroGrid'))</QuroGridRoot>
+  </PropertyGroup>
+</Project>
