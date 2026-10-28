@@ -6,4 +6,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
   </PropertyGroup>
+  <!-- QuroGrid version and source mode (docs/architecture/qurogrid-integration.md) -->
+  <Import Project="$(MSBuildThisFileDirectory)build/QuroGrid.props" />
 </Project>

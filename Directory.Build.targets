@@ -1,0 +1,4 @@
+<Project>
+  <!-- Adds QuroGrid references to projects that set UsesQuroGrid (docs/architecture/qurogrid-integration.md) -->
+  <Import Project="$(MSBuildThisFileDirectory)build/QuroGrid.targets" />
+</Project>
