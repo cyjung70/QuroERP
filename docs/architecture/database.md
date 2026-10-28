@@ -57,7 +57,7 @@
 | 예/아니오 | `boolean` (AS IS `Y`/`N` 플래그) |
 | 긴 텍스트·이미지 | `text`, `bytea`. 이미지(품목 이미지, 회사 로고)는 원본을 `bytea`에 저장하고 표시 크기는 화면에서 줄인다 (서버 축소 없음) |
 
-- 길이와 소수 자릿수는 DB가 아니라 Domain 규칙에서 검사한다. 금액 자릿수는 문서 통화, 단가·수량 자릿수는 모듈 설정을 따른다 ([지역화](localization.md)).
+- 길이와 소수 자릿수는 DB가 아니라 Domain 규칙에서 검사한다. 금액 자릿수는 문서 통화, 단가 자릿수는 문서 통화 국가×모듈(`bc_country_decimal`), 수량 자릿수는 모듈 설정을 따른다 ([지역화](localization.md)).
 - 통화 금액 컬럼은 문서 통화 금액이다. 기준 통화 금액은 `*_base_amt` 컬럼에 함께 둔다.
 
 ## Oracle에서 옮길 때 주의
@@ -103,5 +103,5 @@ dotnet run --project src/QuroERP.Database -- --country KR       # 회사 국가 
 dotnet run --project src/QuroERP.Database -- --connection "<연결 문자열>"
 ```
 
-- `--country US|KR`(기본 `US`): 회사 행이 없을 때 Seed가 그 국가의 회사 행(국가·기준 통화·기본 언어·세금 계산 단위), 기본 세금 코드(BC-BR-505), 모듈 자릿수 기본값(BC-BR-422)을 넣는다. 회사 행이 이미 있으면(이관 DB 포함) 국가를 바꾸지 않는다. 운영 설치와 Tester 테스트 DB 준비가 같은 방법이다.
+- `--country US|KR`(기본 `US`): 회사 행이 없을 때 Seed가 그 국가의 회사 행(국가·기준 통화·기본 언어·세금 계산 단위), 기본 세금 코드(BC-BR-505), 모듈 수량 자릿수 기본값(BC-BR-422)을 넣는다. 국가별 단가 자릿수(`bc_country_decimal`)와 통화 국가(BC-BR-428)는 국가 인자와 무관하게 모두 넣는다. 회사 행이 이미 있으면(이관 DB 포함) 국가를 바꾸지 않는다. 운영 설치와 Tester 테스트 DB 준비가 같은 방법이다.
 - 연결 문자열 우선순위: `--connection` 인자 > 환경변수 `ConnectionStrings__QuroErp` > `dotnet user-secrets` (`ConnectionStrings:QuroErp`). 연결 문자열을 저장소 파일에 쓰지 않는다.

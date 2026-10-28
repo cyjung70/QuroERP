@@ -1,0 +1,37 @@
+{
+  "id": "TASK-CORE-019",
+  "project": "core",
+  "title": "국가별 단가 자릿수 테이블과 문서 통화 국가 기준 단가 검사",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/localization.md",
+    "docs/business-rules/BC/localization.md",
+    "docs/specifications/BC/currency.md",
+    "docs/specifications/BC/localization-setting.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-014"
+  ],
+  "acceptance": [
+    "`bc_country_decimal(country_code, module, unit_price_decimals)` UNIQUE (country_code, module) 마이그레이션과 Seed (US MM 4·SD 2, KR MM 2·SD 0), `bc_currency.country_code` 추가 (USD US, KRW KR), `sys_decimal_setting.unit_price_decimals` 제거",
+    "`IDecimalPolicy` 단가 자릿수 = 문서 통화 국가 행 → 없으면 회사 국가 행 (BC-BR-429). 품목 표준 단가는 회사 국가 행",
+    "`GET /api/bc/localization`에 국가별 단가 자릿수·통화 국가, `PUT /api/bc/localization-setting`에 국가별 단가 자릿수 (BC-BR-425 축소 409)",
+    "단위 테스트: KR 회사 USD SD 단가 12.50 허용, KRW SD 단가 12.5 차단(BC-E-423), US 회사 KRW SD 단가 12.5 차단, 국가 없는 통화는 회사 국가 행"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
