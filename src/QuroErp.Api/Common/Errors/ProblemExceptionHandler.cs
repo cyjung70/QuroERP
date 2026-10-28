@@ -8,7 +8,7 @@ namespace QuroErp.Api.Common.Errors;
 
 /// <summary>
 /// Maps known exceptions to ProblemDetails with code and args (api.md "오류", quro-api step 5):
-/// DomainException → 422, NotFoundException → 404, AuthException → AUTH-xxx status with localized title and detail. Other exceptions fall through to the default handler (500).
+/// DomainException → 422, NotFoundException → 404, ConflictException and ConcurrencyException → 409, AuthException → AUTH-xxx status with localized title and detail. Other exceptions fall through to the default handler (500).
 /// </summary>
 public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetails) : IExceptionHandler
 {
@@ -23,6 +23,7 @@ public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetail
         {
             DomainException e => (StatusCodes.Status422UnprocessableEntity, e.Code, e.Args),
             NotFoundException e => (StatusCodes.Status404NotFound, e.Code, e.Args),
+            ConflictException e => (StatusCodes.Status409Conflict, e.Code, e.Args),
             ConcurrencyException => (StatusCodes.Status409Conflict, ConcurrencyException.Code, (IReadOnlyList<object>)[]),
             _ => (0, null, null),
         };
