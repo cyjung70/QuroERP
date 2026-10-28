@@ -22,11 +22,15 @@ public class LocalizationRepositoryTests(AuthSchemaFixture db)
         var languages = await repository.FindLanguagesAsync(uow.Transaction, CancellationToken.None);
         var currencies = await repository.FindCurrenciesAsync(uow.Transaction, CancellationToken.None);
         var decimals = await repository.FindDecimalSettingsAsync(uow.Transaction, CancellationToken.None);
+        var countryDecimals = await repository.FindCountryDecimalsAsync(uow.Transaction, CancellationToken.None);
         var company = await repository.FindCompanyAsync(uow.Transaction, CancellationToken.None);
 
         languages.Should().Equal(new LanguageRow("en", 1, true), new LanguageRow("ko", 2, true), new LanguageRow("sw", 3, false));
-        currencies.Select(c => (c.CurrencyCode, c.Decimals, c.UseYn)).Should().Equal(("KRW", 0, true), ("USD", 2, true));
-        decimals.Should().Equal(new DecimalSettingRow("MM", 4, 2, "HALF_UP"), new DecimalSettingRow("SD", 2, 0, "HALF_UP"));
+        currencies.Select(c => (c.CurrencyCode, c.Decimals, c.UseYn, c.CountryCode)).Should().Equal(("KRW", 0, true, "KR"), ("USD", 2, true, "US"));
+        decimals.Should().Equal(new DecimalSettingRow("MM", 2, "HALF_UP"), new DecimalSettingRow("SD", 0, "HALF_UP"));
+        countryDecimals.Should().Equal(
+            new CountryDecimalRow("KR", "MM", 2), new CountryDecimalRow("KR", "SD", 0),
+            new CountryDecimalRow("US", "MM", 4), new CountryDecimalRow("US", "SD", 2));
         company.Should().BeNull();
     }
 
@@ -76,7 +80,9 @@ public class LocalizationRepositoryTests(AuthSchemaFixture db)
     [InlineData("UPDATE sys_language SET use_yn = false WHERE lang_code = 'en'")]
     [InlineData("INSERT INTO sys_language (lang_code, sort_order, created_by, updated_by) VALUES ('EN-us', 9, 's', 's')")]
     [InlineData("INSERT INTO bc_currency (currency_code, decimals, created_by, updated_by) VALUES ('EUR', 5, 's', 's')")]
-    [InlineData("UPDATE sys_decimal_setting SET unit_price_decimals = 7 WHERE module = 'MM'")]
+    [InlineData("UPDATE bc_country_decimal SET unit_price_decimals = 7 WHERE country_code = 'US' AND module = 'MM'")]
+    [InlineData("INSERT INTO bc_country_decimal (country_code, module, unit_price_decimals, created_by, updated_by) VALUES ('jp', 'SD', 0, 's', 's')")]
+    [InlineData("UPDATE bc_currency SET country_code = 'usa' WHERE currency_code = 'USD'")]
     [InlineData("UPDATE sys_decimal_setting SET qty_decimals = 5 WHERE module = 'SD'")]
     [InlineData("UPDATE sys_decimal_setting SET rounding_mode = 'HALF_EVEN' WHERE module = 'SD'")]
     public async Task LocalizationConstraints_RejectOutOfRuleValues(string sql)

@@ -8,11 +8,14 @@ public sealed record CompanyLocalizationRow(string CountryCode, string BaseCurre
 /// <summary>sys_language row.</summary>
 public sealed record LanguageRow(string LangCode, int SortOrder, bool UseYn);
 
-/// <summary>bc_currency row. Id is the owner id of bc_currency_translation.</summary>
-public sealed record CurrencyRow(long Id, string CurrencyCode, int Decimals, bool UseYn);
+/// <summary>bc_currency row. Id is the owner id of bc_currency_translation. CountryCode may be null (BC-BR-428).</summary>
+public sealed record CurrencyRow(long Id, string CurrencyCode, int Decimals, bool UseYn, string? CountryCode);
 
 /// <summary>sys_decimal_setting row.</summary>
-public sealed record DecimalSettingRow(string Module, int UnitPriceDecimals, int QtyDecimals, string RoundingMode);
+public sealed record DecimalSettingRow(string Module, int QtyDecimals, string RoundingMode);
+
+/// <summary>bc_country_decimal row.</summary>
+public sealed record CountryDecimalRow(string CountryCode, string Module, int UnitPriceDecimals);
 
 /// <summary>Localization settings (localization.md). Callers pass their own transaction.</summary>
 public interface ILocalizationRepository
@@ -28,4 +31,7 @@ public interface ILocalizationRepository
 
     /// <summary>All module settings in module order.</summary>
     Task<IReadOnlyList<DecimalSettingRow>> FindDecimalSettingsAsync(IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>All country unit price decimals in country_code, module order.</summary>
+    Task<IReadOnlyList<CountryDecimalRow>> FindCountryDecimalsAsync(IDbTransaction transaction, CancellationToken cancellationToken);
 }

@@ -4,7 +4,8 @@ namespace QuroERP.Database;
 
 /// <summary>
 /// Sets the company country at installation (BC-BR-313): country, base currency, default language and the
-/// module decimal settings all come from the country profile (US = USD/en, KR = KRW/ko).
+/// module quantity decimals and rounding mode all come from the country profile (US = USD/en, KR = KRW/ko).
+/// Unit price decimals (bc_country_decimal) are rows for every country and do not change with the company country.
 /// Blocked once any document, stock movement or exchange rate exists.
 /// </summary>
 public static class CompanySetup
@@ -15,8 +16,8 @@ public static class CompanySetup
     /// ICountryProfile (UsCountryProfile, KrCountryProfile); a test keeps them equal.</summary>
     public static IReadOnlyDictionary<string, CountryDefaults> Countries { get; } = new Dictionary<string, CountryDefaults>
     {
-        ["US"] = new("US", "USD", "en", [new("MM", 4, 2, "HALF_UP"), new("SD", 2, 0, "HALF_UP")]),
-        ["KR"] = new("KR", "KRW", "ko", [new("MM", 2, 2, "HALF_UP"), new("SD", 0, 0, "HALF_UP")]),
+        ["US"] = new("US", "USD", "en", [new("MM", 2, "HALF_UP"), new("SD", 0, "HALF_UP")]),
+        ["KR"] = new("KR", "KRW", "ko", [new("MM", 2, "HALF_UP"), new("SD", 0, "HALF_UP")]),
     };
 
     // Tables whose rows mean the company has started trading (BC-BR-312, BC-BR-313)
@@ -52,11 +53,10 @@ public static class CompanySetup
         """;
 
     private const string UpsertDecimalSetting = """
-        INSERT INTO sys_decimal_setting (module, unit_price_decimals, qty_decimals, rounding_mode, created_by, updated_by)
-        VALUES (@module, @unit_price_decimals, @qty_decimals, @rounding_mode, @audit_user, @audit_user)
+        INSERT INTO sys_decimal_setting (module, qty_decimals, rounding_mode, created_by, updated_by)
+        VALUES (@module, @qty_decimals, @rounding_mode, @audit_user, @audit_user)
         ON CONFLICT (module) DO UPDATE
-           SET unit_price_decimals = EXCLUDED.unit_price_decimals,
-               qty_decimals = EXCLUDED.qty_decimals,
+           SET qty_decimals = EXCLUDED.qty_decimals,
                rounding_mode = EXCLUDED.rounding_mode,
                updated_at = now(),
                updated_by = EXCLUDED.updated_by
@@ -103,7 +103,7 @@ public static class CompanySetup
         foreach (var setting in profile.DecimalSettings)
         {
             await ExecuteAsync(connection, transaction, UpsertDecimalSetting, cancellationToken,
-                ("module", setting.Module), ("unit_price_decimals", setting.UnitPriceDecimals), ("qty_decimals", setting.QtyDecimals),
+                ("module", setting.Module), ("qty_decimals", setting.QtyDecimals),
                 ("rounding_mode", setting.RoundingMode), ("audit_user", AuditUser));
         }
 
@@ -150,4 +150,4 @@ public sealed record CountryDefaults(
     string CountryCode, string BaseCurrencyCode, string DefaultLangCode, IReadOnlyList<DecimalDefaults> DecimalSettings);
 
 /// <summary>One sys_decimal_setting row.</summary>
-public sealed record DecimalDefaults(string Module, int UnitPriceDecimals, int QtyDecimals, string RoundingMode);
+public sealed record DecimalDefaults(string Module, int QtyDecimals, string RoundingMode);

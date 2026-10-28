@@ -34,7 +34,7 @@ public class LocalizationServiceTests
     {
         _localization.Company = new CompanyLocalizationRow("KR", "KRW", "ko", "LINE");
         _localization.Languages[2] = new LanguageRow("sw", 3, false);
-        _localization.Currencies[1] = new CurrencyRow(2, "USD", 2, false);
+        _localization.Currencies[1] = new CurrencyRow(2, "USD", 2, false, "US");
 
         var dto = await Service.GetAsync("en", CancellationToken.None);
 
@@ -45,20 +45,23 @@ public class LocalizationServiceTests
         dto.DateFormat.Should().Be("yyyy-MM-dd");
         dto.TaxCalcMode.Should().Be("LINE");
         dto.Languages.Should().Equal(new LanguageDto("en", 1), new LanguageDto("ko", 2));
-        dto.Currencies.Should().Equal(new CurrencyDto("KRW", "Korean Won", 0));
-        dto.DecimalSettings.Should().Equal(new DecimalSettingDto("MM", 4, 2, "HALF_UP"), new DecimalSettingDto("SD", 2, 0, "HALF_UP"));
+        dto.Currencies.Should().Equal(new CurrencyDto("KRW", "Korean Won", 0, "KR"));
+        dto.CountryDecimals.Should().Equal(
+            new CountryDecimalDto("KR", "MM", 2), new CountryDecimalDto("KR", "SD", 0),
+            new CountryDecimalDto("US", "MM", 4), new CountryDecimalDto("US", "SD", 2));
+        dto.DecimalSettings.Should().Equal(new DecimalSettingDto("MM", 2, "HALF_UP"), new DecimalSettingDto("SD", 0, "HALF_UP"));
         _unitOfWork.Commits.Should().Be(1);
     }
 
     [Fact, Trait("Id", "CORE-014-T03")]
     public async Task GetAsync_CurrencyWithoutName_UsesCurrencyCode()
     {
-        _localization.Currencies.Add(new CurrencyRow(3, "EUR", 2, true));
+        _localization.Currencies.Add(new CurrencyRow(3, "EUR", 2, true, null));
 
         var dto = await Service.GetAsync("ko", CancellationToken.None);
 
-        dto.Currencies.Should().Contain(new CurrencyDto("EUR", "EUR", 2));
-        dto.Currencies.Should().Contain(new CurrencyDto("USD", "미국 달러", 2));
+        dto.Currencies.Should().Contain(new CurrencyDto("EUR", "EUR", 2, null));
+        dto.Currencies.Should().Contain(new CurrencyDto("USD", "미국 달러", 2, "US"));
     }
 
     private sealed class CurrencyNames : ITranslationRepository

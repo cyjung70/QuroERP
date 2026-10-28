@@ -259,9 +259,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public List<LanguageRow> Languages { get; } = [new("en", 1, true), new("ko", 2, true), new("sw", 3, false)];
 
-        public List<CurrencyRow> Currencies { get; } = [new(101, "KRW", 0, true), new(102, "USD", 2, true)];
+        public List<CurrencyRow> Currencies { get; } = [new(101, "KRW", 0, true, "KR"), new(102, "USD", 2, true, "US")];
 
-        public List<DecimalSettingRow> DecimalSettings { get; } = [new("MM", 2, 2, "HALF_UP"), new("SD", 0, 0, "DOWN")];
+        public List<DecimalSettingRow> DecimalSettings { get; } = [new("MM", 2, "HALF_UP"), new("SD", 0, "DOWN")];
+
+        public List<CountryDecimalRow> CountryDecimals { get; } =
+            [new("KR", "MM", 2), new("KR", "SD", 0), new("US", "MM", 4), new("US", "SD", 2)];
 
         public Task<CompanyLocalizationRow?> FindCompanyAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(Company);
@@ -274,6 +277,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public Task<IReadOnlyList<DecimalSettingRow>> FindDecimalSettingsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<DecimalSettingRow>>(DecimalSettings);
+
+        public Task<IReadOnlyList<CountryDecimalRow>> FindCountryDecimalsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<CountryDecimalRow>>(CountryDecimals);
     }
 
     public sealed class InMemoryInventorySettingRepository : IInventorySettingRepository

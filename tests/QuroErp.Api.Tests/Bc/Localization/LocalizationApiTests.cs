@@ -26,8 +26,11 @@ public class LocalizationApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         dto.DateFormat.Should().Be("yyyy-MM-dd");
         dto.TaxCalcMode.Should().Be("DOCUMENT");
         dto.Languages.Should().Equal(new LanguageDto("en", 1), new LanguageDto("ko", 2));
-        dto.Currencies.Should().Equal(new CurrencyDto("KRW", "Korean Won", 0), new CurrencyDto("USD", "US Dollar", 2));
-        dto.DecimalSettings.Should().Equal(new DecimalSettingDto("MM", 2, 2, "HALF_UP"), new DecimalSettingDto("SD", 0, 0, "DOWN"));
+        dto.Currencies.Should().Equal(new CurrencyDto("KRW", "Korean Won", 0, "KR"), new CurrencyDto("USD", "US Dollar", 2, "US"));
+        dto.CountryDecimals.Should().Equal(
+            new CountryDecimalDto("KR", "MM", 2), new CountryDecimalDto("KR", "SD", 0),
+            new CountryDecimalDto("US", "MM", 4), new CountryDecimalDto("US", "SD", 2));
+        dto.DecimalSettings.Should().Equal(new DecimalSettingDto("MM", 2, "HALF_UP"), new DecimalSettingDto("SD", 0, "DOWN"));
     }
 
     [Fact, Trait("Id", "CORE-014-IT-02")]
@@ -37,7 +40,7 @@ public class LocalizationApiTests(ApiFactory factory) : IClassFixture<ApiFactory
 
         var dto = await client.GetFromJsonAsync<LocalizationDto>($"{LocalizationRoutes.Base}?lang=sw");
 
-        dto!.Currencies.Should().Equal(new CurrencyDto("KRW", "대한민국 원", 0), new CurrencyDto("USD", "US Dollar", 2));
+        dto!.Currencies.Should().Equal(new CurrencyDto("KRW", "대한민국 원", 0, "KR"), new CurrencyDto("USD", "US Dollar", 2, "US"));
     }
 
     [Fact, Trait("Id", "CORE-014-IT-03")]

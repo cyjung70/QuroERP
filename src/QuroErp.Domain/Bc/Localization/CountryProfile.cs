@@ -41,8 +41,11 @@ public interface ICountryProfile
     /// <summary>Region part of the display culture, e.g. "US" for en-US.</summary>
     string CultureRegion { get; }
 
-    /// <summary>Default sys_decimal_setting rows (BC-BR-422).</summary>
+    /// <summary>Default sys_decimal_setting rows: quantity decimals and rounding mode (BC-BR-422).</summary>
     IReadOnlyList<DecimalSetting> DefaultDecimalSettings { get; }
+
+    /// <summary>bc_country_decimal rows of this country (BC-BR-422). Installed for every supported country.</summary>
+    IReadOnlyList<CountryDecimal> DefaultUnitPriceDecimals { get; }
 }
 
 public sealed class UsCountryProfile : ICountryProfile
@@ -61,8 +64,14 @@ public sealed class UsCountryProfile : ICountryProfile
 
     public IReadOnlyList<DecimalSetting> DefaultDecimalSettings { get; } =
     [
-        new(DecimalModule.Mm, unitPriceDecimals: 4, qtyDecimals: 2, RoundingMode.HalfUp),
-        new(DecimalModule.Sd, unitPriceDecimals: 2, qtyDecimals: 0, RoundingMode.HalfUp),
+        new(DecimalModule.Mm, qtyDecimals: 2, RoundingMode.HalfUp),
+        new(DecimalModule.Sd, qtyDecimals: 0, RoundingMode.HalfUp),
+    ];
+
+    public IReadOnlyList<CountryDecimal> DefaultUnitPriceDecimals { get; } =
+    [
+        new(CountryProfiles.Us, DecimalModule.Mm, unitPriceDecimals: 4),
+        new(CountryProfiles.Us, DecimalModule.Sd, unitPriceDecimals: 2),
     ];
 }
 
@@ -82,8 +91,14 @@ public sealed class KrCountryProfile : ICountryProfile
 
     public IReadOnlyList<DecimalSetting> DefaultDecimalSettings { get; } =
     [
-        new(DecimalModule.Mm, unitPriceDecimals: 2, qtyDecimals: 2, RoundingMode.HalfUp),
-        new(DecimalModule.Sd, unitPriceDecimals: 0, qtyDecimals: 0, RoundingMode.HalfUp),
+        new(DecimalModule.Mm, qtyDecimals: 2, RoundingMode.HalfUp),
+        new(DecimalModule.Sd, qtyDecimals: 0, RoundingMode.HalfUp),
+    ];
+
+    public IReadOnlyList<CountryDecimal> DefaultUnitPriceDecimals { get; } =
+    [
+        new(CountryProfiles.Kr, DecimalModule.Mm, unitPriceDecimals: 2),
+        new(CountryProfiles.Kr, DecimalModule.Sd, unitPriceDecimals: 0),
     ];
 }
 
@@ -103,6 +118,10 @@ public static class CountryProfiles
     }.ToDictionary(p => p.CountryCode, StringComparer.Ordinal);
 
     public static IReadOnlyCollection<string> Supported => Profiles.Keys;
+
+    /// <summary>bc_country_decimal defaults of all supported countries, whatever the company country (BC-BR-422).</summary>
+    public static IReadOnlyList<CountryDecimal> DefaultUnitPriceDecimals =>
+        [.. Profiles.Values.OrderBy(p => p.CountryCode, StringComparer.Ordinal).SelectMany(p => p.DefaultUnitPriceDecimals)];
 
     /// <exception cref="DomainException">BC-E-313 when the country is not supported.</exception>
     public static ICountryProfile Get(string? countryCode) =>
