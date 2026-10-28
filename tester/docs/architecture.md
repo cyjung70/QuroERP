@@ -59,7 +59,7 @@ tester/
 
 회사 국가(`US`·`KR`)는 설치 때 정하고 문서가 생기면 바꿀 수 없다. 그래서 국가마다 테스트 DB를 따로 만든다.
 
-- 테스트 DB 하나 = 국가 하나. 준비할 때 국가를 정한다 [확인 필요: 본체 설치 도구의 국가 지정 방법이 아직 없다]. `conftest.py`는 시작할 때 `GET /api/bc/localization`의 국가가 `QURO_COUNTRY`와 같은지 확인하고, 다르면 전체 실행을 멈춘다.
+- 테스트 DB 하나 = 국가 하나. 준비할 때 설치 도구에 국가를 준다 (`dotnet run --project src/QuroERP.Database -- --connection "<테스트 DB>" --country KR`, 기본 `US` — [DB 설계](../../docs/architecture/database.md)). `conftest.py`는 시작할 때 `GET /api/bc/localization`의 국가가 `QURO_COUNTRY`와 같은지 확인하고, 다르면 전체 실행을 멈춘다.
 - `@pytest.mark.country("KR")`이 달린 테스트는 그 국가 DB에서만 실행하고 다른 국가에서는 건너뛴다 (건너뛰기는 실패가 아니다).
 - 마커가 없는 테스트는 국가 공통이다. 두 국가에서 결과가 같도록 거래처 세금 코드를 `NONE`으로 만들고, 단가·수량은 정수(KR SD 단가 0자리)로 쓴다. 세금 대상 품목만 쓴다 (세금 대상이 아닌 품목은 국가별 면세 코드가 기본값이다).
 - 시나리오 문서 머리 표의 "국가" 칸이 기준이다: `공통`, `US`, `KR`.

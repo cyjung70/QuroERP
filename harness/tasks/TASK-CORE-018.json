@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-018",
+  "project": "core",
+  "title": "환율 표기 방향 변경과 소수 10자리",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/localization.md",
+    "docs/business-rules/BC/localization.md",
+    "docs/business-rules/SD/master-data.md",
+    "docs/business-rules/SD/ar-receipt.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-014"
+  ],
+  "acceptance": [
+    "`exchange_rate`·`bc_exchange_rate.rate` 검사를 소수 10자리로 (마이그레이션 스크립트가 정밀도를 두었다면 함께 바꾼다)",
+    "기준 통화 금액 = 문서 금액 × 환율, 기준 통화 자릿수 반올림 (BC-BR-413). 기준 통화 문서 환율 1",
+    "환율 차이 = 반제 금액 × 입금(지급) 환율 − 반제 금액 × 원 문서 환율 (SD-BR-722, MM-BR-965)",
+    "단위 테스트: KR 회사 USD 100 × 1350 = 135,000원, US 회사 KRW 135,000 × 0.0007407407 = USD 100.00"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

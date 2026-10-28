@@ -84,11 +84,11 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "d71478c531684fdd8344045e95d0d2b884703ab3346f9afa4f8660bf330e36e0"
+      "sha256": "ae88fec86915eafd93dc3d57ed409be5f88b15879e3ce71ab000883460643ab9"
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "48d8d8fe61d4c04f042e05444cfe738b4d40733b3b7e76013f75b9c7d6903e73"
+      "sha256": "44780e0f1c20e74b8b9ab76f221e6e7037ac351ee4199d8978c7e692037c27a5"
     },
     {
       "path": "docs/architecture/i18n.md",
@@ -104,7 +104,7 @@
     },
     {
       "path": "docs/architecture/localization.md",
-      "sha256": "806a4f05fae52aa7f975eb71110e3cf7698d2bb816f483e8df8a6b54c6a9de25"
+      "sha256": "5588183564b58bf4983f3837052b09bcd570436b551052718f60bdd5fd496c7d"
     },
     {
       "path": "docs/architecture/login.md",
@@ -148,7 +148,7 @@
     },
     {
       "path": "docs/business-rules/BC/localization.md",
-      "sha256": "0d0e10b93e1eb2600c59a33885b097fb07c5418f6c9311bfbbec2237c51313c7"
+      "sha256": "4b053bbf353f1a15d45cc7c29be3b4ca0ea725af5100c90ea03d0eb69690859b"
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
@@ -164,7 +164,7 @@
     },
     {
       "path": "docs/business-rules/BC/tax.md",
-      "sha256": "55186a129aa820872437b24cc01cc421325ded3ec192e27b67b37c40932a223a"
+      "sha256": "1e6f38d8e8eaa9bd89fa8f0e198cf43db65b6aec831fa30c1295d436ad5c8dda"
     },
     {
       "path": "docs/business-rules/BC/user.md",
@@ -248,7 +248,7 @@
     },
     {
       "path": "docs/business-rules/SD/ar-receipt.md",
-      "sha256": "0c3e59f46385b26b292ab23b65fd6d74178892d853215f6d8dbfd3327e7119f8"
+      "sha256": "0176840b28380fe3926cdfaaaa1bf23fe026214ec4a8e2c0f0c04d32e0af25c6"
     },
     {
       "path": "docs/business-rules/SD/ar-report.md",
@@ -272,7 +272,7 @@
     },
     {
       "path": "docs/business-rules/SD/master-data.md",
-      "sha256": "6d499bfce4b8fe2856bf1f945e605fe95fec2f9f7fad1585a135c681d273353e"
+      "sha256": "9aeca0c38972ccd78db6fa3a472ded013e5eb40435c7f99dd477c8f1eb4e4b3c"
     },
     {
       "path": "docs/business-rules/SD/pricing.md",
@@ -284,7 +284,7 @@
     },
     {
       "path": "docs/business-rules/SD/sales-invoice.md",
-      "sha256": "cc83a54d83131669ca3c3e4ba2ae4cb1e5f4f5716b5948b75f73c57c5328897d"
+      "sha256": "a1ec1923e1f8a28314b3a59a8f5092e4dbb39ba765b8098702b5e13a36c84c59"
     },
     {
       "path": "docs/business-rules/SD/sales-order.md",
@@ -300,7 +300,7 @@
     },
     {
       "path": "docs/glossary.md",
-      "sha256": "b11818afae13da80aedc8425b33cdcfefedabbf8776d4baaedbd679865459432"
+      "sha256": "44ac451d45d5633141e0695b316aa0cddd0543cf1a6294d2e982839cd19f91db"
     },
     {
       "path": "docs/INDEX.md",
@@ -356,7 +356,7 @@
     },
     {
       "path": "docs/specifications/BC/exchange-rate.md",
-      "sha256": "428fdbb1c8a3b86a2bfd8d9991ce9a0bbeec3382249132ab374c7afc9736287e"
+      "sha256": "c60031ee67888a00671f91339d9b0cd7e6cdbd0a369560514fe52f3da2d6680f"
     },
     {
       "path": "docs/specifications/BC/item-barcode.md",
@@ -1099,6 +1099,14 @@
       "sha256": "8881f2c143cf31e54eb154ef12208a0a09ff913f7c12d840b992a659fd28e33c"
     },
     {
+      "path": "harness/tasks/TASK-CORE-017.json",
+      "sha256": "fba10248e00d53d5235afb48c1fd515537c622fe79dc8f75a4869c6150a4a82f"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-018.json",
+      "sha256": "33483e2aa8ca7e5de57695151ee08c9c5fdf7b37a7a3cb03a8a02a250e26bc2e"
+    },
+    {
       "path": "harness/tasks/TASK-MM-001.json",
       "sha256": "b379abcbcb9833b9d82d0f80339be974796be26971d858700dc6e6bea2021635"
     },
@@ -1116,7 +1124,7 @@
     },
     {
       "path": "harness/tasks/TASK-MM-005.json",
-      "sha256": "76b02c93bd582094303ecacd5f39841e96e239dc9c3106aa59d06ec8abb79c97"
+      "sha256": "1b2cddd2a75f9db93f5b2b5657e0abc27f243e3d9a469ad31ca23d8f99a0693a"
     },
     {
       "path": "harness/tasks/TASK-MM-006.json",
@@ -1124,7 +1132,7 @@
     },
     {
       "path": "harness/tasks/TASK-MM-007.json",
-      "sha256": "6c8a617cb73645967a1d2b912018cc98696cc398b821142fd285fd15da57fe3c"
+      "sha256": "ed8ddea2ebe6866187f261211b7781f405d68862cc8adeb7227c510be0379a0d"
     },
     {
       "path": "harness/tasks/TASK-MM-008.json",
@@ -1216,7 +1224,7 @@
     },
     {
       "path": "harness/tasks/TASK-MM-030.json",
-      "sha256": "2e827a2376975de83fd14bd1787bb14ad28d2869770c3257430f3f4226487eb5"
+      "sha256": "f8c02b869f33af3be9f941b6fd5367fb5693c526aeafdd1553da094f80035f5a"
     },
     {
       "path": "harness/tasks/TASK-MM-031.json",
@@ -1276,7 +1284,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-003.json",
-      "sha256": "f279ebce22af98118c9fa37642f7e33798f84c2aade3756035f44e645012871e"
+      "sha256": "1e9ff991ba20fd0d97831d7112b2328d95c0bf5d955e122051cc4cf2d17ed058"
     },
     {
       "path": "harness/tasks/TASK-SD-004.json",
@@ -1284,7 +1292,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-005.json",
-      "sha256": "27823ae84ccd5b5baacaa90235a18a88cf28c9e6513e40619dbebdb6b3be1473"
+      "sha256": "5841b5bdad4a2d7bc5b58d0109763fb2aaf268658ae9f9f773530339813c1589"
     },
     {
       "path": "harness/tasks/TASK-SD-006.json",
@@ -1292,7 +1300,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-007.json",
-      "sha256": "d222b097ad3e3b1af3b457a287cf2c221f3048af992ec907f60856f6f2512057"
+      "sha256": "78aa242f64953610ae4e12ae1da42ca956cad97c46d37ed250d09024630173d5"
     },
     {
       "path": "harness/tasks/TASK-SD-008.json",
@@ -1404,7 +1412,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-035.json",
-      "sha256": "1401150d8779ca030176897a4aa2000d3ef4bc28125a4f9778a2773b0e8e974a"
+      "sha256": "64da79ba1322581626071a0a79e885a58481894633e453f6a6500b045702c67a"
     },
     {
       "path": "harness/tasks/TASK-SD-036.json",
@@ -1412,7 +1420,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-037.json",
-      "sha256": "6124648742e7e1ccdf2034fcf32f6cbd2b5e2e00fa9905465824ad75ffade631"
+      "sha256": "01f2237fa83decb02aa241e79ad6c52f493758b0f83bc2c24394154c943d2642"
     },
     {
       "path": "harness/tasks/TASK-SD-038.json",
@@ -1420,7 +1428,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-039.json",
-      "sha256": "922f1df78e87cdbf9ef668f7ebc248b2cf140727bffd7d4e6ea5500cf0aaba97"
+      "sha256": "2521741452944dde683c7d6c1af3acd85141c387493701b1a0840be913ce53c4"
     },
     {
       "path": "harness/tasks/TASK-SD-040.json",
@@ -1536,11 +1544,11 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "7fbc4d4aaa7e876a313ed91a4f5725dc706968d1ea26e52a4c6d3046a8e5a617"
+      "sha256": "248bd395582c7b0e8a7b29e449615ae514d19e3e015770d80ddda16a47610a02"
     },
     {
       "path": "tester/docs/INDEX.md",
-      "sha256": "c93cf3e785dacd50970295e18d11def6bcf57c35a3bd65faa7a42abdaa6d76b6"
+      "sha256": "7ec8eb5ee0aa3b519d65a2d61f1216da79d25be61f9cfc2ddedf4d82c8a0f286"
     },
     {
       "path": "tester/docs/qa/defects.md",
@@ -1592,7 +1600,7 @@
     },
     {
       "path": "tester/docs/scenarios/migration/MG-TS-003.md",
-      "sha256": "577faaba89e22aed82520c5f439c671b1a754645426ad8976f183f3ea7418cdb"
+      "sha256": "b0dbffd8457e51b9a9f2025c2c3059679fc8eee80b43ecfcfa9a4f4a5c5408c0"
     },
     {
       "path": "tester/docs/scenarios/migration/MG-TS-004.md",
@@ -1668,7 +1676,11 @@
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-008.md",
-      "sha256": "6610bd3fe94f70977a3195e76ea3d4ceb16a5f30c920e38987cdfbc810fe386a"
+      "sha256": "4229f37f9a02b0b9eab40ab4740c6c7621b2730522e6ee159205632e7cfea704"
+    },
+    {
+      "path": "tester/docs/scenarios/SD/SD-TS-009.md",
+      "sha256": "5c297ec4fada931d8ec1e261b7fe0d82f4fca45c253271e2a05fbf39d46e9741"
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-001.json",
@@ -1688,7 +1700,7 @@
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-005.json",
-      "sha256": "82ea8795e2fa7e2b41e04eb17e33af9ef3c5fe346d442af845dd20aa3e6912fc"
+      "sha256": "c1c37c7367b2cfece2ec643b5dbeff78d278af664bd51395f9e73da4d26095b4"
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-006.json",
