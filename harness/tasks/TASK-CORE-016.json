@@ -1,0 +1,32 @@
+{
+  "id": "TASK-CORE-016",
+  "project": "core",
+  "title": "내부 토큰 만료 30분과 Web 재발급",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/security.md",
+    "docs/architecture/login.md",
+    "docs/business-rules/BC/user.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-unit-test"
+  ],
+  "dependsOn": [
+    "TASK-BC-001"
+  ],
+  "acceptance": [
+    "`Jwt:Lifetime` 기본값 30분 (`JwtOptions.Lifetime`)",
+    "Web은 내부 토큰 만료 10분 전부터 `POST /api/auth/refresh`로 다시 받는다. Web 세션이 만료되면 다시 받지 않는다",
+    "토큰 버전이 바뀐 사용자(비밀번호 변경·초기화, 사용 안 함, 강제 폐기)는 refresh가 401이고, Web은 세션을 지우고 로그인 화면으로 보낸다 (BC-BR-130)",
+    "만료·재발급 시각을 `FakeTimeProvider`로 고정한 단위 테스트"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
