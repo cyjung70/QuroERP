@@ -60,6 +60,9 @@
   <data name="Common.DeleteRow" xml:space="preserve"><value>Delete Row</value></data>
   <data name="Common.RestoreRow" xml:space="preserve"><value>Restore</value></data>
   <data name="Common.Select" xml:space="preserve"><value>Select</value></data>
+  <data name="Common.UndoRow" xml:space="preserve"><value>Undo</value></data>
+  <data name="Common.Keyword" xml:space="preserve"><value>Keyword</value></data>
+  <data name="Common.Close" xml:space="preserve"><value>Close</value></data>
   <data name="Common.RowState" xml:space="preserve"><value>Status</value></data>
   <data name="Common.RowState.Added" xml:space="preserve"><value>New</value></data>
   <data name="Common.RowState.Modified" xml:space="preserve"><value>Edited</value></data>
@@ -81,6 +84,18 @@
   <data name="Samples.OrderDt" xml:space="preserve"><value>Document Date</value></data>
   <data name="Samples.Item" xml:space="preserve"><value>Item</value></data>
   <data name="Samples.Group" xml:space="preserve"><value>Group</value></data>
+  <data name="Samples.PoEntry.Title" xml:space="preserve"><value>Sample: PO Entry (SM)</value></data>
+  <data name="Samples.PoNo" xml:space="preserve"><value>PO No.</value></data>
+  <data name="Samples.PoDt" xml:space="preserve"><value>PO Date</value></data>
+  <data name="Samples.Vendor" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Samples.VendorName" xml:space="preserve"><value>Vendor Name</value></data>
+  <data name="Samples.VendorMessage" xml:space="preserve"><value>Vendor Message</value></data>
+  <data name="Samples.FindVendor" xml:space="preserve"><value>Find Vendor</value></data>
+  <data name="Samples.FindItem" xml:space="preserve"><value>Find Item</value></data>
+  <data name="Samples.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Samples.Fob" xml:space="preserve"><value>F.O.B</value></data>
+  <data name="Samples.Amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="Samples.TotalAmt" xml:space="preserve"><value>Total Amount</value></data>
   <data name="Common-E-005" xml:space="preserve"><value>Please enter {0}.</value></data>
   <data name="BC-E-313" xml:space="preserve"><value>Country {0} is not supported. Choose US or KR.</value></data>
   <data name="BC-E-401" xml:space="preserve"><value>Language code '{0}' is not valid. Enter 2 or 3 lower-case letters.</value></data>

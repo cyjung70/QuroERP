@@ -23,6 +23,7 @@ if (builder.Environment.IsDevelopment())
 {
     // In-memory data of the screen type sample pages (/samples/*)
     builder.Services.AddSingleton<SampleStore>();
+    builder.Services.AddSingleton<SamplePoStore>();
 }
 
 var app = builder.Build();

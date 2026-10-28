@@ -98,4 +98,43 @@ public class GridRowsTests
         changes.Updated.Should().BeEmpty();
         changes.Deleted.Should().ContainSingle();
     }
+
+    [Fact]
+    public void Undo_ModifiedRow_RestoresLoadedValues()
+    {
+        var rows = Loaded();
+        rows.All[0].Item.Code = "X";
+
+        rows.Undo(rows.All[0]);
+
+        rows.All[0].Item.Code.Should().Be("A");
+        rows.All[0].State.Should().Be(RowState.Unchanged);
+    }
+
+    [Fact]
+    public void Undo_ModifiedThenDeletedRow_RestoresValuesAndClearsDelete()
+    {
+        var rows = Loaded();
+        rows.All[1].Item.Code = "X";
+        rows.ToggleDelete(rows.All[1]);
+
+        rows.Undo(rows.All[1]);
+
+        rows.All[1].Item.Code.Should().Be("B");
+        rows.All[1].State.Should().Be(RowState.Unchanged);
+        rows.IsDirty.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Undo_NewRow_DoesNothing()
+    {
+        var rows = Loaded();
+        var row = rows.Add(new SampleItem { Code = "N" });
+
+        row.CanUndo.Should().BeFalse();
+        rows.Undo(row);
+
+        row.Item.Code.Should().Be("N");
+        row.State.Should().Be(RowState.Added);
+    }
 }

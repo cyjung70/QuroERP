@@ -14,9 +14,11 @@ public class SamplePageHostTests(WebFactory factory) : IClassFixture<WebFactory>
     public void SampleStore_OnlyInDevelopment()
     {
         factory.Services.GetService<SampleStore>().Should().NotBeNull();
+        factory.Services.GetService<SamplePoStore>().Should().NotBeNull();
 
         using var production = factory.WithWebHostBuilder(b => b.UseEnvironment("Production"));
         production.Services.GetService<SampleStore>().Should().BeNull();
+        production.Services.GetService<SamplePoStore>().Should().BeNull();
     }
 
     [Theory]
@@ -24,6 +26,7 @@ public class SamplePageHostTests(WebFactory factory) : IClassFixture<WebFactory>
     [InlineData("/samples/multi")]
     [InlineData("/samples/header-detail")]
     [InlineData("/samples/master-detail")]
+    [InlineData("/samples/po-entry")]
     public async Task SamplePage_Anonymous_RedirectsToLogin(string path)
     {
         var response = await factory.CreateBrowser().GetAsync(path);

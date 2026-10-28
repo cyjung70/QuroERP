@@ -34,7 +34,7 @@ public sealed class GridRow<TRow>
         _original = isNew ? null : Snapshot.Of(item);
     }
 
-    public TRow Item { get; }
+    public TRow Item { get; private set; }
 
     public bool IsNew { get; }
 
@@ -45,6 +45,16 @@ public sealed class GridRow<TRow>
         : IsNew ? RowState.Added
         : Snapshot.Of(Item) != _original ? RowState.Modified
         : RowState.Unchanged;
+
+    /// <summary>A loaded row that was edited or marked deleted. A new row has no loaded values to go back to.</summary>
+    public bool CanUndo => !IsNew && State != RowState.Unchanged;
+
+    // The item is replaced by a copy of the loaded values, so the screen must read row.Item again
+    internal void Undo()
+    {
+        Item = Snapshot.Restore<TRow>(_original!);
+        IsDeleted = false;
+    }
 }
 
 /// <summary>Rows of an editable grid with I/U/D tracking. Saving sends only the changed rows.</summary>
@@ -86,6 +96,15 @@ public sealed class GridRows<TRow>
         row.IsDeleted = !row.IsDeleted;
     }
 
+    /// <summary>Puts back the loaded values of an edited or deleted row (Undo Row).</summary>
+    public void Undo(GridRow<TRow> row)
+    {
+        if (row.CanUndo)
+        {
+            row.Undo();
+        }
+    }
+
     public BatchChanges<TRow> Changes() => new(
         [.. _rows.Where(r => r.State == RowState.Added).Select(r => r.Item)],
         [.. _rows.Where(r => r.State == RowState.Modified).Select(r => r.Item)],
@@ -105,4 +124,7 @@ public sealed record BatchChanges<TRow>(IReadOnlyList<TRow> Added, IReadOnlyList
 internal static class Snapshot
 {
     public static string Of<T>(T value) => JsonSerializer.Serialize(value);
+
+    public static T Restore<T>(string snapshot) =>
+        JsonSerializer.Deserialize<T>(snapshot) ?? throw new InvalidOperationException("Empty snapshot.");
 }
