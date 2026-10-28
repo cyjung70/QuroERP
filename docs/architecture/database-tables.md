@@ -79,7 +79,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `bc_warehouse` | 창고 | MM | inventory.md, MM warehouse.md | id, warehouse_code UNIQUE, warehouse_name, is_default, use_yn |
 | `mm_onhand` | 창고별 현재고 | MM | inventory.md, MM ledger.md | id, item_id, warehouse_id, onhand_qty. UNIQUE (item_id, warehouse_id) |
 | `mm_stock_transfer` | 창고 이동 | MM | MM warehouse.md | id, transfer_no UNIQUE, transfer_dt, from_warehouse_id, to_warehouse_id |
-| `mm_stock_transfer_line` | 창고 이동 상세 | MM | MM warehouse.md | id, stock_transfer_id, seq, item_id, qty |
+| `mm_stock_transfer_line` | 창고 이동 상세 | MM | MM warehouse.md | id, stock_transfer_id, seq, item_id, qty, prc, amt |
 | `sys_language` | 언어 | BC | i18n.md, BC localization.md | id, lang_code UNIQUE (en, ko, sw), sort_order, use_yn |
 | `bc_currency` | 통화 | BC | localization.md, BC localization.md | id, currency_code UNIQUE (ISO 4217), decimals (0~4), country_code (ISO 3166-1, NULL 허용), use_yn |
 | `bc_currency_translation` | 통화 번역 | BC | i18n.md | id, currency_id, lang_code, name. UNIQUE (currency_id, lang_code) |
@@ -210,6 +210,8 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `seq` | integer | NOT NULL |  |
 | `item_id` | bigint | FK NOT NULL | → `bc_item.id` |
 | `qty` | numeric | NOT NULL | > 0 |
+| `prc` | numeric | NOT NULL | 이동 시점 이동평균원가 (기준 통화, MM-BR-706) |
+| `amt` | numeric | NOT NULL | `round(qty × prc, 기준 통화 자릿수)`. 출고·입고 이동 금액 (MM-BR-706) |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
@@ -759,6 +761,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `new_amt` | numeric |  |  |  |
 | `dif_qty` | numeric |  |  |  |
 | `dif_amt` | numeric |  |  |  |
+| `prc` | numeric |  | 실사 일자 이동평균원가 (기준 통화). 차이·실사 금액 계산 단가 (MM-BR-303) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |

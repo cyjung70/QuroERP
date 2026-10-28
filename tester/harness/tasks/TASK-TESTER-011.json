@@ -1,0 +1,51 @@
+{
+  "id": "TASK-TESTER-011",
+  "project": "tester",
+  "title": "SD 매출·매출채권 리포트 테스트: 미결 수주·실주·매출 합계 일치, 기준일 잔액",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-011.md",
+    "tester/docs/scenarios/SD/SD-TS-012.md"
+  ],
+  "rules": [
+    "SD-BR-013",
+    "SD-BR-014",
+    "SD-BR-251",
+    "SD-BR-253",
+    "SD-BR-257",
+    "SD-BR-801",
+    "SD-BR-805",
+    "SD-BR-807",
+    "SD-BR-951",
+    "SD-BR-952",
+    "SD-BR-954",
+    "SD-BR-956",
+    "SD-BR-960",
+    "SD-BR-961",
+    "SD-BR-962",
+    "SD-BR-970"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-004",
+    "TASK-SD-003",
+    "TASK-SD-005",
+    "TASK-SD-007",
+    "TASK-SD-035",
+    "TASK-SD-037"
+  ],
+  "acceptance": [
+    "tests/scenario/SD/test_sales_reports.py: SD-TS-011, serial. 기준값은 데이터를 만들기 전에 저장하고 증가분으로 비교한다. 수주 마감 취소는 finally에서 실행한다",
+    "tests/scenario/SD/test_ar_balance_as_of.py: SD-TS-012. 결과에서 고객 이름 접두어 ARB{run_id}의 행만 본다",
+    "일자 Dn은 실행일 기준으로 계산하고, 기대 금액은 시나리오 문서 값을 상수로 쓴다",
+    "리포트 조건 이름은 각 리포트 명세의 조회 조건을 따른다",
+    "uv run pytest -k \"sales_reports or ar_balance_as_of\" 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

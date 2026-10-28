@@ -1,0 +1,47 @@
+{
+  "id": "TASK-TESTER-010",
+  "project": "tester",
+  "title": "입력값 데이터 처리·품목 사용 안 함 보안 회귀와 고객 이름 변경·합치기 테스트",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/BC/BC-TS-005.md",
+    "tester/docs/scenarios/SD/SD-TS-010.md"
+  ],
+  "rules": [
+    "MM-BR-807",
+    "MM-BR-809",
+    "SD-BR-302",
+    "SD-BR-307",
+    "SD-BR-308",
+    "SD-BR-310",
+    "SD-BR-311",
+    "SD-BR-312",
+    "SD-BR-313"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-004",
+    "TASK-TESTER-008",
+    "TASK-BC-017",
+    "TASK-BC-031",
+    "TASK-MM-009",
+    "TASK-SD-001",
+    "TASK-SD-003",
+    "TASK-SD-005",
+    "TASK-SD-035"
+  ],
+  "acceptance": [
+    "tests/api/BC/test_input_as_data.py: BC-TS-005. 시작·끝의 bc_item·bc_customer 건수는 읽기 전용 SELECT로 본다",
+    "tests/scenario/SD/test_change_customer_name.py: SD-TS-010. 사용자 U는 BC-TS-003의 역할 fixture를 재사용한다",
+    "고객·품목 이름에 run_id를 붙여 병렬 실행과 섞이지 않게 한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k \"input_as_data or change_customer_name\" 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
