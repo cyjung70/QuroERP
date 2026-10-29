@@ -10,6 +10,6 @@
 - [비밀번호](password.md): BC-BR-051 ~ BC-BR-059
 - [사용자·내 정보](user.md): BC-BR-101 ~ BC-BR-132
 - [메뉴·역할 권한](menu-role.md): BC-BR-201 ~ BC-BR-216
-- [회사 정보·설정](company.md): BC-BR-301 ~ BC-BR-316
+- [회사 정보·설정](company.md): BC-BR-301 ~ BC-BR-317
 - [지역화 (언어·통화·자릿수)](localization.md): BC-BR-401 ~ BC-BR-429
 - [세금](tax.md): BC-BR-501 ~ BC-BR-547

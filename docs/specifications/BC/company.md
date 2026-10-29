@@ -87,6 +87,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 - [BC-BR-314](../../business-rules/BC/company.md)
 - [BC-BR-315](../../business-rules/BC/company.md)
 - [BC-BR-316](../../business-rules/BC/company.md)
+- [BC-BR-317](../../business-rules/BC/company.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
 
 ## 다국어 리소스 키
