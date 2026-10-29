@@ -13,7 +13,13 @@ public sealed record AutoLoginRequest(string? Token);
 /// <summary>Logout request (POST /api/auth/logout). The token of this device, if any, is revoked.</summary>
 public sealed record LogoutRequest(string? AutoLoginToken);
 
-/// <summary>로그인·재발급 응답. AccessToken은 Web 서버만 보관하고 브라우저에 보내지 않는다.</summary>
+/// <summary>
+/// Password change (POST /api/auth/change-password, BC-BR-051). The current password is required even for a forced change
+/// (BC-BR-052). Empty fields return 400 AUTH-001; rule violations 400 AUTH-011~015 (BC-BR-059).
+/// </summary>
+public sealed record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
+
+/// <summary>로그인·재발급·비밀번호 변경 응답. AccessToken은 Web 서버만 보관하고 브라우저에 보내지 않는다.</summary>
 /// <param name="Language">User language (ko, en). Null when not set.</param>
 /// <param name="LastLoginAt">Previous login before this one, shown on the main screen.</param>
 /// <param name="AutoLoginToken">New raw auto-login token for the token cookie. Null when none was issued.</param>

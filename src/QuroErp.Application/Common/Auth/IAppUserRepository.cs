@@ -20,6 +20,14 @@ public interface IAppUserRepository
     /// <param name="langCode">New lang_code (the language chosen on the login screen), or null to keep it.</param>
     Task SaveLoginStateAsync(AppUser user, string? langCode, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Stores a new password hash: password_changed_at = now, must_change_password = false, password_valid_dt = NULL
+    /// and token_version + 1 (BC-BR-058).
+    /// </summary>
+    /// <param name="auditUser">User ID written to updated_by.</param>
+    Task ChangePasswordAsync(
+        long id, string passwordHash, DateTimeOffset now, string auditUser, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <summary>Menus of the user's role, in menu code order.</summary>
     Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken);
 

@@ -5,7 +5,7 @@ using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Application.Common.Auth;
 
-/// <summary>Login, auto login, logout, current user and token refresh (BC-UC-001, login.md, security.md).</summary>
+/// <summary>Login, auto login, logout, current user, token refresh and password change (BC-UC-001, BC-UC-002, login.md, security.md).</summary>
 /// <remarks>
 /// Failures throw <see cref="AuthException"/> after the failure log and the counters are committed.
 /// Raw passwords and tokens are never logged or stored.
@@ -15,6 +15,7 @@ public sealed class LoginService(
     IUserLoginLogRepository loginLogs,
     IAuthSettingRepository settings,
     IAutoLoginTokenRepository autoLoginTokens,
+    IPasswordHistoryRepository passwordHistory,
     IPasswordHashService passwords,
     IAccessTokenIssuer tokens,
     IUnitOfWorkFactory unitOfWork,
@@ -238,8 +239,12 @@ public sealed class LoginService(
             user.LastLoginAt, user.LastLoginIp, warehouse, menus);
     }
 
-    /// <summary>로그인한 사용자의 토큰을 다시 발급한다. 그 사이 사용 중지·잠금된 사용자면 null.</summary>
-    public async Task<LoginResponse?> RefreshAsync(long appUserId, CancellationToken cancellationToken)
+    /// <summary>
+    /// 로그인한 사용자의 토큰을 다시 발급한다. 그 사이 사용 중지·잠금된 사용자면 null.
+    /// Also null when the token's version is older than the user's (password changed or tokens revoked, BC-BR-130).
+    /// </summary>
+    /// <param name="tokenVersion">Token version carried by the token being refreshed.</param>
+    public async Task<LoginResponse?> RefreshAsync(long appUserId, int tokenVersion, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         var today = Today();
@@ -249,9 +254,66 @@ public sealed class LoginService(
         var setting = await GetSettingAsync(uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
 
-        return user is not null && user.CanLogin(today) && !user.IsLocked(now)
+        return user is not null && user.TokenVersion == tokenVersion && user.CanLogin(today) && !user.IsLocked(now)
             ? ToResponse(user, user.LangCode, setting, now, today, user.LastLoginAt, user.LastLoginIp, null)
             : null;
+    }
+
+    /// <summary>
+    /// Changes the signed-in user's password (BC-BR-051~059) and returns a new token for the current session.
+    /// In one transaction: a history row with the old hash, the new hash, token version + 1 and every auto-login token
+    /// revoked (BC-BR-058). Other sessions stop at their next refresh.
+    /// </summary>
+    /// <remarks>[추정] A wrong current password does not count toward the login lock; the auth rate limit applies.</remarks>
+    public async Task<LoginResponse> ChangePasswordAsync(long appUserId, ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(request.CurrentPassword))
+        {
+            throw new AuthException(AuthCodes.Required, AuthFields.CurrentPassword);
+        }
+        if (string.IsNullOrEmpty(request.NewPassword))
+        {
+            throw new AuthException(AuthCodes.Required, AuthFields.NewPassword);
+        }
+
+        var now = clock.GetUtcNow();
+        var today = Today();
+        var newPassword = request.NewPassword;
+
+        await using var uow = await unitOfWork.BeginAsync(cancellationToken);
+        var tx = uow.Transaction;
+        var user = await users.LockByIdAsync(appUserId, tx, cancellationToken);
+        if (user is null || !user.CanLogin(today) || user.IsLocked(now))
+        {
+            throw new AuthException(AuthCodes.SessionExpired);
+        }
+        // BC-BR-059: the current password is checked first
+        if (request.CurrentPassword.Length > AppUser.MaxPasswordLength || !passwords.Verify(user.PasswordHash, request.CurrentPassword))
+        {
+            throw new AuthException(AuthCodes.CurrentPasswordIncorrect);
+        }
+
+        var setting = await GetSettingAsync(tx, cancellationToken);
+        // BC-BR-055: the history count includes the current password
+        var recent = setting.PasswordHistoryCount > 1
+            ? await passwordHistory.FindRecentAsync(user.Id, setting.PasswordHistoryCount - 1, tx, cancellationToken)
+            : [];
+        var violation = PasswordPolicy.FirstViolation(newPassword, user.UserId, setting, () =>
+            setting.PasswordHistoryCount > 0
+            && (passwords.Verify(user.PasswordHash, newPassword) || recent.Any(hash => passwords.Verify(hash, newPassword))));
+        if (violation is not null)
+        {
+            throw new AuthException(violation.Code, violation.Args);
+        }
+
+        await passwordHistory.InsertAsync(user.Id, user.PasswordHash, user.UserId, tx, cancellationToken);
+        await users.ChangePasswordAsync(user.Id, passwords.Hash(newPassword), now, user.UserId, tx, cancellationToken);
+        await autoLoginTokens.RevokeAllAsync(user.Id, now, tx, cancellationToken);
+        var changed = await users.FindByIdAsync(user.Id, tx, cancellationToken)
+            ?? throw new InvalidOperationException("The user disappeared while changing the password.");
+        await uow.CommitAsync(cancellationToken);
+
+        return ToResponse(changed, changed.LangCode, setting, now, today, changed.LastLoginAt, changed.LastLoginIp, null);
     }
 
     // [추정] 업무 날짜는 서버 현지 날짜로 본다

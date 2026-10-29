@@ -14,4 +14,11 @@
   <data name="AUTH-008" xml:space="preserve"><value>Too many requests. Please try again shortly.</value></data>
   <data name="Auth.Field.LoginId" xml:space="preserve"><value>user ID</value></data>
   <data name="Auth.Field.Password" xml:space="preserve"><value>password</value></data>
+  <data name="AUTH-011" xml:space="preserve"><value>Password must be {0} to 128 characters long.</value></data>
+  <data name="AUTH-012" xml:space="preserve"><value>Use at least {0} of: uppercase, lowercase, digits, symbols.</value></data>
+  <data name="AUTH-013" xml:space="preserve"><value>You cannot reuse a recent password.</value></data>
+  <data name="AUTH-014" xml:space="preserve"><value>Password cannot be the same as your user ID.</value></data>
+  <data name="AUTH-015" xml:space="preserve"><value>Current password is incorrect.</value></data>
+  <data name="Auth.Field.CurrentPassword" xml:space="preserve"><value>current password</value></data>
+  <data name="Auth.Field.NewPassword" xml:space="preserve"><value>new password</value></data>
 </root>

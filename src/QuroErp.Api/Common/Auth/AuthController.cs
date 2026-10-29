@@ -46,8 +46,16 @@ public sealed class AuthController(LoginService service) : ControllerBase
     /// <summary>토큰 재발급. Web이 가진 사용자 토큰(JWT)으로만 부른다 (API 키 불가).</summary>
     [HttpPost("refresh"), Authorize(Policy = AuthenticationSetup.SessionPolicy)]
     public async Task<ActionResult<LoginResponse>> Refresh(CancellationToken cancellationToken) =>
-        await service.RefreshAsync(User.GetAppUserId(), cancellationToken)
+        await service.RefreshAsync(User.GetAppUserId(), User.GetTokenVersion(), cancellationToken)
             ?? throw new AuthException(AuthCodes.SessionExpired);
+
+    /// <summary>
+    /// Changes the signed-in user's password (BC-UC-002). Allowed before a forced password change. 200 with a new token
+    /// for this session (BC-BR-058); 400 AUTH-001, AUTH-011~015.
+    /// </summary>
+    [HttpPost("change-password"), Authorize(Policy = AuthenticationSetup.SessionPolicy)]
+    public async Task<ActionResult<LoginResponse>> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken) =>
+        await service.ChangePasswordAsync(User.GetAppUserId(), request, cancellationToken);
 
     private AuthClient Client() =>
         AuthClient.Create(HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());

@@ -36,6 +36,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>User who must change the password (first login).</summary>
     public const string NewUserId = "newbie";
 
+    /// <summary>Users whose password the password change tests change. Each test uses its own.</summary>
+    public const string ChangeUserId = "changer";
+    public const string ForcedChangeUserId = "forced";
+    public const string StaleUserId = "stale";
+
     /// <summary>Requests per minute per IP on /api/auth/*. High here; the rate limit test lowers it to the real 10.</summary>
     public const string TestRateLimit = "1000";
 
@@ -47,6 +52,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public InMemoryAutoLoginTokenRepository AutoLoginTokens { get; } = new();
 
     public ConcurrentQueue<UserLoginLog> LoginLogs { get; } = new();
+
+    public InMemoryPasswordHistoryRepository PasswordHistory { get; } = new();
 
     /// <summary>Company logo state; there is one company and no logo at start.</summary>
     public InMemoryCompanyRepository Companies { get; } = new();
@@ -81,11 +88,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 new() { Id = 7, UserId = UserId, UserName = "Kim", RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash },
                 new() { Id = 11, UserId = LockUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash },
                 new() { Id = 12, UserId = NewUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash, MustChangePassword = true },
+                new() { Id = 13, UserId = ChangeUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash },
+                new() { Id = 14, UserId = ForcedChangeUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash, MustChangePassword = true },
+                new() { Id = 15, UserId = StaleUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash },
             ];
             services.AddSingleton<IUnitOfWorkFactory, FakeUnitOfWorkFactory>();
             services.AddSingleton<IAppUserRepository>(new FakeAppUserRepository(users));
             services.AddSingleton<IAuthSettingRepository>(new FakeAuthSettingRepository(this));
             services.AddSingleton<IAutoLoginTokenRepository>(AutoLoginTokens);
+            services.AddSingleton<IPasswordHistoryRepository>(PasswordHistory);
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
             services.AddSingleton<ITranslationRepository, FakeTranslationRepository>();
@@ -137,6 +148,19 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public Task SaveLoginStateAsync(AppUser user, string? langCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.CompletedTask;
 
+        public Task ChangePasswordAsync(
+            long id, string passwordHash, DateTimeOffset now, string auditUser, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            var index = Array.FindIndex(users, u => u.Id == id);
+            var u = users[index];
+            users[index] = new AppUser
+            {
+                Id = u.Id, UserId = u.UserId, PasswordHash = passwordHash, UserName = u.UserName, RoleCode = u.RoleCode,
+                ValidFlag = u.ValidFlag, LangCode = u.LangCode, PasswordChangedAt = now, TokenVersion = u.TokenVersion + 1,
+            };
+            return Task.CompletedTask;
+        }
+
         public Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<AuthMenu>>([new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y")]);
 
@@ -148,6 +172,21 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         public Task<AuthSetting?> GetAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<AuthSetting?>(factory.AuthSetting);
+    }
+
+    /// <summary>sys_password_history in memory, oldest first.</summary>
+    public sealed class InMemoryPasswordHistoryRepository : IPasswordHistoryRepository
+    {
+        private readonly ConcurrentQueue<(long AppUserId, string PasswordHash)> _rows = new();
+
+        public Task<IReadOnlyList<string>> FindRecentAsync(long appUserId, int count, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<string>>(_rows.Where(r => r.AppUserId == appUserId).Select(r => r.PasswordHash).Reverse().Take(count).ToList());
+
+        public Task InsertAsync(long appUserId, string passwordHash, string auditUser, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            _rows.Enqueue((appUserId, passwordHash));
+            return Task.CompletedTask;
+        }
     }
 
     public sealed class InMemoryAutoLoginTokenRepository : IAutoLoginTokenRepository

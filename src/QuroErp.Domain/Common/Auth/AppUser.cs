@@ -38,6 +38,12 @@ public sealed class AppUser
     /// <summary>Default warehouse. Null means the company default warehouse.</summary>
     public long? DefaultWarehouseId { get; init; }
 
+    /// <summary>
+    /// Goes up when the user's tokens must stop working (password change, reset, not in use, forced revoke).
+    /// Token refresh fails for a token that carries an older version (BC-BR-058, BC-BR-130).
+    /// </summary>
+    public int TokenVersion { get; init; }
+
     /// <summary>Consecutive failed logins. Reset to 0 on success.</summary>
     public int FailedCount { get; private set; }
 

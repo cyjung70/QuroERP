@@ -21,6 +21,7 @@ internal sealed class JwtAccessTokenIssuer(IOptions<JwtOptions> options) : IAcce
         {
             new(AuthClaims.Subject, user.Id.ToString(CultureInfo.InvariantCulture)),
             new(AuthClaims.Name, user.UserId),
+            new(AuthClaims.TokenVersion, user.TokenVersion.ToString(CultureInfo.InvariantCulture)),
         };
         if (user.RoleCode is not null)
         {
