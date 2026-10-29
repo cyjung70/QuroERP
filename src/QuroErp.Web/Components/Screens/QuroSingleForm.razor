@@ -10,7 +10,7 @@
                      OnSearch="SearchAsync"
                      OnPrevious="@(LoadPrevious is null ? default : EventCallback.Factory.Create(this, () => MoveAsync(LoadPrevious, "Common.FirstRecord")))"
                      OnNext="@(LoadNext is null ? default : EventCallback.Factory.Create(this, () => MoveAsync(LoadNext, "Common.LastRecord")))"
-                     OnNew="@(ReadOnly ? default : EventCallback.Factory.Create(this, NewAsync))"
+                     OnNew="@(ReadOnly || !CanCreate ? default : EventCallback.Factory.Create(this, NewAsync))"
                      OnSave="@(ReadOnly ? default : EventCallback.Factory.Create(this, SaveAsync))"
                      OnDelete="@(Delete is null || ReadOnly ? default : EventCallback.Factory.Create(this, DeleteAsync))"
                      OnPrint="OnPrint" />
@@ -76,6 +76,14 @@
     [Parameter]
     public EventCallback OnPrint { get; set; }
 
+    /// <summary>Searches when the screen opens, e.g. for a record that has no search key such as the company.</summary>
+    [Parameter]
+    public bool LoadOnStart { get; set; }
+
+    /// <summary>False for a record that is never created on the screen (the company, BC-BR-301): there is no new button.</summary>
+    [Parameter]
+    public bool CanCreate { get; set; } = true;
+
     /// <summary>The user may only read: no new, save or delete, and every input is locked.</summary>
     [Parameter]
     public bool ReadOnly { get; set; }
@@ -85,6 +93,14 @@
     public bool IsNew => _form.IsNew;
 
     protected override void OnInitialized() => StartNew();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (LoadOnStart)
+        {
+            await SearchAsync();
+        }
+    }
 
     protected override void OnParametersSet() => _form.ReadOnly = ReadOnly;
 

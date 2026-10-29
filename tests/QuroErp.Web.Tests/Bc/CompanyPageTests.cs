@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using QuroErp.Contracts.Bc.Companies;
+using QuroErp.Contracts.Bc.Localization;
 using QuroErp.Contracts.Common;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Contracts.Mm.Inventory;
@@ -14,7 +15,7 @@ using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Tests.Bc;
 
-/// <summary>Minimal company screen /bc/company: logo and inventory setting areas (BC-UC-007, BC-BR-306, MM-BR-003).</summary>
+/// <summary>Company screen /bc/company rendered on the server: logo and inventory setting areas (BC-UC-007, BC-BR-306, MM-BR-003).</summary>
 public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
 {
     private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
@@ -43,6 +44,7 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
 
         html.Should().Contain("Company Logo").And.Contain("Upload Logo").And.Contain("data:image/png;base64,");
         html.Should().Contain("Always allow").And.Contain("Allow during the month (not at month end)").And.Contain("Do not allow");
+        html.Should().Contain("value=\"Quro\"").And.Contain("Security Settings");
         requests.Should().OnlyContain(r => r.Headers.Authorization!.Scheme == "Bearer" && r.Headers.Authorization.Parameter == "token-admin");
     }
 
@@ -101,6 +103,20 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
         "/" + InventorySettingRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = JsonContent.Create(new InventorySettingDto(NegativeStockModes.Deny, DateTimeOffset.UnixEpoch, "system")),
+        },
+        "/" + CompanyRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new CompanyDto("Quro", null, null, null, null, null, null, null, null, null, null, "US", "USD", "en",
+                "WITH_SHIPMENT", withLogo, DateTimeOffset.UnixEpoch)),
+        },
+        "/" + LocalizationRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new LocalizationDto("US", "USD", "en", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT",
+                [new LanguageDto("en", 1)], [new CurrencyDto("USD", "US Dollar", 2, "US")], [], [])),
+        },
+        "/" + AuthSettingRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new AuthSettingDto(5, 30, true, true, 30, 60, true, 8, 2, 0, 0, "ADMIN_ONLY", DateTimeOffset.UnixEpoch)),
         },
         _ => new HttpResponseMessage(HttpStatusCode.NotFound),
     };
