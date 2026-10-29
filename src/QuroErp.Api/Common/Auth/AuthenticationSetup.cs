@@ -84,6 +84,8 @@ public static class AuthenticationSetup
             .AddPolicy(UserPolicy, p => p.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser()
                 .AddRequirements(new PasswordChangedRequirement()));
         services.AddSingleton<IAuthorizationHandler, PasswordChangedRequirement>();
+        services.AddSingleton<IAuthorizationPolicyProvider, MenuPolicyProvider>();
+        services.AddSingleton<IAuthorizationHandler, MenuAuthorizationHandler>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationResultHandler>();
 
         // IP마다 1분에 Auth:RateLimit:PerMinute번 (login.md). Over the limit: 429 AUTH-008

@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<ItemService>();
         services.AddScoped<WarehouseService>();
         services.AddScoped<RoleService>();
+        services.AddSingleton<MenuPermissionService>();
         services.AddScoped<UserProfileService>();
         services.AddScoped<UserService>();
         services.AddScoped<DocumentNumberService>();
