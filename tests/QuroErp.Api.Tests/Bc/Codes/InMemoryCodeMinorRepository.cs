@@ -85,12 +85,23 @@ public sealed class InMemoryCodeMinorRepository : ICodeMinorRepository
         }
     }
 
-    public Task ReplaceNamesAsync(
-        long minorId, IReadOnlyDictionary<string, string> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+    public Task SaveNamesAsync(
+        long minorId, IReadOnlyDictionary<string, string?> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         lock (_gate)
         {
-            _names[minorId] = names.ToDictionary(n => n.Key, n => n.Value);
+            var stored = _names.TryGetValue(minorId, out var current) ? current : _names[minorId] = [];
+            foreach (var (lang, name) in names)
+            {
+                if (name is null)
+                {
+                    stored.Remove(lang);
+                }
+                else
+                {
+                    stored[lang] = name;
+                }
+            }
         }
         return Task.CompletedTask;
     }

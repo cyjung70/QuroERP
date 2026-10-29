@@ -90,12 +90,12 @@ public sealed class CodeMajorService(
             {
                 throw new ConcurrencyException();
             }
-            await majors.ReplaceNamesAsync(id, fields.Names, updatedBy, uow.Transaction, cancellationToken);
+            await majors.SaveNamesAsync(id, fields.Names, updatedBy, uow.Transaction, cancellationToken);
         }
         foreach (var (code, fields) in newRows)
         {
             var id = await majors.InsertAsync(code, fields.UseYn, updatedBy, uow.Transaction, cancellationToken);
-            await majors.ReplaceNamesAsync(id, fields.Names, updatedBy, uow.Transaction, cancellationToken);
+            await majors.SaveNamesAsync(id, fields.Names, updatedBy, uow.Transaction, cancellationToken);
         }
 
         var after = await ReadAsync(null, langCode, uow.Transaction, cancellationToken);

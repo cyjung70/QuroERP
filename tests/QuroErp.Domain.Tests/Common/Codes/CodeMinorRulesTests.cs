@@ -29,11 +29,11 @@ public class CodeMinorRulesTests
     }
 
     [Fact, Trait("Id", "SD-UT-911")]
-    public void Names_AreTrimmed_BlankOnesDropped_AndInUseIsTheDefault()
+    public void Names_AreTrimmed_BlankOnesRemoveTheTranslation_AndInUseIsTheDefault()
     {
-        var fields = CodeMinorRules.Normalize("EA", new Dictionary<string, string?> { ["en"] = " Each ", ["ko"] = " ", ["KO-kr"] = "개" }, 10, null, " a ", " ");
+        var fields = CodeMinorRules.Normalize("EA", new Dictionary<string, string?> { ["en"] = " Each ", ["KO-kr"] = "개", ["ja"] = " " }, 10, null, " a ", " ");
 
-        fields.Names.Should().Equal(new Dictionary<string, string> { ["en"] = "Each", ["ko"] = "개" });
+        fields.Names.Should().Equal(new Dictionary<string, string?> { ["en"] = "Each", ["ko"] = "개", ["ja"] = null });
         fields.UseYn.Should().BeTrue();
         fields.Attr1.Should().Be("a");
         fields.Attr2.Should().BeNull();

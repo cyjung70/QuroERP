@@ -4,8 +4,8 @@ using QuroErp.Domain.Mm.Inventory;
 
 namespace QuroErp.Domain.Common.Codes;
 
-/// <summary>Minor code fields after normalizing. Names are by language code; every name has text.</summary>
-public sealed record CodeMinorFields(IReadOnlyDictionary<string, string> Names, int SortOrder, bool UseYn, string? Attr1, string? Attr2);
+/// <summary>Minor code fields after normalizing. Names are the sent changes by language code; null removes a name (BC-BR-405).</summary>
+public sealed record CodeMinorFields(IReadOnlyDictionary<string, string?> Names, int SortOrder, bool UseYn, string? Attr1, string? Attr2);
 
 /// <summary>A Minor code that a save would leave in its Major: code and sort order (SD-BR-911, SD-BR-913).</summary>
 public sealed record CodeMinorNode(string MinorCode, int SortOrder);
@@ -48,7 +48,7 @@ public static partial class CodeMinorRules
     }
 
     /// <summary>
-    /// SD-BR-911, 913 for one row. Blank names are dropped (no translation in that language), but the en name is required.
+    /// SD-BR-911, 913 for one row. A blank name removes that language's translation, but the en name is required.
     /// A missing in-use flag means in use.
     /// </summary>
     public static CodeMinorFields Normalize(

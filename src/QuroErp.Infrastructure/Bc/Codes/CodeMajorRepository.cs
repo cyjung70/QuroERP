@@ -27,7 +27,7 @@ internal sealed class CodeMajorRepository : ICodeMajorRepository
         WHERE id = @Id AND updated_at = @ExpectedUpdatedAt
         """;
 
-    private const string DeleteOtherNames = "DELETE FROM sys_code_major_translation WHERE major_id = @MajorId AND NOT (lang_code = ANY(@LangCodes))";
+    private const string DeleteNames = "DELETE FROM sys_code_major_translation WHERE major_id = @MajorId AND lang_code = ANY(@LangCodes)";
 
     private const string UpsertName = """
         INSERT INTO sys_code_major_translation (major_id, lang_code, name, created_by, updated_by)
@@ -58,12 +58,16 @@ internal sealed class CodeMajorRepository : ICodeMajorRepository
             transaction,
             cancellationToken: cancellationToken)) == 1;
 
-    public async Task ReplaceNamesAsync(
-        long majorId, IReadOnlyDictionary<string, string> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task SaveNamesAsync(
+        long majorId, IReadOnlyDictionary<string, string?> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
     {
-        await transaction.Connection!.ExecuteAsync(new CommandDefinition(
-            DeleteOtherNames, new { MajorId = majorId, LangCodes = names.Keys.ToArray() }, transaction, cancellationToken: cancellationToken));
-        foreach (var (langCode, name) in names)
+        var removed = names.Where(n => n.Value is null).Select(n => n.Key).ToArray();
+        if (removed.Length > 0)
+        {
+            await transaction.Connection!.ExecuteAsync(new CommandDefinition(
+                DeleteNames, new { MajorId = majorId, LangCodes = removed }, transaction, cancellationToken: cancellationToken));
+        }
+        foreach (var (langCode, name) in names.Where(n => n.Value is not null))
         {
             await transaction.Connection!.ExecuteAsync(new CommandDefinition(
                 UpsertName, new { MajorId = majorId, LangCode = langCode, Name = name, By = updatedBy }, transaction, cancellationToken: cancellationToken));

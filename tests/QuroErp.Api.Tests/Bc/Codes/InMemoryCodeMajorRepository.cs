@@ -87,12 +87,23 @@ public sealed class InMemoryCodeMajorRepository : ICodeMajorRepository
         }
     }
 
-    public Task ReplaceNamesAsync(
-        long majorId, IReadOnlyDictionary<string, string> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+    public Task SaveNamesAsync(
+        long majorId, IReadOnlyDictionary<string, string?> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         lock (_gate)
         {
-            _names[majorId] = names.ToDictionary(n => n.Key, n => n.Value);
+            var stored = _names.TryGetValue(majorId, out var current) ? current : _names[majorId] = [];
+            foreach (var (lang, name) in names)
+            {
+                if (name is null)
+                {
+                    stored.Remove(lang);
+                }
+                else
+                {
+                    stored[lang] = name;
+                }
+            }
         }
         return Task.CompletedTask;
     }

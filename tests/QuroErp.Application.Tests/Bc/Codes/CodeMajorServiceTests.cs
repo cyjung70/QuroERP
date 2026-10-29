@@ -115,6 +115,17 @@ public class CodeMajorServiceTests
         error.Args.Should().Equal("fr");
     }
 
+    [Fact, Trait("Id", "BC-UT-405")]
+    public async Task Save_ChangesOnlyTheSentLanguages_AndKeepsTheOthers()
+    {
+        _majors.Add(4, "PACK", 0, new() { ["en"] = "Pack", ["ko"] = "팩", ["ja"] = "パック" });
+
+        await _service.SaveAsync(new SaveCodeMajorsRequest(
+            null, [new CodeMajorUpdate(4, null, new Dictionary<string, string?> { ["en"] = "Package", ["ko"] = null }, true, Read)], null), "en", "kim", None);
+
+        _majors.NamesOf("PACK").Should().Equal(new Dictionary<string, string> { ["en"] = "Package", ["ja"] = "パック" });
+    }
+
     [Fact, Trait("Id", "BC-UC-023-T02")]
     public async Task Save_ChangingTheCode_IsSdE902()
     {
@@ -193,11 +204,22 @@ public class CodeMajorServiceTests
             return Task.FromResult(row.UpdatedAt == expectedUpdatedAt);
         }
 
-        public Task ReplaceNamesAsync(
-            long majorId, IReadOnlyDictionary<string, string> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        public Task SaveNamesAsync(
+            long majorId, IReadOnlyDictionary<string, string?> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
         {
             Writes++;
-            _names[majorId] = names.ToDictionary(n => n.Key, n => n.Value);
+            var stored = _names.TryGetValue(majorId, out var current) ? current : _names[majorId] = [];
+            foreach (var (lang, name) in names)
+            {
+                if (name is null)
+                {
+                    stored.Remove(lang);
+                }
+                else
+                {
+                    stored[lang] = name;
+                }
+            }
             return Task.CompletedTask;
         }
 

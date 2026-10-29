@@ -20,9 +20,9 @@ public interface ICodeMajorRepository
     Task<bool> UpdateAsync(
         long id, bool useYn, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Makes the code's translations exactly the given names.</summary>
-    Task ReplaceNamesAsync(
-        long majorId, IReadOnlyDictionary<string, string> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>Sets the given names and removes the null ones. Languages not given keep their names (BC-BR-405).</summary>
+    Task SaveNamesAsync(
+        long majorId, IReadOnlyDictionary<string, string?> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Deletes the rows; their translations go with them.</summary>
     Task DeleteAsync(IReadOnlyCollection<long> ids, IDbTransaction transaction, CancellationToken cancellationToken);

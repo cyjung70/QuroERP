@@ -1,0 +1,152 @@
+@page "/bc/code"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Bc.Codes
+@using QuroErp.Contracts.Common
+@using QuroErp.Web.Bc.Codes
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject CodeMinorApiClient Api
+@inject CodeMajorApiClient Majors
+@inject LocalizationApiClient Localization
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-008 code management, screen type M. Pick a Major (code or lookup dialog), then add, change or delete its Minor codes and
+   save them together (SD-BR-905). Names are edited per language in use. The API checks every rule (SD-BR-910~916). *@
+
+<PageTitle>@L["Bc.Code.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="code-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="CodeMinorRow" Title="@L["Bc.Code.Title"]" TestId="code"
+                   Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)" CreateRow="@(_canEdit ? NewRow : null)">
+        <SearchContent>
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Bc.Code.MajorCode"]" @bind-Value="_majorCode" @bind-Value:after="MajorCodeChanged" Required
+                          TextCase="TextCase.Upper" TestId="code-search-major-code" />
+                <button type="button" aria-label="@L["Bc.Code.FindMajor"]" data-testid="code-search-find-major" @onclick="() => _lookupOpen = true">…</button>
+            </div>
+            <QuroText Label="@L["Bc.Code.MajorName"]" Value="@_majorName" LockMode="LockMode.Always" TestId="code-search-major-name" />
+        </SearchContent>
+        <Columns>
+            <QuroColumn Title="@L["Bc.Code.MinorCode"]" Value="r => r.MinorCode" Context="row">
+                <QuroText Label="@L["Bc.Code.MinorCode"]" HideLabel @bind-Value="row.MinorCode" Required LockMode="LockMode.NewOnly"
+                          TextCase="TextCase.Upper" TestId="code-grid-minor-code" />
+            </QuroColumn>
+            @foreach (var lang in _languages)
+            {
+                <QuroColumn Title="@NameTitle(lang)" Value="r => r.Names.GetValueOrDefault(lang)" Context="row">
+                    <QuroText Label="@NameTitle(lang)" HideLabel @bind-Value="row.Names[lang]" Required="@(lang == FallbackLang)"
+                              TestId="@($"code-grid-name-{lang}")" />
+                </QuroColumn>
+            }
+            <QuroColumn Title="@L["Bc.Code.SortOrder"]" Value="r => r.SortOrder" Context="row">
+                <QuroNumber Label="@L["Bc.Code.SortOrder"]" HideLabel @bind-Value="row.SortOrder" Decimals="0" Required TestId="code-grid-sort-order" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.Code.UseYn"]" Value="r => r.UseYn" Context="row">
+                <QuroCheckbox Label="@L["Bc.Code.UseYn"]" HideLabel @bind-Value="row.UseYn" TestId="code-grid-use-yn" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.Code.Attr1"]" Value="r => r.Attr1" Context="row">
+                <QuroText Label="@L["Bc.Code.Attr1"]" HideLabel @bind-Value="row.Attr1" TestId="code-grid-attr1" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.Code.Attr2"]" Value="r => r.Attr2" Context="row">
+                <QuroText Label="@L["Bc.Code.Attr2"]" HideLabel @bind-Value="row.Attr2" TestId="code-grid-attr2" />
+            </QuroColumn>
+        </Columns>
+    </QuroMultiGrid>
+
+    <QuroLookupDialog TItem="CodeMajorDto" Title="@L["Bc.Code.FindMajor"]" TestId="code-major-lookup"
+                      @bind-Visible="_lookupOpen" Search="FindMajorsAsync" OnSelected="SelectMajor">
+        <Columns>
+            <QuroColumn TRow="CodeMajorDto" Title="@L["Bc.Code.MajorCode"]" Value="m => m.MajorCode" />
+            <QuroColumn TRow="CodeMajorDto" Title="@L["Bc.Code.MajorName"]" Value="m => m.Name" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    // The en name is required (SD-BR-911); its column comes first
+    private const string FallbackLang = "en";
+    private const string RequiredCode = "Common-E-005";
+    private const string UnavailableCode = "BC-E-003";
+
+    private QuroMultiGrid<CodeMinorRow>? _grid;
+    private IReadOnlyList<string> _languages = [FallbackLang];
+    private string? _majorCode;
+    private string? _majorName;
+    private string? _loadedMajorCode;
+    private bool _canEdit;
+    private bool _ready;
+    private bool _lookupOpen;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    private static string Lang => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy is applied, as in CodeMinorController (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        try
+        {
+            var languages = (await Localization.GetAsync(Lang, CancellationToken.None)).Languages.OrderBy(l => l.SortOrder).Select(l => l.LangCode);
+            _languages = [FallbackLang, .. languages.Where(l => l != FallbackLang)];
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // SD-BR-910: the Major comes first; its codes are shown in sort order, in use or not
+    private async Task<IReadOnlyList<CodeMinorRow>> LoadAsync()
+    {
+        var major = _majorCode?.Trim().ToUpperInvariant();
+        if (string.IsNullOrEmpty(major))
+        {
+            _loadedMajorCode = null;
+            throw new ApiProblemException(new ApiProblem(400, RequiredCode, [L["Bc.Code.MajorCode"]]));
+        }
+        var codes = await Api.SearchAsync(major, Lang, CancellationToken.None);
+        _loadedMajorCode = major;
+        _majorName ??= (await Majors.SearchAsync(major, Lang, CancellationToken.None)).FirstOrDefault(m => m.MajorCode == major)?.Name;
+        return codes.Select(c => CodeMinorRow.From(c, _languages)).ToList();
+    }
+
+    // Saves for the Major the rows were read for, even if the Major code changed since
+    private Task SaveAsync(BatchChanges<CodeMinorRow> changes) =>
+        Api.SaveAsync(CodeMinorRow.ToRequest(_loadedMajorCode!, changes.Added, changes.Updated, changes.Deleted), Lang, CancellationToken.None);
+
+    private CodeMinorRow NewRow() => CodeMinorRow.New(_languages);
+
+    // A typed code clears the name; the next search shows the name of that Major
+    private void MajorCodeChanged() => _majorName = null;
+
+    private async Task<IReadOnlyList<CodeMajorDto>> FindMajorsAsync(string? keyword) =>
+        await Majors.SearchAsync(keyword?.Trim().ToUpperInvariant(), Lang, CancellationToken.None);
+
+    // A picked Major is searched right away (after the unsaved-changes check)
+    private async Task SelectMajor(CodeMajorDto major)
+    {
+        _majorCode = major.MajorCode;
+        _majorName = major.Name;
+        await _grid!.SearchAsync();
+    }
+
+    private string NameTitle(string lang) =>
+        string.Format(CultureInfo.CurrentCulture, L["Bc.Code.Name"], L[$"Common.Language.{lang}"] is { ResourceNotFound: false } name ? name.Value : lang);
+}

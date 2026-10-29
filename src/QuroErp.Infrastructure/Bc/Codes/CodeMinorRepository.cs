@@ -31,7 +31,7 @@ internal sealed partial class CodeMinorRepository : ICodeMinorRepository
         WHERE id = @Id AND updated_at = @ExpectedUpdatedAt
         """;
 
-    private const string DeleteOtherNames = "DELETE FROM sys_code_minor_translation WHERE minor_id = @MinorId AND NOT (lang_code = ANY(@LangCodes))";
+    private const string DeleteNames = "DELETE FROM sys_code_minor_translation WHERE minor_id = @MinorId AND lang_code = ANY(@LangCodes)";
 
     private const string UpsertName = """
         INSERT INTO sys_code_minor_translation (minor_id, lang_code, name, created_by, updated_by)
@@ -81,12 +81,16 @@ internal sealed partial class CodeMinorRepository : ICodeMinorRepository
             transaction,
             cancellationToken: cancellationToken)) == 1;
 
-    public async Task ReplaceNamesAsync(
-        long minorId, IReadOnlyDictionary<string, string> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task SaveNamesAsync(
+        long minorId, IReadOnlyDictionary<string, string?> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
     {
-        await transaction.Connection!.ExecuteAsync(new CommandDefinition(
-            DeleteOtherNames, new { MinorId = minorId, LangCodes = names.Keys.ToArray() }, transaction, cancellationToken: cancellationToken));
-        foreach (var (langCode, name) in names)
+        var removed = names.Where(n => n.Value is null).Select(n => n.Key).ToArray();
+        if (removed.Length > 0)
+        {
+            await transaction.Connection!.ExecuteAsync(new CommandDefinition(
+                DeleteNames, new { MinorId = minorId, LangCodes = removed }, transaction, cancellationToken: cancellationToken));
+        }
+        foreach (var (langCode, name) in names.Where(n => n.Value is not null))
         {
             await transaction.Connection!.ExecuteAsync(new CommandDefinition(
                 UpsertName, new { MinorId = minorId, LangCode = langCode, Name = name, By = updatedBy }, transaction, cancellationToken: cancellationToken));

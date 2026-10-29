@@ -2,8 +2,8 @@ using System.Text.RegularExpressions;
 
 namespace QuroErp.Domain.Common.Codes;
 
-/// <summary>Major code fields after normalizing. Names are by language code; every name has text.</summary>
-public sealed record CodeMajorFields(IReadOnlyDictionary<string, string> Names, bool UseYn);
+/// <summary>Major code fields after normalizing. Names are the sent changes by language code; null removes a name (BC-BR-405).</summary>
+public sealed record CodeMajorFields(IReadOnlyDictionary<string, string?> Names, bool UseYn);
 
 /// <summary>Major code rules (SD-BR-901~904). Every error names the Major code of the failing row.</summary>
 public static partial class CodeMajorRules
@@ -34,7 +34,7 @@ public static partial class CodeMajorRules
     }
 
     /// <summary>
-    /// SD-BR-901 for one row. Blank names are dropped (no translation in that language), but the en name is required.
+    /// SD-BR-901 for one row. A blank name removes that language's translation, but the en name is required.
     /// A missing in-use flag means in use.
     /// </summary>
     public static CodeMajorFields Normalize(string majorCode, IReadOnlyDictionary<string, string?>? names, bool? useYn) =>

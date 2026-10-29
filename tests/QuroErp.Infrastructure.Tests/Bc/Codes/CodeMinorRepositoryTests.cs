@@ -20,7 +20,7 @@ public class CodeMinorRepositoryTests(AuthSchemaFixture db)
     private static readonly CancellationToken None = CancellationToken.None;
 
     private static readonly CodeMinorFields Piece =
-        new(new Dictionary<string, string> { ["en"] = "Piece", ["ko"] = "낱개" }, 900, true, "P", null);
+        new(new Dictionary<string, string?> { ["en"] = "Piece", ["ko"] = "낱개" }, 900, true, "P", null);
 
     private CodeMinorService Service =>
         new(db.Get<ICodeMinorRepository>(), db.Get<ITranslationRepository>(), db.Get<ILocalizationRepository>(), db.Get<IUnitOfWorkFactory>());
@@ -33,11 +33,13 @@ public class CodeMinorRepositoryTests(AuthSchemaFixture db)
         var unitId = (await repository.FindMajorIdAsync(CodeMajors.Unit, forUpdate: true, uow.Transaction, None))!.Value;
 
         var id = await repository.InsertAsync(unitId, "PC", Piece, "kim", uow.Transaction, None);
-        await repository.ReplaceNamesAsync(id, Piece.Names, "kim", uow.Transaction, None);
+        await repository.SaveNamesAsync(id, Piece.Names, "kim", uow.Transaction, None);
         var inserted = (await repository.FindByMajorAsync(unitId, uow.Transaction, None)).Single(m => m.Id == id);
         var stale = await repository.UpdateAsync(id, Piece with { SortOrder = 901 }, inserted.UpdatedAt.AddSeconds(-1), "lee", uow.Transaction, None);
         var updated = await repository.UpdateAsync(id, Piece with { UseYn = false, Attr1 = null }, inserted.UpdatedAt, "lee", uow.Transaction, None);
-        await repository.ReplaceNamesAsync(id, new Dictionary<string, string> { ["en"] = "Each piece" }, "lee", uow.Transaction, None);
+        await repository.SaveNamesAsync(id, new Dictionary<string, string?> { ["en"] = "Each piece" }, "lee", uow.Transaction, None);
+        var merged = await db.Get<ITranslationRepository>().FindAsync(TranslationTarget.CodeMinor, [id], uow.Transaction, None);
+        await repository.SaveNamesAsync(id, new Dictionary<string, string?> { ["en"] = "Each piece", ["ko"] = null }, "lee", uow.Transaction, None);
         var names = await db.Get<ITranslationRepository>().FindAsync(TranslationTarget.CodeMinor, [id], uow.Transaction, None);
         var after = (await repository.FindByMajorAsync(unitId, uow.Transaction, None)).Single(m => m.Id == id);
         await repository.DeleteAsync([id], uow.Transaction, None);
@@ -48,6 +50,7 @@ public class CodeMinorRepositoryTests(AuthSchemaFixture db)
         stale.Should().BeFalse();
         updated.Should().BeTrue();
         after.Should().BeEquivalentTo(new { SortOrder = 900, UseYn = false, Attr1 = (string?)null });
+        merged.Select(n => (n.LangCode, n.Name)).Should().BeEquivalentTo([("en", "Each piece"), ("ko", "낱개")]);
         names.Select(n => (n.LangCode, n.Name)).Should().Equal(("en", "Each piece"));
         translationsLeft.Should().Be(0);
         (await repository.FindByMajorAsync(unitId, uow.Transaction, None)).Should().NotContain(m => m.Id == id);
@@ -101,7 +104,7 @@ public class CodeMinorRepositoryTests(AuthSchemaFixture db)
         var codes = db.Get<ICodeRepository>();
         var termsId = (await minors.FindMajorIdAsync("TERMS", forUpdate: true, uow.Transaction, None))!.Value;
         var term = (await minors.FindByMajorAsync(termsId, uow.Transaction, None))[0];
-        await minors.UpdateAsync(term.Id, new(new Dictionary<string, string> { ["en"] = "x" }, term.SortOrder, false, null, null), term.UpdatedAt,
+        await minors.UpdateAsync(term.Id, new(new Dictionary<string, string?> { ["en"] = "x" }, term.SortOrder, false, null, null), term.UpdatedAt,
             "kim", uow.Transaction, None);
 
         (await codes.FindActiveMinorsAsync("TERMS", uow.Transaction, None))!.Should().NotContain(m => m.MinorCode == term.MinorCode);

@@ -28,11 +28,11 @@ public class CodeMajorRulesTests
     }
 
     [Fact, Trait("Id", "SD-UT-901")]
-    public void Names_AreTrimmed_BlankOnesDropped_AndInUseIsTheDefault()
+    public void Names_AreTrimmed_BlankOnesRemoveTheTranslation_AndInUseIsTheDefault()
     {
-        var fields = CodeMajorRules.Normalize("TERMS", new Dictionary<string, string?> { ["en"] = " Terms ", ["ko"] = " ", ["KO-kr"] = "결제 조건" }, null);
+        var fields = CodeMajorRules.Normalize("TERMS", new Dictionary<string, string?> { ["en"] = " Terms ", ["KO-kr"] = "결제 조건", ["ja"] = " " }, null);
 
-        fields.Names.Should().Equal(new Dictionary<string, string> { ["en"] = "Terms", ["ko"] = "결제 조건" });
+        fields.Names.Should().Equal(new Dictionary<string, string?> { ["en"] = "Terms", ["ko"] = "결제 조건", ["ja"] = null });
         fields.UseYn.Should().BeTrue();
     }
 

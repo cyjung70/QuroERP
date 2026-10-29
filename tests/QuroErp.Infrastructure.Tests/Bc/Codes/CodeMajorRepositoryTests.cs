@@ -22,17 +22,19 @@ public class CodeMajorRepositoryTests(AuthSchemaFixture db)
         new(db.Get<ICodeMajorRepository>(), db.Get<ITranslationRepository>(), db.Get<ILocalizationRepository>(), db.Get<IUnitOfWorkFactory>());
 
     [DatabaseFact, Trait("Id", "BC-UC-023-T07")]
-    public async Task InsertUpdateNamesAndDelete_RoundTrip_NamesInTheTranslationTable()
+    public async Task InsertUpdateNamesAndDelete_RoundTrip_NamesInTheTranslationTable_UnsentLanguagesKept()
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         var repository = db.Get<ICodeMajorRepository>();
 
         var id = await repository.InsertAsync("ZZ_TEST", true, "kim", uow.Transaction, None);
-        await repository.ReplaceNamesAsync(id, new Dictionary<string, string> { ["en"] = "Test", ["ko"] = "시험" }, "kim", uow.Transaction, None);
+        await repository.SaveNamesAsync(id, new Dictionary<string, string?> { ["en"] = "Test", ["ko"] = "시험" }, "kim", uow.Transaction, None);
         var inserted = (await repository.FindAsync("ZZ_", forUpdate: true, uow.Transaction, None)).Single();
         var stale = await repository.UpdateAsync(id, false, inserted.UpdatedAt.AddSeconds(-1), "lee", uow.Transaction, None);
         var updated = await repository.UpdateAsync(id, false, inserted.UpdatedAt, "lee", uow.Transaction, None);
-        await repository.ReplaceNamesAsync(id, new Dictionary<string, string> { ["en"] = "Tested" }, "lee", uow.Transaction, None);
+        await repository.SaveNamesAsync(id, new Dictionary<string, string?> { ["en"] = "Tested" }, "lee", uow.Transaction, None);
+        var merged = await db.Get<ITranslationRepository>().FindAsync(TranslationTarget.CodeMajor, [id], uow.Transaction, None);
+        await repository.SaveNamesAsync(id, new Dictionary<string, string?> { ["en"] = "Tested", ["ko"] = null }, "lee", uow.Transaction, None);
         var names = await db.Get<ITranslationRepository>().FindAsync(TranslationTarget.CodeMajor, [id], uow.Transaction, None);
         var after = (await repository.FindAsync("ZZ_TEST", forUpdate: false, uow.Transaction, None)).Single();
         await repository.DeleteAsync([id], uow.Transaction, None);
@@ -43,6 +45,7 @@ public class CodeMajorRepositoryTests(AuthSchemaFixture db)
         stale.Should().BeFalse();
         updated.Should().BeTrue();
         after.UseYn.Should().BeFalse();
+        merged.Select(n => (n.LangCode, n.Name)).Should().BeEquivalentTo([("en", "Tested"), ("ko", "시험")]);
         names.Select(n => (n.LangCode, n.Name)).Should().Equal(("en", "Tested"));
         translationsLeft.Should().Be(0);
         (await repository.FindAsync("ZZ_", forUpdate: false, uow.Transaction, None)).Should().BeEmpty();
