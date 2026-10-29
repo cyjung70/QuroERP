@@ -24,6 +24,7 @@ namespace QuroErp.Web.Tests.Bc;
 public class ItemScreenTests : BunitContext
 {
     private readonly FakeItemApi _api = new();
+    private readonly FakeConfirm _confirm = new();
     private readonly BunitAuthorizationContext _auth;
 
     public ItemScreenTests()
@@ -31,7 +32,7 @@ public class ItemScreenTests : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
-        Services.AddSingleton<IQuroConfirm>(new FakeConfirm());
+        Services.AddSingleton<IQuroConfirm>(_confirm);
         Services.AddSingleton(TimeProvider.System);
         Services.AddSingleton<AccessTokenStore>();
         Services.AddScoped<AccessTokenProvider>();
@@ -57,6 +58,59 @@ public class ItemScreenTests : BunitContext
         Value(page, "item-header-stk-val").Should().Be("0.00");
         page.Find("[data-testid=item-header-mvg-cost]").HasAttribute("readonly").Should().BeTrue();
         _api.Requests.Should().OnlyContain(r => r.Headers.Authorization!.Parameter == "token-admin");
+    }
+
+    [Fact, Trait("Id", "CORE-020-WT-01")]
+    public void PreviousNext_AreAfterSearch_AndDisabledForANewRecord()
+    {
+        var page = RenderAs("admin");
+
+        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().StartWith(
+            ["item-toolbar-search", "item-toolbar-previous", "item-toolbar-next", "item-toolbar-new"]);
+        page.Find("[data-testid=item-toolbar-previous]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=item-toolbar-next]").HasAttribute("disabled").Should().BeTrue();
+    }
+
+    [Fact, Trait("Id", "CORE-020-WT-02")]
+    public void Next_LoadsTheFollowingItem_AndTheSearchCode()
+    {
+        var page = RenderAs("admin");
+        Search(page, "A100");
+
+        page.Find("[data-testid=item-toolbar-next]").Click();
+
+        page.WaitForAssertion(() => Value(page, "item-header-item-cd").Should().Be("B200"));
+        Value(page, "item-search-item-cd").Should().Be("B200");
+        page.Find("[data-testid=item-toolbar-previous]").Click();
+        page.WaitForAssertion(() => Value(page, "item-header-item-cd").Should().Be("A100"));
+    }
+
+    [Fact, Trait("Id", "CORE-020-WT-03")]
+    public void PreviousAtTheFirstItem_StaysAndSaysSo()
+    {
+        var page = RenderAs("admin");
+        Search(page, "A100");
+
+        page.Find("[data-testid=item-toolbar-previous]").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=item-message]").TextContent.Should().Be("처음 자료입니다."));
+        Value(page, "item-header-item-cd").Should().Be("A100");
+    }
+
+    [Fact, Trait("Id", "CORE-020-WT-04")]
+    public void Next_WithUnsavedChanges_AsksFirst_AndStaysWhenDeclined()
+    {
+        var page = RenderAs("admin");
+        Search(page, "A100");
+        page.Find("[data-testid=item-header-item-name]").Change("PEAR");
+        _confirm.Answer = false;
+
+        page.Find("[data-testid=item-toolbar-next]").Click();
+
+        _confirm.Questions.Should().ContainSingle();
+        Value(page, "item-header-item-cd").Should().Be("A100");
+        Value(page, "item-header-item-name").Should().Be("PEAR");
+        _api.Requests.Should().NotContain(r => r.RequestUri!.AbsolutePath.EndsWith("/next", StringComparison.Ordinal));
     }
 
     [Fact, Trait("Id", "BC-UC-009-T01")]
@@ -145,12 +199,13 @@ public class ItemScreenTests : BunitContext
     }
 
     [Fact, Trait("Id", "BC-009-WT-04")]
-    public void UserWithoutFullAccess_SeesSearchOnly_AndLockedInputs()
+    public void UserWithoutFullAccess_SeesSearchAndMoveOnly_AndLockedInputs()
     {
         var page = RenderAs("user");
         Search(page, "A100");
 
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().Equal("item-toolbar-search");
+        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
+            .Should().Equal("item-toolbar-search", "item-toolbar-previous", "item-toolbar-next");
         page.Find("[data-testid=item-header-item-name]").HasAttribute("readonly").Should().BeTrue();
         page.Find("[data-testid=item-header-unit]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=item-header-valid-flag-n]").HasAttribute("disabled").Should().BeTrue();
@@ -231,6 +286,19 @@ public class ItemScreenTests : BunitContext
             if (request.Method == HttpMethod.Get && path == "/" + ItemRoutes.Base)
             {
                 return Json(new ItemListDto([_item], 1));
+            }
+            // Item class, item code order: A100 (FR) is first, B200 (HW) is last
+            if (request.Method == HttpMethod.Get && path is "/api/bc/items/1/previous" or "/api/bc/items/2/next")
+            {
+                return new HttpResponseMessage(HttpStatusCode.NoContent);
+            }
+            if (request.Method == HttpMethod.Get && path == "/api/bc/items/1/next")
+            {
+                return Json(_item with { Id = 2, ItemCd = "B200", ItemName = "BOLT", ItemClass = "HW" });
+            }
+            if (request.Method == HttpMethod.Get && path == "/api/bc/items/2/previous")
+            {
+                return Json(_item);
             }
             if (request.Method == HttpMethod.Get && path == "/api/bc/items/1")
             {

@@ -25,7 +25,8 @@
 @if (_ready)
 {
     <QuroSingleForm @ref="_form" TModel="ItemModel" Title="@L["Bc.Item.Title"]" TestId="item" ReadOnly="!_canEdit"
-                    Load="LoadAsync" Create="() => new ItemModel()" Save="SaveAsync" Delete="DeleteAsync">
+                    Load="LoadAsync" Create="() => new ItemModel()" Save="SaveAsync" Delete="DeleteAsync"
+                    LoadPrevious="item => LoadAdjacentAsync(item, forward: false)" LoadNext="item => LoadAdjacentAsync(item, forward: true)">
         <SearchContent>
             <div class="quro-lookup-field">
                 <QuroText Label="@L["Bc.Item.ItemCd"]" @bind-Value="_searchCd" Required TextCase="TextCase.Upper" TestId="item-search-item-cd" />
@@ -143,6 +144,19 @@
             : await Api.FindByCodeAsync(_searchCd, CancellationToken.None);
         _searchName = item?.ItemName;
         return item is null ? null : ItemModel.From(item);
+    }
+
+    // BC-UC-009 basic flow 1: previous and next follow item class, item code order
+    private async Task<ItemModel?> LoadAdjacentAsync(ItemModel item, bool forward)
+    {
+        if (await Api.GetAdjacentAsync(item.Id, forward, CancellationToken.None) is not { } adjacent)
+        {
+            return null;
+        }
+        _picked = adjacent;
+        _searchCd = adjacent.ItemCd;
+        _searchName = adjacent.ItemName;
+        return ItemModel.From(adjacent);
     }
 
     private async Task<ItemModel> SaveAsync(ItemModel item, bool isNew)

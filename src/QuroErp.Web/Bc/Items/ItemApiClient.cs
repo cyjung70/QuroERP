@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Web.Auth;
 using QuroErp.Web.Common;
@@ -39,6 +40,14 @@ public sealed class ItemApiClient(HttpClient http, AccessTokenProvider tokens)
     {
         using var response = await http.SendAuthorizedAsync(tokens, new HttpRequestMessage(HttpMethod.Get, ItemUri(id)), cancellationToken);
         return await ReadAsync(response, cancellationToken);
+    }
+
+    /// <summary>The item before (forward = false) or after this one in item class, item code order; null at either end.</summary>
+    public async Task<ItemDto?> GetAdjacentAsync(long id, bool forward, CancellationToken cancellationToken)
+    {
+        var uri = $"{ItemUri(id)}/{(forward ? ItemRoutes.Next : ItemRoutes.Previous)}";
+        using var response = await http.SendAuthorizedAsync(tokens, new HttpRequestMessage(HttpMethod.Get, uri), cancellationToken);
+        return response.StatusCode == HttpStatusCode.NoContent ? null : await ReadAsync(response, cancellationToken);
     }
 
     /// <exception cref="ApiProblemException">422 MM-E-801~831 or Common-E-002, 403 for users without Full Access.</exception>

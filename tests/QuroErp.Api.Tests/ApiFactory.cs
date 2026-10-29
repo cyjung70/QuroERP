@@ -283,7 +283,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         private static readonly Dictionary<string, string[]> ItemCodes = new()
         {
-            ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"], ["UNIT"] = ["EA", "PCS"], ["ITEM_CLASS"] = ["PART"], ["GRADE"] = ["A01"],
+            ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"], ["UNIT"] = ["EA", "PCS"], ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2"], ["GRADE"] = ["A01"],
         };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(
@@ -488,6 +488,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public Task<bool> IsInUseAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(InUse.Contains(id));
+
+        public Task<ItemRow?> FindAdjacentAsync(long id, bool forward, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            var ordered = _rows.Values.OrderBy(r => r.ItemClass ?? "", StringComparer.Ordinal).ThenBy(r => r.ItemCd, StringComparer.Ordinal).ToList();
+            var index = ordered.FindIndex(r => r.Id == id);
+            var target = index < 0 ? -1 : index + (forward ? 1 : -1);
+            return Task.FromResult(target >= 0 && target < ordered.Count ? ordered[target] : null);
+        }
 
         public Task<bool> DeleteAsync(long id, DateTimeOffset expectedUpdatedAt, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(_rows.TryGetValue(id, out var row) && row.UpdatedAt == expectedUpdatedAt && _rows.TryRemove(id, out _));

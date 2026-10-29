@@ -170,4 +170,8 @@
   <data name="Bc.UserProfile.TokensRevoked" xml:space="preserve"><value>모든 기기의 자동 로그인을 끊었습니다.</value></data>
   <data name="BC-E-405" xml:space="preserve"><value>언어 '{0}'은(는) 사용 중인 언어가 아닙니다.</value></data>
   <data name="BC-E-102" xml:space="preserve"><value>{0} 값이 올바르지 않습니다. 입력 규칙(필수·길이·형식·사용 중인 창고)을 확인하세요.</value></data>
+  <data name="Common.Previous" xml:space="preserve"><value>이전</value></data>
+  <data name="Common.Next" xml:space="preserve"><value>다음</value></data>
+  <data name="Common.FirstRecord" xml:space="preserve"><value>처음 자료입니다.</value></data>
+  <data name="Common.LastRecord" xml:space="preserve"><value>마지막 자료입니다.</value></data>
 </root>

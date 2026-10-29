@@ -19,6 +19,16 @@ public sealed class ItemController(ItemService service) : ControllerBase
     [HttpGet("{id:long}")]
     public Task<ItemDto> Get(long id, CancellationToken cancellationToken) => service.GetAsync(id, cancellationToken);
 
+    /// <summary>200 with the previous item in item class, item code order; 204 at the first item.</summary>
+    [HttpGet("{id:long}/" + ItemRoutes.Previous)]
+    public async Task<ActionResult<ItemDto>> Previous(long id, CancellationToken cancellationToken) =>
+        await service.GetAdjacentAsync(id, forward: false, cancellationToken) is { } item ? item : NoContent();
+
+    /// <summary>200 with the next item in item class, item code order; 204 at the last item.</summary>
+    [HttpGet("{id:long}/" + ItemRoutes.Next)]
+    public async Task<ActionResult<ItemDto>> Next(long id, CancellationToken cancellationToken) =>
+        await service.GetAdjacentAsync(id, forward: true, cancellationToken) is { } item ? item : NoContent();
+
     /// <summary>201 with the saved item. 422 MM-E-801~831 or Common-E-002.</summary>
     [HttpPost, Authorize(Roles = "admin")]
     public async Task<ActionResult<ItemDto>> Create(CreateItemRequest request, CancellationToken cancellationToken)

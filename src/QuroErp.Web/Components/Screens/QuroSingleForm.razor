@@ -6,8 +6,10 @@
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
     <Toolbar>
         @* Read-only users get search and print only (BC-BR-214) *@
-        <QuroToolbar TestId="@TestId" Busy="Busy" CanDelete="!_form.IsNew"
+        <QuroToolbar TestId="@TestId" Busy="Busy" CanDelete="!_form.IsNew" CanMove="!_form.IsNew"
                      OnSearch="SearchAsync"
+                     OnPrevious="@(LoadPrevious is null ? default : EventCallback.Factory.Create(this, () => MoveAsync(LoadPrevious, "Common.FirstRecord")))"
+                     OnNext="@(LoadNext is null ? default : EventCallback.Factory.Create(this, () => MoveAsync(LoadNext, "Common.LastRecord")))"
                      OnNew="@(ReadOnly ? default : EventCallback.Factory.Create(this, NewAsync))"
                      OnSave="@(ReadOnly ? default : EventCallback.Factory.Create(this, SaveAsync))"
                      OnDelete="@(Delete is null || ReadOnly ? default : EventCallback.Factory.Create(this, DeleteAsync))"
@@ -47,6 +49,17 @@
     [Parameter]
     public Func<TModel, Task>? Delete { get; set; }
 
+    /// <summary>
+    /// Reads the record before the loaded one in the screen's order; null at the first record.
+    /// Without it there are no previous and next buttons.
+    /// </summary>
+    [Parameter]
+    public Func<TModel, Task<TModel?>>? LoadPrevious { get; set; }
+
+    /// <summary>Reads the record after the loaded one in the screen's order; null at the last record.</summary>
+    [Parameter]
+    public Func<TModel, Task<TModel?>>? LoadNext { get; set; }
+
     [Parameter]
     public EventCallback OnPrint { get; set; }
 
@@ -79,6 +92,24 @@
                 return;
             }
             SetLoaded(loaded);
+        });
+    }
+
+    // At the first or last record the form stays and a notice says so
+    private async Task MoveAsync(Func<TModel, Task<TModel?>> load, string endNotice)
+    {
+        if (_form.IsNew || !await ConfirmDiscardAsync())
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            if (await load(_model) is { } moved)
+            {
+                SetLoaded(moved);
+                return;
+            }
+            Notice = L[endNotice];
         });
     }
 
