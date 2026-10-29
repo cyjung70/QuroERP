@@ -209,7 +209,7 @@ public class AutoLoginTests(WebFactory factory) : IClassFixture<WebFactory>
     [Fact, Trait("Id", "BC-002-UT-01")]
     public async Task Coordinator_SameTokenTogether_CallsTheApiOnce()
     {
-        var clock = new TestClock();
+        var clock = new TestClock(new DateTimeOffset(2026, 10, 29, 9, 0, 0, TimeSpan.Zero));
         var coordinator = new AutoLoginCoordinator(clock);
         var calls = 0;
         var answer = new TaskCompletionSource<LoginResponse>();
@@ -286,13 +286,4 @@ public class AutoLoginTests(WebFactory factory) : IClassFixture<WebFactory>
         response.Headers.TryGetValues("Set-Cookie", out var cookies)
             ? cookies.Where(c => c.StartsWith(TokenCookie, StringComparison.Ordinal))
             : [];
-
-    private sealed class TestClock : TimeProvider
-    {
-        private DateTimeOffset _now = new(2026, 10, 29, 9, 0, 0, TimeSpan.Zero);
-
-        public override DateTimeOffset GetUtcNow() => _now;
-
-        public void Advance(TimeSpan by) => _now += by;
-    }
 }

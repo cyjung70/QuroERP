@@ -52,9 +52,21 @@ public static class WebAuthentication
     /// <summary>Query parameter of the login page with the message code to show above the form (AUTH-006, AUTH-007).</summary>
     public const string ReasonQuery = "reason";
     public const string AutoLoginExpiredCode = "AUTH-007";
+    public const string IdleExpiredCode = "AUTH-006";
+
+    /// <summary>Idle session (login.md "세션"): remaining time, extend, and where to go once it ended.</summary>
+    public const string SessionStatusPath = "/bc/session/status";
+    public const string SessionExtendPath = "/bc/session/extend";
+    public const string SessionExpiredPath = "/bc/session/expired";
+
+    /// <summary>The screen asks whether to stay signed in this long before the idle timeout (login.md "설정").</summary>
+    public static readonly TimeSpan WarnBeforeIdleExpiry = TimeSpan.FromMinutes(2);
+
+    private const string IdleExpiredItem = "quro.idle-expired";
 
     // Pages a user who must change the password may still open (login.md "로그인 처리" 9)
-    private static readonly string[] PasswordChangeAllowedPaths = [ChangePasswordPath, LoginPath, LogoutPath, "/not-found", "/Error"];
+    private static readonly string[] PasswordChangeAllowedPaths =
+        [ChangePasswordPath, LoginPath, LogoutPath, SessionExpiredPath, "/not-found", "/Error"];
 
     /// <summary>Api 주소 설정 키.</summary>
     public const string ApiBaseUrlKey = "QuroApi:BaseUrl";
@@ -80,6 +92,17 @@ public static class WebAuthentication
                 o.ExpireTimeSpan = TimeSpan.FromHours(8); // [추정] 사용하지 않으면 8시간 뒤 세션 종료
                 o.SlidingExpiration = true;
                 o.Events.OnValidatePrincipal = RejectUnknownSession;
+                var redirectToLogin = o.Events.OnRedirectToLogin;
+                o.Events.OnRedirectToLogin = context =>
+                {
+                    // A session that ended by the idle timeout shows AUTH-006 on the login screen
+                    if (context.HttpContext.Items.ContainsKey(IdleExpiredItem))
+                    {
+                        context.RedirectUri = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(
+                            context.RedirectUri, ReasonQuery, IdleExpiredCode);
+                    }
+                    return redirectToLogin(context);
+                };
             });
         services.AddAuthorization();
         services.AddCascadingAuthenticationState();
@@ -137,6 +160,53 @@ public static class WebAuthentication
     }
 
     /// <summary>
+    /// Every request of a signed-in user restarts the idle timeout (login.md "세션": 요청마다 연장).
+    /// The status check of the screen's timer is not activity. Use after UseAutoLogin.
+    /// </summary>
+    public static IApplicationBuilder UseSessionActivity(this IApplicationBuilder app) =>
+        app.Use(async (context, next) =>
+        {
+            if (context.User.FindFirst(WebAuthClaims.SessionId)?.Value is { } sessionId
+                && !context.Request.Path.Equals(SessionStatusPath, StringComparison.OrdinalIgnoreCase))
+            {
+                context.RequestServices.GetRequiredService<AccessTokenStore>().Touch(sessionId);
+            }
+            await next();
+        });
+
+    /// <summary>
+    /// Endpoints of the idle session timer (js/quro.js):
+    /// status (remaining seconds, 401 when ended), extend (antiforgery), and expired (where to go once it ended).
+    /// </summary>
+    public static IEndpointRouteBuilder MapSession(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet(SessionStatusPath, (HttpContext context, AccessTokenStore store, TimeProvider clock) =>
+            SessionStatus(context, store, clock));
+        endpoints.MapPost(SessionExtendPath, (HttpContext context, AccessTokenStore store, TimeProvider clock) =>
+            {
+                if (!AntiforgeryCheck.IsValid(context))
+                {
+                    return AntiforgeryCheck.Rejected();
+                }
+                // The request itself already restarted the idle timeout (UseSessionActivity)
+                return SessionStatus(context, store, clock);
+            })
+            .WithMetadata(new RequireAntiforgeryTokenAttribute());
+        // A page request: with the token cookie UseAutoLogin has signed in again by now (login.md "세션")
+        endpoints.MapGet(SessionExpiredPath, (HttpContext context, string? returnUrl) =>
+            Results.LocalRedirect(context.User.Identity?.IsAuthenticated == true
+                ? LocalUrl.OrRoot(returnUrl)
+                : LoginPathWith(IdleExpiredCode, LocalUrl.OrRoot(returnUrl))));
+        return endpoints;
+    }
+
+    private static IResult SessionStatus(HttpContext context, AccessTokenStore store, TimeProvider clock) =>
+        context.User.FindFirst(WebAuthClaims.SessionId)?.Value is { } sessionId && store.IdleExpiresAt(sessionId) is { } expiresAt
+            ? Results.Ok(new SessionStatusResponse(
+                (int)Math.Max(0, (expiresAt - clock.GetUtcNow()).TotalSeconds), (int)WarnBeforeIdleExpiry.TotalSeconds))
+            : Results.Unauthorized();
+
+    /// <summary>
     /// Sends page requests of a user who must change the password to the password change screen (BC-BR-009).
     /// The API also answers 403 AUTH-005; this keeps the user on the screen that can fix it. Use after UseAuthentication.
     /// </summary>
@@ -163,10 +233,20 @@ public static class WebAuthentication
     {
         var store = context.HttpContext.RequestServices.GetRequiredService<AccessTokenStore>();
         var sessionId = context.Principal?.FindFirst(WebAuthClaims.SessionId)?.Value;
-        if (sessionId is null || store.Get(sessionId) is null)
+        var idleExpired = false;
+        if (sessionId is null || store.Find(sessionId, out idleExpired) is null)
         {
+            if (idleExpired)
+            {
+                context.HttpContext.Items[IdleExpiredItem] = true;
+            }
             context.RejectPrincipal();
             await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
     }
 }
+
+/// <summary>Idle session status for the screen's timer.</summary>
+/// <param name="RemainingSeconds">Seconds until the session ends without activity.</param>
+/// <param name="WarnSeconds">Show the stay-signed-in question this many seconds before the end.</param>
+public sealed record SessionStatusResponse(int RemainingSeconds, int WarnSeconds);

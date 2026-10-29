@@ -1,0 +1,13 @@
+@using QuroErp.Web.Auth
+@inject IStringLocalizer<SharedResource> L
+
+@* Idle session (login.md "세션"): js/quro.js asks the server for the remaining time, shows this 2 minutes before the end,
+   and goes to the expired path once the session ended. Rendered only for a signed-in user. *@
+
+<div class="session-warning" role="alertdialog" aria-labelledby="session-warning-text" data-session-timer
+     data-status-url="@WebAuthentication.SessionStatusPath" data-extend-url="@WebAuthentication.SessionExtendPath"
+     data-expired-url="@WebAuthentication.SessionExpiredPath" data-testid="session-warning" hidden>
+    <AntiforgeryToken />
+    <p id="session-warning-text">@L["Common.Session.ExpiringSoon"]</p>
+    <button type="button" data-session-extend data-testid="session-extend">@L["Common.Session.Extend"]</button>
+</div>

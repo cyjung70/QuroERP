@@ -115,3 +115,62 @@ window.quroSubmit = (form) => form.requestSubmit();
         window.Blazor?.addEventListener?.("enhancedload", initLoginForm);
     });
 })();
+
+// Idle session (login.md "세션"). The server keeps the idle time: requests in any tab and Api calls of interactive screens
+// extend it, so the timer asks the server before warning and never decides on its own clock alone.
+(() => {
+    const retryMs = 60000;
+    const recheckMs = 30000;
+    let handle = 0;
+
+    const timer = () => document.querySelector("[data-session-timer]");
+
+    const expire = (el) => {
+        const returnUrl = location.pathname + location.search;
+        location.assign(`${el.dataset.expiredUrl}?returnUrl=${encodeURIComponent(returnUrl)}`);
+    };
+
+    // remainingSeconds and warnSeconds from the server; 401 when the session already ended
+    const schedule = async () => {
+        clearTimeout(handle);
+        const el = timer();
+        if (!el) return;
+        let status;
+        try {
+            const response = await fetch(el.dataset.statusUrl, { headers: { Accept: "application/json" }, credentials: "same-origin" });
+            if (response.status === 401) { expire(el); return; }
+            if (!response.ok) throw new Error(String(response.status));
+            status = await response.json();
+        } catch {
+            handle = setTimeout(schedule, retryMs);
+            return;
+        }
+        if (status.remainingSeconds <= 0) { expire(el); return; }
+        const warn = status.remainingSeconds <= status.warnSeconds;
+        el.hidden = !warn;
+        if (warn && !el.contains(document.activeElement)) el.querySelector("[data-session-extend]")?.focus();
+        const waitMs = warn
+            ? Math.min(status.remainingSeconds * 1000, recheckMs)
+            : (status.remainingSeconds - status.warnSeconds) * 1000;
+        handle = setTimeout(schedule, waitMs);
+    };
+
+    document.addEventListener("click", async (e) => {
+        if (!e.target.closest?.("[data-session-extend]")) return;
+        const el = timer();
+        const body = new FormData();
+        body.append("__RequestVerificationToken", el.querySelector("input[name=__RequestVerificationToken]")?.value ?? "");
+        try {
+            await fetch(el.dataset.extendUrl, { method: "POST", body, credentials: "same-origin" });
+        } catch {
+            // The next status check shows what the server has
+        }
+        schedule();
+    });
+
+    const start = () => { if (timer()) schedule(); else clearTimeout(handle); };
+    document.addEventListener("DOMContentLoaded", () => {
+        start();
+        window.Blazor?.addEventListener?.("enhancedload", start);
+    });
+})();
