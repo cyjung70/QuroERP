@@ -28,6 +28,7 @@
 - [BC-TS-004 인증 API 요청 수 제한](scenarios/BC/BC-TS-004.md)
 - [BC-TS-005 입력값은 데이터로만 처리, 쓰는 품목은 지우지 않고 사용 안 함](scenarios/BC/BC-TS-005.md)
 - [BC-TS-006 코드 키 잠금과 사용 중 코드, 환율 소수·중복, 사용 기한 지난 계정, 사용 안 함 메뉴](scenarios/BC/BC-TS-006.md)
+- [BC-TS-007 출력 인코딩 — 태그·따옴표가 든 이름이 화면·인쇄·엑셀에 글자 그대로 나온다](scenarios/BC/BC-TS-007.md)
 
 ## MM 시나리오
 
