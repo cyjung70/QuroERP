@@ -52,13 +52,13 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/company | 회사 정보 1건 (BC-BR-301) |
-| PUT | /api/bc/company | 회사 정보 수정 (updatedAt 필수, BC-BR-302~305) |
-| PUT | /api/bc/company/logo | 로고 올리기 (multipart, PNG·JPEG, BC-BR-306) |
-| DELETE | /api/bc/company/logo | 로고 지우기 |
-| GET | /api/bc/company/logo | 로고 이미지 (없으면 404) |
-| GET | /api/sys/auth-settings | 보안 설정 조회 |
-| PUT | /api/sys/auth-settings | 보안 설정 수정 (updatedAt 필수, BC-BR-309·310) |
+| GET | /api/bc/company | 회사 정보 1건 → { name, billto, shipto, contact, telNo, faxNo, registerNo, represent, email, businessType, businessItem, countryCode, baseCurrencyCode, defaultLangCode, billingMode, hasLogo, updatedAt } (BC-BR-301). POST·DELETE는 405 |
+| PUT | /api/bc/company | 회사 정보 수정 { 위 필드(hasLogo 제외), updatedAt } (BC-BR-302~305·312~316). 모르는 속성(예: 마감 기준 월)은 400 (BC-BR-307). 422 BC-E-302~316, 409 Common-E-004 또는 거래 데이터가 있어 못 바꾸면 BC-E-312·313·316 |
+| PUT | /api/bc/company/logo | 로고 올리기 (multipart 필드 `file`, PNG·JPEG, 1 MB 이하) → 204 (BC-BR-306). 422 BC-E-004·BC-E-005, 회사 행이 없으면 404 BC-E-006 |
+| DELETE | /api/bc/company/logo | 로고 지우기 → 204 (BC-BR-306) |
+| GET | /api/bc/company/logo | 로고 이미지 (저장한 형식 그대로). 없으면 404 BC-E-007 |
+| GET | /api/sys/auth-settings | 보안 설정 → { maxFailedAttempts, lockoutMinutes, showRemainingAttempts, autoLoginEnabled, autoLoginValidDays, sessionIdleMinutes, allowConcurrentLogin, passwordMinLength, passwordRequiredCategories, passwordExpireDays, passwordHistoryCount, passwordResetMode, updatedAt } |
+| PUT | /api/sys/auth-settings | 보안 설정 수정 { 위 필드, updatedAt } (BC-BR-309·310). 422 BC-E-309(인자 속성 이름), 409 Common-E-004 |
 | GET | /api/mm/inventory-setting | 재고 설정 조회 { negativeStockMode } (행이 없으면 DENY, MM-BR-003). TASK-CORE-008에서 구현 |
 | PUT | /api/mm/inventory-setting | 마이너스 재고 모드 변경 (ALLOW, ALLOW_IN_MONTH, DENY). 회사 정보 메뉴 Full Access 권한 (BC-BR-305). TASK-CORE-008에서 구현 |
 
