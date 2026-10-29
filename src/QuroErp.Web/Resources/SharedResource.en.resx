@@ -109,4 +109,13 @@
   <data name="quro.validation.minExclusive" xml:space="preserve"><value>Enter a value greater than the minimum.</value></data>
   <data name="quro.validation.maxExclusive" xml:space="preserve"><value>Enter a value less than the maximum.</value></data>
   <data name="quro.validation.notEqual" xml:space="preserve"><value>This value is not allowed.</value></data>
+  <data name="Common-E-006" xml:space="preserve"><value>The requested data ({0}) was not found. Search again.</value></data>
+  <data name="MM-E-801" xml:space="preserve"><value>Item code '{0}' cannot be used. Enter up to 18 upper-case characters that no other item uses.</value></data>
+  <data name="MM-E-802" xml:space="preserve"><value>Enter the required field {0}.</value></data>
+  <data name="MM-E-803" xml:space="preserve"><value>{0} must be 0 or more.</value></data>
+  <data name="MM-E-806" xml:space="preserve"><value>The type of item {0} cannot change because it has stock, stock movements or set structure.</value></data>
+  <data name="MM-E-807" xml:space="preserve"><value>Item {0} is in use and cannot be deleted. Set it to not in use instead.</value></data>
+  <data name="MM-E-809" xml:space="preserve"><value>Item {0} is not in use and cannot be selected.</value></data>
+  <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
+  <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
 </root>
