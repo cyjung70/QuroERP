@@ -24,10 +24,11 @@ internal sealed class AppUserRepository : IAppUserRepository
     private const string LockByUserId = SelectByUserId + " FOR UPDATE OF u";
     private const string LockById = SelectById + " FOR UPDATE OF u";
 
+    // Login state is not a change of user data: updated_at and updated_by stay, so my info saves do not get 409 (BC-BR-105)
     private const string UpdateLoginState = """
         UPDATE sys_app_user
         SET failed_count = @FailedCount, locked_until = @LockedUntil, last_login_at = @LastLoginAt, last_login_ip = @LastLoginIp,
-            lang_code = COALESCE(@LangCode, lang_code), updated_at = now(), updated_by = @AuditUser
+            lang_code = COALESCE(@LangCode, lang_code)
         WHERE id = @Id
         """;
 
@@ -73,7 +74,7 @@ internal sealed class AppUserRepository : IAppUserRepository
             new
             {
                 user.Id, user.FailedCount, user.LockedUntil, user.LastLoginAt, LastLoginIp = NullIfEmpty(user.LastLoginIp),
-                LangCode = langCode, AuditUser = UserLoginLogRepository.AuditUser,
+                LangCode = langCode,
             },
             transaction,
             cancellationToken: cancellationToken));

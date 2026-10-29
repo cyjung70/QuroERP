@@ -1,6 +1,7 @@
 using Dapper;
 using FluentAssertions;
 using QuroERP.Database;
+using QuroErp.Application.Bc.UserProfiles;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Contracts.Common.Auth;
@@ -27,10 +28,11 @@ public class LoginRepositoryTests(AuthSchemaFixture db)
     }
 
     [DatabaseFact, Trait("Id", "BC-001-IT-02")]
-    public async Task SaveLoginStateAsync_LockAndLogin_RoundTripsThroughLockByUserId()
+    public async Task SaveLoginStateAsync_LockAndLogin_RoundTripsThroughLockByUserId_AndKeepsUpdatedAt()
     {
         var id = await CreateUserAsync("login1");
         var users = db.Get<IAppUserRepository>();
+        var updatedAt = await UpdatedAtAsync(id);
 
         await using (var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None))
         {
@@ -63,6 +65,13 @@ public class LoginRepositoryTests(AuthSchemaFixture db)
             FailedCount = 0, LockedUntil = (DateTimeOffset?)null, LastLoginAt = (DateTimeOffset?)Now.AddHours(2),
             LastLoginIp = "10.0.0.9", LangCode = "en",
         });
+        (await UpdatedAtAsync(id)).Should().Be(updatedAt);
+    }
+
+    private async Task<DateTimeOffset> UpdatedAtAsync(long id)
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+        return (await db.Get<IUserProfileRepository>().FindAsync(id, forUpdate: false, uow.Transaction, CancellationToken.None))!.UpdatedAt;
     }
 
     [DatabaseFact, Trait("Id", "BC-001-IT-03")]
