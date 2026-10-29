@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "0077239344fa9bbd1539198f8308176fb5fda6a8bca44d6b90386343ad26c751"
+      "sha256": "fc2ff98eec870f5cda97e1938c6913e35572aff335bf6a77662381d5d757cf00"
     },
     {
       "path": "docs/architecture/database.md",
@@ -860,7 +860,7 @@
     },
     {
       "path": "harness/tasks/TASK-BC-013.json",
-      "sha256": "ea0654f288e2aa2cd0a11f85a7c2a203de6a6803db53621b0c72fd9381bab491"
+      "sha256": "87351ecd9c4c16704c84e3c96f7eb03dbcdf843186c3ebbbcda39016ac0c9830"
     },
     {
       "path": "harness/tasks/TASK-BC-014.json",
@@ -996,7 +996,7 @@
     },
     {
       "path": "harness/tasks/TASK-BC-047.json",
-      "sha256": "19914205928248239dd832943b210a97346525d8f31736401541c9fea59f413b"
+      "sha256": "09c9319ed7e3daec88c206312422153d58a2a4c2156e2dd3b35909a19600d7c6"
     },
     {
       "path": "harness/tasks/TASK-BC-048.json",

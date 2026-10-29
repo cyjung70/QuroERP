@@ -34,7 +34,8 @@
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
-    "관련 BR마다 테스트"
+    "관련 BR마다 테스트",
+    "`bc_exchange_rate`를 database-tables.md 정의로 바꾸는 마이그레이션: AS IS 형태(`cur_dt`, `cur_rp`, `cur_won`, UNIQUE `cur_dt`) → `rate_dt`, `currency_code`, `rate`(모두 NOT NULL), UNIQUE (`rate_dt`, `currency_code`). 기존 행은 통화별 행으로 옮긴다 (SD-BR-909)"
   ],
   "estimateHours": 2,
   "status": "todo"
