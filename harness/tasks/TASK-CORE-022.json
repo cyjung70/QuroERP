@@ -33,5 +33,5 @@
     "단위 테스트: 사용 안 함 창고 제외, 정렬, 인증 없으면 401"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
