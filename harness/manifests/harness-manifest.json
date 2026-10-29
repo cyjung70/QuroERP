@@ -336,7 +336,7 @@
     },
     {
       "path": "docs/specifications/BC/change-password.md",
-      "sha256": "b366cbcf203665bed49a087adfe75df3452c6b247a997d2b02bfd93ebe029391"
+      "sha256": "48be1e9c6402713cf19082556baa6562509c3461f30a1ec01e6bb77eaead87e6"
     },
     {
       "path": "docs/specifications/BC/code-major.md",
@@ -380,7 +380,7 @@
     },
     {
       "path": "docs/specifications/BC/item.md",
-      "sha256": "3c60b08e30d083c407c6c9832bf1a120cd01570a006a43440446089322aff533"
+      "sha256": "3d3fb4dcbc59c803e579759cc8f76e899a7055a3ec79e3d9f5183af9c3bec5e7"
     },
     {
       "path": "docs/specifications/BC/localization-setting.md",
@@ -420,7 +420,7 @@
     },
     {
       "path": "docs/specifications/BC/user-profile.md",
-      "sha256": "f6338352b3d8f1adf9f11330c1ed736a6989edb1387df5328d5bdc5fa8d1b50b"
+      "sha256": "07f8c0d6cdcb75ed615af2d83e3a5c9293aec146264da7188a4345b2fa253f33"
     },
     {
       "path": "docs/specifications/BC/user.md",

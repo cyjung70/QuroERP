@@ -14,17 +14,39 @@
 
 ## 기본 흐름
 
-화면유형 표준 흐름이다. AS IS 로직 분석으로 BR이 정해지면 갱신된다.
+관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
-1. 조회 조건(키)으로 1건을 조회한다.
-2. 필드를 입력·수정한다.
-3. 저장한다. API가 BR·코드 값을 검사한 뒤 저장한다.
-4. 삭제는 확인 후 수행한다.
+1. 사용자 메뉴의 내 정보로 `/bc/user-profile`을 연다. 화면이 `GET /api/bc/user-profile`로 내 정보를 읽는다. 대상은 토큰의 사용자다 (BC-BR-101).
+2. 이름·이메일·전화·기본 언어·기본 창고를 바꾼다. 사용자 ID는 잠겨 있다 (BC-BR-102).
+3. 저장한다. 이름이 비면 서버를 부르지 않고 Common-E-005. `PUT /api/bc/user-profile`은 조회 때 받은 `updatedAt`을 함께 보낸다.
+4. 서버는 값을 정리(앞뒤 공백 제거, 빈 값은 비움)하고 길이·형식, 사용 중 언어(BC-BR-403), 사용 중 창고를 검사한 뒤 저장한다.
+5. 성공하면 `Common.Saved`. 기본 언어를 바꿨으면 저장 직후 화면 언어가 바뀐다 (BC-BR-105).
 
 ## 대체 흐름
 
-- 필수 값이 없으면 저장하지 않고 필드에 오류를 표시한다.
-- 다른 사용자가 먼저 수정했으면 409 메시지를 표시하고 다시 조회하게 한다.
+- 다른 곳에서 먼저 바꿨으면 409 Common-E-004이다. 다시 조회한다.
+- BC-E-102는 인자가 속성 이름이다. 화면은 그 필드 라벨로 바꿔 보인다.
+- '모든 기기에서 로그아웃'은 확인 뒤 내 자동 로그인 토큰을 모두 폐기한다. 지금 세션은 유지한다 (BC-BR-106).
+- 비밀번호는 이 화면에서 바꾸지 않는다. 링크로 비밀번호 변경 화면에 간다 (BC-BR-103).
+- 신규·삭제는 없다. 기본 경로의 POST·DELETE는 405다 (BC-BR-104).
+- API에 연결할 수 없으면 BC-E-003이다.
+
+## 화면 항목
+
+이 화면은 아래 항목으로 새로 만든다. 아래 'AS IS 화면 필드'는 참고만 한다.
+
+| No | 항목 | 유형 | 필수 | 기본값 | 설명·검증 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 사용자 ID | 텍스트 |  |  | 항상 잠김 (BC-BR-102) |
+| 2 | 이름 | 텍스트 | ● |  | 앞뒤 공백 제거, 최대 40자. 비면 Common-E-005(화면), 서버 BC-E-102 |
+| 3 | 이메일 | 텍스트 |  |  | 앞뒤 공백 제거, 최대 30자, 입력했을 때 형식 검사(@ 하나, 공백 없음, 도메인에 점). 어기면 BC-E-102 |
+| 4 | 전화 | 텍스트 |  |  | 앞뒤 공백 제거, 최대 18자. 어기면 BC-E-102 |
+| 5 | 기본 언어 | 드롭다운 |  |  | 사용 중인 언어만 (`GET /api/bc/localization`). 사용 안 함이면 BC-E-405 (BC-BR-403). 바꾸고 저장하면 화면 언어가 바로 바뀐다 (BC-BR-105) |
+| 6 | 기본 창고 | 드롭다운 |  | 회사 기본 창고 | 사용 중 창고만 (`GET /api/mm/warehouses/options`). 비우면 회사 기본 창고를 칸 아래에 보인다 (`Bc.UserProfile.CompanyDefaultWarehouse`). 사용 안 함 창고면 BC-E-102 |
+| 7 | 비밀번호 변경 | 링크 |  |  | [비밀번호 변경](change-password.md) 화면으로 간다 (BC-BR-103) |
+| 8 | 모든 기기에서 로그아웃 | 버튼 |  |  | 확인(`Bc.UserProfile.RevokeTokensConfirm`) 뒤 실행, 성공하면 `Bc.UserProfile.TokensRevoked` (BC-BR-106) |
+| 9 | 조회·저장 | 툴바 버튼 |  |  | 저장하지 않은 변경이 있으면 다시 조회 전에 `Common.ConfirmUnsaved`로 확인. 저장 성공은 `Common.Saved` |
+
 
 ## 화면 필드
 
@@ -51,8 +73,8 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/user-profile | 내 정보 (BC-BR-101) |
-| PUT | /api/bc/user-profile | 내 정보 수정 (updatedAt 필수, BC-BR-102·105) |
+| GET | /api/bc/user-profile | 내 정보 → { userId, userName, email, phone, langCode, defaultWarehouseId, defaultWarehouseCode, defaultWarehouseName, updatedAt } (BC-BR-101). 기본 창고가 비었으면 id는 null, 코드·이름은 회사 기본 창고. 404 Common-E-006 |
+| PUT | /api/bc/user-profile | 내 정보 수정 { userName, email, phone, langCode, defaultWarehouseId, updatedAt } → 저장 결과 (BC-BR-102·105). 422 BC-E-102·BC-E-405, 409 Common-E-004. 기본 경로의 POST·DELETE는 405 (BC-BR-104) |
 | POST | /api/bc/user-profile/revoke-tokens | 모든 기기에서 로그아웃 (BC-BR-106). 204 |
 
 ## 관련 테이블
@@ -75,16 +97,25 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 ## 다국어 리소스 키
 
 - 제목: `Bc.UserProfile.Title`
-- 필드: `Bc.UserProfile.<속성>` — `<속성>`은 C# 속성 이름이다 (보통 TO BE 컬럼의 PascalCase, [다국어](../../architecture/i18n.md)). 위 'TO BE 속성 (제안)' 열과 다르면 C# 속성 이름을 따른다
-- 오류: `BC-E-<번호>` (BR에서 정한다)
+- 필드 라벨: `Bc.UserProfile.<C# 속성>` — `UserId`, `UserName`, `Email`, `Phone`, `LangCode`, `DefaultWarehouseId` ([다국어](../../architecture/i18n.md) 규칙)
+- 화면 문구: `Bc.UserProfile.CompanyDefaultWarehouse`(인자 창고), `Bc.UserProfile.ChangePassword`, `Bc.UserProfile.RevokeTokens`, `Bc.UserProfile.RevokeTokensConfirm`, `Bc.UserProfile.TokensRevoked`, 공통 `Common.Saved`, `Common.ConfirmUnsaved`, 언어 이름 `Common.Language.<언어 코드>`
+- 오류: `BC-E-102`(인자 속성 이름, 화면은 필드 라벨로 바꿔 보인다), `BC-E-405`(인자 언어 코드), `Common-E-004`, `Common-E-006`, 화면 `Common-E-005`, `BC-E-003`
 
 ## 테스트 시나리오
 
-- `BC-UC-003-T01` 신규 저장 성공
-- `BC-UC-003-T02` 필수 값 누락 시 저장 차단
-- `BC-UC-003-T03` 동시 수정 충돌 409
-- `BC-UC-003-T04` 없는 코드 값 저장 시 422
-- `BC-UC-003-T05` 관련 BR마다 단위 테스트 (`BC-UT-` + BR 번호, 예: BC-BR-101 → BC-UT-101)
+- `BC-UC-003-T01` 조회 → 내 사용자 ID·이름·이메일·전화·언어·기본 창고, 기본 창고가 비면 회사 기본 창고를 칸 아래에 표시
+- `BC-UC-003-T02` 이름 비우고 저장 → 서버 호출 없음, Common-E-005
+- `BC-UC-003-T03` 이름 41자 → 422 BC-E-102 (인자 UserName), 화면은 이름 라벨로 표시
+- `BC-UC-003-T04` 이메일 형식 오류(`a@b`) → 422 BC-E-102 (인자 Email)
+- `BC-UC-003-T05` 전화 19자 → 422 BC-E-102 (인자 Phone)
+- `BC-UC-003-T06` 사용 안 함 언어 → 422 BC-E-405
+- `BC-UC-003-T07` 사용 안 함 창고 → 422 BC-E-102 (인자 DefaultWarehouseId)
+- `BC-UC-003-T08` 오래된 updatedAt → 409 Common-E-004
+- `BC-UC-003-T09` 기본 언어를 en으로 저장 → 화면 문구가 바로 영어
+- `BC-UC-003-T10` 모든 기기에서 로그아웃 → 204, 내 자동 로그인 토큰 모두 폐기, 지금 세션은 계속 사용
+- `BC-UC-003-T11` POST·DELETE /api/bc/user-profile → 405
+- `BC-UC-003-T12` 요청 본문에 다른 사용자 ID → 무시하고 본인만 바뀜
+- `BC-UC-003-T13` 관련 BR마다 단위 테스트 (`BC-UT-` + BR 번호, 예: BC-BR-101 → BC-UT-101)
 
 ## AS IS 근거
 
