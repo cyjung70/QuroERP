@@ -46,7 +46,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 | --- | --- | --- |
 | GET | /api/mm/warehouses?조건 | 목록 조회 |
 | POST | /api/mm/warehouses/batch | 일괄 저장 (added, updated, deleted) |
-| GET | /api/mm/warehouses/options | 선택 목록: 사용 중 창고의 id·코드·이름 (로그인한 모든 사용자, TASK-CORE-022) |
+| GET | /api/mm/warehouses/options | 선택 목록: 사용 중 창고만 창고 코드 순 → [{ id, warehouseCode, warehouseName }]. 로그인한 모든 사용자·API 클라이언트 (메뉴 권한 없음), 인증 없으면 401 (TASK-CORE-022) |
 
 ## 관련 테이블
 

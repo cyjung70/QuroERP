@@ -49,7 +49,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
 | GET | /api/sys/code-majors?majorCode=&lang= | Major 코드 목록 (majorCode로 시작, 생략하면 전체, 코드 순) → [{ id, majorCode, name, names, useYn, minorCount, updatedAt }]. `name`은 lang(생략하면 요청 언어) → 회사 기본 언어 → en 순 이름 (BC-BR-402), `names`는 언어별 이름(en은 항상 있다), `minorCount`는 사용 안 함을 포함한 Minor 수. 로그인한 모든 사용자·API 클라이언트 |
-| PUT | /api/sys/code-majors?lang= | 그리드 저장 { inserted: [{ majorCode, names, useYn }], updated: [{ id, majorCode, names, useYn, updatedAt }], deleted: [{ id, updatedAt }] } → 저장 뒤 Major 전체 (GET과 같은 형식). 한 트랜잭션, 한 행이라도 실패하면 아무것도 저장하지 않는다 (SD-BR-905). `names`는 그 코드의 이름 전체를 바꾸고 빈 이름은 그 언어 번역을 지운다. `useYn` 생략은 사용. 422 SD-E-901~904(인자 Major 코드), BC-E-405(인자 언어), 409 Common-E-004. 변경은 Full Access (BC-BR-214) |
+| PUT | /api/sys/code-majors?lang= | 그리드 저장 { inserted: [{ majorCode, names, useYn }], updated: [{ id, majorCode, names, useYn, updatedAt }], deleted: [{ id, updatedAt }] } → 저장 뒤 Major 전체 (GET과 같은 형식). 한 트랜잭션, 한 행이라도 실패하면 아무것도 저장하지 않는다 (SD-BR-905). `names`는 보낸 언어만 바꾼다: 값이 있으면 넣거나 바꾸고 빈 값이면 그 언어 번역을 지우며, 보내지 않은 언어는 그대로 둔다 (BC-BR-405). `useYn` 생략은 사용. 422 SD-E-901~904(인자 Major 코드), BC-E-405(인자 언어), 409 Common-E-004. 변경은 Full Access (BC-BR-214) |
 
 ## 관련 테이블
 

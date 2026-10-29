@@ -49,7 +49,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
 | GET | /api/bc/codes?majorCode=&lang= | Major 하나의 Minor 코드 전체 (사용 안 함 포함, 정렬 순서, SD-BR-910) → [{ id, minorCode, name, names, sortOrder, useYn, attr1, attr2, updatedAt }]. `name`·`names`는 Major 목록과 같다. majorCode 없으면 400 Common-E-005, 없는 Major는 404 Common-E-003. 로그인한 모든 사용자·API 클라이언트 |
-| PUT | /api/bc/codes?lang= | 그리드 저장 { majorCode, inserted: [{ minorCode, names, sortOrder, useYn, attr1, attr2 }], updated: [{ id, minorCode, names, sortOrder, useYn, attr1, attr2, updatedAt }], deleted: [{ id, updatedAt }] } → 저장 뒤 그 Major의 Minor 전체. 한 트랜잭션 (SD-BR-905). 422 SD-E-911~914·916(인자 Minor 코드), BC-E-405(인자 언어), 409 Common-E-004. 변경은 Full Access (BC-BR-214) |
+| PUT | /api/bc/codes?lang= | 그리드 저장 { majorCode, inserted: [{ minorCode, names, sortOrder, useYn, attr1, attr2 }], updated: [{ id, minorCode, names, sortOrder, useYn, attr1, attr2, updatedAt }], deleted: [{ id, updatedAt }] } → 저장 뒤 그 Major의 Minor 전체. 한 트랜잭션 (SD-BR-905). `names`는 Major 저장과 같다 (BC-BR-405). 422 SD-E-911~914·916(인자 Minor 코드), BC-E-405(인자 언어), 409 Common-E-004. 변경은 Full Access (BC-BR-214) |
 
 ## 관련 테이블
 
