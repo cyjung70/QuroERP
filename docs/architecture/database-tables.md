@@ -266,7 +266,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `dc_cd` | varchar |  |  |
 | `dc_rate` | numeric |  |  |
 | `billed_qty` | numeric | NOT NULL DEFAULT 0 | 송장으로 청구한 수량 (SD-BR-108) |
-| `sales_order_line_id` | bigint | FK | → `sd_sales_order_line.id` |
+| `sales_order_line_id` | bigint | FK | → `sd_sales_order_line.id`. 직접 넣은 줄은 NULL (SD-BR-173) |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
