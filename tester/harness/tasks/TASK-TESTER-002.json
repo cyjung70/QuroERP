@@ -44,7 +44,8 @@
     "TASK-MM-030",
     "TASK-SD-001",
     "TASK-SD-005",
-    "TASK-BC-017"
+    "TASK-BC-017",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "tests/scenario/MM/test_purchase_to_issue.py: MM-TS-001(3개 모드, serial), MM-TS-002, MM-TS-003(3개 모드, serial)",

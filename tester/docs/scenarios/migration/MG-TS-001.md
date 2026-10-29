@@ -52,7 +52,7 @@
 
 ### 빈 상태 (2단계 — 모두 0행)
 
-`bc_customer`, `bc_vendor`, `bc_item`, `bc_sales_price`, `bc_purchase_price`, `bc_cart_item`, `sd_customer_opening_balance`, `sd_sales_order`, `sd_sales_invoice`, `sd_ar_receipt`, `sd_cm_apply`, `mm_purchase_order`, `mm_goods_receipt`, `mm_goods_movement`, `mm_onhand`, `mm_monthly_inventory`, `mm_ap_payment`
+`bc_customer`, `bc_vendor`, `bc_item`, `bc_sales_price`, `bc_purchase_price`, `bc_cart_item`, `sd_customer_opening_balance`, `sd_sales_order`, `sd_shipment`, `sd_sales_invoice`, `sd_ar_receipt`, `sd_cm_apply`, `mm_purchase_order`, `mm_goods_receipt`, `mm_goods_movement`, `mm_onhand`, `mm_monthly_inventory`, `mm_ap_payment`
 
 - 장바구니·고객 기초 잔액은 참조할 품목·고객이 없어 이관하지 않는다 (예상된 거부). 행이 있으면 실패다.
 

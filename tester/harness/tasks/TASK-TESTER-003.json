@@ -27,7 +27,8 @@
   ],
   "dependsOn": [
     "TASK-TESTER-002",
-    "TASK-CORE-009"
+    "TASK-CORE-009",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "tests/scenario/MM/test_negative_stock_receipt_cancel.py: MM-TS-005 모드별 기대 결과 표 그대로 (parametrize indirect)",

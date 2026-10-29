@@ -18,7 +18,7 @@
 1. 공급자 V, 재고 품목 J, 고객 C (세금 코드 `NONE`). 품목 J는 모드마다 새로 만든다
 2. `PUT /api/mm/inventory-setting` — `ALLOW` (음수 재고를 만들기 위해)
 3. 입고 G1: `M-1/5`, 품목 J 직접 입력, 수량 2, 단가 5
-4. 송장 D1: `M-1/10`, 고객 C, 품목 J 직접 입력, 수량 5, 단가 20 → `M-1` 기말 −3 (`negative_stock = true`)
+4. 출하 H1: `M-1/10`, 고객 C, 품목 J 직접 입력(수주 없는 줄), 수량 5, 단가 20 → `M-1` 기말 −3 (`negative_stock = true`, 송장이 함께 생긴다)
 5. `PUT /api/mm/inventory-setting` — 이 테스트의 모드 (`ALLOW` 또는 `ALLOW_IN_MONTH`)
 
 ## 단계

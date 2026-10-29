@@ -28,7 +28,8 @@
   "dependsOn": [
     "TASK-TESTER-003",
     "TASK-MM-015",
-    "TASK-SD-005"
+    "TASK-SD-005",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "inventory_closing fixture (tester/docs/architecture.md \"Fixture\"): 시작 때 마감한 달 없음 확인, 끝나면 취소",

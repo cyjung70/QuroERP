@@ -31,7 +31,7 @@
 
 ## MM 시나리오
 
-- [MM-TS-001 발주 → 전량 입고 → 송장 출고 (기본 흐름)](scenarios/MM/MM-TS-001.md)
+- [MM-TS-001 발주 → 전량 입고 → 출하 출고 (기본 흐름)](scenarios/MM/MM-TS-001.md)
 - [MM-TS-002 분할 입고와 과납 입고 확인](scenarios/MM/MM-TS-002.md)
 - [MM-TS-003 입고 삭제 → 반입 취소와 발주 상태 되돌림](scenarios/MM/MM-TS-003.md)
 - [MM-TS-004 입고가 있는 발주와 지급한 입고의 수정 차단](scenarios/MM/MM-TS-004.md)
@@ -50,9 +50,9 @@
 
 ## SD 시나리오
 
-- [SD-TS-001 수주 → 분할 송장 → 수주 완료 (기본 흐름)](scenarios/SD/SD-TS-001.md)
-- [SD-TS-002 수주 남은 수량 초과 송장과 송장 이후 수주·송장 수정 차단](scenarios/SD/SD-TS-002.md)
-- [SD-TS-003 세트 품목이 있는 송장 Void — 출고 취소와 수주 되돌림](scenarios/SD/SD-TS-003.md)
+- [SD-TS-001 수주 → 분할 출하(송장 함께 생성) → 수주 완료 (기본 흐름)](scenarios/SD/SD-TS-001.md)
+- [SD-TS-002 수주 남은 수량 초과 출하와 출하 이후 수주·출하·송장 수정 차단](scenarios/SD/SD-TS-002.md)
+- [SD-TS-003 세트 품목이 있는 출하 Void — 송장 Void, 출고 취소, 수주 되돌림](scenarios/SD/SD-TS-003.md)
 - [SD-TS-004 입금 반제 → 송장 잠금 → 입금 삭제로 되돌림](scenarios/SD/SD-TS-004.md)
 - [SD-TS-005 Credit Memo 재고 반입 선택 → 송장 적용 → 적용 취소와 삭제](scenarios/SD/SD-TS-005.md)
 - [SD-TS-006 미국 Sales Tax — 세율 변경, 면세 품목, 면세 증명서](scenarios/SD/SD-TS-006.md)
@@ -60,7 +60,7 @@
 - [SD-TS-008 외화 송장과 입금 — 기준 통화 금액, 환율 차이, 통화 불일치 차단](scenarios/SD/SD-TS-008.md)
 - [SD-TS-009 한국 회사의 USD 수출 송장과 입금 — 영세율, 원화 환산, 환율 차이](scenarios/SD/SD-TS-009.md)
 - [SD-TS-010 고객 이름 변경과 고객 합치기, 문서가 있는 고객 삭제](scenarios/SD/SD-TS-010.md)
-- [SD-TS-011 미결 수주·실주와 매출 리포트 합계 일치 — 송장 없는 수주, 마감 수주, 세트 품목, 송장 담당자](scenarios/SD/SD-TS-011.md)
+- [SD-TS-011 미결 수주·실주와 매출 리포트 합계 일치 — 출하 없는 수주, 마감 수주, 세트 품목, 송장 담당자](scenarios/SD/SD-TS-011.md)
 - [SD-TS-012 기준일 매출채권 잔액 — Credit 적용 줄 일자, 기준일 상세, 최대 고객 수](scenarios/SD/SD-TS-012.md)
 - [SD-TS-013 판매·구매 단가표 저장과 삭제, 신용 한도 경고, 장바구니 담기 검사](scenarios/SD/SD-TS-013.md)
 - [SD-TS-014 문서 번호 동시 채번과 입금 줄 수정 차단](scenarios/SD/SD-TS-014.md)
