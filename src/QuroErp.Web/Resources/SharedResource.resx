@@ -184,6 +184,8 @@
   <data name="Bc.Login.ForgotPassword" xml:space="preserve"><value>비밀번호를 잊으셨나요? 관리자에게 문의하세요.</value></data>
   <data name="Bc.Login.Version" xml:space="preserve"><value>QuroERP {0} · 오픈소스 라이선스 LGPL-3.0</value></data>
   <data name="Common.LastLogin" xml:space="preserve"><value>직전 로그인: {0} (IP {1})</value></data>
+  <data name="Common.Session.ExpiringSoon" xml:space="preserve"><value>사용하지 않아 2분 뒤 로그아웃됩니다. 계속 사용하려면 로그인 유지를 누르세요.</value></data>
+  <data name="Common.Session.Extend" xml:space="preserve"><value>로그인 유지</value></data>
   <data name="Common.Home.Welcome" xml:space="preserve"><value>{0}님, 환영합니다.</value></data>
   <data name="Common.UserMenu" xml:space="preserve"><value>사용자 메뉴</value></data>
   <data name="Common.MyInfo" xml:space="preserve"><value>내 정보</value></data>

@@ -1,0 +1,20 @@
+.session-warning {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1000;
+    max-width: 22rem;
+    padding: 1rem;
+    border: 1px solid #c9a227;
+    border-radius: 6px;
+    background: #fff8e1;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+}
+
+.session-warning[hidden] {
+    display: none;
+}
+
+.session-warning p {
+    margin: 0 0 0.75rem;
+}

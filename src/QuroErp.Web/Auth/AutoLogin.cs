@@ -107,7 +107,8 @@ public static class AutoLoginMiddleware
                 return;
             }
 
-            var principal = WebAuthClaims.CreatePrincipal(services.GetRequiredService<AccessTokenStore>().Add(login), login);
+            var idleTimeout = await IdleTimeoutAsync(services.GetRequiredService<AuthApiClient>(), context.RequestAborted);
+            var principal = WebAuthClaims.CreatePrincipal(services.GetRequiredService<AccessTokenStore>().Add(login, idleTimeout), login);
             await context.SignInAsync(principal);
             context.User = principal;
             AutoLoginCookie.Apply(context.Response, login);
@@ -119,6 +120,19 @@ public static class AutoLoginMiddleware
             }
             await next();
         });
+
+    // session_idle_minutes from the login options; the default when the Api cannot answer
+    private static async Task<TimeSpan?> IdleTimeoutAsync(AuthApiClient authApi, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return TimeSpan.FromMinutes((await authApi.GetLoginOptionsAsync(cancellationToken)).SessionIdleMinutes);
+        }
+        catch (Exception e) when (e is ApiProblemException or HttpRequestException or System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
 
     private static bool IsLoginPage(HttpContext context) =>
         string.Equals(context.Request.Path.Value, WebAuthentication.LoginPath, StringComparison.OrdinalIgnoreCase);

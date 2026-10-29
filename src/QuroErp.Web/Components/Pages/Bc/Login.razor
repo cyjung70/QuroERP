@@ -96,7 +96,7 @@
     private const string EmailResetMode = "EMAIL";
 
     // Only these codes can be shown from the query string
-    private static readonly string[] ReasonCodes = [WebAuthentication.AutoLoginExpiredCode];
+    private static readonly string[] ReasonCodes = [WebAuthentication.IdleExpiredCode, WebAuthentication.AutoLoginExpiredCode];
 
     // Product version for screen item 11
     private static readonly string Version =
@@ -118,7 +118,7 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    // Why the user came back to this page (AUTH-007 after a failed auto login)
+    // Why the user came back to this page (AUTH-006 after the idle timeout, AUTH-007 after a failed auto login)
     [SupplyParameterFromQuery(Name = WebAuthentication.ReasonQuery)]
     private string? Reason { get; set; }
 
@@ -173,7 +173,7 @@
             return;
         }
 
-        var sessionId = Tokens.Add(login);
+        var sessionId = Tokens.Add(login, TimeSpan.FromMinutes(_options.SessionIdleMinutes));
         await HttpContext.SignInAsync(WebAuthClaims.CreatePrincipal(sessionId, login));
         // 사용자 언어 설정이 있으면 그 언어로 바꾼다 (사용자 설정 → 브라우저 언어 → ko)
         WebLocalization.SetCultureCookie(HttpContext, login.Language);

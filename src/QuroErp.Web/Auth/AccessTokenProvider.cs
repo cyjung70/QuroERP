@@ -21,6 +21,8 @@ public sealed class AccessTokenProvider(
         {
             return null;
         }
+        // An Api call from an interactive screen is a request of the user too (login.md "세션": 요청마다 연장)
+        store.Touch(sessionId);
         if (login.ExpiresAt - clock.GetUtcNow() > RefreshBefore)
         {
             return login.AccessToken;

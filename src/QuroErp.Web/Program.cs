@@ -42,6 +42,7 @@ app.UseWebLocalization();
 
 app.UseAuthentication();
 app.UseAutoLogin();
+app.UseSessionActivity();
 app.UsePasswordChangeRedirect();
 app.UseAuthorization();
 app.UseAntiforgery();
@@ -50,6 +51,7 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapLogout();
+app.MapSession();
 app.MapCulture();
 
 app.Run();
