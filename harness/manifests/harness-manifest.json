@@ -8,11 +8,11 @@
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "04a52b5227bc325de4cca9adb70ad14e9fec06549a92956fb53dca4b6d3f5f99"
+      "sha256": "6b3da785872b5b22047b68e8fbf35716c7fc87dc9d6323f1498929ed3c1e4431"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
-      "sha256": "6e545d67e36ccdd312578952f41e89b8c4d84cd6d6669942066e26b8525d82b0"
+      "sha256": "fde885687db57f251833b452db8b276f9060c009ded57a19b02a5b50ecab5d94"
     },
     {
       "path": ".agents/skills/quro-dapper/SKILL.md",
@@ -40,11 +40,11 @@
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "04a52b5227bc325de4cca9adb70ad14e9fec06549a92956fb53dca4b6d3f5f99"
+      "sha256": "6b3da785872b5b22047b68e8fbf35716c7fc87dc9d6323f1498929ed3c1e4431"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
-      "sha256": "6e545d67e36ccdd312578952f41e89b8c4d84cd6d6669942066e26b8525d82b0"
+      "sha256": "fde885687db57f251833b452db8b276f9060c009ded57a19b02a5b50ecab5d94"
     },
     {
       "path": ".claude/skills/quro-dapper/SKILL.md",
@@ -84,11 +84,11 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "43c676e6d248192df234019206b80bd18f7f8051d22062cce13b20f77d5c70b8"
+      "sha256": "077d2d4b94074723262e66152370942c36a1913a52a079769b2d1784e7a7197d"
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "8594d1b8f3dc6794cdb02fa5bbff8111143f268af0e1d0458ef1c377e4c0e90e"
+      "sha256": "b69e28a534575cb868eab2a4cd31068c82428de9f964ad7f83f158a30a125ec5"
     },
     {
       "path": "docs/architecture/i18n.md",
@@ -104,15 +104,15 @@
     },
     {
       "path": "docs/architecture/localization.md",
-      "sha256": "3663a1c988ea81e88f6d95cfa4c4514700e7276fd5c89cbeb6fab662e12fc59c"
+      "sha256": "92cfafdf894d038759ea3557cf00dfd961d60b4e74721a5486e2b70dc4337416"
     },
     {
       "path": "docs/architecture/login.md",
-      "sha256": "b4b28e3787ffd64ef1ee77c73fd3eef5279878d66e605e7a523b09e05ce593df"
+      "sha256": "d96025468e6f573d144cf06deabbf6c9d31bf05d5d64556003f3073a9b69272a"
     },
     {
       "path": "docs/architecture/print-documents.md",
-      "sha256": "a3247a7ea2e504d9147bec3c27cb562a8729edaea1d235bfd8637afc666a402e"
+      "sha256": "84ed84b8ede5b54744596b98a3d5b729d6f23691e1485244b2e4c60de4c8fd59"
     },
     {
       "path": "docs/architecture/qurogrid-integration.md",
@@ -120,15 +120,15 @@
     },
     {
       "path": "docs/architecture/reports.md",
-      "sha256": "acab8d3b8368d4fa5d940a533d6f487ebe469e36a232709d6f556437ff0e81cb"
+      "sha256": "5a85f37e726584f4dfce8e2772ceec57007c494eb396bb84d4e9d14faae9f253"
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "0d8f35bdb9e71c1401b205805cc0d10efcea0728c01e79f6c83eee5ad1777819"
+      "sha256": "19978a3f7fab163385248c7946b545b97de10a144e543318edb238e6fb14c0c7"
     },
     {
       "path": "docs/architecture/security.md",
-      "sha256": "6d69fd72ebed7b802358bae1fea7099f05344870da7e3bbbf227731243e3b02d"
+      "sha256": "9400cbd44b049f28a302d83ce20dbc00e074fa2eb82ce998047f96506551416f"
     },
     {
       "path": "docs/architecture/subprojects.md",
@@ -144,7 +144,7 @@
     },
     {
       "path": "docs/business-rules/BC/company.md",
-      "sha256": "98aa1f694e9c5c7932eaa18ca2c5d1d7d8a0537845b0f43766855f9dea25a52a"
+      "sha256": "44857081a92f572acb8555a7656e1e3b9f1df4fb49fce3f07df233477f6f47f3"
     },
     {
       "path": "docs/business-rules/BC/localization.md",
@@ -160,7 +160,7 @@
     },
     {
       "path": "docs/business-rules/BC/README.md",
-      "sha256": "a320cb1eb46da4b7bdee0103f65de0e3ca112fa5fd72145e4090a18db4a88a64"
+      "sha256": "a70da4cbc753670502aa9b716968688913e2956e450c357c01c9831f2a9e0299"
     },
     {
       "path": "docs/business-rules/BC/tax.md",
@@ -204,7 +204,7 @@
     },
     {
       "path": "docs/business-rules/MM/item.md",
-      "sha256": "2e07bff6dafef6b46680e4100206f398b617c650a18578986d0870ae885e7e93"
+      "sha256": "edd5cde8f539486de503b748e1d97d89c7258c557ab7285884eee1358cbe9b71"
     },
     {
       "path": "docs/business-rules/MM/ledger.md",
@@ -236,7 +236,7 @@
     },
     {
       "path": "docs/business-rules/MM/vendor.md",
-      "sha256": "32a49b14acf1562d9e88ad7a386547e44e96cb83196702ab4e2086c4550092f0"
+      "sha256": "ae92b4acdc3586ac67e8d38dfa7921f7f83943eb8f233fd62c16ceb7b7ff00b6"
     },
     {
       "path": "docs/business-rules/MM/warehouse.md",
@@ -304,11 +304,11 @@
     },
     {
       "path": "docs/glossary.md",
-      "sha256": "a5b333e8ae915f1bc2dfe83deca1c79e798d016feb76c821eb98f6103f61560b"
+      "sha256": "804ec9b2be30786dd1c80e2ffbbe679d7481370fc969b8f90733762ed16ffbc6"
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "0afa73e95e219329631b0f38f8bd8e975337b59bb5764bde3ff7115f70206aa2"
+      "sha256": "3ffa802b7c215f862daf2539fff81ef33f1c4ea178148c4dd8cf371ee6bb499d"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -352,7 +352,7 @@
     },
     {
       "path": "docs/specifications/BC/company.md",
-      "sha256": "0ab54f5bef53e90c5bd50f6d12cd80a179b0d5130dfcc6df60d1a2078d76f384"
+      "sha256": "eeee2db8a21f287eb2e73e96d7b4a58f41f6d921be10ef0ea7e3c5b549978d8b"
     },
     {
       "path": "docs/specifications/BC/currency.md",
@@ -444,7 +444,7 @@
     },
     {
       "path": "docs/specifications/MM/purchase-order.md",
-      "sha256": "efefa2c7c34fecb08b99ce5296127d707ab7c9cb8892eed4d5114d80bad2c293"
+      "sha256": "a72c3b0052840539e00321bfe6831fd248c2bf5c14e9180787fff751ffeaa481"
     },
     {
       "path": "docs/specifications/MM/purchase-simulation.md",
@@ -860,11 +860,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-013.json",
-      "sha256": "9816c13e5a124dd2601bb3444cda3842f6e5632f6a8265e5bd7471401402fa32"
+      "sha256": "02dcba9f6432ad39b4c66ab2aa5b7f9626fdb58f0ee2b5b3b8c19fffea59d423"
     },
     {
       "path": "harness/tasks/TASK-BC-014.json",
-      "sha256": "b84f632bb49e263b1fe4ad8ad4b53aa20c539e80a863c32234b0f94a28c4a93e"
+      "sha256": "aa5d90f5d9f44424a2bcbe7635dc3070536bb2428a0fe907b9ef6049faab599a"
     },
     {
       "path": "harness/tasks/TASK-BC-015.json",
@@ -1133,6 +1133,10 @@
     {
       "path": "harness/tasks/TASK-CORE-023.json",
       "sha256": "10f9a54842b9dc55ad3610bb7811df4f7a6b450065ecc7fd7e6c45c86641b4bc"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-024.json",
+      "sha256": "246d0c33e0cd85595d2773f3c78d253ecf0ae98edf99a97aa4db7a8654ee24e3"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
@@ -1580,11 +1584,11 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "7654c82f0ea4160cd03d8d16b87f4d86c08f59113fa82061b7f69a58f9e64041"
+      "sha256": "0a91f7073ebaa58eb8dcaa26e484c2acd5065b5772c0109b0949aa6fc7f2d4ca"
     },
     {
       "path": "tester/docs/INDEX.md",
-      "sha256": "e20d20c47e304ca83307fc6d89aebf4c2d060ec1995969e49923321d714b55e7"
+      "sha256": "de95242edf91d1e1008f463db45063b9c3ea1e7c0eed6e0ab25e3279b1916610"
     },
     {
       "path": "tester/docs/qa/defects.md",
@@ -1629,6 +1633,10 @@
     {
       "path": "tester/docs/scenarios/BC/BC-TS-006.md",
       "sha256": "c9b6fcd2a218f50a16e9185fa8f7c425c3d775af7032310c7e1e751fa7d6acc0"
+    },
+    {
+      "path": "tester/docs/scenarios/BC/BC-TS-007.md",
+      "sha256": "48a8596978294af37e5314e824987575c5dfc58ab5172c0a9b263c3a2ad80963"
     },
     {
       "path": "tester/docs/scenarios/migration/.gitkeep",

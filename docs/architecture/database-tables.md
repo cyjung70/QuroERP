@@ -497,6 +497,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `logo_content_type` | varchar |  | 로고 MIME 타입 (`image/png`, `image/jpeg`) |  |
 | `country_code` | varchar | NOT NULL | ISO 3166-1 alpha-2 `US`·`KR` (BC-BR-313) |  |
 | `default_lang_code` | varchar | NOT NULL | 회사 기본 언어 → `sys_language` (BC-BR-314) |  |
+| `time_zone` | varchar | NOT NULL | IANA 시간대 이름, 업무 일자 기준 (BC-BR-318) |  |
 | `tax_calc_mode` | varchar | NOT NULL DEFAULT 'DOCUMENT' | `DOCUMENT`·`LINE` (BC-BR-543) |  |
 | `billing_mode` | varchar | NOT NULL DEFAULT 'WITH_SHIPMENT' | `WITH_SHIPMENT`·`SEPARATE` 청구 시점 (BC-BR-316) |  |
 | `business_type` | varchar |  | 업태 (KR 세금계산서, BC-BR-315) |  |

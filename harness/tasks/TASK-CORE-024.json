@@ -1,0 +1,36 @@
+{
+  "id": "TASK-CORE-024",
+  "project": "core",
+  "title": "회사 시간대와 업무 일자 시계 (IBusinessClock)",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/localization.md",
+    "docs/business-rules/BC/company.md",
+    "docs/architecture/database.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-014"
+  ],
+  "acceptance": [
+    "`bc_company.time_zone`(varchar, NOT NULL, IANA 이름) 마이그레이션. 기존 행은 국가 기본값(US `America/New_York`, KR `Asia/Seoul`)으로 채운다 (BC-BR-318)",
+    "`--set-country`가 국가 기본 시간대를 넣는다 (`--time-zone <IANA>`로 바꿀 수 있다). 모르는 이름이면 멈춘다",
+    "`IBusinessClock`(Application): `Today()`(회사 시간대의 오늘, `DateOnly`), `ToCompanyTime(DateTimeOffset)`. `TimeProvider`를 감싸고 회사 시간대는 캐시하되 회사 저장 때 지운다",
+    "업무 일자를 `DateOnly.FromDateTime(clock.GetLocalNow()...)`·`clock.LocalTimeZone`으로 구하던 곳을 모두 `IBusinessClock`으로 바꾼다 (로그인 사용 기한·비밀번호 만료, 잠금 해제 시각 메시지 AUTH-003 포함)",
+    "`GET`·`PUT /api/bc/company`에 `timeZone`. 회사 정보 화면 시간대 드롭다운 (BC-BR-318)",
+    "단위 테스트: UTC 2026-01-01 03:00이면 `America/New_York`의 오늘은 2025-12-31, `Asia/Seoul`은 2026-01-01. 모르는 시간대는 400 BC-E-318"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
