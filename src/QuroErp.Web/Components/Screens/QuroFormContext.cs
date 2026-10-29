@@ -45,6 +45,9 @@ public sealed class QuroFormContext
     /// <summary>True until the record is loaded or saved.</summary>
     public bool IsNew { get; internal set; } = true;
 
+    /// <summary>The user may only read (no Full Access, BC-BR-214): every input is locked.</summary>
+    public bool ReadOnly { get; internal set; }
+
     internal void Register(IQuroField field) => _fields.Add(field);
 
     internal void Unregister(IQuroField field) => _fields.Remove(field);

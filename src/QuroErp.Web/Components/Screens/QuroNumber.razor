@@ -3,12 +3,22 @@
 
 <div class="quro-field">
     <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
-    <input id="@InputId" type="number" step="any" value="@Value?.ToString(CultureInfo.InvariantCulture)" readonly="@IsLocked"
+    <input id="@InputId" type="number" step="@Step" value="@Text" readonly="@IsLocked"
            aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
 </div>
 
 @code {
+    /// <summary>Decimal places from GET api/bc/localization (amount, unit price or quantity). Null: any.</summary>
+    [Parameter]
+    public int? Decimals { get; set; }
+
     public override bool IsEmpty => Value is null;
+
+    private string Step => Decimals is { } d ? (1m / (decimal)Math.Pow(10, d)).ToString(CultureInfo.InvariantCulture) : "any";
+
+    private string? Text => Decimals is { } d
+        ? Value?.ToString("F" + d.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)
+        : Value?.ToString(CultureInfo.InvariantCulture);
 
     private Task OnChangeAsync(ChangeEventArgs e) =>
         SetValueAsync(decimal.TryParse(e.Value?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var number)

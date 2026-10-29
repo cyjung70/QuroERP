@@ -1,0 +1,57 @@
+@* Combo box or radio buttons over (code, name) options (codes.md "화면"). The value is the code. *@
+@using QuroErp.Contracts.Common.Codes
+@inherits QuroInputBase<string>
+
+@if (Radio)
+{
+    <fieldset class="quro-field quro-radio" data-testid="@TestId" aria-required="@(IsRequiredNow ? "true" : null)">
+        <legend class="@(HideLabel ? "quro-visually-hidden" : null)">
+            @Label@if (IsRequiredNow)
+            {
+                <span class="quro-required" aria-hidden="true">*</span>
+            }
+        </legend>
+        @foreach (var option in Options)
+        {
+            <label>
+                <input type="radio" name="@InputId" value="@option.Code" checked="@(option.Code == Value)" disabled="@IsLocked"
+                       data-testid="@(TestId is null ? null : $"{TestId}-{option.Code.ToLowerInvariant()}")"
+                       @onchange="() => SetValueAsync(option.Code)" />
+                @option.Name
+            </label>
+        }
+    </fieldset>
+}
+else
+{
+    <div class="quro-field">
+        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @* A select has no readonly attribute; disabled keeps a locked value from changing *@
+        <select id="@InputId" disabled="@IsLocked" aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync">
+            <option value="" selected="@(Value is null)"></option>
+            @foreach (var option in Options)
+            {
+                <option value="@option.Code" selected="@(option.Code == Value)">@option.Name</option>
+            }
+            @if (Value is not null && Options.All(o => o.Code != Value))
+            {
+                @* A stored code that is no longer active still shows *@
+                <option value="@Value" selected>@Value</option>
+            }
+        </select>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<CodeItemDto> Options { get; set; } = [];
+
+    /// <summary>Radio buttons instead of a combo box.</summary>
+    [Parameter]
+    public bool Radio { get; set; }
+
+    public override bool IsEmpty => string.IsNullOrEmpty(Value);
+
+    private Task OnChangeAsync(ChangeEventArgs e) =>
+        SetValueAsync(e.Value?.ToString() is { Length: > 0 } code ? code : null);
+}

@@ -1,0 +1,12 @@
+@* Yes/no input (e.g. taxable). Never empty, so it is never missing in the required check. *@
+@inherits QuroInputBase<bool>
+
+<div class="quro-field quro-checkbox">
+    <input id="@InputId" type="checkbox" checked="@Value" disabled="@IsLocked" data-testid="@TestId"
+           @onchange="e => SetValueAsync(e.Value is true)" />
+    <QuroLabel For="@InputId" Text="@Label" Hidden="HideLabel" />
+</div>
+
+@code {
+    public override bool IsEmpty => false;
+}
