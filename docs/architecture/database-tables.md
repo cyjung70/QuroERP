@@ -1520,5 +1520,5 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
-- UNIQUE: (log_dt)
+- UNIQUE: (없음)
 - INDEX: (log_dt)
