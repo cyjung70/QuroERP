@@ -73,6 +73,7 @@
 | POST | /api/auth/logout | 로그아웃, 이 기기 자동 로그인 토큰 폐기. 204 |
 | GET | /api/auth/me | 사용자·권한·메뉴·기본 창고. 401 AUTH-006 |
 | POST | /api/auth/refresh | Web 내부 토큰 재발급 (security.md) |
+| GET | /api/auth/login-options | 로그인 전 화면 설정 { autoLoginEnabled, passwordResetMode, sessionIdleMinutes }. 인증 없음, 요청 수 제한 429 AUTH-008 |
 
 ## 관련 테이블
 

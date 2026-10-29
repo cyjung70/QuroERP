@@ -1,107 +1,137 @@
+/* BC-UC-001 screen layout: a centered card 360-400px wide, 16px side margins on phones */
 .login-page {
     box-sizing: border-box;
     min-height: 100vh;
     display: grid;
     place-items: center;
-    padding: clamp(.75rem, 2vw, 2rem);
-    background: #f2f0e9;
+    padding: 1rem;
+    background: #f2f0e9 url("/images/login-scene.png") center / cover no-repeat;
     color: #171717;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: Arial, sans-serif;
 }
 
-.login-frame {
+.login-card {
     box-sizing: border-box;
-    width: min(100%, 1244px);
-    padding: 9px;
-    border: 1px solid #aaa;
+    width: min(100%, 400px);
+    min-width: min(100%, 360px);
+    padding: 1.5rem;
+    border: 1px solid #bbb;
+    border-top: 6px solid #a69428;
     background: #fff;
-    box-shadow: 0 2px 10px #0002;
+    box-shadow: 0 2px 12px #0003;
 }
 
-.login-hero {
-    aspect-ratio: 1201 / 1005;
-    background: url("/images/login-scene.png") center / cover no-repeat;
-    border-top: 7px solid #a69428;
-    border-bottom: 7px solid #a69428;
+.login-title {
+    margin: 0 0 1rem;
+    font-size: 1.4rem;
 }
 
-.login-frame ::deep .login-form {
+.login-error {
+    margin: 0 0 .75rem;
+    color: #a21d16;
+    font-size: .95rem;
+}
+
+.login-card ::deep .login-form {
     display: grid;
-    grid-template-columns: auto minmax(8rem, 1fr) auto minmax(8rem, 1fr) auto auto;
-    align-items: center;
-    gap: .75rem clamp(.6rem, 2vw, 1.5rem);
-    padding: .55rem .4rem .4rem;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(1rem, 2vw, 1.5rem);
+    gap: .75rem;
 }
 
-.login-field { display: contents; }
-
-.login-field label { white-space: nowrap; }
+.login-field {
+    display: grid;
+    gap: .25rem;
+}
 
 .login-field ::deep input {
     box-sizing: border-box;
     width: 100%;
-    min-width: 0;
-    height: 2.65rem;
-    padding: .25rem .45rem;
-    border: 2px solid #888;
-    border-radius: 0;
-    background: #fff;
-    color: #171717;
+    height: 2.5rem;
+    padding: .25rem .5rem;
+    border: 1px solid #888;
     font: 1rem Arial, sans-serif;
 }
 
-.login-actions { display: contents; }
+.login-password {
+    display: grid;
+    grid-template-columns: 1fr auto;
+}
 
-.login-actions button {
-    min-height: 2.65rem;
-    padding: .2rem .8rem;
-    border: 2px solid #777;
-    border-radius: 2px;
-    background: linear-gradient(#fff, #ddd);
-    box-shadow: inset 0 0 0 1px #fff;
-    color: #222;
-    font: 1rem Arial, sans-serif;
-    white-space: nowrap;
+.login-toggle {
+    width: 2.5rem;
+    border: 1px solid #888;
+    border-left: 0;
+    background: #f5f5f5;
     cursor: pointer;
 }
 
-.login-actions button:focus-visible,
-.login-field ::deep input:focus-visible {
+.login-toggle[aria-pressed=true] {
+    background: #e6e0b8;
+}
+
+.login-field-error,
+.login-hint {
+    font-size: .85rem;
+}
+
+.login-field-error {
+    color: #a21d16;
+}
+
+.login-field-error:empty {
+    display: none;
+}
+
+.login-hint {
+    color: #7a5b00;
+}
+
+.login-check {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.login-submit {
+    height: 2.75rem;
+    border: 0;
+    background: #6f6318;
+    color: #fff;
+    font: bold 1rem Arial, sans-serif;
+    cursor: pointer;
+}
+
+.login-submit:disabled {
+    opacity: .6;
+    cursor: progress;
+}
+
+.login-card button:focus-visible,
+.login-card select:focus-visible,
+.login-card ::deep input:focus-visible {
     outline: 3px solid #9a861d;
     outline-offset: 2px;
 }
 
-.login-error {
-    grid-column: 1 / -1;
-    margin: 0;
-    color: #a21d16;
-    font: .95rem Arial, sans-serif;
+.login-forgot {
+    margin: .75rem 0 0;
+    font-size: .9rem;
 }
 
 .login-footer {
+    margin-top: 1.25rem;
+    padding-top: .75rem;
+    border-top: 1px solid #ddd;
+    color: #555;
+    font-size: .8rem;
+}
+
+.login-footer p {
+    margin: 0 0 .25rem;
+}
+
+.login-language {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: .5rem 1rem;
-    padding: .1rem .4rem .2rem;
-}
-
-.login-copyright {
-    font-size: clamp(.85rem, 2vw, 1.5rem);
-}
-
-@media (max-width: 760px) {
-    .login-page { align-items: start; }
-    .login-frame ::deep .login-form {
-        grid-template-columns: minmax(6rem, auto) minmax(0, 1fr);
-        gap: .6rem .75rem;
-        font-size: 1rem;
-        padding: .8rem .4rem;
-    }
-    .login-field { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: center; }
-    .login-actions { display: flex; grid-column: 2; gap: .5rem; }
-    .login-copyright { line-height: 1.4; }
+    gap: .5rem;
+    margin-top: .5rem;
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -14,6 +15,10 @@ public static class WebAuthClaims
     public const string Name = "name";
     public const string Role = "role";
 
+    /// <summary>Previous sign-in time (ISO 8601) and IP, shown on the main screen (login.md "로그인 처리" 11).</summary>
+    public const string LastLoginAt = "last_login_at";
+    public const string LastLoginIp = "last_login_ip";
+
     public static ClaimsPrincipal CreatePrincipal(string sessionId, LoginResponse login)
     {
         var claims = new List<Claim>
@@ -24,6 +29,14 @@ public static class WebAuthClaims
         if (login.RoleCode is not null)
         {
             claims.Add(new Claim(Role, login.RoleCode));
+        }
+        if (login.LastLoginAt is { } lastLoginAt)
+        {
+            claims.Add(new Claim(LastLoginAt, lastLoginAt.ToString("O", CultureInfo.InvariantCulture)));
+        }
+        if (login.LastLoginIp is not null)
+        {
+            claims.Add(new Claim(LastLoginIp, login.LastLoginIp));
         }
         return new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme, Name, Role));
     }

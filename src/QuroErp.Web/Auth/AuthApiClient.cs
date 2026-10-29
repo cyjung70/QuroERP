@@ -25,6 +25,11 @@ public sealed class AuthApiClient(HttpClient http)
         return await SendAsync(message, cancellationToken);
     }
 
+    /// <summary>Login screen settings, read before sign-in (anonymous).</summary>
+    public async Task<LoginOptionsResponse> GetLoginOptionsAsync(CancellationToken cancellationToken) =>
+        await http.GetFromJsonAsync<LoginOptionsResponse>(AuthRoutes.LoginOptions, cancellationToken)
+            ?? throw new InvalidOperationException("Login options response body is empty.");
+
     /// <returns>토큰이 만료됐거나 사용자가 사용 중지됐으면 null.</returns>
     public async Task<LoginResponse?> RefreshAsync(string accessToken, CancellationToken cancellationToken)
     {

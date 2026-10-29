@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using QuroErp.Contracts.Common.Auth;
 using QuroErp.Web.Auth;
 using QuroErp.Web.Bc.Companies;
 using QuroErp.Web.Bc.Items;
@@ -25,6 +26,12 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
     {
         Content = new StringContent("""{"status":401,"code":"AUTH-002"}""", null, "application/problem+json"),
     };
+
+    /// <summary>Login screen settings returned by GET api/auth/login-options. Null: that request also gets <see cref="ApiResponse"/>.</summary>
+    public LoginOptionsResponse? LoginOptions { get; set; }
+
+    /// <summary>Paths of the auth API requests the Web host sent, in order.</summary>
+    public System.Collections.Concurrent.ConcurrentQueue<string> AuthRequests { get; } = new();
 
     /// <summary>Response of business APIs (company, inventory setting, codes, localization, items) by request. Default: 404 without body.</summary>
     public Func<HttpRequestMessage, HttpResponseMessage> BusinessApiResponse { get; set; } = _ => new HttpResponseMessage(HttpStatusCode.NotFound);
@@ -66,8 +73,14 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
 
     private sealed class FakeApiHandler(WebFactory factory) : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-            Task.FromResult(factory.ApiResponse());
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            factory.AuthRequests.Enqueue(path);
+            return Task.FromResult(path.EndsWith(AuthRoutes.LoginOptions, StringComparison.Ordinal) && factory.LoginOptions is { } options
+                ? new HttpResponseMessage(HttpStatusCode.OK) { Content = System.Net.Http.Json.JsonContent.Create(options) }
+                : factory.ApiResponse());
+        }
     }
 
     private sealed class FakeBusinessApiHandler(WebFactory factory) : HttpMessageHandler

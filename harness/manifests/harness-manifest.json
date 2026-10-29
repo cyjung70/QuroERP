@@ -24,7 +24,7 @@
     },
     {
       "path": ".agents/skills/quro-grid/SKILL.md",
-      "sha256": "1fdfade1dc2492e4f42fc0c72ae07746d59e66399a7a9a04176fcd47aa6e4f6f"
+      "sha256": "051b5eeb6e8a8a079a048ae211140ca83ce4de5f6dd20a41083cb13ce2b6e730"
     },
     {
       "path": ".agents/skills/quro-pytest/SKILL.md",
@@ -56,7 +56,7 @@
     },
     {
       "path": ".claude/skills/quro-grid/SKILL.md",
-      "sha256": "1fdfade1dc2492e4f42fc0c72ae07746d59e66399a7a9a04176fcd47aa6e4f6f"
+      "sha256": "051b5eeb6e8a8a079a048ae211140ca83ce4de5f6dd20a41083cb13ce2b6e730"
     },
     {
       "path": ".claude/skills/quro-pytest/SKILL.md",
@@ -108,7 +108,7 @@
     },
     {
       "path": "docs/architecture/login.md",
-      "sha256": "69ec96b6c6810eeaf8dccfa12e775d6101348efdd2a6f082d3c4ec863e24a44e"
+      "sha256": "3bc3bbaf721c20ac4f7e9e983f4d454a9900ab9dd21720f04fa1382d220501c8"
     },
     {
       "path": "docs/architecture/print-documents.md",
@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/architecture/qurogrid-integration.md",
-      "sha256": "a43354624e266f1ae9e5483e63212f76c250e52bcb12a1c4d6e3b01846789307"
+      "sha256": "51b9a2d0632801fcf613f240be966df6bdd2bdfcc6d6f96aac7b2c2d26dc4144"
     },
     {
       "path": "docs/architecture/reports.md",
@@ -388,7 +388,7 @@
     },
     {
       "path": "docs/specifications/BC/login.md",
-      "sha256": "df6fc46eb09997d37283b4c8b728539ecd3156169b01b6ffa0e02b2f80346e93"
+      "sha256": "f90ca7fec9c635ab4e6794f8a03583c13db8b9c56aca81a8bd4527c625bee8b1"
     },
     {
       "path": "docs/specifications/BC/purchase-price.md",
@@ -816,7 +816,7 @@
     },
     {
       "path": "harness/tasks/TASK-BC-002.json",
-      "sha256": "d92c5a4d5e686f7def134d5904e25f990651040cb66b2ce6fddf9717547d59ba"
+      "sha256": "99460541e429a5712bf17076a8e68c30a2957d92e3648e31ea6d633ac9c3a62d"
     },
     {
       "path": "harness/tasks/TASK-BC-003.json",

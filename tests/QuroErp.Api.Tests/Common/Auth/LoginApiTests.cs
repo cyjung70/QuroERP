@@ -106,6 +106,18 @@ public class LoginApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be(AuthCodes.SessionExpired);
     }
 
+    [Fact, Trait("Id", "BC-002-IT-01")]
+    public async Task LoginOptions_Anonymous_ReturnsOnlyTheLoginScreenSettings()
+    {
+        factory.AuthSetting = new AuthSetting { AutoLoginEnabled = true, SessionIdleMinutes = 45, PasswordResetMode = "ADMIN_ONLY" };
+
+        using var response = await factory.CreateClient().GetAsync(AuthRoutes.LoginOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await response.Content.ReadFromJsonAsync<LoginOptionsResponse>()).Should().Be(new LoginOptionsResponse(true, "ADMIN_ONLY", 45));
+        (await response.Content.ReadAsStringAsync()).Should().NotContain("maxFailedAttempts").And.NotContain("passwordMinLength");
+    }
+
     [Fact, Trait("Id", "BC-UC-001-T15")]
     public async Task AutoLogin_RotatesTheToken_ReusingTheOldOneReturns401Auth007AndRevokesAll()
     {

@@ -1,7 +1,27 @@
 ﻿@page "/"
+@using System.Globalization
+@using System.Security.Claims
+@using QuroErp.Web.Auth
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Home</PageTitle>
+@* Main screen. Shows the previous sign-in time and IP (login.md "로그인 처리" 11) *@
 
-<h1>Hello, world!</h1>
+<PageTitle>QuroERP</PageTitle>
 
-Welcome to your new app.
+<AuthorizeView>
+    <Authorized>
+        <h1>@L["Common.Home.Welcome", context.User.Identity?.Name ?? ""]</h1>
+        @if (LastLogin(context.User) is { } last)
+        {
+            <p data-testid="home-last-login">@L["Common.LastLogin", last.At, last.Ip]</p>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    // Shown in the server's local time [추정] until a user time zone exists
+    private static (string At, string Ip)? LastLogin(ClaimsPrincipal user) =>
+        DateTimeOffset.TryParse(user.FindFirst(WebAuthClaims.LastLoginAt)?.Value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var at)
+            ? (at.ToLocalTime().ToString("g", CultureInfo.CurrentCulture), user.FindFirst(WebAuthClaims.LastLoginIp)?.Value ?? "-")
+            : null;
+}

@@ -36,6 +36,14 @@ public sealed record LoginResponse(
     string? AutoLoginToken = null,
     DateTimeOffset? AutoLoginExpiresAt = null);
 
+/// <summary>
+/// Login screen settings (GET /api/auth/login-options, anonymous). Only these three settings leave the server before sign-in.
+/// </summary>
+/// <param name="AutoLoginEnabled">Shows the "keep me signed in" checkbox (auto_login_enabled).</param>
+/// <param name="PasswordResetMode">ADMIN_ONLY (contact the administrator) or EMAIL (password_reset_mode).</param>
+/// <param name="SessionIdleMinutes">Idle minutes before the session ends (session_idle_minutes).</param>
+public sealed record LoginOptionsResponse(bool AutoLoginEnabled, string PasswordResetMode, int SessionIdleMinutes);
+
 /// <summary>Signed-in user (GET /api/auth/me).</summary>
 /// <param name="Menus">Menus the role may open, with the access level of each (the user's permissions).</param>
 public sealed record MeResponse(

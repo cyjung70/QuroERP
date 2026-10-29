@@ -8,7 +8,6 @@
   <data name="Bc.Login.UserId" xml:space="preserve"><value>User ID</value></data>
   <data name="Bc.Login.Password" xml:space="preserve"><value>Password</value></data>
   <data name="Bc.Login.Submit" xml:space="preserve"><value>Sign in</value></data>
-  <data name="Bc.Login.Clear" xml:space="preserve"><value>Clear</value></data>
   <data name="Bc.Login.Copyright" xml:space="preserve"><value>© 2026 QuroSYS Co., Ltd. All Rights Reserved.</value></data>
   <data name="Common.Logout" xml:space="preserve"><value>Sign out</value></data>
   <data name="Common.Language" xml:space="preserve"><value>Language</value></data>
@@ -174,4 +173,16 @@
   <data name="Common.Next" xml:space="preserve"><value>Next</value></data>
   <data name="Common.FirstRecord" xml:space="preserve"><value>This is the first record.</value></data>
   <data name="Common.LastRecord" xml:space="preserve"><value>This is the last record.</value></data>
+  <data name="AUTH-001" xml:space="preserve"><value>Please enter your {0}.</value></data>
+  <data name="AUTH-009" xml:space="preserve"><value>Caps Lock is on.</value></data>
+  <data name="AUTH-010" xml:space="preserve"><value>Do not use "Keep me signed in" on a shared computer.</value></data>
+  <data name="Bc.Login.ShowPassword" xml:space="preserve"><value>Show password</value></data>
+  <data name="Bc.Login.HidePassword" xml:space="preserve"><value>Hide password</value></data>
+  <data name="Bc.Login.RememberId" xml:space="preserve"><value>Remember my ID</value></data>
+  <data name="Bc.Login.KeepSignedIn" xml:space="preserve"><value>Keep me signed in</value></data>
+  <data name="Bc.Login.Submitting" xml:space="preserve"><value>Signing in…</value></data>
+  <data name="Bc.Login.ForgotPassword" xml:space="preserve"><value>Forgot your password? Please contact your administrator.</value></data>
+  <data name="Bc.Login.Version" xml:space="preserve"><value>QuroERP {0} · Open source license LGPL-3.0</value></data>
+  <data name="Common.LastLogin" xml:space="preserve"><value>Last sign-in: {0} (IP {1})</value></data>
+  <data name="Common.Home.Welcome" xml:space="preserve"><value>Welcome, {0}.</value></data>
 </root>
