@@ -76,7 +76,7 @@
     },
     {
       "path": "docs/architecture/api.md",
-      "sha256": "7021485d2044d35fab114da9f07380c71777a7b97ecf1ae490c3afbd8b5ea2d0"
+      "sha256": "3780e35775cb5b587f09fc8f9458ff4ff743861e85143eedfeaa8e3dfbaf5cbb"
     },
     {
       "path": "docs/architecture/codes.md",
@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "32c3aea278bcde76aecfe321639dc6ed3a7152055f1883a6b3a712c13a64de83"
+      "sha256": "66f96b56c1056255aa412583f40fcda66cdc6f8b9d76fbfab19908daa1decfd1"
     },
     {
       "path": "docs/architecture/database.md",
@@ -268,7 +268,7 @@
     },
     {
       "path": "docs/business-rules/SD/customer.md",
-      "sha256": "c11071215758ec5db71ac370b644ba05c7e47d5bd736ca68293717f646372066"
+      "sha256": "0b105de4b41e74c057772883d53a355fa36f405bfddf53222dd1cb03b9dbff71"
     },
     {
       "path": "docs/business-rules/SD/master-data.md",
@@ -436,7 +436,7 @@
     },
     {
       "path": "docs/specifications/MM/goods-receipt.md",
-      "sha256": "4b075443ecc24f3c84574a6850f3b868ca2ec342caba501e579f3be5493e1211"
+      "sha256": "887b44b298c40f2a79f4021b599f999cbef775083ef51fbf563d036ee707c420"
     },
     {
       "path": "docs/specifications/MM/inventory-closing.md",
@@ -564,7 +564,7 @@
     },
     {
       "path": "docs/specifications/SD/customer.md",
-      "sha256": "928c54fb948322830a5aea14e9e06be0e615381a534f6035c1e98b597bb2fb06"
+      "sha256": "06c1c5db5137de64575adb6f0cd6d4f42a0331b251871813c49c6a62035f78eb"
     },
     {
       "path": "docs/specifications/SD/item-catalog.md",
@@ -1568,7 +1568,7 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "7bc08ca89ec53adc77b94d907fe58d6ef7985936ce0083e36b646323df5ed2e0"
+      "sha256": "550a7784094c5516ebb0ef3f8321727e54d8fb6fadf413c43fa398f7ca4f5bff"
     },
     {
       "path": "tester/docs/INDEX.md",
@@ -1604,7 +1604,7 @@
     },
     {
       "path": "tester/docs/scenarios/BC/BC-TS-003.md",
-      "sha256": "971c82bee7bb97c610b05aa029868ef0509c02611c3c0f21d1695d8e2b1aa466"
+      "sha256": "d893c0906f17a1a9467dcd18441da77185c72882b70bb98abe6527f2546e93b5"
     },
     {
       "path": "tester/docs/scenarios/BC/BC-TS-004.md",
@@ -1636,7 +1636,7 @@
     },
     {
       "path": "tester/docs/scenarios/migration/MG-TS-004.md",
-      "sha256": "9a78c8c1463c80ff35e41071f8bd04548e1e9eccd93cf980b3093d5b86805d72"
+      "sha256": "7654e3f02ca5c90c9af9e45b3c7cb5ec121b68c14ddb6c80cd82222b8d40886a"
     },
     {
       "path": "tester/docs/scenarios/MM/.gitkeep",
@@ -1648,7 +1648,7 @@
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-002.md",
-      "sha256": "b244d7212b0b0a64f29200d1eb2421e0c2f8f635b486ec4f4365913b24e1720e"
+      "sha256": "67efe05a2d8099b9b9478490117d2fad23fca4993e6495f62ab9092337e99acd"
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-003.md",
@@ -1664,7 +1664,7 @@
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-006.md",
-      "sha256": "e1309adf85b8bc9d7a4bf7bb70f5695d0d1aecddffde7f816dccf72a5e80ceda"
+      "sha256": "33eb2e2456b20676deaf32f5704f1b9a234df32fe3270d4e9fd82828bdfb4826"
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-007.md",
@@ -1696,7 +1696,7 @@
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-014.md",
-      "sha256": "5cc0c11eb4a0e8491cbea0496820288d62f979b6206ac83185b76468c93822d9"
+      "sha256": "63aa2b508dfc518a5814f1c4b9a6d1dbc90ce22f47a6b1da290a019ac7085094"
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-015.md",
@@ -1732,7 +1732,7 @@
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-006.md",
-      "sha256": "26360941d7077ba77a9f4b69ff29dfe66ee371db0e8aca45196def65ffeff842"
+      "sha256": "2f121812f44d441a90a6fd114592c2007a948c455237f450a9a4e868d7b0a46a"
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-007.md",
@@ -1760,7 +1760,7 @@
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-013.md",
-      "sha256": "1b0cac77b6a439a0c327442928d329ddc4f90b8c31cb1a35370f6483b9c958fd"
+      "sha256": "2ede88c92b5b4701f748659024cfd5df74d8ae6c80a587c3920e93cb2646c66a"
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-014.md",

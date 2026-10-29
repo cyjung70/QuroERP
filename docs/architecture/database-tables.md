@@ -761,7 +761,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `qty` | numeric | NOT NULL | 재고 증감 (+ 증가, − 감소). 0 불가 (MM-BR-606) | Quantity |
 | `prc` | numeric | NOT NULL | 단가 (이동평균원가 또는 반입 단가) | Price |
 | `amount` | numeric | NOT NULL | 재고 금액 증감. `qty`와 같은 부호 | Amount |
-| `ref_key` | varchar |  | 출처 문서 번호 (입고·송장·실사·창고 이동 등) | Reference Key |
+| `ref_key` | varchar |  | 출처 문서 번호 (입고·출하·실사·창고 이동 등) | Reference Key |
 | `ref_seq` | integer |  | 출처 문서 줄 순번 | Reference Sequence No |
 | `parent_movement_id` | bigint | FK | → `mm_goods_movement.id`. 취소 행이 가리키는 원 이동 (MM-BR-601) |  |
 | `negative_stock` | boolean | NOT NULL DEFAULT false | 이 이동으로 그 창고 재고가 음수가 됨 (MM-BR-002) |  |

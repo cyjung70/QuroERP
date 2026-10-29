@@ -86,6 +86,8 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/sd/customers | 신규 |
 | PUT | /api/sd/customers/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/sd/customers/{id} | 삭제 |
+| GET | /api/sd/customers/{id}/tax-exemptions | US 면세 증명서 목록 (BC-BR-524). KR 회사는 404 |
+| PUT | /api/sd/customers/{id}/tax-exemptions | 그리드 저장 (추가·수정·삭제 행 { stateCode, certificateNo, validTo }, 행마다 updatedAt, 한 트랜잭션, BC-BR-524). KR 회사는 404 |
 
 ## 관련 테이블
 

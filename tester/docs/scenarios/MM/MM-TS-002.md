@@ -22,7 +22,7 @@
 
 | 단계 | 호출 | 입력 |
 | --- | --- | --- |
-| 1 | 발주 가져오기 조회 (경로 [확인 필요] — 입고 명세 REST API 목록에 아직 없다) | 공급자 V |
+| 1 | `GET /api/mm/goods-receipts/open-po-lines?vendorId={V}` | — |
 | 2 | `POST /api/mm/goods-receipts` | 줄 1: 발주 줄, 수량 4, 단가 5 |
 | 3 | `GET /api/mm/purchase-orders/{id}` | 발주 id |
 | 4 | `POST /api/mm/goods-receipts` | 줄 1: 같은 발주 줄, 수량 8 (남은 수량 6 초과), `confirmOverReceipt` 없음 |
@@ -37,9 +37,9 @@
 | 1 | 200 | — | 발주 줄이 남은 수량 10으로 나온다 | — |
 | 2 | 201 | — | — | — |
 | 3 | 200 | — | 상태 `RE`, 줄 입고 수량 4 | — |
-| 4 | 422 | `MM-W-102` | `args`에 발주 번호, 줄, 남은 수량 6. 리소스 키가 `ko`, `en` 모두 있다 | 입고가 저장되지 않았다 (공급자 V 입고 1건) |
+| 4 | 422 | `MM-W-102` | `args`에 발주 번호, 줄, 남은 수량 6. `confirmField` = `confirmOverReceipt`. 리소스 키가 `ko`, `en` 모두 있다 | 입고가 저장되지 않았다 (공급자 V 입고 1건) |
 | 5 | 201 | — | — | — |
 | 6 | 200 | — | 상태 `CL`, 줄 입고 수량 12 (`receipt_qty > po_qty` 허용) | `mm_purchase_order_line.receipt_qty = 12` |
 | 7 | 200 | — | 이 발주 줄이 목록에 없다 (남은 수량 ≤ 0) | — |
 
-- [확인 필요] 경고를 확인받는 API 형식(확인 플래그 없이 보내면 422 + 경고 코드)은 본체 API 표준에 아직 없다. 본체 API 표준이 다르게 정해지면 단계 4의 기대 결과를 그에 맞춘다.
+- 경고 확인 형식은 본체 API 규칙(`docs/architecture/api.md` 경고)을 따른다.
