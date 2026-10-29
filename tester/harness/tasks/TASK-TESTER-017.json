@@ -1,0 +1,40 @@
+{
+  "id": "TASK-TESTER-017",
+  "project": "tester",
+  "title": "SD 출력 문서 PDF 내용 테스트(송장 번호·줄·합계, 세트 구성품 목록)와 HTTPS 이동·HSTS 검사",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-016.md",
+    "tester/docs/scenarios/BC/BC-TS-001.md"
+  ],
+  "rules": [
+    "BC-BR-311",
+    "SD-BR-106",
+    "SD-BR-109",
+    "SD-BR-112",
+    "SD-BR-116"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-004",
+    "TASK-TESTER-008",
+    "TASK-CORE-003",
+    "TASK-BC-025",
+    "TASK-SD-003",
+    "TASK-SD-005"
+  ],
+  "acceptance": [
+    "tester/pyproject.toml에 pypdf를 더하고 uv.lock을 갱신한다",
+    "src/quro_tester/pdf.py: PDF 바이트 → 텍스트(공백 하나로 줄임, 숫자 사이 천 단위 구분 기호 제거), 숫자 토큰 찾기 함수",
+    "tests/api/SD/test_print_documents.py: SD-TS-016. 금액 서식은 QURO_COUNTRY의 기준 통화 자릿수를 따른다",
+    "tests/api/BC/test_login_lockout.py에 BC-TS-001 7·8단계를 더한다. QURO_API_HTTP_URL이 없으면 7단계는 pytest.skip, 8단계는 Development 환경이면 skip",
+    "uv run pytest -k \"print_documents or login_lockout\" 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

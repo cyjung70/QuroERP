@@ -10,7 +10,7 @@
 | 마이너스 재고 모드 | 해당 없음 |
 | 직렬 실행 | 예 (`serial` — `/api/auth/*` 요청 수 제한을 함께 쓴다) |
 | 다국어 | 오류 단계: `ko`, `en` (언어마다 새 사용자) |
-| 비고 | AS IS 결함 회귀 (실패 잠금 없음, 성공 로그인만 이력에 남김) |
+| 비고 | AS IS 결함 회귀 (실패 잠금 없음, 성공 로그인만 이력에 남김, 암호화되지 않은 HTTP 접속) |
 
 ## 사전 데이터
 
@@ -30,6 +30,8 @@
 | 4 | `POST /api/auth/login` | 없는 ID `t{run_id}-none`, 틀린 비밀번호 |
 | 5 | `POST /api/bc/users/{U}/unlock` (관리자) | — |
 | 6 | `POST /api/auth/login` | ID U, 비밀번호 P0 |
+| 7 | `GET {QURO_API_HTTP_URL}/api/auth/login` | 리다이렉트를 따라가지 않는다 |
+| 8 | 6의 응답 헤더 | — |
 
 ## 기대 결과
 
@@ -41,6 +43,8 @@
 | 4 | 401 | `AUTH-002` | 응답 본문의 키 구성이 1단계와 같다 (ID 존재를 알 수 없다) | 없는 ID의 실패 이력 1행, 잠그는 사용자 없음 |
 | 5 | 204 | — | — | `failed_count = 0`, `locked_until` null |
 | 6 | 200 | — | `mustChangePassword = true` (새 사용자, BC-BR-123) | `failed_count = 0`, `last_login_at` 갱신 |
+| 7 | 307 또는 308 | — | `Location`이 `https://`로 시작한다 | — |
+| 8 | — | — | `Strict-Transport-Security` 헤더가 있다 | — |
 
 ### 로그인 이력 (`sys_user_login_log`, 입력 ID가 U인 행, 시간순)
 
@@ -54,3 +58,4 @@
 
 - 이력·사용자 테이블의 어떤 텍스트 열에도 P0와 틀린 비밀번호 문자열이 없다 (BC-BR-016).
 - 1단계 ID는 공백을 지우고 소문자로 바꿔 U를 찾는다 (BC-BR-002).
+- 7·8: HTTPS만 쓴다 ([로그인 정책](../../../../docs/architecture/login.md) 보안·감사). `QURO_API_HTTP_URL`이 없으면 7은 건너뛴다. 8은 테스트 환경이 `Development`가 아닐 때만 검사한다 (ASP.NET Core는 Development에서 HSTS를 보내지 않는다).
