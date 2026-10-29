@@ -1,4 +1,4 @@
--- bc_company: company logo for printed documents (ADR-0024, print-documents.md)
+-- bc_company: company logo for printed documents (BC-BR-306, print-documents.md)
 --   logo_image:        image bytes (PNG or JPEG), uploaded on the company screen
 --   logo_content_type: MIME type of logo_image
 --   Both are NULL when no logo is set; printed documents then show the company name only

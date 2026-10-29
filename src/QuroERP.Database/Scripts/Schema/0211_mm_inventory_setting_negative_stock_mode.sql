@@ -1,4 +1,4 @@
--- mm_inventory_setting: one global setting with three negative stock modes (ADR-0025, inventory.md)
+-- mm_inventory_setting: one global setting with three negative stock modes (MM-BR-003, inventory.md)
 --   Before: company_id, plant_id, warehouse_id, allow_negative_stock (per company/plant/warehouse)
 --   After:  id, negative_stock_mode (ALLOW, ALLOW_IN_MONTH, DENY), audit columns. Exactly one row
 --   Existing rows: allow_negative_stock true -> ALLOW, false -> DENY. The company-level row is kept

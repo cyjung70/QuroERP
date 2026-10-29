@@ -1,4 +1,4 @@
--- warehouse_id on sd_sales_invoice and sd_sales_invoice_line (ADR-0027, MM-BR-703)
+-- warehouse_id on sd_sales_invoice and sd_sales_invoice_line (inventory.md, MM-BR-703)
 --   The header warehouse is the line default; lines carry the movement warehouse
 --   Existing rows go to the default warehouse (0213_mm_warehouse_stock.sql)
 -- Applied scripts are never edited. Add a new numbered script for changes.
