@@ -253,4 +253,43 @@
   <data name="BC-E-314" xml:space="preserve"><value>Default language {0} is not in use.</value></data>
   <data name="BC-E-315" xml:space="preserve"><value>Enter a valid 10-digit business registration number.</value></data>
   <data name="BC-E-316" xml:space="preserve"><value>The billing mode cannot change to {0}: the value is invalid or unbilled shipments exist.</value></data>
+  <data name="Bc.Company.Name" xml:space="preserve"><value>Company name</value></data>
+  <data name="Bc.Company.Billto" xml:space="preserve"><value>Bill-to address</value></data>
+  <data name="Bc.Company.Shipto" xml:space="preserve"><value>Ship-to address</value></data>
+  <data name="Bc.Company.Contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="Bc.Company.TelNo" xml:space="preserve"><value>Phone</value></data>
+  <data name="Bc.Company.FaxNo" xml:space="preserve"><value>Fax</value></data>
+  <data name="Bc.Company.RegisterNo" xml:space="preserve"><value>Business registration number</value></data>
+  <data name="Bc.Company.Represent" xml:space="preserve"><value>Representative</value></data>
+  <data name="Bc.Company.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Bc.Company.BusinessType" xml:space="preserve"><value>Business type</value></data>
+  <data name="Bc.Company.BusinessItem" xml:space="preserve"><value>Business item</value></data>
+  <data name="Bc.Company.CountryCode" xml:space="preserve"><value>Country</value></data>
+  <data name="Bc.Company.Country.US" xml:space="preserve"><value>United States</value></data>
+  <data name="Bc.Company.Country.KR" xml:space="preserve"><value>Korea</value></data>
+  <data name="Bc.Company.BaseCurrencyCode" xml:space="preserve"><value>Base currency</value></data>
+  <data name="Bc.Company.DefaultLangCode" xml:space="preserve"><value>Default language</value></data>
+  <data name="Bc.Company.BillingMode" xml:space="preserve"><value>Billing</value></data>
+  <data name="Bc.Company.BillingMode.WITH_SHIPMENT" xml:space="preserve"><value>Bill with shipment</value></data>
+  <data name="Bc.Company.BillingMode.SEPARATE" xml:space="preserve"><value>Bill separately after shipment</value></data>
+  <data name="Bc.Company.Logo.Delete" xml:space="preserve"><value>Delete Logo</value></data>
+  <data name="Bc.Company.Logo.ConfirmDelete" xml:space="preserve"><value>Delete the logo? Printed documents will show the company name only.</value></data>
+  <data name="Bc.Company.Security" xml:space="preserve"><value>Security Settings</value></data>
+  <data name="Bc.Company.Security.Hint" xml:space="preserve"><value>Password policy changes apply from each user's next password change.</value></data>
+  <data name="Bc.Company.Security.ConfirmRevoke" xml:space="preserve"><value>Turning off auto sign-in ends auto sign-in for every user. Continue?</value></data>
+  <data name="Bc.Company.MaxFailedAttempts" xml:space="preserve"><value>Failed sign-ins before lockout (3-10)</value></data>
+  <data name="Bc.Company.LockoutMinutes" xml:space="preserve"><value>Lockout minutes (1-1440)</value></data>
+  <data name="Bc.Company.ShowRemainingAttempts" xml:space="preserve"><value>Show remaining attempts</value></data>
+  <data name="Bc.Company.AutoLoginEnabled" xml:space="preserve"><value>Allow auto sign-in</value></data>
+  <data name="Bc.Company.AutoLoginValidDays" xml:space="preserve"><value>Auto sign-in valid days (1-90)</value></data>
+  <data name="Bc.Company.SessionIdleMinutes" xml:space="preserve"><value>Idle session timeout minutes (5-480)</value></data>
+  <data name="Bc.Company.AllowConcurrentLogin" xml:space="preserve"><value>Allow concurrent sign-in</value></data>
+  <data name="Bc.Company.PasswordMinLength" xml:space="preserve"><value>Minimum password length (8-128)</value></data>
+  <data name="Bc.Company.PasswordRequiredCategories" xml:space="preserve"><value>Required character types (1-4)</value></data>
+  <data name="Bc.Company.PasswordExpireDays" xml:space="preserve"><value>Password expiry days (0 = never, up to 3650)</value></data>
+  <data name="Bc.Company.PasswordHistoryCount" xml:space="preserve"><value>Passwords that cannot be reused (0-24)</value></data>
+  <data name="Bc.Company.PasswordResetMode" xml:space="preserve"><value>Password reset</value></data>
+  <data name="Bc.Company.PasswordResetMode.ADMIN_ONLY" xml:space="preserve"><value>Contact the administrator</value></data>
+  <data name="Bc.Company.PasswordResetMode.EMAIL" xml:space="preserve"><value>Reset by email</value></data>
+  <data name="Common.ConfirmSectionsUnsaved" xml:space="preserve"><value>Other sections have unsaved changes, and this save does not include them. Continue?</value></data>
 </root>

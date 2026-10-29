@@ -1,96 +1,259 @@
 @page "/bc/company"
 @rendermode InteractiveServer
+@using System.Globalization
 @using System.Net.Http
 @using QuroErp.Contracts.Bc.Companies
+@using QuroErp.Contracts.Common.Auth
+@using QuroErp.Contracts.Common.Codes
 @using QuroErp.Contracts.Mm.Inventory
+@using QuroErp.Web.Auth
 @using QuroErp.Web.Bc.Companies
+@using QuroErp.Web.Bc.Localization
 @using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
 @using QuroErp.Web.Mm.Inventory
 @inject CompanyApiClient CompanyApi
+@inject AuthSettingApiClient AuthSettingApi
 @inject InventorySettingApiClient InventorySettingApi
+@inject LocalizationApiClient LocalizationApi
+@inject IQuroConfirm Confirm
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
 
-@* BC-UC-007 company screen, minimal version: logo (docs/architecture/print-documents.md) and inventory setting (MM-BR-003) only.
-   Company fields and the QuroSingleForm layout come with TASK-BC-013/014 after the common components (TASK-CORE-006). *@
+@* BC-UC-007 company, screen type S. There is exactly one company: it loads when the screen opens and is never created or
+   deleted here (BC-BR-301). Rules are checked by the API (BC-BR-302~316). The logo (BC-BR-306), inventory setting (MM-BR-003)
+   and security settings (BC-BR-309, 310) are separate records, so each section below the form saves on its own. Search reads
+   the sections again, and unsaved section changes are guarded like the form's own (BC-BR-317). *@
 
 <PageTitle>@L["Bc.Company.Title"]</PageTitle>
 
-<h1>@L["Bc.Company.Title"]</h1>
-
-@if (_error is not null)
+@if (_loadError is not null)
 {
-    <p class="page-error" role="alert">@_error</p>
-}
-@if (_notice is not null)
-{
-    <p class="page-notice" role="status">@_notice</p>
+    <p class="page-error" role="alert" data-testid="company-message">@_loadError</p>
 }
 
-<section aria-labelledby="logo-title">
-    <h2 id="logo-title">@L["Bc.Company.Logo"]</h2>
-    @if (_logo is not null)
-    {
-        <img class="company-logo" src="@_logo.ToDataUrl()" alt="@L["Bc.Company.Logo"]" />
-    }
-    else if (_loaded)
-    {
-        <p>@L["Bc.Company.Logo.None"]</p>
-    }
-    <AuthorizeView Roles="admin">
-        <div>
-            <InputFile id="logo-file" accept="image/png,image/jpeg" OnChange="SelectLogo" />
-            <button type="button" disabled="@(_logoFile is null || _busy)" @onclick="UploadLogoAsync">@L["Bc.Company.Logo.Upload"]</button>
-            <small>@L["Bc.Company.Logo.Hint"]</small>
-        </div>
-    </AuthorizeView>
-</section>
+@if (_ready)
+{
+    <QuroSingleForm TModel="CompanyModel" Title="@L["Bc.Company.Title"]" TestId="company" ReadOnly="!_canEdit" LoadOnStart CanCreate="false"
+                    Load="LoadAsync" Create="() => new CompanyModel()" Save="SaveAsync" HasSectionChanges="HasSectionChanges">
+        <Fields Context="company">
+            @* BC-BR-302: the name is not a key, so it stays editable after loading *@
+            <QuroText Label="@L["Bc.Company.Name"]" @bind-Value="company.Name" Required TestId="company-header-name" />
+            <QuroText Label="@L["Bc.Company.Billto"]" @bind-Value="company.Billto" Rows="3" TestId="company-header-billto" />
+            <QuroText Label="@L["Bc.Company.Shipto"]" @bind-Value="company.Shipto" Rows="3" TestId="company-header-shipto" />
+            <QuroText Label="@L["Bc.Company.Contact"]" @bind-Value="company.Contact" TestId="company-header-contact" />
+            <QuroText Label="@L["Bc.Company.TelNo"]" @bind-Value="company.TelNo" TestId="company-header-tel-no" />
+            <QuroText Label="@L["Bc.Company.FaxNo"]" @bind-Value="company.FaxNo" TestId="company-header-fax-no" />
+            @* BC-BR-315: a KR company needs the business registration number, business type and item for tax invoices *@
+            <QuroText Label="@L["Bc.Company.RegisterNo"]" @bind-Value="company.RegisterNo" Required="@(company.CountryCode == KrCountry)"
+                      TestId="company-header-register-no" />
+            <QuroText Label="@L["Bc.Company.Represent"]" @bind-Value="company.Represent" TestId="company-header-represent" />
+            <QuroText Label="@L["Bc.Company.Email"]" @bind-Value="company.Email" TestId="company-header-email" />
+            <QuroText Label="@L["Bc.Company.BusinessType"]" @bind-Value="company.BusinessType" TestId="company-header-business-type" />
+            <QuroText Label="@L["Bc.Company.BusinessItem"]" @bind-Value="company.BusinessItem" TestId="company-header-business-item" />
+            @* BC-BR-312, 313: country and base currency cannot change once transactions exist; the API answers 409 *@
+            <QuroSelect Label="@L["Bc.Company.CountryCode"]" @bind-Value="company.CountryCode" Options="_countries" Required
+                        TestId="company-header-country-code" />
+            <QuroSelect Label="@L["Bc.Company.BaseCurrencyCode"]" @bind-Value="company.BaseCurrencyCode" Options="_currencies" Required
+                        TestId="company-header-base-currency-code" />
+            <QuroSelect Label="@L["Bc.Company.DefaultLangCode"]" @bind-Value="company.DefaultLangCode" Options="_languages" Required
+                        TestId="company-header-default-lang-code" />
+            <QuroSelect Label="@L["Bc.Company.BillingMode"]" @bind-Value="company.BillingMode" Options="_billingModes" Radio Required
+                        TestId="company-header-billing-mode" />
+        </Fields>
+    </QuroSingleForm>
 
-<section aria-labelledby="inventory-setting-title">
-    <h2 id="inventory-setting-title">@L["Mm.InventorySetting.Title"]</h2>
-    @if (_setting is not null)
+    @if (_error is not null)
     {
-        <AuthorizeView Roles="admin">
-            <Authorized>
+        <p class="page-error" role="alert" data-testid="company-settings-message">@_error</p>
+    }
+    @if (_notice is not null)
+    {
+        <p class="page-notice" role="status" data-testid="company-settings-message">@_notice</p>
+    }
+
+    <section aria-labelledby="logo-title">
+        <h2 id="logo-title">@L["Bc.Company.Logo"]</h2>
+        @if (_logo is not null)
+        {
+            <img class="company-logo" src="@_logo.ToDataUrl()" alt="@L["Bc.Company.Logo"]" />
+        }
+        else
+        {
+            <p>@L["Bc.Company.Logo.None"]</p>
+        }
+        @if (_canEdit)
+        {
+            <div>
+                <InputFile id="logo-file" accept="image/png,image/jpeg" OnChange="SelectLogo" data-testid="company-logo-file" />
+                <button type="button" disabled="@(_logoFile is null || _busy)" data-testid="company-logo-upload" @onclick="UploadLogoAsync">
+                    @L["Bc.Company.Logo.Upload"]
+                </button>
+                <button type="button" disabled="@(_logo is null || _busy)" data-testid="company-logo-delete" @onclick="DeleteLogoAsync">
+                    @L["Bc.Company.Logo.Delete"]
+                </button>
+                <small>@L["Bc.Company.Logo.Hint"]</small>
+            </div>
+        }
+    </section>
+
+    <section aria-labelledby="inventory-setting-title">
+        <h2 id="inventory-setting-title">@L["Mm.InventorySetting.Title"]</h2>
+        @if (_setting is not null)
+        {
+            @if (_canEdit)
+            {
                 <fieldset>
                     <legend>@L["Mm.InventorySetting.NegativeStockMode"]</legend>
                     <InputRadioGroup Name="negative-stock-mode" @bind-Value="_mode">
                         @foreach (var mode in NegativeStockModes.All)
                         {
                             <label>
-                                <InputRadio Name="negative-stock-mode" Value="mode" />
+                                <InputRadio Name="negative-stock-mode" Value="mode" data-testid="@($"company-inventory-mode-{mode.ToLowerInvariant()}")" />
                                 @L[$"Mm.InventorySetting.Mode.{mode}"]
                             </label>
                         }
                     </InputRadioGroup>
                 </fieldset>
-                <button type="button" disabled="@(_busy || _mode == _setting.NegativeStockMode)" @onclick="SaveSettingAsync">@L["Common.Save"]</button>
-            </Authorized>
-            <NotAuthorized>
+                <button type="button" disabled="@(_busy || _mode == _setting.NegativeStockMode)" data-testid="company-inventory-save"
+                        @onclick="SaveSettingAsync">@L["Common.Save"]</button>
+            }
+            else
+            {
                 <p>@L["Mm.InventorySetting.NegativeStockMode"]: @L[$"Mm.InventorySetting.Mode.{_setting.NegativeStockMode}"]</p>
-            </NotAuthorized>
-        </AuthorizeView>
-    }
-</section>
+            }
+        }
+    </section>
+
+    <section aria-labelledby="security-title">
+        <h2 id="security-title">@L["Bc.Company.Security"]</h2>
+        @if (_security is not null)
+        {
+            <CascadingValue Value="_securityForm" IsFixed="true">
+                <div class="quro-form" data-testid="company-security">
+                    <QuroNumber Label="@L["Bc.Company.MaxFailedAttempts"]" @bind-Value="_security.MaxFailedAttempts" Decimals="0" Required
+                                TestId="company-security-max-failed-attempts" />
+                    <QuroNumber Label="@L["Bc.Company.LockoutMinutes"]" @bind-Value="_security.LockoutMinutes" Decimals="0" Required
+                                TestId="company-security-lockout-minutes" />
+                    <QuroCheckbox Label="@L["Bc.Company.ShowRemainingAttempts"]" @bind-Value="_security.ShowRemainingAttempts"
+                                  TestId="company-security-show-remaining-attempts" />
+                    <QuroCheckbox Label="@L["Bc.Company.AutoLoginEnabled"]" @bind-Value="_security.AutoLoginEnabled"
+                                  TestId="company-security-auto-login-enabled" />
+                    <QuroNumber Label="@L["Bc.Company.AutoLoginValidDays"]" @bind-Value="_security.AutoLoginValidDays" Decimals="0" Required
+                                TestId="company-security-auto-login-valid-days" />
+                    <QuroNumber Label="@L["Bc.Company.SessionIdleMinutes"]" @bind-Value="_security.SessionIdleMinutes" Decimals="0" Required
+                                TestId="company-security-session-idle-minutes" />
+                    <QuroCheckbox Label="@L["Bc.Company.AllowConcurrentLogin"]" @bind-Value="_security.AllowConcurrentLogin"
+                                  TestId="company-security-allow-concurrent-login" />
+                    <QuroNumber Label="@L["Bc.Company.PasswordMinLength"]" @bind-Value="_security.PasswordMinLength" Decimals="0" Required
+                                TestId="company-security-password-min-length" />
+                    <QuroNumber Label="@L["Bc.Company.PasswordRequiredCategories"]" @bind-Value="_security.PasswordRequiredCategories" Decimals="0"
+                                Required TestId="company-security-password-required-categories" />
+                    <QuroNumber Label="@L["Bc.Company.PasswordExpireDays"]" @bind-Value="_security.PasswordExpireDays" Decimals="0" Required
+                                TestId="company-security-password-expire-days" />
+                    <QuroNumber Label="@L["Bc.Company.PasswordHistoryCount"]" @bind-Value="_security.PasswordHistoryCount" Decimals="0" Required
+                                TestId="company-security-password-history-count" />
+                    <QuroSelect Label="@L["Bc.Company.PasswordResetMode"]" @bind-Value="_security.PasswordResetMode" Options="_resetModes" Radio Required
+                                TestId="company-security-password-reset-mode" />
+                    @* BC-BR-310: a new password policy applies from each user's next password change *@
+                    <p class="quro-hint">@L["Bc.Company.Security.Hint"]</p>
+                </div>
+            </CascadingValue>
+            @if (_canEdit)
+            {
+                <button type="button" disabled="@_busy" data-testid="company-security-save" @onclick="SaveSecurityAsync">@L["Common.Save"]</button>
+            }
+        }
+    </section>
+}
 
 @code {
+    private const string KrCountry = "KR";
+    private const string TooLargeCode = "BC-E-005";
+    private const string UnavailableCode = "BC-E-003";
+    private const string InvalidNameCode = "BC-E-302";
+    private const string InvalidFieldCode = "BC-E-303";
+    private const string InvalidSecurityValueCode = "BC-E-309";
+    private const string RegisterNoCode = "BC-E-315";
+
+    // MVP countries (BC-BR-313) and billing modes (BC-BR-316); the API rejects any other value
+    private static readonly string[] Countries = ["US", KrCountry];
+    private static readonly string[] BillingModes = ["WITH_SHIPMENT", "SEPARATE"];
+    private static readonly string[] ResetModes = ["ADMIN_ONLY", "EMAIL"];
+
+    private readonly QuroFormContext _securityForm = new() { IsNew = false };
+    private IReadOnlyList<CodeItemDto> _countries = [];
+    private IReadOnlyList<CodeItemDto> _currencies = [];
+    private IReadOnlyList<CodeItemDto> _languages = [];
+    private IReadOnlyList<CodeItemDto> _billingModes = [];
+    private IReadOnlyList<CodeItemDto> _resetModes = [];
     private CompanyLogoImage? _logo;
     private IBrowserFile? _logoFile;
     private InventorySettingDto? _setting;
     private string _mode = NegativeStockModes.Deny;
-    private bool _loaded;
+    private SecuritySettingModel? _security;
+    private string? _securitySnapshot;
+    private bool _canEdit;
+    private bool _ready;
     private bool _busy;
+    private string? _loadError;
     private string? _error;
     private string? _notice;
 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
     protected override async Task OnInitializedAsync()
     {
-        await RunAsync(async () =>
+        // Full Access is the admin role until the menu policy exists, as in CompanyController (BC-BR-305, BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        _securityForm.ReadOnly = !_canEdit;
+        _countries = Countries.Select(c => new CodeItemDto(c, L[$"Bc.Company.Country.{c}"])).ToList();
+        _billingModes = BillingModes.Select(m => new CodeItemDto(m, L[$"Bc.Company.BillingMode.{m}"])).ToList();
+        _resetModes = ResetModes.Select(m => new CodeItemDto(m, L[$"Bc.Company.PasswordResetMode.{m}"])).ToList();
+        try
         {
-            _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
-            ApplySetting(await InventorySettingApi.GetAsync(CancellationToken.None));
-        });
-        _loaded = true;
+            // BC-BR-312, 314: only currencies and languages in use can be chosen
+            var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+            _currencies = localization.Currencies.Select(c => new CodeItemDto(c.CurrencyCode, $"{c.CurrencyCode} {c.Name}")).ToList();
+            _languages = localization.Languages.Select(l => new CodeItemDto(l.LangCode, LanguageName(l.LangCode))).ToList();
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // The form loads on open and on search; the sections are read with it so a search also discards their changes
+    private async Task<CompanyModel?> LoadAsync()
+    {
+        var company = CompanyModel.From(await CompanyApi.GetAsync(CancellationToken.None));
+        _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
+        _logoFile = null;
+        ApplySetting(await InventorySettingApi.GetAsync(CancellationToken.None));
+        ApplySecurity(await AuthSettingApi.GetAsync(CancellationToken.None));
+        _error = null;
+        _notice = null;
+        // The form renders itself after loading; the sections belong to this page
+        StateHasChanged();
+        return company;
+    }
+
+    // BC-BR-317: a picked logo not uploaded yet, a changed inventory mode or changed security values
+    private bool HasSectionChanges() =>
+        _logoFile is not null
+        || (_setting is not null && _mode != _setting.NegativeStockMode)
+        || (_security is not null && Snapshot.Of(_security) != _securitySnapshot);
+
+    private async Task<CompanyModel> SaveAsync(CompanyModel company, bool isNew)
+    {
+        var saved = await WithFieldLabelsAsync(() => CompanyApi.UpdateAsync(company.ToRequest(), CancellationToken.None));
+        return CompanyModel.From(saved);
     }
 
     private void SelectLogo(InputFileChangeEventArgs e)
@@ -121,8 +284,24 @@
                 await stream.CopyToAsync(buffer);
             }
             await CompanyApi.UploadLogoAsync(buffer.ToArray(), _logoFile.Name, CancellationToken.None);
+            _logoFile = null;
             _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
             _notice = L["Common.Saved"];
+        });
+    }
+
+    // BC-BR-306: printed documents then show the company name only
+    private async Task DeleteLogoAsync()
+    {
+        if (!await Confirm.ConfirmAsync(L["Bc.Company.Logo.ConfirmDelete"]))
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            await CompanyApi.DeleteLogoAsync(CancellationToken.None);
+            _logo = null;
+            _notice = L["Common.Deleted"];
         });
     }
 
@@ -136,10 +315,38 @@
         });
     }
 
+    private async Task SaveSecurityAsync()
+    {
+        if (_securityForm.FirstMissing() is { } missing)
+        {
+            _notice = null;
+            _error = Messages.Get(QuroScreenBase.RequiredCode, missing.Label);
+            return;
+        }
+        var security = _security!;
+        // BC-BR-310: turning auto login off signs every user out of auto login
+        if (security.AutoLoginWasEnabled && !security.AutoLoginEnabled
+            && !await Confirm.ConfirmAsync(L["Bc.Company.Security.ConfirmRevoke"]))
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            ApplySecurity(await WithFieldLabelsAsync(() => AuthSettingApi.UpdateAsync(security.ToRequest(), CancellationToken.None)));
+            _notice = L["Common.Saved"];
+        });
+    }
+
     private void ApplySetting(InventorySettingDto setting)
     {
         _setting = setting;
         _mode = setting.NegativeStockMode;
+    }
+
+    private void ApplySecurity(AuthSettingDto setting)
+    {
+        _security = SecuritySettingModel.From(setting);
+        _securitySnapshot = Snapshot.Of(_security);
     }
 
     // Shows API errors (ProblemDetails code) and connection failures as messages instead of breaking the circuit
@@ -166,6 +373,24 @@
         }
     }
 
-    private const string TooLargeCode = "BC-E-005";
-    private const string UnavailableCode = "BC-E-003";
+    // BC-E-302, 303, 309 and 315 name the property; show its label instead
+    private async Task<T> WithFieldLabelsAsync<T>(Func<Task<T>> call)
+    {
+        try
+        {
+            return await call();
+        }
+        catch (ApiProblemException e) when (e.Problem is
+            { Code: InvalidNameCode or InvalidFieldCode or InvalidSecurityValueCode or RegisterNoCode, Args: [var field, ..] })
+        {
+            throw new ApiProblemException(e.Problem with { Args = [FieldLabel(field)] });
+        }
+    }
+
+    // Company and security setting properties share the Bc.Company.<property> keys (docs/specifications/BC/company.md)
+    private string FieldLabel(string property) =>
+        L[$"Bc.Company.{property}"] is { ResourceNotFound: false } label ? label.Value : property;
+
+    private string LanguageName(string langCode) =>
+        L[$"Common.Language.{langCode}"] is { ResourceNotFound: false } name ? name.Value : langCode;
 }
