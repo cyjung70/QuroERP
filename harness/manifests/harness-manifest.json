@@ -84,11 +84,11 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "fc2ff98eec870f5cda97e1938c6913e35572aff335bf6a77662381d5d757cf00"
+      "sha256": "f2fc49e7e8717c538e897905eb1f5bc74fcb2d6c8d05395dbf2601c17489959c"
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "a36d2957f8a53ff92d899c74d77a4e62e1fe3f5ad27a37043b25c923f7e75ed2"
+      "sha256": "0332927d685438f7f5933095a77bf1c3a9228180bbeae1c8d07a3c26fbc48ae6"
     },
     {
       "path": "docs/architecture/i18n.md",
@@ -168,7 +168,7 @@
     },
     {
       "path": "docs/business-rules/BC/user.md",
-      "sha256": "9dcd546cf44c45b7f0c169f0e32542acfa98af95059a929154c6eb5052bcd574"
+      "sha256": "ad1c21a22bd4e890d4e613d9bee7ef60ac07273ffaf8fcfa3f8b3a9a09fbdbe8"
     },
     {
       "path": "docs/business-rules/CO/README.md",
@@ -540,7 +540,7 @@
     },
     {
       "path": "docs/specifications/MM/warehouse.md",
-      "sha256": "2c590c11d2bc693edcfa91653d1c1b20c97a5155019b9e29f934fe94ef510124"
+      "sha256": "9d8ef1ddbf12339bd3bc22f82694d71c17fa28f9f82eaa9e787f5a379b42235f"
     },
     {
       "path": "docs/specifications/SD/ar-receipt.md",
@@ -832,7 +832,7 @@
     },
     {
       "path": "harness/tasks/TASK-BC-006.json",
-      "sha256": "ac66b4a45ecc4ded6c260319dbb00f68af1bb9cf82e662c6a6417d3ac19df267"
+      "sha256": "0e7bdbb41e311cb372cc18c7e2db669749bb681ae54a06917e5317258730b5db"
     },
     {
       "path": "harness/tasks/TASK-BC-007.json",
@@ -1125,6 +1125,10 @@
     {
       "path": "harness/tasks/TASK-CORE-021.json",
       "sha256": "721f576b5a8a545650431c93b10778816552b3960a9b60e3b0c4b98770b797ef"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-022.json",
+      "sha256": "f234f9ab52210ba81bb5ef06e786c20d6434c79c11402d013a58d46043be0a9a"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",

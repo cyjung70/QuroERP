@@ -44,6 +44,7 @@
 
 - 다중 회사는 지원하지 않는다. 회사는 `bc_company` 1행이고, 테이블에 `company_id`를 두지 않는다.
 - 동시 수정 검사는 `updated_at`을 낙관적 잠금으로 쓴다 (`WHERE id = @Id AND updated_at = @UpdatedAt`, 영향 행 0이면 충돌).
+- `updated_at`·`updated_by`는 업무 데이터가 바뀐 시각·사용자다. 로그인 상태(실패 횟수, 잠금, 마지막 로그인 시각·IP, 로그인 화면에서 고른 언어)를 저장할 때는 바꾸지 않는다. 로그인 시각은 `sys_app_user.last_login_at`에 남긴다.
 
 ## 타입
 
