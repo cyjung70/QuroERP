@@ -1,0 +1,34 @@
+{
+  "id": "TASK-CORE-023",
+  "project": "core",
+  "title": "헤더 사용자 메뉴 (내 정보, 비밀번호 변경, 로그아웃)",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screens.md",
+    "docs/architecture/login.md",
+    "docs/specifications/BC/user-profile.md",
+    "docs/specifications/BC/change-password.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-004",
+    "TASK-BC-006"
+  ],
+  "acceptance": [
+    "헤더의 사용자 이름을 누르면 메뉴가 열린다: 내 정보(`/bc/user-profile`), 비밀번호 변경(`/bc/change-password`), 로그아웃",
+    "메뉴 권한과 상관없이 로그인한 모든 사용자에게 보인다 (본인 화면, BC-BR-101·051)",
+    "`data-testid`: `user-menu`, `user-menu-profile`, `user-menu-change-password`, `user-menu-logout`. 라벨은 ko·en 리소스",
+    "bUnit 테스트: 메뉴 항목과 링크, 로그인하지 않으면 메뉴 없음"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

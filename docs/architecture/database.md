@@ -100,11 +100,12 @@
 ```bash
 dotnet run --project src/QuroERP.Database                       # Schema → Seed
 dotnet run --project src/QuroERP.Database -- --demo             # + Demo
-dotnet run --project src/QuroERP.Database -- --country KR       # 회사 국가 KR로 설치 (기본 US)
+dotnet run --project src/QuroERP.Database -- --set-country KR --company-name "<회사 이름>"   # 회사 국가 설정 (마이그레이션 뒤)
 dotnet run --project src/QuroERP.Database -- --connection "<연결 문자열>"
 dotnet run --project src/QuroERP.Database -- --create-admin <userid>   # 관리자 계정 만들기·비밀번호 초기화
 ```
 
-- `--country US|KR`(기본 `US`): 회사 행이 없을 때 Seed가 그 국가의 회사 행(국가·기준 통화·기본 언어·세금 계산 단위), 기본 세금 코드(BC-BR-505), 모듈 수량 자릿수 기본값(BC-BR-422)을 넣는다. 국가별 단가 자릿수(`bc_country_decimal`)와 통화 국가(BC-BR-428)는 국가 인자와 무관하게 모두 넣는다. 회사 행이 이미 있으면(이관 DB 포함) 국가를 바꾸지 않는다. 운영 설치와 Tester 테스트 DB 준비가 같은 방법이다.
+- 설치 순서: 마이그레이션(Schema → Seed) → `--set-country` → `--create-admin`. 운영 설치와 Tester 테스트 DB 준비가 같은 방법이다.
+- `--set-country US|KR [--company-name <이름>]`: 마이그레이션 대신 회사 국가를 정한다. 회사 행이 없으면 만들고(`--company-name` 필수), 있으면 국가를 바꾼다. 국가 기본값으로 기준 통화·기본 언어, 모듈 수량 자릿수·반올림(BC-BR-422), 기본 세금 코드(BC-BR-505)를 넣는다. 문서·재고 이동·환율이 하나라도 있으면 실행을 멈춘다 (BC-BR-313). 국가를 정하지 않은 DB에는 회사 행이 없다. 국가별 단가 자릿수(`bc_country_decimal`)와 통화 국가(BC-BR-428)는 국가와 무관하게 Seed가 모두 넣는다.
 - `--create-admin <userid>`: 마이그레이션 대신 `admin` 역할 계정을 만들거나 비밀번호를 초기화한다. 비밀번호는 콘솔에서 입력받고(표준 입력이 리디렉션되면 거기서 읽는다) 해시만 저장한다. 첫 로그인 때 비밀번호 변경을 강제한다. 설치 직후 첫 관리자를 만드는 방법이다.
 - 연결 문자열 우선순위: `--connection` 인자 > 환경변수 `ConnectionStrings__QuroErp` > `dotnet user-secrets` (`ConnectionStrings:QuroErp`). 연결 문자열을 저장소 파일에 쓰지 않는다.
