@@ -15,17 +15,17 @@
 | SD-BR-103 | 송장 줄 단가는 0일 수 없다 | `dn_prc <> 0` | 저장 차단, 메시지 SD-E-103 | AS IS 송장 화면 수량·단가 검사 | SD-UT-103 |
 | SD-BR-104 | 송장 수정·삭제·Void는 입금 전에만 할 수 있다 | `tot_dn_amt = bal_amt` | 차단, 메시지 SD-E-104 | AS IS 송장 저장 입금 검사 ("This Invoice is already paid") | SD-UT-104, SD-TS-004, SD-TS-005 |
 | SD-BR-105 | 송장 상태는 금액으로 계산한다: Void → `VO`, `bal_amt = tot_dn_amt` → `OP`, `bal_amt = 0` → `CL`, 그 밖 → `PA` | 조회·저장 시 | (상태 계산) | AS IS `get_dn_status` | SD-UT-105, SD-TS-001, SD-TS-003, SD-TS-004 |
-| SD-BR-106 | 송장 번호 형식은 `DN` + 7자리 연속 번호다 (월 구분 없음). 채번은 SD-BR-006을 따른다 | 신규 저장 | (채번 규칙) | AS IS `get_auto_num('DN')` | SD-UT-106, SD-TS-001 |
+| SD-BR-106 | 송장 번호 형식은 `DN` + 7자리 연속 번호다 (월 구분 없음). 채번은 SD-BR-006을 따른다 | 신규 저장 | (채번 규칙) | AS IS `get_auto_num('DN')` | SD-UT-106, SD-TS-001, SD-TS-016 |
 | SD-BR-107 | 저장한 송장 줄은 고칠 수 없다. 지우고 다시 넣는다 | 기존 줄 수정 요청 | 차단, 메시지 SD-E-107 | AS IS 송장 줄 수정 없음 | SD-UT-107, SD-TS-002 |
 | SD-BR-108 | 출하에서 가져온 송장 줄을 저장하면 출하 줄 청구 수량(`billed_qty`)과, 그 출하 줄이 수주에서 왔으면 수주 줄 청구 수량(`dn_qty`)에 더하고, 지우면 뺀다 | 줄 추가·삭제 | 같은 트랜잭션에서 `sd_shipment_line.billed_qty`, `sd_sales_order_line.dn_qty` 갱신 | AS IS 송장 저장 (수주 송장 수량) — 출하 기준으로 TO BE 변경 | SD-UT-108, SD-TS-001, SD-TS-002, SD-TS-015 |
-| SD-BR-109 | 송장 합계는 줄 공급가액 합 + 세액이고(SD-BR-132), 입금 전이므로 잔액은 합계와 같다. 줄 금액은 SD-BR-005 식으로 계산한다 | 줄 변경 | `tot_dn_amt = bal_amt = sum(supply_amt) + sum(tax_amt)` | AS IS `update_hdr_amt('DN')` | SD-UT-109, SD-TS-001 |
+| SD-BR-109 | 송장 합계는 줄 공급가액 합 + 세액이고(SD-BR-132), 입금 전이므로 잔액은 합계와 같다. 줄 금액은 SD-BR-005 식으로 계산한다 | 줄 변경 | `tot_dn_amt = bal_amt = sum(supply_amt) + sum(tax_amt)` | AS IS `update_hdr_amt('DN')` | SD-UT-109, SD-TS-001, SD-TS-016 |
 | SD-BR-110 | 송장 줄을 저장·삭제·Void하면 관련 출하의 청구 상태를 다시 계산한다 (SD-BR-166). 수주 상태는 출하가 정한다 (SD-BR-012) | 출하에서 가져온 줄이 바뀜 | 출하 상태 갱신 | AS IS는 송장이 수주 상태를 바꿨다 — TO BE 변경 | SD-UT-110, SD-TS-001, SD-TS-003 |
 | SD-BR-111 | 송장은 재고를 움직이지 않는다. 재고 출고·출고 취소는 출하가 한다 (SD-BR-163). 송장 줄 창고는 출하 줄 창고를 복사한 표시 값이다 | 저장 | (재고 규칙) | AS IS `issue_inv('DN')`는 송장 저장 때 출고했다 — TO BE 변경 | SD-UT-111, MM-TS-001, MM-TS-006, MM-TS-007, SD-TS-001, SD-TS-003 |
-| SD-BR-112 | 재고 관리 품목 판정은 [MM-BR-008](../MM/inventory.md)을 따른다. 세트 품목은 구성품으로 전개해 출고한다 (MM-BR-007). 출고·출고 취소·Void가 같은 판정을 쓴다 | 품목 유형 | (판정 규칙) | AS IS는 출고는 Service 제외, Void는 Inventory만 취소해 Set 재고가 남았다 — 결함 수정 | SD-UT-112, SD-TS-003 |
+| SD-BR-112 | 재고 관리 품목 판정은 [MM-BR-008](../MM/inventory.md)을 따른다. 세트 품목은 구성품으로 전개해 출고한다 (MM-BR-007). 출고·출고 취소·Void가 같은 판정을 쓴다 | 품목 유형 | (판정 규칙) | AS IS는 출고는 Service 제외, Void는 Inventory만 취소해 Set 재고가 남았다 — 결함 수정 | SD-UT-112, SD-TS-003, SD-TS-016 |
 | SD-BR-113 | Void하면 줄 수량·금액을 0으로, 출하 줄·수주 줄 청구 수량을 되돌리고, 헤더를 `VO`·합계 0·잔액 0으로 만든 뒤 출하 상태를 다시 계산한다. `WITH_SHIPMENT` 출하로 만든 송장은 출하에서 Void한다 (SD-BR-169) | Void 실행 (SD-BR-104 통과) | 같은 트랜잭션. 출하로 만든 송장을 송장에서 Void하면 차단, 메시지 SD-E-113 | AS IS `void_dn`은 출고도 취소했다 — TO BE 변경 | SD-UT-113, SD-TS-003, SD-TS-015 |
 | SD-BR-114 | 이동평균원가 0 검사는 출하가 한다 (SD-BR-163). 송장은 원가를 검사하지 않는다 | 저장 | (검사 위치) | AS IS `issue_inv` ("Moving Average Cost should not be 0") — 출하로 옮김 | SD-UT-114, MM-TS-006 |
 | SD-BR-115 | 출하 가져오기(`SEPARATE`)는 같은 고객·같은 통화의 Void가 아닌 출하에서 미청구 수량 > 0인 줄만 보여 준다. 여러 출하의 줄을 한 송장에 모을 수 있다. 수량 기본값은 미청구 수량, 단가·할인·세금 코드는 출하 줄(수주 줄)에서 가져오고, 헤더(담당자·결제 조건·운송비·배송지·결제 예정일)는 첫 출하의 수주에서 복사한다 | 출하 가져오기 | (조회 규칙) | AS IS 송장 수주 선택 — 출하 기준으로 TO BE 변경 | SD-UT-115, SD-TS-015 |
-| SD-BR-116 | 출하 없이 품목을 직접 넣은 송장 줄은 재고 관리가 아닌 품목(SD-BR-112 판정)만 된다. 이 줄에는 SD-BR-102·108·110을 적용하지 않는다. 재고 관리 품목은 출하로만 청구한다 | `shipment_line_id is null` | 재고 관리 품목이면 저장 차단, 메시지 SD-E-116 | AS IS 송장 품목 직접 입력 — 재고 품목 제한은 TO BE 변경 | SD-UT-116, SD-TS-015 |
+| SD-BR-116 | 출하 없이 품목을 직접 넣은 송장 줄은 재고 관리가 아닌 품목(SD-BR-112 판정)만 된다. 이 줄에는 SD-BR-102·108·110을 적용하지 않는다. 재고 관리 품목은 출하로만 청구한다 | `shipment_line_id is null` | 재고 관리 품목이면 저장 차단, 메시지 SD-E-116 | AS IS 송장 품목 직접 입력 — 재고 품목 제한은 TO BE 변경 | SD-UT-116, SD-TS-015, SD-TS-016 |
 | SD-BR-117 | 배송지·고객 단가 갱신 확인은 수주와 같다 (SD-BR-009, SD-BR-010) | 저장 시 | 사용자 선택 | AS IS 저장 전 확인 | SD-UT-117 |
 | SD-BR-118 | 송장 화면은 고객의 미적용 Credit Memo 잔액 합을 "사용 가능 Credit"으로 보여 준다 | 고객 선택 시 | (조회 규칙) `-sum(bal_amt) where type = 'CM'` | AS IS 송장 화면 | SD-UT-118 |
 | SD-BR-131 | 송장 통화·환율은 출하에서 가져오고 바꿀 수 없다. 한 송장의 출하는 모두 같은 통화다. 출하 없는 송장은 고객 거래 통화가 기본이다 (BC-BR-412). 환율 기본값은 송장 일자 환율이다 | 저장 | 통화가 출하와 다르면 저장 차단, 메시지 SD-E-131 | TO BE 신규 | SD-UT-131, SD-TS-008, SD-TS-009 |

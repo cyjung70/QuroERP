@@ -11,6 +11,7 @@ tester/
     config.py             환경변수 읽기
     api.py                httpx 클라이언트 (로그인, Accept-Language, Problem Details)
     db.py                 읽기 전용 psycopg 연결
+    pdf.py                PDF 텍스트 추출 (pypdf, 공백 정리)
     pages/                화면유형 공통 Page Object: single.py, multi.py, single_multi.py, multi_multi.py
     data.py               테스트 데이터 생성 (API 호출)
   tests/
@@ -30,6 +31,7 @@ tester/
 | `QURO_TEST_DB` | 테스트 DB 읽기 전용 연결 문자열 (Migration, 검증 조회) | — |
 | `QURO_LANGS` | 메시지 검사 언어 | `ko,en` |
 | `QURO_AUTH_RATE_LIMIT` | 테스트 환경 API의 `Auth__RateLimit__PerMinute` 값 (`docker-compose.test.yml`에서 같은 값으로 준다) | `60` |
+| `QURO_API_HTTP_URL` | REST API의 HTTP 주소 (HTTPS 이동 검사). 없으면 그 단계는 건너뛴다 | `http://localhost:5101` |
 | `QURO_COUNTRY` | 테스트 DB의 회사 국가 | `US` (기본), `KR` |
 
 - 값은 저장소에 쓰지 않는다. 로컬은 `tester/.env`(커밋 금지), CI는 비밀 변수로 준다.

@@ -65,6 +65,7 @@
 - [SD-TS-013 판매·구매 단가표 저장과 삭제, 신용 한도 경고, 장바구니 담기 검사](scenarios/SD/SD-TS-013.md)
 - [SD-TS-014 문서 번호 동시 채번과 입금 줄 수정 차단](scenarios/SD/SD-TS-014.md)
 - [SD-TS-015 출하와 청구 분리 — 출하와 같이 청구, 따로 모아 청구](scenarios/SD/SD-TS-015.md)
+- [SD-TS-016 출력 문서 PDF 내용 — 송장 번호·줄·합계, 세트 구성품 목록](scenarios/SD/SD-TS-016.md)
 
 ## 이관 검증 시나리오
 

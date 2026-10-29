@@ -27,6 +27,7 @@
 | REST API | httpx |
 | 화면 E2E | Playwright for Python |
 | DB 검증 | psycopg 3 (조회만) |
+| PDF 내용 검사 | pypdf (텍스트 추출만) |
 | 의존성 | `tester/pyproject.toml` 하나, 도구 uv (`uv.lock` 커밋) |
 | 리포트 | JUnit XML + HTML |
 
