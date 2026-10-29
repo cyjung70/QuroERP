@@ -30,5 +30,5 @@
     "bUnit 테스트: 메뉴 항목과 링크, 로그인하지 않으면 메뉴 없음"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

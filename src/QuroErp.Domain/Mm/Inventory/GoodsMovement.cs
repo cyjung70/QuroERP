@@ -13,7 +13,7 @@ public sealed class GoodsMovement
 
     private GoodsMovement(
         string movType, DateOnly documentDt, long itemId, long warehouseId, decimal qty, decimal prc,
-        string? refKey, int? refSeq, long? parentMovementId)
+        string? refKey, int? refSeq, long? parentMovementId, long? setItemId)
     {
         MovType = movType;
         DocumentDt = documentDt;
@@ -25,6 +25,7 @@ public sealed class GoodsMovement
         RefKey = refKey;
         RefSeq = refSeq;
         ParentMovementId = parentMovementId;
+        SetItemId = setItemId;
     }
 
     public long Id { get; set; }
@@ -55,6 +56,9 @@ public sealed class GoodsMovement
     /// <summary>The original movement this reversal cancels; null for an original movement.</summary>
     public long? ParentMovementId { get; }
 
+    /// <summary>The set item whose line was expanded into this component movement; null otherwise (MM-BR-007).</summary>
+    public long? SetItemId { get; }
+
     /// <summary>This movement left the item + warehouse stock below zero (MM-BR-002).</summary>
     public bool NegativeStock { get; set; }
 
@@ -62,7 +66,7 @@ public sealed class GoodsMovement
     /// <exception cref="DomainException">MM-E-606 for an unknown type, zero qty or the wrong sign.</exception>
     public static GoodsMovement Create(
         string movType, DateOnly documentDt, long itemId, long warehouseId, decimal qty, decimal prc,
-        string? refKey = null, int? refSeq = null)
+        string? refKey = null, int? refSeq = null, long? setItemId = null)
     {
         if (!MovementType.IsKnown(movType) || qty == 0)
         {
@@ -73,14 +77,14 @@ public sealed class GoodsMovement
         {
             throw new DomainException(InvalidMovement, movType, qty);
         }
-        return new GoodsMovement(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, null);
+        return new GoodsMovement(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, null, setItemId);
     }
 
     /// <summary>Rebuilds a saved row.</summary>
     public static GoodsMovement Restore(
         long id, string documentNo, string movType, DateOnly documentDt, long itemId, long warehouseId, decimal qty, decimal prc,
-        string? refKey, int? refSeq, long? parentMovementId, bool negativeStock) =>
-        new(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, parentMovementId)
+        string? refKey, int? refSeq, long? parentMovementId, bool negativeStock, long? setItemId = null) =>
+        new(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, parentMovementId, setItemId)
         {
             Id = id,
             DocumentNo = documentNo,
@@ -88,7 +92,7 @@ public sealed class GoodsMovement
         };
 
     /// <summary>
-    /// The reversal of this movement on reversalDt: same item, warehouse, type, price and reference, opposite sign
+    /// The reversal of this movement on reversalDt: same item, warehouse, type, price, reference and set, opposite sign
     /// (MM-BR-601).
     /// </summary>
     /// <param name="alreadyReversed">Another movement already points to this one.</param>
@@ -99,6 +103,6 @@ public sealed class GoodsMovement
         {
             throw new DomainException(InvalidMovement, MovType, -Qty);
         }
-        return new GoodsMovement(MovType, reversalDt, ItemId, WarehouseId, -Qty, Prc, RefKey, RefSeq, Id);
+        return new GoodsMovement(MovType, reversalDt, ItemId, WarehouseId, -Qty, Prc, RefKey, RefSeq, Id, SetItemId);
     }
 }

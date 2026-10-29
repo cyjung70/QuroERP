@@ -185,4 +185,6 @@
   <data name="Bc.Login.Version" xml:space="preserve"><value>QuroERP {0} · 오픈소스 라이선스 LGPL-3.0</value></data>
   <data name="Common.LastLogin" xml:space="preserve"><value>직전 로그인: {0} (IP {1})</value></data>
   <data name="Common.Home.Welcome" xml:space="preserve"><value>{0}님, 환영합니다.</value></data>
+  <data name="Common.UserMenu" xml:space="preserve"><value>사용자 메뉴</value></data>
+  <data name="Common.MyInfo" xml:space="preserve"><value>내 정보</value></data>
 </root>

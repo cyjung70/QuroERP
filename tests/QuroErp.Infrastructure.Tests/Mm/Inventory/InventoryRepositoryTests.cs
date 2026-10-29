@@ -112,7 +112,7 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
 
         var error = (await second.Invoking(t => t).Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be("MM-E-001");
-        error.Args.Should().Equal($"IT-{itemId}", "MAIN", 2m, 3m);
+        error.Args.Should().Equal($"IT-{itemId}", "MAIN", 2m, 3m, "");
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-604")]
@@ -183,7 +183,7 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be("MM-E-009");
-        error.Args.Should().Equal($"IT-{itemId}", "MAIN", "2026-10-09", -2m);
+        error.Args.Should().Equal($"IT-{itemId}", "MAIN", "2026-10-09", -2m, "");
     }
 
     private static Task<int> InsertMovementAsync(IDbTransaction tx, long itemId, long warehouseId, DateOnly date, decimal qty) =>
@@ -193,31 +193,111 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
             VALUES (gen_random_uuid()::text, @date, CASE WHEN @qty > 0 THEN 'UR' ELSE 'GI' END, @itemId, @warehouseId, @qty, 1, @qty, 't', 't')
             """, new { itemId, warehouseId, date, qty }, tx);
 
+    [DatabaseFact, Trait("Id", "CORE-011-IT-01")]
+    public async Task PostAndReverse_SetLine_MovesComponentsFromSdBomWithTheSet()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+        var tx = uow.Transaction;
+        var warehouseId = await DefaultWarehouseAsync(tx);
+        var setId = await InsertItemAsync(tx, onHand: 0, cost: 0, type: "SET");
+        var first = await InsertItemAsync(tx, onHand: 0, cost: 0);
+        var second = await InsertItemAsync(tx, onHand: 0, cost: 0);
+        await InsertComponentAsync(tx, setId, 1, second, 0.5m);
+        await InsertComponentAsync(tx, setId, 2, first, 2);
+        await Service().PostAsync(
+            [new StockMovementRequest("GR", Day, first, warehouseId, 10, Price: 1), new StockMovementRequest("GR", Day, second, warehouseId, 10, Price: 4)],
+            "kim", tx, CancellationToken.None);
+
+        var issued = await Service().PostAsync([new StockMovementRequest("DN", Day, setId, warehouseId, -3)], "kim", tx, CancellationToken.None);
+        await Service().ReverseAsync([issued[0].Id], Day, "kim", tx, CancellationToken.None);
+
+        var rows = (await tx.Connection!.QueryAsync<(long ItemId, decimal Qty, long? SetItemId)>(
+            "SELECT item_id, qty, set_item_id FROM mm_goods_movement WHERE set_item_id = @setId ORDER BY id", new { setId }, tx)).ToList();
+        rows.Should().Equal((second, -1.5m, setId), (first, -6m, setId), (second, 1.5m, setId));
+        (await tx.Connection!.QuerySingleAsync<decimal>("SELECT onhand_qty FROM bc_item WHERE id = @setId", new { setId }, tx))
+            .Should().Be(0, "a set keeps no stock");
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-007")]
+    public async Task PostAsync_SetComponentShortInDeny_RollsBackEveryComponent()
+    {
+        var units = db.Get<IUnitOfWorkFactory>();
+        long setId, first, second, warehouseId;
+        await using (var setup = await units.BeginAsync(CancellationToken.None))
+        {
+            warehouseId = await DefaultWarehouseAsync(setup.Transaction);
+            setId = await InsertItemAsync(setup.Transaction, onHand: 0, cost: 0, type: "SET");
+            first = await InsertItemAsync(setup.Transaction, onHand: 0, cost: 0);
+            second = await InsertItemAsync(setup.Transaction, onHand: 0, cost: 0);
+            await InsertComponentAsync(setup.Transaction, setId, 1, first, 1);
+            await InsertComponentAsync(setup.Transaction, setId, 2, second, 1);
+            await Service().PostAsync(
+                [new StockMovementRequest("GR", Day, first, warehouseId, 5, Price: 1)], "setup", setup.Transaction, CancellationToken.None);
+            await setup.CommitAsync(CancellationToken.None);
+        }
+
+        await using (var uow = await units.BeginAsync(CancellationToken.None))
+        {
+            var act = () => Service().PostAsync([new StockMovementRequest("DN", Day, setId, warehouseId, -1)], "kim", uow.Transaction, CancellationToken.None);
+
+            (await act.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal($"IT-{second}", "MAIN", 0m, 1m, $"IT-{setId}");
+        }
+
+        await using var check = await units.BeginAsync(CancellationToken.None);
+        (await check.Transaction.Connection!.QuerySingleAsync<decimal>(
+            "SELECT onhand_qty FROM mm_onhand WHERE item_id = @first AND warehouse_id = @warehouseId", new { first, warehouseId }, check.Transaction))
+            .Should().Be(5, "the first component's issue is rolled back with the document");
+    }
+
+    [DatabaseTheory, Trait("Id", "CORE-011-IT-02")]
+    [InlineData("dup")]
+    [InlineData("zero")]
+    [InlineData("self")]
+    public async Task SdBom_RejectsDuplicateZeroAndSelfComponents(string broken)
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+        var tx = uow.Transaction;
+        var setId = await InsertItemAsync(tx, onHand: 0, cost: 0, type: "SET");
+        var part = await InsertItemAsync(tx, onHand: 0, cost: 0);
+        var other = await InsertItemAsync(tx, onHand: 0, cost: 0);
+        await InsertComponentAsync(tx, setId, 1, part, 1);
+
+        var act = () => broken switch
+        {
+            "dup" => InsertComponentAsync(tx, setId, 2, part, 1),
+            "zero" => InsertComponentAsync(tx, setId, 2, other, 0),
+            _ => InsertComponentAsync(tx, setId, 2, setId, 1),
+        };
+
+        await act.Should().ThrowAsync<Npgsql.PostgresException>();
+    }
+
     private InventoryService Service() => new(
         db.Get<IInventoryRepository>(),
         db.Get<IInventorySettingRepository>(),
-        new NoSetComponents(),
+        db.Get<ISetComponentRepository>(),
         new DocumentNumberService(db.Get<IDocumentNumberRepository>()));
 
     private static Task<long> DefaultWarehouseAsync(IDbTransaction tx) =>
         tx.Connection!.QuerySingleAsync<long>("SELECT id FROM bc_warehouse WHERE is_default", transaction: tx);
 
+    private static Task<int> InsertComponentAsync(IDbTransaction tx, long setId, int seq, long componentId, decimal qty) =>
+        tx.Connection!.ExecuteAsync(
+            """
+            INSERT INTO sd_bom (parent_item_id, seq, child_item_id, child_qty, created_by, updated_by)
+            VALUES (@setId, @seq, @componentId, @qty, 't', 't')
+            """, new { setId, seq, componentId, qty }, tx);
+
     // item_cd is IT-<id> so concurrent tests never collide
-    private static async Task<long> InsertItemAsync(IDbTransaction tx, decimal onHand, decimal cost)
+    private static async Task<long> InsertItemAsync(IDbTransaction tx, decimal onHand, decimal cost, string type = "INVENTORY")
     {
         var id = await tx.Connection!.QuerySingleAsync<long>(
             """
             INSERT INTO bc_item (item_cd, type, onhand_qty, stk_val, mvg_cost, created_by, updated_by)
-            VALUES (gen_random_uuid()::text, 'INVENTORY', @onHand, @value, @cost, 't', 't')
+            VALUES (gen_random_uuid()::text, @type, @onHand, @value, @cost, 't', 't')
             RETURNING id
-            """, new { onHand, value = onHand * cost, cost }, tx);
+            """, new { onHand, value = onHand * cost, cost, type }, tx);
         await tx.Connection!.ExecuteAsync("UPDATE bc_item SET item_cd = 'IT-' || id WHERE id = @id", new { id }, tx);
         return id;
-    }
-
-    private sealed class NoSetComponents : ISetComponentRepository
-    {
-        public Task<IReadOnlyList<SetComponent>> GetComponentsAsync(IReadOnlyCollection<long> setItemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<SetComponent>>([]);
     }
 }

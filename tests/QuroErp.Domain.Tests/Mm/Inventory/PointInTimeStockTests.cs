@@ -22,7 +22,7 @@ public class PointInTimeStockTests
 
         var error = act.Should().Throw<DomainException>().Which;
         error.Code.Should().Be("MM-E-009");
-        error.Args.Should().Equal("A", "MAIN", "2026-10-05", -1m);
+        error.Args.Should().Equal("A", "MAIN", "2026-10-05", -1m, "");
     }
 
     [Fact, Trait("Id", "MM-UT-009")]
@@ -32,7 +32,7 @@ public class PointInTimeStockTests
             B(10, 1, 10), B(10, 8, 4), B(10, 9, 2), B(11, 2, 1, monthEnd: true));
 
         var error = act.Should().Throw<DomainException>().Which;
-        error.Args.Should().Equal("A", "MAIN", "2026-10-09", -1m);
+        error.Args.Should().Equal("A", "MAIN", "2026-10-09", -1m, "");
     }
 
     [Fact, Trait("Id", "MM-UT-009")]
@@ -65,7 +65,7 @@ public class PointInTimeStockTests
 
         var error = act.Should().Throw<DomainException>().Which;
         error.Code.Should().Be("MM-E-010");
-        error.Args.Should().Equal("A", "MAIN", "202610", -1m);
+        error.Args.Should().Equal("A", "MAIN", "202610", -1m, "");
     }
 
     [Fact, Trait("Id", "MM-UT-010")]
@@ -74,7 +74,7 @@ public class PointInTimeStockTests
         // The current month ends with the new movement itself
         var act = () => Check(NegativeStockMode.AllowInMonth, D(10, 5), -3, 0, B(10, 1, 2), B(11, 3, 10, monthEnd: true));
 
-        act.Should().Throw<DomainException>().Which.Args.Should().Equal("A", "MAIN", "202610", -1m);
+        act.Should().Throw<DomainException>().Which.Args.Should().Equal("A", "MAIN", "202610", -1m, "");
     }
 
     [Fact, Trait("Id", "MM-UT-010")]
@@ -83,7 +83,7 @@ public class PointInTimeStockTests
         var act = () => Check(NegativeStockMode.AllowInMonth, D(10, 5), -3, 0,
             B(10, 1, 10), B(10, 31, 10, monthEnd: true), B(11, 15, 2, monthEnd: true), B(12, 1, 20, monthEnd: true));
 
-        act.Should().Throw<DomainException>().Which.Args.Should().Equal("A", "MAIN", "202611", -1m);
+        act.Should().Throw<DomainException>().Which.Args.Should().Equal("A", "MAIN", "202611", -1m, "");
     }
 
     [Theory, Trait("Id", "MM-UT-602")]
