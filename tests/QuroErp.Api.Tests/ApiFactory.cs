@@ -9,7 +9,9 @@ using Microsoft.Extensions.Logging;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
+using QuroErp.Api.Tests.Bc.Users;
 using QuroErp.Application.Bc.UserProfiles;
+using QuroErp.Application.Bc.Users;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
@@ -83,6 +85,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
+    /// <summary>Users of user management (BC-UC-004).</summary>
+    public InMemoryUserRepository Users { get; } = new();
+
     /// <summary>Inventory setting state; DENY at start.</summary>
     public InMemoryInventorySettingRepository InventorySettings { get; } = new();
 
@@ -122,6 +127,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IItemRepository>(Items);
             services.AddSingleton<IWarehouseRepository>(new FakeWarehouseRepository(this));
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
+            services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
             {
