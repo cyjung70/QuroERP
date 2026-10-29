@@ -21,6 +21,12 @@
                 @Fields(_model)
             </div>
         </CascadingValue>
+        @if (Actions is not null && !_form.IsNew && !ReadOnly)
+        {
+            <div class="quro-actions" data-testid="@Id("actions")">
+                @Actions(_model)
+            </div>
+        }
     </ChildContent>
 </QuroScreenFrame>
 
@@ -60,6 +66,13 @@
     [Parameter]
     public Func<TModel, Task<TModel?>>? LoadNext { get; set; }
 
+    /// <summary>
+    /// Buttons for actions on the loaded record other than save and delete (for example unlock an account).
+    /// Shown only for a loaded record and only to users who may change it; run them with <see cref="RunActionAsync"/>.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<TModel>? Actions { get; set; }
+
     [Parameter]
     public EventCallback OnPrint { get; set; }
 
@@ -93,6 +106,24 @@
             }
             SetLoaded(loaded);
         });
+    }
+
+    /// <summary>
+    /// Runs an action on the loaded record with the screen's busy state and messages. The action returns the record as
+    /// stored after it, which replaces the form, so unsaved changes are confirmed first.
+    /// </summary>
+    public async Task RunActionAsync(Func<TModel, Task<TModel>> action, string notice)
+    {
+        if (_form.IsNew || !await ConfirmDiscardAsync())
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            SetLoaded(await action(_model));
+            Notice = notice;
+        });
+        StateHasChanged();
     }
 
     // At the first or last record the form stays and a notice says so

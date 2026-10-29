@@ -1,0 +1,282 @@
+@page "/bc/user"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Bc.Users
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.Roles
+@using QuroErp.Web.Bc.Users
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject UserApiClient Api
+@inject RoleApiClient Roles
+@inject LocalizationApiClient LocalizationApi
+@inject IQuroConfirm Confirm
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-004 user management, screen type S. Rules are checked by the API (BC-BR-121~132). There is no delete: a user is set
+   not in use instead (BC-BR-125). The password is entered only for a new user; afterwards it changes only by reset (BC-BR-124),
+   and there is no per-user password expiry date (BC-BR-127). *@
+
+<PageTitle>@L["Bc.User.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="user-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroSingleForm @ref="_form" TModel="UserModel" Title="@L["Bc.User.Title"]" TestId="user" ReadOnly="!_canEdit"
+                    Load="LoadAsync" Create="() => new UserModel()" Save="SaveAsync"
+                    LoadPrevious="user => LoadAdjacentAsync(user, forward: false)" LoadNext="user => LoadAdjacentAsync(user, forward: true)">
+        <SearchContent>
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Bc.User.Userid"]" @bind-Value="_searchId" Required TextCase="TextCase.Lower" TestId="user-search-userid" />
+                <button type="button" aria-label="@L["Bc.User.FindUser"]" data-testid="user-search-user-lookup" @onclick="() => _lookupOpen = true">…</button>
+            </div>
+            <QuroText Label="@L["Bc.User.Username"]" Value="@_searchName" LockMode="LockMode.Always" TestId="user-search-username" />
+        </SearchContent>
+        <Fields Context="user">
+            <QuroText Label="@L["Bc.User.Userid"]" @bind-Value="user.UserId" LockMode="LockMode.NewOnly" TextCase="TextCase.Lower" TestId="user-header-userid" />
+            <QuroText Label="@L["Bc.User.Username"]" @bind-Value="user.UserName" Required TestId="user-header-username" />
+            @if (user.Id == 0)
+            {
+                <QuroText Label="@L["Bc.User.Password"]" @bind-Value="user.Password" Password Required TestId="user-header-password" />
+                <QuroText Label="@L["Bc.User.ConfirmPassword"]" @bind-Value="user.ConfirmPassword" Password Required TestId="user-header-confirm-password" />
+            }
+            @* BC-BR-131: my own role and in-use flag are locked; the API checks it too *@
+            <QuroSelect Label="@L["Bc.User.Role"]" @bind-Value="user.RoleId" Options="_roles" Required LockMode="SelfLock(user)" TestId="user-header-role-id" />
+            <QuroText Label="@L["Bc.User.Email"]" @bind-Value="user.Email" TestId="user-header-email" />
+            <QuroText Label="@L["Bc.User.Phone"]" @bind-Value="user.Phone" TestId="user-header-phone" />
+            <QuroSelect Label="@L["Bc.User.LangCode"]" @bind-Value="user.LangCode" Options="_languages" TestId="user-header-lang-code" />
+            <QuroDate Label="@L["Bc.User.UserValidDt"]" @bind-Value="user.UserValidDt" TestId="user-header-user-valid-dt" />
+            <p class="quro-hint" data-testid="user-header-user-valid-dt-hint">@L["Bc.User.NoEndDate"]</p>
+            <QuroCodeSelect Major="VALID_FLAG" Label="@L["Bc.User.ValidFlag"]" @bind-Value="user.ValidFlag" Radio LockMode="SelfLock(user)"
+                            TestId="user-header-valid-flag" />
+            @if (user.Id != 0)
+            {
+                <QuroText Label="@L["Bc.User.FailedCount"]" Value="@user.FailedCount.ToString(CultureInfo.CurrentCulture)" LockMode="LockMode.Always"
+                          TestId="user-header-failed-count" />
+                <QuroText Label="@L["Bc.User.LockedUntil"]" Value="@Format(user.LockedUntil)" LockMode="LockMode.Always" TestId="user-header-locked-until" />
+                <QuroText Label="@L["Bc.User.LastLoginAt"]" Value="@Format(user.LastLoginAt)" LockMode="LockMode.Always" TestId="user-header-last-login-at" />
+                <QuroText Label="@L["Bc.User.LastLoginIp"]" Value="@user.LastLoginIp" LockMode="LockMode.Always" TestId="user-header-last-login-ip" />
+            }
+        </Fields>
+        <Actions Context="user">
+            <button type="button" disabled="@(user.LockedUntil is null)" data-testid="user-actions-unlock" @onclick="UnlockAsync">
+                @L["Bc.User.Unlock"]
+            </button>
+            <QuroText Label="@L["Bc.User.NewPassword"]" @bind-Value="_newPassword" Password TestId="user-actions-new-password" />
+            <QuroText Label="@L["Bc.User.ConfirmNewPassword"]" @bind-Value="_confirmNewPassword" Password TestId="user-actions-confirm-new-password" />
+            <button type="button" data-testid="user-actions-reset-password" @onclick="ResetPasswordAsync">@L["Bc.User.ResetPassword"]</button>
+            <button type="button" data-testid="user-actions-revoke-tokens" @onclick="RevokeTokensAsync">@L["Bc.User.RevokeTokens"]</button>
+        </Actions>
+    </QuroSingleForm>
+
+    <QuroLookupDialog TItem="UserDto" Title="@L["Bc.User.FindUser"]" TestId="user-user-lookup"
+                      @bind-Visible="_lookupOpen" Search="FindUsersAsync" OnSelected="SelectUserAsync">
+        <Columns>
+            <QuroColumn TRow="UserDto" Title="@L["Bc.User.Userid"]" Value="u => u.UserId" />
+            <QuroColumn TRow="UserDto" Title="@L["Bc.User.Username"]" Value="u => u.UserName" />
+            <QuroColumn TRow="UserDto" Title="@L["Bc.User.Role"]" Value="u => u.RoleCode" />
+            <QuroColumn TRow="UserDto" Title="@L["Bc.User.ValidFlag"]" Value="u => u.ValidFlag" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const int LookupPageSize = 100;
+    private const string RequiredCode = "Common-E-005";
+    private const string AuthRequiredCode = "AUTH-001";
+    private const string InvalidFieldCode = "BC-E-122";
+    private const string MismatchCode = "BC-E-057";
+    private const string UnavailableCode = "BC-E-003";
+
+    private QuroSingleForm<UserModel>? _form;
+    private IReadOnlyList<CodeItemDto> _roles = [];
+    private IReadOnlyList<CodeItemDto> _languages = [];
+    private bool _canEdit;
+    private bool _ready;
+    private bool _lookupOpen;
+    private string? _me;
+    private string? _searchId;
+    private string? _searchName;
+    private string? _newPassword;
+    private string? _confirmNewPassword;
+    private UserDto? _picked;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var principal = (await AuthenticationState).User;
+        // Full Access is the admin role until the menu policy exists, as in UserController (BC-BR-132, BC-BR-214)
+        _canEdit = principal.IsInRole("admin");
+        _me = principal.Identity?.Name;
+        try
+        {
+            _roles = (await Roles.GetInUseAsync(CancellationToken.None))
+                .Select(r => new CodeItemDto(r.Id.ToString(CultureInfo.InvariantCulture), r.RoleCode)).ToList();
+            // BC-BR-403: only languages in use can be chosen
+            var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+            _languages = localization.Languages.Select(l => new CodeItemDto(l.LangCode, LanguageName(l.LangCode))).ToList();
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    private async Task<UserModel?> LoadAsync()
+    {
+        _searchName = null;
+        if (string.IsNullOrWhiteSpace(_searchId))
+        {
+            return null;
+        }
+        // A user picked in the lookup is read by id; a typed user ID is matched exactly
+        var user = _picked?.UserId == _searchId
+            ? await Api.GetAsync(_picked.Id, CancellationToken.None)
+            : await Api.FindByUserIdAsync(_searchId, CancellationToken.None);
+        return user is null ? null : Show(user);
+    }
+
+    // Previous and next follow user ID order
+    private async Task<UserModel?> LoadAdjacentAsync(UserModel user, bool forward) =>
+        await Api.GetAdjacentAsync(user.Id, forward, CancellationToken.None) is { } adjacent ? Show(adjacent) : null;
+
+    private async Task<UserModel> SaveAsync(UserModel user, bool isNew)
+    {
+        if (isNew && !user.PasswordsMatch)
+        {
+            throw Problem(MismatchCode);
+        }
+        var saved = await WithFieldLabelsAsync(() => isNew
+            ? Api.CreateAsync(user.ToCreateRequest(), CancellationToken.None)
+            : Api.UpdateAsync(user.Id, user.ToUpdateRequest(), CancellationToken.None));
+        return Show(saved);
+    }
+
+    // BC-BR-128
+    private Task UnlockAsync() => _form!.RunActionAsync(async user =>
+    {
+        await Api.UnlockAsync(user.Id, CancellationToken.None);
+        return await ReloadAsync(user);
+    }, L["Bc.User.Unlocked"]);
+
+    // BC-BR-129: the administrator enters the new password; the user must change it at the next sign-in
+    private async Task ResetPasswordAsync()
+    {
+        if (!await Confirm.ConfirmAsync(L["Bc.User.ResetPasswordConfirm"]))
+        {
+            return;
+        }
+        await _form!.RunActionAsync(async user =>
+        {
+            if (string.IsNullOrEmpty(_newPassword))
+            {
+                throw Problem(RequiredCode, L["Bc.User.NewPassword"]);
+            }
+            if (_newPassword != _confirmNewPassword)
+            {
+                throw Problem(MismatchCode);
+            }
+            await WithFieldLabelsAsync(async () =>
+            {
+                await Api.ResetPasswordAsync(user.Id, new ResetPasswordRequest(_newPassword), CancellationToken.None);
+                return true;
+            });
+            _newPassword = null;
+            _confirmNewPassword = null;
+            return await ReloadAsync(user);
+        }, L["Bc.User.PasswordReset"]);
+    }
+
+    // BC-BR-130
+    private async Task RevokeTokensAsync()
+    {
+        if (!await Confirm.ConfirmAsync(L["Bc.User.RevokeTokensConfirm"]))
+        {
+            return;
+        }
+        await _form!.RunActionAsync(async user =>
+        {
+            await Api.RevokeTokensAsync(user.Id, CancellationToken.None);
+            return await ReloadAsync(user);
+        }, L["Bc.User.TokensRevoked"]);
+    }
+
+    private async Task<UserModel> ReloadAsync(UserModel user) => Show(await Api.GetAsync(user.Id, CancellationToken.None));
+
+    private UserModel Show(UserDto user)
+    {
+        _picked = user;
+        _searchId = user.UserId;
+        _searchName = user.UserName;
+        return UserModel.From(user);
+    }
+
+    // The keyword matches the user ID prefix or the user name, in user ID order
+    private async Task<IReadOnlyList<UserDto>> FindUsersAsync(string? keyword)
+    {
+        var byId = await Api.SearchAsync(new UserSearchQuery { UserId = keyword, Size = LookupPageSize }, CancellationToken.None);
+        if (string.IsNullOrWhiteSpace(keyword))
+        {
+            return byId.Items;
+        }
+        var byName = await Api.SearchAsync(new UserSearchQuery { UserName = keyword, Size = LookupPageSize }, CancellationToken.None);
+        return byId.Items.Concat(byName.Items).DistinctBy(u => u.Id).OrderBy(u => u.UserId, StringComparer.Ordinal).ToList();
+    }
+
+    private async Task SelectUserAsync(UserDto user)
+    {
+        _picked = user;
+        _searchId = user.UserId;
+        await _form!.SearchAsync();
+    }
+
+    private LockMode SelfLock(UserModel user) =>
+        user.Id != 0 && string.Equals(user.UserId, _me, StringComparison.OrdinalIgnoreCase) ? LockMode.Always : LockMode.None;
+
+    // BC-E-122 and AUTH-001 name the property; show its label instead
+    private async Task<T> WithFieldLabelsAsync<T>(Func<Task<T>> call)
+    {
+        try
+        {
+            return await call();
+        }
+        catch (ApiProblemException e) when (e.Problem is { Code: InvalidFieldCode or AuthRequiredCode, Args: [var field, ..] })
+        {
+            throw new ApiProblemException(e.Problem with { Args = [FieldLabel(field)] });
+        }
+    }
+
+    private string FieldLabel(string property) => property switch
+    {
+        nameof(UserDto.UserId) => L["Bc.User.Userid"],
+        nameof(UserDto.UserName) => L["Bc.User.Username"],
+        nameof(UserDto.RoleId) => L["Bc.User.Role"],
+        nameof(UserDto.Email) => L["Bc.User.Email"],
+        nameof(UserDto.Phone) => L["Bc.User.Phone"],
+        nameof(CreateUserRequest.Password) => L["Bc.User.Password"],
+        nameof(ResetPasswordRequest.NewPassword) => L["Bc.User.NewPassword"],
+        _ => property,
+    };
+
+    private static ApiProblemException Problem(string code, params string[] args) => new(new ApiProblem(400, code, args));
+
+    private static string? Format(DateTimeOffset? value) => value?.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+
+    private string LanguageName(string langCode) =>
+        L[$"Common.Language.{langCode}"] is { ResourceNotFound: false } name ? name.Value : langCode;
+}

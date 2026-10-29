@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
+using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Bc.UserProfiles;
 using QuroErp.Application.Bc.Users;
 using QuroErp.Application.Common.Auth;
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<InventorySettingService>();
         services.AddScoped<ItemService>();
         services.AddScoped<WarehouseService>();
+        services.AddScoped<RoleService>();
         services.AddScoped<UserProfileService>();
         services.AddScoped<UserService>();
         services.AddScoped<DocumentNumberService>();
