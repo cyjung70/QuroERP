@@ -53,5 +53,7 @@ Browser ──SignalR──▶ QuroErp.Web (Blazor Interactive Server)
 ## 트랜잭션
 
 - 한 유스케이스 = 한 Application 서비스 메서드 = 한 트랜잭션.
+- 서비스는 `IUnitOfWorkFactory.BeginAsync`로 연결과 트랜잭션을 열고(`await using`), 끝에 `CommitAsync`한다. 커밋하지 않고 해제하면 롤백된다. Repository에는 `uow.Transaction`을 넘긴다.
+- 다른 서비스 안에서 부르는 공통 서비스(재고 이동 `InventoryService`, 채번 `DocumentNumberService`, 번역 `TranslationService`)는 트랜잭션을 열지 않고 호출한 쪽의 `IDbTransaction`을 받는다.
 - 헤더·상세·재고 이동·문서 번호 채번은 같은 트랜잭션에서 처리한다.
 - AS IS의 프로시저(`receipt_inv`, `issue_inv`, `run_closing`, `get_auto_num` 등) 로직은 Application·Domain C# 코드로 옮긴다. PL/pgSQL은 성능상 꼭 필요할 때만 쓴다.

@@ -16,7 +16,7 @@
     },
     {
       "path": ".agents/skills/quro-dapper/SKILL.md",
-      "sha256": "93582c8feae0d05b8203fbd7f623b15c5ec75eb3a7580a41a05d5fefda455149"
+      "sha256": "b644117c600e7bf228e4625e2bde8ed113d5339237a65b7e316f3113e94bd142"
     },
     {
       "path": ".agents/skills/quro-game/SKILL.md",
@@ -48,7 +48,7 @@
     },
     {
       "path": ".claude/skills/quro-dapper/SKILL.md",
-      "sha256": "93582c8feae0d05b8203fbd7f623b15c5ec75eb3a7580a41a05d5fefda455149"
+      "sha256": "b644117c600e7bf228e4625e2bde8ed113d5339237a65b7e316f3113e94bd142"
     },
     {
       "path": ".claude/skills/quro-game/SKILL.md",
@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "c71ee1ab3fcc1c155168d05661210a211e5415ad5afd743e3b29c324b9926d19"
+      "sha256": "8594d1b8f3dc6794cdb02fa5bbff8111143f268af0e1d0458ef1c377e4c0e90e"
     },
     {
       "path": "docs/architecture/i18n.md",
@@ -100,7 +100,7 @@
     },
     {
       "path": "docs/architecture/layers.md",
-      "sha256": "35da1a87ccdfd536747739cce42df9748cd565ce35119351b197411307904a89"
+      "sha256": "45848cd38ed9c46c71199f6cc15463851dc4fda6647cdb91f0beea702a24506a"
     },
     {
       "path": "docs/architecture/localization.md",
