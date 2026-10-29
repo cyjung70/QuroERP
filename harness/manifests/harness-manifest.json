@@ -68,7 +68,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "c23ad375ed87936e99d1925f7bda2d8297aad0720e772b6ae4114f1278dbc51a"
+      "sha256": "f7a874a667ce4d8bac261526bbe84f73717f38f6db8b35a016a97305549d3120"
     },
     {
       "path": "CLAUDE.md",
@@ -348,7 +348,7 @@
     },
     {
       "path": "docs/specifications/BC/company-menu.md",
-      "sha256": "1b598d669773de0637aede99d593b814aa463376da6046a2dc50605220eefc2f"
+      "sha256": "ee2bdf4663d32e735c4f16cf7bcc5a9fd396cd6b695b11b67c4686283b40d7ca"
     },
     {
       "path": "docs/specifications/BC/company.md",
@@ -384,7 +384,7 @@
     },
     {
       "path": "docs/specifications/BC/localization-setting.md",
-      "sha256": "6f1f7ed2b7dde55c34cfa5a952839e04c9521dee91579a812d292bd257a8fe2b"
+      "sha256": "011b3fa0340f1689ca8c87837c8c716e9da0eb566bdec7198110b409ebba4fbf"
     },
     {
       "path": "docs/specifications/BC/login.md",
