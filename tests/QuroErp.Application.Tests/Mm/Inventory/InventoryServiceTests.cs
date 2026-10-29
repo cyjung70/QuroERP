@@ -1,5 +1,6 @@
 using System.Data;
 using FluentAssertions;
+using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Tests.Common.DocumentNumbers;
 using QuroErp.Application.Mm.Inventory;
@@ -39,7 +40,7 @@ public class InventoryServiceTests
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be("MM-E-001");
-        error.Args.Should().Equal("A", "WH1", 5m, 6m);
+        error.Args.Should().Equal("A", "WH1", 5m, 6m, "");
         _inventory.Movements.Should().BeEmpty();
         _inventory.OnHand[(10, Main)].Should().Be(5);
     }
@@ -108,6 +109,83 @@ public class InventoryServiceTests
         _inventory.OnHand[(1, Main)].Should().Be(14);
         _inventory.OnHand[(2, Main)].Should().Be(17);
         _inventory.OnHand.Should().NotContainKey((90, Main), "a set keeps no stock");
+    }
+
+    [Fact, Trait("Id", "CORE-011-T01")]
+    public async Task PostAsync_SetLine_LocksItemSetAndComponentsInOnePassAndRemembersTheSet()
+    {
+        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
+        _inventory.AddItem(2, "P2", onHand: (Main, 20m), cost: 5);
+        _inventory.AddItem(50, "A", onHand: (Main, 20m), cost: 1);
+        _sets.Components.AddRange([new SetComponent(90, 2, 1), new SetComponent(90, 1, 2)]);
+
+        var posted = await Post(
+            new StockMovementRequest("DN", Day, 50, Main, -1),
+            new StockMovementRequest("DN", Day, 90, Main, -1));
+
+        _inventory.LockedItemCalls.Should().ContainSingle().Which.Should().BeEquivalentTo([1L, 2L, 50L, 90L]);
+        posted.Select(m => (m.ItemId, m.SetItemId)).Should().Equal((50L, null), (2L, 90L), (1L, 90L));
+    }
+
+    [Fact, Trait("Id", "SD-UT-509")]
+    public async Task PostAsync_SetWithoutComponents_ThrowsSdE509AndSavesNothing()
+    {
+        _inventory.AddItem(90, "SET", type: "SET");
+
+        var act = () => Post(new StockMovementRequest("DN", Day, 90, Main, -1));
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("SD-E-509");
+        error.Args.Should().Equal("SET");
+        _inventory.Movements.Should().BeEmpty();
+    }
+
+    [Fact, Trait("Id", "CORE-011-T02")]
+    public async Task PostAsync_ComponentsChangedBeforeTheLock_ThrowsConcurrency()
+    {
+        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
+        _inventory.AddItem(2, "P2", onHand: (Main, 20m), cost: 5);
+        _sets.Components.Add(new SetComponent(90, 1, 2));
+        _sets.AfterFirstRead = () => _sets.Components.Add(new SetComponent(90, 2, 1));
+
+        var act = () => Post(new StockMovementRequest("DN", Day, 90, Main, -1));
+
+        await act.Should().ThrowAsync<ConcurrencyException>();
+        _inventory.Movements.Should().BeEmpty();
+    }
+
+    [Fact, Trait("Id", "MM-UT-007")]
+    public async Task PostAsync_SetComponentShortInDeny_ThrowsWithTheSetCode()
+    {
+        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
+        _inventory.AddItem(2, "P2", onHand: (Main, 1m), cost: 5);
+        _sets.Components.AddRange([new SetComponent(90, 1, 2), new SetComponent(90, 2, 1)]);
+
+        var act = () => Post(new StockMovementRequest("DN", Day, 90, Main, -3));
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-001");
+        error.Args.Should().Equal("P2", "WH1", 1m, 3m, "SET");
+    }
+
+    [Fact, Trait("Id", "MM-UT-601")]
+    public async Task ReverseAsync_SetComponentMovement_KeepsTheSetAndNamesItInErrors()
+    {
+        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(1, "P1", cost: 3);
+        _sets.Components.Add(new SetComponent(90, 1, 2));
+        var receipt = (await Post(new StockMovementRequest("GR", Day, 90, Main, 2, Price: 3))).Single();
+        await Post(new StockMovementRequest("DN", Day, 1, Main, -1));
+
+        var act = () => Service.ReverseAsync([receipt.Id], Day, "kim", null!, CancellationToken.None);
+
+        receipt.SetItemId.Should().Be(90);
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-001");
+        error.Args.Should().Equal("P1", "WH1", 3m, 4m, "SET");
     }
 
     [Fact, Trait("Id", "MM-UT-008")]
@@ -281,7 +359,7 @@ public class InventoryServiceTests
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be("MM-E-009");
-        error.Args.Should().Equal("A", "WH1", "2026-10-05", -2m);
+        error.Args.Should().Equal("A", "WH1", "2026-10-05", -2m, "");
     }
 
     [Fact, Trait("Id", "MM-UT-010")]
@@ -308,7 +386,7 @@ public class InventoryServiceTests
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be("MM-E-010");
-        error.Args.Should().Equal("A", "WH1", "202610", -3m);
+        error.Args.Should().Equal("A", "WH1", "202610", -3m, "");
     }
 
     [Fact, Trait("Id", "MM-UT-603")]
@@ -325,7 +403,7 @@ public class InventoryServiceTests
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be("MM-E-009");
-        error.Args.Should().Equal("A", "WH1", "2026-10-06", -1m);
+        error.Args.Should().Equal("A", "WH1", "2026-10-06", -1m, "");
     }
 
     private sealed class FakeInventoryRepository : IInventoryRepository
@@ -339,6 +417,8 @@ public class InventoryServiceTests
         public List<GoodsMovement> Movements { get; } = [];
 
         public List<(long ItemId, long WarehouseId)> Locked { get; } = [];
+
+        public List<long[]> LockedItemCalls { get; } = [];
 
         /// <summary>Starting stock, read as the closing balance of a closed month (keeps ledger = on-hand, MM-BR-605).</summary>
         public Dictionary<(long ItemId, long WarehouseId), decimal> Opening { get; } = [];
@@ -365,9 +445,12 @@ public class InventoryServiceTests
         public Task<string?> GetCloseYearMonthAsync(IDbTransaction transaction, CancellationToken cancellationToken) => Task.FromResult(CloseYearMonth);
 
         // Copies, so a failed post does not change the stored items
-        public Task<IReadOnlyList<ItemStock>> LockItemsAsync(IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ItemStock>>(itemIds.Where(Items.ContainsKey).Select(id => Items[id])
+        public Task<IReadOnlyList<ItemStock>> LockItemsAsync(IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            LockedItemCalls.Add([.. itemIds]);
+            return Task.FromResult<IReadOnlyList<ItemStock>>(itemIds.Where(Items.ContainsKey).Select(id => Items[id])
                 .Select(i => new ItemStock(i.ItemId, i.ItemCd, i.Type, i.OnHandQty, i.StockValue, i.MovingAverageCost)).ToList());
+        }
 
         public Task<OnHandRow> LockOnHandAsync(long itemId, long warehouseId, string user, IDbTransaction transaction, CancellationToken cancellationToken)
         {
@@ -429,7 +512,15 @@ public class InventoryServiceTests
     {
         public List<SetComponent> Components { get; } = [];
 
-        public Task<IReadOnlyList<SetComponent>> GetComponentsAsync(IReadOnlyCollection<long> setItemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<SetComponent>>(Components.Where(c => setItemIds.Contains(c.SetItemId)).ToList());
+        /// <summary>Runs once after the first read, like another user saving the set's components meanwhile.</summary>
+        public Action? AfterFirstRead { get; set; }
+
+        public Task<IReadOnlyList<SetComponent>> GetComponentsAsync(IReadOnlyCollection<long> setItemIds, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            IReadOnlyList<SetComponent> read = Components.Where(c => setItemIds.Contains(c.SetItemId)).ToList();
+            AfterFirstRead?.Invoke();
+            AfterFirstRead = null;
+            return Task.FromResult(read);
+        }
     }
 }

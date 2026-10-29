@@ -185,4 +185,6 @@
   <data name="Bc.Login.Version" xml:space="preserve"><value>QuroERP {0} · Open source license LGPL-3.0</value></data>
   <data name="Common.LastLogin" xml:space="preserve"><value>Last sign-in: {0} (IP {1})</value></data>
   <data name="Common.Home.Welcome" xml:space="preserve"><value>Welcome, {0}.</value></data>
+  <data name="Common.UserMenu" xml:space="preserve"><value>User menu</value></data>
+  <data name="Common.MyInfo" xml:space="preserve"><value>My info</value></data>
 </root>

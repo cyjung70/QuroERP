@@ -14,7 +14,7 @@ public class StockPolicyTests
 
         var error = act.Should().Throw<DomainException>().Which;
         error.Code.Should().Be("MM-E-001");
-        error.Args.Should().Equal("ITEM-1", "MAIN", 5m, 7m);
+        error.Args.Should().Equal("ITEM-1", "MAIN", 5m, 7m, "");
     }
 
     [Fact, Trait("Id", "MM-UT-001")]

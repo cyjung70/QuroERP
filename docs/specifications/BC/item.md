@@ -104,7 +104,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `get_price_level`
 ## 다국어 리소스 키
 
 - 제목: `Bc.Item.Title`
-- 필드: `Bc.Item.<속성>` (예: `Bc.Item.ItemCd`, `Bc.Item.ItemNm`, `Bc.Item.ItemCd`)
+- 필드: `Bc.Item.<속성>` — `<속성>`은 C# 속성 이름이다 (보통 TO BE 컬럼의 PascalCase, [다국어](../../architecture/i18n.md)). 위 'TO BE 속성 (제안)' 열과 다르면 C# 속성 이름을 따른다
 - 오류: `BC-E-<번호>` (BR에서 정한다)
 
 ## 테스트 시나리오
