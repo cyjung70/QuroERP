@@ -44,7 +44,21 @@ public sealed class CodeMajorApiClient(HttpClient http, AccessTokenProvider toke
             uri += $"&majorCode={Uri.EscapeDataString(majorCode.Trim())}";
         }
         using var response = await http.SendAuthorizedAsync(tokens, new HttpRequestMessage(HttpMethod.Get, uri), cancellationToken);
-        return await response.Content.ReadFromJsonAsync<List<CodeMajorDto>>(cancellationToken)
-            ?? throw new InvalidOperationException("Code API returned an empty body.");
+        return await ReadAsync(response, cancellationToken);
     }
+
+    /// <exception cref="ApiProblemException">422 SD-E-901~904 naming the row's Major code or BC-E-405, 409 Common-E-004.</exception>
+    public async Task<IReadOnlyList<CodeMajorDto>> SaveAsync(SaveCodeMajorsRequest request, string lang, CancellationToken cancellationToken)
+    {
+        using var message = new HttpRequestMessage(HttpMethod.Put, $"{CodeMajorRoutes.Base}?lang={Uri.EscapeDataString(lang)}")
+        {
+            Content = JsonContent.Create(request),
+        };
+        using var response = await http.SendAuthorizedAsync(tokens, message, cancellationToken);
+        return await ReadAsync(response, cancellationToken);
+    }
+
+    private static async Task<IReadOnlyList<CodeMajorDto>> ReadAsync(HttpResponseMessage response, CancellationToken cancellationToken) =>
+        await response.Content.ReadFromJsonAsync<List<CodeMajorDto>>(cancellationToken)
+        ?? throw new InvalidOperationException("Code API returned an empty body.");
 }
