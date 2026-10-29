@@ -35,4 +35,7 @@ public sealed class MenuPermissionService(IRoleRepository roles, IUnitOfWorkFact
 
     /// <summary>BC-BR-215: call after a role's menus are saved.</summary>
     public void Invalidate(string roleCode) => _cache.TryRemove(roleCode, out _);
+
+    /// <summary>BC-BR-206, BC-BR-215: call after menus change, since every role may hold them.</summary>
+    public void InvalidateAll() => _cache.Clear();
 }

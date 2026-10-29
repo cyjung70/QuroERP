@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
+using QuroErp.Api.Tests.Bc.Menus;
 using QuroErp.Api.Tests.Bc.Roles;
 using QuroErp.Api.Tests.Bc.Users;
 using QuroErp.Application.Bc.UserProfiles;
@@ -18,6 +19,7 @@ using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Common.Auth;
@@ -87,6 +89,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Roles, menus and role menu assignments (BC-UC-005).</summary>
     public InMemoryRoleRepository Roles { get; } = new();
 
+    /// <summary>Company menus (BC-UC-006).</summary>
+    public InMemoryMenuRepository Menus { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -132,6 +137,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IItemRepository>(Items);
             services.AddSingleton<IWarehouseRepository>(new FakeWarehouseRepository(this));
             services.AddSingleton<IRoleRepository>(Roles);
+            services.AddSingleton<IMenuRepository>(Menus);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
