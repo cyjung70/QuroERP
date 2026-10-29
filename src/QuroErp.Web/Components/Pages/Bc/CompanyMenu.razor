@@ -1,0 +1,91 @@
+@page "/bc/company-menu"
+@rendermode InteractiveServer
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Web.Bc.Menus
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject MenuApiClient Api
+@inject IStringLocalizer<SharedResource> L
+
+@* BC-UC-006 company menus, screen type M. Search by menu code, then add, change or delete rows and save them together.
+   The API checks every rule (BC-BR-201~207); a failing row's menu code is in the message. *@
+
+<PageTitle>@L["Bc.CompanyMenu.Title"]</PageTitle>
+
+@if (_ready)
+{
+    <QuroMultiGrid TRow="CompanyMenuRow" Title="@L["Bc.CompanyMenu.Title"]" TestId="company-menu" LoadOnStart="true"
+                   Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)" CreateRow="@(_canEdit ? CompanyMenuRow.New : null)">
+        <SearchContent>
+            <QuroText Label="@L["Bc.CompanyMenu.MenuCode"]" @bind-Value="_menuCode" TextCase="TextCase.Upper" TestId="company-menu-search-menu-code" />
+            <QuroText Label="@L["Bc.CompanyMenu.Name"]" Value="@_menuName" LockMode="LockMode.Always" TestId="company-menu-search-name" />
+        </SearchContent>
+        <Columns>
+            <QuroColumn Title="@L["Bc.CompanyMenu.MenuCode"]" Value="r => r.MenuCode" Context="row">
+                <QuroText Label="@L["Bc.CompanyMenu.MenuCode"]" HideLabel @bind-Value="row.MenuCode" Required LockMode="LockMode.NewOnly"
+                          TextCase="TextCase.Upper" TestId="company-menu-grid-menu-code" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.CompanyMenu.Name"]" Value="r => MenuName(r)" Context="row">
+                <QuroText Label="@L["Bc.CompanyMenu.Name"]" HideLabel @bind-Value="row.Name" Required TestId="company-menu-grid-name" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.CompanyMenu.Type"]" Value="r => TypeName(r.Type)" Context="row">
+                <QuroSelect Label="@L["Bc.CompanyMenu.Type"]" HideLabel @bind-Value="row.Type" Options="_types" Required TestId="company-menu-grid-type" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.CompanyMenu.ProgramId"]" Value="r => r.ProgramId" Context="row">
+                <QuroText Label="@L["Bc.CompanyMenu.ProgramId"]" HideLabel @bind-Value="row.ProgramId" TestId="company-menu-grid-program-id" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.CompanyMenu.Module"]" Value="r => r.Module" Context="row">
+                <QuroSelect Label="@L["Bc.CompanyMenu.Module"]" HideLabel @bind-Value="row.Module" Options="Modules" Required TestId="company-menu-grid-module" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.CompanyMenu.ParentMenuCode"]" Value="r => r.ParentMenuCode" Context="row">
+                <QuroText Label="@L["Bc.CompanyMenu.ParentMenuCode"]" HideLabel @bind-Value="row.ParentMenuCode" TextCase="TextCase.Upper"
+                          TestId="company-menu-grid-parent-menu-code" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.CompanyMenu.ValidFlag"]" Value="r => r.ValidFlag" Context="row">
+                <QuroCodeSelect Major="VALID_FLAG" Label="@L["Bc.CompanyMenu.ValidFlag"]" HideLabel @bind-Value="row.ValidFlag" Required
+                                TestId="company-menu-grid-valid-flag" />
+            </QuroColumn>
+        </Columns>
+    </QuroMultiGrid>
+}
+
+@code {
+    // BC-BR-204: module codes; they have no code table, so the code is its own name
+    private static readonly IReadOnlyList<CodeItemDto> Modules = new[] { "bc", "mm", "sd", "fi", "rpt" }.Select(m => new CodeItemDto(m, m)).ToList();
+
+    private IReadOnlyList<CodeItemDto> _types = [];
+    private string? _menuCode;
+    private string? _menuName;
+    private bool _canEdit;
+    private bool _ready;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy is applied, as in MenuController (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // BC-BR-203: P program, U popup, M menu group
+        _types = new[] { "P", "U", "M" }.Select(t => new CodeItemDto(t, TypeName(t)!)).ToList();
+        _ready = true;
+    }
+
+    private async Task<IReadOnlyList<CompanyMenuRow>> LoadAsync()
+    {
+        var menus = await Api.SearchAsync(_menuCode, CancellationToken.None);
+        // The name of the menu whose code was entered in full, as in AS IS [추정]
+        var code = _menuCode?.Trim().ToUpperInvariant();
+        _menuName = menus.FirstOrDefault(m => m.MenuCode == code) is { } match ? MenuName(CompanyMenuRow.From(match)) : null;
+        return menus.Select(CompanyMenuRow.From).ToList();
+    }
+
+    private Task SaveAsync(BatchChanges<CompanyMenuRow> changes) =>
+        Api.SaveAsync(CompanyMenuRow.ToRequest(changes.Added, changes.Updated, changes.Deleted), CancellationToken.None);
+
+    // BC-BR-202: the translated menu name when there is one, else the stored name
+    private string? MenuName(CompanyMenuRow row) =>
+        row.MenuCode is not null && L[$"Menu.{row.MenuCode}"] is { ResourceNotFound: false } translated ? translated.Value : row.Name;
+
+    private string? TypeName(string? type) =>
+        type is not null && L[$"Bc.RoleMenu.Type.{type}"] is { ResourceNotFound: false } name ? name.Value : type;
+}

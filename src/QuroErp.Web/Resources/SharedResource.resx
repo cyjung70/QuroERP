@@ -232,4 +232,18 @@
   <data name="BC-E-211" xml:space="preserve"><value>역할을 고르세요. 사용 중인 역할만 고를 수 있습니다.</value></data>
   <data name="BC-E-212" xml:space="preserve"><value>메뉴 {0}은(는) 이미 이 역할에 있습니다.</value></data>
   <data name="BC-E-216" xml:space="preserve"><value>역할별 메뉴 권한 화면을 Full Access로 쓸 수 있는 사용 중 역할이 하나 이상 남아야 하고, 자기 역할의 이 권한은 뺄 수 없습니다.</value></data>
+  <data name="Bc.CompanyMenu.Title" xml:space="preserve"><value>회사 메뉴</value></data>
+  <data name="Bc.CompanyMenu.MenuCode" xml:space="preserve"><value>메뉴 ID</value></data>
+  <data name="Bc.CompanyMenu.Name" xml:space="preserve"><value>메뉴 이름</value></data>
+  <data name="Bc.CompanyMenu.Type" xml:space="preserve"><value>유형</value></data>
+  <data name="Bc.CompanyMenu.ProgramId" xml:space="preserve"><value>프로그램 ID</value></data>
+  <data name="Bc.CompanyMenu.Module" xml:space="preserve"><value>모듈</value></data>
+  <data name="Bc.CompanyMenu.ParentMenuCode" xml:space="preserve"><value>상위 메뉴 ID</value></data>
+  <data name="Bc.CompanyMenu.ValidFlag" xml:space="preserve"><value>사용</value></data>
+  <data name="BC-E-201" xml:space="preserve"><value>메뉴 ID {0}은(는) 비었거나, 10자를 넘거나, 이미 있습니다.</value></data>
+  <data name="BC-E-202" xml:space="preserve"><value>메뉴 {0}의 이름을 30자 이내로 입력하세요.</value></data>
+  <data name="BC-E-203" xml:space="preserve"><value>메뉴 {0}의 유형이 올바르지 않습니다. 프로그램·팝업은 프로그램 ID가 있어야 하고, 메뉴 그룹은 비워야 합니다.</value></data>
+  <data name="BC-E-204" xml:space="preserve"><value>메뉴 {0}의 모듈을 고르세요.</value></data>
+  <data name="BC-E-205" xml:space="preserve"><value>메뉴 {0}의 상위 메뉴는 비우거나, 있는 메뉴 그룹이어야 합니다. 자기 자신이나 하위 메뉴는 상위로 둘 수 없습니다.</value></data>
+  <data name="BC-E-207" xml:space="preserve"><value>메뉴 {0}은(는) 역할에 배정되었거나 하위 메뉴가 있어 삭제할 수 없습니다. 사용 안 함으로 바꾸세요.</value></data>
 </root>

@@ -232,4 +232,18 @@
   <data name="BC-E-211" xml:space="preserve"><value>Choose a role. Only roles in use can be chosen.</value></data>
   <data name="BC-E-212" xml:space="preserve"><value>Menu {0} is already assigned to this role.</value></data>
   <data name="BC-E-216" xml:space="preserve"><value>At least one role in use must keep Full Access to the role menu permission screen, and you cannot remove it from your own role.</value></data>
+  <data name="Bc.CompanyMenu.Title" xml:space="preserve"><value>Company Menus</value></data>
+  <data name="Bc.CompanyMenu.MenuCode" xml:space="preserve"><value>Menu ID</value></data>
+  <data name="Bc.CompanyMenu.Name" xml:space="preserve"><value>Menu Name</value></data>
+  <data name="Bc.CompanyMenu.Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Bc.CompanyMenu.ProgramId" xml:space="preserve"><value>Program ID</value></data>
+  <data name="Bc.CompanyMenu.Module" xml:space="preserve"><value>Module</value></data>
+  <data name="Bc.CompanyMenu.ParentMenuCode" xml:space="preserve"><value>Upper Menu ID</value></data>
+  <data name="Bc.CompanyMenu.ValidFlag" xml:space="preserve"><value>Valid</value></data>
+  <data name="BC-E-201" xml:space="preserve"><value>Menu ID {0} is empty, longer than 10 characters, or already exists.</value></data>
+  <data name="BC-E-202" xml:space="preserve"><value>Enter a name of up to 30 characters for menu {0}.</value></data>
+  <data name="BC-E-203" xml:space="preserve"><value>Menu {0} has an invalid type. A program or popup needs a program ID; a menu group must leave it empty.</value></data>
+  <data name="BC-E-204" xml:space="preserve"><value>Choose a module for menu {0}.</value></data>
+  <data name="BC-E-205" xml:space="preserve"><value>The upper menu of {0} must be empty or an existing menu group, and cannot be the menu itself or one of its sub-menus.</value></data>
+  <data name="BC-E-207" xml:space="preserve"><value>Menu {0} is assigned to a role or has sub-menus, so it cannot be deleted. Set it to not in use instead.</value></data>
 </root>
