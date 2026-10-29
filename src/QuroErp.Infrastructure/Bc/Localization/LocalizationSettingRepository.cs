@@ -23,9 +23,9 @@ internal sealed class LocalizationSettingRepository : ILocalizationSettingReposi
             (SELECT updated_at FROM (SELECT updated_at FROM bc_company ORDER BY id LIMIT 1 FOR UPDATE) b))
         """;
 
-    // Document lines with quantities of each module (BC-BR-425). The MVP has no quotation; the sales invoice
-    // (dn_no) is also the shipment and the goods receipt is also the purchase invoice. sd_production_result_line
-    // is the SD simple result for sales BOM (SET) items, not a production (PP) document.
+    // Document lines with quantities of each module (BC-BR-425). The MVP has no quotation; the shipment issues
+    // stock and the sales invoice bills it, and the goods receipt is also the purchase invoice.
+    // sd_production_result_line is the SD simple result for sales BOM (SET) items, not a production (PP) document.
     private const string SelectMmHasDocuments = """
         SELECT EXISTS (SELECT 1 FROM mm_purchase_order_line)
             OR EXISTS (SELECT 1 FROM mm_goods_receipt_line)
@@ -38,6 +38,7 @@ internal sealed class LocalizationSettingRepository : ILocalizationSettingReposi
 
     private const string SelectSdHasDocuments = """
         SELECT EXISTS (SELECT 1 FROM sd_sales_order_line)
+            OR EXISTS (SELECT 1 FROM sd_shipment_line)
             OR EXISTS (SELECT 1 FROM sd_sales_invoice_line)
             OR EXISTS (SELECT 1 FROM sd_production_result_line)
         """;

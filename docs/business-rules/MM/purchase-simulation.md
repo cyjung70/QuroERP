@@ -11,7 +11,7 @@
 |---|---|---|---|---|---|
 | MM-BR-501 | 대상 품목은 재주문점이 0보다 큰 재고 관리 품목(MM-BR-008)이다. Set은 제외한다. 조회 조건은 품목군·품목 코드(앞부분 일치)·사용 여부다 | `reorder_point > 0`, 유형 ≠ Service·Set | (조회 규칙) | AS IS 조회식. Service·Set을 거르지 않은 것은 결함 수정 | MM-UT-501, MM-TS-010 |
 | MM-BR-502 | 판매 실적 M-2·M-1·M-0은 전전월·전월·이번 달(오늘까지)의 송장 수량 합이다. Credit Memo는 빼고(음수), Void는 0이다. 합계도 보여 준다. 기준일은 회사 시간대의 오늘이다 | 조회 | (표시만, 추천 수량에 쓰지 않음) | AS IS 조회식 월별 `dn_qty` 합 | MM-UT-502 |
-| MM-BR-503 | 미결 수주 수량은 `CL`이 아닌 수주 줄의 `max(0, so_qty - dn_qty)` 합이다 | 조회 | (계산 규칙) | AS IS 조회식 Open SO (표시만 했다) | MM-UT-503, MM-TS-010 |
+| MM-BR-503 | 미결 수주 수량은 `CL`이 아닌 수주 줄의 `max(0, so_qty - ship_qty)`(출하 기준) 합이다 | 조회 | (계산 규칙) | AS IS 조회식 Open SO (표시만 했다) | MM-UT-503, MM-TS-010 |
 | MM-BR-504 | 미입고 발주 수량은 `CL`이 아닌 발주 줄의 `max(0, po_qty - receipt_qty)` 합이다 | 조회 | (계산 규칙) | AS IS는 발주를 보지 않았다 — TO BE 변경 | MM-UT-504, MM-TS-010 |
 | MM-BR-505 | 기준량(Offset ROP) = `ceil(reorder_point × (1 + offset / 100))`. Offset은 `OFFSET` 코드 값(%)이고 기본값은 0이다 | 조회 | (계산 규칙) | AS IS `HCEIL`은 0.5 단위로 올렸다 — 정수 올림으로 TO BE 변경 | MM-UT-505, MM-TS-010 |
 | MM-BR-506 | 가용 수량 = 현재고(모든 창고 합계, `bc_item.onhand_qty`) + 미입고 발주 - 미결 수주. 추천 발주 수량 = `max(0, ceil(기준량 - 가용 수량))` | 조회 | (계산 규칙) | AS IS는 현재고 ≤ 기준량이면 기준량 전체를 추천했다 — TO BE 변경 | MM-UT-506, MM-TS-010 |

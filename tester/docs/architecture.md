@@ -80,7 +80,7 @@ tester/
 | `lang` | function | 기본 언어(`QURO_LANGS`의 첫 값) 1개. `Accept-Language` 설정 |
 | `run_id` | session | 이번 실행의 고유 접두어. 테스트 데이터 업무 키에 붙인다 |
 | `negative_stock_mode` | function | 재고 설정 API로 모드를 바꾸고, 끝나면 원래 값으로 되돌린다. `ALLOW`·`ALLOW_IN_MONTH`·`DENY`로 매개변수화. 이 fixture를 쓰는 테스트는 `serial` |
-| `inventory_closing` | function | 시작할 때 마감한 달이 없는지 확인하고(있으면 실패로 멈춤), 끝나면 이 테스트가 마감한 달을 모두 취소한다. 이 fixture를 쓰는 테스트는 `serial`. 지난 달 이전 날짜로 재고 이동을 만드는 테스트는 이 fixture를 쓰는 마감 시나리오뿐이다 |
+| `inventory_closing` | function | 시작할 때 마감한 달이 없는지 확인하고(있으면 실패로 멈춤), 끝나면 이 테스트가 마감한 달을 최근 달부터 모두 취소한다. 선행 마감 도우미 `close_until(month)`는 `nextTargetMonth`가 `month`가 될 때까지 차례로 마감한다 — 다른 테스트가 지난달 이전 날짜로 재고 이동을 만들 수 있어 첫 마감 대상 달을 가정하지 않는다. 이 fixture를 쓰는 테스트는 `serial` |
 | `user_client` | function | 테스트 사용자 전용 httpx 클라이언트를 만든다 (로그인·토큰을 관리자 `api`와 나눈다). 인증 시나리오(BC)가 쓴다 |
 | `error_lang` | function | 오류를 내는 테스트용. `ko`, `en`으로 매개변수화해 `Accept-Language`를 바꾼다. 정상 흐름 테스트는 쓰지 않는다 |
 | `page` | function | Playwright 페이지. 로그인 상태를 세션에서 한 번 저장해 재사용한다 |
@@ -105,6 +105,8 @@ tester/
 - 기대 결과: 상태 코드, 오류 코드, 리소스 키, DB 검증값
 - 마이너스 재고 모드 (재고를 줄이는 경우)
 - 국가 (`공통`, `US`, `KR`)
+
+출하·청구: 시나리오의 "송장"에 재고 관리 품목 줄이 있으면, 회사 기본 청구 시점 `WITH_SHIPMENT`에서는 `POST /api/sd/shipments`로 출하를 저장해 송장을 만든다. 재고 이동·수주 남은 수량은 출하가, 금액·잔액은 그 송장이 기준이다. 서비스 품목만 있는 송장은 `POST /api/sd/sales-invoices`로 직접 만든다. `SEPARATE` 동작은 SD-TS-015에서만 본다.
 
 ## 실행
 

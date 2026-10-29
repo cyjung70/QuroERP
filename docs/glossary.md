@@ -74,6 +74,8 @@
 | 창고별 현재고 | Onhand | mm_onhand | MM | TO BE 신규 |
 | 창고 이동 | StockTransfer | mm_stock_transfer | MM | TO BE 신규 |
 | 창고 이동 상세 | StockTransferLine | mm_stock_transfer_line | MM | TO BE 신규 |
+| 출하 | Shipment | sd_shipment | SD | TO BE 신규 |
+| 출하 상세 | ShipmentLine | sd_shipment_line | SD | TO BE 신규 |
 | 언어 | Language | sys_language | BC | TO BE 신규 |
 | 통화 | Currency | bc_currency | BC | TO BE 신규 |
 | 통화 번역 | CurrencyTranslation | bc_currency_translation | BC | TO BE 신규 |
@@ -127,5 +129,10 @@
 | 면세 증명서 | TaxExemptionCertificate | tax_exemption_cert_no | SD | US 재판매 면세 증명서 (sd_customer_tax_exemption) |
 | 사업자등록번호 | BusinessRegNo | business_reg_no | 공통 | KR 10자리, 검증 숫자 (BC-BR-521) |
 | 세금 계산 단위 | TaxCalcMode | tax_calc_mode | BC | DOCUMENT, LINE (BC-BR-543) |
+| 청구 시점 | BillingMode | billing_mode | BC | WITH_SHIPMENT(출하와 같이 청구), SEPARATE(출하 뒤 따로 청구) (BC-BR-316) |
+| 출하 | Shipment | sd_shipment | SD | 재고 출고 문서. 청구는 매출 송장 |
+| 출하 번호 | ShipNo | ship_no | SD | `SH` + 7자리 (SD-BR-164) |
+| 출하 수량 | ShipQty | ship_qty | SD | 출하 줄 수량, 수주 줄 출하 수량 합 (SD-BR-165) |
+| 청구 수량 | BilledQty | billed_qty | SD | 출하 줄 중 송장으로 청구한 수량 (SD-BR-108) |
 | 국가별 단가 자릿수 | CountryDecimal | bc_country_decimal | BC | 국가×모듈 단가 자릿수. 문서 통화의 국가 행을 쓴다 (BC-BR-422·429) |
 | 자릿수 설정 | DecimalSetting | sys_decimal_setting | BC | 모듈별 수량 자릿수, 반올림 방식 (BC-BR-422) |
