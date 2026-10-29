@@ -189,4 +189,34 @@
   <data name="Common.Home.Welcome" xml:space="preserve"><value>Welcome, {0}.</value></data>
   <data name="Common.UserMenu" xml:space="preserve"><value>User menu</value></data>
   <data name="Common.MyInfo" xml:space="preserve"><value>My info</value></data>
+  <data name="Bc.User.Title" xml:space="preserve"><value>User Management</value></data>
+  <data name="Bc.User.Userid" xml:space="preserve"><value>User ID</value></data>
+  <data name="Bc.User.Username" xml:space="preserve"><value>Name</value></data>
+  <data name="Bc.User.Password" xml:space="preserve"><value>Initial password</value></data>
+  <data name="Bc.User.ConfirmPassword" xml:space="preserve"><value>Confirm initial password</value></data>
+  <data name="Bc.User.Role" xml:space="preserve"><value>Role</value></data>
+  <data name="Bc.User.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Bc.User.Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Bc.User.LangCode" xml:space="preserve"><value>Default language</value></data>
+  <data name="Bc.User.UserValidDt" xml:space="preserve"><value>Valid until</value></data>
+  <data name="Bc.User.NoEndDate" xml:space="preserve"><value>Leave it empty for no end date.</value></data>
+  <data name="Bc.User.ValidFlag" xml:space="preserve"><value>In use</value></data>
+  <data name="Bc.User.FailedCount" xml:space="preserve"><value>Failed sign-ins</value></data>
+  <data name="Bc.User.LockedUntil" xml:space="preserve"><value>Locked until</value></data>
+  <data name="Bc.User.LastLoginAt" xml:space="preserve"><value>Last sign-in</value></data>
+  <data name="Bc.User.LastLoginIp" xml:space="preserve"><value>Last sign-in IP</value></data>
+  <data name="Bc.User.FindUser" xml:space="preserve"><value>Find user</value></data>
+  <data name="Bc.User.Unlock" xml:space="preserve"><value>Unlock</value></data>
+  <data name="Bc.User.Unlocked" xml:space="preserve"><value>The account is unlocked.</value></data>
+  <data name="Bc.User.NewPassword" xml:space="preserve"><value>New password</value></data>
+  <data name="Bc.User.ConfirmNewPassword" xml:space="preserve"><value>Confirm new password</value></data>
+  <data name="Bc.User.ResetPassword" xml:space="preserve"><value>Reset password</value></data>
+  <data name="Bc.User.ResetPasswordConfirm" xml:space="preserve"><value>This sets the user's password to the new password and ends auto sign-in on all devices. Continue?</value></data>
+  <data name="Bc.User.PasswordReset" xml:space="preserve"><value>The password is reset. The user must change it at the next sign-in.</value></data>
+  <data name="Bc.User.RevokeTokens" xml:space="preserve"><value>End auto sign-in</value></data>
+  <data name="Bc.User.RevokeTokensConfirm" xml:space="preserve"><value>This ends auto sign-in for this user on all devices. Continue?</value></data>
+  <data name="Bc.User.TokensRevoked" xml:space="preserve"><value>Auto sign-in is ended for this user.</value></data>
+  <data name="BC-E-121" xml:space="preserve"><value>This user ID is already taken.</value></data>
+  <data name="BC-E-122" xml:space="preserve"><value>{0} is not valid. Check the input rules (required, length, format, role in use).</value></data>
+  <data name="BC-E-131" xml:space="preserve"><value>You cannot change your own role or in-use setting.</value></data>
 </root>

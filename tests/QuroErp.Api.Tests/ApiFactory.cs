@@ -17,8 +17,10 @@ using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Contracts.Bc.Roles;
 using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Bc.UserProfiles;
@@ -82,6 +84,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Warehouse choice list the API returns as is (the repository filters and sorts).</summary>
     public List<WarehouseOptionDto> WarehouseOptions { get; } = [new(1, "MAIN", "Main"), new(2, "W02", "Second")];
 
+    /// <summary>Roles in use the API returns as is (the repository filters and sorts).</summary>
+    public List<RoleDto> Roles { get; } = [new(1, "admin"), new(2, "user")];
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -126,6 +131,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
             services.AddSingleton<IItemRepository>(Items);
             services.AddSingleton<IWarehouseRepository>(new FakeWarehouseRepository(this));
+            services.AddSingleton<IRoleRepository>(new FakeRoleRepository(this));
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
@@ -189,6 +195,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public Task<AuthWarehouse?> FindDefaultWarehouseAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<AuthWarehouse?>(new AuthWarehouse(1, "W01", "Main"));
+    }
+
+    private sealed class FakeRoleRepository(ApiFactory factory) : IRoleRepository
+    {
+        public Task<IReadOnlyList<RoleDto>> FindInUseAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<RoleDto>>(factory.Roles);
     }
 
     private sealed class FakeWarehouseRepository(ApiFactory factory) : IWarehouseRepository
