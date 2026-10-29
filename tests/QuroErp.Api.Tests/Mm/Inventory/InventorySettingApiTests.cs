@@ -6,7 +6,7 @@ using QuroErp.Contracts.Mm.Inventory;
 
 namespace QuroErp.Api.Tests.Mm.Inventory;
 
-/// <summary>Inventory setting API (ADR-0025): read by any signed-in caller, change by admin only, 409 on stale updatedAt.</summary>
+/// <summary>Inventory setting API (MM-BR-003): read by any signed-in caller, change by admin only, 409 on stale updatedAt.</summary>
 public class InventorySettingApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact, Trait("Id", "MM-SET-IT-10")]

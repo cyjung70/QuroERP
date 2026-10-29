@@ -6,7 +6,7 @@ namespace QuroErp.Infrastructure.Bc.Localization;
 
 internal sealed class LocalizationRepository : ILocalizationRepository
 {
-    // Single company (ADR-0025): the lowest id is the company
+    // Single company (BC-BR-301): the lowest id is the company
     private const string SelectCompany = """
         SELECT country_code, base_currency_code, default_lang_code, tax_calc_mode
         FROM bc_company

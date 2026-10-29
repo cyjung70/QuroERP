@@ -3,7 +3,7 @@ using QuroErp.Domain.Common;
 namespace QuroErp.Domain.Bc.Companies;
 
 /// <summary>
-/// Company logo for printed documents (bc_company.logo_image, logo_content_type; ADR-0024).
+/// Company logo for printed documents (bc_company.logo_image, logo_content_type; docs/architecture/print-documents.md).
 /// Only PNG and JPEG up to MaxBytes. The type is decided from the file signature, not from what the client says.
 /// </summary>
 public sealed class CompanyLogo

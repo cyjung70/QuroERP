@@ -6,7 +6,7 @@ namespace QuroErp.Infrastructure.Bc.Localization;
 
 internal sealed class LocalizationSettingRepository : ILocalizationSettingRepository
 {
-    // Single company (ADR-0025): the lowest id is the company. GREATEST skips NULL (no company yet)
+    // Single company (BC-BR-301): the lowest id is the company. GREATEST skips NULL (no company yet)
     private const string SelectVersion = """
         SELECT GREATEST(
             (SELECT max(updated_at) FROM sys_language),

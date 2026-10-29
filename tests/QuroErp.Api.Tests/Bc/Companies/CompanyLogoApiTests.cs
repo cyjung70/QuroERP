@@ -7,7 +7,7 @@ using QuroErp.Domain.Bc.Companies;
 
 namespace QuroErp.Api.Tests.Bc.Companies;
 
-/// <summary>Company logo API (BC-UC-007, ADR-0024): read by any signed-in caller, upload by admin only.</summary>
+/// <summary>Company logo API (BC-UC-007, BC-BR-306): read by any signed-in caller, upload by admin only.</summary>
 public class CompanyLogoApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x01, 0x02];

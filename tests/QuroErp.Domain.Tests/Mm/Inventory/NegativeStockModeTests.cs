@@ -3,7 +3,7 @@ using QuroErp.Domain.Mm.Inventory;
 
 namespace QuroErp.Domain.Tests.Mm.Inventory;
 
-/// <summary>NegativeStockMode is stored as ALLOW, ALLOW_IN_MONTH or DENY (ADR-0025).</summary>
+/// <summary>NegativeStockMode is stored as ALLOW, ALLOW_IN_MONTH or DENY (MM-BR-003).</summary>
 public class NegativeStockModeTests
 {
     [Theory, Trait("Id", "MM-SET-T01")]

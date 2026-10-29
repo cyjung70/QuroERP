@@ -5,7 +5,7 @@ using QuroErp.Contracts.Mm.Inventory;
 
 namespace QuroErp.Api.Mm.Inventory;
 
-/// <summary>The global negative stock mode (ADR-0025). Any signed-in user can read it; only admin can change it.</summary>
+/// <summary>The global negative stock mode (MM-BR-003, docs/architecture/inventory.md). Any signed-in user can read it; only admin can change it.</summary>
 [ApiController, Route(InventorySettingRoutes.Base)]
 public sealed class InventorySettingController(InventorySettingService service) : ControllerBase
 {

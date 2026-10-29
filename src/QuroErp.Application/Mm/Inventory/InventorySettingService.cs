@@ -7,7 +7,7 @@ using QuroErp.Domain.Mm.Inventory;
 
 namespace QuroErp.Application.Mm.Inventory;
 
-/// <summary>The global negative stock mode (ADR-0025), changed on the company screen (BC-UC-007).</summary>
+/// <summary>The global negative stock mode (MM-BR-003, docs/architecture/inventory.md), changed on the company screen (BC-UC-007).</summary>
 public sealed class InventorySettingService(IInventorySettingRepository settings, IUnitOfWorkFactory unitOfWork)
 {
     /// <summary>Name shown as {0} in Common-E-002 for an unknown mode.</summary>

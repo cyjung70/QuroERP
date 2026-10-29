@@ -4,7 +4,7 @@ using QuroErp.Domain.Common;
 
 namespace QuroErp.Domain.Tests.Bc.Companies;
 
-/// <summary>Company logo validation (ADR-0024): PNG or JPEG by signature, up to 1 MB.</summary>
+/// <summary>Company logo validation (BC-BR-306): PNG or JPEG by signature, up to 1 MB.</summary>
 public class CompanyLogoTests
 {
     private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
