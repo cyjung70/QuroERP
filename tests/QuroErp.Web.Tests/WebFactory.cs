@@ -33,6 +33,12 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
     /// <summary>Paths of the auth API requests the Web host sent, in order.</summary>
     public System.Collections.Concurrent.ConcurrentQueue<string> AuthRequests { get; } = new();
 
+    /// <summary>Auth API requests with their bearer token and JSON body, in order.</summary>
+    public System.Collections.Concurrent.ConcurrentQueue<(string Path, string? Bearer, string Body)> AuthCalls { get; } = new();
+
+    /// <summary>Response for one auth API path (e.g. auto-login, logout). Null: the request gets <see cref="ApiResponse"/>.</summary>
+    public Func<string, HttpResponseMessage?> AuthRouteResponse { get; set; } = _ => null;
+
     /// <summary>Response of business APIs (company, inventory setting, codes, localization, items) by request. Default: 404 without body.</summary>
     public Func<HttpRequestMessage, HttpResponseMessage> BusinessApiResponse { get; set; } = _ => new HttpResponseMessage(HttpStatusCode.NotFound);
 
@@ -73,13 +79,17 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
 
     private sealed class FakeApiHandler(WebFactory factory) : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var path = request.RequestUri!.AbsolutePath;
             factory.AuthRequests.Enqueue(path);
-            return Task.FromResult(path.EndsWith(AuthRoutes.LoginOptions, StringComparison.Ordinal) && factory.LoginOptions is { } options
-                ? new HttpResponseMessage(HttpStatusCode.OK) { Content = System.Net.Http.Json.JsonContent.Create(options) }
-                : factory.ApiResponse());
+            var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
+            factory.AuthCalls.Enqueue((path, request.Headers.Authorization?.Parameter, body));
+            if (path.EndsWith(AuthRoutes.LoginOptions, StringComparison.Ordinal) && factory.LoginOptions is { } options)
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content = System.Net.Http.Json.JsonContent.Create(options) };
+            }
+            return factory.AuthRouteResponse(path) ?? factory.ApiResponse();
         }
     }
 
