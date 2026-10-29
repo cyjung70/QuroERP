@@ -170,4 +170,8 @@
   <data name="Bc.UserProfile.TokensRevoked" xml:space="preserve"><value>Auto-login has been ended on all devices.</value></data>
   <data name="BC-E-405" xml:space="preserve"><value>Language '{0}' is not in use.</value></data>
   <data name="BC-E-102" xml:space="preserve"><value>{0} is not valid. Check the rules (required, length, format, warehouse in use).</value></data>
+  <data name="Common.Previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="Common.Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Common.FirstRecord" xml:space="preserve"><value>This is the first record.</value></data>
+  <data name="Common.LastRecord" xml:space="preserve"><value>This is the last record.</value></data>
 </root>

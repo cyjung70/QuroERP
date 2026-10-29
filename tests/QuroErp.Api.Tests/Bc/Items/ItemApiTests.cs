@@ -82,6 +82,27 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("MM-E-801");
     }
 
+    [Fact, Trait("Id", "CORE-020-T01")]
+    public async Task PreviousNext_FollowItemClassThenCode_And204AtTheEnd()
+    {
+        var client = await factory.AdminAsync();
+        var first = (await (await client.PostAsJsonAsync(ItemRoutes.Base, NewItem("NAV2") with { ItemClass = "ZZNAV1" }))
+            .Content.ReadFromJsonAsync<ItemDto>())!;
+        var second = (await (await client.PostAsJsonAsync(ItemRoutes.Base, NewItem("NAV1") with { ItemClass = "ZZNAV2" }))
+            .Content.ReadFromJsonAsync<ItemDto>())!;
+        var reader = factory.NonAdmin();
+
+        var next = await reader.GetFromJsonAsync<ItemDto>($"{ItemUrl(first.Id)}/{ItemRoutes.Next}");
+        var previous = await reader.GetFromJsonAsync<ItemDto>($"{ItemUrl(second.Id)}/{ItemRoutes.Previous}");
+        using var last = await reader.GetAsync($"{ItemUrl(second.Id)}/{ItemRoutes.Next}");
+        using var unknown = await reader.GetAsync($"{ItemUrl(999_999)}/{ItemRoutes.Next}");
+
+        next!.ItemCd.Should().Be("NAV1");
+        previous!.ItemCd.Should().Be("NAV2");
+        last.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        unknown.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
     [Fact, Trait("Id", "BC-UC-009-T03")]
     public async Task Put_StaleUpdatedAt_Returns409CommonE004_CurrentSaves()
     {

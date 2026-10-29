@@ -57,6 +57,25 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
         after.MvgCost.Should().Be(2.5m);
     }
 
+    [DatabaseFact, Trait("Id", "CORE-020-IT-01")]
+    public async Task FindAdjacent_FollowsClassThenCode_WithoutClassFirst()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IItemRepository>();
+        // Item class is required now (MM-E-802); a row without one can still come from migrated data
+        var noClass = await repository.InsertAsync(Item.Create("ZZZZ0", Fields), "kim", uow.Transaction, None);
+        await uow.Transaction.Connection!.ExecuteAsync(
+            "UPDATE bc_item SET class = NULL WHERE id = @Id", new { Id = noClass }, transaction: uow.Transaction);
+        var a = await repository.InsertAsync(Item.Create("NAV2", Fields with { ItemClass = "ZZZQ1" }), "kim", uow.Transaction, None);
+        var b = await repository.InsertAsync(Item.Create("NAV1", Fields with { ItemClass = "ZZZQ2" }), "kim", uow.Transaction, None);
+
+        (await repository.FindAdjacentAsync(a, forward: true, uow.Transaction, None))!.Id.Should().Be(b);
+        (await repository.FindAdjacentAsync(b, forward: false, uow.Transaction, None))!.Id.Should().Be(a);
+        (await repository.FindAdjacentAsync(b, forward: true, uow.Transaction, None)).Should().BeNull();
+        (await repository.FindAdjacentAsync(noClass, forward: true, uow.Transaction, None))!.ItemClass.Should().NotBeNull();
+        (await repository.FindAdjacentAsync(-1, forward: true, uow.Transaction, None)).Should().BeNull();
+    }
+
     [DatabaseFact, Trait("Id", "BC-UC-009-IT-03")]
     public async Task Search_FiltersByCodePrefixNameClassAndFlag_PagesInClassCodeOrder()
     {

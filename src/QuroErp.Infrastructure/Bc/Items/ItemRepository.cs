@@ -19,6 +19,25 @@ internal sealed class ItemRepository : IItemRepository
 
     private const string SelectCodeExists = "SELECT EXISTS (SELECT 1 FROM bc_item WHERE item_cd = @ItemCd)";
 
+    // Item class, item code order as in the list (class NULLS FIRST): stored text is never blank, so '' sorts as null
+    private const string FromAfterCurrent = """
+         FROM bc_item, (SELECT coalesce(class, '') AS cur_class, item_cd AS cur_cd FROM bc_item WHERE id = @Id) cur
+        """;
+
+    private const string SelectNext = "SELECT " + Columns + FromAfterCurrent + """
+
+        WHERE (coalesce(class, ''), item_cd) > (cur.cur_class, cur.cur_cd)
+        ORDER BY coalesce(class, ''), item_cd
+        LIMIT 1
+        """;
+
+    private const string SelectPrevious = "SELECT " + Columns + FromAfterCurrent + """
+
+        WHERE (coalesce(class, ''), item_cd) < (cur.cur_class, cur.cur_cd)
+        ORDER BY coalesce(class, '') DESC, item_cd DESC
+        LIMIT 1
+        """;
+
     private const string SearchCondition = """
         WHERE (@ItemCdPattern IS NULL OR item_cd ILIKE @ItemCdPattern ESCAPE '\')
           AND (@NamePattern IS NULL OR item_name ILIKE @NamePattern ESCAPE '\' OR item_name2 ILIKE @NamePattern ESCAPE '\')
@@ -132,6 +151,13 @@ internal sealed class ItemRepository : IItemRepository
     public Task<bool> IsTypeLockedAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteScalarAsync<bool>(
             new CommandDefinition(SelectTypeLocked, new { Id = id }, transaction, cancellationToken: cancellationToken));
+
+    public async Task<ItemRow?> FindAdjacentAsync(long id, bool forward, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var row = await transaction.Connection!.QuerySingleOrDefaultAsync<Row>(new CommandDefinition(
+            forward ? SelectNext : SelectPrevious, new { Id = id }, transaction, cancellationToken: cancellationToken));
+        return row?.ToItemRow();
+    }
 
     public Task<bool> IsInUseAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteScalarAsync<bool>(

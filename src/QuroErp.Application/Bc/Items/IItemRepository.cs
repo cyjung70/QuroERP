@@ -44,6 +44,9 @@ public interface IItemRepository
 
     Task<bool> CodeExistsAsync(string itemCd, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>The item before or after the given one in item class (empty first), item code order; null at either end.</summary>
+    Task<ItemRow?> FindAdjacentAsync(long id, bool forward, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <summary>Matching items in item class, item code order, and the number of all matches.</summary>
     Task<(IReadOnlyList<ItemRow> Items, int Total)> SearchAsync(ItemSearch search, IDbTransaction transaction, CancellationToken cancellationToken);
 

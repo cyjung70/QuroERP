@@ -34,6 +34,15 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
         return ToDto(row);
     }
 
+    /// <summary>The item before or after the given one in item class, item code order (BC-UC-009 basic flow 1); null at either end.</summary>
+    public async Task<ItemDto?> GetAdjacentAsync(long id, bool forward, CancellationToken cancellationToken)
+    {
+        await using var uow = await unitOfWork.BeginAsync(cancellationToken);
+        var row = await items.FindAdjacentAsync(id, forward, uow.Transaction, cancellationToken);
+        await uow.CommitAsync(cancellationToken);
+        return row is null ? null : ToDto(row);
+    }
+
     /// <exception cref="DomainException">MM-E-801 (also for a used code), 802, 803, 825, 831; Common-E-002 for an unknown code value.</exception>
     public async Task<ItemDto> CreateAsync(CreateItemRequest request, string createdBy, CancellationToken cancellationToken)
     {

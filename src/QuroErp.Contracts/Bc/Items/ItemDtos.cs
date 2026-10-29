@@ -6,6 +6,13 @@ public static class ItemRoutes
     /// <summary>GET list (query <see cref="ItemSearchQuery"/>), POST new item.</summary>
     public const string Base = "api/bc/items";
 
+    /// <summary>
+    /// GET {Base}/{id}/previous and {Base}/{id}/next: the item before or after it in item class, item code order
+    /// (BC-UC-009 basic flow 1). 204 when there is none.
+    /// </summary>
+    public const string Previous = "previous";
+    public const string Next = "next";
+
     /// <summary>Default and largest page size (api.md "기타").</summary>
     public const int DefaultPageSize = 50;
     public const int MaxPageSize = 500;

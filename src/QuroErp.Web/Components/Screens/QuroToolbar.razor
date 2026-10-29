@@ -1,9 +1,11 @@
-@* Toolbar in a fixed order: search, new, save, delete, print, Excel export (screens.md "툴바").
+@* Toolbar in a fixed order: search, previous, next, new, save, delete, print, Excel export (screens.md "툴바").
    A button appears only when the screen handles it. *@
 @inject IStringLocalizer<SharedResource> L
 
 <div class="quro-toolbar" role="toolbar" data-testid="@(TestId is null ? null : $"{TestId}-toolbar")" aria-label="@L["Common.Toolbar"]">
     @Button(OnSearch, "Common.Search", "search")
+    @Button(OnPrevious, "Common.Previous", "previous", !CanMove)
+    @Button(OnNext, "Common.Next", "next", !CanMove)
     @Button(OnNew, "Common.New", "new")
     @Button(OnSave, "Common.Save", "save")
     @Button(OnDelete, "Common.Delete", "delete", !CanDelete)
@@ -14,6 +16,17 @@
 @code {
     [Parameter]
     public EventCallback OnSearch { get; set; }
+
+    /// <summary>Moves to the previous record (S screens with an order, e.g. the item master).</summary>
+    [Parameter]
+    public EventCallback OnPrevious { get; set; }
+
+    [Parameter]
+    public EventCallback OnNext { get; set; }
+
+    /// <summary>False while there is no loaded record to move from (a new record).</summary>
+    [Parameter]
+    public bool CanMove { get; set; } = true;
 
     [Parameter]
     public EventCallback OnNew { get; set; }

@@ -29,5 +29,5 @@
     "bUnit 테스트: 이전·다음 이동, 처음·끝, 변경 확인, 버튼이 없는 화면"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
