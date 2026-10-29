@@ -54,7 +54,7 @@ tester/
 - 실행마다 새로 만든다 (compose를 내렸다 올리거나 DB를 지우고 마이그레이션 콘솔로 다시 만든다). 이것은 환경 준비이고, 테스트 코드는 여전히 DB에 쓰지 않는다.
 - 테스트 전용 PostgreSQL 데이터베이스다. 이름은 `_test`로 끝난다 (예: `quroerp_test`). `conftest.py`가 시작할 때 `current_database()`를 확인하고, 아니면 전체 실행을 멈춘다.
 - 준비: 본체 마이그레이션 콘솔로 Schema·Seed를 적용한다 (`dotnet run --project src/QuroERP.Database -- --connection "<테스트 DB>"`). Demo 데이터는 넣지 않는다. 테스트가 쓸 데이터는 API로 만든다.
-- 조회 계정은 읽기 전용 역할이다 (`default_transaction_read_only = on`, SELECT 권한만).
+- 조회 계정은 읽기 전용 역할이다 (`default_transaction_read_only = on`, 테이블·시퀀스 SELECT 권한만). 시퀀스 SELECT는 이관 뒤 시퀀스 값 검사(MG-TS-004)에 쓴다.
 - Migration 계층은 이관을 마친 별도 테스트 DB에서 실행한다.
 
 ## 국가
