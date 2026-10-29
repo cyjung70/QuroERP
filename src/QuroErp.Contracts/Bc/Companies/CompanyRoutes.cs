@@ -5,7 +5,7 @@ public static class CompanyRoutes
 {
     public const string Base = "api/bc/company";
 
-    /// <summary>GET returns the logo image; PUT uploads it as multipart/form-data field LogoFormField.</summary>
+    /// <summary>GET returns the logo image; PUT uploads it as multipart/form-data field LogoFormField; DELETE removes it.</summary>
     public const string Logo = Base + "/logo";
 
     public const string LogoFormField = "file";

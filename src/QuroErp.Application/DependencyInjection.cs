@@ -26,6 +26,8 @@ public static class DependencyInjection
         services.AddScoped<ICodeValidator, CodeValidator>();
         services.AddScoped<CodeService>();
         services.AddScoped<CompanyLogoService>();
+        services.AddScoped<CompanyService>();
+        services.AddScoped<AuthSettingService>();
         services.AddScoped<LocalizationService>();
         services.AddScoped<LocalizationSettingService>();
         services.AddScoped<InventorySettingService>();

@@ -31,6 +31,12 @@ internal sealed class AutoLoginTokenRepository : IAutoLoginTokenRepository
         WHERE app_user_id = @AppUserId AND revoked_at IS NULL
         """;
 
+    private const string RevokeEveryUser = """
+        UPDATE sys_auto_login_token
+        SET revoked_at = @Now, updated_at = @Now, updated_by = @AuditUser
+        WHERE revoked_at IS NULL
+        """;
+
     private const string AuditUser = UserLoginLogRepository.AuditUser;
 
     public async Task<AutoLoginTokenRow?> FindByHashAsync(
@@ -61,6 +67,10 @@ internal sealed class AutoLoginTokenRepository : IAutoLoginTokenRepository
     public Task RevokeAllAsync(long appUserId, DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteAsync(new CommandDefinition(
             RevokeAll, new { AppUserId = appUserId, Now = now, AuditUser }, transaction, cancellationToken: cancellationToken));
+
+    public Task RevokeEveryUserAsync(DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            RevokeEveryUser, new { Now = now, AuditUser }, transaction, cancellationToken: cancellationToken));
 
     // Npgsql reads timestamptz as DateTime, which Dapper converts only for properties, not constructor parameters
     private sealed class Row

@@ -7,7 +7,7 @@ namespace QuroErp.Application.Bc.Companies;
 /// <summary>Logo bytes with the MIME type to send back.</summary>
 public sealed record CompanyLogoFile(byte[] Content, string ContentType);
 
-/// <summary>Company logo for printed documents (BC-UC-007, ADR-0024).</summary>
+/// <summary>Company logo for printed documents (BC-UC-007, docs/architecture/print-documents.md).</summary>
 public sealed class CompanyLogoService(ICompanyRepository companies, IUnitOfWorkFactory unitOfWork)
 {
     /// <summary>The company does not exist yet.</summary>
@@ -35,6 +35,18 @@ public sealed class CompanyLogoService(ICompanyRepository companies, IUnitOfWork
 
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
         if (!await companies.UpdateLogoAsync(logo.Image, logo.ContentType, updatedBy, uow.Transaction, cancellationToken))
+        {
+            throw new NotFoundException(CompanyNotFoundCode);
+        }
+        await uow.CommitAsync(cancellationToken);
+    }
+
+    /// <summary>Removes the logo; printed documents then show no logo (BC-BR-306).</summary>
+    /// <exception cref="NotFoundException">BC-E-006 when there is no company.</exception>
+    public async Task DeleteLogoAsync(string updatedBy, CancellationToken cancellationToken)
+    {
+        await using var uow = await unitOfWork.BeginAsync(cancellationToken);
+        if (!await companies.DeleteLogoAsync(updatedBy, uow.Transaction, cancellationToken))
         {
             throw new NotFoundException(CompanyNotFoundCode);
         }

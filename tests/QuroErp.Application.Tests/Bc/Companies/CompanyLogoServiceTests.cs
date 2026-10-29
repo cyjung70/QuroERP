@@ -3,6 +3,7 @@ using FluentAssertions;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Common;
 using QuroErp.Application.Tests.Common.Auth;
+using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Domain.Bc.Companies;
 using QuroErp.Domain.Common;
 
@@ -93,5 +94,26 @@ public class CompanyLogoServiceTests
             }
             return Task.FromResult(HasCompany);
         }
+
+        public Task<bool> DeleteLogoAsync(string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            if (HasCompany)
+            {
+                Logo = null;
+                UpdatedBy = updatedBy;
+            }
+            return Task.FromResult(HasCompany);
+        }
+
+        public Task<CompanyDto?> FindAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<bool> UpdateAsync(
+            CompanyFields fields, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<bool> HasTransactionsAsync(IDbTransaction transaction, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<bool> HasUnbilledShipmentsAsync(IDbTransaction transaction, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }

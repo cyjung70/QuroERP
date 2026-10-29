@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using QuroErp.Application.Bc.Companies;
+using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Api.Tests.Bc.Menus;
@@ -24,6 +25,7 @@ using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Contracts.Mm.Warehouses;
+using QuroErp.Domain.Bc.Companies;
 using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Bc.UserProfiles;
 using QuroErp.Domain.Common.Auth;
@@ -62,6 +64,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public ConcurrentQueue<string> LogMessages { get; } = new();
 
     public AuthSetting AuthSetting { get; set; } = new();
+
+    public DateTimeOffset AuthSettingUpdatedAt { get; set; } = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
     public InMemoryAutoLoginTokenRepository AutoLoginTokens { get; } = new();
 
@@ -213,6 +217,21 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         public Task<AuthSetting?> GetAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<AuthSetting?>(factory.AuthSetting);
+
+        public Task<AuthSettingRow?> FindForEditAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<AuthSettingRow?>(new AuthSettingRow(factory.AuthSetting, factory.AuthSettingUpdatedAt));
+
+        public Task<bool> UpdateAsync(
+            AuthSetting setting, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            if (expectedUpdatedAt != factory.AuthSettingUpdatedAt)
+            {
+                return Task.FromResult(false);
+            }
+            factory.AuthSetting = setting;
+            factory.AuthSettingUpdatedAt = factory.AuthSettingUpdatedAt.AddMinutes(1);
+            return Task.FromResult(true);
+        }
     }
 
     /// <summary>sys_password_history in memory, oldest first.</summary>
@@ -258,6 +277,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public Task RevokeAllAsync(long appUserId, DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken)
         {
             foreach (var (hash, token) in Tokens.Where(t => t.Value.AppUserId == appUserId && t.Value.RevokedAt is null))
+            {
+                Tokens[hash] = token with { RevokedAt = now };
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task RevokeEveryUserAsync(DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            foreach (var (hash, token) in Tokens.Where(t => t.Value.RevokedAt is null))
             {
                 Tokens[hash] = token with { RevokedAt = now };
             }
@@ -335,11 +363,44 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             Task.FromResult(clients.GetValueOrDefault(keyHash));
     }
 
+    /// <summary>A KR company (KRW, ko) with no logo and no trading data at start.</summary>
     public sealed class InMemoryCompanyRepository : ICompanyRepository
     {
+        public static readonly DateTimeOffset Created = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
+
+        public CompanyDto? Company { get; set; } = new(
+            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "WITH_SHIPMENT", false, Created);
+
         public CompanyLogoRow? Logo { get; set; }
 
         public string? UpdatedBy { get; private set; }
+
+        public bool HasTransactions { get; set; }
+
+        public bool HasUnbilledShipments { get; set; }
+
+        public Task<CompanyDto?> FindAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Company is null ? null : Company with { HasLogo = Logo is not null });
+
+        public Task<bool> UpdateAsync(
+            CompanyFields fields, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            if (Company is null || Company.UpdatedAt != expectedUpdatedAt)
+            {
+                return Task.FromResult(false);
+            }
+            Company = new CompanyDto(
+                fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.RegisterNo, fields.Represent,
+                fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!,
+                fields.BillingMode!, false, Company.UpdatedAt.AddMinutes(1));
+            UpdatedBy = updatedBy;
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> HasTransactionsAsync(IDbTransaction transaction, CancellationToken cancellationToken) => Task.FromResult(HasTransactions);
+
+        public Task<bool> HasUnbilledShipmentsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(HasUnbilledShipments);
 
         public Task<CompanyLogoRow?> FindLogoAsync(IDbTransaction transaction, CancellationToken cancellationToken) => Task.FromResult(Logo);
 
@@ -349,6 +410,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             Logo = new CompanyLogoRow(image, contentType);
             UpdatedBy = updatedBy;
             return Task.FromResult(true);
+        }
+
+        public Task<bool> DeleteLogoAsync(string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            Logo = null;
+            UpdatedBy = updatedBy;
+            return Task.FromResult(Company is not null);
         }
     }
 

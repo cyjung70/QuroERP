@@ -96,7 +96,7 @@
   <data name="Samples.Amount" xml:space="preserve"><value>금액</value></data>
   <data name="Samples.TotalAmt" xml:space="preserve"><value>합계 금액</value></data>
   <data name="Common-E-005" xml:space="preserve"><value>{0}을(를) 입력하세요.</value></data>
-  <data name="BC-E-313" xml:space="preserve"><value>지원하지 않는 국가 {0}입니다. US 또는 KR을 고르세요.</value></data>
+  <data name="BC-E-313" xml:space="preserve"><value>국가 {0}은(는) 지원하지 않거나(US·KR만 가능), 거래가 생긴 뒤라 바꿀 수 없습니다.</value></data>
   <data name="BC-E-401" xml:space="preserve"><value>언어 '{0}'이(가) 올바르지 않습니다. 목록에 있는 소문자 2~3자 코드를 쓰세요. en은 항상 사용합니다.</value></data>
   <data name="BC-E-403" xml:space="preserve"><value>언어 '{0}'은(는) 회사 기본 언어라서 사용 안 함으로 바꿀 수 없습니다.</value></data>
   <data name="BC-E-411" xml:space="preserve"><value>통화 '{0}'이(가) 올바르지 않습니다. 통화 코드는 영문 대문자 3자, 자릿수는 0~4입니다.</value></data>
@@ -246,4 +246,11 @@
   <data name="BC-E-204" xml:space="preserve"><value>메뉴 {0}의 모듈을 고르세요.</value></data>
   <data name="BC-E-205" xml:space="preserve"><value>메뉴 {0}의 상위 메뉴는 비우거나, 있는 메뉴 그룹이어야 합니다. 자기 자신이나 하위 메뉴는 상위로 둘 수 없습니다.</value></data>
   <data name="BC-E-207" xml:space="preserve"><value>메뉴 {0}은(는) 역할에 배정되었거나 하위 메뉴가 있어 삭제할 수 없습니다. 사용 안 함으로 바꾸세요.</value></data>
+  <data name="BC-E-302" xml:space="preserve"><value>회사 이름을 40자 이내로 입력하세요.</value></data>
+  <data name="BC-E-303" xml:space="preserve"><value>{0} 값이 너무 길거나 형식이 올바르지 않습니다.</value></data>
+  <data name="BC-E-309" xml:space="preserve"><value>{0} 값이 허용 범위를 벗어났습니다.</value></data>
+  <data name="BC-E-312" xml:space="preserve"><value>기준 통화 {0}은(는) 사용 중인 통화가 아니거나, 거래가 생긴 뒤라 바꿀 수 없습니다.</value></data>
+  <data name="BC-E-314" xml:space="preserve"><value>기본 언어 {0}은(는) 사용 중인 언어가 아닙니다.</value></data>
+  <data name="BC-E-315" xml:space="preserve"><value>사업자등록번호를 숫자 10자리로 정확히 입력하세요.</value></data>
+  <data name="BC-E-316" xml:space="preserve"><value>청구 시점을 {0}(으)로 바꿀 수 없습니다. 값이 올바르지 않거나 청구하지 않은 출하가 있습니다.</value></data>
 </root>

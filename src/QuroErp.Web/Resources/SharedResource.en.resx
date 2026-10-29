@@ -96,7 +96,7 @@
   <data name="Samples.Amount" xml:space="preserve"><value>Amount</value></data>
   <data name="Samples.TotalAmt" xml:space="preserve"><value>Total Amount</value></data>
   <data name="Common-E-005" xml:space="preserve"><value>Please enter {0}.</value></data>
-  <data name="BC-E-313" xml:space="preserve"><value>Country {0} is not supported. Choose US or KR.</value></data>
+  <data name="BC-E-313" xml:space="preserve"><value>Country {0} is not supported (only US or KR), or it cannot change because transactions exist.</value></data>
   <data name="BC-E-401" xml:space="preserve"><value>Language '{0}' is not valid. Use a listed code of 2 or 3 lower-case letters; en is always in use.</value></data>
   <data name="BC-E-403" xml:space="preserve"><value>Language '{0}' is the company default language and must stay in use.</value></data>
   <data name="BC-E-411" xml:space="preserve"><value>Currency '{0}' is not valid. Use 3 upper-case letters and 0 to 4 decimals.</value></data>
@@ -246,4 +246,11 @@
   <data name="BC-E-204" xml:space="preserve"><value>Choose a module for menu {0}.</value></data>
   <data name="BC-E-205" xml:space="preserve"><value>The upper menu of {0} must be empty or an existing menu group, and cannot be the menu itself or one of its sub-menus.</value></data>
   <data name="BC-E-207" xml:space="preserve"><value>Menu {0} is assigned to a role or has sub-menus, so it cannot be deleted. Set it to not in use instead.</value></data>
+  <data name="BC-E-302" xml:space="preserve"><value>Enter a company name of up to 40 characters.</value></data>
+  <data name="BC-E-303" xml:space="preserve"><value>{0} is too long or not in a valid format.</value></data>
+  <data name="BC-E-309" xml:space="preserve"><value>{0} is outside the allowed range.</value></data>
+  <data name="BC-E-312" xml:space="preserve"><value>Base currency {0} is not in use, or it cannot change because transactions exist.</value></data>
+  <data name="BC-E-314" xml:space="preserve"><value>Default language {0} is not in use.</value></data>
+  <data name="BC-E-315" xml:space="preserve"><value>Enter a valid 10-digit business registration number.</value></data>
+  <data name="BC-E-316" xml:space="preserve"><value>The billing mode cannot change to {0}: the value is invalid or unbilled shipments exist.</value></data>
 </root>
