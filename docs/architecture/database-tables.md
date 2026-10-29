@@ -1484,6 +1484,7 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `last_login_at` | timestamptz |  | 직전 로그인 시각 (메인 화면 표시) |  |
 | `last_login_ip` | varchar |  | 직전 로그인 IP |  |
 | `lang_code` | varchar |  | 기본 언어 `ko`·`en`. 로그인 화면에서 고른 언어로 갱신 |  |
+| `token_version` | integer | NOT NULL DEFAULT 0 | 토큰 버전. 비밀번호 변경·초기화, 사용 안 함, 강제 폐기 때 1 올린다. JWT 클레임 `ver`과 다르면 refresh 401 (BC-BR-058·125·129·130) |  |
 | `default_warehouse_id` | bigint | FK | → `bc_warehouse.id` 기본 창고 (NULL이면 회사 기본 창고) |  |
 | `username` | varchar |  | NOT NULL 후보 (참고) | User Name |
 | `role_id` | bigint | FK | → `sys_role.id` | 'admin', 'user', 'guest' |

@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "0ee3af3b2519eb6caea0e9c13b34f160808cef3b21212aac941c64c1dc21228c"
+      "sha256": "32c3aea278bcde76aecfe321639dc6ed3a7152055f1883a6b3a712c13a64de83"
     },
     {
       "path": "docs/architecture/database.md",
@@ -128,7 +128,7 @@
     },
     {
       "path": "docs/architecture/security.md",
-      "sha256": "b96dcd249a888e056601055d9cd157825d766069b6508fb465fcf06f731b9b5d"
+      "sha256": "7a3450a1af5b2c427a735174c16f3c6f716dbee0ec504ceb9beb4056eb4850ef"
     },
     {
       "path": "docs/architecture/subprojects.md",
@@ -336,7 +336,7 @@
     },
     {
       "path": "docs/specifications/BC/change-password.md",
-      "sha256": "188cf4fd2197be88e3575a1dae9342bc0376fe2e12718eae04d3658af7f791be"
+      "sha256": "f614ff66660ced44cbce3fb7b823cf39c0fab8b14e3fa714a1020a5e85bf1078"
     },
     {
       "path": "docs/specifications/BC/code-major.md",

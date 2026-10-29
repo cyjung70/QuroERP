@@ -11,7 +11,7 @@
 
 - OAuth2는 쓰지 않는다.
 - 로그인 처리 순서, 계정 잠금, 자동 로그인, 세션 만료, 비밀번호 정책, 인증 메시지(AUTH-001~010)는 [login.md](login.md)를 따른다.
-- 내부 토큰은 JWT다. 만료 시간은 설정 `Jwt:Lifetime`(기본 30분)이다. Web은 세션이 살아 있는 동안 만료 10분 전부터 `POST /api/auth/refresh`로 다시 받는다. refresh는 토큰 버전을 검사하므로, 폐기된 토큰은 늦어도 30분 안에 쓸 수 없게 된다 (TASK-CORE-016).
+- 내부 토큰은 JWT다. 만료 시간은 설정 `Jwt:Lifetime`(기본 30분)이다. Web은 세션이 살아 있는 동안 만료 10분 전부터 `POST /api/auth/refresh`로 다시 받는다. refresh는 토큰 버전(JWT 클레임 `ver` = `sys_app_user.token_version`)을 검사하므로, 폐기된 토큰은 늦어도 30분 안에 쓸 수 없게 된다 (TASK-CORE-016, TASK-BC-003). 비밀번호 변경은 지금 세션에 새 토큰을 돌려준다 (BC-BR-058).
 
 ## 권한
 
