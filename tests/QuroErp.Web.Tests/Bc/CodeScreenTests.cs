@@ -78,7 +78,7 @@ public class CodeScreenTests : BunitContext
     }
 
     [Fact, Trait("Id", "BC-UC-008-T03")]
-    public void MajorLookup_FillsTheCodeAndName()
+    public void MajorLookup_FillsTheCodeAndName_AndSearches()
     {
         var page = RenderAs("admin");
 
@@ -89,6 +89,8 @@ public class CodeScreenTests : BunitContext
         page.Find("[data-testid=code-search-major-code]").GetAttribute("value").Should().Be("UNIT");
         page.Find("[data-testid=code-search-major-name]").GetAttribute("value").Should().Be("단위");
         page.FindAll("[data-testid=code-major-lookup]").Should().BeEmpty();
+        page.WaitForAssertion(() => Values(page, "code-grid-minor-code").Should().Equal("EA", "BOX"));
+        _api.MinorSearches.Should().Equal("UNIT");
     }
 
     [Fact, Trait("Id", "SD-UT-912")]
@@ -107,7 +109,7 @@ public class CodeScreenTests : BunitContext
     }
 
     [Fact, Trait("Id", "BC-UC-008-T01")]
-    public void AddChangeAndDelete_AreSavedTogether_ForTheMajorThatWasRead()
+    public void AddChangeAndDelete_AreSavedTogether_ForTheMajorThatWasRead_WithNamesInLanguagesInUseOnly()
     {
         var page = SearchUnit(RenderAs("admin"));
 
@@ -217,7 +219,7 @@ public class CodeScreenTests : BunitContext
     private static List<string> Values(IRenderedComponent<Code> page, string testId) =>
         page.FindAll($"[data-testid={testId}]").Select(e => e.GetAttribute("value") ?? "").ToList();
 
-    /// <summary>Languages ko then en; Majors TERMS and UNIT; UNIT holds EA (Each/개) and BOX (Box, not in use).</summary>
+    /// <summary>Languages ko then en; Majors TERMS and UNIT; UNIT holds EA (Each/개) and BOX (Box, not in use, with a name in ja, which is not in use).</summary>
     private sealed class FakeCodeApi : HttpMessageHandler
     {
         private static readonly CodeMajorDto[] Majors =
@@ -229,7 +231,7 @@ public class CodeScreenTests : BunitContext
         private static readonly CodeMinorDto[] Units =
         [
             new(11, "EA", "개", new Dictionary<string, string> { ["en"] = "Each", ["ko"] = "개" }, 10, true, null, null, Read),
-            new(12, "BOX", "Box", new Dictionary<string, string> { ["en"] = "Box" }, 20, false, null, null, Read),
+            new(12, "BOX", "Box", new Dictionary<string, string> { ["en"] = "Box", ["ja"] = "箱" }, 20, false, null, null, Read),
         ];
 
         public List<string?> MinorSearches { get; } = [];

@@ -22,26 +22,22 @@ public sealed class CodeMinorRow
     /// <summary>A new row in use, with an empty name in every language in use.</summary>
     public static CodeMinorRow New(IEnumerable<string> languages) => new() { Names = languages.ToDictionary(l => l, _ => (string?)null) };
 
-    public static CodeMinorRow From(CodeMinorDto dto, IEnumerable<string> languages)
-    {
-        var names = languages.ToDictionary(l => l, l => dto.Names.GetValueOrDefault(l));
-        // Keep names in languages that are no longer in use, so a save does not drop them
-        foreach (var (lang, name) in dto.Names)
-        {
-            names.TryAdd(lang, name);
-        }
-        return new()
+    /// <summary>
+    /// A loaded row with the names of the languages in use only. Names in other languages are not sent back, so a save keeps them
+    /// (BC-BR-405).
+    /// </summary>
+    public static CodeMinorRow From(CodeMinorDto dto, IEnumerable<string> languages) =>
+        new()
         {
             Id = dto.Id,
             MinorCode = dto.MinorCode,
-            Names = names,
+            Names = languages.ToDictionary(l => l, l => dto.Names.GetValueOrDefault(l)),
             SortOrder = dto.SortOrder,
             UseYn = dto.UseYn,
             Attr1 = dto.Attr1,
             Attr2 = dto.Attr2,
             UpdatedAt = dto.UpdatedAt,
         };
-    }
 
     /// <summary>Grid changes of one Major as one save request. Loaded rows always have updatedAt; the API normalizes and checks every value.</summary>
     public static SaveCodeMinorsRequest ToRequest(

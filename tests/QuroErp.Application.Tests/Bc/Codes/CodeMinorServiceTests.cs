@@ -71,7 +71,7 @@ public class CodeMinorServiceTests
             [new CodeMinorDelete(13, Read)]), "en", "kim", None);
 
         codes.Select(c => (c.MinorCode, c.SortOrder)).Should().Equal(("PC", 5), ("EA", 15), ("BOX", 20));
-        codes.Single(c => c.MinorCode == "EA").Should().BeEquivalentTo(new { Attr1 = "1", Names = new Dictionary<string, string> { ["en"] = "Each" } });
+        codes.Single(c => c.MinorCode == "EA").Should().BeEquivalentTo(new { Attr1 = "1", Names = new Dictionary<string, string> { ["en"] = "Each", ["ko"] = "개" } });
         codes.Single(c => c.MinorCode == "PC").Names.Should().ContainKey("ko");
         _uow.Commits.Should().Be(1);
     }
@@ -133,6 +133,18 @@ public class CodeMinorServiceTests
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be(CodeMinorService.LanguageNotInUseCode);
         error.Args.Should().Equal("fr");
+    }
+
+    [Fact, Trait("Id", "BC-UT-405")]
+    public async Task Save_ChangesOnlyTheSentLanguages_AndKeepsTheOthers()
+    {
+        _minors.Add(14, 1, "PK", 40, new() { ["en"] = "Pack", ["ko"] = "팩", ["ja"] = "パック" });
+
+        var codes = await _service.SaveAsync(new SaveCodeMinorsRequest(
+            "UNIT", null, [new CodeMinorUpdate(14, null, new Dictionary<string, string?> { ["en"] = "Package", ["ko"] = " " }, 40, true, null, null, Read)], null),
+            "en", "kim", None);
+
+        codes.Single(c => c.MinorCode == "PK").Names.Should().Equal(new Dictionary<string, string> { ["en"] = "Package", ["ja"] = "パック" });
     }
 
     [Fact, Trait("Id", "SD-UT-912")]
@@ -240,11 +252,22 @@ public class CodeMinorServiceTests
             return Task.FromResult(row.UpdatedAt == expectedUpdatedAt);
         }
 
-        public Task ReplaceNamesAsync(
-            long minorId, IReadOnlyDictionary<string, string> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        public Task SaveNamesAsync(
+            long minorId, IReadOnlyDictionary<string, string?> names, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
         {
             Writes++;
-            _names[minorId] = names.ToDictionary(n => n.Key, n => n.Value);
+            var stored = _names.TryGetValue(minorId, out var current) ? current : _names[minorId] = [];
+            foreach (var (lang, name) in names)
+            {
+                if (name is null)
+                {
+                    stored.Remove(lang);
+                }
+                else
+                {
+                    stored[lang] = name;
+                }
+            }
             return Task.CompletedTask;
         }
 
