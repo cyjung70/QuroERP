@@ -17,7 +17,7 @@
 품목 코드는 `PR{run_id}`로 시작한다. PDF 텍스트는 `quro_tester.pdf`로 뽑고 공백을 하나로 줄여 비교한다.
 
 1. 고객 C (세금 코드 `NONE`)
-2. 서비스 품목 SA (등급 `A`), SB (등급 비움)
+2. 서비스 품목 SA (등급 G = `base_codes` fixture의 `GRADE` 값), SB (등급 비움)
 3. 재고 품목 I (표준 판매가 4321), J (표준 판매가 8765), 세트 품목 S
 4. `POST /api/bc/set-items/batch` — S = I × 2 + J × 1
 5. 송장 D (출하 없이 직접 입력, SD-BR-116): 고객 C, 줄 1: SA 수량 3 단가 37 (금액 111) / 줄 2: SB 수량 1 단가 59 (금액 59)

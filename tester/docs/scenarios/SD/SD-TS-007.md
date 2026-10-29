@@ -15,7 +15,7 @@
 
 1. `POST /api/sd/customers` — 고객 B: `tax_party_type = BUSINESS`, 사업자등록번호 `1234567891`, 상호·대표자·주소·업태·종목, 기본 세금 코드 `VAT10` / 고객 P: `INDIVIDUAL`, 기본 세금 코드 `VAT10`
 2. `POST /api/bc/items` — I1: Service, `vat_kind = TAXABLE` / I2: Service, `vat_kind = EXEMPT` (송장 직접 입력은 재고 관리가 아닌 품목만 된다)
-3. 회사 사업자등록번호·상호·대표자가 들어 있는지 `GET /api/bc/company`로 확인한다 (없으면 사전 준비 실패)
+3. 회사 사업자등록번호·상호·대표자·업태·종목: `GET /api/bc/company`로 읽고 비어 있으면 `PUT /api/bc/company`로 넣는다 (사업자등록번호 `9999999997`(검증 숫자만 맞춘 가짜 값), 대표자 `Tester`. 값이 이미 있으면 그대로 쓴다). 테스트 DB는 설치 때 회사 이름·국가만 들어 있다
 
 ## 단계
 

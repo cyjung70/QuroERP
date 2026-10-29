@@ -21,6 +21,7 @@
   ],
   "acceptance": [
     "저장소 루트 `docker-compose.test.yml`: PostgreSQL(DB 이름 `quroerp_test`) + API + Blazor, 마이그레이션 콘솔로 Schema·Seed 적용",
+    "테스트 관리자: 마이그레이션 콘솔 `--create-admin <QURO_TEST_USER>`로 만든다. 표준 입력이 리디렉션되면 비밀번호를 거기서 읽는다(대화 없이, CI용). 초기 비밀번호는 `QURO_TEST_INITIAL_PASSWORD`",
     "테스트 DB 읽기 전용 역할 (`default_transaction_read_only = on`, SELECT 권한만)",
     "실행마다 DB를 새로 만든다 (볼륨 없이 기동)",
     "GitHub Actions: PR마다 `dotnet test`와 Tester `-m \"(api or scenario) and not migration\"`, 매일 밤 `-m \"not migration\"`",

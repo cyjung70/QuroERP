@@ -16,11 +16,11 @@
 
 코드·이름에 `{run_id}`를 붙인다. 파일은 UTF-8 CSV이고 첫 줄은 머리글이다. `L100` = 100자 문자열, `L101` = 101자 문자열.
 
-- 품목 파일 F1 (2행): `itemCd, itemNm, itemType, unit, itemClass, purchasePrc` — (`UP{run_id}A`, L100, Inventory, EA, 사용 중 품목군, 10), (`up{run_id}b`, `name b`, Inventory, EA, 같은 품목군, 5)
+- 품목 파일 F1 (2행): `itemCd, itemNm, itemType, unit, itemClass, purchasePrc` — (`UP{run_id}A`, L100, Inventory, EA, `base_codes` fixture의 품목군, 10), (`up{run_id}b`, `name b`, Inventory, EA, 같은 품목군, 5)
 - 품목 파일 F2 (3행): F1의 2행 + (`UP{run_id}C`, L101, …)
 - 품목 파일 F3: F1에 `onhandQty` 열을 더한 것
 - 공급자 파일 V1 (2행): `vendorNm, phone1, zip` — (`  vendor {run_id} a `, 전화 30자, 우편번호), (L100, 전화 18자 넘는 25자, 우편번호)
-- 고객 파일 C1 (2행): `cName, phone1, rep, zip` — (L100, 전화 25자, 담당자 코드, 우편번호), (`c {run_id} b`, 전화, 담당자 코드, 우편번호)
+- 고객 파일 C1 (2행): `cName, phone1, rep, zip` — (L100, 전화 25자, `base_codes` fixture의 담당자 코드, 우편번호), (`c {run_id} b`, 전화, 같은 담당자 코드, 우편번호)
 - 고객 파일 C2: C1의 2행이 같은 이름 (파일 안 중복)
 
 ## 단계

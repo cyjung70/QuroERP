@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "0332927d685438f7f5933095a77bf1c3a9228180bbeae1c8d07a3c26fbc48ae6"
+      "sha256": "15e9c8b3518abd9b49b39023472f6c178f2bcd5fa2b1225e1c8f53cf39164c67"
     },
     {
       "path": "docs/architecture/i18n.md",
@@ -1088,7 +1088,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-012.json",
-      "sha256": "c72c54be5afe548eb5fdd1c9b920ed1b66290145b52d79749461cf05134a4213"
+      "sha256": "345deb0d1baddefe262530d05c747185ba3757e5a4fafc10be31e104694483c6"
     },
     {
       "path": "harness/tasks/TASK-CORE-013.json",
@@ -1576,7 +1576,7 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "b478bce637f1146c7ba49d2dfa9c570aa736d68a43cb220fa3b08be5e87c09e1"
+      "sha256": "d81206c638f5581d20c1441aa672f9d09ba22ffc26b0437abd1a627b17596cff"
     },
     {
       "path": "tester/docs/INDEX.md",
@@ -1712,7 +1712,7 @@
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-016.md",
-      "sha256": "5cc39688c81295088c694d50330fb6e4fdfebb1910bdddc537b702a78d7c8404"
+      "sha256": "6f27ad928914bc0b4caa7f864d9317df40bfd293a18c13a44304100da09f66f3"
     },
     {
       "path": "tester/docs/scenarios/SD/.gitkeep",
@@ -1744,7 +1744,7 @@
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-007.md",
-      "sha256": "75164db06890b4e7d867e226de125b9e18237ca137ed2dd1210d5c9b5f2e3f76"
+      "sha256": "169e0059ccb0bc1df59f557e580b37739f107d13dd9afa7c39229ed5bbb967d3"
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-008.md",
@@ -1780,7 +1780,7 @@
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-016.md",
-      "sha256": "6aea0be9bef868bfee00b4fc93e38d34dc90f3ecf9a1ab85692acefebc04ee8d"
+      "sha256": "40cd71be1998f214656e9d6f739d59d1ae6df6055aa2398a99d1214a4fc565c9"
     },
     {
       "path": "tester/docs/scenarios/SD/SD-TS-017.md",
@@ -1788,7 +1788,7 @@
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-001.json",
-      "sha256": "0568f18ede2789d39247d9fb6a3bbe48ad30b30e5d2b940a0540ffca6c2d25c6"
+      "sha256": "995dac6a1b4dd816570d046dd61206c501ed2eb22e38ef238fbc8d44b76e0707"
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-002.json",
