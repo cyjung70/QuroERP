@@ -340,11 +340,11 @@
     },
     {
       "path": "docs/specifications/BC/code-major.md",
-      "sha256": "4bc2e913b96fe1ec1017c742017cb18e87cc713d418c2a33f5782037059ff5a7"
+      "sha256": "d06eb3f1a9f8e5a4efa09c3f240923396f918aea395e8ef8a39cef1e4576f6fe"
     },
     {
       "path": "docs/specifications/BC/code.md",
-      "sha256": "99795f4e7552ef32dbd73a7e0c0c88dced8aa9e34e0828a2bfa0c81af91d158a"
+      "sha256": "5b6c8c95709ff98c63197740ee3296775e3a821436bfccb5dac88035c653cc0d"
     },
     {
       "path": "docs/specifications/BC/company-menu.md",
