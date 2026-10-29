@@ -92,7 +92,7 @@
     },
     {
       "path": "docs/architecture/i18n.md",
-      "sha256": "91aaee69c30f66a56bbdc21ce7d67e36e18e0e3a9191704b31ddac2a755a3378"
+      "sha256": "c23417a6342ff8ae37554b11e161b438b2f67464bd7df47569864641a7d6694b"
     },
     {
       "path": "docs/architecture/inventory.md",
@@ -124,7 +124,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "9c5d4368e71f13d1f5f437b32af765d2cfa9cc7d2f5177877353986105a2619c"
+      "sha256": "0d8f35bdb9e71c1401b205805cc0d10efcea0728c01e79f6c83eee5ad1777819"
     },
     {
       "path": "docs/architecture/security.md",
@@ -148,7 +148,7 @@
     },
     {
       "path": "docs/business-rules/BC/localization.md",
-      "sha256": "be3bf5e076de2b8740139e8c90c177d5c5e1a21ea56cc6229b93b84fec45a5fd"
+      "sha256": "49e3df9c478e965f3b45cd923d4f85e38d5221474174a7019f65c953673f0d23"
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
@@ -340,11 +340,11 @@
     },
     {
       "path": "docs/specifications/BC/code-major.md",
-      "sha256": "d06eb3f1a9f8e5a4efa09c3f240923396f918aea395e8ef8a39cef1e4576f6fe"
+      "sha256": "9e82983ec804658b5c11c5b313f31f840d9c42075423acb74bcba69481461a2a"
     },
     {
       "path": "docs/specifications/BC/code.md",
-      "sha256": "5b6c8c95709ff98c63197740ee3296775e3a821436bfccb5dac88035c653cc0d"
+      "sha256": "1ce9c97167df348e0cb7eef79927530284e69876267358aa763a82f4f364b56c"
     },
     {
       "path": "docs/specifications/BC/company-menu.md",
@@ -540,7 +540,7 @@
     },
     {
       "path": "docs/specifications/MM/warehouse.md",
-      "sha256": "9d8ef1ddbf12339bd3bc22f82694d71c17fa28f9f82eaa9e787f5a379b42235f"
+      "sha256": "5aaaafb29e3926a13a19ddb70cf9a8e2f70c6899c1400065ad894cab3bc53c49"
     },
     {
       "path": "docs/specifications/SD/ar-receipt.md",
