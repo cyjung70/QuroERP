@@ -1,0 +1,53 @@
+@* Code field: options from GET api/codes/{Major} in the UI language, stored value is the minor_code (codes.md "화면"). *@
+@using System.Globalization
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Web.Common
+@inject CodeApiClient Codes
+
+<QuroSelect Label="@Label" Value="@Value" ValueChanged="ValueChanged" Options="_options" Radio="Radio"
+            Required="Required" LockMode="LockMode" HideLabel="HideLabel" TestId="@TestId" />
+
+@code {
+    private IReadOnlyList<CodeItemDto> _options = [];
+
+    /// <summary>Major code, e.g. ITEM_TYPE.</summary>
+    [Parameter, EditorRequired]
+    public string Major { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter]
+    public bool Radio { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; }
+
+    [Parameter]
+    public LockMode LockMode { get; set; }
+
+    [Parameter]
+    public bool HideLabel { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _options = await Codes.GetAsync(Major, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+        }
+        catch (Exception e) when (e is ApiProblemException or HttpRequestException)
+        {
+            // Without options the stored code still shows; the required check and the API reject a missing value
+            _options = [];
+        }
+    }
+}

@@ -37,7 +37,7 @@ public abstract class QuroInputBase<TValue> : ComponentBase, IQuroField, IDispos
 
     protected string InputId { get; } = "q" + Guid.NewGuid().ToString("N")[..10];
 
-    public bool IsLocked => LockMode switch
+    public bool IsLocked => Form is { ReadOnly: true } || LockMode switch
     {
         LockMode.Always => true,
         LockMode.NewOnly or LockMode.AfterLoad => Form is { IsNew: false },

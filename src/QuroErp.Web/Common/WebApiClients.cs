@@ -1,5 +1,7 @@
 using QuroErp.Web.Auth;
 using QuroErp.Web.Bc.Companies;
+using QuroErp.Web.Bc.Items;
+using QuroErp.Web.Bc.Localization;
 using QuroErp.Web.Mm.Inventory;
 
 namespace QuroErp.Web.Common;
@@ -14,6 +16,9 @@ public static class WebApiClients
 
         services.AddHttpClient<CompanyApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<InventorySettingApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<CodeApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<LocalizationApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<ItemApiClient>(http => http.BaseAddress = apiBaseUrl);
         return services;
     }
 }

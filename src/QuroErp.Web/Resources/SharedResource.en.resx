@@ -118,4 +118,31 @@
   <data name="MM-E-809" xml:space="preserve"><value>Item {0} is not in use and cannot be selected.</value></data>
   <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
   <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
+  <data name="Bc.Item.Title" xml:space="preserve"><value>Item Master</value></data>
+  <data name="Bc.Item.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Bc.Item.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Bc.Item.ItemName2" xml:space="preserve"><value>Item Name 2</value></data>
+  <data name="Bc.Item.ItemType" xml:space="preserve"><value>Item Type</value></data>
+  <data name="Bc.Item.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Bc.Item.ItemClass" xml:space="preserve"><value>Item Class</value></data>
+  <data name="Bc.Item.ValidFlag" xml:space="preserve"><value>Valid Flag</value></data>
+  <data name="Bc.Item.ItemGrade" xml:space="preserve"><value>Grade</value></data>
+  <data name="Bc.Item.UsdPrc" xml:space="preserve"><value>Purchase Price</value></data>
+  <data name="Bc.Item.SoUsdPrc" xml:space="preserve"><value>Sales Price</value></data>
+  <data name="Bc.Item.ReorderPoint" xml:space="preserve"><value>Reorder Point</value></data>
+  <data name="Bc.Item.Taxable" xml:space="preserve"><value>Taxable</value></data>
+  <data name="Bc.Item.VatKind" xml:space="preserve"><value>VAT Kind</value></data>
+  <data name="Bc.Item.VatKind.TAXABLE" xml:space="preserve"><value>Taxable</value></data>
+  <data name="Bc.Item.VatKind.EXEMPT" xml:space="preserve"><value>Exempt</value></data>
+  <data name="Bc.Item.UpcCode" xml:space="preserve"><value>UPC Code</value></data>
+  <data name="Bc.Item.Location" xml:space="preserve"><value>Location</value></data>
+  <data name="Bc.Item.MvgCost" xml:space="preserve"><value>Moving Average Cost</value></data>
+  <data name="Bc.Item.OnhandQty" xml:space="preserve"><value>On-hand Qty</value></data>
+  <data name="Bc.Item.StkVal" xml:space="preserve"><value>Stock Value</value></data>
+  <data name="Bc.Item.Memo1" xml:space="preserve"><value>Memo 1</value></data>
+  <data name="Bc.Item.Memo2" xml:space="preserve"><value>Memo 2</value></data>
+  <data name="Bc.Item.Memo3" xml:space="preserve"><value>Memo 3</value></data>
+  <data name="Bc.Item.Memo4" xml:space="preserve"><value>Memo 4</value></data>
+  <data name="Bc.Item.Memo5" xml:space="preserve"><value>Memo 5</value></data>
+  <data name="Bc.Item.FindItem" xml:space="preserve"><value>Find Item</value></data>
 </root>

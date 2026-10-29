@@ -5,9 +5,12 @@
 <QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
     <Toolbar>
+        @* Read-only users get search and print only (BC-BR-214) *@
         <QuroToolbar TestId="@TestId" Busy="Busy" CanDelete="!_form.IsNew"
-                     OnSearch="SearchAsync" OnNew="NewAsync" OnSave="SaveAsync"
-                     OnDelete="@(Delete is null ? default : EventCallback.Factory.Create(this, DeleteAsync))"
+                     OnSearch="SearchAsync"
+                     OnNew="@(ReadOnly ? default : EventCallback.Factory.Create(this, NewAsync))"
+                     OnSave="@(ReadOnly ? default : EventCallback.Factory.Create(this, SaveAsync))"
+                     OnDelete="@(Delete is null || ReadOnly ? default : EventCallback.Factory.Create(this, DeleteAsync))"
                      OnPrint="OnPrint" />
     </Toolbar>
     <ChildContent>
@@ -47,13 +50,20 @@
     [Parameter]
     public EventCallback OnPrint { get; set; }
 
+    /// <summary>The user may only read: no new, save or delete, and every input is locked.</summary>
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
     public override bool IsDirty => Snapshot.Of(_model) != _snapshot;
 
     public bool IsNew => _form.IsNew;
 
     protected override void OnInitialized() => StartNew();
 
-    private async Task SearchAsync()
+    protected override void OnParametersSet() => _form.ReadOnly = ReadOnly;
+
+    /// <summary>Runs the search, e.g. after the screen filled the search conditions from a lookup dialog.</summary>
+    public async Task SearchAsync()
     {
         if (!await ConfirmDiscardAsync())
         {

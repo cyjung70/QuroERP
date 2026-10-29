@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Web.Auth;
 using QuroErp.Web.Bc.Companies;
+using QuroErp.Web.Bc.Items;
+using QuroErp.Web.Bc.Localization;
+using QuroErp.Web.Common;
 using QuroErp.Web.Mm.Inventory;
 
 namespace QuroErp.Web.Tests;
@@ -21,7 +24,7 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
         Content = new StringContent("""{"status":401,"code":"AUTH-002"}""", null, "application/problem+json"),
     };
 
-    /// <summary>Response of business APIs (company, inventory setting) by request. Default: 404 without body.</summary>
+    /// <summary>Response of business APIs (company, inventory setting, codes, localization, items) by request. Default: 404 without body.</summary>
     public Func<HttpRequestMessage, HttpResponseMessage> BusinessApiResponse { get; set; } = _ => new HttpResponseMessage(HttpStatusCode.NotFound);
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -32,6 +35,9 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
             services.AddHttpClient<AuthApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeApiHandler(this));
             services.AddHttpClient<CompanyApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
             services.AddHttpClient<InventorySettingApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
+            services.AddHttpClient<CodeApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
+            services.AddHttpClient<LocalizationApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
+            services.AddHttpClient<ItemApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
         });
     }
 
