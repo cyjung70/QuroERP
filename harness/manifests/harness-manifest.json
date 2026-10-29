@@ -8,7 +8,7 @@
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "476635d1cda9babd7363d7bc975b858e9fa1f1aae9323434f7fd03a765808435"
+      "sha256": "04a52b5227bc325de4cca9adb70ad14e9fec06549a92956fb53dca4b6d3f5f99"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
@@ -40,7 +40,7 @@
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "476635d1cda9babd7363d7bc975b858e9fa1f1aae9323434f7fd03a765808435"
+      "sha256": "04a52b5227bc325de4cca9adb70ad14e9fec06549a92956fb53dca4b6d3f5f99"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
@@ -144,7 +144,7 @@
     },
     {
       "path": "docs/business-rules/BC/company.md",
-      "sha256": "68bfd1f1e725885e887fb2e411b3c54d87cf5ed9ee9cb7a0caa9332514c0078f"
+      "sha256": "98aa1f694e9c5c7932eaa18ca2c5d1d7d8a0537845b0f43766855f9dea25a52a"
     },
     {
       "path": "docs/business-rules/BC/localization.md",
@@ -160,7 +160,7 @@
     },
     {
       "path": "docs/business-rules/BC/README.md",
-      "sha256": "55cf02c4640966b6f9b86d7cbc1fc9cfcf5bf7d17f82e69f592f70c5aec43cd3"
+      "sha256": "a320cb1eb46da4b7bdee0103f65de0e3ca112fa5fd72145e4090a18db4a88a64"
     },
     {
       "path": "docs/business-rules/BC/tax.md",
@@ -308,7 +308,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "97b160842859a94816c2991914b365e6530bd06600c4baeac6727b44eeb858a4"
+      "sha256": "b69901c7dd1561fa17e83260c7d3cd64c65f1773098577ccf07097953d6365e6"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -352,7 +352,7 @@
     },
     {
       "path": "docs/specifications/BC/company.md",
-      "sha256": "0ca8bafcccf3e5298b042b9248899006e3454fb15c0df7292786b492a4dde65b"
+      "sha256": "6a65109cefc3d25b1cc0fd99dee1f120fe1a7725fa56c0809694a6c4f233279c"
     },
     {
       "path": "docs/specifications/BC/currency.md",
@@ -860,11 +860,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-013.json",
-      "sha256": "87351ecd9c4c16704c84e3c96f7eb03dbcdf843186c3ebbbcda39016ac0c9830"
+      "sha256": "9816c13e5a124dd2601bb3444cda3842f6e5632f6a8265e5bd7471401402fa32"
     },
     {
       "path": "harness/tasks/TASK-BC-014.json",
-      "sha256": "86bd6a199368a7c622dd1e28e0a2f4f5bea973fbb92315590ea28ae57711de1c"
+      "sha256": "b84f632bb49e263b1fe4ad8ad4b53aa20c539e80a863c32234b0f94a28c4a93e"
     },
     {
       "path": "harness/tasks/TASK-BC-015.json",

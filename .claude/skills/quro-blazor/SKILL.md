@@ -43,7 +43,7 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
    - 수정한 조회 행 되돌리기(Undo Row)는 그리드가 기본으로 준다. 화면에서 따로 만들지 않는다
 4. 라벨·제목·메시지는 모두 `L["Sd.SalesOrder.SoDt"]` 형식 리소스 키. `ko`(`SharedResource.resx`, 기본)와 `en`(`SharedResource.en.resx`) 두 파일에 모두 넣는다. 금액·단가·수량 입력 칸 자릿수는 `GET /api/bc/localization` 값으로 정한다.
 5. 데이터는 `Contracts`의 API 클라이언트 인터페이스로만 읽고 쓴다.
-6. 서버 오류(ProblemDetails `code`)는 `QuroMessage.ShowAsync(code, args)`로 표시한다.
+6. 서버 오류(ProblemDetails `code`, `args`)는 화면유형 공통 컴포넌트가 화면 위 메시지(`{화면}-message`)에 보인다. 공통 컴포넌트 밖에서 부른 API는 `ProblemMessages.Get(e.Problem)`(코드 → 사용자 언어 문장, 없는 코드는 `Common-E-001`)으로 바꿔 `QuroScreenFrame`의 `Error`·`Notice`에 넘긴다. API에 연결할 수 없으면 `BC-E-003`이다.
 7. 메뉴 경로 `/<module>/<feature-kebab>`를 `@page`로 둔다.
 8. 화면 자동 테스트(Tester E2E)가 찾을 수 있게 입력·버튼·그리드·메시지에 `data-testid`를 단다.
    - 이름: `{화면}-{영역}-{필드}`, 모두 kebab-case. 화면은 메뉴 경로의 마지막 부분이다 (`sales-order`).
