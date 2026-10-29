@@ -108,7 +108,7 @@
     },
     {
       "path": "docs/architecture/login.md",
-      "sha256": "3bc3bbaf721c20ac4f7e9e983f4d454a9900ab9dd21720f04fa1382d220501c8"
+      "sha256": "b4b28e3787ffd64ef1ee77c73fd3eef5279878d66e605e7a523b09e05ce593df"
     },
     {
       "path": "docs/architecture/print-documents.md",
@@ -388,7 +388,7 @@
     },
     {
       "path": "docs/specifications/BC/login.md",
-      "sha256": "f90ca7fec9c635ab4e6794f8a03583c13db8b9c56aca81a8bd4527c625bee8b1"
+      "sha256": "4e71452ec0c70035f91cf8fe1bc595b062b92b85869d0bf01d1a98c43995d6ea"
     },
     {
       "path": "docs/specifications/BC/purchase-price.md",

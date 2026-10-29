@@ -26,11 +26,14 @@ public sealed class AuthApiClient(HttpClient http)
     }
 
     /// <summary>Revokes this device's auto-login token (if any) and logs LOGOUT.</summary>
-    /// <exception cref="ApiProblemException">401 when the session is already gone on the Api.</exception>
-    public async Task LogoutAsync(string accessToken, LogoutRequest request, string? clientIp, string? userAgent, CancellationToken cancellationToken)
+    /// <param name="accessToken">This session's token. Null after the session is gone: the Api revokes the request's token alone.</param>
+    public async Task LogoutAsync(string? accessToken, LogoutRequest request, string? clientIp, string? userAgent, CancellationToken cancellationToken)
     {
         using var message = ClientMessage(AuthRoutes.Logout, request, clientIp, userAgent);
-        message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        if (accessToken is not null)
+        {
+            message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        }
         using var response = await http.SendAsync(message, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {

@@ -125,6 +125,87 @@ public class AutoLoginTests(WebFactory factory) : IClassFixture<WebFactory>
         TokenCookies(response).Should().ContainSingle().Which.Should().Contain("expires=Thu, 01 Jan 1970");
     }
 
+    [Fact, Trait("Id", "BC-002-WT-09")]
+    public async Task Logout_AfterTheSessionExpired_RevokesTheTokenWithoutABearerAndDeletesTheCookie()
+    {
+        Reset();
+        factory.AuthRouteResponse = path => path.EndsWith(AuthRoutes.Logout, StringComparison.Ordinal)
+            ? new HttpResponseMessage(HttpStatusCode.NoContent)
+            : null;
+        // The page's antiforgery token was issued to the signed-in user and no longer validates
+        using var request = new HttpRequestMessage(HttpMethod.Post, WebAuthentication.LogoutPath)
+        {
+            Content = new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = "stale" }),
+        };
+        request.Headers.Add("Cookie", TokenCookie + "raw-expired");
+
+        using var response = await Browser().SendAsync(request);
+
+        response.Headers.Location!.OriginalString.Should().Be(WebAuthentication.LoginPath);
+        var logout = factory.AuthCalls.Should().ContainSingle(c => c.Path == "/" + AuthRoutes.Logout).Subject;
+        logout.Bearer.Should().BeNull();
+        logout.Body.Should().Contain("\"autoLoginToken\":\"raw-expired\"");
+        TokenCookies(response).Should().ContainSingle().Which.Should().Contain("expires=Thu, 01 Jan 1970");
+    }
+
+    [Fact, Trait("Id", "BC-002-WT-10")]
+    public async Task Logout_SignedOutWithoutTheTokenCookie_StillNeedsTheAntiforgeryToken()
+    {
+        Reset();
+
+        using var response = await Browser().PostAsync(WebAuthentication.LogoutPath, new FormUrlEncodedContent([]));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        factory.AuthCalls.Should().BeEmpty();
+    }
+
+    [Theory, Trait("Id", "BC-UC-001-T22")]
+    [InlineData("/bc/item", "/bc/item")]
+    [InlineData("https://evil.example/", "/")]
+    [InlineData("//evil.example/", "/")]
+    [InlineData("/\\evil.example/", "/")]
+    public async Task AutoLogin_OnTheLoginPage_FollowsOnlyLocalReturnUrls(string returnUrl, string expected)
+    {
+        Reset();
+        var token = "raw-return-" + Guid.NewGuid().ToString("N");
+        factory.AuthRouteResponse = path => path.EndsWith(AuthRoutes.AutoLogin, StringComparison.Ordinal) ? Ok(Login("raw-next")) : null;
+
+        using var response = await Browser().SendAsync(
+            PageRequest(WebAuthentication.LoginPath + "?ReturnUrl=" + Uri.EscapeDataString(returnUrl), token));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        response.Headers.Location!.OriginalString.Should().Be(expected);
+    }
+
+    [Fact, Trait("Id", "BC-UC-001-T22")]
+    public async Task AutoLoginFailure_OnAProtocolRelativePath_ReturnsToTheMainScreenAfterSignIn()
+    {
+        Reset();
+        factory.AuthRouteResponse = path => path.EndsWith(AuthRoutes.AutoLogin, StringComparison.Ordinal)
+            ? Problem(HttpStatusCode.Unauthorized, "AUTH-007")
+            : null;
+        var browser = Browser(handleCookies: true);
+
+        // An absolute URI keeps the "//evil.example" path on this site
+        using var failed = await Browser().SendAsync(PageRequest("https://localhost//evil.example/x", "raw-evil"));
+        var loginPage = failed.Headers.Location!.OriginalString;
+        loginPage.Should().Be("/bc/login?reason=AUTH-007&ReturnUrl=%2F%2Fevil.example%2Fx");
+
+        factory.ApiResponse = () => Ok(Login(null));
+        var antiforgery = WebFactory.AntiforgeryToken(await browser.GetStringAsync(loginPage));
+        using var signedIn = await browser.PostAsync(loginPage, new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["_handler"] = "login",
+            ["Input.UserId"] = "kim",
+            ["Input.Password"] = "pass",
+            ["__RequestVerificationToken"] = antiforgery,
+        }));
+
+        signedIn.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        signedIn.Headers.Location!.Host.Should().Be("localhost");
+        signedIn.Headers.Location!.AbsolutePath.Should().Be("/");
+    }
+
     [Fact, Trait("Id", "BC-002-UT-01")]
     public async Task Coordinator_SameTokenTogether_CallsTheApiOnce()
     {

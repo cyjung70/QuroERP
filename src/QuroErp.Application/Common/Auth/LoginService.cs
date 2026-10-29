@@ -194,21 +194,35 @@ public sealed class LoginService(
         return ToResponse(user, user.LangCode, setting, now, today, previousAt, previousIp, rotated);
     }
 
-    /// <summary>Revokes this device's auto-login token, if any, and logs LOGOUT. The saved user ID stays.</summary>
-    public async Task LogoutAsync(long appUserId, LogoutRequest request, AuthClient client, CancellationToken cancellationToken)
+    /// <summary>
+    /// Revokes this device's auto-login token, if any, and logs LOGOUT. The saved user ID stays.
+    /// Without a session (<paramref name="appUserId"/> null) only the given live token is revoked and logged for its user;
+    /// an unknown or revoked token does nothing and is not a theft signal (login.md "로그아웃").
+    /// </summary>
+    public async Task LogoutAsync(long? appUserId, LogoutRequest request, AuthClient client, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
+        var tokenHash = string.IsNullOrEmpty(request.AutoLoginToken) ? null : AutoLoginToken.Hash(request.AutoLoginToken);
 
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
         var tx = uow.Transaction;
-        var user = await users.FindByIdAsync(appUserId, tx, cancellationToken);
+        if (appUserId is null)
+        {
+            var found = tokenHash is null ? null : await autoLoginTokens.FindByHashAsync(tokenHash, false, tx, cancellationToken);
+            if (found is null || found.RevokedAt is not null)
+            {
+                return;
+            }
+            appUserId = found.AppUserId;
+        }
+        var user = await users.FindByIdAsync(appUserId.Value, tx, cancellationToken);
         if (user is null)
         {
             return;
         }
-        if (!string.IsNullOrEmpty(request.AutoLoginToken))
+        if (tokenHash is not null)
         {
-            await autoLoginTokens.RevokeAsync(user.Id, AutoLoginToken.Hash(request.AutoLoginToken), now, tx, cancellationToken);
+            await autoLoginTokens.RevokeAsync(user.Id, tokenHash, now, tx, cancellationToken);
         }
         await loginLogs.InsertAsync(
             new UserLoginLog(now, user.Id, user.UserId, client.IpAddr, true, LoginEvents.Logout, null, client.UserAgent),

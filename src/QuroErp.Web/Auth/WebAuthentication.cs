@@ -100,25 +100,32 @@ public static class WebAuthentication
     {
         endpoints.MapPost(LogoutPath, async (HttpContext context, AccessTokenStore store, AuthApiClient authApi) =>
             {
-                if (!AntiforgeryCheck.IsValid(context))
+                var sessionId = context.User.FindFirst(WebAuthClaims.SessionId)?.Value;
+                var token = AutoLoginCookie.Read(context.Request);
+                // After the session expired, the page's antiforgery token was issued to the signed-in user and no longer
+                // validates. A signed-out request carrying the token cookie is same-site (the cookie is SameSite=Strict),
+                // so it may still revoke that token.
+                if (!AntiforgeryCheck.IsValid(context) && !(sessionId is null && token is not null))
                 {
                     return AntiforgeryCheck.Rejected();
                 }
-                if (context.User.FindFirst(WebAuthClaims.SessionId)?.Value is { } sessionId)
+                var login = sessionId is null ? null : store.Get(sessionId);
+                if (login is not null || token is not null)
                 {
-                    if (store.Get(sessionId) is { } login)
+                    try
                     {
-                        try
-                        {
-                            await authApi.LogoutAsync(login.AccessToken, new LogoutRequest(AutoLoginCookie.Read(context.Request)),
-                                context.Connection.RemoteIpAddress?.ToString(), context.Request.Headers.UserAgent.ToString(),
-                                context.RequestAborted);
-                        }
-                        catch (Exception e) when (e is ApiProblemException or HttpRequestException)
-                        {
-                            // Signing out of the Web host does not depend on the Api; an unrevoked token still expires
-                        }
+                        // Without a session the Api revokes the token alone (login.md "로그아웃")
+                        await authApi.LogoutAsync(login?.AccessToken, new LogoutRequest(token),
+                            context.Connection.RemoteIpAddress?.ToString(), context.Request.Headers.UserAgent.ToString(),
+                            context.RequestAborted);
                     }
+                    catch (Exception e) when (e is ApiProblemException or HttpRequestException)
+                    {
+                        // Signing out of the Web host does not depend on the Api; an unrevoked token still expires
+                    }
+                }
+                if (sessionId is not null)
+                {
                     store.Remove(sessionId);
                 }
                 AutoLoginCookie.Delete(context.Response);

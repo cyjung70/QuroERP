@@ -44,6 +44,7 @@ public static class AutoLoginCookie
 /// Shares one auto-login call per token. The Api replaces the token on every use and treats a second use as theft
 /// (revokes all the user's tokens), so page requests that arrive together (several tabs, reloads) must not each call it.
 /// [추정] A result is reused for <see cref="ReuseFor"/>; a later request has the new cookie by then.
+/// In memory, like <see cref="AccessTokenStore"/>: the Web host runs as a single instance (login.md "세션").
 /// </summary>
 public sealed class AutoLoginCoordinator(TimeProvider clock)
 {

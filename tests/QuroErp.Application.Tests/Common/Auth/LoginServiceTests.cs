@@ -431,6 +431,40 @@ public class LoginServiceTests
         _logs.Logs.Last().Should().Be(new UserLoginLog(Now, 7, "kim", IpAddr, true, LoginEvents.Logout, null, UserAgent));
     }
 
+    [Fact, Trait("Id", "BC-002-UT-02")]
+    public async Task LogoutAsync_NoSession_RevokesOnlyTheGivenTokenAndLogsItsUser()
+    {
+        var token = await SignInWithAutoLoginAsync();
+        var otherDevice = (await LoginAsync("kim", "secret", autoLogin: true)).AutoLoginToken!;
+
+        await Service.LogoutAsync(null, new LogoutRequest(token), Client, CancellationToken.None);
+
+        _autoLoginTokens.Tokens[AutoLoginToken.Hash(token)].RevokedAt.Should().Be(Now);
+        _autoLoginTokens.Tokens[AutoLoginToken.Hash(otherDevice)].RevokedAt.Should().BeNull();
+        _logs.Logs.Last().Should().Be(new UserLoginLog(Now, 7, "kim", IpAddr, true, LoginEvents.Logout, null, UserAgent));
+    }
+
+    [Theory, Trait("Id", "BC-002-UT-03")]
+    [InlineData(null)]
+    [InlineData("not-a-token")]
+    [InlineData("revoked")]
+    public async Task LogoutAsync_NoSession_NoLiveToken_DoesNothing(string? kind)
+    {
+        var token = await SignInWithAutoLoginAsync();
+        var otherDevice = (await LoginAsync("kim", "secret", autoLogin: true)).AutoLoginToken!;
+        if (kind == "revoked")
+        {
+            await Service.LogoutAsync(7, new LogoutRequest(token), Client, CancellationToken.None);
+        }
+        var logs = _logs.Logs.Count;
+
+        await Service.LogoutAsync(null, new LogoutRequest(kind == "revoked" ? token : kind), Client, CancellationToken.None);
+
+        _logs.Logs.Should().HaveCount(logs);
+        // A revoked token at logout is not a theft signal: the other device keeps its token
+        _autoLoginTokens.Tokens[AutoLoginToken.Hash(otherDevice)].RevokedAt.Should().BeNull();
+    }
+
     [Fact, Trait("Id", "BC-UC-001-T02")]
     public async Task MeAsync_ReturnsUserMenusAndDefaultWarehouse()
     {
