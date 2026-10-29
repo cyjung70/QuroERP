@@ -1,0 +1,45 @@
+{
+  "id": "TASK-TESTER-016",
+  "project": "tester",
+  "title": "SD 출하·청구 분리 테스트: 출하와 같이 청구(WITH_SHIPMENT), 여러 출하를 모아 청구(SEPARATE), 청구 시점 변경 차단",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-015.md"
+  ],
+  "rules": [
+    "BC-BR-316",
+    "SD-BR-012",
+    "SD-BR-102",
+    "SD-BR-108",
+    "SD-BR-113",
+    "SD-BR-115",
+    "SD-BR-116",
+    "SD-BR-162",
+    "SD-BR-163",
+    "SD-BR-165",
+    "SD-BR-166",
+    "SD-BR-167",
+    "SD-BR-168",
+    "SD-BR-169"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-BC-013",
+    "TASK-SD-003",
+    "TASK-SD-005",
+    "TASK-SD-063"
+  ],
+  "acceptance": [
+    "tests/scenario/SD/test_shipment_billing.py: SD-TS-015, serial. 끝나면(실패해도) 청구 시점을 WITH_SHIPMENT로 되돌린다",
+    "출하·송장·수주 수량과 상태는 DB SELECT로 확인한다 (ship_qty, billed_qty, dn_qty, status)",
+    "uv run pytest -k shipment_billing 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

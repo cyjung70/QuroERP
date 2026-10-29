@@ -16,8 +16,8 @@
 
 날짜 표기: `M` = 이번 달, `M-1` = 지난 달. `M-1/10`은 지난 달 10일이다.
 
-- 이 테스트 DB에서 지난 달 이전 날짜로 재고 이동을 만드는 테스트는 마감 시나리오(MM-TS-007·008)뿐이다. 그래서 첫 마감 대상 달은 `M-1`이다.
 - 시작할 때 `GET /api/mm/inventory-closing`의 `lastClosedMonth`가 null이어야 한다. 아니면 이전 테스트가 마감을 되돌리지 않은 것이므로 실패로 멈춘다.
+- 다른 테스트(재고·매입채무 리포트 등)가 지난달 이전 날짜로 재고 이동을 만들 수 있어 첫 마감 대상 달을 가정하지 않는다. 사전 데이터를 만든 뒤 `inventory_closing` fixture의 선행 마감으로 `nextTargetMonth`가 `M-1`이 될 때까지 차례로 마감한다.
 
 1. 공급자 V, 재고 품목 I, 고객 C (세금 코드 `NONE`)
 2. 입고 G1: `M-1/10`, 품목 I 직접 입력, 수량 10, 단가 5
@@ -41,14 +41,14 @@
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
-| 1 | 200 | — | `lastClosedMonth` null, `nextTargetMonth` = `M-1` | — |
+| 1 | 200 | — | `lastClosedMonth` null(선행 마감 없음) 또는 `M-2`, `nextTargetMonth` = `M-1` | — |
 | 2 | 200 | — | `closedMonth` = `M-1` | `bc_company.close_year_month` = `M`(`YYYYMM`). `mm_monthly_inventory`(I, `MAIN`, `M-1`): 기초 0, 입고 10, 출고 4, 기말 6. 품목 I 기말 금액 30 |
 | 3 | 200 | — | `lastClosedMonth` = `M-1`, `nextTargetMonth` = `M` | — |
 | 4 | 422 | `MM-E-002` | — | 입고·재고 이동이 생기지 않는다 |
 | 5 | 422 | `MM-E-002` | — | 송장·출고 이동이 생기지 않는다 |
 | 6 | 422 | `MM-E-402` | — | `close_year_month` = `M` 그대로 |
-| 7 | 200 | — | `reopenedMonth` = `M-1` | `close_year_month` null. `M-1`의 `mm_monthly_inventory` 확정 행 없음 |
+| 7 | 200 | — | `reopenedMonth` = `M-1` | `close_year_month` = 선행 마감이 없었으면 null, 있었으면 `M-1`(`YYYYMM`). `M-1`의 `mm_monthly_inventory` 확정 행 없음 |
 | 8 | 201 | — | — | `M-1/25` 입고 이동 1건 |
 
-- 테스트가 끝나면 마감 상태가 시작 때와 같아야 한다 (`lastClosedMonth` null). 실패해도 fixture가 마감을 취소한다.
+- 테스트가 끝나면 마감 상태가 시작 때와 같아야 한다 (`lastClosedMonth` null). 실패해도 fixture가 선행 마감까지 모두 취소한다.
 - 5단계는 SD 송장도 같은 마감 검사를 거치는지 본다.

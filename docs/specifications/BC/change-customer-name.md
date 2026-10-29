@@ -17,9 +17,9 @@
 관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
 1. 원 고객을 찾고 새 이름을 넣는다. 새 이름은 앞뒤 공백을 지우고 대문자로 바꾼다 (SD-BR-310·302).
-2. 실행 전 확인 API로 방식(이름 변경 / 고객 합치기)과 옮길 건수(수주, 송장·Credit Memo, 입금, 기초 잔액)를 보여 주고 확인을 받는다 (SD-BR-313).
+2. 실행 전 확인 API로 방식(이름 변경 / 고객 합치기)과 옮길 건수(수주, 출하, 송장·Credit Memo, 입금, 기초 잔액)를 보여 주고 확인을 받는다 (SD-BR-313).
 3. 새 이름의 고객이 없으면 원 고객 이름만 바꾼다. 거래는 고객 id로 따라간다 (SD-BR-311).
-4. 새 이름의 고객이 있으면 원 고객의 수주·송장·Credit Memo·입금·기초 잔액을 대상 고객으로 옮기고 원 고객을 사용 안 함으로 바꾼다. 한 트랜잭션이다 (SD-BR-312).
+4. 새 이름의 고객이 있으면 원 고객의 수주·출하·송장·Credit Memo·입금·기초 잔액을 대상 고객으로 옮기고 원 고객을 사용 안 함으로 바꾼다. 한 트랜잭션이다 (SD-BR-312).
 5. 끝나면 바뀐 건수를 보여 준다.
 
 ## 대체 흐름
@@ -46,7 +46,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/change-customer-name/preview?customerId=&newName= | 실행 전 확인: { mode: RENAME\|MERGE, newName(정규화), targetCustomerId, counts: { salesOrders, invoices, receipts, openingBalances } } — 아무것도 바꾸지 않는다 (SD-BR-313). 422 SD-E-310 |
+| GET | /api/bc/change-customer-name/preview?customerId=&newName= | 실행 전 확인: { mode: RENAME\|MERGE, newName(정규화), targetCustomerId, counts: { salesOrders, shipments, invoices, receipts, openingBalances } } — 아무것도 바꾸지 않는다 (SD-BR-313). 422 SD-E-310 |
 | POST | /api/bc/change-customer-name | 실행 { customerId, newName } — 한 트랜잭션. 200 { mode, counts }. 422 SD-E-310, 고객 수정 권한 없으면 403 (SD-BR-310~313) |
 
 ## 관련 테이블

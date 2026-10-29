@@ -45,6 +45,8 @@
 - [MM-TS-012 매입채무 리포트 — 현황 실행, 지급 예정일 기준 연령, 기간 안 공급자 잔액](scenarios/MM/MM-TS-012.md)
 - [MM-TS-013 품목 마스터 무결성 — 유형 변경, 재고 값 무시, 세트 구성, 대체 품목, 바코드, 이미지](scenarios/MM/MM-TS-013.md)
 - [MM-TS-014 예외 입고 줄 파일 검사, 지급 줄 수정 차단, 공급자 메모·삭제](scenarios/MM/MM-TS-014.md)
+- [MM-TS-015 연도 경계 마감과 이동 없는 달의 이월](scenarios/MM/MM-TS-015.md)
+- [MM-TS-016 마스터 일괄 등록 — 실제 데이터 길이, 화면과 같은 검사, 전체 차단, 재고 없이 등록](scenarios/MM/MM-TS-016.md)
 
 ## SD 시나리오
 
@@ -62,6 +64,7 @@
 - [SD-TS-012 기준일 매출채권 잔액 — Credit 적용 줄 일자, 기준일 상세, 최대 고객 수](scenarios/SD/SD-TS-012.md)
 - [SD-TS-013 판매·구매 단가표 저장과 삭제, 신용 한도 경고, 장바구니 담기 검사](scenarios/SD/SD-TS-013.md)
 - [SD-TS-014 문서 번호 동시 채번과 입금 줄 수정 차단](scenarios/SD/SD-TS-014.md)
+- [SD-TS-015 출하와 청구 분리 — 출하와 같이 청구, 따로 모아 청구](scenarios/SD/SD-TS-015.md)
 
 ## 이관 검증 시나리오
 

@@ -1,0 +1,59 @@
+{
+  "id": "TASK-TESTER-015",
+  "project": "tester",
+  "title": "MM 연도 경계 마감·이월과 마스터 일괄 등록 테스트, 재고 마감 fixture 선행 마감",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-015.md",
+    "tester/docs/scenarios/MM/MM-TS-016.md",
+    "tester/docs/scenarios/MM/MM-TS-007.md",
+    "tester/docs/scenarios/MM/MM-TS-008.md"
+  ],
+  "rules": [
+    "MM-BR-004",
+    "MM-BR-006",
+    "MM-BR-401",
+    "MM-BR-402",
+    "MM-BR-403",
+    "MM-BR-406",
+    "MM-BR-804",
+    "MM-BR-825",
+    "MM-BR-826",
+    "MM-BR-827",
+    "MM-BR-828",
+    "MM-BR-852",
+    "MM-BR-859",
+    "MM-BR-860",
+    "MM-BR-861",
+    "MM-BR-862",
+    "SD-BR-302",
+    "SD-BR-314",
+    "SD-BR-315",
+    "SD-BR-316",
+    "SD-BR-317"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-007",
+    "TASK-MM-009",
+    "TASK-MM-015",
+    "TASK-BC-049",
+    "TASK-MM-040",
+    "TASK-SD-059"
+  ],
+  "acceptance": [
+    "tests/conftest.py: inventory_closing fixture에 close_until(month)를 더하고, 끝날 때 이번 실행에서 마감한 달을 최근 달부터 모두 취소한다. 시작할 때 마감된 달이 있으면 실패한다",
+    "tests/scenario/MM/test_closing_year_boundary.py: MM-TS-015, serial. 연도 Y는 이번 달 기준으로 정한다",
+    "tests/api/MM/test_master_uploads.py: MM-TS-016. 업로드 파일은 tmp_path에 UTF-8 CSV로 만든다",
+    "MM-TS-007·008 테스트가 선행 마감 뒤에도 통과한다 (lastClosedMonth null 또는 M-2)",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k \"closing or master_uploads\" 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

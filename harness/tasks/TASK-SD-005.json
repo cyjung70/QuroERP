@@ -1,7 +1,7 @@
 {
   "id": "TASK-SD-005",
   "project": "core",
-  "title": "매출 송장(출고) API (Application·Domain·Infrastructure)",
+  "title": "매출 송장 API (Application·Domain·Infrastructure)",
   "module": "SD",
   "layer": [
     "Api",
@@ -40,6 +40,9 @@
     "SD-BR-406",
     "SD-BR-309",
     "SD-BR-261",
+    "SD-BR-136",
+    "SD-BR-166",
+    "BC-BR-316",
     "SD-BR-131",
     "SD-BR-132",
     "SD-BR-133",
@@ -55,24 +58,7 @@
     "BC-BR-545",
     "BC-BR-525",
     "BC-BR-546",
-    "BC-BR-547",
-    "MM-BR-001",
-    "MM-BR-002",
-    "MM-BR-003",
-    "MM-BR-004",
-    "MM-BR-005",
-    "MM-BR-006",
-    "MM-BR-007",
-    "MM-BR-008",
-    "MM-BR-009",
-    "MM-BR-010",
-    "MM-BR-601",
-    "MM-BR-602",
-    "MM-BR-603",
-    "MM-BR-604",
-    "MM-BR-606",
-    "MM-BR-607",
-    "MM-BR-703"
+    "BC-BR-547"
   ],
   "skills": [
     "quro-api",
@@ -87,21 +73,16 @@
     "TASK-CORE-003",
     "TASK-CORE-005",
     "TASK-CORE-007",
-    "TASK-CORE-008",
-    "TASK-CORE-009",
-    "TASK-CORE-011",
     "TASK-CORE-014",
     "TASK-CORE-015",
     "TASK-CORE-018",
     "TASK-CORE-019",
-    "TASK-MM-025"
+    "TASK-SD-063"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
-    "마이너스 재고 모드 3종 테스트 (현재고·시점별·월말)",
-    "줄 창고별 재고 이동, 줄 변경·삭제는 반대 부호 이동 (MM-BR-703·601)",
     "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)"
   ],
   "estimateHours": 3,
