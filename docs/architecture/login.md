@@ -18,6 +18,7 @@
 - 브라우저 ↔ Web: ASP.NET Core 쿠키 인증 (`HttpOnly`, `Secure`, `SameSite=Lax`). Antiforgery 토큰을 쓴다.
 - Web ↔ Api: 로그인 때 받은 내부 토큰 (security.md). 이 문서의 "인증 쿠키 발급"은 Web 쿠키 발급을 뜻한다.
 - 자동 로그인 토큰 쿠키는 Web이 발급·삭제하고, 검증·교체는 Api(`POST /api/auth/auto-login`)가 한다.
+- 로그인 화면은 로그인 전에 `GET /api/auth/login-options`(인증 없음, 요청 수 제한)로 `auto_login_enabled`·`password_reset_mode`·`session_idle_minutes`만 읽는다. 다른 설정은 내보내지 않는다.
 
 ## 설정 (`sys_auth_setting`, 1행)
 
