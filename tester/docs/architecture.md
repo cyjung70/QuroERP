@@ -25,18 +25,18 @@ tester/
 
 | 이름 | 뜻 | 예 |
 | --- | --- | --- |
-| `QURO_API_URL` | REST API 주소 | `https://localhost:7101` |
-| `QURO_WEB_URL` | Blazor 화면 주소 (E2E) | `https://localhost:7201` |
+| `QURO_API_URL` | REST API 주소 | `https://localhost:7118` |
+| `QURO_WEB_URL` | Blazor 화면 주소 (E2E) | `https://localhost:7274` |
 | `QURO_TEST_USER`, `QURO_TEST_PASSWORD` | 테스트 사용자 (관리자 권한) | — |
 | `QURO_TEST_INITIAL_PASSWORD` | 테스트 DB 준비 때 테스트 사용자를 만드는 초기 비밀번호 (`QURO_TEST_PASSWORD`와 달라야 한다) | — |
 | `QURO_TEST_DB` | 테스트 DB 읽기 전용 연결 문자열 (Migration, 검증 조회) | — |
 | `QURO_LANGS` | 메시지 검사 언어 | `ko,en` |
 | `QURO_AUTH_RATE_LIMIT` | 테스트 환경 API의 `Auth__RateLimit__PerMinute` 값 (`docker-compose.test.yml`에서 같은 값으로 준다) | `60` |
-| `QURO_API_HTTP_URL` | REST API의 HTTP 주소 (HTTPS 이동 검사). 없으면 그 단계는 건너뛴다 | `http://localhost:5101` |
+| `QURO_API_HTTP_URL` | REST API의 HTTP 주소 (HTTPS 이동 검사). 없으면 그 단계는 건너뛴다 | `http://localhost:5058` |
 | `QURO_COUNTRY` | 테스트 DB의 회사 국가 | `US` (기본), `KR` |
 
 - 값은 저장소에 쓰지 않는다. 로컬은 `tester/.env`(커밋 금지), CI는 비밀 변수로 준다.
-- 주소 예시는 [추정]이다. 실제 포트는 본체 `launchSettings.json`을 따른다.
+- 주소 예시는 본체 `launchSettings.json`의 로컬 개발 포트다 (API `QuroErp.Api`, 화면 `QuroErp.Web`). compose 환경은 compose 파일의 포트를 따른다.
 
 ## 실행 환경
 

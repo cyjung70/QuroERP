@@ -68,11 +68,11 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "4642ff9fb8a3b19b3a6b9f6ffc072b24ab138d57a2b6477dfec51a2e30648c41"
+      "sha256": "c23ad375ed87936e99d1925f7bda2d8297aad0720e772b6ae4114f1278dbc51a"
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "84833160f11b9f9e1f7850203f30615fe6c047faa42a4c6ad334f2df9dbea49b"
+      "sha256": "427bc58507dc4e3e44fef47da1ddab411ecbc8ea9c330ef3d06b8ca39a78e2a1"
     },
     {
       "path": "docs/architecture/api.md",
@@ -108,7 +108,7 @@
     },
     {
       "path": "docs/architecture/login.md",
-      "sha256": "2b505007091988a13e5dcfbf56cdbc60d6510f7b38d7b8c0acafa02007edef00"
+      "sha256": "69ec96b6c6810eeaf8dccfa12e775d6101348efdd2a6f082d3c4ec863e24a44e"
     },
     {
       "path": "docs/architecture/print-documents.md",
@@ -128,7 +128,7 @@
     },
     {
       "path": "docs/architecture/security.md",
-      "sha256": "7a3450a1af5b2c427a735174c16f3c6f716dbee0ec504ceb9beb4056eb4850ef"
+      "sha256": "711a6051d113b91a2af8990c63fbf86f39ea779255d50a3309fc14e3a63cdd15"
     },
     {
       "path": "docs/architecture/subprojects.md",
@@ -1580,7 +1580,7 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "cd8e9e0e00f0bb319dfd27df8b52d2ebfbbee741085ba4dcc5b539746bb3b264"
+      "sha256": "7654c82f0ea4160cd03d8d16b87f4d86c08f59113fa82061b7f69a58f9e64041"
     },
     {
       "path": "tester/docs/INDEX.md",
