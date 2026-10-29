@@ -1,0 +1,142 @@
+@page "/bc/role-menu"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Bc.Roles
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Web.Bc.Roles
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject RoleApiClient Api
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-005 role menu permissions, screen type M. Pick a role, then add menus from the dialog, change Full Access or delete rows,
+   and save them together (BC-BR-211~213). The API checks every rule, including keeping a manager of this screen (BC-BR-216). *@
+
+<PageTitle>@L["Bc.RoleMenu.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="role-menu-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="RoleMenuRow" Title="@L["Bc.RoleMenu.Title"]" TestId="role-menu" LoadOnStart="_roleId is not null"
+                   Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)"
+                   OnAddRequested="@(_canEdit ? EventCallback.Factory.Create(this, OpenAddDialog) : default)">
+        <SearchContent>
+            <QuroSelect Label="@L["Bc.RoleMenu.Role"]" @bind-Value="_roleId" Options="_roles" Required TestId="role-menu-search-role" />
+        </SearchContent>
+        <Columns>
+            <QuroColumn Title="@L["Bc.RoleMenu.MenuCode"]" Value="r => r.MenuCode" />
+            <QuroColumn Title="@L["Bc.RoleMenu.Name"]" Value="r => MenuName(r.MenuCode, r.Name)" />
+            <QuroColumn Title="@L["Bc.RoleMenu.Type"]" Value="r => TypeName(r.Type)" />
+            <QuroColumn Title="@L["Bc.RoleMenu.FullAccess"]" Value="r => r.FullAccess" Context="row">
+                <QuroCheckbox Label="@L["Bc.RoleMenu.FullAccess"]" HideLabel @bind-Value="row.FullAccess" TestId="role-menu-grid-full-access" />
+            </QuroColumn>
+        </Columns>
+    </QuroMultiGrid>
+
+    <QuroLookupDialog TItem="MenuOptionDto" Title="@L["Bc.RoleMenu.AddMenu"]" TestId="role-menu-menu-lookup"
+                      @bind-Visible="_addOpen" Search="FindMenusAsync" OnSelected="AddMenu">
+        <Columns>
+            <QuroColumn TRow="MenuOptionDto" Title="@L["Bc.RoleMenu.MenuCode"]" Value="m => m.MenuCode" />
+            <QuroColumn TRow="MenuOptionDto" Title="@L["Bc.RoleMenu.Name"]" Value="m => MenuName(m.MenuCode, m.Name)" />
+            <QuroColumn TRow="MenuOptionDto" Title="@L["Bc.RoleMenu.Type"]" Value="m => TypeName(m.Type)" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string RequiredCode = "Common-E-005";
+    private const string DuplicateMenuCode = "BC-E-212";
+    private const string UnavailableCode = "BC-E-003";
+
+    private QuroMultiGrid<RoleMenuRow>? _grid;
+    private IReadOnlyList<CodeItemDto> _roles = [];
+    private string? _roleId;
+    private long? _loadedRoleId;
+    private bool _canEdit;
+    private bool _ready;
+    private bool _addOpen;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy is applied, as in RoleController (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        try
+        {
+            _roles = (await Api.GetInUseAsync(CancellationToken.None))
+                .Select(r => new CodeItemDto(r.Id.ToString(CultureInfo.InvariantCulture), r.RoleCode)).ToList();
+            // BC-BR-211: the role comes first; the first role in use is shown on open
+            _roleId = _roles.FirstOrDefault()?.Code;
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    private async Task<IReadOnlyList<RoleMenuRow>> LoadAsync()
+    {
+        if (!long.TryParse(_roleId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var roleId))
+        {
+            _loadedRoleId = null;
+            throw new ApiProblemException(new ApiProblem(400, RequiredCode, [L["Bc.RoleMenu.Role"]]));
+        }
+        var menus = await Api.GetMenusAsync(roleId, CancellationToken.None);
+        _loadedRoleId = roleId;
+        return menus.Select(RoleMenuRow.From).ToList();
+    }
+
+    // Saves for the role the rows were read for, even if the role select changed since
+    private async Task SaveAsync(BatchChanges<RoleMenuRow> changes)
+    {
+        try
+        {
+            await Api.SaveMenusAsync(_loadedRoleId!.Value, RoleMenuRow.ToRequest(changes.Added, changes.Updated, changes.Deleted), CancellationToken.None);
+        }
+        catch (ApiProblemException e) when (e.Problem is { Code: DuplicateMenuCode, Args: [var menuId, ..] })
+        {
+            // BC-E-212 names the menu id; show its code instead
+            var row = _grid!.Items.FirstOrDefault(r => r.MenuId.ToString(CultureInfo.InvariantCulture) == menuId);
+            throw new ApiProblemException(e.Problem with { Args = [row?.MenuCode ?? menuId] });
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        if (_loadedRoleId is not null)
+        {
+            _addOpen = true;
+        }
+    }
+
+    // BC-BR-212: menus the role does not have, without the ones already added on the grid
+    private async Task<IReadOnlyList<MenuOptionDto>> FindMenusAsync(string? keyword)
+    {
+        var onGrid = _grid!.Items.Select(r => r.MenuId).ToHashSet();
+        var menus = await Api.GetUnassignedMenusAsync(_loadedRoleId!.Value, keyword, CancellationToken.None);
+        return menus.Where(m => !onGrid.Contains(m.MenuId)).ToList();
+    }
+
+    private void AddMenu(MenuOptionDto menu) => _grid!.AddRows([RoleMenuRow.From(menu)]);
+
+    // BC-BR-202: the translated menu name when there is one, else the stored name
+    private string? MenuName(string menuCode, string? name) =>
+        L[$"Menu.{menuCode}"] is { ResourceNotFound: false } translated ? translated.Value : name;
+
+    private string? TypeName(string? type) =>
+        type is not null && L[$"Bc.RoleMenu.Type.{type}"] is { ResourceNotFound: false } name ? name.Value : type;
+}

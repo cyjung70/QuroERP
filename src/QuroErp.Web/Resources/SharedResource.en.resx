@@ -219,4 +219,17 @@
   <data name="BC-E-121" xml:space="preserve"><value>This user ID is already taken.</value></data>
   <data name="BC-E-122" xml:space="preserve"><value>{0} is not valid. Check the input rules (required, length, format, role in use).</value></data>
   <data name="BC-E-131" xml:space="preserve"><value>You cannot change your own role or in-use setting.</value></data>
+  <data name="Bc.RoleMenu.Title" xml:space="preserve"><value>Role Menu Permissions</value></data>
+  <data name="Bc.RoleMenu.Role" xml:space="preserve"><value>Role</value></data>
+  <data name="Bc.RoleMenu.MenuCode" xml:space="preserve"><value>Menu ID</value></data>
+  <data name="Bc.RoleMenu.Name" xml:space="preserve"><value>Menu name</value></data>
+  <data name="Bc.RoleMenu.Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Bc.RoleMenu.Type.P" xml:space="preserve"><value>Program</value></data>
+  <data name="Bc.RoleMenu.Type.U" xml:space="preserve"><value>Popup</value></data>
+  <data name="Bc.RoleMenu.Type.M" xml:space="preserve"><value>Menu group</value></data>
+  <data name="Bc.RoleMenu.FullAccess" xml:space="preserve"><value>Full Access</value></data>
+  <data name="Bc.RoleMenu.AddMenu" xml:space="preserve"><value>Add menu</value></data>
+  <data name="BC-E-211" xml:space="preserve"><value>Choose a role. Only roles in use can be chosen.</value></data>
+  <data name="BC-E-212" xml:space="preserve"><value>Menu {0} is already assigned to this role.</value></data>
+  <data name="BC-E-216" xml:space="preserve"><value>At least one role in use must keep Full Access to the role menu permission screen, and you cannot remove it from your own role.</value></data>
 </root>
