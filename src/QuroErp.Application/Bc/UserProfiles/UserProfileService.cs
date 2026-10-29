@@ -25,7 +25,7 @@ public sealed class UserProfileService(
         return ToDto(row);
     }
 
-    /// <exception cref="DomainException">BC-E-102 with the property name, BC-E-403 for a language not in use.</exception>
+    /// <exception cref="DomainException">BC-E-102 with the property name, BC-E-405 for a language not in use.</exception>
     /// <exception cref="ConcurrencyException">updatedAt differs from the stored row (BC-BR-105).</exception>
     /// <exception cref="NotFoundException">Common-E-006.</exception>
     public async Task<UserProfileDto> UpdateAsync(

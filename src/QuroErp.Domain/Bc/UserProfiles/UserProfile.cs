@@ -12,8 +12,8 @@ public static partial class UserProfile
     /// <summary>A value breaks the my info field rules. Arg: property name.</summary>
     public const string InvalidFieldCode = "BC-E-102";
 
-    /// <summary>The language is not in use. Arg: language code.</summary>
-    public const string LanguageNotInUseCode = "BC-E-403";
+    /// <summary>The chosen language is not in use (BC-BR-403). Arg: language code.</summary>
+    public const string LanguageNotInUseCode = "BC-E-405";
 
     public const int UserNameMaxLength = 40;
     public const int EmailMaxLength = 30;

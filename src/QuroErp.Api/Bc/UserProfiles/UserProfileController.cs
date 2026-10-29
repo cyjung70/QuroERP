@@ -16,7 +16,7 @@ public sealed class UserProfileController(UserProfileService service) : Controll
     [HttpGet]
     public Task<UserProfileDto> Get(CancellationToken cancellationToken) => service.GetAsync(User.GetAppUserId(), cancellationToken);
 
-    /// <summary>200 with the saved info. 422 BC-E-102 or BC-E-403; 409 Common-E-004 when updatedAt is stale.</summary>
+    /// <summary>200 with the saved info. 422 BC-E-102 or BC-E-405; 409 Common-E-004 when updatedAt is stale.</summary>
     [HttpPut]
     public Task<UserProfileDto> Update(UpdateUserProfileRequest request, CancellationToken cancellationToken) =>
         service.UpdateAsync(User.GetAppUserId(), request, User.Identity!.Name!, cancellationToken);

@@ -156,4 +156,18 @@
   <data name="AUTH-013" xml:space="preserve"><value>You cannot reuse a recent password.</value></data>
   <data name="AUTH-014" xml:space="preserve"><value>Password cannot be the same as your user ID.</value></data>
   <data name="AUTH-015" xml:space="preserve"><value>Current password is incorrect.</value></data>
+  <data name="Bc.UserProfile.Title" xml:space="preserve"><value>My Info</value></data>
+  <data name="Bc.UserProfile.Userid" xml:space="preserve"><value>User ID</value></data>
+  <data name="Bc.UserProfile.Username" xml:space="preserve"><value>Name</value></data>
+  <data name="Bc.UserProfile.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Bc.UserProfile.Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Bc.UserProfile.LangCode" xml:space="preserve"><value>Default Language</value></data>
+  <data name="Bc.UserProfile.DefaultWarehouse" xml:space="preserve"><value>Default Warehouse</value></data>
+  <data name="Bc.UserProfile.CompanyDefaultWarehouse" xml:space="preserve"><value>Leave empty to use the company default warehouse ({0}).</value></data>
+  <data name="Bc.UserProfile.ChangePassword" xml:space="preserve"><value>Change Password</value></data>
+  <data name="Bc.UserProfile.RevokeTokens" xml:space="preserve"><value>Log Out on All Devices</value></data>
+  <data name="Bc.UserProfile.RevokeTokensConfirm" xml:space="preserve"><value>This ends auto-login on all devices. This screen stays signed in. Continue?</value></data>
+  <data name="Bc.UserProfile.TokensRevoked" xml:space="preserve"><value>Auto-login has been ended on all devices.</value></data>
+  <data name="BC-E-405" xml:space="preserve"><value>Language '{0}' is not in use.</value></data>
+  <data name="BC-E-102" xml:space="preserve"><value>{0} is not valid. Check the rules (required, length, format, warehouse in use).</value></data>
 </root>

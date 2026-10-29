@@ -63,3 +63,5 @@ h1:focus {
 .quro-master-detail { display: grid; gap: 1rem; }
 .page-error { color: #b00020; }
 .page-notice { color: #1b5e20; }
+.quro-hint { color: #555; font-size: 0.9em; margin: 0; }
+.quro-actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-top: 1rem; }

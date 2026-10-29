@@ -11,3 +11,6 @@ window.quroDownload = async (fileName, streamReference) => {
     link.remove();
     URL.revokeObjectURL(url);
 };
+
+// Submits a normal (non-interactive) form, e.g. the culture form after the my info language changes.
+window.quroSubmit = (form) => form.requestSubmit();
