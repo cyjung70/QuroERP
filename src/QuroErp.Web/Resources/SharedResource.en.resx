@@ -174,4 +174,6 @@
   <data name="Common.Next" xml:space="preserve"><value>Next</value></data>
   <data name="Common.FirstRecord" xml:space="preserve"><value>This is the first record.</value></data>
   <data name="Common.LastRecord" xml:space="preserve"><value>This is the last record.</value></data>
+  <data name="Common.UserMenu" xml:space="preserve"><value>User menu</value></data>
+  <data name="Common.MyInfo" xml:space="preserve"><value>My info</value></data>
 </root>
