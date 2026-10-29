@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<TranslationService>();
         services.AddScoped<ICodeValidator, CodeValidator>();
         services.AddScoped<CodeService>();
+        services.AddScoped<CodeMinorService>();
         services.AddScoped<CompanyLogoService>();
         services.AddScoped<CompanyService>();
         services.AddScoped<AuthSettingService>();

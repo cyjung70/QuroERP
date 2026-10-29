@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
+using QuroErp.Api.Tests.Bc.Codes;
 using QuroErp.Api.Tests.Bc.Menus;
 using QuroErp.Api.Tests.Bc.Roles;
 using QuroErp.Api.Tests.Bc.Users;
@@ -96,6 +98,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Company menus (BC-UC-006).</summary>
     public InMemoryMenuRepository Menus { get; } = new();
 
+    /// <summary>Minor codes of code management (BC-UC-008). Their names come through the translation fake.</summary>
+    public InMemoryCodeMinorRepository CodeMinors { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -133,7 +138,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IPasswordHistoryRepository>(PasswordHistory);
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
-            services.AddSingleton<ITranslationRepository, FakeTranslationRepository>();
+            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors));
             services.AddSingleton<ICompanyRepository>(Companies);
             services.AddSingleton<ILocalizationRepository>(Localization);
             services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
@@ -142,6 +147,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IWarehouseRepository>(new FakeWarehouseRepository(this));
             services.AddSingleton<IRoleRepository>(Roles);
             services.AddSingleton<IMenuRepository>(Menus);
+            services.AddSingleton<ICodeMinorRepository>(CodeMinors);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
@@ -342,7 +348,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 : ItemCodes.TryGetValue(majorCode, out var minors) && minors.Contains(minorCode));
     }
 
-    private sealed class FakeTranslationRepository : ITranslationRepository
+    private sealed class FakeTranslationRepository(InMemoryCodeMinorRepository codeMinors) : ITranslationRepository
     {
         private static readonly List<TranslationRow> Rows =
         [
@@ -354,7 +360,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public Task<IReadOnlyList<TranslationRow>> FindAsync(
             TranslationTarget target, IReadOnlyCollection<long> ownerIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<TranslationRow>>(Rows.Where(r => ownerIds.Contains(r.OwnerId)).ToList());
+            Task.FromResult<IReadOnlyList<TranslationRow>>(Rows.Where(r => ownerIds.Contains(r.OwnerId))
+                .Concat(target == TranslationTarget.CodeMinor ? codeMinors.NamesOf(ownerIds) : [])
+                .ToList());
     }
 
     private sealed class FakeApiClientRepository(Dictionary<string, ApiClient> clients) : IApiClientRepository

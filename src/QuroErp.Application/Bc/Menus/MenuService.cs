@@ -5,6 +5,7 @@ using QuroErp.Application.Common.Persistence;
 using QuroErp.Contracts.Bc.Menus;
 using QuroErp.Domain.Bc.Menus;
 using QuroErp.Domain.Common;
+using QuroErp.Domain.Common.Codes;
 
 namespace QuroErp.Application.Bc.Menus;
 
