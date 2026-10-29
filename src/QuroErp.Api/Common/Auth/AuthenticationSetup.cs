@@ -23,6 +23,9 @@ public static class AuthenticationSetup
     /// <summary>Signed-in user (JWT) without the password-change gate: me, logout, refresh.</summary>
     public const string SessionPolicy = "session";
 
+    /// <summary>Signed-in user (JWT) with the password-change gate. API clients have no user, so they get 401.</summary>
+    public const string UserPolicy = "user";
+
     /// <summary>Requests per minute per IP on /api/auth/* (login.md "설정", appsettings).</summary>
     public const string RateLimitPerMinuteKey = "Auth:RateLimit:PerMinute";
 
@@ -77,7 +80,9 @@ public static class AuthenticationSetup
         services.AddAuthorizationBuilder()
             .SetDefaultPolicy(signedIn)
             .SetFallbackPolicy(signedIn)
-            .AddPolicy(SessionPolicy, p => p.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser());
+            .AddPolicy(SessionPolicy, p => p.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser())
+            .AddPolicy(UserPolicy, p => p.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser()
+                .AddRequirements(new PasswordChangedRequirement()));
         services.AddSingleton<IAuthorizationHandler, PasswordChangedRequirement>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationResultHandler>();
 

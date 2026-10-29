@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
+using QuroErp.Application.Bc.UserProfiles;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
@@ -18,6 +19,7 @@ using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Domain.Bc.Items;
+using QuroErp.Domain.Bc.UserProfiles;
 using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Tests;
@@ -42,6 +44,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public const string ChangeUserId = "changer";
     public const string ForcedChangeUserId = "forced";
     public const string StaleUserId = "stale";
+
+    /// <summary>User whose info the my info tests change (BC-UC-003).</summary>
+    public const string ProfileUserId = "profile";
+    public const long ProfileUserKey = 16;
 
     /// <summary>Requests per minute per IP on /api/auth/*. High here; the rate limit test lowers it to the real 10.</summary>
     public const string TestRateLimit = "1000";
@@ -74,6 +80,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Warehouse choice list the API returns as is (the repository filters and sorts).</summary>
     public List<WarehouseOptionDto> WarehouseOptions { get; } = [new(1, "MAIN", "Main"), new(2, "W02", "Second")];
 
+    /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
+    public InMemoryUserProfileRepository UserProfiles { get; } = new();
+
     /// <summary>Inventory setting state; DENY at start.</summary>
     public InMemoryInventorySettingRepository InventorySettings { get; } = new();
 
@@ -96,6 +105,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 new() { Id = 13, UserId = ChangeUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash },
                 new() { Id = 14, UserId = ForcedChangeUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash, MustChangePassword = true },
                 new() { Id = 15, UserId = StaleUserId, RoleCode = "admin", ValidFlag = "Y", PasswordHash = hash },
+                new() { Id = ProfileUserKey, UserId = ProfileUserId, RoleCode = "user", ValidFlag = "Y", PasswordHash = hash },
             ];
             services.AddSingleton<IUnitOfWorkFactory, FakeUnitOfWorkFactory>();
             services.AddSingleton<IAppUserRepository>(new FakeAppUserRepository(users));
@@ -111,6 +121,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
             services.AddSingleton<IItemRepository>(Items);
             services.AddSingleton<IWarehouseRepository>(new FakeWarehouseRepository(this));
+            services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
             {
@@ -488,6 +499,43 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 id, item.ItemCd, f.ItemName, f.ItemName2, f.ItemDesc, f.ItemType, f.Unit, f.ItemClass, f.ValidFlag, f.UsdPrc, f.SoUsdPrc,
                 f.UpcCode, f.Location, f.ReorderPoint, f.Memo1, f.Memo2, f.Memo3, f.Memo4, f.Memo5, f.ItemGrade, f.Taxable ?? true,
                 f.VatKind ?? Item.VatTaxable, item.Plating, item.ItemGroupCd, item.MvgCost, item.OnhandQty, item.StkVal, updatedAt);
+        }
+    }
+
+    public sealed class InMemoryUserProfileRepository : IUserProfileRepository
+    {
+        private static readonly DateTimeOffset Start = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
+
+        public ConcurrentDictionary<long, UserProfileRow> Rows { get; } = new()
+        {
+            [7] = new UserProfileRow(7, UserId, "Kim", null, null, "ko", null, "W01", "Main", Start),
+            [ProfileUserKey] = new UserProfileRow(ProfileUserKey, ProfileUserId, "Profile", null, null, "ko", null, "W01", "Main", Start),
+        };
+
+        public Task<UserProfileRow?> FindAsync(long appUserId, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Rows.GetValueOrDefault(appUserId));
+
+        public Task<bool> IsLanguageInUseAsync(string langCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(langCode is "ko" or "en");
+
+        public Task<bool> IsWarehouseInUseAsync(long warehouseId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(warehouseId == 1);
+
+        public Task<bool> UpdateAsync(
+            long appUserId, UserProfileFields fields, DateTimeOffset expectedUpdatedAt, string updatedBy,
+            IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            var row = Rows[appUserId];
+            if (row.UpdatedAt != expectedUpdatedAt)
+            {
+                return Task.FromResult(false);
+            }
+            Rows[appUserId] = row with
+            {
+                UserName = fields.UserName, Email = fields.Email, Phone = fields.Phone, LangCode = fields.LangCode,
+                DefaultWarehouseId = fields.DefaultWarehouseId, UpdatedAt = row.UpdatedAt.AddSeconds(1),
+            };
+            return Task.FromResult(true);
         }
     }
 }
