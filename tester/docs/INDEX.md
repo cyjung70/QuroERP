@@ -66,6 +66,7 @@
 - [SD-TS-014 문서 번호 동시 채번과 입금 줄 수정 차단](scenarios/SD/SD-TS-014.md)
 - [SD-TS-015 출하와 청구 분리 — 출하와 같이 청구, 따로 모아 청구](scenarios/SD/SD-TS-015.md)
 - [SD-TS-016 출력 문서 PDF 내용 — 송장 번호·줄·합계, 세트 구성품 목록](scenarios/SD/SD-TS-016.md)
+- [SD-TS-017 출하 입력 검사 — 수주 가져오기, 수량·단가, 수주 줄과 직접 줄 혼합, 통화](scenarios/SD/SD-TS-017.md)
 
 ## 이관 검증 시나리오
 

@@ -124,7 +124,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "66b758b2b18cbf899a4cb341bc9c64571ddf22847e25b2a7d3854bf3d53f6698"
+      "sha256": "bf4f7ce2ac8ad08e87db007a60f2765e3ebf9d36c67e662966cb1d046e6a93fa"
     },
     {
       "path": "docs/architecture/security.md",
@@ -164,7 +164,7 @@
     },
     {
       "path": "docs/business-rules/BC/tax.md",
-      "sha256": "1e6f38d8e8eaa9bd89fa8f0e198cf43db65b6aec831fa30c1295d436ad5c8dda"
+      "sha256": "265b008745dbe3638221c6a6967d6d3db0ea38f94fca14d9804e64b4b1cae797"
     },
     {
       "path": "docs/business-rules/BC/user.md",
@@ -300,7 +300,7 @@
     },
     {
       "path": "docs/business-rules/SD/shipment.md",
-      "sha256": "e21ff8898fe070b9a421efad1132d40f72b9f76c8b4931756a169994ca174d1f"
+      "sha256": "bc3f5dd88391e16c8fa9c65e212a2e73c26bc2aee255b2bbaec93cba32bf0bee"
     },
     {
       "path": "docs/glossary.md",
@@ -744,7 +744,7 @@
     },
     {
       "path": "docs/specifications/SD/shipment.md",
-      "sha256": "6e4fb2009077b3e396f52d07ec847294f35353bd0c66aff5d297cb2e58bb14bb"
+      "sha256": "0f419e7a386124ea424618251eadd6b6bd44349d52d0a249ec3fc1670c171060"
     },
     {
       "path": "game-academy/AGENTS.md",
@@ -1117,6 +1117,10 @@
     {
       "path": "harness/tasks/TASK-CORE-019.json",
       "sha256": "ce1fd47ce637e689246adef3b7b31e97095cf4b3d2363c6c339ca4961a21250a"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-020.json",
+      "sha256": "6b64c9b757f02a8697747936f906e2140734b985013b9b5f97fa33415199d477"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
@@ -1568,7 +1572,7 @@
     },
     {
       "path": "tester/docs/INDEX.md",
-      "sha256": "9eb6273f1a1decedcd12f81f240f48b9622b0420283f9c8f9aff1ca2d81622d7"
+      "sha256": "2f7726a2f743c3432e707a759eb0c7b820435d67990c9dfb5288b3b64e805b6f"
     },
     {
       "path": "tester/docs/qa/defects.md",
@@ -1771,6 +1775,10 @@
       "sha256": "6aea0be9bef868bfee00b4fc93e38d34dc90f3ecf9a1ab85692acefebc04ee8d"
     },
     {
+      "path": "tester/docs/scenarios/SD/SD-TS-017.md",
+      "sha256": "bedbd38797c64065f6fee875a62dd5b89254268cd0a6806d3a1b9b26f38f930d"
+    },
+    {
       "path": "tester/harness/tasks/TASK-TESTER-001.json",
       "sha256": "0caab432926d21233c2497b120636e51b5051501fc673df2e3f45da40580f7c2"
     },
@@ -1837,6 +1845,10 @@
     {
       "path": "tester/harness/tasks/TASK-TESTER-017.json",
       "sha256": "afd4f65f72968d7dd3ed9ef65c47042ae0d4454c10c69aebf81ab4d2ea56ba33"
+    },
+    {
+      "path": "tester/harness/tasks/TASK-TESTER-018.json",
+      "sha256": "1b3e62147b2790f9ac2706464f396442bce296d965de529aedc8b674c4e3cff5"
     },
     {
       "path": "tester/src/.gitkeep",
