@@ -14,6 +14,7 @@
 | --- | --- | --- |
 | 목록 조회 | `GET /resources?조건&page=&size=` | 200 + `{ items, total }` |
 | 1건 조회 | `GET /resources/{id}` | 200 / 404 |
+| 이전·다음 (S 화면) | `GET /resources/{id}/previous`, `GET /resources/{id}/next` (순서는 명세) | 200 / 204(처음·끝) |
 | 신규 | `POST /resources` | 201 + `Location` |
 | 수정 | `PUT /resources/{id}` (본문에 `updatedAt`) | 200 / 409(동시 수정) |
 | 삭제 | `DELETE /resources/{id}` | 204 |

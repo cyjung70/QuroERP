@@ -54,6 +54,13 @@ mm_inventory_setting(id, negative_stock_mode varchar NOT NULL DEFAULT 'DENY', �
 ### 검사 순서 (MM-BR-603)
 
 ```
+문서 저장 1건 (줄 여러 개)
+ 0. 세트 줄이면 sd_bom 구성을 읽는다 (잠금 없음). 구성품이 없으면 SD-E-509
+    그 문서의 품목·세트·구성품 bc_item 행을 id 순으로 한 번에 SELECT ... FOR UPDATE
+    구성을 다시 읽어 0과 다르면 409 Common-E-004 (구성 저장도 세트 bc_item 행을 잠그므로 둘은 줄을 선다)
+    세트 줄은 구성품마다 이동 수량 × 구성 수량으로 전개한다 (반올림 없음, set_item_id = 세트)
+    mm_onhand 잠금은 (품목, 창고) 순이다
+
 재고를 줄이는 이동 1줄 (품목, 창고, 일자 d, 수량 q > 0)
  1. mm_onhand (품목, 창고) SELECT ... FOR UPDATE  -- 없으면 0 행 INSERT 후 잠금. 같은 품목+창고 저장은 여기서 줄을 선다
  2. 현재고 검사      onhand - q < 0 ?            → DENY: MM-E-001 / 그 밖: negative_stock = true
@@ -62,7 +69,7 @@ mm_inventory_setting(id, negative_stock_mode varchar NOT NULL DEFAULT 'DENY', �
       ALLOW_IN_MONTH min(d가 속한 달부터 각 달 월말 잔고) - q < 0 → MM-E-010 (월중 음수는 통과)
       ALLOW          검사 안 함
  4. mm_onhand·bc_item 반영, mm_goods_movement INSERT
- 오류가 나면 문서 저장 트랜잭션 전체를 롤백한다
+ 오류가 나면 문서 저장 트랜잭션 전체를 롤백한다. 세트 구성품 오류는 인자 끝에 세트 품목 코드를 붙인다
 ```
 
 ### 시점 잔고 조회 (MM-BR-604)

@@ -76,7 +76,7 @@
     },
     {
       "path": "docs/architecture/api.md",
-      "sha256": "3780e35775cb5b587f09fc8f9458ff4ff743861e85143eedfeaa8e3dfbaf5cbb"
+      "sha256": "fc6ce44062a20c758c9b771c7a100365bff5829c7364b4f6978e16915a19d009"
     },
     {
       "path": "docs/architecture/codes.md",
@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "f2fc49e7e8717c538e897905eb1f5bc74fcb2d6c8d05395dbf2601c17489959c"
+      "sha256": "8d020ef455dd3a20635f5b455ccc55f4aff17fcd1d6aa03adfce5b7fe21d14c7"
     },
     {
       "path": "docs/architecture/database.md",
@@ -96,7 +96,7 @@
     },
     {
       "path": "docs/architecture/inventory.md",
-      "sha256": "1e0276c2a68d020e8d7d31041b35abe751448cd37c0ade84189bcaf35fb8806f"
+      "sha256": "30ecdb950e4e011fd4b373f89d6ab1302bb36bfce4189f44f13def701e61c480"
     },
     {
       "path": "docs/architecture/layers.md",
@@ -124,7 +124,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "bf4f7ce2ac8ad08e87db007a60f2765e3ebf9d36c67e662966cb1d046e6a93fa"
+      "sha256": "9c5d4368e71f13d1f5f437b32af765d2cfa9cc7d2f5177877353986105a2619c"
     },
     {
       "path": "docs/architecture/security.md",
@@ -200,7 +200,7 @@
     },
     {
       "path": "docs/business-rules/MM/inventory.md",
-      "sha256": "76d24ef128a276e4bf48555e02c4359448497bd85db2a087fcd607e40aa5aebf"
+      "sha256": "c1ee9b0c933e97f7bc4756c67ff1618daec0dbc952e7adcddd5aed783259d537"
     },
     {
       "path": "docs/business-rules/MM/item.md",
@@ -380,7 +380,7 @@
     },
     {
       "path": "docs/specifications/BC/item.md",
-      "sha256": "2d68346a9171d79ce411d4306884c7cb22a7a1e4a84ebdc0e84abf2d3f0c2824"
+      "sha256": "c18666c70fba24aceac242fe45bd4f46972db1b0b75a0855fa1c252f33fdcf07"
     },
     {
       "path": "docs/specifications/BC/localization-setting.md",
@@ -1084,7 +1084,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-011.json",
-      "sha256": "5923c9b9ca25c3df3867828082eeb5ae178c7977bca5796f441cad3cc09966f8"
+      "sha256": "46db3e92879e0ca42fe74ab4301f03ba8a7507866e38d9f4777350d31ee373d0"
     },
     {
       "path": "harness/tasks/TASK-CORE-012.json",
