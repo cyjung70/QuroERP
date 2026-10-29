@@ -28,6 +28,7 @@ tester/
 | `QURO_API_URL` | REST API 주소 | `https://localhost:7101` |
 | `QURO_WEB_URL` | Blazor 화면 주소 (E2E) | `https://localhost:7201` |
 | `QURO_TEST_USER`, `QURO_TEST_PASSWORD` | 테스트 사용자 (관리자 권한) | — |
+| `QURO_TEST_INITIAL_PASSWORD` | 테스트 DB 준비 때 테스트 사용자를 만드는 초기 비밀번호 (`QURO_TEST_PASSWORD`와 달라야 한다) | — |
 | `QURO_TEST_DB` | 테스트 DB 읽기 전용 연결 문자열 (Migration, 검증 조회) | — |
 | `QURO_LANGS` | 메시지 검사 언어 | `ko,en` |
 | `QURO_AUTH_RATE_LIMIT` | 테스트 환경 API의 `Auth__RateLimit__PerMinute` 값 (`docker-compose.test.yml`에서 같은 값으로 준다) | `60` |
@@ -54,6 +55,8 @@ tester/
 - 실행마다 새로 만든다 (compose를 내렸다 올리거나 DB를 지우고 마이그레이션 콘솔로 다시 만든다). 이것은 환경 준비이고, 테스트 코드는 여전히 DB에 쓰지 않는다.
 - 테스트 전용 PostgreSQL 데이터베이스다. 이름은 `_test`로 끝난다 (예: `quroerp_test`). `conftest.py`가 시작할 때 `current_database()`를 확인하고, 아니면 전체 실행을 멈춘다.
 - 준비: 본체 마이그레이션 콘솔로 Schema·Seed를 적용한다 (`dotnet run --project src/QuroERP.Database -- --connection "<테스트 DB>"`). Demo 데이터는 넣지 않는다. 테스트가 쓸 데이터는 API로 만든다.
+- 테스트 사용자: 같은 콘솔의 `--create-admin <QURO_TEST_USER>`로 관리자 역할 계정을 만든다 (초기 비밀번호 `QURO_TEST_INITIAL_PASSWORD`). 이 계정은 첫 로그인 때 비밀번호 변경이 필요하다. 그래서 `api` fixture는 로그인 응답이 `mustChangePassword = true`면 `QURO_TEST_PASSWORD`로 한 번 바꾼 뒤 다시 로그인한다.
+- 테스트 DB에 없는 것: 업무 데이터 코드 값(`base_codes` fixture가 만든다), 회사 사업자등록번호·대표자 같은 회사 정보(필요한 시나리오가 회사 API로 채운다), 거래처·품목·문서(시나리오가 API로 만든다).
 - 조회 계정은 읽기 전용 역할이다 (`default_transaction_read_only = on`, 테이블·시퀀스 SELECT 권한만). 시퀀스 SELECT는 이관 뒤 시퀀스 값 검사(MG-TS-004)에 쓴다.
 - Migration 계층은 이관을 마친 별도 테스트 DB에서 실행한다.
 
