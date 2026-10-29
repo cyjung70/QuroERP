@@ -3,6 +3,7 @@ using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Bc.UserProfiles;
+using QuroErp.Application.Bc.Users;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.DocumentNumbers;
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<ItemService>();
         services.AddScoped<WarehouseService>();
         services.AddScoped<UserProfileService>();
+        services.AddScoped<UserService>();
         services.AddScoped<DocumentNumberService>();
         services.AddScoped<InventoryService>();
         return services;
