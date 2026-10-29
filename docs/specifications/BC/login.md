@@ -68,9 +68,9 @@
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| POST | /api/auth/login | 로그인 { loginId, password, autoLogin, language } → { userName, language, mustChangePassword, lastLoginAt, lastLoginIp } + 인증. 400 AUTH-001, 401 AUTH-002, 423 AUTH-003, 403 AUTH-004, 429 AUTH-008 |
-| POST | /api/auth/auto-login | 자동 로그인 토큰으로 인증, 새 토큰으로 교체. 401 AUTH-007 |
-| POST | /api/auth/logout | 로그아웃, 이 기기 자동 로그인 토큰 폐기. 세션이 끝났으면 토큰만으로 그 토큰 폐기(인증 없음). 항상 204 |
+| POST | /api/auth/login | 로그인 { loginId, password, autoLogin, language } → { accessToken, expiresAt, userId, userName, roleCode, mustChangePassword, language, lastLoginAt, lastLoginIp, autoLoginToken, autoLoginExpiresAt }. 400 AUTH-001, 401 AUTH-002, 423 AUTH-003, 403 AUTH-004, 429 AUTH-008 |
+| POST | /api/auth/auto-login | 자동 로그인 { token } → 로그인과 같은 응답, 새 토큰으로 교체. 401 AUTH-007 |
+| POST | /api/auth/logout | 로그아웃 { autoLoginToken }, 이 기기 자동 로그인 토큰 폐기. 세션이 끝났으면 토큰만으로 그 토큰 폐기(인증 없음). 항상 204 |
 | GET | /api/auth/me | 사용자·권한·메뉴·기본 창고. 401 AUTH-006 |
 | POST | /api/auth/refresh | Web 내부 토큰 재발급 (security.md) |
 | GET | /api/auth/login-options | 로그인 전 화면 설정 { autoLoginEnabled, passwordResetMode, sessionIdleMinutes }. 인증 없음, 요청 수 제한 429 AUTH-008 |
@@ -106,8 +106,9 @@
 ## 다국어 리소스 키
 
 - 제목: `Bc.Login.Title`
-- 필드: `Bc.Login.<속성>` — `<속성>`은 C# 속성 이름이다 (보통 TO BE 컬럼의 PascalCase, [다국어](../../architecture/i18n.md)). 위 'TO BE 속성 (제안)' 열과 다르면 C# 속성 이름을 따른다
-- 오류: `BC-E-<번호>` (BR에서 정한다)
+- 화면 문구: `Bc.Login.UserId`, `Bc.Login.Password`, `Bc.Login.ShowPassword`, `Bc.Login.HidePassword`, `Bc.Login.RememberId`, `Bc.Login.KeepSignedIn`, `Bc.Login.Submit`, `Bc.Login.Submitting`, `Bc.Login.ForgotPassword`, `Bc.Login.Version`(인자 버전), `Bc.Login.Copyright`
+- 오류: `AUTH-001`~`AUTH-015` ([로그인](../../architecture/login.md) 메시지 표). `AUTH-009`·`AUTH-010`은 화면 전용. API에 연결할 수 없으면 `BC-E-003`
+- `AUTH-001`의 인자(항목 이름): 화면은 `Bc.Login.UserId`·`Bc.Login.Password`, API는 `Auth.Field.LoginId`·`Auth.Field.Password`
 
 ## 테스트 시나리오
 
