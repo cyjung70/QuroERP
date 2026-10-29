@@ -1,4 +1,5 @@
 using QuroErp.Web.Auth;
+using QuroErp.Web.Bc.Codes;
 using QuroErp.Web.Bc.Companies;
 using QuroErp.Web.Bc.Items;
 using QuroErp.Web.Bc.Localization;
@@ -30,6 +31,8 @@ public static class WebApiClients
         services.AddHttpClient<UserApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<RoleApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<MenuApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<CodeMinorApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<CodeMajorApiClient>(http => http.BaseAddress = apiBaseUrl);
         return services;
     }
 }
