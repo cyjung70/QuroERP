@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<TranslationService>();
         services.AddScoped<ICodeValidator, CodeValidator>();
         services.AddScoped<CodeService>();
+        services.AddScoped<CodeMajorService>();
         services.AddScoped<CodeMinorService>();
         services.AddScoped<CompanyLogoService>();
         services.AddScoped<CompanyService>();

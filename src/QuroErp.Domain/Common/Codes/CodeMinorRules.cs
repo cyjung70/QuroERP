@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using QuroErp.Domain.Bc.Items;
-using QuroErp.Domain.Common.I18n;
 using QuroErp.Domain.Mm.Inventory;
 
 namespace QuroErp.Domain.Common.Codes;
@@ -55,18 +54,7 @@ public static partial class CodeMinorRules
     public static CodeMinorFields Normalize(
         string minorCode, IReadOnlyDictionary<string, string?>? names, int? sortOrder, bool? useYn, string? attr1, string? attr2)
     {
-        var kept = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var (lang, name) in names ?? new Dictionary<string, string?>())
-        {
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                kept[LanguageCode.Normalize(lang) ?? ""] = name.Trim();
-            }
-        }
-        if (!kept.ContainsKey(LanguageCode.Fallback))
-        {
-            throw new DomainException(InvalidCodeCode, minorCode);
-        }
+        var kept = CodeNames.Normalize(names, InvalidCodeCode, minorCode);
         if (sortOrder is not > 0)
         {
             throw new DomainException(InvalidSortOrderCode, minorCode);

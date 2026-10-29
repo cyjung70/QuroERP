@@ -77,6 +77,7 @@ public static class DependencyInjection
         services.AddSingleton<IWarehouseRepository, WarehouseRepository>();
         services.AddSingleton<IRoleRepository, RoleRepository>();
         services.AddSingleton<IMenuRepository, MenuRepository>();
+        services.AddSingleton<ICodeMajorRepository, CodeMajorRepository>();
         services.AddSingleton<ICodeMinorRepository, CodeMinorRepository>();
         return services;
     }
