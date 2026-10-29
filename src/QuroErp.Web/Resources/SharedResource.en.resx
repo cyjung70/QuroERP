@@ -187,4 +187,6 @@
   <data name="Common.Session.ExpiringSoon" xml:space="preserve"><value>You will be signed out in 2 minutes due to inactivity. Choose Stay signed in to continue.</value></data>
   <data name="Common.Session.Extend" xml:space="preserve"><value>Stay signed in</value></data>
   <data name="Common.Home.Welcome" xml:space="preserve"><value>Welcome, {0}.</value></data>
+  <data name="Common.UserMenu" xml:space="preserve"><value>User menu</value></data>
+  <data name="Common.MyInfo" xml:space="preserve"><value>My info</value></data>
 </root>

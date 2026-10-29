@@ -1,0 +1,27 @@
+@using QuroErp.Web.Auth
+@inject IStringLocalizer<SharedResource> L
+
+@* Header user menu for every signed-in user, whatever their menu rights: own screens only (BC-BR-101, BC-BR-051).
+   A details element opens it without interactivity, so it also works on static pages like the login flow. *@
+<AuthorizeView>
+    <Authorized>
+        <details class="user-menu" data-testid="user-menu">
+            <summary aria-label="@L["Common.UserMenu"]">@context.User.Identity?.Name</summary>
+            <ul>
+                <li><a href="@ProfilePath" data-testid="user-menu-profile">@L["Common.MyInfo"]</a></li>
+                <li><a href="@WebAuthentication.ChangePasswordPath" data-testid="user-menu-change-password">@L["Bc.ChangePassword.Title"]</a></li>
+                <li>
+                    <form method="post" action="@WebAuthentication.LogoutPath">
+                        <AntiforgeryToken />
+                        <button type="submit" data-testid="user-menu-logout">@L["Common.Logout"]</button>
+                    </form>
+                </li>
+            </ul>
+        </details>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    /// <summary>My info screen (BC-UC-003).</summary>
+    public const string ProfilePath = "/bc/user-profile";
+}

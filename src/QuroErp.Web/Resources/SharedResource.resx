@@ -187,4 +187,6 @@
   <data name="Common.Session.ExpiringSoon" xml:space="preserve"><value>사용하지 않아 2분 뒤 로그아웃됩니다. 계속 사용하려면 로그인 유지를 누르세요.</value></data>
   <data name="Common.Session.Extend" xml:space="preserve"><value>로그인 유지</value></data>
   <data name="Common.Home.Welcome" xml:space="preserve"><value>{0}님, 환영합니다.</value></data>
+  <data name="Common.UserMenu" xml:space="preserve"><value>사용자 메뉴</value></data>
+  <data name="Common.MyInfo" xml:space="preserve"><value>내 정보</value></data>
 </root>
