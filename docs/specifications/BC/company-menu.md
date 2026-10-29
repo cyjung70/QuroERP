@@ -51,8 +51,8 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/sys/menus?menuCode= | 메뉴 목록 (메뉴 코드 앞부분, 코드 순) |
-| PUT | /api/sys/menus | 그리드 저장 (추가·수정·삭제 행, 행마다 updatedAt, 한 트랜잭션, BC-BR-201~207) |
+| GET | /api/sys/menus?menuCode= | 메뉴 목록 (메뉴 코드 앞부분, 코드 순) → [{ id, menuCode, name, type, programId, module, parentMenuCode, validFlag, updatedAt }] |
+| PUT | /api/sys/menus | 그리드 저장 { inserted: [{ menuCode, name, type, programId, module, parentMenuCode, validFlag }], updated: [{ id, …, updatedAt }], deleted: [{ id, updatedAt }] } → 저장 뒤 전체 메뉴. 한 트랜잭션, 한 행이라도 실패하면 저장 안 함 (BC-BR-201~207). 422 BC-E-201~205·BC-E-207·Common-E-002(인자 행의 메뉴 코드), 409 Common-E-004 |
 
 ## 관련 테이블
 

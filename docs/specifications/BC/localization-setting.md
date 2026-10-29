@@ -46,7 +46,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/localization | 국가, 기준 통화, 회사 기본 언어, 사용 언어, 통화 자릿수·국가, 국가별 단가 자릿수, 모듈 수량 자릿수·반올림 방식, 세금 계산 단위 (모든 로그인 사용자, BC-BR-426) |
+| GET | /api/bc/localization?lang= | { countryCode, baseCurrencyCode, defaultLangCode, taxMethod(SALES_TAX·VAT), dateFormat, taxCalcMode, languages[{ langCode, sortOrder }], currencies[{ currencyCode, name, decimals, countryCode }], countryDecimals[{ countryCode, module, unitPriceDecimals }], decimalSettings[{ module, qtyDecimals, roundingMode }] }. 통화 이름은 `lang`(없으면 요청 언어). 모든 로그인 사용자·API 클라이언트 (BC-BR-426, TASK-CORE-014) |
 | PUT | /api/bc/localization-setting | 언어 사용 여부·국가별 단가 자릿수·모듈 수량 자릿수·반올림 방식·세금 계산 단위 변경 { ..., updatedAt }. 409 BC-E-425 |
 
 ## 관련 테이블
