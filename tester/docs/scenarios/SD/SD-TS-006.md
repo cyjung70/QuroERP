@@ -5,7 +5,7 @@
 | --- | --- |
 | 시나리오 ID | SD-TS-006 |
 | 계층 | scenario |
-| 관련 BR | BC-BR-421, BC-BR-512, BC-BR-513, BC-BR-525, BC-BR-541, BC-BR-542, BC-BR-543, BC-BR-545, BC-BR-547, SD-BR-032, SD-BR-132, SD-BR-133, SD-BR-135, SD-BR-167 |
+| 관련 BR | BC-BR-421, BC-BR-512, BC-BR-513, BC-BR-525, BC-BR-541, BC-BR-542, BC-BR-543, BC-BR-545, BC-BR-547, SD-BR-032, SD-BR-132, SD-BR-133, SD-BR-135, SD-BR-167, SD-BR-173 |
 | 국가 | `US` (`country("US")`) — 기준 통화 USD(2자리), SD 단가 2자리, 세금 계산 단위 `DOCUMENT`(기본) |
 | 마이너스 재고 모드 | 해당 없음 (기본 `DENY`) |
 | 직렬 실행 | 아니오 |
@@ -26,7 +26,7 @@
 | 단계 | 호출 | 입력 |
 | --- | --- | --- |
 | 1 | `POST /api/sd/sales-orders` | 고객 C1, **어제**, 줄 1: I1 수량 3 단가 19.99 / 줄 2: I2 수량 1 단가 40.05 (세금 코드는 보내지 않는다 — 기본값) |
-| 2 | `POST /api/sd/shipments` | 고객 C1, 오늘, 줄 1·2: 1의 수주 줄 전량 / 줄 3: I3 직접 입력(수주 없는 줄) 수량 2 단가 5.00. 청구 시점 기본 `WITH_SHIPMENT`라 송장이 함께 생긴다 |
+| 2 | `POST /api/sd/shipments` | 고객 C1, 오늘, 줄 1·2: 1의 수주 줄 전량 / 줄 3: I3 직접 입력(수주 없는 줄, SD-BR-173) 수량 2 단가 5.00. 청구 시점 기본 `WITH_SHIPMENT`라 송장이 함께 생긴다 |
 | 3 | `POST /api/sd/sales-invoices` | 고객 C2, 오늘, S1 직접 입력 수량 1 단가 19.99 |
 | 4 | `POST /api/sd/sales-invoices` | 고객 C3, 오늘, S1 직접 입력 수량 1 단가 19.99 |
 | 5 | `GET /api/sd/sales-invoices/{2에서 생긴 송장}/print/sales-invoice.pdf` | — |

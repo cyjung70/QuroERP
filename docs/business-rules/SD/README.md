@@ -8,7 +8,7 @@
 - AS IS JSP·프로시저 로직 분석 결과를 주제별 파일로 추가한다 [작성 중].
 - [수주](sales-order.md): SD-BR-001 ~ SD-BR-034
 - [매출 송장](sales-invoice.md): SD-BR-101 ~ SD-BR-136
-- [출하](shipment.md): SD-BR-161 ~ SD-BR-172
+- [출하](shipment.md): SD-BR-161 ~ SD-BR-173
 - [Credit Memo](credit-memo.md): SD-BR-201 ~ SD-BR-232
 - [Credit Memo 적용](credit-apply.md): SD-BR-251 ~ SD-BR-262
 - [고객 마스터](customer.md): SD-BR-301 ~ SD-BR-334
