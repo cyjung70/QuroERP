@@ -34,6 +34,10 @@ public static class WebAuthentication
 {
     public const string LoginPath = "/bc/login";
     public const string LogoutPath = "/bc/logout";
+    public const string ChangePasswordPath = "/bc/change-password";
+
+    // Pages a user who must change the password may still open (login.md "로그인 처리" 9)
+    private static readonly string[] PasswordChangeAllowedPaths = [ChangePasswordPath, LoginPath, LogoutPath, "/not-found", "/Error"];
 
     /// <summary>Api 주소 설정 키.</summary>
     public const string ApiBaseUrlKey = "QuroApi:BaseUrl";
@@ -83,6 +87,28 @@ public static class WebAuthentication
             .WithMetadata(new RequireAntiforgeryTokenAttribute());
         return endpoints;
     }
+
+    /// <summary>
+    /// Sends page requests of a user who must change the password to the password change screen (BC-BR-009).
+    /// The API also answers 403 AUTH-005; this keeps the user on the screen that can fix it. Use after UseAuthentication.
+    /// </summary>
+    public static IApplicationBuilder UsePasswordChangeRedirect(this IApplicationBuilder app) =>
+        app.Use(async (context, next) =>
+        {
+            if (HttpMethods.IsGet(context.Request.Method)
+                && context.Request.Headers.Accept.ToString().Contains("text/html", StringComparison.OrdinalIgnoreCase)
+                && !PasswordChangeAllowedPaths.Contains(context.Request.Path.Value, StringComparer.OrdinalIgnoreCase)
+                && MustChangePassword(context))
+            {
+                context.Response.Redirect(ChangePasswordPath);
+                return;
+            }
+            await next();
+        });
+
+    private static bool MustChangePassword(HttpContext context) =>
+        context.User.FindFirst(WebAuthClaims.SessionId)?.Value is { } sessionId
+        && context.RequestServices.GetRequiredService<AccessTokenStore>().Get(sessionId) is { MustChangePassword: true };
 
     // Web을 다시 시작했거나 토큰이 만료돼 서버에 토큰이 없으면 쿠키 세션도 끝낸다
     private static async Task RejectUnknownSession(CookieValidatePrincipalContext context)

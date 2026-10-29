@@ -145,4 +145,15 @@
   <data name="Bc.Item.Memo4" xml:space="preserve"><value>메모 4</value></data>
   <data name="Bc.Item.Memo5" xml:space="preserve"><value>메모 5</value></data>
   <data name="Bc.Item.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
+  <data name="Bc.ChangePassword.Title" xml:space="preserve"><value>비밀번호 변경</value></data>
+  <data name="Bc.ChangePassword.CurrentPassword" xml:space="preserve"><value>현재 비밀번호</value></data>
+  <data name="Bc.ChangePassword.NewPassword" xml:space="preserve"><value>새 비밀번호</value></data>
+  <data name="Bc.ChangePassword.ConfirmPassword" xml:space="preserve"><value>새 비밀번호 확인</value></data>
+  <data name="Bc.ChangePassword.Changed" xml:space="preserve"><value>비밀번호를 변경했습니다.</value></data>
+  <data name="BC-E-057" xml:space="preserve"><value>새 비밀번호와 확인 값이 같지 않습니다.</value></data>
+  <data name="AUTH-011" xml:space="preserve"><value>비밀번호는 {0}자 이상 128자 이하여야 합니다.</value></data>
+  <data name="AUTH-012" xml:space="preserve"><value>영문 대문자, 소문자, 숫자, 특수문자 중 {0}가지 이상을 쓰세요.</value></data>
+  <data name="AUTH-013" xml:space="preserve"><value>최근에 쓴 비밀번호는 다시 쓸 수 없습니다.</value></data>
+  <data name="AUTH-014" xml:space="preserve"><value>비밀번호는 사용자 ID와 같을 수 없습니다.</value></data>
+  <data name="AUTH-015" xml:space="preserve"><value>현재 비밀번호가 올바르지 않습니다.</value></data>
 </root>

@@ -41,6 +41,7 @@ app.UseHttpsRedirection();
 app.UseWebLocalization();
 
 app.UseAuthentication();
+app.UsePasswordChangeRedirect();
 app.UseAuthorization();
 app.UseAntiforgery();
 
