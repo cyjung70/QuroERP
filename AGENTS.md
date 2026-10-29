@@ -112,7 +112,7 @@ tests/
 - `dotnet build`가 경고 없이 통과하고, `dotnet test`가 모두 통과한다. **패키지 모드(기본)로 확인한다.**
 - 관련 BR ID마다 테스트가 하나 이상 있다.
 - `quro-code-review` 체크리스트를 통과한다.
-- 태스크 JSON의 `status`를 `done`으로 바꾼다.
+- 태스크 JSON의 `status`를 `done`으로 바꾸고, 구현과 같은 커밋 또는 PR에 넣는다.
 - `status`가 `blocked`인 태스크는 시작하지 않는다. 사람이 `todo`로 바꾼 뒤에 한다.
 
 ## 10. 하지 말 것
