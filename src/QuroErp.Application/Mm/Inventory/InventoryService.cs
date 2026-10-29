@@ -1,4 +1,5 @@
 using System.Data;
+using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
@@ -30,8 +31,10 @@ public sealed class InventoryService(
     /// </summary>
     /// <exception cref="QuroErp.Domain.Common.DomainException">
     /// MM-E-002 closed month, MM-E-606 wrong sign or zero qty, MM-E-001 not enough stock in DENY mode,
-    /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end.
+    /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end (a set component error ends with the
+    /// set item code), SD-E-509 a set with no components.
     /// </exception>
+    /// <exception cref="ConcurrencyException">A set's components changed between reading and locking.</exception>
     public async Task<IReadOnlyList<GoodsMovement>> PostAsync(
         IReadOnlyList<StockMovementRequest> requests, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
@@ -41,15 +44,18 @@ public sealed class InventoryService(
             InventoryClosing.EnsureOpen(closeYearMonth, request.DocumentDt);
         }
 
-        var items = await LockItemsAsync(requests.Select(r => r.ItemId), transaction, cancellationToken);
-        var setIds = items.Values.Where(i => i.IsSet).Select(i => i.ItemId).ToList();
+        // inventory.md step 0: read the components first, then lock every item row in one pass in id order so two
+        // documents cannot lock the same rows in a different order. Saving a set's components locks the set row too
+        var requestIds = requests.Select(r => r.ItemId).Distinct().ToList();
+        var read = await sets.GetComponentsAsync(requestIds, transaction, cancellationToken);
+        var items = await LockItemsAsync(requestIds.Concat(read.Select(c => c.ComponentItemId)), transaction, cancellationToken);
+        var setIds = requestIds.Where(id => items[id].IsSet).ToList();
         var components = setIds.Count == 0
             ? []
             : await sets.GetComponentsAsync(setIds, transaction, cancellationToken);
-        var componentIds = components.Select(c => c.ComponentItemId).Where(id => !items.ContainsKey(id));
-        foreach (var (id, item) in await LockItemsAsync(componentIds, transaction, cancellationToken))
+        if (!SameComponents(read.Where(c => setIds.Contains(c.SetItemId)), components))
         {
-            items[id] = item;
+            throw new ConcurrencyException();
         }
 
         var lines = new List<Line>();
@@ -58,17 +64,17 @@ public sealed class InventoryService(
             var item = items[request.ItemId];
             if (!item.IsSet)
             {
-                lines.Add(new Line(request.ItemId, request.WarehouseId, request.DocumentDt, stock => GoodsMovement.Create(
+                lines.Add(new Line(request.ItemId, request.WarehouseId, request.DocumentDt, "", stock => GoodsMovement.Create(
                     request.MovType, request.DocumentDt, request.ItemId, request.WarehouseId, request.Qty,
                     request.Price ?? stock.MovingAverageCost, request.RefKey, request.RefSeq)));
                 continue;
             }
-            // Components move at their own moving average cost (MM-BR-007)
-            foreach (var (componentId, qty) in SetComponent.Expand(request.Qty, components.Where(c => c.SetItemId == item.ItemId)))
+            // Components move at their own moving average cost and remember the set (MM-BR-007)
+            foreach (var (componentId, qty) in SetComponent.Expand(item.ItemCd, request.Qty, components.Where(c => c.SetItemId == item.ItemId)))
             {
-                lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, stock => GoodsMovement.Create(
+                lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, item.ItemCd, stock => GoodsMovement.Create(
                     request.MovType, request.DocumentDt, componentId, request.WarehouseId, qty,
-                    stock.MovingAverageCost, request.RefKey, request.RefSeq)));
+                    stock.MovingAverageCost, request.RefKey, request.RefSeq, item.ItemId)));
             }
         }
 
@@ -82,7 +88,8 @@ public sealed class InventoryService(
     /// </summary>
     /// <exception cref="QuroErp.Domain.Common.DomainException">
     /// MM-E-002 closed month, MM-E-606 already reversed or a reversal, MM-E-001 not enough stock in DENY mode,
-    /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end.
+    /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end (a set component error ends with the
+    /// set item code).
     /// </exception>
     public async Task<IReadOnlyList<GoodsMovement>> ReverseAsync(
         IReadOnlyList<long> movementIds, DateOnly reversalDt, string user, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -100,8 +107,12 @@ public sealed class InventoryService(
             reversals.Add(original.Movement.Reverse(reversalDt, original.Reversed || !reversedNow.Add(id)));
         }
 
-        var items = await LockItemsAsync(reversals.Select(r => r.ItemId), transaction, cancellationToken);
-        var lines = reversals.Select(r => new Line(r.ItemId, r.WarehouseId, r.DocumentDt, _ => r)).ToList();
+        // Set rows are locked with the components, in the same id order as posting, for the set code in errors
+        var items = await LockItemsAsync(
+            reversals.Select(r => r.ItemId).Concat(reversals.Where(r => r.SetItemId is not null).Select(r => r.SetItemId!.Value)),
+            transaction, cancellationToken);
+        var lines = reversals.Select(r => new Line(
+            r.ItemId, r.WarehouseId, r.DocumentDt, r.SetItemId is { } setId ? items[setId].ItemCd : "", _ => r)).ToList();
         return await ApplyAsync(lines, items, closeYearMonth, user, transaction, cancellationToken);
     }
 
@@ -130,14 +141,14 @@ public sealed class InventoryService(
             var item = items[line.ItemId];
             var warehouseCode = onHand[key].WarehouseCode;
             var movement = line.Build(item);
-            movement.NegativeStock = StockPolicy.CheckOnHand(mode, qty[key], movement.Qty, item.ItemCd, warehouseCode);
+            movement.NegativeStock = StockPolicy.CheckOnHand(mode, qty[key], movement.Qty, item.ItemCd, warehouseCode, line.SetItemCd);
             if (movement.Qty < 0 && mode != NegativeStockMode.Allow)
             {
                 // Earlier lines of this document are already in the ledger, so they count
                 var (opening, balances) = await inventory.GetDailyBalancesAsync(
                     line.ItemId, line.WarehouseId, lastClosedMonthEnd, movement.DocumentDt, transaction, cancellationToken);
                 movement.NegativeStock |= PointInTimeStock.Check(
-                    mode, movement.DocumentDt, movement.Qty, opening, balances, item.ItemCd, warehouseCode);
+                    mode, movement.DocumentDt, movement.Qty, opening, balances, item.ItemCd, warehouseCode, line.SetItemCd);
             }
             qty[key] += movement.Qty;
             item.Apply(movement.Qty, movement.Amount, movement.Prc, MovementType.RecalculatesCost(movement.MovType, movement.Qty));
@@ -173,6 +184,11 @@ public sealed class InventoryService(
         return items;
     }
 
-    // Build runs at posting time so an issue takes the moving average cost after the lines before it
-    private sealed record Line(long ItemId, long WarehouseId, DateOnly DocumentDt, Func<ItemStock, GoodsMovement> Build);
+    private static bool SameComponents(IEnumerable<SetComponent> read, IEnumerable<SetComponent> locked) =>
+        read.OrderBy(c => c.SetItemId).ThenBy(c => c.ComponentItemId)
+            .SequenceEqual(locked.OrderBy(c => c.SetItemId).ThenBy(c => c.ComponentItemId));
+
+    // Build runs at posting time so an issue takes the moving average cost after the lines before it.
+    // SetItemCd is the set a component line came from, empty otherwise (last arg of stock errors)
+    private sealed record Line(long ItemId, long WarehouseId, DateOnly DocumentDt, string SetItemCd, Func<ItemStock, GoodsMovement> Build);
 }

@@ -46,10 +46,12 @@ public interface IInventoryRepository
     Task<IReadOnlyList<SavedMovement>> LockMovementsAsync(IReadOnlyCollection<long> movementIds, IDbTransaction transaction, CancellationToken cancellationToken);
 }
 
-/// <summary>
-/// Set item components (MM-BR-007). Source table: sd_bom (AS IS P_BOM), not generated yet [확인 필요].
-/// </summary>
+/// <summary>Set item components (MM-BR-007) from sd_bom (AS IS P_BOM).</summary>
 public interface ISetComponentRepository
 {
+    /// <summary>
+    /// The components of the given items, without locking. Items that are not sets have none. The inventory service
+    /// reads them before and again after locking the item rows (inventory.md step 0).
+    /// </summary>
     Task<IReadOnlyList<SetComponent>> GetComponentsAsync(IReadOnlyCollection<long> setItemIds, IDbTransaction transaction, CancellationToken cancellationToken);
 }

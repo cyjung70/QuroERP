@@ -9,7 +9,10 @@ namespace QuroErp.Domain.Mm.Inventory;
 /// </summary>
 public static class StockPolicy
 {
-    /// <summary>Not enough stock in the warehouse. Args: item code, warehouse code, on hand, requested qty.</summary>
+    /// <summary>
+    /// Not enough stock in the warehouse. Args: item code, warehouse code, on hand, requested qty, set item code
+    /// (empty unless the item is a component of a set line).
+    /// </summary>
     public const string InsufficientStock = "MM-E-001";
 
     /// <summary>The mode when mm_inventory_setting has no row (MM-BR-003).</summary>
@@ -21,7 +24,7 @@ public static class StockPolicy
     /// </summary>
     /// <returns>true when the movement leaves the stock below zero and is allowed (flag it, MM-BR-002).</returns>
     /// <exception cref="DomainException">MM-E-001 in DENY mode when the stock would go below zero (MM-BR-001).</exception>
-    public static bool CheckOnHand(NegativeStockMode mode, decimal onHand, decimal qty, string itemCd, string warehouseCode)
+    public static bool CheckOnHand(NegativeStockMode mode, decimal onHand, decimal qty, string itemCd, string warehouseCode, string setItemCd = "")
     {
         if (qty >= 0 || onHand + qty >= 0)
         {
@@ -29,7 +32,7 @@ public static class StockPolicy
         }
         if (mode == NegativeStockMode.Deny)
         {
-            throw new DomainException(InsufficientStock, itemCd, warehouseCode, onHand, -qty);
+            throw new DomainException(InsufficientStock, itemCd, warehouseCode, onHand, -qty, setItemCd);
         }
         return true;
     }
