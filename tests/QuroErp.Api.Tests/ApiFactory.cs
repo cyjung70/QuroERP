@@ -101,6 +101,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Minor codes of code management (BC-UC-008). Their names come through the translation fake.</summary>
     public InMemoryCodeMinorRepository CodeMinors { get; } = new();
 
+    /// <summary>Major codes of Major code management (BC-UC-023). Their names come through the translation fake.</summary>
+    public InMemoryCodeMajorRepository CodeMajors { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -138,7 +141,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IPasswordHistoryRepository>(PasswordHistory);
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
-            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors));
+            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors));
             services.AddSingleton<ICompanyRepository>(Companies);
             services.AddSingleton<ILocalizationRepository>(Localization);
             services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
@@ -148,6 +151,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IRoleRepository>(Roles);
             services.AddSingleton<IMenuRepository>(Menus);
             services.AddSingleton<ICodeMinorRepository>(CodeMinors);
+            services.AddSingleton<ICodeMajorRepository>(CodeMajors);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
@@ -348,7 +352,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 : ItemCodes.TryGetValue(majorCode, out var minors) && minors.Contains(minorCode));
     }
 
-    private sealed class FakeTranslationRepository(InMemoryCodeMinorRepository codeMinors) : ITranslationRepository
+    private sealed class FakeTranslationRepository(InMemoryCodeMinorRepository codeMinors, InMemoryCodeMajorRepository codeMajors) : ITranslationRepository
     {
         private static readonly List<TranslationRow> Rows =
         [
@@ -362,6 +366,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             TranslationTarget target, IReadOnlyCollection<long> ownerIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<TranslationRow>>(Rows.Where(r => ownerIds.Contains(r.OwnerId))
                 .Concat(target == TranslationTarget.CodeMinor ? codeMinors.NamesOf(ownerIds) : [])
+                .Concat(target == TranslationTarget.CodeMajor ? codeMajors.NamesOf(ownerIds) : [])
                 .ToList());
     }
 
