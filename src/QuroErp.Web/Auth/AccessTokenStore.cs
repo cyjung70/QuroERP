@@ -6,7 +6,7 @@ namespace QuroErp.Web.Auth;
 /// <summary>
 /// 로그인 세션별 내부 토큰을 Web 서버 메모리에 둔다 (security.md: 토큰은 브라우저에 보내지 않는다).
 /// 쿠키에는 세션 ID만 들어간다. Web을 다시 시작하면 모든 세션이 끝난다.
-/// [확인 필요] Web을 여러 대로 늘리면 공유 저장소(분산 캐시)로 바꾼다.
+/// The Web host runs as a single instance (login.md "세션"); more instances need a shared store (distributed cache) first.
 /// </summary>
 public sealed class AccessTokenStore(TimeProvider clock)
 {

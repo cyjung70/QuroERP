@@ -49,6 +49,10 @@ public static class WebAuthentication
     public const string LogoutPath = "/bc/logout";
     public const string ChangePasswordPath = "/bc/change-password";
 
+    /// <summary>Query parameter of the login page with the message code to show above the form (AUTH-006, AUTH-007).</summary>
+    public const string ReasonQuery = "reason";
+    public const string AutoLoginExpiredCode = "AUTH-007";
+
     // Pages a user who must change the password may still open (login.md "로그인 처리" 9)
     private static readonly string[] PasswordChangeAllowedPaths = [ChangePasswordPath, LoginPath, LogoutPath, "/not-found", "/Error"];
 
@@ -61,6 +65,7 @@ public static class WebAuthentication
             ?? throw new InvalidOperationException($"설정 {ApiBaseUrlKey}가 없다. appsettings나 환경변수 QuroApi__BaseUrl로 설정한다.");
 
         services.AddSingleton<AccessTokenStore>();
+        services.AddSingleton<AutoLoginCoordinator>();
         services.AddScoped<AccessTokenProvider>();
         services.AddHttpClient<AuthApiClient>(http => http.BaseAddress = new Uri(apiBaseUrl));
 
@@ -81,19 +86,49 @@ public static class WebAuthentication
         return services;
     }
 
-    /// <summary>로그아웃: 서버의 토큰을 지우고 쿠키를 지운다.</summary>
+    /// <summary>Login page showing a message code above the form, keeping a local return address.</summary>
+    public static string LoginPathWith(string reason, string? returnUrl = null) =>
+        $"{LoginPath}?{ReasonQuery}={Uri.EscapeDataString(reason)}"
+        + (string.IsNullOrEmpty(returnUrl) ? "" : "&ReturnUrl=" + Uri.EscapeDataString(returnUrl));
+
+    /// <summary>
+    /// 로그아웃: Api가 이 기기의 자동 로그인 토큰을 폐기하고 LOGOUT 이력을 남긴다 (login.md "로그아웃").
+    /// Then the server-side token, the session cookie and the token cookie are removed even if the Api call failed.
+    /// The remembered user ID stays (it is in the browser's localStorage).
+    /// </summary>
     public static IEndpointRouteBuilder MapLogout(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost(LogoutPath, async (HttpContext context, AccessTokenStore store) =>
+        endpoints.MapPost(LogoutPath, async (HttpContext context, AccessTokenStore store, AuthApiClient authApi) =>
             {
-                if (!AntiforgeryCheck.IsValid(context))
+                var sessionId = context.User.FindFirst(WebAuthClaims.SessionId)?.Value;
+                var token = AutoLoginCookie.Read(context.Request);
+                // After the session expired, the page's antiforgery token was issued to the signed-in user and no longer
+                // validates. A signed-out request carrying the token cookie is same-site (the cookie is SameSite=Strict),
+                // so it may still revoke that token.
+                if (!AntiforgeryCheck.IsValid(context) && !(sessionId is null && token is not null))
                 {
                     return AntiforgeryCheck.Rejected();
                 }
-                if (context.User.FindFirst(WebAuthClaims.SessionId)?.Value is { } sessionId)
+                var login = sessionId is null ? null : store.Get(sessionId);
+                if (login is not null || token is not null)
+                {
+                    try
+                    {
+                        // Without a session the Api revokes the token alone (login.md "로그아웃")
+                        await authApi.LogoutAsync(login?.AccessToken, new LogoutRequest(token),
+                            context.Connection.RemoteIpAddress?.ToString(), context.Request.Headers.UserAgent.ToString(),
+                            context.RequestAborted);
+                    }
+                    catch (Exception e) when (e is ApiProblemException or HttpRequestException)
+                    {
+                        // Signing out of the Web host does not depend on the Api; an unrevoked token still expires
+                    }
+                }
+                if (sessionId is not null)
                 {
                     store.Remove(sessionId);
                 }
+                AutoLoginCookie.Delete(context.Response);
                 await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 return Results.LocalRedirect(LoginPath);
             })

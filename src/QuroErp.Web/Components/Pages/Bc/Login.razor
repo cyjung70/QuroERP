@@ -95,6 +95,9 @@
     private const string UnavailableCode = "BC-E-003";
     private const string EmailResetMode = "EMAIL";
 
+    // Only these codes can be shown from the query string
+    private static readonly string[] ReasonCodes = [WebAuthentication.AutoLoginExpiredCode];
+
     // Product version for screen item 11
     private static readonly string Version =
         typeof(Login).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "";
@@ -115,11 +118,19 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
+    // Why the user came back to this page (AUTH-007 after a failed auto login)
+    [SupplyParameterFromQuery(Name = WebAuthentication.ReasonQuery)]
+    private string? Reason { get; set; }
+
     private string CurrentUrl => "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
 
     protected override async Task OnInitializedAsync()
     {
         Input ??= new LoginInput();
+        if (Reason is not null && ReasonCodes.Contains(Reason) && HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            _error = Messages.Get(Reason);
+        }
         try
         {
             _options = await AuthApi.GetLoginOptionsAsync(HttpContext.RequestAborted);
@@ -166,6 +177,8 @@
         await HttpContext.SignInAsync(WebAuthClaims.CreatePrincipal(sessionId, login));
         // 사용자 언어 설정이 있으면 그 언어로 바꾼다 (사용자 설정 → 브라우저 언어 → ko)
         WebLocalization.SetCultureCookie(HttpContext, login.Language);
+        // "Keep me signed in": the token cookie, or no cookie when the Api issued no token
+        AutoLoginCookie.Apply(HttpContext.Response, login);
         // login.md "로그인 처리" 9: a forced change goes to the password change screen first
         Navigation.NavigateTo(login.MustChangePassword ? WebAuthentication.ChangePasswordPath : LocalUrl.OrRoot(ReturnUrl));
     }

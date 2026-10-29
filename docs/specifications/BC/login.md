@@ -70,7 +70,7 @@
 | --- | --- | --- |
 | POST | /api/auth/login | 로그인 { loginId, password, autoLogin, language } → { userName, language, mustChangePassword, lastLoginAt, lastLoginIp } + 인증. 400 AUTH-001, 401 AUTH-002, 423 AUTH-003, 403 AUTH-004, 429 AUTH-008 |
 | POST | /api/auth/auto-login | 자동 로그인 토큰으로 인증, 새 토큰으로 교체. 401 AUTH-007 |
-| POST | /api/auth/logout | 로그아웃, 이 기기 자동 로그인 토큰 폐기. 204 |
+| POST | /api/auth/logout | 로그아웃, 이 기기 자동 로그인 토큰 폐기. 세션이 끝났으면 토큰만으로 그 토큰 폐기(인증 없음). 항상 204 |
 | GET | /api/auth/me | 사용자·권한·메뉴·기본 창고. 401 AUTH-006 |
 | POST | /api/auth/refresh | Web 내부 토큰 재발급 (security.md) |
 | GET | /api/auth/login-options | 로그인 전 화면 설정 { autoLoginEnabled, passwordResetMode, sessionIdleMinutes }. 인증 없음, 요청 수 제한 429 AUTH-008 |

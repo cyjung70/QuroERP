@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -30,11 +32,16 @@ public sealed class AuthController(LoginService service) : ControllerBase
     public async Task<ActionResult<LoginResponse>> AutoLogin(AutoLoginRequest request, CancellationToken cancellationToken) =>
         await service.AutoLoginAsync(request, Client(), cancellationToken);
 
-    /// <summary>Revokes this device's auto-login token and logs LOGOUT.</summary>
-    [HttpPost("logout"), Authorize(Policy = AuthenticationSetup.SessionPolicy)]
+    /// <summary>
+    /// Revokes this device's auto-login token and logs LOGOUT. Anonymous too: after the session is gone the token alone
+    /// revokes itself (login.md "로그아웃"). Always 204, so it never tells whether a token exists.
+    /// </summary>
+    [HttpPost("logout"), AllowAnonymous]
     public async Task<IActionResult> Logout(LogoutRequest request, CancellationToken cancellationToken)
     {
-        await service.LogoutAsync(User.GetAppUserId(), request, Client(), cancellationToken);
+        // Only a user token (JWT) counts as a session here, never an API key
+        var session = await HttpContext.AuthenticateAsync(JwtBearerDefaults.AuthenticationScheme);
+        await service.LogoutAsync(session.Succeeded ? session.Principal.GetAppUserId() : null, request, Client(), cancellationToken);
         return NoContent();
     }
 

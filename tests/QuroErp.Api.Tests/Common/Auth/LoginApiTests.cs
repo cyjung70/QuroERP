@@ -153,6 +153,22 @@ public class LoginApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         factory.LoginLogs.Should().Contain(l => l.AppUserId == 7 && l.EventType == LoginEvents.Logout);
     }
 
+    [Fact, Trait("Id", "BC-002-IT-02")]
+    public async Task Logout_WithoutSession_RevokesTheTokenAloneAndAlwaysReturns204()
+    {
+        factory.AuthSetting = new AuthSetting { AutoLoginEnabled = true };
+        var client = factory.CreateClient();
+        var login = await LoginAsync(client, new LoginRequest(ApiFactory.UserId, ApiFactory.Password, AutoLogin: true));
+
+        using var logout = await client.PostAsJsonAsync(AuthRoutes.Logout, new LogoutRequest(login.AutoLoginToken));
+        using var unknown = await client.PostAsJsonAsync(AuthRoutes.Logout, new LogoutRequest("not-a-token"));
+        using var autoLogin = await client.PostAsJsonAsync(AuthRoutes.AutoLogin, new AutoLoginRequest(login.AutoLoginToken));
+
+        logout.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        unknown.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        autoLogin.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
     [Fact, Trait("Id", "BC-UC-001-T20")]
     public async Task AuthApis_EleventhRequestInAMinuteFromOneIp_Returns429Auth008()
     {
