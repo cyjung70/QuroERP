@@ -599,6 +599,41 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public Task<bool> DeleteAsync(long id, DateTimeOffset expectedUpdatedAt, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(_rows.TryGetValue(id, out var row) && row.UpdatedAt == expectedUpdatedAt && _rows.TryRemove(id, out _));
 
+        /// <summary>Stored images by item code.</summary>
+        public ConcurrentDictionary<string, byte[]> Images { get; } = new();
+
+        public Task<byte[]?> FindImageAsync(string itemCd, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            if (_rows.Values.FirstOrDefault(r => r.ItemCd == itemCd) is not { } item)
+            {
+                return Task.FromResult<byte[]?>(null);
+            }
+            var group = item.ItemGroupCd ?? item.ItemCd;
+            var image = _rows.Values
+                .Where(r => r.Id == item.Id || (r.ItemGroupCd ?? r.ItemCd) == group)
+                .OrderByDescending(r => r.Id == item.Id).ThenByDescending(r => r.Plating is null or "" or "R").ThenBy(r => r.ItemCd, StringComparer.Ordinal)
+                .Select(r => Images.GetValueOrDefault(r.ItemCd))
+                .FirstOrDefault(i => i is { Length: > 0 });
+            return Task.FromResult(image);
+        }
+
+        public Task<bool> SaveImageAsync(string itemCd, byte[]? image, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            if (!_rows.Values.Any(r => r.ItemCd == itemCd))
+            {
+                return Task.FromResult(false);
+            }
+            if (image is null)
+            {
+                Images.TryRemove(itemCd, out _);
+            }
+            else
+            {
+                Images[itemCd] = image;
+            }
+            return Task.FromResult(true);
+        }
+
         private static ItemRow ToRow(long id, Item item, DateTimeOffset updatedAt)
         {
             var f = item.Fields;

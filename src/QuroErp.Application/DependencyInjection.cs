@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<LocalizationSettingService>();
         services.AddScoped<InventorySettingService>();
         services.AddScoped<ItemService>();
+        services.AddScoped<ItemImageService>();
         services.AddScoped<WarehouseService>();
         services.AddScoped<RoleService>();
         services.AddScoped<MenuService>();

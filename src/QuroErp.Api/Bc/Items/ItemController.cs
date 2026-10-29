@@ -10,8 +10,38 @@ namespace QuroErp.Api.Bc.Items;
 /// checked by the admin role until the menu policy (security.md "권한") exists, as on the company screen.
 /// </summary>
 [ApiController, Route(ItemRoutes.Base)]
-public sealed class ItemController(ItemService service) : ControllerBase
+public sealed class ItemController(ItemService service, ItemImageService images) : ControllerBase
 {
+    /// <summary>200 with the item image, else its item group's (MM-BR-820). 404 Common-E-006 when there is none.</summary>
+    [HttpGet("{itemCd}/" + ItemRoutes.Image)]
+    public async Task<IActionResult> GetImage(string itemCd, CancellationToken cancellationToken)
+    {
+        var image = await images.GetAsync(itemCd, cancellationToken);
+        return File(image.Content, image.ContentType);
+    }
+
+    /// <summary>
+    /// 204. multipart/form-data with field "file": one JPEG up to 10 MB, replacing the whole image (MM-BR-821, MM-BR-822).
+    /// 400 MM-E-821. Larger requests are cut off by the size limit.
+    /// </summary>
+    [HttpPut("{itemCd}/" + ItemRoutes.Image), Authorize(Roles = "admin")]
+    [RequestSizeLimit(ItemRoutes.ImageMaxBytes + 64 * 1024)]
+    public async Task<IActionResult> UploadImage(
+        string itemCd, [FromForm(Name = ItemRoutes.ImageFormField)] IFormFile? file, CancellationToken cancellationToken)
+    {
+        await using var content = file?.OpenReadStream();
+        await images.UploadAsync(itemCd, content, file?.Length ?? 0, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>204. The screen asks for confirmation first (MM-BR-823). 404 Common-E-006 when the item does not exist.</summary>
+    [HttpDelete("{itemCd}/" + ItemRoutes.Image), Authorize(Roles = "admin")]
+    public async Task<IActionResult> DeleteImage(string itemCd, CancellationToken cancellationToken)
+    {
+        await images.DeleteAsync(itemCd, cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet]
     public Task<ItemListDto> Search([FromQuery] ItemSearchQuery query, CancellationToken cancellationToken) =>
         service.SearchAsync(query, cancellationToken);

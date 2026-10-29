@@ -64,6 +64,16 @@ public interface IItemRepository
     /// <summary>Used by a document, price, set structure, alternate item group, cart or stock movement (MM-BR-807).</summary>
     Task<bool> IsInUseAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The item's own image; when it has none, the image of another item in its item group, plating R or empty first, then by item
+    /// code (MM-BR-820, SD-BR-607). Null when the item does not exist or none is found. An empty stored image counts as none.
+    /// </summary>
+    Task<byte[]?> FindImageAsync(string itemCd, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Replaces the whole stored image, or clears it with null (MM-BR-822, MM-BR-823). updated_at is left alone.</summary>
+    /// <returns>False when there is no item with that code.</returns>
+    Task<bool> SaveImageAsync(string itemCd, byte[]? image, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <returns>False when updated_at changed or the row is gone.</returns>
     Task<bool> DeleteAsync(long id, DateTimeOffset expectedUpdatedAt, IDbTransaction transaction, CancellationToken cancellationToken);
 }

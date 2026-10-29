@@ -317,4 +317,5 @@
   <data name="SD-E-902" xml:space="preserve"><value>The value of Major code {0} cannot be changed.</value></data>
   <data name="SD-E-903" xml:space="preserve"><value>Major code {0} has Minor codes and cannot be deleted. Delete its Minor codes first, or set it not in use.</value></data>
   <data name="SD-E-904" xml:space="preserve"><value>Major code {0} is used by the system and cannot be deleted or set not in use.</value></data>
+  <data name="MM-E-821" xml:space="preserve"><value>Choose one JPEG file of 10 MB or less for an existing item.</value></data>
 </root>
