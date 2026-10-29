@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "quro.grid.deflint": {
+      "version": "0.2.0-alpha.1",
+      "commands": [
+        "quro-deflint"
+      ],
+      "rollForward": false
+    }
+  }
+}

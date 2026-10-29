@@ -106,4 +106,7 @@
   <data name="BC-E-423" xml:space="preserve"><value>{0} allows up to {1} decimal places.</value></data>
   <data name="BC-E-424" xml:space="preserve"><value>Rounding mode '{0}' is not valid. Choose HALF_UP or DOWN.</value></data>
   <data name="BC-E-425" xml:space="preserve"><value>{0} decimals cannot be reduced because documents already use them.</value></data>
+  <data name="quro.validation.minExclusive" xml:space="preserve"><value>Enter a value greater than the minimum.</value></data>
+  <data name="quro.validation.maxExclusive" xml:space="preserve"><value>Enter a value less than the maximum.</value></data>
+  <data name="quro.validation.notEqual" xml:space="preserve"><value>This value is not allowed.</value></data>
 </root>
