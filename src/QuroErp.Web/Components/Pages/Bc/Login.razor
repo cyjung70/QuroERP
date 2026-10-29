@@ -96,7 +96,8 @@
         await HttpContext.SignInAsync(WebAuthClaims.CreatePrincipal(sessionId, login));
         // 사용자 언어 설정이 있으면 그 언어로 바꾼다 (사용자 설정 → 브라우저 언어 → ko)
         WebLocalization.SetCultureCookie(HttpContext, login.Language);
-        Navigation.NavigateTo(LocalUrl.OrRoot(ReturnUrl));
+        // login.md "로그인 처리" 9: a forced change goes to the password change screen first
+        Navigation.NavigateTo(login.MustChangePassword ? WebAuthentication.ChangePasswordPath : LocalUrl.OrRoot(ReturnUrl));
     }
 
     private sealed class LoginInput

@@ -5,7 +5,7 @@ using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Auth;
 
-/// <summary>인증 API 클라이언트 (POST api/auth/login, refresh).</summary>
+/// <summary>인증 API 클라이언트 (POST api/auth/login, refresh, change-password).</summary>
 public sealed class AuthApiClient(HttpClient http)
 {
     /// <param name="clientIp">브라우저 IP. Api가 로그인 이력에 남기도록 X-Forwarded-For로 보낸다.</param>
@@ -38,6 +38,16 @@ public sealed class AuthApiClient(HttpClient http)
         {
             return null;
         }
+    }
+
+    /// <summary>Changes the signed-in user's password (BC-UC-002).</summary>
+    /// <returns>A new token for this session (BC-BR-058). The caller replaces the stored login with it.</returns>
+    /// <exception cref="ApiProblemException">400 AUTH-001 or AUTH-011~015, 401 when the session is gone.</exception>
+    public async Task<LoginResponse> ChangePasswordAsync(string accessToken, ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        using var message = new HttpRequestMessage(HttpMethod.Post, AuthRoutes.ChangePassword) { Content = JsonContent.Create(request) };
+        message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return await SendAsync(message, cancellationToken);
     }
 
     private async Task<LoginResponse> SendAsync(HttpRequestMessage message, CancellationToken cancellationToken)
