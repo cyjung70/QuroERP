@@ -27,7 +27,8 @@
   ],
   "dependsOn": [
     "TASK-BC-005",
-    "TASK-CORE-006"
+    "TASK-CORE-006",
+    "TASK-CORE-022"
   ],
   "acceptance": [
     "화면유형 공통 컴포넌트 사용",

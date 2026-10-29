@@ -1,0 +1,37 @@
+{
+  "id": "TASK-CORE-022",
+  "project": "core",
+  "title": "창고 선택 목록 API",
+  "module": "CORE",
+  "layer": [
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/api.md",
+    "docs/business-rules/MM/warehouse.md",
+    "docs/specifications/MM/warehouse.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-008"
+  ],
+  "acceptance": [
+    "`GET /api/mm/warehouses/options`: 사용 중(`use_yn = true`) 창고만 창고 코드 순으로 `id`·`warehouseCode`·`warehouseName`만 돌려준다",
+    "로그인한 모든 사용자가 쓴다 (메뉴 권한 없음). 창고 마스터 목록(`GET /api/mm/warehouses`)과 계약을 나눈다",
+    "Web API 클라이언트(`WarehouseApiClient.GetOptionsAsync`)도 만든다",
+    "단위 테스트: 사용 안 함 창고 제외, 정렬, 인증 없으면 401"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
