@@ -38,6 +38,11 @@ public sealed class AuthController(LoginService service) : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Login screen settings. Anonymous: the screen reads them before sign-in (login.md).</summary>
+    [HttpGet("login-options"), AllowAnonymous]
+    public Task<LoginOptionsResponse> LoginOptions(CancellationToken cancellationToken) =>
+        service.GetLoginOptionsAsync(cancellationToken);
+
     /// <summary>User, permissions, menus and default warehouse. Allowed before a forced password change.</summary>
     [HttpGet("me"), Authorize(Policy = AuthenticationSetup.SessionPolicy)]
     public async Task<ActionResult<MeResponse>> Me(CancellationToken cancellationToken) =>

@@ -2,6 +2,7 @@
 @attribute [AllowAnonymous]
 @using System.Globalization
 @using System.Net.Http
+@using System.Reflection
 @using Microsoft.AspNetCore.Authentication
 @using QuroErp.Contracts.Common.Auth
 @using QuroErp.Web.Auth
@@ -12,45 +13,98 @@
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
 
-@* BC-UC-001 로그인. 쿠키를 써야 해서 정적 SSR로 렌더링한다 (rendermode 없음) *@
+@* BC-UC-001 로그인. 쿠키를 써야 해서 정적 SSR로 렌더링한다 (rendermode 없음).
+   Remember ID, Caps Lock, show password and the busy button run in js/quro.js (quroLogin). *@
 
 <PageTitle>@L["Bc.Login.Title"]</PageTitle>
 
 <main class="login-page">
-    <section class="login-frame" aria-label="@L["Bc.Login.Title"]">
-        <div class="login-hero" aria-hidden="true"></div>
+    <section class="login-card" aria-labelledby="login-title">
+        <h1 id="login-title" class="login-title">@L["Bc.Login.Title"]</h1>
 
-        <EditForm class="login-form" Model="Input" FormName="login" OnSubmit="LoginAsync" method="post">
-            @if (_error is not null)
-            {
-                <p class="login-error" role="alert">@_error</p>
-            }
+        @* 9: one line above the form, cleared when the user types again *@
+        <p class="login-error" role="alert" data-testid="login-message" data-login-error hidden="@(_error is null)">@_error</p>
+
+        <EditForm class="login-form" Model="Input" FormName="login" OnSubmit="LoginAsync" method="post" data-login-form
+                  data-busy-text="@L["Bc.Login.Submitting"]">
             <div class="login-field">
                 <label for="user-id">@L["Bc.Login.UserId"]</label>
-                <InputText id="user-id" @bind-Value="Input!.UserId" autocomplete="username" required />
+                <InputText id="user-id" @bind-Value="Input!.UserId" autocomplete="username" maxlength="50" autofocus
+                           aria-describedby="user-id-error" data-testid="login-header-user-id" data-login-user-id />
+                <span id="user-id-error" class="login-field-error" data-login-field-error>@_userIdError</span>
             </div>
             <div class="login-field">
                 <label for="password">@L["Bc.Login.Password"]</label>
-                <InputText id="password" type="password" @bind-Value="Input!.Password" autocomplete="current-password" required />
+                <div class="login-password">
+                    <InputText id="password" type="password" @bind-Value="Input!.Password" autocomplete="current-password" maxlength="128"
+                               aria-describedby="password-error caps-lock" data-testid="login-header-password" data-login-password />
+                    <button type="button" class="login-toggle" aria-pressed="false" aria-controls="password"
+                            aria-label="@L["Bc.Login.ShowPassword"]" data-show-label="@L["Bc.Login.ShowPassword"]"
+                            data-hide-label="@L["Bc.Login.HidePassword"]" data-testid="login-header-show-password" data-login-toggle>👁</button>
+                </div>
+                <span id="caps-lock" class="login-hint" role="status" data-testid="login-caps-lock" data-login-caps hidden>@Messages.Get(CapsLockCode)</span>
+                <span id="password-error" class="login-field-error" data-login-field-error>@_passwordError</span>
             </div>
-            <div class="login-actions">
-                <button class="login-submit" type="submit">@L["Bc.Login.Submit"]</button>
-                <button class="login-clear" type="reset">@L["Bc.Login.Clear"]</button>
-            </div>
+            <label class="login-check">
+                <input type="checkbox" data-testid="login-header-remember-id" data-login-remember />
+                @L["Bc.Login.RememberId"]
+            </label>
+            @if (_options.AutoLoginEnabled)
+            {
+                <label class="login-check">
+                    <InputCheckbox @bind-Value="Input!.KeepSignedIn" aria-describedby="keep-signed-in-warning"
+                                   data-testid="login-header-keep-signed-in" data-login-keep />
+                    @L["Bc.Login.KeepSignedIn"]
+                </label>
+                <span id="keep-signed-in-warning" class="login-hint" data-testid="login-keep-signed-in-warning" data-login-keep-warning
+                      hidden="@(!Input!.KeepSignedIn)">@Messages.Get(SharedComputerCode)</span>
+            }
+            <button class="login-submit" type="submit" data-testid="login-toolbar-login">@L["Bc.Login.Submit"]</button>
         </EditForm>
 
+        @if (_options.PasswordResetMode != EmailResetMode)
+        {
+            <p class="login-forgot" data-testid="login-forgot-password">@L["Bc.Login.ForgotPassword"]</p>
+        }
+
         <footer class="login-footer">
-            <span class="login-copyright">@L["Bc.Login.Copyright"]</span>
-            <LanguageSelector />
+            <p class="login-version" data-testid="login-version">@L["Bc.Login.Version", Version]</p>
+            <p class="login-copyright">@L["Bc.Login.Copyright"]</p>
+            <form class="login-language" method="post" action="@WebLocalization.CulturePath">
+                <AntiforgeryToken />
+                <input type="hidden" name="returnUrl" value="@CurrentUrl" />
+                <label for="login-language">@L["Common.Language"]</label>
+                <select id="login-language" name="culture" data-testid="login-language" data-login-language>
+                    @foreach (var culture in WebLocalization.Cultures)
+                    {
+                        <option value="@culture" lang="@culture" selected="@(culture == CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)">
+                            @L[$"Common.Language.{culture}"]
+                        </option>
+                    }
+                </select>
+                <noscript><button type="submit">@L["Common.Language"]</button></noscript>
+            </form>
         </footer>
     </section>
 </main>
 
 @code {
-    private const string RequiredCode = "BC-E-002";
+    private const string RequiredCode = "AUTH-001";
+    private const string CapsLockCode = "AUTH-009";
+    private const string SharedComputerCode = "AUTH-010";
     private const string UnavailableCode = "BC-E-003";
+    private const string EmailResetMode = "EMAIL";
+
+    // Product version for screen item 11
+    private static readonly string Version =
+        typeof(Login).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "";
 
     private string? _error;
+    private string? _userIdError;
+    private string? _passwordError;
+
+    // Defaults (no checkbox, contact the administrator) while the API cannot be reached
+    private LoginOptionsResponse _options = new(false, "ADMIN_ONLY", 30);
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -61,13 +115,28 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    protected override void OnInitialized() => Input ??= new LoginInput();
+    private string CurrentUrl => "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new LoginInput();
+        try
+        {
+            _options = await AuthApi.GetLoginOptionsAsync(HttpContext.RequestAborted);
+        }
+        catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException)
+        {
+            // The login itself reports BC-E-003 when the API is down
+        }
+    }
 
     private async Task LoginAsync()
     {
-        if (Input is null || string.IsNullOrWhiteSpace(Input.UserId) || string.IsNullOrEmpty(Input.Password))
+        // login.md "로그인 처리" 1: empty fields are reported below them without calling the server
+        _userIdError = string.IsNullOrWhiteSpace(Input!.UserId) ? Messages.Get(RequiredCode, L["Bc.Login.UserId"].Value) : null;
+        _passwordError = string.IsNullOrEmpty(Input.Password) ? Messages.Get(RequiredCode, L["Bc.Login.Password"].Value) : null;
+        if (_userIdError is not null || _passwordError is not null)
         {
-            _error = Messages.Get(RequiredCode);
             return;
         }
 
@@ -75,7 +144,8 @@
         try
         {
             login = await AuthApi.LoginAsync(
-                new LoginRequest(Input.UserId, Input.Password, Language: CultureInfo.CurrentUICulture.TwoLetterISOLanguageName),
+                new LoginRequest(Input.UserId, Input.Password, Input.KeepSignedIn && _options.AutoLoginEnabled,
+                    CultureInfo.CurrentUICulture.TwoLetterISOLanguageName),
                 HttpContext.Connection.RemoteIpAddress?.ToString(),
                 HttpContext.Request.Headers.UserAgent.ToString(),
                 HttpContext.RequestAborted);
@@ -105,5 +175,7 @@
         public string UserId { get; set; } = "";
 
         public string Password { get; set; } = "";
+
+        public bool KeepSignedIn { get; set; }
     }
 }

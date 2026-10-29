@@ -216,6 +216,15 @@ public sealed class LoginService(
         await uow.CommitAsync(cancellationToken);
     }
 
+    /// <summary>The settings the login screen shows before sign-in (BC-UC-001 screen items 7 and 10).</summary>
+    public async Task<LoginOptionsResponse> GetLoginOptionsAsync(CancellationToken cancellationToken)
+    {
+        await using var uow = await unitOfWork.BeginAsync(cancellationToken);
+        var setting = await GetSettingAsync(uow.Transaction, cancellationToken);
+        await uow.CommitAsync(cancellationToken);
+        return new LoginOptionsResponse(setting.AutoLoginEnabled, setting.PasswordResetMode, setting.SessionIdleMinutes);
+    }
+
     /// <summary>User, permissions (role menus) and default warehouse. AUTH-006 if the user can no longer sign in.</summary>
     public async Task<MeResponse> MeAsync(long appUserId, CancellationToken cancellationToken)
     {
