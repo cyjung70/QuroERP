@@ -68,6 +68,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 | POST | /api/sd/shipments | 신규 저장 → 201 (SD-BR-161~167·170). `WITH_SHIPMENT`면 송장도 만든다 |
 | PUT | /api/sd/shipments/{id} | 수정 { ..., updatedAt } (SD-BR-167·168·171). 409 Common-E-004 |
 | POST | /api/sd/shipments/{id}/void | Void { updatedAt } → 200 (SD-BR-169). 청구된 줄이 있으면(SEPARATE) 422 SD-E-168 |
+| GET | /api/sd/shipments/open-order-lines?customerId | 수주 가져오기: 같은 고객의 `CL`이 아닌 수주에서 남은 수량 > 0인 줄과 수주 헤더 기본값 (SD-BR-172) |
 | GET | /api/sd/shipments/unbilled-lines?customerId&currencyCode | 미청구 출하 줄 (송장 '출하 가져오기', SD-BR-115) |
 | GET | /api/sd/shipments/{id}/print.pdf | 출하 명세서(납품서) PDF |
 

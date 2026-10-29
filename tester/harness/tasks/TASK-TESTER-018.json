@@ -1,0 +1,41 @@
+{
+  "id": "TASK-TESTER-018",
+  "project": "tester",
+  "title": "SD 출하 입력 검사 테스트: 수주 가져오기, 수량·단가, 수주 줄과 직접 줄 혼합, 출하 통화",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-017.md"
+  ],
+  "rules": [
+    "BC-BR-542",
+    "SD-BR-161",
+    "SD-BR-162",
+    "SD-BR-163",
+    "SD-BR-164",
+    "SD-BR-165",
+    "SD-BR-167",
+    "SD-BR-170",
+    "SD-BR-171",
+    "SD-BR-172",
+    "SD-BR-173"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-004",
+    "TASK-TESTER-005",
+    "TASK-SD-003",
+    "TASK-SD-063"
+  ],
+  "acceptance": [
+    "tests/api/SD/test_shipment_input.py: SD-TS-017. 통화 X는 QURO_COUNTRY로 고른다 (US → KRW, KR → USD)",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k shipment_input 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}
