@@ -42,7 +42,7 @@ public static class CompanyRules
     /// <summary>BC-BR-313: MVP countries.</summary>
     public static readonly IReadOnlySet<string> Countries = new HashSet<string>(StringComparer.Ordinal) { "US", Korea };
 
-    // BC-BR-303 lengths; business type and item have no stated limit, so they use the register number's 30 [추정]
+    // BC-BR-303 lengths; business type and item allow 50 (decided for BC-BR-315, which states no limit)
     private static readonly (string Field, Func<CompanyFields, string?> Value, int MaxLength)[] Lengths =
     [
         (nameof(CompanyFields.Billto), f => f.Billto, 200),
@@ -53,8 +53,8 @@ public static class CompanyRules
         (nameof(CompanyFields.RegisterNo), f => f.RegisterNo, 30),
         (nameof(CompanyFields.Represent), f => f.Represent, 30),
         (nameof(CompanyFields.Email), f => f.Email, 30),
-        (nameof(CompanyFields.BusinessType), f => f.BusinessType, 30),
-        (nameof(CompanyFields.BusinessItem), f => f.BusinessItem, 30),
+        (nameof(CompanyFields.BusinessType), f => f.BusinessType, 50),
+        (nameof(CompanyFields.BusinessItem), f => f.BusinessItem, 50),
     ];
 
     /// <summary>

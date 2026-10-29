@@ -40,8 +40,8 @@ public class CompanyRulesTests
     [InlineData("FaxNo", 21)]
     [InlineData("RegisterNo", 31)]
     [InlineData("Represent", 31)]
-    [InlineData("BusinessType", 31)]
-    [InlineData("BusinessItem", 31)]
+    [InlineData("BusinessType", 51)]
+    [InlineData("BusinessItem", 51)]
     public void LongText_IsBcE303WithTheField(string field, int length)
     {
         var value = new string('x', length);
@@ -67,7 +67,7 @@ public class CompanyRulesTests
 
     [Fact, Trait("Id", "BC-UT-303")]
     public void TextAtTheLimits_IsAllowed() =>
-        CompanyRules.Normalize(Us with { Billto = new string('x', 200), TelNo = new string('1', 20), Email = "abcdefghij@abcdefghijklmn.com" });
+        CompanyRules.Normalize(Us with { Billto = new string('x', 200), TelNo = new string('1', 20), Email = "abcdefghij@abcdefghijklmn.com", BusinessType = new string('x', 50) });
 
     [Theory, Trait("Id", "BC-UT-303")]
     [InlineData("not-an-email")]
