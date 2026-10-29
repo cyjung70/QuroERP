@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
+using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Bc.UserProfiles;
 using QuroErp.Application.Bc.Users;
@@ -17,6 +18,7 @@ using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Infrastructure.Bc.Companies;
 using QuroErp.Infrastructure.Bc.Items;
 using QuroErp.Infrastructure.Bc.Localization;
+using QuroErp.Infrastructure.Bc.Menus;
 using QuroErp.Infrastructure.Bc.Roles;
 using QuroErp.Infrastructure.Bc.UserProfiles;
 using QuroErp.Infrastructure.Bc.Users;
@@ -72,6 +74,7 @@ public static class DependencyInjection
         services.AddSingleton<ISetComponentRepository, SetComponentRepository>();
         services.AddSingleton<IWarehouseRepository, WarehouseRepository>();
         services.AddSingleton<IRoleRepository, RoleRepository>();
+        services.AddSingleton<IMenuRepository, MenuRepository>();
         return services;
     }
 }

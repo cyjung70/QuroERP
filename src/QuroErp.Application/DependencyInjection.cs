@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
+using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Bc.UserProfiles;
 using QuroErp.Application.Bc.Users;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<ItemService>();
         services.AddScoped<WarehouseService>();
         services.AddScoped<RoleService>();
+        services.AddScoped<MenuService>();
         services.AddSingleton<MenuPermissionService>();
         services.AddScoped<UserProfileService>();
         services.AddScoped<UserService>();
