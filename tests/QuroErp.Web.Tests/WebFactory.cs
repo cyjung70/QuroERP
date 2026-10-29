@@ -8,6 +8,7 @@ using QuroErp.Web.Auth;
 using QuroErp.Web.Bc.Companies;
 using QuroErp.Web.Bc.Items;
 using QuroErp.Web.Bc.Localization;
+using QuroErp.Web.Bc.UserProfiles;
 using QuroErp.Web.Common;
 using QuroErp.Web.Mm.Inventory;
 using QuroErp.Web.Mm.Warehouses;
@@ -40,6 +41,7 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
             services.AddHttpClient<LocalizationApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
             services.AddHttpClient<ItemApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
             services.AddHttpClient<WarehouseApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
+            services.AddHttpClient<UserProfileApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
         });
     }
 

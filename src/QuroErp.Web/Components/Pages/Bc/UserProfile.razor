@@ -1,0 +1,231 @@
+@page "/bc/user-profile"
+@rendermode InteractiveServer
+@using System.Globalization
+@using System.Net.Http
+@using QuroErp.Contracts.Bc.UserProfiles
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Web.Auth
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.UserProfiles
+@using QuroErp.Web.Common
+@using QuroErp.Web.Mm.Warehouses
+@inject UserProfileApiClient Api
+@inject WarehouseApiClient Warehouses
+@inject LocalizationApiClient Localization
+@inject IQuroConfirm Confirm
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-003 my info (screen type S). The record is always the signed-in user, so there is no search key and no new or delete
+   (BC-BR-101, BC-BR-104). There is no password field; the password change screen has its own link (BC-BR-103). *@
+
+<PageTitle>@L["Bc.UserProfile.Title"]</PageTitle>
+
+<QuroScreenFrame Title="@L["Bc.UserProfile.Title"]" TestId="user-profile" Error="@_error" Notice="@_notice" IsDirty="IsDirty">
+    <Toolbar>
+        <QuroToolbar TestId="user-profile" Busy="_busy" OnSearch="LoadAsync" OnSave="SaveAsync" />
+    </Toolbar>
+    <ChildContent>
+        @if (_input is not null)
+        {
+            <CascadingValue Value="_form" IsFixed="true">
+                <div class="quro-form" data-testid="user-profile-header">
+                    <QuroText Label="@L["Bc.UserProfile.Userid"]" Value="@_userId" LockMode="LockMode.Always" TestId="user-profile-header-userid" />
+                    <QuroText Label="@L["Bc.UserProfile.Username"]" @bind-Value="_input.UserName" Required TestId="user-profile-header-username" />
+                    <QuroText Label="@L["Bc.UserProfile.Email"]" @bind-Value="_input.Email" TestId="user-profile-header-email" />
+                    <QuroText Label="@L["Bc.UserProfile.Phone"]" @bind-Value="_input.Phone" TestId="user-profile-header-phone" />
+                    <QuroSelect Label="@L["Bc.UserProfile.LangCode"]" @bind-Value="_input.LangCode" Options="_languages" TestId="user-profile-header-lang-code" />
+                    <QuroSelect Label="@L["Bc.UserProfile.DefaultWarehouse"]" @bind-Value="_input.DefaultWarehouseId" Options="_warehouses"
+                                TestId="user-profile-header-default-warehouse-id" />
+                    @if (_input.DefaultWarehouseId is null && _companyWarehouse is not null)
+                    {
+                        <p class="quro-hint" data-testid="user-profile-header-company-warehouse">
+                            @L["Bc.UserProfile.CompanyDefaultWarehouse", _companyWarehouse]
+                        </p>
+                    }
+                </div>
+            </CascadingValue>
+            <div class="quro-actions">
+                <a href="@WebAuthentication.ChangePasswordPath" data-testid="user-profile-change-password">@L["Bc.UserProfile.ChangePassword"]</a>
+                <button type="button" disabled="@_busy" data-testid="user-profile-revoke-tokens" @onclick="RevokeTokensAsync">
+                    @L["Bc.UserProfile.RevokeTokens"]
+                </button>
+            </div>
+        }
+    </ChildContent>
+</QuroScreenFrame>
+
+@* BC-BR-105: a new default language applies right after the save. The culture is a cookie, so a normal form post sets it *@
+<form @ref="_cultureForm" method="post" action="@WebLocalization.CulturePath" hidden>
+    <AntiforgeryToken />
+    <input type="hidden" name="culture" value="@_savedLang" />
+    <input type="hidden" name="returnUrl" value="/bc/user-profile" />
+</form>
+
+@code {
+    private const string RequiredCode = "Common-E-005";
+    private const string InvalidFieldCode = "BC-E-102";
+    private const string LanguageNotInUseCode = "BC-E-403";
+    private const string UnavailableCode = "BC-E-003";
+
+    private readonly QuroFormContext _form = new();
+    private ElementReference _cultureForm;
+    private ProfileInput? _input;
+    private UpdateUserProfileRequest? _loaded;
+    private string? _userId;
+    private string? _companyWarehouse;
+    private string? _savedLang;
+    private IReadOnlyList<CodeItemDto> _languages = [];
+    private IReadOnlyList<CodeItemDto> _warehouses = [];
+    private bool _busy;
+    private string? _error;
+    private string? _notice;
+
+    private bool IsDirty => _input is not null && _loaded is not null && _input.ToRequest(_loaded.UpdatedAt) != _loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var localization = await Localization.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+            _languages = localization.Languages.Select(l => new CodeItemDto(l.LangCode, LanguageName(l.LangCode))).ToList();
+            _warehouses = (await Warehouses.GetOptionsAsync(CancellationToken.None))
+                .Select(w => new CodeItemDto(w.Id.ToString(CultureInfo.InvariantCulture), $"{w.WarehouseCode} {w.WarehouseName}")).ToList();
+            Show(await Api.GetAsync(CancellationToken.None));
+        });
+    }
+
+    private async Task LoadAsync()
+    {
+        if (IsDirty && !await Confirm.ConfirmAsync(L["Common.ConfirmUnsaved"]))
+        {
+            return;
+        }
+        await RunAsync(async () => Show(await Api.GetAsync(CancellationToken.None)));
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_input is null || _loaded is null)
+        {
+            return;
+        }
+        _error = null;
+        _notice = null;
+        if (_form.FirstMissing() is { } missing)
+        {
+            _error = Messages.Get(RequiredCode, missing.Label);
+            return;
+        }
+
+        var languageChanged = _input.LangCode != _loaded.LangCode;
+        await RunAsync(async () =>
+        {
+            Show(await Api.UpdateAsync(_input.ToRequest(_loaded.UpdatedAt), CancellationToken.None));
+            _notice = L["Common.Saved"];
+        });
+        if (_error is null && languageChanged && _savedLang is not null && WebLocalization.Cultures.Contains(_savedLang)
+            && _savedLang != CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
+        {
+            StateHasChanged();
+            await JS.InvokeVoidAsync("quroSubmit", _cultureForm);
+        }
+    }
+
+    // BC-BR-106: other devices lose auto-login; this session stays
+    private async Task RevokeTokensAsync()
+    {
+        if (!await Confirm.ConfirmAsync(L["Bc.UserProfile.RevokeTokensConfirm"]))
+        {
+            return;
+        }
+        _error = null;
+        _notice = null;
+        await RunAsync(async () =>
+        {
+            await Api.RevokeTokensAsync(CancellationToken.None);
+            _notice = L["Bc.UserProfile.TokensRevoked"];
+        });
+    }
+
+    private void Show(UserProfileDto profile)
+    {
+        _userId = profile.UserId;
+        _savedLang = profile.LangCode;
+        _companyWarehouse = profile.DefaultWarehouseId is null && profile.DefaultWarehouseCode is not null
+            ? $"{profile.DefaultWarehouseCode} {profile.DefaultWarehouseName}"
+            : null;
+        _input = ProfileInput.From(profile);
+        _loaded = _input.ToRequest(profile.UpdatedAt);
+    }
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        _busy = true;
+        try
+        {
+            await action();
+        }
+        catch (ApiProblemException e)
+        {
+            // BC-E-102 names the property; show its label instead. BC-E-403's shared text is about the localization
+            // setting, so this screen says the chosen language is not in use
+            _error = e.Problem switch
+            {
+                { Code: InvalidFieldCode, Args: [var field, ..] } => Messages.Get(InvalidFieldCode, FieldLabel(field?.ToString())),
+                { Code: LanguageNotInUseCode, Args: [var lang, ..] } => L["Bc.UserProfile.LanguageNotInUse", lang ?? ""],
+                _ => Messages.Get(e.Problem),
+            };
+        }
+        catch (HttpRequestException)
+        {
+            _error = Messages.Get(UnavailableCode);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private string FieldLabel(string? property) => property switch
+    {
+        nameof(UpdateUserProfileRequest.UserName) => L["Bc.UserProfile.Username"],
+        nameof(UpdateUserProfileRequest.Email) => L["Bc.UserProfile.Email"],
+        nameof(UpdateUserProfileRequest.Phone) => L["Bc.UserProfile.Phone"],
+        nameof(UpdateUserProfileRequest.DefaultWarehouseId) => L["Bc.UserProfile.DefaultWarehouse"],
+        _ => property ?? "",
+    };
+
+    private string LanguageName(string langCode) =>
+        L[$"Common.Language.{langCode}"] is { ResourceNotFound: false } name ? name.Value : langCode;
+
+    private sealed class ProfileInput
+    {
+        public string? UserName { get; set; }
+
+        public string? Email { get; set; }
+
+        public string? Phone { get; set; }
+
+        public string? LangCode { get; set; }
+
+        /// <summary>Warehouse id as the select value; empty means the company default warehouse.</summary>
+        public string? DefaultWarehouseId { get; set; }
+
+        public static ProfileInput From(UserProfileDto p) => new()
+        {
+            UserName = p.UserName,
+            Email = p.Email,
+            Phone = p.Phone,
+            LangCode = p.LangCode,
+            DefaultWarehouseId = p.DefaultWarehouseId?.ToString(CultureInfo.InvariantCulture),
+        };
+
+        public UpdateUserProfileRequest ToRequest(DateTimeOffset updatedAt) => new(
+            UserName, Email, Phone, LangCode,
+            long.TryParse(DefaultWarehouseId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) ? id : null,
+            updatedAt);
+    }
+}

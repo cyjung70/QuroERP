@@ -156,4 +156,18 @@
   <data name="AUTH-013" xml:space="preserve"><value>최근에 쓴 비밀번호는 다시 쓸 수 없습니다.</value></data>
   <data name="AUTH-014" xml:space="preserve"><value>비밀번호는 사용자 ID와 같을 수 없습니다.</value></data>
   <data name="AUTH-015" xml:space="preserve"><value>현재 비밀번호가 올바르지 않습니다.</value></data>
+  <data name="Bc.UserProfile.Title" xml:space="preserve"><value>내 정보 변경</value></data>
+  <data name="Bc.UserProfile.Userid" xml:space="preserve"><value>사용자 ID</value></data>
+  <data name="Bc.UserProfile.Username" xml:space="preserve"><value>이름</value></data>
+  <data name="Bc.UserProfile.Email" xml:space="preserve"><value>이메일</value></data>
+  <data name="Bc.UserProfile.Phone" xml:space="preserve"><value>전화</value></data>
+  <data name="Bc.UserProfile.LangCode" xml:space="preserve"><value>기본 언어</value></data>
+  <data name="Bc.UserProfile.DefaultWarehouse" xml:space="preserve"><value>기본 창고</value></data>
+  <data name="Bc.UserProfile.CompanyDefaultWarehouse" xml:space="preserve"><value>비워 두면 회사 기본 창고({0})를 씁니다.</value></data>
+  <data name="Bc.UserProfile.ChangePassword" xml:space="preserve"><value>비밀번호 변경</value></data>
+  <data name="Bc.UserProfile.RevokeTokens" xml:space="preserve"><value>모든 기기에서 로그아웃</value></data>
+  <data name="Bc.UserProfile.RevokeTokensConfirm" xml:space="preserve"><value>모든 기기의 자동 로그인을 끊습니다. 지금 화면은 로그인 상태를 유지합니다. 계속할까요?</value></data>
+  <data name="Bc.UserProfile.TokensRevoked" xml:space="preserve"><value>모든 기기의 자동 로그인을 끊었습니다.</value></data>
+  <data name="Bc.UserProfile.LanguageNotInUse" xml:space="preserve"><value>언어 '{0}'은(는) 사용 중인 언어가 아닙니다.</value></data>
+  <data name="BC-E-102" xml:space="preserve"><value>{0} 값이 올바르지 않습니다. 입력 규칙(필수·길이·형식·사용 중인 창고)을 확인하세요.</value></data>
 </root>
