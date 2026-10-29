@@ -79,6 +79,7 @@ tester/
 | `settings` | session | 환경변수 검사, 빠지면 실행 중지 |
 | `db` | session | 읽기 전용 연결, DB 이름 `_test` 검사 |
 | `api` | session | 로그인 1회(`POST /api/auth/login`), 내부 토큰을 `Authorization: Bearer`로 붙인 httpx 클라이언트 |
+| `base_codes` | session | Seed가 Minor를 넣지 않는 업무 데이터 코드(`ITEM_CLASS`, `SALES_REP`, `GRADE`, `OFFSET`, `DISCOUNT_STATUS`)에 사용 중 값이 2개 미만이면 `POST /api/bc/codes/batch`로 `TST1`·`TST2`(ko·en 이름)를 만든다. 품목·고객을 만드는 테스트는 이 값을 쓴다. 테스트 DB는 Schema·Seed만 적용해 이 코드들이 비어 있다 |
 | `lang` | function | 기본 언어(`QURO_LANGS`의 첫 값) 1개. `Accept-Language` 설정 |
 | `run_id` | session | 이번 실행의 고유 접두어. 테스트 데이터 업무 키에 붙인다 |
 | `negative_stock_mode` | function | 재고 설정 API로 모드를 바꾸고, 끝나면 원래 값으로 되돌린다. `ALLOW`·`ALLOW_IN_MONTH`·`DENY`로 매개변수화. 이 fixture를 쓰는 테스트는 `serial` |

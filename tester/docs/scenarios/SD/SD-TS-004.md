@@ -20,7 +20,7 @@
 
 송장은 출하 없이 직접 입력한 서비스 품목 줄이라 송장에서 Void할 수 있다 (SD-BR-116).
 
-입금 방법은 `AR_PAYMENT_METHOD`의 사용 중 코드 하나(예: 수표)다.
+입금 방법은 Seed가 넣은 `AR_PAYMENT_METHOD` `CHECK`(수표)다.
 
 ## 단계
 

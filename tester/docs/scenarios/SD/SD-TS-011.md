@@ -17,7 +17,7 @@
 일자: D0 = 오늘, D1 = 어제. 고객 이름은 `SRP{run_id}`로 시작한다.
 
 0. **기준값 저장** (데이터를 만들기 전): `GET /api/sd/reports/lost-sales-order?from=D1&to=D0`, `GET /api/sd/reports/period-sales-by-rep?from=D0&to=D0`, `GET /api/sd/reports/sales-by-class?from=D0&to=D0`(품목 유형 조건 없음), `GET /api/sd/reports/period-sales-by-class?from=D0&to=D0`의 합계 행
-1. 담당자 코드: `GET /api/bc/codes`의 `SALES_REP`에서 사용 중인 값 두 개 R1, R2
+1. 담당자 코드: `base_codes` fixture가 준비한 `SALES_REP` 사용 중 값 두 개 R1, R2
 2. 고객 K `SRP{run_id} K` (담당자 R1, 세금 코드 `NONE`)
 3. 재고 품목 I (입고 수량 20 단가 5), 서비스 품목 SV, 세트 품목 S (구성품 I × 2)
 4. 수주 SO1: K, D0, I 수량 10 단가 10 + SV 수량 1 단가 50 → 150
