@@ -5,7 +5,7 @@
 | --- | --- |
 | 시나리오 ID | MM-TS-007 |
 | 계층 | scenario |
-| 관련 BR | MM-BR-004, MM-BR-006, MM-BR-401, MM-BR-402, MM-BR-403, MM-BR-406, SD-BR-111 |
+| 관련 BR | MM-BR-004, MM-BR-006, MM-BR-401, MM-BR-402, MM-BR-403, MM-BR-406, SD-BR-111, SD-BR-163 |
 | 국가 | 공통 (세금 코드 `NONE`, 정수 단가) |
 | 마이너스 재고 모드 | `DENY` (고정 — 마감 자체는 모드와 무관하다. 모드별 차이는 MM-TS-008) |
 | 직렬 실행 | 예 (`serial` — 회사 마감 기준 월을 바꾼다) |
@@ -21,7 +21,7 @@
 
 1. 공급자 V, 재고 품목 I, 고객 C (세금 코드 `NONE`)
 2. 입고 G1: `M-1/10`, 품목 I 직접 입력, 수량 10, 단가 5
-3. 송장 D1: `M-1/20`, 고객 C, 품목 I 직접 입력, 수량 4, 단가 20
+3. 출하 H1: `M-1/20`, 고객 C, 품목 I 직접 입력(수주 없는 줄), 수량 4, 단가 20 (송장이 함께 생긴다)
 4. 입고 G2: 오늘, 품목 I, 수량 5, 단가 5
 
 ## 단계
@@ -32,7 +32,7 @@
 | 2 | `POST /api/mm/inventory-closing/close` | `yearMonth` = `M-1` |
 | 3 | `GET /api/mm/inventory-closing` | — |
 | 4 | `POST /api/mm/goods-receipts` | `M-1/25`, 품목 I 직접 입력, 수량 1, 단가 5 |
-| 5 | `POST /api/sd/sales-invoices` | `M-1/25`, 고객 C, 품목 I 직접 입력, 수량 1, 단가 20 |
+| 5 | `POST /api/sd/shipments` | `M-1/25`, 고객 C, 품목 I 직접 입력(수주 없는 줄), 수량 1, 단가 20 |
 | 6 | `POST /api/mm/inventory-closing/close` | `yearMonth` = `M` |
 | 7 | `POST /api/mm/inventory-closing/cancel` | `yearMonth` = `M-1` |
 | 8 | `POST /api/mm/goods-receipts` | 4단계와 같은 입력 |
@@ -45,10 +45,10 @@
 | 2 | 200 | — | `closedMonth` = `M-1` | `bc_company.close_year_month` = `M`(`YYYYMM`). `mm_monthly_inventory`(I, `MAIN`, `M-1`): 기초 0, 입고 10, 출고 4, 기말 6. 품목 I 기말 금액 30 |
 | 3 | 200 | — | `lastClosedMonth` = `M-1`, `nextTargetMonth` = `M` | — |
 | 4 | 422 | `MM-E-002` | — | 입고·재고 이동이 생기지 않는다 |
-| 5 | 422 | `MM-E-002` | — | 송장·출고 이동이 생기지 않는다 |
+| 5 | 422 | `MM-E-002` | — | 출하·송장·출고 이동이 생기지 않는다 |
 | 6 | 422 | `MM-E-402` | — | `close_year_month` = `M` 그대로 |
 | 7 | 200 | — | `reopenedMonth` = `M-1` | `close_year_month` = 선행 마감이 없었으면 null, 있었으면 `M-1`(`YYYYMM`). `M-1`의 `mm_monthly_inventory` 확정 행 없음 |
 | 8 | 201 | — | — | `M-1/25` 입고 이동 1건 |
 
 - 테스트가 끝나면 마감 상태가 시작 때와 같아야 한다 (`lastClosedMonth` null). 실패해도 fixture가 선행 마감까지 모두 취소한다.
-- 5단계는 SD 송장도 같은 마감 검사를 거치는지 본다.
+- 5단계는 SD 출하도 같은 마감 검사를 거치는지 본다.

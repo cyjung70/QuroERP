@@ -5,7 +5,7 @@
 | --- | --- |
 | 시나리오 ID | SD-TS-007 |
 | 계층 | scenario |
-| 관련 BR | BC-BR-421, BC-BR-423, BC-BR-505, BC-BR-541, BC-BR-542, BC-BR-543, SD-BR-132, SD-BR-134, SD-BR-135 |
+| 관련 BR | BC-BR-421, BC-BR-423, BC-BR-505, BC-BR-541, BC-BR-542, BC-BR-543, SD-BR-116, SD-BR-132, SD-BR-134 |
 | 국가 | `KR` (`country("KR")`) — 기준 통화 KRW(0자리), SD 단가 0자리, 반올림 `HALF_UP` |
 | 마이너스 재고 모드 | 해당 없음 (기본 `DENY`) |
 | 직렬 실행 | 예 (`serial` — 5단계에서 세금 계산 단위를 바꾼다) |
@@ -14,9 +14,8 @@
 ## 사전 데이터
 
 1. `POST /api/sd/customers` — 고객 B: `tax_party_type = BUSINESS`, 사업자등록번호 `1234567891`, 상호·대표자·주소·업태·종목, 기본 세금 코드 `VAT10` / 고객 P: `INDIVIDUAL`, 기본 세금 코드 `VAT10`
-2. `POST /api/bc/items` — I1: Inventory, `vat_kind = TAXABLE` / I2: Inventory, `vat_kind = EXEMPT`
-3. 공급자 V(세금 코드 `NONE`)에서 입고: I1·I2 각 수량 20, 단가 1000
-4. 회사 사업자등록번호·상호·대표자가 들어 있는지 `GET /api/bc/company`로 확인한다 (없으면 사전 준비 실패)
+2. `POST /api/bc/items` — I1: Service, `vat_kind = TAXABLE` / I2: Service, `vat_kind = EXEMPT` (송장 직접 입력은 재고 관리가 아닌 품목만 된다)
+3. 회사 사업자등록번호·상호·대표자가 들어 있는지 `GET /api/bc/company`로 확인한다 (없으면 사전 준비 실패)
 
 ## 단계
 
@@ -33,7 +32,7 @@
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
-| 1 | 201 | — | 줄 세금 코드 `VAT10`·`VAT10`·`VAT10`·`VATEX`·`VAT0`, 줄 세액 100·101·101·0·0, 공급가액 15015, 세액 302, 합계 = 잔액 = 15317 | 출고 이동 `prc = 1000` (세액 무관) |
+| 1 | 201 | — | 줄 세금 코드 `VAT10`·`VAT10`·`VAT10`·`VATEX`·`VAT0`, 줄 세액 100·101·101·0·0, 공급가액 15015, 세액 302, 합계 = 잔액 = 15317 | — |
 | 2 | 200 | — | `Content-Type: application/pdf` | — |
 | 3 | 201 | — | 세액 100, 합계 1100 | — |
 | 4 | 422 | `SD-E-134` | — | — |

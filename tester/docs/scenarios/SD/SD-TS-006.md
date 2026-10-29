@@ -5,7 +5,7 @@
 | --- | --- |
 | 시나리오 ID | SD-TS-006 |
 | 계층 | scenario |
-| 관련 BR | BC-BR-421, BC-BR-512, BC-BR-513, BC-BR-525, BC-BR-541, BC-BR-542, BC-BR-543, BC-BR-545, BC-BR-547, SD-BR-032, SD-BR-132, SD-BR-133, SD-BR-135 |
+| 관련 BR | BC-BR-421, BC-BR-512, BC-BR-513, BC-BR-525, BC-BR-541, BC-BR-542, BC-BR-543, BC-BR-545, BC-BR-547, SD-BR-032, SD-BR-132, SD-BR-133, SD-BR-135, SD-BR-167 |
 | 국가 | `US` (`country("US")`) — 기준 통화 USD(2자리), SD 단가 2자리, 세금 계산 단위 `DOCUMENT`(기본) |
 | 마이너스 재고 모드 | 해당 없음 (기본 `DENY`) |
 | 직렬 실행 | 아니오 |
@@ -18,7 +18,7 @@
 1. `POST /api/bc/tax-areas` — 세율 지역 A: 주 `CA`, 세율 행 2개: 시작일 `2000-01-01` 8.0000 / 시작일 오늘 8.2500
 2. `POST /api/bc/tax-codes/batch` — 세금 코드 T: 종류 `SALES_TAX`, 세율 지역 A
 3. `POST /api/sd/customers` — 고객 C1·C2·C3: 배송지 주 `CA`, 기본 세금 코드 T. C2는 `CA` 면세 증명서(번호 `EX-C2`, 만료일 오늘 + 1년), C3는 `CA` 면세 증명서(번호 `EX-C3`, 만료일 어제) [확인 필요: 고객 명세에 면세 증명서 요청 형식이 아직 없다. 고객 저장 본문의 증명서 목록으로 가정]
-4. `POST /api/bc/items` — I1·I2: Inventory, `taxable = true` / I3: Inventory, `taxable = false`
+4. `POST /api/bc/items` — I1·I2: Inventory, `taxable = true` / I3: Inventory, `taxable = false` / S1: Service, `taxable = true`
 5. 공급자 V(세금 코드 `NONE`)에서 입고: I1·I2·I3 각 수량 10, 단가 5
 
 ## 단계
@@ -26,18 +26,18 @@
 | 단계 | 호출 | 입력 |
 | --- | --- | --- |
 | 1 | `POST /api/sd/sales-orders` | 고객 C1, **어제**, 줄 1: I1 수량 3 단가 19.99 / 줄 2: I2 수량 1 단가 40.05 (세금 코드는 보내지 않는다 — 기본값) |
-| 2 | `POST /api/sd/sales-invoices` | 고객 C1, 오늘, 줄 1·2: 1의 수주 줄 전량 / 줄 3: I3 직접 입력 수량 2 단가 5.00 |
-| 3 | `POST /api/sd/sales-invoices` | 고객 C2, 오늘, I1 직접 입력 수량 1 단가 19.99 |
-| 4 | `POST /api/sd/sales-invoices` | 고객 C3, 오늘, I1 직접 입력 수량 1 단가 19.99 |
-| 5 | `GET /api/sd/sales-invoices/{2의 id}/print/sales-invoice.pdf` | — |
-| 6 | `POST /api/sd/sales-invoices` | 고객 C1, 오늘, I1 수량 1 단가 19.99, 줄 세액 `taxAmt = 1.00`을 직접 보냄 |
+| 2 | `POST /api/sd/shipments` | 고객 C1, 오늘, 줄 1·2: 1의 수주 줄 전량 / 줄 3: I3 직접 입력(수주 없는 줄) 수량 2 단가 5.00. 청구 시점 기본 `WITH_SHIPMENT`라 송장이 함께 생긴다 |
+| 3 | `POST /api/sd/sales-invoices` | 고객 C2, 오늘, S1 직접 입력 수량 1 단가 19.99 |
+| 4 | `POST /api/sd/sales-invoices` | 고객 C3, 오늘, S1 직접 입력 수량 1 단가 19.99 |
+| 5 | `GET /api/sd/sales-invoices/{2에서 생긴 송장}/print/sales-invoice.pdf` | — |
+| 6 | `POST /api/sd/sales-invoices` | 고객 C1, 오늘, S1 수량 1 단가 19.99, 줄 세액 `taxAmt = 1.00`을 직접 보냄 |
 
 ## 기대 결과
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
 | 1 | 201 | — | 어제 세율 8%: 줄 공급가액 59.97·40.05, 줄 세액 4.80·3.20, 공급가액 100.02, 세액 8.00, 합계 108.02 | — |
-| 2 | 201 | — | 오늘 세율 8.25%로 다시 계산: 줄 세금 코드 T·T·`EXEMPT`, 줄 세액 4.95·3.30·0, 공급가액 110.02, 세액 8.25, 합계 = 잔액 = 118.27 | 송장에 세율 지역 A 저장. 출고 이동 `prc = 5` (세액 무관) |
+| 2 | 201 | — | 함께 생긴 송장 (`GET`): 송장 일자(= 출하 일자) 오늘의 세율 8.25%로 다시 계산: 줄 세금 코드 T·T·`EXEMPT`, 줄 세액 4.95·3.30·0, 공급가액 110.02, 세액 8.25, 합계 = 잔액 = 118.27 | 송장에 세율 지역 A 저장. 출하의 출고 이동 `prc = 5` (세액 무관) |
 | 3 | 201 | — | 줄 세금 코드 `EXEMPT`, 세액 0, 합계 19.99 | 송장 면세 증명서 번호 `EX-C2` |
 | 4 | 201 | — | 경고 `BC-W-525`, 줄 세금 코드 T, 세액 1.65, 합계 21.64 | 송장 면세 증명서 번호 없음 |
 | 5 | 200 | — | `Content-Type: application/pdf`, 본문 비어 있지 않음 | — |

@@ -5,7 +5,7 @@
 | --- | --- |
 | 시나리오 ID | SD-TS-008 |
 | 계층 | scenario |
-| 관련 BR | BC-BR-412, BC-BR-413, BC-BR-414, BC-BR-415, BC-BR-421, SD-BR-031, SD-BR-131, SD-BR-135, SD-BR-721, SD-BR-722 |
+| 관련 BR | BC-BR-412, BC-BR-413, BC-BR-414, BC-BR-415, BC-BR-421, SD-BR-031, SD-BR-131, SD-BR-135, SD-BR-167, SD-BR-170, SD-BR-721, SD-BR-722 |
 | 국가 | `US` (`country("US")`) — 기준 통화 USD(2자리), 문서 통화 KRW(0자리) |
 | 마이너스 재고 모드 | 해당 없음 (기본 `DENY`) |
 | 직렬 실행 | 아니오 |
@@ -18,26 +18,27 @@
 1. `POST /api/bc/currencies/batch` — KRW 사용 중 (이미 사용 중이면 그대로)
 2. `PUT /api/bc/exchange-rates` — KRW, 오늘, 0.0007407407
 3. `POST /api/sd/customers` — 고객 K: 거래 통화 KRW, 세금 코드 `NONE` / 고객 U: 거래 통화 비움(USD), 세금 코드 `NONE`
-4. 재고 품목 I, 공급자 V(세금 코드 `NONE`)에서 입고: I 수량 10, 단가 5.00 (USD)
+4. 재고 품목 I, 공급자 V(세금 코드 `NONE`)에서 입고: I 수량 10, 단가 5.00 (USD). 서비스 품목 SV
+5. 청구 시점은 기본 `WITH_SHIPMENT`다 (출하를 저장하면 송장이 함께 생긴다)
 
 ## 단계
 
 | 단계 | 호출 | 입력 |
 | --- | --- | --- |
-| 1 | `POST /api/sd/sales-invoices` | 고객 K, 오늘, I 직접 입력 수량 3 단가 45000 (통화·환율은 보내지 않는다 — 기본값) |
-| 2 | `POST /api/sd/ar-receipts` | 고객 K, 오늘, 통화 KRW, 환율 0.0007692308 (USD 1 = 1300원), 받은 금액 135000, 줄: 1의 송장 적용 135000 |
-| 3 | `POST /api/sd/sales-invoices` | 고객 U, 오늘, I 수량 1 단가 100.00 → 송장 DU |
+| 1 | `POST /api/sd/shipments` | 고객 K, 오늘, I 직접 입력(수주 없는 줄) 수량 3 단가 45000 (통화·환율은 보내지 않는다 — 기본값) |
+| 2 | `POST /api/sd/ar-receipts` | 고객 K, 오늘, 통화 KRW, 환율 0.0007692308 (USD 1 = 1300원), 받은 금액 135000, 줄: 1에서 생긴 송장 적용 135000 |
+| 3 | `POST /api/sd/sales-invoices` | 고객 U, 오늘, SV 직접 입력 수량 1 단가 100.00 → 송장 DU |
 | 4 | `POST /api/sd/ar-receipts` | 고객 K, 통화 KRW, 환율 0.0007692308, 줄: 송장 DU 적용 100 |
-| 5 | `POST /api/sd/sales-orders` → `POST /api/sd/sales-invoices` | 고객 K 수주(KRW) I 수량 1 단가 45000 → 그 수주 줄로 송장, 통화 USD를 보냄 |
+| 5 | `POST /api/sd/sales-orders` → `POST /api/sd/shipments` | 고객 K 수주(KRW) I 수량 1 단가 45000 → 그 수주 줄로 출하, 통화 USD를 보냄 |
 
 ## 기대 결과
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
-| 1 | 201 | — | 통화 KRW, 환율 0.0007407407, 합계 = 잔액 = 135000 | `tot_base_amt = 100.00`. 출고 이동 `prc = 5.00` (기준 통화 이동평균원가) |
+| 1 | 201 | — | 출하 통화 KRW, 환율 0.0007407407. 함께 생긴 송장: 같은 통화·환율, 합계 = 잔액 = 135000 | 송장 `tot_base_amt = 100.00`. 출하의 출고 이동 `prc = 5.00` (기준 통화 이동평균원가) |
 | 2 | 201 | — | 송장 잔액 0, 상태 `CL` | `sd_ar_clear.fx_diff_base_amt = 3.85` (135000 × 0.0007692308 = 103.85 − 135000 × 0.0007407407 = 100.00) |
 | 3 | 201 | — | 통화 USD, 환율 1 | `tot_base_amt = 100.00` |
 | 4 | 422 | `SD-E-721` | — | 입금이 생기지 않는다. DU 잔액 100.00 |
-| 5 | 422 | `SD-E-131` | — | 송장이 생기지 않는다 |
+| 5 | 422 | `SD-E-170` | — | 출하·송장이 생기지 않는다 |
 
 - 기준 통화가 KRW인 회사(`KR`)의 외화 문서는 SD-TS-009에 있다.

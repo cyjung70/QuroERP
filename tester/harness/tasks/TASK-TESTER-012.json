@@ -33,7 +33,8 @@
     "TASK-MM-009",
     "TASK-MM-030",
     "TASK-SD-003",
-    "TASK-SD-005"
+    "TASK-SD-005",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "tests/scenario/MM/test_inventory_reports.py: MM-TS-011, serial. 연령 분석·수불부는 데이터를 만들기 전 합계 행을 저장하고 증가분으로 비교한다",

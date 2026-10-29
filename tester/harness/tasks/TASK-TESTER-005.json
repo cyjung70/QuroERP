@@ -51,7 +51,8 @@
     "TASK-BC-051",
     "TASK-BC-053",
     "TASK-BC-055",
-    "TASK-BC-057"
+    "TASK-BC-057",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "tests/scenario/SD/test_us_sales_tax.py: SD-TS-006, country(\"US\")",

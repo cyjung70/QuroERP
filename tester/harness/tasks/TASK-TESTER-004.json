@@ -62,7 +62,8 @@
     "TASK-SD-035",
     "TASK-SD-037",
     "TASK-BC-025",
-    "TASK-CORE-011"
+    "TASK-CORE-011",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "tests/scenario/SD/test_order_to_invoice.py: SD-TS-001, SD-TS-003",

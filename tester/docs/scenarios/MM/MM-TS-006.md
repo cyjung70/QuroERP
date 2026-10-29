@@ -5,7 +5,7 @@
 | --- | --- |
 | 시나리오 ID | MM-TS-006 |
 | 계층 | scenario |
-| 관련 BR | MM-BR-005, MM-BR-110, MM-BR-111, SD-BR-111, SD-BR-114 |
+| 관련 BR | MM-BR-005, MM-BR-110, MM-BR-111, SD-BR-111, SD-BR-114, SD-BR-163 |
 | 국가 | `US` (`country("US")`) — US 단가 자릿수(MM 4·SD 2)로 쓴 값이다. 공급자·고객 세금 코드 `NONE` |
 | 마이너스 재고 모드 | `ALLOW`·`ALLOW_IN_MONTH`·`DENY` 각각 (현재고 안에서 출고하므로 세 모드 결과가 같다) |
 | 직렬 실행 | 예 (`serial`) |
@@ -20,18 +20,18 @@
 
 | 단계 | 호출 | 입력 |
 | --- | --- | --- |
-| 1 | `POST /api/sd/sales-invoices` | 고객 C, 품목 I, 수량 1, 단가 9 (입고 전, 원가 0) |
+| 1 | `POST /api/sd/shipments` | 고객 C, 품목 I 직접 입력(수주 없는 줄), 수량 1, 단가 9 (입고 전, 원가 0) |
 | 2 | `POST /api/mm/goods-receipts` | 품목 I 직접 입력, 수량 10, 단가 100 |
 | 3 | `POST /api/mm/goods-receipts` | 품목 I 직접 입력, 수량 10, 단가 200 |
 | 4 | `GET /api/bc/items/{I}` | — |
-| 5 | `POST /api/sd/sales-invoices` | 고객 C, 품목 I, 수량 5, 단가 300 |
+| 5 | `POST /api/sd/shipments` | 고객 C, 품목 I 직접 입력(수주 없는 줄), 수량 5, 단가 300 |
 | 6 | `GET /api/bc/items/{I}` | — |
 
 ## 기대 결과
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
-| 1 | 422 | `SD-E-114` | — | 품목 I 재고 이동 없음 |
+| 1 | 422 | `SD-E-114` | — | 품목 I 재고 이동 없음, 출하·송장 없음 |
 | 2 | 201 | — | — | — |
 | 3 | 201 | — | — | — |
 | 4 | 200 | — | 현재고 20, 이동평균원가 150, 표준 구매단가 200 (마지막 입고 단가) | — |

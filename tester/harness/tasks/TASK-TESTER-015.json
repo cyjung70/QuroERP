@@ -44,7 +44,8 @@
     "TASK-MM-015",
     "TASK-BC-049",
     "TASK-MM-040",
-    "TASK-SD-059"
+    "TASK-SD-059",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "tests/conftest.py: inventory_closing fixture에 close_until(month)를 더하고, 끝날 때 이번 실행에서 마감한 달을 최근 달부터 모두 취소한다. 시작할 때 마감된 달이 있으면 실패한다",
