@@ -44,7 +44,7 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         read.Should().BeEquivalentTo(item);
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T01")]
+    [Fact, Trait("Id", "BC-UC-009-T11")]
     public async Task Get_ListByCodePrefix_ReturnsPageAndTotal()
     {
         var client = await factory.AdminAsync();
@@ -57,7 +57,7 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         page.Items.Select(i => i.ItemCd).Should().Equal("LST1");
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T02")]
+    [Fact, Trait("Id", "BC-UC-009-T03")]
     public async Task Post_MissingName_Returns422MmE802()
     {
         var client = await factory.AdminAsync();
@@ -70,7 +70,31 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         problem.GetProperty("args")[0].GetString().Should().Be("ItemName");
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T02")]
+    [Theory, Trait("Id", "BC-UC-009-T05")]
+    [InlineData("UsdPrc")]
+    [InlineData("SoUsdPrc")]
+    [InlineData("ReorderPoint")]
+    public async Task Post_NegativePriceOrReorderPoint_Returns422MmE803_AndSavesNothing(string field)
+    {
+        var client = await factory.AdminAsync();
+        var request = field switch
+        {
+            "UsdPrc" => NewItem("NEG1") with { UsdPrc = -0.01m },
+            "SoUsdPrc" => NewItem("NEG2") with { SoUsdPrc = -1m },
+            _ => NewItem("NEG3") with { ReorderPoint = -1m },
+        };
+
+        using var response = await client.PostAsJsonAsync(ItemRoutes.Base, request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        var problem = await response.ReadProblemAsync();
+        problem.GetProperty("code").GetString().Should().Be("MM-E-803");
+        problem.GetProperty("args")[0].GetString().Should().Be(field);
+        var list = await client.GetFromJsonAsync<ItemListDto>($"{ItemRoutes.Base}?itemCd={request.ItemCd}");
+        list!.Items.Should().BeEmpty();
+    }
+
+    [Fact, Trait("Id", "BC-UC-009-T04")]
     public async Task Post_UsedCode_Returns422MmE801()
     {
         var client = await factory.AdminAsync();
@@ -82,7 +106,7 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("MM-E-801");
     }
 
-    [Fact, Trait("Id", "CORE-020-T01")]
+    [Fact, Trait("Id", "CORE-020-T01"), Trait("Id", "BC-UC-009-T12")]
     public async Task PreviousNext_FollowItemClassThenCode_And204AtTheEnd()
     {
         var client = await factory.AdminAsync();
@@ -103,7 +127,7 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         unknown.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T03")]
+    [Fact, Trait("Id", "BC-UC-009-T13")]
     public async Task Put_StaleUpdatedAt_Returns409CommonE004_CurrentSaves()
     {
         var client = await factory.AdminAsync();
@@ -125,7 +149,7 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         (await stale.ReadProblemAsync()).GetProperty("code").GetString().Should().Be(ConcurrencyException.Code);
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T04")]
+    [Fact, Trait("Id", "MM-UT-802")]
     public async Task Post_UnknownUnitCode_Returns422CommonE002()
     {
         var client = await factory.AdminAsync();
@@ -138,7 +162,7 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         problem.GetProperty("args")[0].GetString().Should().Be("UNIT");
     }
 
-    [Fact, Trait("Id", "BC-UC-009-IT-10")]
+    [Fact, Trait("Id", "BC-UC-009-T06")]
     public async Task Put_TypeOfLockedItem_Returns422MmE806()
     {
         var client = await factory.AdminAsync();
@@ -155,7 +179,7 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("MM-E-806");
     }
 
-    [Fact, Trait("Id", "BC-UC-009-IT-11")]
+    [Fact, Trait("Id", "BC-UC-009-T07")]
     public async Task Delete_UsedItem_Returns422MmE807_UnusedReturns204()
     {
         var client = await factory.AdminAsync();
@@ -173,7 +197,7 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         gone.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    [Fact, Trait("Id", "BC-UC-009-IT-12")]
+    [Fact, Trait("Id", "BC-UT-214")]
     public async Task Post_NonAdmin_Returns403()
     {
         using var response = await factory.NonAdmin().PostAsJsonAsync(ItemRoutes.Base, NewItem("NOPE"));
