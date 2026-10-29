@@ -92,7 +92,7 @@
     },
     {
       "path": "docs/architecture/i18n.md",
-      "sha256": "313bbd839a7833493d90b72cc3a638ce092d2b177874c03ddc062bdb97bd27ea"
+      "sha256": "05abc9f3650fef3e8ee6c3bfa682e2dd6479b6f0aada7d6a630570b9ee096c40"
     },
     {
       "path": "docs/architecture/inventory.md",
@@ -144,7 +144,7 @@
     },
     {
       "path": "docs/business-rules/BC/company.md",
-      "sha256": "905028c6d7130919c2147086adcebba18843b3894d991fa3b3a206e25ea17f75"
+      "sha256": "68bfd1f1e725885e887fb2e411b3c54d87cf5ed9ee9cb7a0caa9332514c0078f"
     },
     {
       "path": "docs/business-rules/BC/localization.md",
