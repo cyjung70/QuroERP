@@ -168,6 +168,6 @@
   <data name="Bc.UserProfile.RevokeTokens" xml:space="preserve"><value>Log Out on All Devices</value></data>
   <data name="Bc.UserProfile.RevokeTokensConfirm" xml:space="preserve"><value>This ends auto-login on all devices. This screen stays signed in. Continue?</value></data>
   <data name="Bc.UserProfile.TokensRevoked" xml:space="preserve"><value>Auto-login has been ended on all devices.</value></data>
-  <data name="Bc.UserProfile.LanguageNotInUse" xml:space="preserve"><value>Language '{0}' is not in use.</value></data>
+  <data name="BC-E-405" xml:space="preserve"><value>Language '{0}' is not in use.</value></data>
   <data name="BC-E-102" xml:space="preserve"><value>{0} is not valid. Check the rules (required, length, format, warehouse in use).</value></data>
 </root>

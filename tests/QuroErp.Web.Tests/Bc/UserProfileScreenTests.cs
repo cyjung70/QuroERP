@@ -137,7 +137,7 @@ public class UserProfileScreenTests : BunitContext
     [Fact, Trait("Id", "BC-UT-403")]
     public void Save_LanguageNotInUse_SaysSo()
     {
-        _api.UpdateProblem = (HttpStatusCode.UnprocessableEntity, """{"status":422,"code":"BC-E-403","args":["sw"]}""");
+        _api.UpdateProblem = (HttpStatusCode.UnprocessableEntity, """{"status":422,"code":"BC-E-405","args":["sw"]}""");
         var page = Open();
 
         page.Find("[data-testid=user-profile-toolbar-save]").Click();

@@ -14,7 +14,7 @@ public sealed class UserProfileApiClient(HttpClient http, AccessTokenProvider to
         return await ReadAsync(response, cancellationToken);
     }
 
-    /// <exception cref="ApiProblemException">422 BC-E-102 (arg: property name) or BC-E-403, 409 Common-E-004 when someone saved first.</exception>
+    /// <exception cref="ApiProblemException">422 BC-E-102 (arg: property name) or BC-E-405, 409 Common-E-004 when someone saved first.</exception>
     public async Task<UserProfileDto> UpdateAsync(UpdateUserProfileRequest request, CancellationToken cancellationToken)
     {
         using var message = new HttpRequestMessage(HttpMethod.Put, UserProfileRoutes.Base) { Content = JsonContent.Create(request) };

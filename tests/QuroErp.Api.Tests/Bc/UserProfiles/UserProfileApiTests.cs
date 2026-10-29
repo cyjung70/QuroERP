@@ -69,7 +69,7 @@ public class UserProfileApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [Theory, Trait("Id", "BC-UC-003-T02")]
     [InlineData("", "ko", 1L, "BC-E-102", "UserName")]
     [InlineData("Kim", "ko", 9L, "BC-E-102", "DefaultWarehouseId")]
-    [InlineData("Kim", "sw", 1L, "BC-E-403", "sw")]
+    [InlineData("Kim", "sw", 1L, "BC-E-405", "sw")]
     public async Task Put_BreakingAFieldRule_Returns422WithCodeAndArg(string name, string lang, long warehouseId, string code, string arg)
     {
         var client = await SignInAsync(ApiFactory.ProfileUserId);

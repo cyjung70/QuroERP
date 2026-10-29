@@ -67,7 +67,6 @@
 @code {
     private const string RequiredCode = "Common-E-005";
     private const string InvalidFieldCode = "BC-E-102";
-    private const string LanguageNotInUseCode = "BC-E-403";
     private const string UnavailableCode = "BC-E-003";
 
     private readonly QuroFormContext _form = new();
@@ -170,14 +169,10 @@
         }
         catch (ApiProblemException e)
         {
-            // BC-E-102 names the property; show its label instead. BC-E-403's shared text is about the localization
-            // setting, so this screen says the chosen language is not in use
-            _error = e.Problem switch
-            {
-                { Code: InvalidFieldCode, Args: [var field, ..] } => Messages.Get(InvalidFieldCode, FieldLabel(field?.ToString())),
-                { Code: LanguageNotInUseCode, Args: [var lang, ..] } => L["Bc.UserProfile.LanguageNotInUse", lang ?? ""],
-                _ => Messages.Get(e.Problem),
-            };
+            // BC-E-102 names the property; show its label instead
+            _error = e.Problem is { Code: InvalidFieldCode, Args: [var field, ..] }
+                ? Messages.Get(InvalidFieldCode, FieldLabel(field))
+                : Messages.Get(e.Problem);
         }
         catch (HttpRequestException)
         {
