@@ -140,7 +140,7 @@
         }
     }
 
-    // Loaded rows behave like a loaded record: NewOnly and AfterLoad cells are locked
+    // Loaded rows behave like a loaded record: NewOnly and AfterLoad cells are locked. A view-only grid locks every cell (BC-BR-214)
     private QuroFormContext FormOf(GridRow<TRow> row)
     {
         if (!_forms.TryGetValue(row, out var form))
@@ -148,6 +148,7 @@
             form = new QuroFormContext { IsNew = row.IsNew };
             _forms[row] = form;
         }
+        form.ReadOnly = !Editable;
         return form;
     }
 

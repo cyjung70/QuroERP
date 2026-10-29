@@ -30,9 +30,16 @@
     [Parameter, EditorRequired]
     public Func<Task<IReadOnlyList<TRow>>> Load { get; set; } = default!;
 
-    /// <summary>A new row. Required for an editable grid.</summary>
+    /// <summary>A new row. An editable grid needs this or <see cref="OnAddRequested"/>.</summary>
     [Parameter]
     public Func<TRow>? CreateRow { get; set; }
+
+    /// <summary>
+    /// New and add-row ask the screen for rows instead of adding an empty one, for example from a lookup dialog
+    /// of what can still be added. The screen adds the picked rows with <see cref="AddRows"/>.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnAddRequested { get; set; }
 
     /// <summary>Saves the changed rows. Without it the grid is view only.</summary>
     [Parameter]
@@ -47,7 +54,10 @@
 
     public override bool IsDirty => _rows.IsDirty;
 
-    private bool Editable => Save is not null && CreateRow is not null;
+    /// <summary>Rows on the grid that are not marked deleted, including new ones.</summary>
+    public IEnumerable<TRow> Items => _rows.All.Where(r => !r.IsDeleted).Select(r => r.Item);
+
+    private bool Editable => Save is not null && (CreateRow is not null || OnAddRequested.HasDelegate);
 
     protected override async Task OnInitializedAsync()
     {
@@ -65,7 +75,25 @@
         }
     }
 
-    private void AddRow() => _rows.Add(CreateRow!());
+    /// <summary>Adds rows as new (state I), e.g. the ones picked in the screen's dialog.</summary>
+    public void AddRows(IEnumerable<TRow> items)
+    {
+        foreach (var item in items)
+        {
+            _rows.Add(item);
+        }
+        StateHasChanged();
+    }
+
+    private async Task AddRow()
+    {
+        if (OnAddRequested.HasDelegate)
+        {
+            await OnAddRequested.InvokeAsync();
+            return;
+        }
+        _rows.Add(CreateRow!());
+    }
 
     private async Task SaveAsync()
     {
