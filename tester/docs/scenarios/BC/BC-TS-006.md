@@ -16,7 +16,7 @@
 
 코드 값은 대문자다: M = `ZT_` + `run_id`(대문자, 30자 이하로 자름).
 
-1. 담당자 코드: `GET /api/bc/codes`의 `SALES_REP`에서 사용 중인 값 R1과 그 en 이름 N1을 저장한다
+1. 담당자 코드: `base_codes` fixture가 준비한 `SALES_REP` 사용 중 값 R1과 그 en 이름 N1을 저장한다
 2. 고객 C (담당자 R1, 세금 코드 `NONE`)
 3. 외화 F 사용 중 (`POST /api/bc/currencies/batch`, 이미 사용 중이면 그대로)
 4. 메뉴: `GET /api/sys/menus`에서 공급자 마스터 메뉴 VM을 찾고 그 행을 저장한다
