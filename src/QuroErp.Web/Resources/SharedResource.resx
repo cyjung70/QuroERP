@@ -307,4 +307,14 @@
   <data name="SD-E-913" xml:space="preserve"><value>코드 {0}의 정렬 순서는 1 이상 정수이고 겹치지 않아야 합니다.</value></data>
   <data name="SD-E-914" xml:space="preserve"><value>코드 {0}은(는) 업무 데이터가 쓰고 있어 삭제할 수 없습니다. 사용 안 함으로 바꾸세요.</value></data>
   <data name="SD-E-916" xml:space="preserve"><value>코드 {0}은(는) 시스템이 쓰는 코드라 삭제하거나 사용 안 함으로 바꿀 수 없습니다.</value></data>
+  <data name="Bc.CodeMajor.Title" xml:space="preserve"><value>Major 코드 관리</value></data>
+  <data name="Bc.CodeMajor.MajorCode" xml:space="preserve"><value>Major 코드</value></data>
+  <data name="Bc.CodeMajor.Name" xml:space="preserve"><value>Major 이름</value></data>
+  <data name="Bc.CodeMajor.NameIn" xml:space="preserve"><value>이름 ({0})</value></data>
+  <data name="Bc.CodeMajor.UseYn" xml:space="preserve"><value>사용</value></data>
+  <data name="Bc.CodeMajor.MinorCount" xml:space="preserve"><value>Minor 수</value></data>
+  <data name="SD-E-901" xml:space="preserve"><value>Major 코드 {0}은(는) 비었거나, 영문 대문자·숫자·_로 30자 이하가 아니거나, 이미 있거나, 영어 이름이 없습니다.</value></data>
+  <data name="SD-E-902" xml:space="preserve"><value>Major 코드 {0}의 값은 바꿀 수 없습니다.</value></data>
+  <data name="SD-E-903" xml:space="preserve"><value>Major 코드 {0}에 Minor 코드가 있어 삭제할 수 없습니다. 먼저 Minor 코드를 지우거나 사용 안 함으로 바꾸세요.</value></data>
+  <data name="SD-E-904" xml:space="preserve"><value>Major 코드 {0}은(는) 시스템이 쓰는 코드라 삭제하거나 사용 안 함으로 바꿀 수 없습니다.</value></data>
 </root>
