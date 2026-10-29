@@ -43,7 +43,7 @@ public class ItemScreenTests : BunitContext
         _auth = AddAuthorization();
     }
 
-    [Fact, Trait("Id", "BC-009-WT-01")]
+    [Fact, Trait("Id", "BC-UC-009-T01"), Trait("Id", "BC-UC-009-T09"), Trait("Id", "BC-UC-009-T10")]
     public void New_ShowsDefaultsCodeNamesAndDecimals()
     {
         var page = RenderAs("admin");
@@ -60,7 +60,7 @@ public class ItemScreenTests : BunitContext
         _api.Requests.Should().OnlyContain(r => r.Headers.Authorization!.Parameter == "token-admin");
     }
 
-    [Fact, Trait("Id", "CORE-020-WT-01")]
+    [Fact, Trait("Id", "CORE-020-WT-01"), Trait("Id", "BC-UC-009-T12")]
     public void PreviousNext_AreAfterSearch_AndDisabledForANewRecord()
     {
         var page = RenderAs("admin");
@@ -71,7 +71,7 @@ public class ItemScreenTests : BunitContext
         page.Find("[data-testid=item-toolbar-next]").HasAttribute("disabled").Should().BeTrue();
     }
 
-    [Fact, Trait("Id", "CORE-020-WT-02")]
+    [Fact, Trait("Id", "CORE-020-WT-02"), Trait("Id", "BC-UC-009-T12")]
     public void Next_LoadsTheFollowingItem_AndTheSearchCode()
     {
         var page = RenderAs("admin");
@@ -85,7 +85,7 @@ public class ItemScreenTests : BunitContext
         page.WaitForAssertion(() => Value(page, "item-header-item-cd").Should().Be("A100"));
     }
 
-    [Fact, Trait("Id", "CORE-020-WT-03")]
+    [Fact, Trait("Id", "CORE-020-WT-03"), Trait("Id", "BC-UC-009-T12")]
     public void PreviousAtTheFirstItem_StaysAndSaysSo()
     {
         var page = RenderAs("admin");
@@ -97,7 +97,7 @@ public class ItemScreenTests : BunitContext
         Value(page, "item-header-item-cd").Should().Be("A100");
     }
 
-    [Fact, Trait("Id", "CORE-020-WT-04")]
+    [Fact, Trait("Id", "CORE-020-WT-04"), Trait("Id", "BC-UC-009-T12")]
     public void Next_WithUnsavedChanges_AsksFirst_AndStaysWhenDeclined()
     {
         var page = RenderAs("admin");
@@ -113,7 +113,7 @@ public class ItemScreenTests : BunitContext
         _api.Requests.Should().NotContain(r => r.RequestUri!.AbsolutePath.EndsWith("/next", StringComparison.Ordinal));
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T01")]
+    [Fact, Trait("Id", "BC-UC-009-T02")]
     public void SaveNew_PostsItem_AndLocksCode()
     {
         var page = RenderAs("admin");
@@ -133,7 +133,7 @@ public class ItemScreenTests : BunitContext
         Value(page, "item-search-item-cd").Should().Be("B200");
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T02")]
+    [Fact, Trait("Id", "BC-UC-009-T03")]
     public void SaveWithoutItemClass_ShowsRequiredMessage_AndDoesNotPost()
     {
         var page = RenderAs("admin");
@@ -146,7 +146,7 @@ public class ItemScreenTests : BunitContext
         _api.Created.Should().BeEmpty();
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T03")]
+    [Fact, Trait("Id", "BC-UC-009-T13")]
     public void UpdateAfterSomeoneElseSaved_Shows409Message()
     {
         var page = RenderAs("admin");
@@ -160,7 +160,36 @@ public class ItemScreenTests : BunitContext
             .Should().Be("다른 사용자가 먼저 수정했습니다. 다시 조회한 뒤 저장하세요."));
     }
 
-    [Fact, Trait("Id", "BC-UC-009-T04")]
+    [Theory, Trait("Id", "BC-UC-009-T04"), Trait("Id", "BC-UC-009-T05"), Trait("Id", "BC-UC-009-T06")]
+    [InlineData("MM-E-801", "A100", "품목 코드 'A100'을(를) 쓸 수 없습니다. 대문자 18자 이하로, 다른 품목과 겹치지 않게 입력하세요.")]
+    [InlineData("MM-E-803", "UsdPrc", "구매 단가은(는) 0 이상이어야 합니다.")]
+    [InlineData("MM-E-806", "A100", "품목 A100은(는) 재고·재고 이동·세트 구성이 있어 유형을 바꿀 수 없습니다.")]
+    public void SaveRejectedByTheApi_ShowsTheMessage_WithFieldLabels(string code, string arg, string message)
+    {
+        var page = RenderAs("admin");
+        Search(page, "A100");
+        _api.UpdateProblem = $$"""{"status":422,"code":"{{code}}","args":["{{arg}}"]}""";
+
+        page.Find("[data-testid=item-toolbar-save]").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=item-message]").TextContent.Should().Be(message));
+    }
+
+    [Fact, Trait("Id", "BC-UC-009-T07")]
+    public void DeletingAUsedItem_ShowsMmE807_AndKeepsTheItem()
+    {
+        var page = RenderAs("admin");
+        Search(page, "A100");
+        _api.DeleteProblem = """{"status":422,"code":"MM-E-807","args":["A100"]}""";
+
+        page.Find("[data-testid=item-toolbar-delete]").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=item-message]").TextContent
+            .Should().Be("품목 A100은(는) 사용 중이라 지울 수 없습니다. 사용 안 함으로 바꾸세요."));
+        Value(page, "item-header-item-cd").Should().Be("A100");
+    }
+
+    [Fact, Trait("Id", "MM-UT-802")]
     public void SaveWithUnknownCode_Shows422Message()
     {
         var page = RenderAs("admin");
@@ -172,7 +201,7 @@ public class ItemScreenTests : BunitContext
         page.WaitForAssertion(() => page.Find("[data-testid=item-message]").TextContent.Should().Contain("'XX'"));
     }
 
-    [Fact, Trait("Id", "BC-009-WT-02")]
+    [Fact, Trait("Id", "BC-UC-009-T02")]
     public void Search_ByTypedCode_LoadsExactItem_AndShowsName()
     {
         var page = RenderAs("admin");
@@ -185,7 +214,7 @@ public class ItemScreenTests : BunitContext
         page.Find("[data-testid=item-header-item-cd]").HasAttribute("readonly").Should().BeTrue();
     }
 
-    [Fact, Trait("Id", "BC-009-WT-03")]
+    [Fact, Trait("Id", "BC-UC-009-T11")]
     public void Lookup_SelectedItem_IsLoadedById()
     {
         var page = RenderAs("admin");
@@ -198,7 +227,7 @@ public class ItemScreenTests : BunitContext
         _api.Requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/api/bc/items/1");
     }
 
-    [Fact, Trait("Id", "BC-009-WT-04")]
+    [Fact, Trait("Id", "BC-UT-214")]
     public void UserWithoutFullAccess_SeesSearchAndMoveOnly_AndLockedInputs()
     {
         var page = RenderAs("user");
@@ -211,7 +240,7 @@ public class ItemScreenTests : BunitContext
         page.Find("[data-testid=item-header-valid-flag-n]").HasAttribute("disabled").Should().BeTrue();
     }
 
-    [Theory, Trait("Id", "BC-009-WT-05")]
+    [Theory, Trait("Id", "BC-UC-009-T08")]
     [InlineData("SALES_TAX", "item-header-taxable", "item-header-vat-kind")]
     [InlineData("VAT", "item-header-vat-kind", "item-header-taxable")]
     public void TaxField_FollowsTaxMethod(string taxMethod, string shown, string hidden)
@@ -268,6 +297,8 @@ public class ItemScreenTests : BunitContext
 
         public string? UpdateProblem { get; set; }
 
+        public string? DeleteProblem { get; set; }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Requests.Add(request);
@@ -323,6 +354,10 @@ public class ItemScreenTests : BunitContext
                 var update = (await request.Content!.ReadFromJsonAsync<UpdateItemRequest>(cancellationToken))!;
                 _item = _item with { ItemName = update.ItemName };
                 return Json(_item);
+            }
+            if (request.Method == HttpMethod.Delete && path == "/api/bc/items/1")
+            {
+                return DeleteProblem is null ? new HttpResponseMessage(HttpStatusCode.NoContent) : Problem(HttpStatusCode.UnprocessableEntity, DeleteProblem);
             }
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
