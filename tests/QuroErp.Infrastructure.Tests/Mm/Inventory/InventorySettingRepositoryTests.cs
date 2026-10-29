@@ -9,7 +9,7 @@ using QuroErp.Infrastructure.Tests.Common.Persistence;
 namespace QuroErp.Infrastructure.Tests.Mm.Inventory;
 
 /// <summary>
-/// mm_inventory_setting after 0211_mm_inventory_setting_negative_stock_mode.sql (ADR-0025) and its repository,
+/// mm_inventory_setting after 0211_mm_inventory_setting_negative_stock_mode.sql (MM-BR-003) and its repository,
 /// real PostgreSQL. Each test rolls back.
 /// </summary>
 [Collection(AuthSchemaDefinition.Name)]

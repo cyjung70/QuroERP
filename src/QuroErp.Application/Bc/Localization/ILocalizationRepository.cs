@@ -20,7 +20,7 @@ public sealed record CountryDecimalRow(string CountryCode, string Module, int Un
 /// <summary>Localization settings (localization.md). Callers pass their own transaction.</summary>
 public interface ILocalizationRepository
 {
-    /// <returns>The company with the lowest id (ADR-0025), or null when there is no company yet.</returns>
+    /// <returns>The company with the lowest id (BC-BR-301), or null when there is no company yet.</returns>
     Task<CompanyLocalizationRow?> FindCompanyAsync(IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>All languages in sort_order.</summary>

@@ -1,4 +1,4 @@
--- Warehouse stock and the inventory ledger (ADR-0027, inventory.md, MM ledger.md, MM warehouse.md)
+-- Warehouse stock and the inventory ledger (inventory.md, MM ledger.md, MM warehouse.md)
 --   New:     bc_warehouse with one default warehouse (MM-BR-702), mm_onhand (item + warehouse), mm_stock_transfer(_line)
 --   Ledger:  mm_goods_movement gets warehouse_id and parent_movement_id, loses dc_flag (sign is in qty, MM-BR-606),
 --            and its required columns become NOT NULL. mm_monthly_inventory is keyed by item + warehouse

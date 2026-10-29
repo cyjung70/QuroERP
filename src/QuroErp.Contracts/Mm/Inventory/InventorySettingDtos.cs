@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuroErp.Contracts.Mm.Inventory;
 
-/// <summary>Inventory setting API route (ADR-0025): GET, PUT api/mm/inventory-setting. There is only one setting.</summary>
+/// <summary>Inventory setting API route (MM-BR-003): GET, PUT api/mm/inventory-setting. There is only one setting.</summary>
 public static class InventorySettingRoutes
 {
     public const string Base = "api/mm/inventory-setting";

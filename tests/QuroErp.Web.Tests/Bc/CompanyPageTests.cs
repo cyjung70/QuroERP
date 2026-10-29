@@ -14,7 +14,7 @@ using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Tests.Bc;
 
-/// <summary>Minimal company screen /bc/company: logo and inventory setting areas (BC-UC-007, ADR-0024, ADR-0025).</summary>
+/// <summary>Minimal company screen /bc/company: logo and inventory setting areas (BC-UC-007, BC-BR-306, MM-BR-003).</summary>
 public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
 {
     private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];

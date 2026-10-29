@@ -1,7 +1,7 @@
 namespace QuroErp.Domain.Mm.Inventory;
 
 /// <summary>
-/// Whether stock may go below zero (inventory.md, ADR-0025). One global setting (mm_inventory_setting).
+/// Whether stock may go below zero (inventory.md, MM-BR-003). One global setting (mm_inventory_setting).
 /// Stored as the string code (ALLOW, ALLOW_IN_MONTH, DENY).
 /// </summary>
 public enum NegativeStockMode

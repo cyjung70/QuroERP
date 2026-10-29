@@ -28,7 +28,7 @@ public interface ILocalizationSettingRepository
     Task UpdateDecimalSettingsAsync(
         IReadOnlyList<DecimalSettingRow> settings, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Sets tax_calc_mode of the company with the lowest id (ADR-0025).</summary>
+    /// <summary>Sets tax_calc_mode of the company with the lowest id (BC-BR-301).</summary>
     Task UpdateTaxCalcModeAsync(string taxCalcMode, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Moves users whose language is one of fromLangCodes to toLangCode (BC-BR-403).</summary>
