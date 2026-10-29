@@ -161,9 +161,19 @@
 
     private async Task<ItemModel> SaveAsync(ItemModel item, bool isNew)
     {
-        var saved = isNew
-            ? await Api.CreateAsync(item.ToCreateRequest(), CancellationToken.None)
-            : await Api.UpdateAsync(item.Id, item.ToUpdateRequest(), CancellationToken.None);
+        ItemDto saved;
+        try
+        {
+            saved = isNew
+                ? await Api.CreateAsync(item.ToCreateRequest(), CancellationToken.None)
+                : await Api.UpdateAsync(item.Id, item.ToUpdateRequest(), CancellationToken.None);
+        }
+        catch (ApiProblemException e) when (e.Problem is { Code: "MM-E-802" or "MM-E-803" or "MM-E-825", Args: [var field, ..] }
+                                            && L[$"Bc.Item.{field}"] is { ResourceNotFound: false } label)
+        {
+            // These messages name the field by its property name; show its label instead
+            throw new ApiProblemException(e.Problem with { Args = [label.Value, .. e.Problem.Args.Skip(1)] });
+        }
         _searchCd = saved.ItemCd;
         _searchName = saved.ItemName;
         _picked = saved;
