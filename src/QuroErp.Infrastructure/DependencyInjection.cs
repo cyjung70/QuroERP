@@ -10,6 +10,7 @@ using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Infrastructure.Bc.Companies;
 using QuroErp.Infrastructure.Bc.Items;
 using QuroErp.Infrastructure.Bc.Localization;
@@ -19,6 +20,7 @@ using QuroErp.Infrastructure.Common.DocumentNumbers;
 using QuroErp.Infrastructure.Common.I18n;
 using QuroErp.Infrastructure.Common.Persistence;
 using QuroErp.Infrastructure.Mm.Inventory;
+using QuroErp.Infrastructure.Mm.Warehouses;
 
 namespace QuroErp.Infrastructure;
 
@@ -59,6 +61,7 @@ public static class DependencyInjection
         services.AddSingleton<IItemRepository, ItemRepository>();
         services.AddSingleton<IDocumentNumberRepository, DocumentNumberRepository>();
         services.AddSingleton<IInventoryRepository, InventoryRepository>();
+        services.AddSingleton<IWarehouseRepository, WarehouseRepository>();
         return services;
     }
 }
