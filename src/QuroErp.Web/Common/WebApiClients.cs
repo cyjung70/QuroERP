@@ -3,6 +3,7 @@ using QuroErp.Web.Bc.Companies;
 using QuroErp.Web.Bc.Items;
 using QuroErp.Web.Bc.Localization;
 using QuroErp.Web.Mm.Inventory;
+using QuroErp.Web.Mm.Warehouses;
 
 namespace QuroErp.Web.Common;
 
@@ -19,6 +20,7 @@ public static class WebApiClients
         services.AddHttpClient<CodeApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<LocalizationApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<ItemApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<WarehouseApiClient>(http => http.BaseAddress = apiBaseUrl);
         return services;
     }
 }

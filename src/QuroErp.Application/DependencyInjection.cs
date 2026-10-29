@@ -7,6 +7,7 @@ using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Warehouses;
 
 namespace QuroErp.Application;
 
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<LocalizationSettingService>();
         services.AddScoped<InventorySettingService>();
         services.AddScoped<ItemService>();
+        services.AddScoped<WarehouseService>();
         services.AddScoped<DocumentNumberService>();
         // InventoryService is registered once ISetComponentRepository has a table to read (sd_bom, not generated yet)
         return services;

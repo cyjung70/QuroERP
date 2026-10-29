@@ -10,6 +10,7 @@ using QuroErp.Web.Bc.Items;
 using QuroErp.Web.Bc.Localization;
 using QuroErp.Web.Common;
 using QuroErp.Web.Mm.Inventory;
+using QuroErp.Web.Mm.Warehouses;
 
 namespace QuroErp.Web.Tests;
 
@@ -38,6 +39,7 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
             services.AddHttpClient<CodeApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
             services.AddHttpClient<LocalizationApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
             services.AddHttpClient<ItemApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
+            services.AddHttpClient<WarehouseApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
         });
     }
 

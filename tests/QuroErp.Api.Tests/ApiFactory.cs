@@ -14,7 +14,9 @@ using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Common.Auth;
 
@@ -69,6 +71,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Items; empty at start. Ids in <see cref="InMemoryItemRepository.InUse"/> count as used (MM-BR-807).</summary>
     public InMemoryItemRepository Items { get; } = new();
 
+    /// <summary>Warehouse choice list the API returns as is (the repository filters and sorts).</summary>
+    public List<WarehouseOptionDto> WarehouseOptions { get; } = [new(1, "MAIN", "Main"), new(2, "W02", "Second")];
+
     /// <summary>Inventory setting state; DENY at start.</summary>
     public InMemoryInventorySettingRepository InventorySettings { get; } = new();
 
@@ -105,6 +110,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
             services.AddSingleton<IItemRepository>(Items);
+            services.AddSingleton<IWarehouseRepository>(new FakeWarehouseRepository(this));
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
             {
@@ -166,6 +172,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public Task<AuthWarehouse?> FindDefaultWarehouseAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<AuthWarehouse?>(new AuthWarehouse(1, "W01", "Main"));
+    }
+
+    private sealed class FakeWarehouseRepository(ApiFactory factory) : IWarehouseRepository
+    {
+        public Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<WarehouseOptionDto>>(factory.WarehouseOptions);
     }
 
     private sealed class FakeAuthSettingRepository(ApiFactory factory) : IAuthSettingRepository
