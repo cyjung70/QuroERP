@@ -16,15 +16,24 @@ public class UserApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         action is null ? $"{UserRoutes.Base}/{id}" : $"{UserRoutes.Base}/{id}/{action}";
 
     [Fact, Trait("Id", "BC-UT-132")]
-    public async Task NonAdminUser_Gets403_OnReadsAndChanges()
+    public async Task NonAdminUser_CanRead_ButGets403OnChanges()
     {
         var client = await SignInAsync(ApiFactory.ProfileUserId);
+        var target = InMemoryUserRepository.TargetId;
 
         using var list = await client.GetAsync(UserRoutes.Base);
-        using var unlock = await client.PostAsync(Path(InMemoryUserRepository.TargetId, UserRoutes.Unlock), null);
+        using var get = await client.GetAsync(Path(target));
+        using var create = await client.PostAsJsonAsync(UserRoutes.Base, new CreateUserRequest(
+            "by.user", NewPassword, "By User", InMemoryUserRepository.UserRoleId, null, null, null, null, null));
+        using var update = await client.PutAsJsonAsync(Path(target), new UpdateUserRequest(
+            "Changed", InMemoryUserRepository.UserRoleId, null, null, null, null, "Y", DateTimeOffset.UtcNow));
+        using var unlock = await client.PostAsync(Path(target, UserRoutes.Unlock), null);
+        using var reset = await client.PostAsJsonAsync(Path(target, UserRoutes.ResetPassword), new ResetPasswordRequest(NewPassword));
+        using var revoke = await client.PostAsync(Path(target, UserRoutes.RevokeTokens), null);
 
-        list.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        unlock.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        list.StatusCode.Should().Be(HttpStatusCode.OK);
+        get.StatusCode.Should().Be(HttpStatusCode.OK);
+        new[] { create, update, unlock, reset, revoke }.Select(r => r.StatusCode).Should().AllBeEquivalentTo(HttpStatusCode.Forbidden);
     }
 
     [Fact, Trait("Id", "BC-UT-132")]
