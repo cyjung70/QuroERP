@@ -20,6 +20,7 @@ public class LoginServiceTests
     private readonly FakeUserLoginLogRepository _logs = new();
     private readonly FakeAuthSettingRepository _settings = new();
     private readonly FakeAutoLoginTokenRepository _autoLoginTokens = new();
+    private readonly FakePasswordHistoryRepository _history = new();
     private readonly FakePasswordHashService _passwords = new();
     private readonly FakeTimeProvider _clock = new(Now);
 
@@ -35,7 +36,7 @@ public class LoginServiceTests
     private AppUser Kim => _users.Users.Single(u => u.Id == 7);
 
     private LoginService Service =>
-        new(_users, _logs, _settings, _autoLoginTokens, _passwords, new FakeAccessTokenIssuer(), _unitOfWork, _clock);
+        new(_users, _logs, _settings, _autoLoginTokens, _history, _passwords, new FakeAccessTokenIssuer(), _unitOfWork, _clock);
 
     private Task<LoginResponse> LoginAsync(string loginId, string password, bool autoLogin = false, string? language = null) =>
         Service.LoginAsync(new LoginRequest(loginId, password, autoLogin, language), Client, CancellationToken.None);
@@ -457,7 +458,7 @@ public class LoginServiceTests
     [Fact, Trait("Id", "CORE-003-T16")]
     public async Task RefreshAsync_ActiveUser_ReturnsNewToken()
     {
-        var response = await Service.RefreshAsync(7, CancellationToken.None);
+        var response = await Service.RefreshAsync(7, 0, CancellationToken.None);
 
         response!.AccessToken.Should().Be("token-7");
         _logs.Logs.Should().BeEmpty();
@@ -468,7 +469,7 @@ public class LoginServiceTests
     {
         _users.Users.Add(new AppUser { Id = 10, UserId = "park", ValidFlag = "Y", UserValidDt = new DateOnly(2026, 10, 24) });
 
-        (await Service.RefreshAsync(10, CancellationToken.None)).Should().BeNull();
+        (await Service.RefreshAsync(10, 0, CancellationToken.None)).Should().BeNull();
     }
 
     [Fact, Trait("Id", "BC-UC-001-T06")]
@@ -476,7 +477,7 @@ public class LoginServiceTests
     {
         await FailTimesAsync(5);
 
-        (await Service.RefreshAsync(7, CancellationToken.None)).Should().BeNull();
+        (await Service.RefreshAsync(7, 0, CancellationToken.None)).Should().BeNull();
     }
 
     private async Task<string> SignInWithAutoLoginAsync()

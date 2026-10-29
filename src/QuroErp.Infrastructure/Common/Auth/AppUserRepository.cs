@@ -11,7 +11,8 @@ internal sealed class AppUserRepository : IAppUserRepository
     private const string SelectUser = """
         SELECT u.id, u.userid AS user_id, u.password_hash, u.must_change_password, u.username AS user_name,
                r.role_code, u.valid_flag, u.user_valid_dt, u.password_valid_dt, u.lang_code,
-               u.password_changed_at, u.default_warehouse_id, u.failed_count, u.locked_until, u.last_login_at, u.last_login_ip
+               u.password_changed_at, u.default_warehouse_id, u.failed_count, u.locked_until, u.last_login_at, u.last_login_ip,
+               u.token_version
         FROM sys_app_user u
         LEFT JOIN sys_role r ON r.id = u.role_id
         """;
@@ -27,6 +28,13 @@ internal sealed class AppUserRepository : IAppUserRepository
         UPDATE sys_app_user
         SET failed_count = @FailedCount, locked_until = @LockedUntil, last_login_at = @LastLoginAt, last_login_ip = @LastLoginIp,
             lang_code = COALESCE(@LangCode, lang_code), updated_at = now(), updated_by = @AuditUser
+        WHERE id = @Id
+        """;
+
+    private const string UpdatePassword = """
+        UPDATE sys_app_user
+        SET password_hash = @PasswordHash, password_changed_at = @Now, must_change_password = false, password_valid_dt = NULL,
+            token_version = token_version + 1, updated_at = @Now, updated_by = @AuditUser
         WHERE id = @Id
         """;
 
@@ -68,6 +76,12 @@ internal sealed class AppUserRepository : IAppUserRepository
                 LangCode = langCode, AuditUser = UserLoginLogRepository.AuditUser,
             },
             transaction,
+            cancellationToken: cancellationToken));
+
+    public Task ChangePasswordAsync(
+        long id, string passwordHash, DateTimeOffset now, string auditUser, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            UpdatePassword, new { Id = id, PasswordHash = passwordHash, Now = now, AuditUser = auditUser }, transaction,
             cancellationToken: cancellationToken));
 
     public async Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>

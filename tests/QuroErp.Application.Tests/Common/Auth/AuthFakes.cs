@@ -63,8 +63,25 @@ internal sealed class FakeAppUserRepository : IAppUserRepository
         return Task.CompletedTask;
     }
 
+    public Task ChangePasswordAsync(
+        long id, string passwordHash, DateTimeOffset now, string auditUser, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var index = Users.FindIndex(u => u.Id == id);
+        Users[index] = WithNewPassword(Users[index], passwordHash, now);
+        return Task.CompletedTask;
+    }
+
     public Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<AuthMenu>>(Menus);
+
+    /// <summary>The user after ChangePasswordAsync: AppUser has init-only properties, so a copy replaces it.</summary>
+    internal static AppUser WithNewPassword(AppUser u, string passwordHash, DateTimeOffset now) => new()
+    {
+        Id = u.Id, UserId = u.UserId, PasswordHash = passwordHash, MustChangePassword = false, UserName = u.UserName,
+        RoleCode = u.RoleCode, ValidFlag = u.ValidFlag, UserValidDt = u.UserValidDt, PasswordValidDt = null, LangCode = u.LangCode,
+        PasswordChangedAt = now, DefaultWarehouseId = u.DefaultWarehouseId, TokenVersion = u.TokenVersion + 1,
+    };
+
 
     public Task<AuthWarehouse?> FindDefaultWarehouseAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         Task.FromResult(DefaultWarehouse);
@@ -114,6 +131,21 @@ internal sealed class FakeAutoLoginTokenRepository : IAutoLoginTokenRepository
     }
 }
 
+/// <summary>sys_password_history in memory, oldest first.</summary>
+internal sealed class FakePasswordHistoryRepository : IPasswordHistoryRepository
+{
+    public List<(long AppUserId, string PasswordHash, string AuditUser)> Rows { get; } = [];
+
+    public Task<IReadOnlyList<string>> FindRecentAsync(long appUserId, int count, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<string>>(Rows.Where(r => r.AppUserId == appUserId).Select(r => r.PasswordHash).Reverse().Take(count).ToList());
+
+    public Task InsertAsync(long appUserId, string passwordHash, string auditUser, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        Rows.Add((appUserId, passwordHash, auditUser));
+        return Task.CompletedTask;
+    }
+}
+
 internal sealed class FakeUserLoginLogRepository : IUserLoginLogRepository
 {
     public List<UserLoginLog> Logs { get; } = [];
@@ -150,5 +182,5 @@ internal sealed class FakePasswordHashService : IPasswordHashService
 internal sealed class FakeAccessTokenIssuer : IAccessTokenIssuer
 {
     public AccessToken Issue(AppUser user, bool mustChangePassword, DateTimeOffset now) =>
-        new($"token-{user.Id}{(mustChangePassword ? "-pwd" : "")}", now.AddHours(24));
+        new($"token-{user.Id}{(mustChangePassword ? "-pwd" : "")}{(user.TokenVersion > 0 ? $"-v{user.TokenVersion}" : "")}", now.AddHours(24));
 }

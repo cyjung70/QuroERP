@@ -20,6 +20,13 @@ public static class AuthClaims
 
     public const string True = "true";
 
+    /// <summary>sys_app_user.token_version when the token was issued. Refresh fails for an older version (BC-BR-130).</summary>
+    public const string TokenVersion = "ver";
+
+    /// <summary>Token version of the request. [추정] A token without the claim (issued before it existed) counts as 0.</summary>
+    public static int GetTokenVersion(this ClaimsPrincipal user) =>
+        int.TryParse(user.FindFirstValue(TokenVersion), NumberStyles.Integer, CultureInfo.InvariantCulture, out var version) ? version : 0;
+
     /// <summary>sys_app_user.id를 읽는다. JWT로 인증한 요청에서만 쓴다.</summary>
     public static long GetAppUserId(this ClaimsPrincipal user) =>
         long.Parse(user.FindFirstValue(Subject) ?? throw new InvalidOperationException("sub 클레임이 없다."), CultureInfo.InvariantCulture);

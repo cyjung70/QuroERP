@@ -18,7 +18,8 @@ public static class AuthProblems
     /// <summary>HTTP status for each code (login.md, BC login spec "REST API").</summary>
     public static int Status(string code) => code switch
     {
-        AuthCodes.Required => StatusCodes.Status400BadRequest,
+        AuthCodes.Required or AuthCodes.PasswordLength or AuthCodes.PasswordCategories or AuthCodes.PasswordReused
+            or AuthCodes.PasswordSameAsUserId or AuthCodes.CurrentPasswordIncorrect => StatusCodes.Status400BadRequest,
         AuthCodes.Locked => StatusCodes.Status423Locked,
         AuthCodes.Inactive or AuthCodes.PasswordChangeRequired => StatusCodes.Status403Forbidden,
         AuthCodes.TooManyRequests => StatusCodes.Status429TooManyRequests,
@@ -44,7 +45,7 @@ public static class AuthProblems
             // The unlock time is shown in the server time zone [추정: login.md says the user's time zone, which is not stored]
             AuthCodes.Locked when exception.LockedUntil is { } until =>
                 [TimeZoneInfo.ConvertTime(until, clock.LocalTimeZone).ToString("HH:mm", CultureInfo.InvariantCulture)],
-            _ => [],
+            _ => exception.Args.ToArray(),
         };
 
         var extensions = new Dictionary<string, object?>();

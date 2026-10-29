@@ -14,4 +14,11 @@
   <data name="AUTH-008" xml:space="preserve"><value>요청이 너무 많습니다. 잠시 후 다시 시도하세요.</value></data>
   <data name="Auth.Field.LoginId" xml:space="preserve"><value>사용자 ID</value></data>
   <data name="Auth.Field.Password" xml:space="preserve"><value>비밀번호</value></data>
+  <data name="AUTH-011" xml:space="preserve"><value>비밀번호는 {0}자 이상 128자 이하여야 합니다.</value></data>
+  <data name="AUTH-012" xml:space="preserve"><value>영문 대문자, 소문자, 숫자, 특수문자 중 {0}가지 이상을 쓰세요.</value></data>
+  <data name="AUTH-013" xml:space="preserve"><value>최근에 쓴 비밀번호는 다시 쓸 수 없습니다.</value></data>
+  <data name="AUTH-014" xml:space="preserve"><value>비밀번호는 사용자 ID와 같을 수 없습니다.</value></data>
+  <data name="AUTH-015" xml:space="preserve"><value>현재 비밀번호가 올바르지 않습니다.</value></data>
+  <data name="Auth.Field.CurrentPassword" xml:space="preserve"><value>현재 비밀번호</value></data>
+  <data name="Auth.Field.NewPassword" xml:space="preserve"><value>새 비밀번호</value></data>
 </root>
