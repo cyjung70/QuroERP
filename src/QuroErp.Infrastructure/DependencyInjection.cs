@@ -1,6 +1,7 @@
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
@@ -15,6 +16,7 @@ using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Mm.Warehouses;
+using QuroErp.Infrastructure.Bc.Codes;
 using QuroErp.Infrastructure.Bc.Companies;
 using QuroErp.Infrastructure.Bc.Items;
 using QuroErp.Infrastructure.Bc.Localization;
@@ -75,6 +77,7 @@ public static class DependencyInjection
         services.AddSingleton<IWarehouseRepository, WarehouseRepository>();
         services.AddSingleton<IRoleRepository, RoleRepository>();
         services.AddSingleton<IMenuRepository, MenuRepository>();
+        services.AddSingleton<ICodeMinorRepository, CodeMinorRepository>();
         return services;
     }
 }

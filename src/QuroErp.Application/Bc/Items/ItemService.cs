@@ -4,6 +4,7 @@ using QuroErp.Application.Common.Persistence;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Common;
+using QuroErp.Domain.Common.Codes;
 
 namespace QuroErp.Application.Bc.Items;
 

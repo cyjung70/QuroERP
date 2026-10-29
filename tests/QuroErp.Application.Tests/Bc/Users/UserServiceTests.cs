@@ -12,6 +12,7 @@ using QuroErp.Domain.Bc.UserProfiles;
 using QuroErp.Domain.Bc.Users;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Common.Auth;
+using QuroErp.Domain.Common.Codes;
 
 namespace QuroErp.Application.Tests.Bc.Users;
 
