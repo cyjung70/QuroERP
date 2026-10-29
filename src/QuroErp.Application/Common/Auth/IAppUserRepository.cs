@@ -16,7 +16,7 @@ public interface IAppUserRepository
     /// <summary>Finds and locks the user row.</summary>
     Task<AppUser?> LockByIdAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Saves failed_count, locked_until, last_login_at and last_login_ip.</summary>
+    /// <summary>Saves failed_count, locked_until, last_login_at and last_login_ip. updated_at and updated_by stay as they are.</summary>
     /// <param name="langCode">New lang_code (the language chosen on the login screen), or null to keep it.</param>
     Task SaveLoginStateAsync(AppUser user, string? langCode, IDbTransaction transaction, CancellationToken cancellationToken);
 
