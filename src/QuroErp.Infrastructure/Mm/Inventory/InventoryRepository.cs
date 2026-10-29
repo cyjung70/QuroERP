@@ -50,9 +50,9 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private const string InsertMovement = """
         INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, qty, prc, amount,
-                                       ref_key, ref_seq, parent_movement_id, negative_stock, created_by, updated_by)
+                                       ref_key, ref_seq, parent_movement_id, negative_stock, set_item_id, created_by, updated_by)
         VALUES (@DocumentNo, @DocumentDt, @MovType, @ItemId, @WarehouseId, @Qty, @Prc, @Amount,
-                @RefKey, @RefSeq, @ParentMovementId, @NegativeStock, @User, @User)
+                @RefKey, @RefSeq, @ParentMovementId, @NegativeStock, @SetItemId, @User, @User)
         RETURNING id
         """;
 
@@ -81,7 +81,7 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private const string LockMovements = """
         SELECT m.id, m.document_no, m.document_dt, m.mov_type, m.item_id, m.warehouse_id, m.qty, m.prc,
-               m.ref_key, m.ref_seq, m.parent_movement_id, m.negative_stock,
+               m.ref_key, m.ref_seq, m.parent_movement_id, m.negative_stock, m.set_item_id,
                EXISTS (SELECT 1 FROM mm_goods_movement r WHERE r.parent_movement_id = m.id) AS reversed
         FROM mm_goods_movement m
         WHERE m.id = ANY(@MovementIds)
@@ -131,7 +131,7 @@ internal sealed class InventoryRepository : IInventoryRepository
             {
                 movement.DocumentNo, movement.DocumentDt, movement.MovType, movement.ItemId, movement.WarehouseId,
                 movement.Qty, movement.Prc, movement.Amount, movement.RefKey, movement.RefSeq,
-                movement.ParentMovementId, movement.NegativeStock, User = user,
+                movement.ParentMovementId, movement.NegativeStock, movement.SetItemId, User = user,
             },
             transaction,
             cancellationToken: cancellationToken));
@@ -165,7 +165,7 @@ internal sealed class InventoryRepository : IInventoryRepository
             new CommandDefinition(LockMovements, new { MovementIds = movementIds.ToArray() }, transaction, cancellationToken: cancellationToken));
         return rows.Select(r => new SavedMovement(
             GoodsMovement.Restore(r.Id, r.DocumentNo, r.MovType, r.DocumentDt, r.ItemId, r.WarehouseId, r.Qty, r.Prc,
-                r.RefKey, r.RefSeq, r.ParentMovementId, r.NegativeStock),
+                r.RefKey, r.RefSeq, r.ParentMovementId, r.NegativeStock, r.SetItemId),
             r.Reversed)).ToList();
     }
 
@@ -177,5 +177,5 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private sealed record MovementRow(
         long Id, string DocumentNo, DateOnly DocumentDt, string MovType, long ItemId, long WarehouseId, decimal Qty, decimal Prc,
-        string? RefKey, int? RefSeq, long? ParentMovementId, bool NegativeStock, bool Reversed);
+        string? RefKey, int? RefSeq, long? ParentMovementId, bool NegativeStock, long? SetItemId, bool Reversed);
 }

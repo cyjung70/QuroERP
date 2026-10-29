@@ -13,10 +13,10 @@ public sealed record DailyStockBalance(DateOnly Date, decimal Balance, bool Mont
 /// </summary>
 public static class PointInTimeStock
 {
-    /// <summary>A balance on or after the movement date would go negative. Args: item, warehouse, date, balance.</summary>
+    /// <summary>A balance on or after the movement date would go negative. Args: item, warehouse, date, balance, set item.</summary>
     public const string NegativeOnDate = "MM-E-009";
 
-    /// <summary>A month-end balance would go negative. Args: item, warehouse, month (YYYYMM), month-end balance.</summary>
+    /// <summary>A month-end balance would go negative. Args: item, warehouse, month (YYYYMM), month-end balance, set item.</summary>
     public const string NegativeAtMonthEnd = "MM-E-010";
 
     /// <param name="opening">Closing balance of the last closed month, 0 when no month is closed.</param>
@@ -28,10 +28,11 @@ public static class PointInTimeStock
     /// true when a balance on or after movementDate goes below zero but the movement is allowed: ALLOW_IN_MONTH with
     /// only mid-month negatives (flag it, MM-BR-002).
     /// </returns>
+    /// <param name="setItemCd">The set item when the movement comes from a set line, else empty (last error arg).</param>
     /// <exception cref="DomainException">MM-E-009 in DENY mode, MM-E-010 in ALLOW_IN_MONTH mode.</exception>
     public static bool Check(
         NegativeStockMode mode, DateOnly movementDate, decimal qty, decimal opening, IReadOnlyList<DailyStockBalance> balances,
-        string itemCd, string warehouseCode)
+        string itemCd, string warehouseCode, string setItemCd = "")
     {
         // Only movements that decrease stock are checked (MM-BR-602)
         if (qty >= 0 || mode == NegativeStockMode.Allow)
@@ -48,7 +49,7 @@ public static class PointInTimeStock
             {
                 if (balance + qty < 0)
                 {
-                    throw new DomainException(NegativeOnDate, itemCd, warehouseCode, date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), balance + qty);
+                    throw new DomainException(NegativeOnDate, itemCd, warehouseCode, date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), balance + qty, setItemCd);
                 }
             }
             return false;
@@ -64,7 +65,7 @@ public static class PointInTimeStock
         {
             if (balance + qty < 0)
             {
-                throw new DomainException(NegativeAtMonthEnd, itemCd, warehouseCode, date.ToString("yyyyMM", CultureInfo.InvariantCulture), balance + qty);
+                throw new DomainException(NegativeAtMonthEnd, itemCd, warehouseCode, date.ToString("yyyyMM", CultureInfo.InvariantCulture), balance + qty, setItemCd);
             }
         }
         return dayBalance + qty < 0 || later.Any(b => b.Balance + qty < 0);

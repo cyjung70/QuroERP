@@ -30,7 +30,7 @@ public static class DependencyInjection
         services.AddScoped<WarehouseService>();
         services.AddScoped<UserProfileService>();
         services.AddScoped<DocumentNumberService>();
-        // InventoryService is registered once ISetComponentRepository has a table to read (sd_bom, not generated yet)
+        services.AddScoped<InventoryService>();
         return services;
     }
 }

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
 
 namespace QuroErp.Domain.Tests.Mm.Inventory;
@@ -13,7 +14,23 @@ public class SetAndMonthlyInventoryTests
     {
         var components = new[] { new SetComponent(9, 1, 2), new SetComponent(9, 2, 1) };
 
-        SetComponent.Expand(qty, components).Should().Equal((1L, first), (2L, second));
+        SetComponent.Expand("SET", qty, components).Should().Equal((1L, first), (2L, second));
+    }
+
+    [Fact, Trait("Id", "MM-UT-007")]
+    public void Expand_KeepsEveryDecimalOfQtyTimesComponentQty()
+    {
+        SetComponent.Expand("SET", -3, [new SetComponent(9, 1, 0.3333m)]).Should().Equal((1L, -0.9999m));
+    }
+
+    [Fact, Trait("Id", "SD-UT-509")]
+    public void Expand_SetWithoutComponents_ThrowsSdE509()
+    {
+        var act = () => SetComponent.Expand("SET", -1, []);
+
+        var error = act.Should().Throw<DomainException>().Which;
+        error.Code.Should().Be("SD-E-509");
+        error.Args.Should().Equal("SET");
     }
 
     [Fact, Trait("Id", "MM-UT-006")]
