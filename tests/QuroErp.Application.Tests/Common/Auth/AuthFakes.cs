@@ -91,8 +91,28 @@ internal sealed class FakeAuthSettingRepository : IAuthSettingRepository
 {
     public AuthSetting Setting { get; set; } = new();
 
+    public DateTimeOffset UpdatedAt { get; set; } = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
+
+    public int Updates { get; private set; }
+
     public Task<AuthSetting?> GetAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
         Task.FromResult<AuthSetting?>(Setting);
+
+    public Task<AuthSettingRow?> FindForEditAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        Task.FromResult<AuthSettingRow?>(new AuthSettingRow(Setting, UpdatedAt));
+
+    public Task<bool> UpdateAsync(
+        AuthSetting setting, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (expectedUpdatedAt != UpdatedAt)
+        {
+            return Task.FromResult(false);
+        }
+        Updates++;
+        Setting = setting;
+        UpdatedAt = UpdatedAt.AddMinutes(1);
+        return Task.FromResult(true);
+    }
 }
 
 /// <summary>sys_auto_login_token in memory, keyed by hash.</summary>
@@ -124,6 +144,15 @@ internal sealed class FakeAutoLoginTokenRepository : IAutoLoginTokenRepository
     public Task RevokeAllAsync(long appUserId, DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         foreach (var (hash, token) in Tokens.Where(t => t.Value.AppUserId == appUserId && t.Value.RevokedAt is null).ToList())
+        {
+            Tokens[hash] = token with { RevokedAt = now };
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task RevokeEveryUserAsync(DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        foreach (var (hash, token) in Tokens.Where(t => t.Value.RevokedAt is null).ToList())
         {
             Tokens[hash] = token with { RevokedAt = now };
         }

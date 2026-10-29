@@ -17,4 +17,7 @@ public interface IAutoLoginTokenRepository
 
     /// <summary>Revokes every token of the user that is not revoked yet.</summary>
     Task RevokeAllAsync(long appUserId, DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Revokes every user's tokens that are not revoked yet (auto login turned off, BC-BR-310).</summary>
+    Task RevokeEveryUserAsync(DateTimeOffset now, IDbTransaction transaction, CancellationToken cancellationToken);
 }

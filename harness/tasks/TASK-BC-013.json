@@ -50,5 +50,5 @@
     "`bc_company`에 `business_type`·`business_item`(varchar, NULL 허용) 컬럼 추가 마이그레이션 (BC-BR-315)"
   ],
   "estimateHours": 2,
-  "status": "todo"
+  "status": "done"
 }

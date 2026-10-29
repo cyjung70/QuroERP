@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using QuroErp.Domain.Common;
 
 namespace QuroErp.Domain.Bc.UserProfiles;
@@ -7,7 +6,7 @@ namespace QuroErp.Domain.Bc.UserProfiles;
 public sealed record UserProfileFields(string? UserName, string? Email, string? Phone, string? LangCode, long? DefaultWarehouseId);
 
 /// <summary>My info rules BC-BR-102 and BC-BR-403.</summary>
-public static partial class UserProfile
+public static class UserProfile
 {
     /// <summary>A value breaks the my info field rules. Arg: property name.</summary>
     public const string InvalidFieldCode = "BC-E-102";
@@ -33,7 +32,7 @@ public static partial class UserProfile
         {
             throw new DomainException(InvalidFieldCode, nameof(UserProfileFields.UserName));
         }
-        if (normalized.Email is { } email && (email.Length > EmailMaxLength || !EmailFormat().IsMatch(email)))
+        if (normalized.Email is { } email && (email.Length > EmailMaxLength || !EmailAddress.IsValid(email)))
         {
             throw new DomainException(InvalidFieldCode, nameof(UserProfileFields.Email));
         }
@@ -45,8 +44,4 @@ public static partial class UserProfile
     }
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    // One @, no spaces, and a dot inside the domain part
-    [GeneratedRegex(@"^[^@\s]+@[^@\s.]+(\.[^@\s.]+)+$")]
-    private static partial Regex EmailFormat();
 }
