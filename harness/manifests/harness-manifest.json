@@ -8,7 +8,7 @@
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "4fce4c7b1dab86a59f80516fcd7741c33c5546e2b6a40b77004fcc74435a8368"
+      "sha256": "6b3da785872b5b22047b68e8fbf35716c7fc87dc9d6323f1498929ed3c1e4431"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
@@ -40,7 +40,7 @@
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "4fce4c7b1dab86a59f80516fcd7741c33c5546e2b6a40b77004fcc74435a8368"
+      "sha256": "6b3da785872b5b22047b68e8fbf35716c7fc87dc9d6323f1498929ed3c1e4431"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
@@ -124,7 +124,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "5139a3fc5585e10b3de590a59186097ee38c80b35a0795d087d637ecd966674e"
+      "sha256": "19978a3f7fab163385248c7946b545b97de10a144e543318edb238e6fb14c0c7"
     },
     {
       "path": "docs/architecture/security.md",
