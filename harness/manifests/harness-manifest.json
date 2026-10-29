@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "66f96b56c1056255aa412583f40fcda66cdc6f8b9d76fbfab19908daa1decfd1"
+      "sha256": "0077239344fa9bbd1539198f8308176fb5fda6a8bca44d6b90386343ad26c751"
     },
     {
       "path": "docs/architecture/database.md",
@@ -1624,7 +1624,7 @@
     },
     {
       "path": "tester/docs/scenarios/migration/MG-TS-001.md",
-      "sha256": "0f59d37602d682a0a79dfd0d94603d4b384f2272223b92801d2d225fe4773f0c"
+      "sha256": "49ed8a56a3ebab5d6995e936a6cb85a6fc65575d70e544addeb2b17cb2bb9307"
     },
     {
       "path": "tester/docs/scenarios/migration/MG-TS-002.md",
