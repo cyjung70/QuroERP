@@ -124,7 +124,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "9c5d4368e71f13d1f5f437b32af765d2cfa9cc7d2f5177877353986105a2619c"
+      "sha256": "0d8f35bdb9e71c1401b205805cc0d10efcea0728c01e79f6c83eee5ad1777819"
     },
     {
       "path": "docs/architecture/security.md",
@@ -540,7 +540,7 @@
     },
     {
       "path": "docs/specifications/MM/warehouse.md",
-      "sha256": "9d8ef1ddbf12339bd3bc22f82694d71c17fa28f9f82eaa9e787f5a379b42235f"
+      "sha256": "5aaaafb29e3926a13a19ddb70cf9a8e2f70c6899c1400065ad894cab3bc53c49"
     },
     {
       "path": "docs/specifications/SD/ar-receipt.md",

@@ -16,8 +16,9 @@
 
 | 동작 | 규칙 |
 | --- | --- |
+| 헤더 | 로그인한 사용자에게만 보인다. 사용자 메뉴(사용자 ID를 누르면 열린다: 내 정보 `/bc/user-profile`, 비밀번호 변경 `/bc/change-password`, 로그아웃 — 메뉴 권한과 상관없다, BC-BR-101·051, `data-testid` `user-menu`·`user-menu-profile`·`user-menu-change-password`·`user-menu-logout`), 언어 선택, 미사용 세션 만료 안내([로그인](login.md)) |
 | 툴바 | 조회, 이전·다음(S, 있을 때), 신규, 저장, 삭제, 인쇄(있을 때), 엑셀 내보내기(M) — 순서 고정 |
-| 이전·다음 | S 화면은 명세가 정한 순서로 이전·다음 레코드를 연다. 이동 전에 변경 확인을 하고, 처음·끝이면 안내 메시지를 보인다. API는 `GET /resources/{id}/previous`·`/next`이고 처음·끝이면 204다 ([API](api.md)) |
+| 이전·다음 | S 화면은 명세가 정한 순서로 이전·다음 레코드를 연다. 이동 전에 변경 확인을 하고, 처음·끝이면 안내 메시지(`Common.FirstRecord`·`Common.LastRecord`)를 보인다. API는 `GET /resources/{id}/previous`·`/next`이고 처음·끝이면 204다 ([API](api.md)) |
 | 조회 조건 | 화면 위쪽. Enter로 조회 |
 | 필수 입력 | 라벨에 `*`. 저장 전에 클라이언트에서 검사하고, API에서도 다시 검사한다 |
 | 잠김 필드 | AS IS `tag` 둘째 자리 `3`(신규 필수·조회 후 잠김), `4`(잠김), `5`(조회 후 잠김)를 컴포넌트 속성 `LockMode`로 옮긴다 |
