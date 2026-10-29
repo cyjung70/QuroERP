@@ -14,17 +14,44 @@
 
 ## 기본 흐름
 
-화면유형 표준 흐름이다. AS IS 로직 분석으로 BR이 정해지면 갱신된다.
+관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
-1. 조회 조건(키)으로 1건을 조회한다.
-2. 필드를 입력·수정한다.
-3. 저장한다. API가 BR·코드 값을 검사한 뒤 저장한다.
-4. 삭제는 확인 후 수행한다.
+1. 사용자 ID로 조회하거나(찾기 대화상자, 이전·다음은 사용자 ID 순) 신규를 누른다. 변경 권한이 없으면 조회만 한다 (BC-BR-132, BC-BR-214).
+2. 신규는 사용자 ID·이름·초기 비밀번호(두 번)·역할을 넣는다. 사용자 ID는 소문자로 바뀌고 저장한 뒤에는 바꿀 수 없다 (BC-BR-121·123).
+3. 수정에는 비밀번호 칸이 없다 (BC-BR-124). 이름·역할·이메일·전화·기본 언어·사용 기한·사용 여부를 바꾸고 `updatedAt`과 함께 저장한다.
+4. 서버가 값을 정리하고 검사한 뒤 저장한다. 신규 사용자는 첫 로그인 때 비밀번호를 바꿔야 한다 (BC-BR-123).
+5. 조회한 사용자에 잠금 해제, 비밀번호 초기화(새 비밀번호 두 번), 토큰 강제 폐기를 한다 (BC-BR-128~130).
 
 ## 대체 흐름
 
-- 필수 값이 없으면 저장하지 않고 필드에 오류를 표시한다.
-- 다른 사용자가 먼저 수정했으면 409 메시지를 표시하고 다시 조회하게 한다.
+- 삭제는 없다. 사용 안 함으로 바꾸면 그 사용자의 자동 로그인 토큰을 폐기하고 토큰 버전을 올린다 (BC-BR-125). DELETE는 405다.
+- 관리자는 자기 계정의 역할·사용 여부를 바꿀 수 없다. 화면은 두 칸을 잠그고, 서버는 BC-E-131이다 (BC-BR-131).
+- 중복 사용자 ID는 BC-E-121, 필드 규칙 위반은 BC-E-122(화면은 필드 라벨로 보인다)다.
+- 다른 사용자가 먼저 수정했으면 409 Common-E-004다. 다시 조회한다.
+- API에 연결할 수 없으면 BC-E-003이다.
+
+## 화면 항목
+
+이 화면은 아래 항목으로 새로 만든다. 아래 'AS IS 화면 필드'는 참고만 한다.
+
+| No | 항목 | 유형 | 필수 | 기본값 | 설명·검증 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 사용자 ID (조회 조건) | 텍스트 + 찾기 버튼 | ● |  | 소문자. 찾기 대화상자(`Bc.User.FindUser`)는 ID 앞부분·이름으로 찾고 사용자 ID 순, 열은 ID·이름·역할·사용 여부 |
+| 2 | 이름 (조회 조건) | 텍스트 |  |  | 항상 잠김. 조회한 사용자 이름 |
+| 3 | 사용자 ID | 텍스트 | ● |  | 소문자, 최대 50자, 신규에서만 입력 (BC-BR-121) |
+| 4 | 이름 | 텍스트 | ● |  | 최대 40자 (BC-BR-122) |
+| 5 | 초기 비밀번호·확인 | password | ● |  | 신규에서만 보인다. 다르면 BC-E-057, 규칙 위반은 AUTH-011~014 (BC-BR-123) |
+| 6 | 역할 | 드롭다운 | ● |  | 사용 중 역할 (`GET /api/sys/roles`). 자기 계정이면 잠김 (BC-BR-122·131) |
+| 7 | 이메일 | 텍스트 |  |  | 최대 30자, 입력했을 때 형식 검사 (BC-BR-122) |
+| 8 | 전화 | 텍스트 |  |  | 최대 18자 |
+| 9 | 기본 언어 | 드롭다운 |  |  | 사용 중 언어 (BC-BR-403) |
+| 10 | 사용 기한 | 날짜 |  |  | 비우면 무기한, 칸 아래 안내 `Bc.User.NoEndDate` (BC-BR-126) |
+| 11 | 사용 여부 | 코드 라디오 `VALID_FLAG` |  | Y | N이면 자동 로그인 토큰 폐기 (BC-BR-125). 자기 계정이면 잠김 (BC-BR-131) |
+| 12 | 실패 횟수·잠금 해제 시각·마지막 로그인 시각·IP | 텍스트 |  |  | 조회한 사용자만, 항상 잠김 |
+| 13 | 잠금 해제 | 버튼 |  |  | 조회한 사용자만. 성공하면 `Bc.User.Unlocked` (BC-BR-128) |
+| 14 | 새 비밀번호·확인 + 비밀번호 초기화 | password + 버튼 |  |  | 조회한 사용자만. 확인(`Bc.User.ResetPasswordConfirm`) 뒤 실행, 비면 Common-E-005, 다르면 BC-E-057, 성공하면 `Bc.User.PasswordReset` (BC-BR-129) |
+| 15 | 토큰 강제 폐기 | 버튼 |  |  | 조회한 사용자만. 확인(`Bc.User.RevokeTokensConfirm`) 뒤 실행, 성공하면 `Bc.User.TokensRevoked` (BC-BR-130) |
+
 
 ## 화면 필드
 
@@ -55,13 +82,16 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/users?조건 | 사용자 목록·찾기 (비밀번호 해시 없음) |
-| GET | /api/bc/users/{id} | 1건 조회 |
-| POST | /api/bc/users | 신규 (초기 비밀번호 포함, BC-BR-121~123) |
-| PUT | /api/bc/users/{id} | 수정 (updatedAt 필수, 비밀번호 없음, BC-BR-124~126·131) |
-| POST | /api/bc/users/{id}/unlock | 잠금 해제 (BC-BR-128) |
-| POST | /api/bc/users/{id}/reset-password | 비밀번호 초기화 { newPassword } (BC-BR-129) |
-| POST | /api/bc/users/{id}/revoke-tokens | 자동 로그인 토큰 강제 폐기 (BC-BR-130) |
+| GET | /api/bc/users?userId=&userName=&roleId=&validFlag=&page=&size= | 사용자 목록·찾기 → { items, total } (기본 50건, 최대 500, 비밀번호 해시 없음 — BC-BR-132) |
+| GET | /api/bc/users/{id} | 1건 → { id, userId, userName, roleId, roleCode, email, phone, langCode, userValidDt, validFlag, mustChangePassword, failedCount, lockedUntil, lastLoginAt, lastLoginIp, updatedAt }. 404 Common-E-006 |
+| GET | /api/bc/users/{id}/previous | 이전 사용자 (사용자 ID 순, 처음이면 204) |
+| GET | /api/bc/users/{id}/next | 다음 사용자 (사용자 ID 순, 끝이면 204) |
+| POST | /api/bc/users | 신규 { userId, password, userName, roleId, email, phone, langCode, userValidDt, validFlag } → 201 (BC-BR-121~123). 422 BC-E-121·BC-E-122·BC-E-405·Common-E-002, 400 AUTH-001·AUTH-011~014 |
+| PUT | /api/bc/users/{id} | 수정 { userName, roleId, email, phone, langCode, userValidDt, validFlag, updatedAt } (비밀번호 없음, BC-BR-124~126·131). 422 BC-E-122·BC-E-131·BC-E-405·Common-E-002, 409 Common-E-004 |
+| POST | /api/bc/users/{id}/unlock | 잠금 해제 → 204, 잠기지 않았어도 204 (BC-BR-128) |
+| POST | /api/bc/users/{id}/reset-password | 비밀번호 초기화 { newPassword } → 204 (BC-BR-129). 400 AUTH-001·AUTH-011~015 |
+| POST | /api/bc/users/{id}/revoke-tokens | 자동 로그인 토큰 강제 폐기 → 204 (BC-BR-130) |
+| DELETE | /api/bc/users/{id} | 없음 → 405 (BC-BR-125) |
 
 ## 관련 테이블
 
@@ -91,16 +121,30 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 ## 다국어 리소스 키
 
 - 제목: `Bc.User.Title`
-- 필드: `Bc.User.<속성>` — `<속성>`은 C# 속성 이름이다 (보통 TO BE 컬럼의 PascalCase, [다국어](../../architecture/i18n.md)). 위 'TO BE 속성 (제안)' 열과 다르면 C# 속성 이름을 따른다
-- 오류: `BC-E-<번호>` (BR에서 정한다)
+- 필드 라벨: `Bc.User.<C# 속성>` — `UserId`, `UserName`, `Password`, `ConfirmPassword`, `RoleId`, `Email`, `Phone`, `LangCode`, `UserValidDt`, `ValidFlag`, `FailedCount`, `LockedUntil`, `LastLoginAt`, `LastLoginIp`, `NewPassword`, `ConfirmNewPassword` ([다국어](../../architecture/i18n.md) 규칙)
+- 화면 문구: `Bc.User.FindUser`, `Bc.User.NoEndDate`, `Bc.User.Unlock`, `Bc.User.Unlocked`, `Bc.User.ResetPassword`, `Bc.User.ResetPasswordConfirm`, `Bc.User.PasswordReset`, `Bc.User.RevokeTokens`, `Bc.User.RevokeTokensConfirm`, `Bc.User.TokensRevoked`
+- 오류: `BC-E-121`(인자 사용자 ID), `BC-E-122`(인자 속성 이름, 화면은 필드 라벨로 바꿔 보인다), `BC-E-131`, `BC-E-405`, `Common-E-002`, `Common-E-004`, `Common-E-006`, `AUTH-001`·`AUTH-011`~`AUTH-015`, 화면 `Common-E-005`·`BC-E-057`·`BC-E-003`
 
 ## 테스트 시나리오
 
-- `BC-UC-004-T01` 신규 저장 성공
-- `BC-UC-004-T02` 필수 값 누락 시 저장 차단
-- `BC-UC-004-T03` 동시 수정 충돌 409
-- `BC-UC-004-T04` 없는 코드 값 저장 시 422
-- `BC-UC-004-T05` 관련 BR마다 단위 테스트 (`BC-UT-` + BR 번호, 예: BC-BR-121 → BC-UT-121)
+- `BC-UC-004-T01` 신규 → 사용 여부 Y, 사용 기한 비어 있음(무기한), 비밀번호 칸 2개 보임
+- `BC-UC-004-T02` 사용자 ID ` NewUser ` 저장 → `newuser`로 저장, 이후 ID 칸 잠김
+- `BC-UC-004-T03` 같은 사용자 ID로 신규 → 422 BC-E-121
+- `BC-UC-004-T04` 역할 없이 저장 → 422 BC-E-122 (인자 RoleId)
+- `BC-UC-004-T05` 초기 비밀번호와 확인이 다름 → 서버 호출 없음, BC-E-057
+- `BC-UC-004-T06` 초기 비밀번호 7자 → 400 AUTH-011
+- `BC-UC-004-T07` 신규 사용자로 로그인 → mustChangePassword = true
+- `BC-UC-004-T08` 수정 화면에 비밀번호 칸 없음, 실패 횟수·잠금·마지막 로그인 표시
+- `BC-UC-004-T09` 자기 계정 → 역할·사용 여부 칸 잠김, API로 바꾸면 422 BC-E-131
+- `BC-UC-004-T10` 사용 안 함으로 저장 → 그 사용자의 자동 로그인 토큰 폐기
+- `BC-UC-004-T11` 잠긴 사용자 잠금 해제 → 204, 실패 횟수 0, UNLOCK 이력. 잠기지 않은 사용자도 204
+- `BC-UC-004-T12` 비밀번호 초기화 → 204, mustChangePassword = true, 자동 로그인 토큰 폐기
+- `BC-UC-004-T13` 토큰 강제 폐기 → 204, 그 사용자의 자동 로그인 401 AUTH-007
+- `BC-UC-004-T14` DELETE /api/bc/users/{id} → 405
+- `BC-UC-004-T15` 변경 권한 없는 사용자 → 화면 읽기 전용, POST·PUT 403
+- `BC-UC-004-T16` 오래된 updatedAt → 409 Common-E-004
+- `BC-UC-004-T17` 목록 응답에 비밀번호 해시 없음
+- `BC-UC-004-T18` 관련 BR마다 단위 테스트 (`BC-UT-` + BR 번호, 예: BC-BR-121 → BC-UT-121)
 
 ## AS IS 근거
 

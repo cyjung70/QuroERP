@@ -396,7 +396,7 @@
     },
     {
       "path": "docs/specifications/BC/role-menu.md",
-      "sha256": "85e7563c3dbf9cf521a95d25f48c4c23dca436d8027285978ed327beb3d7fd6a"
+      "sha256": "0de743d165c5af549cf60a61f1fbac310040680967fa55184bf44474deedbd3e"
     },
     {
       "path": "docs/specifications/BC/sales-price.md",
@@ -424,7 +424,7 @@
     },
     {
       "path": "docs/specifications/BC/user.md",
-      "sha256": "e63d87e341ad2b14ce69978c78bb1d86c64ecb5758d61cab6cfdb210e9350482"
+      "sha256": "aaee195a80fc5538da4f885e311cab3eaa1c82279c417ed4ccfe8da24725d06d"
     },
     {
       "path": "docs/specifications/MM/ap-payment.md",

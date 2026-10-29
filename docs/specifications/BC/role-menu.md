@@ -47,11 +47,11 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/sys/roles | 사용 중 역할 목록 |
-| GET | /api/sys/roles/{roleId}/menus | 역할에 배정된 메뉴와 Full Access |
-| GET | /api/sys/roles/{roleId}/unassigned-menus?menuCode= | 메뉴 추가 대화상자: 역할에 없는 메뉴 (BC-BR-212) |
-| PUT | /api/sys/roles/{roleId}/menus | 배정 저장 (추가·Full Access 수정·삭제 행, 한 트랜잭션, BC-BR-213·216) |
-| DELETE | /api/sys/roles/{roleId}/menus | 역할의 배정 전체 삭제 (BC-BR-213·216) |
+| GET | /api/sys/roles | 사용 중 역할 목록 → [{ id, roleCode }] |
+| GET | /api/sys/roles/{roleId}/menus | 역할에 배정된 메뉴 → [{ menuId, menuCode, name, type, module, fullAccess, updatedAt }]. 400 BC-E-211 |
+| GET | /api/sys/roles/{roleId}/unassigned-menus?menuCode= | 메뉴 추가 대화상자: 역할에 없고 코드가 menuCode로 시작하는 메뉴 → [{ menuId, menuCode, name, type, module }] (BC-BR-212) |
+| PUT | /api/sys/roles/{roleId}/menus | 배정 저장 { inserted: [{ menuId, fullAccess }], updated: [{ menuId, fullAccess, updatedAt }], deleted: [{ menuId, updatedAt }] } → 저장 뒤 역할 메뉴 목록. 한 트랜잭션, 한 행이라도 실패하면 저장 안 함 (BC-BR-213·216). 422 BC-E-212·BC-E-216, 404 Common-E-006(없는 메뉴), 409 Common-E-004, 400 BC-E-211 |
+| DELETE | /api/sys/roles/{roleId}/menus | 역할의 배정 전체 삭제 → 204 (BC-BR-213·216). 422 BC-E-216, 400 BC-E-211 |
 
 ## 관련 테이블
 
