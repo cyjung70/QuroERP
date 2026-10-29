@@ -10,21 +10,27 @@
 | 외부 서버 → Api | **API 키** (`X-Api-Key`). 외부 시스템마다 발급, DB에는 해시만 저장, 폐기 가능 |
 
 - OAuth2는 쓰지 않는다.
+- API는 요청에 `X-Api-Key` 헤더가 있으면 API 키로, 없으면 내부 토큰(JWT Bearer)으로 인증한다.
+- API 키는 `sys_api_client`(`client_code`, `key_hash`, `role_id`, `revoked_at`)에 둔다. 키는 발급 때 만든 긴 난수라서 솔트 없이 SHA-256(16진 소문자)으로 찾는다. `revoked_at`이 없거나 아직 오지 않았으면 쓸 수 있다. 틀리거나 폐기된 키는 401이다.
 - 로그인 처리 순서, 계정 잠금, 자동 로그인, 세션 만료, 비밀번호 정책, 인증 메시지(AUTH-001~010)는 [login.md](login.md)를 따른다.
 - 내부 토큰은 JWT다. 만료 시간은 설정 `Jwt:Lifetime`(기본 30분)이다. Web은 세션이 살아 있는 동안 만료 10분 전부터 `POST /api/auth/refresh`로 다시 받는다. refresh는 토큰 버전(JWT 클레임 `ver` = `sys_app_user.token_version`)을 검사하므로, 폐기된 토큰은 늦어도 30분 안에 쓸 수 없게 된다 (TASK-CORE-016, TASK-BC-003). 비밀번호 변경은 지금 세션에 새 토큰을 돌려준다 (BC-BR-058).
+- 내부 토큰 클레임: `sub`(`sys_app_user.id`), `name`(사용자 ID), `role`(`sys_role.role_code`), `pwd_change`(비밀번호 변경을 강제할 때 `true`), `ver`(토큰 버전). API 키 호출자는 `name`(클라이언트 코드)과 `role`만 갖는다. 서명 알고리즘은 HS256만 받고, 시계 오차는 1분까지 허용한다.
 - 내부 토큰 설정 절은 `Jwt`다: `Jwt:SigningKey`(HS256, 32바이트 이상, 필수), `Jwt:Issuer`(기본 `QuroErp.Api`), `Jwt:Audience`(기본 `QuroErp.Web`), `Jwt:Lifetime`. 서명 키가 없거나 짧으면 API가 시작하지 않는다. 서명 키는 저장소 파일에 쓰지 않고 user-secrets나 환경변수 `Jwt__SigningKey`로 준다. API의 DB 연결 문자열도 같은 방법으로 준다 (`ConnectionStrings:QuroErp`, [DB 설계](database.md)).
 
 ## 권한
 
-- API는 `FallbackPolicy = RequireAuthenticatedUser`로 모든 엔드포인트를 막는다. `[AllowAnonymous]`는 로그인 API만.
+- API는 기본·대체(Fallback) 정책으로 모든 엔드포인트를 막는다: 로그인한 사용자이고, 비밀번호 변경을 강제당한 상태가 아니어야 한다. 토큰이 없거나 만료되면 401 AUTH-006이다.
+- `[AllowAnonymous]`는 로그인 전에 쓰는 `POST /api/auth/login`, `POST /api/auth/auto-login`, `POST /api/auth/logout`, `GET /api/auth/login-options`만이다 ([login.md](login.md)).
+- 비밀번호 변경을 강제당한 사용자(`pwd_change`)는 세션 API(`GET /api/auth/me`, `POST /api/auth/refresh`, `POST /api/auth/change-password`)와 로그인 전 API만 쓴다. 다른 API는 403 AUTH-005다.
+- 세션 API와 사용자 계정 API(내 정보 변경 `/api/bc/user-profile`, 사용자 관리 `/api/bc/users`)는 JWT 사용자만 받는다. API 키 호출자는 401이다.
 - 메뉴·화면 권한은 역할(`sys_role`)과 `sys_role_menu`로 정한다. API는 `[Authorize(Policy = "Menu:<menu_code>")]`로 검사한다.
-- 판정: 역할에 배정된 메뉴는 조회(GET), Full Access면 변경(그 밖의 메서드)까지 한다. 사용 안 함 메뉴는 거부한다 ([BC-BR-206, BC-BR-214](../business-rules/BC/menu-role.md)).
+- 판정: 역할에 배정된 메뉴는 조회(GET·HEAD), Full Access면 변경(그 밖의 메서드)까지 한다. 사용 안 함 메뉴는 거부한다 ([BC-BR-206, BC-BR-214](../business-rules/BC/menu-role.md)).
 - 비밀번호 변경·내 정보 변경은 메뉴 배정 없이 로그인한 본인이 쓴다 ([BC-BR-051](../business-rules/BC/password.md), [BC-BR-101](../business-rules/BC/user.md)).
 - API 키 호출자는 API 키에 붙은 역할로 검사한다.
 
 ## 비밀번호
 
-- `PasswordHasher<AppUser>`(PBKDF2) 해시만 저장한다. 길이·종류·재사용 규칙은 [login.md](login.md).
+- `PasswordHasher<AppUser>`(PBKDF2, Identity V3 형식) 해시만 저장한다. 설치 때 만드는 관리자도 같은 형식이다. 해시 형식이 아닌 값은 비밀번호가 틀린 것으로 본다. 길이·종류·재사용 규칙은 [login.md](login.md).
 - 비밀번호 조회 기능은 없다. 관리자는 초기화만 할 수 있고, 초기화 후 첫 로그인 때 변경을 강제한다.
 - 레거시에서 이관한 사용자는 첫 로그인 때 비밀번호 변경을 강제한다.
 
