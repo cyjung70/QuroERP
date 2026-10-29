@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using QuroErp.Application.Bc.Companies;
+using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Codes;
@@ -14,6 +15,7 @@ using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Tests;
@@ -57,6 +59,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     private InMemoryLocalizationSettingRepository? _localizationSettings;
 
+    /// <summary>Items; empty at start. Ids in <see cref="InMemoryItemRepository.InUse"/> count as used (MM-BR-807).</summary>
+    public InMemoryItemRepository Items { get; } = new();
+
     /// <summary>Inventory setting state; DENY at start.</summary>
     public InMemoryInventorySettingRepository InventorySettings { get; } = new();
 
@@ -88,6 +93,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ILocalizationRepository>(Localization);
             services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
+            services.AddSingleton<IItemRepository>(Items);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
             {
@@ -208,17 +214,24 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
     }
 
-    /// <summary>VALID_FLAG = Y, N, S (S has no translation).</summary>
+    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE.</summary>
     private sealed class FakeCodeRepository : ICodeRepository
     {
         private static readonly List<CodeMinorRow> ValidFlag = [new(1, "Y", 10), new(2, "N", 20), new(3, "S", 30)];
+
+        private static readonly Dictionary<string, string[]> ItemCodes = new()
+        {
+            ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"], ["UNIT"] = ["EA", "PCS"], ["ITEM_CLASS"] = ["PART"], ["GRADE"] = ["A01"],
+        };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(
             string majorCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<CodeMinorRow>?>(majorCode == "VALID_FLAG" ? ValidFlag : null);
 
         public Task<bool> ExistsActiveAsync(string majorCode, string minorCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(majorCode == "VALID_FLAG" && ValidFlag.Any(m => m.MinorCode == minorCode));
+            Task.FromResult(majorCode == "VALID_FLAG"
+                ? ValidFlag.Any(m => m.MinorCode == minorCode)
+                : ItemCodes.TryGetValue(majorCode, out var minors) && minors.Contains(minorCode));
     }
 
     private sealed class FakeTranslationRepository : ITranslationRepository
@@ -363,6 +376,67 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             }
             Row = new InventorySettingRow(negativeStockMode, Row.UpdatedAt.AddSeconds(1), updatedBy);
             return Task.FromResult<InventorySettingRow?>(Row);
+        }
+    }
+
+    public sealed class InMemoryItemRepository : IItemRepository
+    {
+        private readonly ConcurrentDictionary<long, ItemRow> _rows = new();
+        private long _nextId;
+
+        public HashSet<long> InUse { get; } = [];
+
+        public HashSet<long> TypeLocked { get; } = [];
+
+        public Task<ItemRow?> FindAsync(long id, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(_rows.GetValueOrDefault(id));
+
+        public Task<bool> CodeExistsAsync(string itemCd, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(_rows.Values.Any(r => r.ItemCd == itemCd));
+
+        public Task<(IReadOnlyList<ItemRow> Items, int Total)> SearchAsync(
+            ItemSearch search, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            var matches = _rows.Values
+                .Where(r => search.ItemCd is null || r.ItemCd.StartsWith(search.ItemCd, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(r => r.ItemClass, StringComparer.Ordinal).ThenBy(r => r.ItemCd, StringComparer.Ordinal).ToList();
+            return Task.FromResult<(IReadOnlyList<ItemRow>, int)>((matches.Skip(search.Offset).Take(search.Limit).ToList(), matches.Count));
+        }
+
+        public Task<long> InsertAsync(Item item, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            var id = Interlocked.Increment(ref _nextId);
+            _rows[id] = ToRow(id, item, new DateTimeOffset(2026, 10, 29, 0, 0, 0, TimeSpan.Zero));
+            return Task.FromResult(id);
+        }
+
+        public Task<bool> UpdateAsync(
+            Item item, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            if (!_rows.TryGetValue(item.Id, out var row) || row.UpdatedAt != expectedUpdatedAt)
+            {
+                return Task.FromResult(false);
+            }
+            _rows[item.Id] = ToRow(item.Id, item, row.UpdatedAt.AddSeconds(1));
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> IsTypeLockedAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(TypeLocked.Contains(id));
+
+        public Task<bool> IsInUseAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(InUse.Contains(id));
+
+        public Task<bool> DeleteAsync(long id, DateTimeOffset expectedUpdatedAt, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(_rows.TryGetValue(id, out var row) && row.UpdatedAt == expectedUpdatedAt && _rows.TryRemove(id, out _));
+
+        private static ItemRow ToRow(long id, Item item, DateTimeOffset updatedAt)
+        {
+            var f = item.Fields;
+            return new ItemRow(
+                id, item.ItemCd, f.ItemName, f.ItemName2, f.ItemDesc, f.ItemType, f.Unit, f.ItemClass, f.ValidFlag, f.UsdPrc, f.SoUsdPrc,
+                f.UpcCode, f.Location, f.ReorderPoint, f.Memo1, f.Memo2, f.Memo3, f.Memo4, f.Memo5, f.ItemGrade, f.Taxable ?? true,
+                f.VatKind ?? Item.VatTaxable, item.Plating, item.ItemGroupCd, item.MvgCost, item.OnhandQty, item.StkVal, updatedAt);
         }
     }
 }
