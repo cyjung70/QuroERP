@@ -291,4 +291,5 @@
   <data name="Bc.Company.PasswordResetMode" xml:space="preserve"><value>비밀번호 찾기 방식</value></data>
   <data name="Bc.Company.PasswordResetMode.ADMIN_ONLY" xml:space="preserve"><value>관리자에게 문의</value></data>
   <data name="Bc.Company.PasswordResetMode.EMAIL" xml:space="preserve"><value>이메일로 재설정</value></data>
+  <data name="Common.ConfirmSectionsUnsaved" xml:space="preserve"><value>다른 영역에 저장하지 않은 변경 내용이 있습니다. 이 저장은 그 변경 내용을 저장하지 않습니다. 계속할까요?</value></data>
 </root>

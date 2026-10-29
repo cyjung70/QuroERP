@@ -44,7 +44,7 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
 
         html.Should().Contain("Company Logo").And.Contain("Upload Logo").And.Contain("data:image/png;base64,");
         html.Should().Contain("Always allow").And.Contain("Allow during the month (not at month end)").And.Contain("Do not allow");
-        html.Should().Contain("value=\"Quro\"").And.Contain("Security Settings");
+        html.Should().Contain("value=\"Quro\"").And.Contain("Lockout minutes (1-1440)").And.NotContain("page-error");
         requests.Should().OnlyContain(r => r.Headers.Authorization!.Scheme == "Bearer" && r.Headers.Authorization.Parameter == "token-admin");
     }
 

@@ -3,6 +3,7 @@
 @using System.Globalization
 @using System.Net.Http
 @using QuroErp.Contracts.Bc.Companies
+@using QuroErp.Contracts.Common.Auth
 @using QuroErp.Contracts.Common.Codes
 @using QuroErp.Contracts.Mm.Inventory
 @using QuroErp.Web.Auth
@@ -21,7 +22,8 @@
 
 @* BC-UC-007 company, screen type S. There is exactly one company: it loads when the screen opens and is never created or
    deleted here (BC-BR-301). Rules are checked by the API (BC-BR-302~316). The logo (BC-BR-306), inventory setting (MM-BR-003)
-   and security settings (BC-BR-309, 310) are separate records, so each section below the form saves on its own. *@
+   and security settings (BC-BR-309, 310) are separate records, so each section below the form saves on its own. Search reads
+   the sections again, and unsaved section changes are guarded like the form's own (BC-BR-317). *@
 
 <PageTitle>@L["Bc.Company.Title"]</PageTitle>
 
@@ -33,7 +35,7 @@
 @if (_ready)
 {
     <QuroSingleForm TModel="CompanyModel" Title="@L["Bc.Company.Title"]" TestId="company" ReadOnly="!_canEdit" LoadOnStart CanCreate="false"
-                    Load="LoadAsync" Create="() => new CompanyModel()" Save="SaveAsync">
+                    Load="LoadAsync" Create="() => new CompanyModel()" Save="SaveAsync" HasSectionChanges="HasSectionChanges">
         <Fields Context="company">
             @* BC-BR-302: the name is not a key, so it stays editable after loading *@
             <QuroText Label="@L["Bc.Company.Name"]" @bind-Value="company.Name" Required TestId="company-header-name" />
@@ -190,6 +192,7 @@
     private InventorySettingDto? _setting;
     private string _mode = NegativeStockModes.Deny;
     private SecuritySettingModel? _security;
+    private string? _securitySnapshot;
     private bool _canEdit;
     private bool _ready;
     private bool _busy;
@@ -214,9 +217,6 @@
             var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
             _currencies = localization.Currencies.Select(c => new CodeItemDto(c.CurrencyCode, $"{c.CurrencyCode} {c.Name}")).ToList();
             _languages = localization.Languages.Select(l => new CodeItemDto(l.LangCode, LanguageName(l.LangCode))).ToList();
-            _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
-            ApplySetting(await InventorySettingApi.GetAsync(CancellationToken.None));
-            _security = SecuritySettingModel.From(await AuthSettingApi.GetAsync(CancellationToken.None));
         }
         catch (ApiProblemException e)
         {
@@ -229,7 +229,26 @@
         _ready = true;
     }
 
-    private async Task<CompanyModel?> LoadAsync() => CompanyModel.From(await CompanyApi.GetAsync(CancellationToken.None));
+    // The form loads on open and on search; the sections are read with it so a search also discards their changes
+    private async Task<CompanyModel?> LoadAsync()
+    {
+        var company = CompanyModel.From(await CompanyApi.GetAsync(CancellationToken.None));
+        _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
+        _logoFile = null;
+        ApplySetting(await InventorySettingApi.GetAsync(CancellationToken.None));
+        ApplySecurity(await AuthSettingApi.GetAsync(CancellationToken.None));
+        _error = null;
+        _notice = null;
+        // The form renders itself after loading; the sections belong to this page
+        StateHasChanged();
+        return company;
+    }
+
+    // BC-BR-317: a picked logo not uploaded yet, a changed inventory mode or changed security values
+    private bool HasSectionChanges() =>
+        _logoFile is not null
+        || (_setting is not null && _mode != _setting.NegativeStockMode)
+        || (_security is not null && Snapshot.Of(_security) != _securitySnapshot);
 
     private async Task<CompanyModel> SaveAsync(CompanyModel company, bool isNew)
     {
@@ -265,6 +284,7 @@
                 await stream.CopyToAsync(buffer);
             }
             await CompanyApi.UploadLogoAsync(buffer.ToArray(), _logoFile.Name, CancellationToken.None);
+            _logoFile = null;
             _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
             _notice = L["Common.Saved"];
         });
@@ -312,8 +332,7 @@
         }
         await RunAsync(async () =>
         {
-            var saved = await WithFieldLabelsAsync(() => AuthSettingApi.UpdateAsync(security.ToRequest(), CancellationToken.None));
-            _security = SecuritySettingModel.From(saved);
+            ApplySecurity(await WithFieldLabelsAsync(() => AuthSettingApi.UpdateAsync(security.ToRequest(), CancellationToken.None)));
             _notice = L["Common.Saved"];
         });
     }
@@ -322,6 +341,12 @@
     {
         _setting = setting;
         _mode = setting.NegativeStockMode;
+    }
+
+    private void ApplySecurity(AuthSettingDto setting)
+    {
+        _security = SecuritySettingModel.From(setting);
+        _securitySnapshot = Snapshot.Of(_security);
     }
 
     // Shows API errors (ProblemDetails code) and connection failures as messages instead of breaking the circuit

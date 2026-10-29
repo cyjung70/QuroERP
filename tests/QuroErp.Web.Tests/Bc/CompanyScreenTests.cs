@@ -16,6 +16,7 @@ using QuroErp.Web.Bc.Companies;
 using QuroErp.Web.Bc.Localization;
 using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Bc;
+using QuroErp.Web.Components.Pages.Bc.Models;
 using QuroErp.Web.Components.Screens;
 using QuroErp.Web.Mm.Inventory;
 using QuroErp.Web.Tests.Screens;
@@ -228,6 +229,61 @@ public class CompanyScreenTests : BunitContext
         page.WaitForAssertion(() => _api.SecurityUpdates.Should().ContainSingle().Which.AutoLoginEnabled.Should().BeFalse());
     }
 
+    [Fact, Trait("Id", "BC-UT-317")]
+    public void ToolbarSave_WithAnUnsavedSection_AsksFirst_AndSavesTheCompanyOnly()
+    {
+        var page = RenderAs("admin");
+        page.Find("[data-testid=company-security-lockout-minutes]").Change("15");
+        _confirm.Answer = false;
+
+        page.Find("[data-testid=company-toolbar-save]").Click();
+
+        _confirm.Questions.Should().ContainSingle().Which.Should().Contain("다른 영역");
+        _api.CompanyUpdates.Should().BeEmpty();
+
+        _confirm.Answer = true;
+        page.Find("[data-testid=company-toolbar-save]").Click();
+
+        page.WaitForAssertion(() => _api.CompanyUpdates.Should().ContainSingle());
+        _api.SecurityUpdates.Should().BeEmpty();
+        Value(page, "company-security-lockout-minutes").Should().Be("15");
+        Form(page).IsDirty.Should().BeTrue();
+    }
+
+    [Fact, Trait("Id", "BC-UT-317")]
+    public void Search_WithAnUnsavedSection_AsksFirst_AndReadsTheSectionsAgain()
+    {
+        var page = RenderAs("admin");
+        page.Find("[data-testid=company-inventory-mode-allow]").Change(NegativeStockModes.Allow);
+        _confirm.Answer = false;
+
+        page.Find("[data-testid=company-toolbar-search]").Click();
+
+        _confirm.Questions.Should().ContainSingle().Which.Should().StartWith("저장하지 않은 변경 내용이 있습니다.");
+        page.Find("[data-testid=company-inventory-mode-allow]").HasAttribute("checked").Should().BeTrue();
+
+        _confirm.Answer = true;
+        page.Find("[data-testid=company-toolbar-search]").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=company-inventory-mode-deny]").HasAttribute("checked").Should().BeTrue());
+        Form(page).IsDirty.Should().BeFalse();
+    }
+
+    [Fact, Trait("Id", "BC-UT-317")]
+    public void UnsavedSectionChanges_GuardLeavingTheScreen_UntilSaved()
+    {
+        var page = RenderAs("admin");
+        Form(page).IsDirty.Should().BeFalse();
+
+        page.Find("[data-testid=company-security-allow-concurrent-login]").Change(false);
+
+        Form(page).IsDirty.Should().BeTrue();
+
+        page.Find("[data-testid=company-security-save]").Click();
+
+        page.WaitForAssertion(() => Form(page).IsDirty.Should().BeFalse());
+    }
+
     private static readonly AuthSettingDto Security = new(5, 30, true, true, 30, 60, true, 8, 2, 0, 0, "ADMIN_ONLY", DateTimeOffset.UnixEpoch);
 
     private IRenderedComponent<Company> RenderAs(string role)
@@ -242,6 +298,9 @@ public class CompanyScreenTests : BunitContext
         page.WaitForElement("[data-testid=company-security-lockout-minutes]");
         return page;
     }
+
+    private static QuroSingleForm<CompanyModel> Form(IRenderedComponent<Company> page) =>
+        page.FindComponent<QuroSingleForm<CompanyModel>>().Instance;
 
     private static string? Value(IRenderedComponent<Company> page, string testId) =>
         page.Find($"[data-testid={testId}]").GetAttribute("value");

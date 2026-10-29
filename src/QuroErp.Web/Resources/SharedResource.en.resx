@@ -291,4 +291,5 @@
   <data name="Bc.Company.PasswordResetMode" xml:space="preserve"><value>Password reset</value></data>
   <data name="Bc.Company.PasswordResetMode.ADMIN_ONLY" xml:space="preserve"><value>Contact the administrator</value></data>
   <data name="Bc.Company.PasswordResetMode.EMAIL" xml:space="preserve"><value>Reset by email</value></data>
+  <data name="Common.ConfirmSectionsUnsaved" xml:space="preserve"><value>Other sections have unsaved changes, and this save does not include them. Continue?</value></data>
 </root>
