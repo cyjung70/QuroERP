@@ -1,0 +1,45 @@
+{
+  "id": "TASK-CORE-046",
+  "project": "core",
+  "title": "사업장 마스터와 `business_place_id`, 회사 화면 사업장 영역",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/organization.md",
+    "docs/specifications/BC/company.md",
+    "docs/business-rules/BC/company.md",
+    "docs/architecture/database-tables.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-013",
+    "TASK-BC-014",
+    "TASK-CORE-021"
+  ],
+  "acceptance": [
+    "마이그레이션: `bc_business_place`(database-tables.md) 생성, 기본 사업장 1행(`MAIN`, `is_default = true`)을 회사 값(이름, `register_no`, `represent`, `tel_no`, `business_type`, `business_item`)으로 채운다",
+    "이미 있는 `bc_warehouse`와 매출·매입 문서 헤더(지금 있는 테이블만: 수주, 매출 송장, 출하, 발주, 입고, 입금, 지급)에 `business_place_id` NOT NULL + 외래 키 + 인덱스를 더하고 기본 사업장으로 채운다. 아직 없는 문서 테이블(견적, 매출 반품, 공급자 송장, 공급자 반품)은 그 태스크가 처음부터 넣는다",
+    "설치 Seed가 기본 창고와 함께 기본 사업장을 만든다. 새 창고·새 문서 저장 때 사업장 기본값 = 기본 사업장 (BC-BR-321). 문서 DTO·화면에는 사업장을 보이지 않는다",
+    "`GET /api/bc/business-places`, `PUT /api/bc/business-places/{id}` (BC-BR-319·320). POST·DELETE는 405. KR이면 사업자등록번호 필수·검증 숫자(BC-BR-521), 종사업장번호 숫자 4자리 → 422 BC-E-320",
+    "회사 정보 화면: 사업자등록번호·업태·종목을 회사 폼에서 빼고 사업장 영역(company.md 화면 항목 15)에 둔다. 회사 API 응답에서도 뺀다. 회사 컬럼은 지우지 않는다 (BC-BR-315)",
+    "KR 세금계산서 공급자 정보를 문서 사업장에서 읽는다 (SD-BR-134). 이미 만든 출력이 회사 값을 읽으면 바꾼다",
+    "리소스 `Bc.BusinessPlace.*`, BC-E-319·320·321 (en·ko)",
+    "단위 테스트: 기본 사업장 1개, 추가 차단, KR 등록번호 검사. 통합 테스트: 마이그레이션 뒤 모든 창고·문서에 사업장 값, 새 문서 기본값. bUnit: 사업장 영역 저장"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
