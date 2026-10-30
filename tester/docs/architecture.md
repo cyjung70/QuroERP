@@ -96,7 +96,7 @@ tester/
 - 상태 코드와 Problem Details `code`를 함께 본다 (예: `assert r.status_code == 422 and r.json()["code"] == "SD-E-001"`).
 - 메시지는 리소스 키·오류 코드로 본다. 문구 전체를 비교하지 않는다.
 - DB 검증은 API 결과를 다시 확인하는 데만 쓴다 (예: 저장 후 재고 이동 행 수).
-- 화면 E2E는 화면유형 Page Object를 쓴다: 조회 조건 입력 → 조회 → 그리드·폼 확인 → 저장 → 메시지 확인.
+- 화면 E2E는 화면유형 Page Object를 쓴다: 조회 조건 입력 → 조회 → 그리드·폼 확인 → 저장 → 메시지 확인. SM Page Object(`single_multi.py`)는 엔트리 프레임 영역(`title`·`doc-no`·`status-chip`·`toolbar`·`header`·`totals`·`line`·`audit`·`message`)으로 다룬다. 조회는 문서 찾기 대화상자이고, 커맨드바 버튼은 숨기지 않으므로 활성 여부(`disabled`)로 확인한다
 - 확인 질문은 앱 대화상자(`data-testid` `confirm-dialog`)다. Page Object 공통 함수가 `confirm-dialog-yes`·`-no`를 누른다. 브라우저 탭 닫기 경고만 Playwright `dialog` 이벤트로 다룬다.
 
 ## 시나리오 문서

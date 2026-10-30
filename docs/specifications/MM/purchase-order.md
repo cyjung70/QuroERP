@@ -10,25 +10,74 @@
 | 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
+> 화면은 [공통 엔트리 화면 프레임](../../architecture/entry-frame.md) 5단이다. 상태는 `DR` 작성중 → `PO` 승인 → `RE` 부분 입고 → `CL` 입고 완료, 그리고 `MC` 마감·`CN` 취소다 (MM-BR-019). 입고가 하나라도 있으면 수정·삭제할 수 없다 (MM-BR-013).
+
 > 문서 통화·환율과 세금(줄 세금 코드, 공급가액·세액·합계)은 [지역화](../../architecture/localization.md)·[세금](../../architecture/tax.md) 규칙을 따른다. 금액은 문서 통화 자릿수로 반올림한다 (BC-BR-421).
 
 ## 기본 흐름
 
 관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
-1. 발주 번호로 조회하거나 신규를 누른다. 신규 상태는 `PO`다.
-2. 공급자를 고르고 줄을 추가한다. 품목은 Inventory·Service다 (MM-BR-014).
-3. 저장하면 서버가 수량·단가를 검사하고(MM-BR-011·012) 줄 금액과 합계를 계산한다 (MM-BR-015).
-4. 단가가 표준 구매단가·공급자 단가와 다르면 공급자 단가도 바꿀지 묻는다 (MM-BR-016).
-5. 헤더·줄·채번(MM-BR-017)을 한 트랜잭션으로 저장하고 발주 번호를 보여 준다.
-6. 인쇄 버튼으로 발주서 PDF를 연다. 엑셀 버튼으로 같은 내용을 XLSX 파일로 받는다 (저장된 발주만).
+1. 조회(F3)로 발주 찾기 대화상자를 열어 고르거나 신규를 누른다. 신규는 번호 없이 시작하고 칩이 없다.
+2. 공급자를 고른다. 통화·환율·기본 세금 코드가 채워진다 (MM-BR-031, BC-BR-542). 발주일·납기일·입고 창고·인코텀즈·결제 조건·구매 담당·비고를 넣는다 (MM-BR-026·027).
+3. 행 추가로 줄을 넣는다. 헤더의 납기일·창고·세금 코드가 줄에 복사된다 (MM-BR-026). 품목은 Inventory·Service다 (MM-BR-014). 줄마다 수량·단가·할인율을 넣는다 (MM-BR-011·012·025).
+4. 저장하면 서버가 검사하고 총액·할인·줄 금액·세액·합계를 계산한다 (MM-BR-015·025·032). 단가가 표준 구매단가·공급자 단가와 다르면 공급자 단가도 바꿀지 묻는다 (MM-BR-016).
+5. 첫 저장은 상태 `DR`(작성중)이고 같은 트랜잭션에서 번호를 매긴다 (MM-BR-017·019).
+6. 승인을 누르면 확인 뒤 `DR` → `PO`(승인)가 된다. 승인 일시·사용자가 남는다 (MM-BR-020).
+7. 입고가 발주 줄을 가져가면 상태가 `RE`(부분 입고)·`CL`(입고 완료)로 바뀐다 (MM-BR-018·024).
+8. PDF 버튼으로 발주서를 받는다. 엑셀 버튼으로 같은 내용을 XLSX 파일로 받는다 (저장된 발주만).
 
 ## 대체 흐름
 
 - '요청 가져오기'로 닫히지 않은 구매 요청의 남은 수량을 가져온다. 희망 공급자가 다른 줄은 나오지 않는다 (MM-BR-554·555)
-- 상태가 `PO`가 아니면(입고 시작) 수정·삭제를 막는다 (MM-BR-013).
-- 발주 상태는 입고 줄이 바뀔 때 서버가 다시 계산한다 (MM-BR-018).
+- 승인(`PO`) 발주를 입고 전에 고쳐 저장하면 상태는 그대로이고 `Rev. n`이 1 늘어난다 (MM-BR-021).
+- 입고가 하나라도 있으면 상태와 상관없이 저장·행 편집·삭제를 막는다. 버튼은 비활성화되고 API는 422 MM-E-013이다 (MM-BR-013).
+- 마감을 누르면 `PO`·`RE` → `MC`가 되고, 남은 수량은 더 입고하지 않는다 (MM-BR-022).
+- 취소를 누르면 입고 전 `PO` → `CN`이 된다. `DR`은 취소하지 않고 삭제한다 (MM-BR-023).
+- 허용하지 않는 상태 전이는 422 MM-E-019다 (MM-BR-019). 저장하지 않은 변경이 있으면 승인·마감·취소 전에 먼저 저장하라고 안내한다.
+- 할인율이 0~100 밖이면 MM-E-025, 줄 납기일이 발주일 전이면 MM-E-026, 인코텀즈가 목록 밖이면 MM-E-027이다.
 - 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
+
+## 화면 항목
+
+이 화면은 아래 항목으로 새로 만든다. 아래 'AS IS 화면 필드'는 참고만 한다.
+
+| No | 항목 | 유형 | 필수 | 기본값 | 설명·검증 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 경로 · 화면 이름 | 텍스트 (타이틀바) |  |  | `MM > Purchasing` · `Mm.PurchaseOrder.Title` (발주 등록 / PO Entry) |
+| 2 | 발주 번호 | 텍스트 (타이틀바, 읽기 전용) |  | 신규면 `Common.NewDocument` | mono. 첫 저장 때 서버가 매긴다 `PO` + `yymm` + 5자리 (MM-BR-017) |
+| 3 | 상태 칩 · 개정 | 칩 (타이틀바) |  |  | `DR` neutral, `PO` brand, `RE` warn, `CL` ok, `MC` neutral, `CN` danger. `revision_no ≥ 1`이면 `Rev. n` (MM-BR-019·021) |
+| 4 | 조회 · 신규 · 저장 | 버튼 (File) |  |  | 조회 F3 = 발주 찾기 대화상자(번호·공급자·기간·상태). 저장 Ctrl+S, 저장만 brand 채움 |
+| 5 | 행 추가 · 삭제 표시 · 행 복원 · 요청 가져오기 | 버튼 (Rows) |  |  | 행 추가 Ctrl+Insert, 삭제 표시 Ctrl+Delete(토글). 요청 가져오기 = 구매 요청 남은 수량 (MM-BR-554·555) |
+| 6 | 승인 · 마감 · 취소 | 버튼 (Status) |  |  | MM-BR-020·022·023. 상태와 버튼 표를 따른다 |
+| 7 | 발주 삭제 · PDF · 엑셀 | 버튼 (Output) |  |  | 삭제는 `danger` 글자 (`Mm.PurchaseOrder.Delete`). PDF·엑셀은 저장된 발주만 |
+| 8 | 공급자 | 코드 + 이름 + 찾기 (span 2) | ● |  | `bc_vendor` 찾기, 사용 중 공급자. 저장 후 줄이 있으면 바꿀 수 없다 (MM-BR-031) |
+| 9 | 발주일 | 날짜 | ● | 오늘 | 번호의 `yymm` 기준 (MM-BR-017) |
+| 10 | 납기일 | 날짜 |  |  | 발주일 이후. 행 추가 때 줄 납기일 기본값 (MM-BR-026) |
+| 11 | 통화 · 환율 | 코드 선택 · 숫자 | ● | 공급자 거래 통화, 환율 = 그날 환율 (기준 통화면 1) | 줄이 있으면 통화 잠김 (MM-BR-031). 환율 소수 10자리 (BC-BR-412) |
+| 12 | 입고 창고 | 코드 + 이름 + 찾기 |  | 사용자 기본 창고 | 일반 창고만(위탁 불가). 행 추가 때 줄 창고 기본값 (MM-BR-026) |
+| 13 | 기본 세금 코드 | 코드 선택 |  | 공급자 기본 세금 코드 | 저장하지 않는다. 행 추가 때 줄에 복사 (BC-BR-542) |
+| 14 | 인코텀즈 | 코드 선택 |  |  | Incoterms 2020 11개 (MM-BR-027) |
+| 15 | 결제 조건 | 텍스트 |  |  | 최대 50자, 발주서에 찍힌다 |
+| 16 | 구매 담당 | 텍스트 |  |  | 최대 50자, 발주서에 찍힌다 |
+| 17 | 비고 (공급자 메시지) | 여러 줄 텍스트 (span 4) |  |  | `remarks`, 발주서에 찍힌다 |
+| 18 | 기준 통화 합계 | 숫자 (읽기 전용) |  |  | 문서 통화가 기준 통화와 다를 때만 (BC-BR-413) |
+| 19 | 합계 패널 | 읽기 전용 |  |  | 소계(`gross_amt` 합) · 할인(−`dc_amt` 합) · 세액 · 합계 + 통화 코드. 삭제 표시 줄 제외 (MM-BR-015·025) |
+| 20 | 라인 그리드 | QuroGrid |  |  | 열: No(index) · 품목 코드(lookup, 필수) · 품목명(이름) · 단위(이름) · 창고(lookup) · 수량(필수, > 0) · 단가(필수, ≠ 0, 제목 Unit Price) · 할인율 %(0~100, 소수 2) · 금액(계산 = 총액 − 할인) · 세금 코드 · 세액(계산) · 납기일 · 입고 수량(계산) |
+| 21 | 감사 정보 | caption |  |  | 등록 일시·사용자, 수정 일시·사용자, 승인 일시·사용자(승인 뒤) |
+
+- 배치는 엔트리 프레임 5단이다: ① 타이틀바(No 1~3) ② 커맨드바(No 4~7) ③ 헤더 4열(No 8~18, 1행 공급자(2)·발주일·납기일 / 2행 통화·환율·입고 창고·기본 세금 코드 / 3행 인코텀즈·결제 조건·구매 담당·기준 통화 합계 / 4행 비고(4)) + 합계 패널(No 19) ④ 라인 그리드(No 20) ⑤ 감사 정보(No 21).
+- 상태와 버튼 (○ 활성, × 비활성 — 숨기지 않는다). API도 같은 규칙으로 422를 돌려준다. 입고 수량이 하나라도 있으면 상태와 상관없이 저장·행 편집·삭제가 ×다 (MM-BR-013):
+- `DR` 작성중: 저장·행 편집 ○, 승인 ○(저장 후, 변경 없을 때), 마감 ×, 취소 ×, 삭제 ○
+- `PO` 승인: 저장·행 편집 ○(입고 전, 저장하면 Rev. +1), 승인 ×, 마감 ○, 취소 ○(입고 전), 삭제 ○(입고 전)
+- `RE` 부분 입고: 저장·행 편집 ×, 승인 ×, 마감 ○, 취소 ×, 삭제 ×
+- `CL` 입고 완료 · `MC` 마감 · `CN` 취소: 모두 × (조회·PDF·엑셀만)
+- 신규: 저장 ○, 그 밖의 상태 동작·삭제·PDF·엑셀 ×. 조회 전용 권한(BC-BR-214)은 조회·PDF·엑셀만 ○.
+- 공급자를 고르기 전에는 줄 품목 열을 잠그고 `Common.SelectPartnerFirst`를 보인다. 공급자를 고르면 통화·환율·기본 세금 코드를 채운다 (MM-BR-031, BC-BR-542). 줄이 있으면 통화를 바꿀 수 없다.
+- 행 추가는 헤더의 납기일·입고 창고·기본 세금 코드를 줄에 복사한다 (MM-BR-026). 품목을 고르면 공급자 단가 → 표준 구매단가 순으로 단가를 채운다.
+- 입고된 줄(입고 수량 > 0)은 모든 셀이 잠긴다(회색). 승인·마감·취소는 확인 대화상자(`Mm.PurchaseOrder.ConfirmApprove`·`ConfirmClose`·`ConfirmCancel`) 뒤 실행하고, 끝나면 다시 조회한다.
+- 금액 자릿수는 문서 통화, 단가는 문서 통화 국가 × MM, 수량은 MM 설정이다 (`GET /api/bc/localization`). 예: USD 금액 2·단가 4, KRW 금액 0.
+- PDF는 저장된 발주만, 파일로 바로 받는다. `Rev. n`(n ≥ 1)을 발주서 머리에 찍는다 (MM-BR-021).
 
 ## 화면 필드
 
@@ -64,6 +113,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/mm/purchase-orders | 신규 |
 | PUT | /api/mm/purchase-orders/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/mm/purchase-orders/{id} | 삭제 |
+| POST | /api/mm/purchase-orders/{id}/approve | 승인 `DR` → `PO` (MM-BR-020, updatedAt 필수) |
+| POST | /api/mm/purchase-orders/{id}/close | 마감 `PO`·`RE` → `MC` (MM-BR-022, updatedAt 필수) |
+| POST | /api/mm/purchase-orders/{id}/cancel | 취소 `PO`(입고 0) → `CN` (MM-BR-023, updatedAt 필수) |
 | GET | /api/mm/purchase-orders/open-request-lines?vendorId | 요청 가져오기: `CL`이 아닌 구매 요청에서 남은 수량 > 0이고 희망 공급자가 이 공급자이거나 빈 줄 (MM-BR-554) |
 | GET | /api/mm/purchase-orders/{id}/print/purchase-order.pdf | 발주서 인쇄 (FastReport PDF) |
 | GET | /api/mm/purchase-orders/{id}/print/purchase-order.xlsx | 발주서 엑셀 내보내기 (XLSX, PDF와 같은 내용) |
@@ -91,6 +143,15 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 - [MM-BR-016](../../business-rules/MM/purchase-order.md)
 - [MM-BR-017](../../business-rules/MM/purchase-order.md)
 - [MM-BR-018](../../business-rules/MM/purchase-order.md)
+- [MM-BR-019](../../business-rules/MM/purchase-order.md)
+- [MM-BR-020](../../business-rules/MM/purchase-order.md)
+- [MM-BR-021](../../business-rules/MM/purchase-order.md)
+- [MM-BR-022](../../business-rules/MM/purchase-order.md)
+- [MM-BR-023](../../business-rules/MM/purchase-order.md)
+- [MM-BR-024](../../business-rules/MM/purchase-order.md)
+- [MM-BR-025](../../business-rules/MM/purchase-order.md)
+- [MM-BR-026](../../business-rules/MM/purchase-order.md)
+- [MM-BR-027](../../business-rules/MM/purchase-order.md)
 - [MM-BR-031](../../business-rules/MM/purchase-order.md)
 - [MM-BR-032](../../business-rules/MM/purchase-order.md)
 - [MM-BR-554](../../business-rules/MM/purchase-request.md)
@@ -113,11 +174,19 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 
 ## 테스트 시나리오
 
-- `MM-UC-003-T01` 헤더·상세 신규 저장 성공, 문서 번호 채번
-- `MM-UC-003-T02` 상세 행 추가·수정·삭제 저장
-- `MM-UC-003-T03` 저장 중 오류 시 전체 롤백
-- `MM-UC-003-T04` 동시 수정 충돌 409
-- `MM-UC-003-T05` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-011 → MM-UT-011)
+- `MM-UC-003-T01` 신규 저장 → `DR`, 번호 `PO` + `yymm` + 5자리
+- `MM-UC-003-T02` 줄 없는 `DR` 승인 422 MM-E-020, 저장 후 승인 → `PO`·approved_at
+- `MM-UC-003-T03` `PO` 수정 저장 → 상태 `PO` 유지, revision_no 1 → 2
+- `MM-UC-003-T04` 입고 1건 뒤 수정·삭제·취소 422 (MM-E-013·023), 마감 → `MC`
+- `MM-UC-003-T05` `MC`·`CN`·`CL` 발주 줄은 입고 가져오기에 없고 요청에 있으면 422 MM-E-024
+- `MM-UC-003-T06` `DR` 발주 줄도 입고 가져오기에 없다
+- `MM-UC-003-T07` 할인율 10% 줄: 총액 1,000 → 할인 100 → 금액 900, 세액은 tax_calc_mode DOCUMENT로 계산
+- `MM-UC-003-T08` 할인율 −1·101 차단 MM-E-025
+- `MM-UC-003-T09` 행 추가 때 헤더 납기일·창고·세금 코드 복사
+- `MM-UC-003-T10` 취소한 발주 줄은 구매 요청 발주 수량 합에서 빠진다 (MM-BR-553)
+- `MM-UC-003-T11` 상태별 버튼 활성: DR·PO·RE·CL·MC·CN 6가지 (화면 E2E)
+- `MM-UC-003-T12` USD 금액 2·단가 4, KRW 금액 0 자릿수
+- `MM-UC-003-T13` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-011 → MM-UT-011)
 
 ## AS IS 근거
 

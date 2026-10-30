@@ -24,12 +24,14 @@
   ],
   "dependsOn": [
     "TASK-BC-057",
-    "TASK-CORE-006"
+    "TASK-CORE-006",
+    "TASK-CORE-031"
   ],
   "acceptance": [
     "화면유형 공통 컴포넌트 사용",
     "명세 화면 필드 반영",
-    "ko·en 리소스"
+    "ko·en 리소스",
+    "공통 엔트리 프레임 5단 (docs/architecture/entry-frame.md): 입력 노란색·읽기 전용 회색·필수 마커, 상태 칩, 비활성 버튼은 숨기지 않음"
   ],
   "estimateHours": 3,
   "status": "todo"

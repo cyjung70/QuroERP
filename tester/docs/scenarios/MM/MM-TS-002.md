@@ -17,7 +17,7 @@
 
 1. `POST /api/mm/vendors` — 공급자 V
 2. `POST /api/bc/items` — 재고 품목 I
-3. `POST /api/mm/purchase-orders` — 공급자 V, 줄 1: 품목 I, 수량 10, 단가 5
+3. `POST /api/mm/purchase-orders` — 공급자 V, 줄 1: 품목 I, 수량 10, 단가 5 → `POST .../approve`로 승인 (상태 `PO`, MM-BR-024)
 4. `PUT /api/mm/inventory-setting` — `overReceiptMode` = 이 테스트의 모드 (`DENY` 또는 `WARN`)
 
 ## 단계

@@ -5,7 +5,7 @@
 | --- | --- |
 | 시나리오 ID | MM-TS-001 |
 | 계층 | scenario |
-| 관련 BR | MM-BR-015, MM-BR-017, MM-BR-018, MM-BR-106, MM-BR-108, MM-BR-109, MM-BR-110, MM-BR-111, MM-BR-112, MM-BR-005, MM-BR-607, SD-BR-111, SD-BR-163 |
+| 관련 BR | MM-BR-015, MM-BR-017, MM-BR-018, MM-BR-019, MM-BR-020, MM-BR-024, MM-BR-106, MM-BR-108, MM-BR-109, MM-BR-110, MM-BR-111, MM-BR-112, MM-BR-005, MM-BR-607, SD-BR-111, SD-BR-163 |
 | 국가 | `US` (`country("US")`) — US 단가 자릿수(MM 4·SD 2)로 쓴 값이다. 공급자·고객 세금 코드 `NONE` |
 | 마이너스 재고 모드 | `ALLOW_IN_MONTH`·`DENY` 각각 (현재고 안에서 출고하므로 두 모드 결과가 같다) |
 | 직렬 실행 | 예 (`serial` — 모드를 바꾼다) |
@@ -25,7 +25,7 @@
 | 단계 | 호출 | 입력 |
 | --- | --- | --- |
 | 1 | `POST /api/mm/purchase-orders` | 공급자 V, 오늘, 줄 1: 품목 I, 수량 10, 단가 12.345 |
-| 2 | `GET /api/mm/purchase-orders/{id}` | 1의 id |
+| 2 | `POST /api/mm/purchase-orders/{id}/approve` | 1의 id, `updatedAt` = 1의 값 |
 | 3 | `POST /api/mm/goods-receipts` | 공급자 V, 오늘, 창고 `MAIN`, 줄 1: 1의 발주 줄, 수량 10, 단가 12.345 |
 | 4 | `GET /api/mm/purchase-orders/{id}` | 1의 id |
 | 5 | `POST /api/sd/shipments` | 고객 C, 오늘, 창고 `MAIN`, 줄 1: 품목 I 직접 입력(수주 없는 줄), 수량 4, 단가 20 |
@@ -35,8 +35,8 @@
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
-| 1 | 201 | — | 발주 번호 `PO` + 오늘 `yymm` + 5자리, 상태 `PO`, 줄 금액 123.45, 합계 123.45 | — |
-| 2 | 200 | — | 줄 입고 수량 0 | — |
+| 1 | 201 | — | 발주 번호 `PO` + 오늘 `yymm` + 5자리, 상태 `DR`, 줄 금액 123.45, 합계 123.45 | — |
+| 2 | 200 | — | 상태 `PO`(승인), 줄 입고 수량 0 | `approved_at`·`approved_by` 있음 |
 | 3 | 201 | — | 입고 번호 `GR` + `yymm` + 5자리, 합계 = 잔액 = 123.45 | `mm_goods_movement`: 품목 I, 창고 `MAIN`, `mov_type = 'GR'`, `qty = 10`, `prc = 12.345`, `document_no`는 `ID` + `yymm` + 10자리, `negative_stock = false` |
 | 4 | 200 | — | 상태 `CL`, 줄 입고 수량 10 | — |
 | 5 | 201 | — | — | `mm_goods_movement`(출하 줄): `mov_type = 'DN'`, `qty = -4`, `prc` = 12.345 (그 시점 이동평균원가), `negative_stock = false` |

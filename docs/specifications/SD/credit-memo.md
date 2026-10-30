@@ -27,6 +27,8 @@
 
 - 송장에 적용된 Credit Memo는 수정·삭제할 수 없다. Void 기능은 없다 (SD-BR-203).
 - 매출 반품이 만든 Credit Memo는 이 화면에서 고치거나 지울 수 없다. 반품을 Void한다 (SD-BR-558).
+- 적용 전이면 저장한 줄의 수량·단가·세금 코드를 고칠 수 있고 합계·잔액을 다시 계산한다 (SD-BR-211). 저장한 Credit Memo의 고객은 잠긴다 (SD-BR-212).
+- 송장 번호로 이 화면을 열 수 없다. 송장 API와 Credit Memo API는 서로의 문서를 다루지 않는다 (SD-BR-120).
 - 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
 
 ## 화면 필드
@@ -108,6 +110,9 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_nu
 - [SD-BR-208](../../business-rules/SD/credit-memo.md)
 - [SD-BR-209](../../business-rules/SD/credit-memo.md)
 - [SD-BR-210](../../business-rules/SD/credit-memo.md)
+- [SD-BR-211](../../business-rules/SD/credit-memo.md)
+- [SD-BR-212](../../business-rules/SD/credit-memo.md)
+- [SD-BR-120](../../business-rules/SD/sales-invoice.md)
 - [SD-BR-231](../../business-rules/SD/credit-memo.md)
 - [SD-BR-232](../../business-rules/SD/credit-memo.md)
 - [BC-BR-412](../../business-rules/BC/localization.md)
