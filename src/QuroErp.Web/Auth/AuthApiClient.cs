@@ -46,6 +46,21 @@ public sealed class AuthApiClient(HttpClient http)
         await http.GetFromJsonAsync<LoginOptionsResponse>(AuthRoutes.LoginOptions, cancellationToken)
             ?? throw new InvalidOperationException("Login options response body is empty.");
 
+    /// <summary>The signed-in user with menus, company and role for the app shell (app-shell.md 5).</summary>
+    /// <exception cref="ApiProblemException">401 when the session is gone.</exception>
+    public async Task<MeResponse> GetMeAsync(string accessToken, CancellationToken cancellationToken)
+    {
+        using var message = new HttpRequestMessage(HttpMethod.Get, AuthRoutes.Me);
+        message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        using var response = await http.SendAsync(message, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new ApiProblemException(await ApiProblemReader.ReadAsync(response, cancellationToken));
+        }
+        return await response.Content.ReadFromJsonAsync<MeResponse>(cancellationToken)
+            ?? throw new InvalidOperationException("Me response body is empty.");
+    }
+
     /// <returns>토큰이 만료됐거나 사용자가 사용 중지됐으면 null.</returns>
     public async Task<LoginResponse?> RefreshAsync(string accessToken, CancellationToken cancellationToken)
     {

@@ -38,5 +38,5 @@
     "단위 테스트: 상위 메뉴 포함, 사용 안 함 메뉴 제외, 트리 순서. bUnit: 권한별 보이는 그룹·항목, 현재 메뉴 강조. 1280px·375px, en·ko 화면 확인"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

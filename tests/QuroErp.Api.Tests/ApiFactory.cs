@@ -223,7 +223,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
 
         public Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<AuthMenu>>([new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y")]);
+            Task.FromResult<IReadOnlyList<AuthMenu>>([new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y", "P")]);
+
+        public Task<string?> FindCompanyNameAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>("Quro Test Co.");
 
         public Task<AuthWarehouse?> FindDefaultWarehouseAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<AuthWarehouse?>(new AuthWarehouse(1, "W01", "Main"));

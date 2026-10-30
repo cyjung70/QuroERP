@@ -1,0 +1,62 @@
+@using System.Globalization
+@using QuroErp.Web.Auth
+@using QuroErp.Web.Common
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* Top bar (app-shell.md 2), items 1-7 in order. Language and logout are plain forms, as the layout is not interactive. *@
+<header class="shell-top" data-testid="shell-top">
+    <button type="button" class="shell-top-icon shell-menu-toggle" aria-label="@L["Shell.Menu.Open"]" aria-controls="shell-nav"
+            aria-expanded="false" data-shell-toggle data-testid="shell-menu-toggle">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+    </button>
+    <a class="shell-logo" href="/" data-testid="shell-logo">
+        <img src="@Assets["img/quro-logo-white.png"]" alt="@L["Shell.ProductName"]" width="118" height="24" />
+    </a>
+    <span class="shell-spacer"></span>
+    @if (Profile?.Me.CompanyName is { } company)
+    {
+        <span class="shell-company shell-wide" data-testid="shell-company">@company</span>
+    }
+    <form class="shell-language" method="post" action="@WebLocalization.CulturePath">
+        <AntiforgeryToken />
+        <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+        <label class="shell-visually-hidden" for="shell-language">@L["Common.Language"]</label>
+        <select id="shell-language" name="culture" data-shell-language data-testid="shell-language">
+            @foreach (var culture in Languages)
+            {
+                <option value="@culture" lang="@culture" selected="@(culture == CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)">
+                    @LanguageName(culture)
+                </option>
+            }
+        </select>
+        <noscript><button type="submit">@L["Common.Language"]</button></noscript>
+    </form>
+    @if (Role is { } role)
+    {
+        <span class="shell-role shell-wide" data-testid="shell-role">@role</span>
+    }
+    <UserMenu Company="@Profile?.Me.CompanyName" Role="@Role" />
+    <form class="shell-logout" method="post" action="@WebAuthentication.LogoutPath">
+        <AntiforgeryToken />
+        <button type="submit" class="shell-top-icon" aria-label="@L["Shell.Logout"]" title="@L["Shell.Logout"]" data-testid="shell-logout">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10" /></svg>
+        </button>
+    </form>
+</header>
+
+@code {
+    /// <summary>The signed-in user's shell data; null when the Api could not be reached.</summary>
+    [Parameter]
+    public ShellProfile? Profile { get; set; }
+
+    // Role name, or the role code while roles have no name (app-shell.md 2 item 5)
+    private string? Role => Profile?.Me.RoleName ?? Profile?.Me.RoleCode;
+
+    private IReadOnlyList<string> Languages => Profile?.Languages ?? WebLocalization.Cultures;
+
+    private string ReturnUrl => "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+
+    private string LanguageName(string culture) =>
+        L[$"Common.Language.{culture}"] is { ResourceNotFound: false } name ? name.Value : culture;
+}

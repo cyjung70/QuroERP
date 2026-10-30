@@ -370,4 +370,24 @@
   <data name="SD-E-903" xml:space="preserve"><value>Major code {0} has Minor codes and cannot be deleted. Delete its Minor codes first, or set it not in use.</value></data>
   <data name="SD-E-904" xml:space="preserve"><value>Major code {0} is used by the system and cannot be deleted or set not in use.</value></data>
   <data name="MM-E-821" xml:space="preserve"><value>Choose one JPEG file of 10 MB or less for an existing item.</value></data>
+  <data name="Shell.ProductName" xml:space="preserve"><value>QuroERP</value></data>
+  <data name="Shell.Menu.Label" xml:space="preserve"><value>Menu</value></data>
+  <data name="Shell.Menu.Open" xml:space="preserve"><value>Open menu</value></data>
+  <data name="Shell.Menu.Empty" xml:space="preserve"><value>No menus are available.</value></data>
+  <data name="Shell.Menu.Collapse" xml:space="preserve"><value>Collapse menu</value></data>
+  <data name="Shell.Menu.Expand" xml:space="preserve"><value>Expand menu</value></data>
+  <data name="Shell.Logout" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Menu.G1BA" xml:space="preserve"><value>Master Data</value></data>
+  <data name="Menu.G2MM" xml:space="preserve"><value>Purchasing &amp; Inventory</value></data>
+  <data name="Menu.G3SD" xml:space="preserve"><value>Sales</value></data>
+  <data name="Menu.G4RP" xml:space="preserve"><value>Reports</value></data>
+  <data name="Menu.G5AD" xml:space="preserve"><value>Administration</value></data>
+  <data name="Menu.G1BA01" xml:space="preserve"><value>Items</value></data>
+  <data name="Menu.G1BA02" xml:space="preserve"><value>Codes</value></data>
+  <data name="Menu.G1BA03" xml:space="preserve"><value>Major Codes</value></data>
+  <data name="Menu.G5AD01" xml:space="preserve"><value>Company</value></data>
+  <data name="Menu.G5AD02" xml:space="preserve"><value>Currencies</value></data>
+  <data name="Menu.G5AD03" xml:space="preserve"><value>Users</value></data>
+  <data name="Menu.G5AD04" xml:space="preserve"><value>Menus</value></data>
+  <data name="Menu.G5AD05" xml:space="preserve"><value>Role Menus</value></data>
 </root>

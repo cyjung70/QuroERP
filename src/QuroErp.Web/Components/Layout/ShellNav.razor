@@ -1,0 +1,93 @@
+@inject IStringLocalizer<SharedResource> L
+
+@* Side menu (app-shell.md 3). Groups fold and the menu collapses to icons in js/quro.js (quroShell), which keeps both in
+   localStorage; the group of the current screen always opens. *@
+<nav id="shell-nav" class="shell-nav" aria-label="@L["Shell.Menu.Label"]" data-shell-nav data-testid="shell-nav">
+    @if (_groups.Count == 0)
+    {
+        <p class="shell-nav-empty" data-testid="shell-nav-empty">@L["Shell.Menu.Empty"]</p>
+    }
+    else
+    {
+        <ul class="shell-nav-groups">
+            @foreach (var group in _groups)
+            {
+                var id = Id(group.MenuCode);
+                <li class="shell-nav-group" data-shell-group="@group.MenuCode" data-current="@(group.Current ? "true" : null)"
+                    data-testid="shell-nav-group-@id">
+                    <button type="button" class="shell-nav-group-title" aria-expanded="true" aria-controls="shell-nav-links-@id" data-shell-group-toggle>
+                        <svg class="shell-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="@Icon(group.MenuCode)" /></svg>
+                        <span class="shell-nav-label">@Name(group.MenuCode, group.Name)</span>
+                        <svg class="shell-nav-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                    </button>
+                    <ul id="shell-nav-links-@id" class="shell-nav-links">
+                        @foreach (var entry in group.Entries)
+                        {
+                            if (entry.Link is { } link)
+                            {
+                                <li>@LinkTo(link)</li>
+                            }
+                            else
+                            {
+                                <li class="shell-nav-heading">
+                                    <span class="shell-nav-heading-title">@Name(entry.HeadingCode!, entry.HeadingName)</span>
+                                    <ul>
+                                        @foreach (var headingLink in entry.HeadingLinks)
+                                        {
+                                            <li>@LinkTo(headingLink)</li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+    }
+    <button type="button" class="shell-nav-collapse" aria-pressed="false" aria-label="@L["Shell.Menu.Collapse"]"
+            data-collapse-label="@L["Shell.Menu.Collapse"]" data-expand-label="@L["Shell.Menu.Expand"]" data-shell-collapse
+            data-testid="shell-nav-collapse">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+    </button>
+</nav>
+<div class="shell-nav-backdrop" data-shell-backdrop hidden></div>
+
+@code {
+    // Icons of the default groups (app-shell.md 3.1); other groups get a folder
+    private static readonly Dictionary<string, string> GroupIcons = new(StringComparer.Ordinal)
+    {
+        ["G1BA"] = "M4 7l8-4 8 4-8 4-8-4zM4 7v10l8 4 8-4V7M12 11v10",
+        ["G2MM"] = "M6 6h15l-2 8H8L6 3H3M9 20a1 1 0 100-2 1 1 0 000 2M18 20a1 1 0 100-2 1 1 0 000 2",
+        ["G3SD"] = "M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6",
+        ["G4RP"] = "M4 20V11M10 20V4M16 20v-7M2 20h20",
+        ["G5AD"] = "M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4",
+    };
+
+    private const string FolderIcon = "M3 6h6l2 2h10v11H3z";
+
+    private IReadOnlyList<ShellNavGroup> _groups = [];
+
+    /// <summary>The signed-in user's shell data; null when the Api could not be reached (an empty menu).</summary>
+    [Parameter]
+    public ShellProfile? Profile { get; set; }
+
+    /// <summary>Path of the open screen, e.g. /bc/item.</summary>
+    [Parameter]
+    public string CurrentPath { get; set; } = "/";
+
+    protected override void OnParametersSet() =>
+        _groups = Profile is null ? [] : ShellMenuTree.Build(Profile.Me.Menus, CurrentPath);
+
+    private RenderFragment LinkTo(ShellNavLink link) =>
+        @<a class="shell-nav-link" href="@link.Path" aria-current="@(link.Current ? "page" : null)"
+            data-testid="shell-nav-item-@Id(link.MenuCode)">@Name(link.MenuCode, link.Name)</a>;
+
+    // Menu.<menu_code> resource, else the stored name (menu name rule)
+    private string Name(string menuCode, string? stored) =>
+        L[$"Menu.{menuCode}"] is { ResourceNotFound: false } name ? name.Value : stored ?? menuCode;
+
+    private static string Id(string menuCode) => menuCode.ToLowerInvariant();
+
+    private static string Icon(string menuCode) => GroupIcons.GetValueOrDefault(menuCode, FolderIcon);
+}

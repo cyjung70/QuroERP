@@ -74,6 +74,11 @@ internal sealed class FakeAppUserRepository : IAppUserRepository
     public Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<AuthMenu>>(Menus);
 
+    public string? CompanyName { get; set; }
+
+    public Task<string?> FindCompanyNameAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+        Task.FromResult(CompanyName);
+
     /// <summary>The user after ChangePasswordAsync: AppUser has init-only properties, so a copy replaces it.</summary>
     internal static AppUser WithNewPassword(AppUser u, string passwordHash, DateTimeOffset now) => new()
     {

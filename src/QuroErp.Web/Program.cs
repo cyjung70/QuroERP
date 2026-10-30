@@ -1,6 +1,7 @@
 using QuroErp.Web.Auth;
 using QuroErp.Web.Common;
 using QuroErp.Web.Components;
+using QuroErp.Web.Components.Layout;
 using QuroErp.Web.Components.Pages.Samples;
 using QuroErp.Web.Components.Screens;
 
@@ -19,6 +20,10 @@ builder.Services.AddWebLocalization();
 
 // Screen type components (screens.md)
 builder.Services.AddScoped<IQuroConfirm, JsQuroConfirm>();
+
+// App shell: top bar and side menu from /me (app-shell.md)
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ShellProfileLoader>();
 if (builder.Environment.IsDevelopment())
 {
     // In-memory data of the screen type sample pages (/samples/*)

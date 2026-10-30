@@ -15,9 +15,11 @@
         margin: 0.25rem 0 0;
         padding: 0.25rem 0;
         list-style: none;
-        background: #fff;
-        border: 1px solid #ccc;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        background: var(--q-surface-0);
+        color: var(--q-ink);
+        border: 1px solid var(--q-line);
+        border-radius: var(--q-radius-panel);
+        box-shadow: var(--q-shadow-dialog);
     }
 
     .user-menu li a,
@@ -36,5 +38,18 @@
 
         .user-menu li a:hover,
         .user-menu li button:hover {
-            background: #f0f0f0;
+            background: var(--q-brand-tint);
         }
+
+    .user-menu .user-menu-info {
+        padding: 0.375rem 0.75rem;
+        color: var(--q-ink-muted);
+        border-bottom: 1px solid var(--q-line);
+    }
+
+/* The top bar shows company and role from 768px (app-shell.md 2) */
+@media (min-width: 768px) {
+    .user-menu .user-menu-narrow {
+        display: none;
+    }
+}
