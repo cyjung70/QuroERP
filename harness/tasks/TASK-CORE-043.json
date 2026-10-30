@@ -1,0 +1,32 @@
+{
+  "id": "TASK-CORE-043",
+  "project": "core",
+  "title": "F 화면 공통 컴포넌트 `QuroFreeForm`과 샘플",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/screens.md",
+    "docs/architecture/app-shell.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-040"
+  ],
+  "acceptance": [
+    "`QuroFreeForm`: `Title`이 있으면 타이틀바, 메시지 한 줄(`Error`·`Notice`), `ChildContent` 본문. 커맨드바·조회 조건·감사 정보·변경 감지 없음 (screen-templates.md 5장)",
+    "본문 공통 클래스 `panel`·`btn`·`chip`과 토큰만. 768px 미만 한 열",
+    "홈(`/`)이 이미 있으면 `QuroFreeForm`으로 감싼다. 로그인은 셸 밖 정적 SSR이라 바꾸지 않는다",
+    "샘플 `/samples/free-form`(타이틀바·카드·흐름 단계)과 bUnit 테스트: 타이틀 없을 때 타이틀바 없음, 메시지 표시. 1280px·375px 화면 확인"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

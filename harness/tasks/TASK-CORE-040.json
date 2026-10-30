@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-040",
+  "project": "core",
+  "title": "S·M·MM 공통 화면 프레임: 타이틀바·커맨드바·감사 정보",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/screens.md",
+    "docs/architecture/entry-frame.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-031",
+    "TASK-CORE-034"
+  ],
+  "acceptance": [
+    "`QuroScreenFrame`을 screen-templates.md 0장 틀로 바꾼다: 타이틀바(경로·화면 이름·S의 레코드 코드 mono·상태 칩) → 메시지 한 줄 → 커맨드바 패널 → 조회 조건 → 본문 → 감사 정보(S만)",
+    "커맨드바: 표준 버튼 순서 그대로, 저장만 `brand` 채움, 삭제 `danger` 글자색, 구분선 뒤 `ExtraCommands` 자리. 막힌 버튼은 비활성화",
+    "`QuroSingleForm`·`QuroMultiGrid`·`QuroMasterMultiDetail`이 새 틀을 쓴다. 이미 만든 화면은 매개변수를 한 번에 고친다. `data-testid`는 바꾸지 않고 `title`·`audit`를 더한다",
+    "간격·색·글꼴은 디자인 토큰만 (본문 여백 24px, 영역 사이 16px, 패널 모서리 10px, 버튼·입력 32px)",
+    "탭(MDI)·화면 번호 표시는 만들지 않는다",
+    "샘플 `/samples/single`·`/samples/multi`·`/samples/master-detail`을 새 틀로 바꾸고, bUnit 테스트로 영역 순서·비활성 버튼·감사 정보(S만)를 확인한다. en·ko, 라이트·다크 화면 확인"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
