@@ -186,6 +186,9 @@
   <data name="MM-E-809" xml:space="preserve"><value>Item {0} is not in use and cannot be selected.</value></data>
   <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
   <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
+  <data name="MM-E-901" xml:space="preserve"><value>Price group {0} / item {1}: a price group is up to 5 uppercase characters, and each item appears once in it.</value></data>
+  <data name="MM-E-902" xml:space="preserve"><value>Item {0} does not exist, is not an inventory item, or is not in use.</value></data>
+  <data name="MM-E-903" xml:space="preserve"><value>The purchase price of item {0} must be above 0.</value></data>
   <data name="Bc.Item.Title" xml:space="preserve"><value>Item Master</value></data>
   <data name="Bc.Item.ItemCd" xml:space="preserve"><value>Item Code</value></data>
   <data name="Bc.Item.ItemName" xml:space="preserve"><value>Item Name</value></data>

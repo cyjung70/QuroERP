@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
+using QuroErp.Application.Bc.PurchasePrices;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Bc.Menus;
@@ -21,6 +22,7 @@ using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Infrastructure.Bc.Codes;
 using QuroErp.Infrastructure.Bc.Companies;
 using QuroErp.Infrastructure.Bc.Items;
+using QuroErp.Infrastructure.Bc.PurchasePrices;
 using QuroErp.Infrastructure.Bc.Localization;
 using QuroErp.Infrastructure.Bc.Tax;
 using QuroErp.Infrastructure.Bc.Menus;
@@ -86,6 +88,7 @@ public static class DependencyInjection
         services.AddSingleton<IMenuRepository, MenuRepository>();
         services.AddSingleton<ICodeMajorRepository, CodeMajorRepository>();
         services.AddSingleton<ICodeMinorRepository, CodeMinorRepository>();
+        services.AddSingleton<IPurchasePriceRepository, PurchasePriceRepository>();
         return services;
     }
 }

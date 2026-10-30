@@ -3,6 +3,7 @@ using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Common;
+using QuroErp.Application.Bc.PurchasePrices;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Bc.Menus;
@@ -32,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<CodeService>();
         services.AddScoped<CodeMajorService>();
         services.AddScoped<CodeMinorService>();
+        services.AddScoped<PurchasePriceService>();
         services.AddScoped<CompanyLogoService>();
         services.AddScoped<CompanyService>();
         services.AddScoped<AuthSettingService>();
