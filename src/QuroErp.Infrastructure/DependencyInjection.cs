@@ -67,6 +67,7 @@ public static class DependencyInjection
         services.AddSingleton<ICompanyRepository, CompanyRepository>();
         services.AddSingleton<ILocalizationRepository, LocalizationRepository>();
         services.AddSingleton<ILocalizationSettingRepository, LocalizationSettingRepository>();
+        services.AddSingleton<ICurrencyRepository, CurrencyRepository>();
         services.AddSingleton<IInventorySettingRepository, InventorySettingRepository>();
         services.AddSingleton<IItemRepository, ItemRepository>();
         services.AddSingleton<IUserProfileRepository, UserProfileRepository>();
