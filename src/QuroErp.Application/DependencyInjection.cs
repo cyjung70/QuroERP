@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<AuthSettingService>();
         services.AddScoped<LocalizationService>();
         services.AddScoped<LocalizationSettingService>();
+        services.AddScoped<CurrencyService>();
         services.AddScoped<InventorySettingService>();
         services.AddScoped<ItemService>();
         services.AddScoped<ItemImageService>();

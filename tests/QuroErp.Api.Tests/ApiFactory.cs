@@ -10,6 +10,7 @@ using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Application.Bc.Items;
+using QuroErp.Api.Tests.Bc.Localization;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Api.Tests.Bc.Codes;
 using QuroErp.Api.Tests.Bc.Menus;
@@ -104,6 +105,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Major codes of Major code management (BC-UC-023). Their names come through the translation fake.</summary>
     public InMemoryCodeMajorRepository CodeMajors { get; } = new();
 
+    /// <summary>Currencies of currency management (BC-UC-026). Their names come through the translation fake.</summary>
+    public InMemoryCurrencyRepository Currencies { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -141,7 +145,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IPasswordHistoryRepository>(PasswordHistory);
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
-            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors));
+            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors, Currencies));
             services.AddSingleton<ICompanyRepository>(Companies);
             services.AddSingleton<ILocalizationRepository>(Localization);
             services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
@@ -152,6 +156,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IMenuRepository>(Menus);
             services.AddSingleton<ICodeMinorRepository>(CodeMinors);
             services.AddSingleton<ICodeMajorRepository>(CodeMajors);
+            services.AddSingleton<ICurrencyRepository>(Currencies);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
@@ -362,14 +367,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 : ItemCodes.TryGetValue(majorCode, out var minors) && minors.Contains(minorCode));
     }
 
-    private sealed class FakeTranslationRepository(InMemoryCodeMinorRepository codeMinors, InMemoryCodeMajorRepository codeMajors) : ITranslationRepository
+    private sealed class FakeTranslationRepository(
+        InMemoryCodeMinorRepository codeMinors, InMemoryCodeMajorRepository codeMajors, InMemoryCurrencyRepository currencies) : ITranslationRepository
     {
         private static readonly List<TranslationRow> Rows =
         [
             new(1, "ko", "사용"), new(1, "en", "Used"),
             new(2, "ko", "사용 안 함"), new(2, "en", "Not Used"),
-            new(101, "ko", "대한민국 원"), new(101, "en", "Korean Won"),
-            new(102, "en", "US Dollar"),
         ];
 
         public Task<IReadOnlyList<TranslationRow>> FindAsync(
@@ -377,6 +381,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             Task.FromResult<IReadOnlyList<TranslationRow>>(Rows.Where(r => ownerIds.Contains(r.OwnerId))
                 .Concat(target == TranslationTarget.CodeMinor ? codeMinors.NamesOf(ownerIds) : [])
                 .Concat(target == TranslationTarget.CodeMajor ? codeMajors.NamesOf(ownerIds) : [])
+                .Concat(target == TranslationTarget.CurrencyName ? currencies.NamesOf(ownerIds) : [])
                 .ToList());
     }
 
