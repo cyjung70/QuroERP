@@ -24,7 +24,7 @@
     },
     {
       "path": ".agents/skills/quro-grid/SKILL.md",
-      "sha256": "051b5eeb6e8a8a079a048ae211140ca83ce4de5f6dd20a41083cb13ce2b6e730"
+      "sha256": "e82d086572db3674772674311051505103a3e943d4b6d35bcfdad3b4a096359d"
     },
     {
       "path": ".agents/skills/quro-pytest/SKILL.md",
@@ -56,7 +56,7 @@
     },
     {
       "path": ".claude/skills/quro-grid/SKILL.md",
-      "sha256": "051b5eeb6e8a8a079a048ae211140ca83ce4de5f6dd20a41083cb13ce2b6e730"
+      "sha256": "e82d086572db3674772674311051505103a3e943d4b6d35bcfdad3b4a096359d"
     },
     {
       "path": ".claude/skills/quro-pytest/SKILL.md",
@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/architecture/qurogrid-integration.md",
-      "sha256": "51b9a2d0632801fcf613f240be966df6bdd2bdfcc6d6f96aac7b2c2d26dc4144"
+      "sha256": "808dbb00e3b94260d537cae1ccd47f73eb04bc5c7a82023e2c3dc0e88a27f0ca"
     },
     {
       "path": "docs/architecture/reports.md",
@@ -1205,6 +1205,10 @@
     {
       "path": "harness/tasks/TASK-CORE-029.json",
       "sha256": "8c8ce2d07f8b2aa76604960e9ce7cdb1d71af8593a26b5d756f99b66e9a7c34d"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-030.json",
+      "sha256": "b037599d240c96672e1d2ebb2cf74da409d33e823f8e131755eec08df034d44e"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
