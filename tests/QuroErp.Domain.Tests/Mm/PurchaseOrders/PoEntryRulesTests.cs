@@ -155,6 +155,13 @@ public class PoEntryRulesTests
         CodeOf(() => Calc(Header("EUR"), lines: Line())).Should().Be(AmountRounder.UnknownCurrencyCode);
     }
 
+    [Fact, Trait("Id", "BC-UT-412")]
+    public void Currency_RateHasAtMost10Decimals()
+    {
+        Calc(Header("KRW", D("0.0007407407")), lines: Line(price: 135000m)).Totals.TotBaseAmt.Should().Be(D("1100.00"));
+        CodeOf(() => Calc(Header("KRW", D("0.00074074074")), lines: Line())).Should().Be(DecimalPolicy.TooManyDecimalsCode);
+    }
+
     [Fact]
     public void TaxCode_NotInUse_IsRequired()
     {

@@ -31,5 +31,5 @@
     "단위 테스트: KR 회사 USD 100 × 1350 = 135,000원, US 회사 KRW 135,000 × 0.0007407407 = USD 100.00"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

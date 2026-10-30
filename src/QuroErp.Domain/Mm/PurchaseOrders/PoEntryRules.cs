@@ -61,7 +61,7 @@ public static class PoEntryRules
     /// Checks the header and lines and computes every amount. Lines are numbered 1..n in the order given.
     /// </summary>
     /// <param name="previousCurrencyCode">Currency of the stored order when it already has lines (MM-BR-031), else null.</param>
-    /// <exception cref="DomainException">MM-E-011, 012, 014, 025, 026, 027, 031; Common-E-005; BC-E-412 for an unknown currency.</exception>
+    /// <exception cref="DomainException">MM-E-011, 012, 014, 025, 026, 027, 031; Common-E-005; BC-E-412 for an unknown currency; BC-E-423 for a rate with more than 10 decimals.</exception>
     public static (IReadOnlyList<PurchaseOrderLine> Lines, PurchaseOrderTotals Totals) Calculate(
         PurchaseOrderHeader header, IReadOnlyList<PurchaseOrderLineInput> lines, string? previousCurrencyCode,
         PurchaseOrderMasters masters, PurchaseOrderSettings settings, IAmountRounder rounder)
@@ -89,7 +89,7 @@ public static class PoEntryRules
         var sums = PoCalculator.CalcTotals(poLines, decimals, settings.RoundingMode);
         var totals = new PurchaseOrderTotals(
             sums.Subtotal, sums.Discount, tax.SupplyAmt, tax.TaxAmt, tax.TotalAmt,
-            rounder.Round(tax.TotalAmt * header.ExchangeRate, settings.BaseCurrencyCode, settings.RoundingMode));
+            ExchangeRate.BaseAmount(tax.TotalAmt, header.ExchangeRate, settings.BaseCurrencyCode, rounder, settings.RoundingMode));
         return (computed, totals);
     }
 
@@ -112,6 +112,7 @@ public static class PoEntryRules
         {
             throw new DomainException(CurrencyCode, header.CurrencyCode, header.ExchangeRate);
         }
+        ExchangeRate.EnsureDecimals(header.ExchangeRate, "exchangeRate");
         if (header.Incoterms is not null && !IncotermsCodes.Contains(header.Incoterms))
         {
             throw new DomainException(IncotermsCode, header.Incoterms);
