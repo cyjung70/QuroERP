@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/architecture/localization.md",
-      "sha256": "b2007404a0cc7581d65780a78b2e8dd38aecefcad3a7a08658cf354dcd7b7366"
+      "sha256": "8dfe4b37fe56732fd1ae29e1dd97636a20aeb389f8cd33678c8db9717bd2d31d"
     },
     {
       "path": "docs/architecture/login.md",
@@ -428,7 +428,7 @@
     },
     {
       "path": "docs/specifications/BC/localization-setting.md",
-      "sha256": "011b3fa0340f1689ca8c87837c8c716e9da0eb566bdec7198110b409ebba4fbf"
+      "sha256": "cbfbc3ff7c0496f92d3a753f2b7371ffa433df426b1c502cd2cd9f5e23c26d25"
     },
     {
       "path": "docs/specifications/BC/login.md",
@@ -1204,7 +1204,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-024.json",
-      "sha256": "246d0c33e0cd85595d2773f3c78d253ecf0ae98edf99a97aa4db7a8654ee24e3"
+      "sha256": "cc0c6c95b09740e87ecb1f1a9a8df7936f4d93022966743786b7035afae20090"
     },
     {
       "path": "harness/tasks/TASK-CORE-025.json",
