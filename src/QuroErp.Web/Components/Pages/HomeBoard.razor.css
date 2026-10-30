@@ -1,0 +1,143 @@
+/* Home phase 1 (app-shell.md 6): tokens only, solid brand icons, flows vertical below 768px */
+.home {
+    display: flex;
+    flex-direction: column;
+    gap: var(--q-panel-gap);
+    max-width: 72rem;
+}
+
+.home-welcome h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--q-ink);
+}
+
+.home-welcome p {
+    margin: 0.25rem 0 0;
+    color: var(--q-ink-muted);
+}
+
+.home-panel {
+    padding: var(--q-panel-pad);
+    background: var(--q-surface-0);
+    border: 1px solid var(--q-line);
+    border-radius: var(--q-radius-panel);
+}
+
+    .home-panel h2 {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+        color: var(--q-ink);
+    }
+
+.home-flow,
+.home-link-list {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+    .home-flow > li,
+    .home-link-list > li {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Arrow between flow steps */
+    .home-flow > li + li {
+        position: relative;
+    }
+
+        .home-flow > li + li::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: -0.6rem;
+            width: 0.45rem;
+            height: 0.45rem;
+            border-top: 2px solid var(--q-line);
+            border-right: 2px solid var(--q-line);
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+.home-links {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--q-panel-gap);
+}
+
+.home-step {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    height: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--q-line);
+    border-radius: var(--q-radius-panel);
+    color: var(--q-ink);
+    text-decoration: none;
+}
+
+a.home-step:hover,
+a.home-step:focus-visible {
+    border-color: var(--q-brand);
+    background: var(--q-brand-tint);
+}
+
+.home-step-icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--q-brand);
+    color: var(--q-on-brand);
+    font-weight: 600;
+}
+
+.home-step-name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+}
+
+.home-step[aria-disabled="true"] {
+    background: var(--q-surface-2);
+    color: var(--q-ink-muted);
+    cursor: default;
+}
+
+    .home-step[aria-disabled="true"] .home-step-icon {
+        background: var(--q-ink-muted);
+        color: var(--q-surface-0);
+    }
+
+.home-step-badge {
+    flex: none;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--q-radius-chip);
+    background: var(--q-neutral-tint);
+    color: var(--q-ink-muted);
+    font-size: 0.75rem;
+}
+
+@media (max-width: 767.98px) {
+    .home-flow,
+    .home-link-list {
+        flex-direction: column;
+    }
+
+        .home-flow > li + li::before {
+            top: -0.55rem;
+            left: 1.4rem;
+            transform: translateY(-50%) rotate(135deg);
+        }
+
+    .home-links {
+        grid-template-columns: 1fr;
+    }
+}

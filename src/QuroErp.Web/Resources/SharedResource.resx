@@ -238,7 +238,6 @@
   <data name="Common.LastLogin" xml:space="preserve"><value>직전 로그인: {0} (IP {1})</value></data>
   <data name="Common.Session.ExpiringSoon" xml:space="preserve"><value>사용하지 않아 2분 뒤 로그아웃됩니다. 계속 사용하려면 로그인 유지를 누르세요.</value></data>
   <data name="Common.Session.Extend" xml:space="preserve"><value>로그인 유지</value></data>
-  <data name="Common.Home.Welcome" xml:space="preserve"><value>{0}님, 환영합니다.</value></data>
   <data name="Common.UserMenu" xml:space="preserve"><value>사용자 메뉴</value></data>
   <data name="Common.MyInfo" xml:space="preserve"><value>내 정보</value></data>
   <data name="Bc.User.Title" xml:space="preserve"><value>사용자 관리</value></data>
@@ -395,4 +394,24 @@
   <data name="Role.admin" xml:space="preserve"><value>관리자</value></data>
   <data name="Role.manager" xml:space="preserve"><value>매니저</value></data>
   <data name="Role.srep" xml:space="preserve"><value>영업 담당</value></data>
+  <data name="Home.Welcome" xml:space="preserve"><value>{0}님, 환영합니다.</value></data>
+  <data name="Home.Flow.Purchase" xml:space="preserve"><value>구매 흐름</value></data>
+  <data name="Home.Flow.Sales" xml:space="preserve"><value>판매 흐름</value></data>
+  <data name="Home.Links.Master" xml:space="preserve"><value>기준정보</value></data>
+  <data name="Home.Links.Settings" xml:space="preserve"><value>설정</value></data>
+  <data name="Home.Step.PurchaseOrder" xml:space="preserve"><value>발주</value></data>
+  <data name="Home.Step.GoodsReceipt" xml:space="preserve"><value>입고</value></data>
+  <data name="Home.Step.SupplierInvoice" xml:space="preserve"><value>공급자 송장</value></data>
+  <data name="Home.Step.ApPayment" xml:space="preserve"><value>지급</value></data>
+  <data name="Home.Step.SalesOrder" xml:space="preserve"><value>수주</value></data>
+  <data name="Home.Step.Shipment" xml:space="preserve"><value>출하</value></data>
+  <data name="Home.Step.SalesInvoice" xml:space="preserve"><value>매출 송장</value></data>
+  <data name="Home.Step.ArReceipt" xml:space="preserve"><value>입금</value></data>
+  <data name="Home.Link.Item" xml:space="preserve"><value>품목</value></data>
+  <data name="Home.Link.Customer" xml:space="preserve"><value>고객</value></data>
+  <data name="Home.Link.Vendor" xml:space="preserve"><value>공급자</value></data>
+  <data name="Home.Link.Stock" xml:space="preserve"><value>재고 현황</value></data>
+  <data name="Home.Link.Company" xml:space="preserve"><value>회사 정보</value></data>
+  <data name="Home.NoPermission" xml:space="preserve"><value>이 화면을 열 권한이 없습니다.</value></data>
+  <data name="Home.NotReady" xml:space="preserve"><value>2단계</value></data>
 </root>

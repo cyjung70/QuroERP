@@ -2,26 +2,39 @@
 @using System.Globalization
 @using System.Security.Claims
 @using QuroErp.Web.Auth
+@using QuroErp.Web.Components.Layout
+@inject ShellProfileLoader Profiles
 @inject IStringLocalizer<SharedResource> L
 
-@* Main screen. Shows the previous sign-in time and IP (login.md "로그인 처리" 11) *@
+@* Home phase 1 (app-shell.md 6), screen type F: welcome with the previous sign-in time and IP (login.md "로그인 처리" 11), the
+   purchase and sales flows and the shortcuts. Rendered on the server; the menus come from /me, read once with the shell. *@
 
 <PageTitle>QuroERP</PageTitle>
 
 <AuthorizeView>
     <Authorized>
-        <h1>@L["Common.Home.Welcome", context.User.Identity?.Name ?? ""]</h1>
-        @if (LastLogin(context.User) is { } last)
-        {
-            <p data-testid="home-last-login">@L["Common.LastLogin", last.At, last.Ip]</p>
-        }
+        <HomeBoard UserName="@(_profile?.Me.UserName ?? context.User.Identity?.Name)" LastLogin="@LastLogin(context.User)"
+                   Menus="@(_profile?.Me.Menus ?? [])" />
     </Authorized>
 </AuthorizeView>
 
 @code {
-    // Shown in the server's local time [추정] until a user time zone exists
-    private static (string At, string Ip)? LastLogin(ClaimsPrincipal user) =>
+    private ShellProfile? _profile;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContext is not null && Profiles.ShowsShell(HttpContext))
+        {
+            _profile = await Profiles.LoadAsync(HttpContext, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, HttpContext.RequestAborted);
+        }
+    }
+
+    // Shown in the server's local time [추정] until the company time zone reaches the Web (app-shell.md 6)
+    private string? LastLogin(ClaimsPrincipal user) =>
         DateTimeOffset.TryParse(user.FindFirst(WebAuthClaims.LastLoginAt)?.Value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var at)
-            ? (at.ToLocalTime().ToString("g", CultureInfo.CurrentCulture), user.FindFirst(WebAuthClaims.LastLoginIp)?.Value ?? "-")
+            ? L["Common.LastLogin", at.ToLocalTime().ToString("g", CultureInfo.CurrentCulture), user.FindFirst(WebAuthClaims.LastLoginIp)?.Value ?? "-"].Value
             : null;
 }
