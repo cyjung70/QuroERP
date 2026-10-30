@@ -4,7 +4,7 @@
 
 @if (Radio)
 {
-    <fieldset class="quro-field quro-radio" data-testid="@TestId" aria-required="@(IsRequiredNow ? "true" : null)">
+    <fieldset class="@FieldClass("quro-radio")" data-testid="@TestId" aria-required="@(IsRequiredNow ? "true" : null)">
         <legend class="@(HideLabel ? "quro-visually-hidden" : null)">
             @Label@if (IsRequiredNow)
             {
@@ -24,7 +24,7 @@
 }
 else
 {
-    <div class="quro-field">
+    <div class="@FieldClass()">
         <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
         @* A select has no readonly attribute; disabled keeps a locked value from changing *@
         <select id="@InputId" disabled="@IsLocked" aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync">

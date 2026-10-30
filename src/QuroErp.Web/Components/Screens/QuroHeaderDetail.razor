@@ -1,40 +1,158 @@
-@* Screen type SM: search conditions → header form → line grid → saved together (screens.md). *@
+@* Screen type SM: the entry frame (entry-frame.md) — title bar → command bar (File | Rows | Status | Output) →
+   4-column header + totals panel → line grid → audit. Header and lines are saved together (screens.md).
+   There is no search area: Search (F3) opens a document search dialog. *@
 @typeparam THeader where THeader : class
 @typeparam TLine where TLine : class
 @inherits QuroScreenBase
+@implements IAsyncDisposable
+@inject IJSRuntime Js
 
-<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
-                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
-    <Toolbar>
-        <QuroToolbar TestId="@TestId" Busy="Busy" CanDelete="!_form.IsNew"
-                     OnSearch="SearchAsync" OnNew="NewAsync" OnSave="SaveAsync"
-                     OnDelete="@(Delete is null ? default : EventCallback.Factory.Create(this, DeleteAsync))"
-                     OnPrint="OnPrint" />
-    </Toolbar>
-    <ChildContent>
+<section class="quro-entry" data-testid="@TestId">
+    <NavigationLock ConfirmExternalNavigation="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync" />
+
+    @* ① Title bar *@
+    <header class="quro-entry-title" data-testid="@Id("title")">
+        @if (Path is not null)
+        {
+            <div class="quro-entry-path">@Path</div>
+        }
+        <div class="quro-entry-title-row">
+            <h1>@Title</h1>
+            @if (_form.IsNew)
+            {
+                <span class="quro-entry-new" data-testid="@Id("doc-no")">@L["Common.NewDocument"]</span>
+            }
+            else
+            {
+                <span class="quro-entry-doc-no" data-testid="@Id("doc-no")">@DocumentNo?.Invoke(_header)</span>
+                @if (StatusChip is not null)
+                {
+                    <span class="quro-entry-status" data-testid="@Id("status-chip")">@StatusChip(_header)</span>
+                }
+                @if (Revision?.Invoke(_header) is int revision && revision >= 1)
+                {
+                    <span class="quro-entry-revision" data-testid="@Id("revision")">@L["Common.Revision", revision]</span>
+                }
+            }
+        </div>
+    </header>
+
+    @* One message line under the title bar *@
+    @if (Error is not null)
+    {
+        <p class="quro-entry-message" role="alert" data-level="error" data-testid="@Id("message")">@Error</p>
+    }
+    else if (_warning is not null)
+    {
+        <p class="quro-entry-message" role="alert" data-level="warn" data-testid="@Id("message")">@_warning</p>
+    }
+    else if (Notice is not null)
+    {
+        <p class="quro-entry-message" role="status" data-level="info" data-testid="@Id("message")">@Notice</p>
+    }
+
+    @* ② Command bar: fixed groups in a fixed order. Blocked commands are disabled, never hidden *@
+    <div class="quro-commandbar" role="toolbar" aria-label="@L["Common.Toolbar"]" data-testid="@Id("toolbar")">
+        <div class="quro-commandbar-group" data-group="file">
+            <button type="button" disabled="@Busy" aria-keyshortcuts="F3" data-testid="@Id("toolbar-search")" @onclick="OpenFindAsync">@L["Common.Search"]</button>
+            <button type="button" disabled="@Busy" data-testid="@Id("toolbar-new")" @onclick="NewAsync">@L["Common.New"]</button>
+            <button type="button" class="quro-primary" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+S"
+                    data-testid="@Id("toolbar-save")" @onclick="SaveAsync">@L["Common.Save"]</button>
+        </div>
+        <span class="quro-commandbar-sep" aria-hidden="true"></span>
+        <div class="quro-commandbar-group" data-group="rows">
+            <button type="button" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+Insert"
+                    data-testid="@Id("toolbar-add-row")" @onclick="AddLine">@L["Common.AddRow"]</button>
+            <button type="button" disabled="@(Busy || !CanMarkSelected)" aria-keyshortcuts="Control+Delete"
+                    aria-pressed="@(_selected?.IsDeleted == true ? "true" : "false")"
+                    data-testid="@Id("toolbar-mark-delete")" @onclick="MarkDelete">@L["Common.MarkDelete"]</button>
+            <button type="button" disabled="@(Busy || !CanRestoreSelected)" data-testid="@Id("toolbar-restore-row")" @onclick="RestoreLine">@L["Common.RestoreLine"]</button>
+            @RowCommands?.Invoke(_header)
+        </div>
+        @if (StatusCommands is not null)
+        {
+            <span class="quro-commandbar-sep" aria-hidden="true"></span>
+            <div class="quro-commandbar-group" data-group="status">
+                @StatusCommands(_header)
+            </div>
+        }
+        <span class="quro-commandbar-sep" aria-hidden="true"></span>
+        <div class="quro-commandbar-group" data-group="output">
+            @if (Delete is not null)
+            {
+                <button type="button" class="quro-danger-text" disabled="@(Busy || _form.IsNew || CanDelete?.Invoke(_header) == false)"
+                        data-testid="@Id("toolbar-delete")" @onclick="DeleteAsync">@(DeleteText ?? L["Common.Delete"])</button>
+            }
+            @if (OnPdf.HasDelegate)
+            {
+                <button type="button" disabled="@(Busy || _form.IsNew)" data-testid="@Id("toolbar-pdf")" @onclick="OnPdf">@L["Common.Pdf"]</button>
+            }
+            @if (OnExport.HasDelegate)
+            {
+                <button type="button" disabled="@(Busy || _lines.All.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport">@L["Common.ExportExcel"]</button>
+            }
+        </div>
+    </div>
+
+    @* ③ Header panel (4 columns, Span 1·2·4) + totals panel (320px) *@
+    <div class="quro-entry-top">
         <CascadingValue Value="_form" IsFixed="true">
-            <div class="quro-form" data-testid="@Id("header")">
+            <div class="quro-panel quro-entry-header" data-testid="@Id("header")">
                 @HeaderFields(_header)
             </div>
         </CascadingValue>
-        @if (LineSummary is not null)
+        @if (Totals is not null)
         {
-            <div class="quro-summary" data-testid="@Id("summary")">
-                @LineSummary(ActiveLines)
+            <div class="quro-panel quro-entry-totals" data-testid="@Id("totals")">
+                @Totals(ActiveLines)
             </div>
         }
-        <QuroGrid @ref="_grid" TRow="TLine" Rows="_lines" Columns="LineColumns" Editable="true" Busy="Busy" TestId="@Id("line")"
-                  OnAddRow="AddLine" OnChanged="StateHasChanged" />
-    </ChildContent>
-</QuroScreenFrame>
+    </div>
+
+    @* ④ Line panel *@
+    <div class="quro-panel quro-entry-lines">
+        <div class="quro-entry-lines-head">
+            <h2>@L["Common.Lines"]</h2>
+            <span data-testid="@Id("line-count")">@L["Common.LineCount", ActiveLines.Count]</span>
+            @if (LinesHint?.Invoke(_header) is { } hint)
+            {
+                <span class="quro-hint">@hint</span>
+            }
+        </div>
+        <QuroGrid @ref="_grid" TRow="TLine" Rows="_lines" Columns="LineColumns" Editable="CanSaveNow" EntryMode="true" Busy="Busy"
+                  TestId="@Id("line")" @bind-SelectedRow="_selected" IsRowLocked="IsLineLocked" />
+    </div>
+
+    @* ⑤ Audit: empty for a new document *@
+    <footer class="quro-entry-audit" data-testid="@Id("audit")">
+        @if (!_form.IsNew && Audit?.Invoke(_header) is { } audit)
+        {
+            <dl><dt>@L["Common.Audit.Created"]</dt><dd>@Stamp(audit.CreatedAt, audit.CreatedBy)</dd></dl>
+            <dl><dt>@L["Common.Audit.Updated"]</dt><dd>@Stamp(audit.UpdatedAt, audit.UpdatedBy)</dd></dl>
+        }
+    </footer>
+</section>
+
+<QuroLookupDialog TItem="THeader" Title="@L["Common.FindDocument"]" TestId="@Id("find")" @bind-Visible="_findOpen"
+                  Search="Find" Columns="FindColumns" OnSelected="OpenAsync" />
 
 @code {
     private readonly QuroFormContext _form = new();
     private readonly GridRows<TLine> _lines = new();
     private QuroGrid<TLine>? _grid;
+    private GridRow<TLine>? _selected;
     private THeader _header = default!;
     private string _snapshot = "";
+    private string? _warning;
+    private bool _findOpen;
+    private DotNetObjectReference<QuroHeaderDetail<THeader, TLine>>? _self;
+    private IJSObjectReference? _shortcuts;
 
+    /// <summary>Menu path above the title, e.g. "MM > Purchasing".</summary>
+    [Parameter]
+    public string? Path { get; set; }
+
+    /// <summary>Header fields in a 4-column grid; each field sets <c>Span</c> 1, 2 or 4.</summary>
     [Parameter, EditorRequired]
     public RenderFragment<THeader> HeaderFields { get; set; } = default!;
 
@@ -42,15 +160,28 @@
     [Parameter, EditorRequired]
     public RenderFragment LineColumns { get; set; } = default!;
 
-    /// <summary>Reads the document for the current search conditions; null when there is none.</summary>
-    [Parameter, EditorRequired]
-    public Func<Task<HeaderLines<THeader, TLine>?>> Load { get; set; } = default!;
-
     [Parameter, EditorRequired]
     public Func<THeader> Create { get; set; } = default!;
 
+    /// <summary>A new line for Add Row, with the header values the screen spec copies (e.g. due date, warehouse).</summary>
     [Parameter, EditorRequired]
-    public Func<TLine> CreateLine { get; set; } = default!;
+    public Func<THeader, TLine> CreateLine { get; set; } = default!;
+
+    /// <summary>Documents for the search dialog (F3) by keyword (null = all). Real screens call a Contracts API client.</summary>
+    [Parameter, EditorRequired]
+    public Func<string?, Task<IReadOnlyList<THeader>>> Find { get; set; } = default!;
+
+    /// <summary>QuroColumn declarations of the search dialog (TRow = THeader), e.g. number, date, partner, status.</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment FindColumns { get; set; } = default!;
+
+    /// <summary>Reads the document picked in the search dialog; null when it no longer exists.</summary>
+    [Parameter, EditorRequired]
+    public Func<THeader, Task<HeaderLines<THeader, TLine>?>> Load { get; set; } = default!;
+
+    /// <summary>Opens a document when the screen starts, e.g. from the address /{module}/{screen}/{number}.</summary>
+    [Parameter]
+    public Func<Task<HeaderLines<THeader, TLine>?>>? Initial { get; set; }
 
     /// <summary>
     /// Saves the header (second argument: it is new) with the changed lines in one request and returns the stored document.
@@ -61,43 +192,193 @@
     [Parameter]
     public Func<THeader, Task>? Delete { get; set; }
 
+    /// <summary>Delete button text that says what is deleted, e.g. "Delete PO". Defaults to Common.Delete.</summary>
     [Parameter]
-    public EventCallback OnPrint { get; set; }
+    public string? DeleteText { get; set; }
+
+    [Parameter]
+    public EventCallback OnPdf { get; set; }
+
+    [Parameter]
+    public EventCallback OnExport { get; set; }
+
+    /// <summary>Document number in the title bar (mono).</summary>
+    [Parameter]
+    public Func<THeader, string?>? DocumentNo { get; set; }
+
+    /// <summary>Revision number; "Rev. n" is shown from 1.</summary>
+    [Parameter]
+    public Func<THeader, int>? Revision { get; set; }
+
+    [Parameter]
+    public Func<THeader, QuroAudit?>? Audit { get; set; }
+
+    /// <summary>The status chip right of the document number (a QuroStatusChip). Not shown for a new document.</summary>
+    [Parameter]
+    public RenderFragment<THeader>? StatusChip { get; set; }
+
+    /// <summary>Screen line commands at the end of the Rows group (e.g. import cart). They add lines and never remove them.</summary>
+    [Parameter]
+    public RenderFragment<THeader>? RowCommands { get; set; }
+
+    /// <summary>Status commands (e.g. approve, close, cancel). Without them the Status group is not drawn.</summary>
+    [Parameter]
+    public RenderFragment<THeader>? StatusCommands { get; set; }
+
+    /// <summary>Display-only totals of the lines that will be kept (lines marked for delete left out), usually a QuroTotals.</summary>
+    [Parameter]
+    public RenderFragment<IReadOnlyList<TLine>>? Totals { get; set; }
+
+    /// <summary>Hint next to the line count, e.g. "Select the vendor first".</summary>
+    [Parameter]
+    public Func<THeader, string?>? LinesHint { get; set; }
 
     /// <summary>
-    /// Display-only totals of the lines that will be kept (deleted lines left out), e.g. a total amount.
-    /// Stored totals are calculated by the API.
+    /// False when the status or permission blocks saving a loaded document: save and the row commands are disabled
+    /// and every field is locked. A new document can always be saved.
     /// </summary>
     [Parameter]
-    public RenderFragment<IReadOnlyList<TLine>>? LineSummary { get; set; }
+    public Func<THeader, bool>? CanSave { get; set; }
+
+    [Parameter]
+    public Func<THeader, bool>? CanDelete { get; set; }
+
+    /// <summary>Lines whose cells are all locked, e.g. received PO lines. They cannot be marked for delete.</summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineLocked { get; set; }
 
     public override bool IsDirty => Snapshot.Of(_header) != _snapshot || _lines.IsDirty;
 
+    private bool CanSaveNow => _form.IsNew || CanSave?.Invoke(_header) != false;
+
+    private bool CanMarkSelected => CanSaveNow && _selected is not null && IsLineLocked?.Invoke(_selected.Item) != true;
+
+    private bool CanRestoreSelected => CanSaveNow && _selected is { } row && row.State != RowState.Unchanged;
+
     private IReadOnlyList<TLine> ActiveLines => [.. _lines.All.Where(r => !r.IsDeleted).Select(r => r.Item)];
 
-    protected override void OnInitialized() => StartNew();
-
-    private async Task SearchAsync()
+    /// <summary>
+    /// Runs a status command (approve, close, cancel) on the saved document and shows the stored result.
+    /// A new document or unsaved changes get Common.SaveFirst instead.
+    /// </summary>
+    public async Task RunStatusAsync(Func<THeader, Task<HeaderLines<THeader, TLine>>> action, string? confirmMessage = null)
     {
-        if (!await ConfirmDiscardAsync())
+        _warning = null;
+        if (_form.IsNew || IsDirty)
+        {
+            _warning = L["Common.SaveFirst"];
+            StateHasChanged();
+            return;
+        }
+        if (confirmMessage is not null && !await Confirm.ConfirmAsync(confirmMessage))
         {
             return;
         }
+        await RunAsync(async () => SetLoaded(await action(_header)));
+        StateHasChanged();
+    }
+
+    /// <summary>Keyboard shortcut from quro.js (entry-frame.md 2). A disabled command does nothing.</summary>
+    [JSInvokable]
+    public async Task OnShortcut(string command)
+    {
+        if (Busy || _findOpen)
+        {
+            return;
+        }
+        switch (command)
+        {
+            case "search":
+                await OpenFindAsync();
+                break;
+            case "save" when CanSaveNow:
+                await SaveAsync();
+                break;
+            case "add-row" when CanSaveNow:
+                AddLine();
+                break;
+            case "mark-delete" when CanMarkSelected:
+                MarkDelete();
+                break;
+            default:
+                return;
+        }
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        StartNew();
+        if (Initial is not null)
+        {
+            await RunAsync(async () =>
+            {
+                if (await Initial() is { } document)
+                {
+                    SetLoaded(document);
+                }
+                else
+                {
+                    Notice = L["Common.NoData"];
+                }
+            });
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _self = DotNetObjectReference.Create(this);
+            _shortcuts = await Js.InvokeAsync<IJSObjectReference?>("quroEntryShortcuts", _self);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_shortcuts is not null)
+        {
+            try
+            {
+                await _shortcuts.InvokeVoidAsync("dispose");
+                await _shortcuts.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // The circuit is gone, and the listener with the page
+            }
+        }
+        _self?.Dispose();
+    }
+
+    private async Task OpenFindAsync()
+    {
+        _warning = null;
+        if (await ConfirmDiscardAsync())
+        {
+            _findOpen = true;
+        }
+    }
+
+    private async Task OpenAsync(THeader picked)
+    {
         await RunAsync(async () =>
         {
-            var loaded = await Load();
-            if (loaded is null)
+            if (await Load(picked) is { } document)
+            {
+                SetLoaded(document);
+            }
+            else
             {
                 StartNew();
                 Notice = L["Common.NoData"];
-                return;
             }
-            SetLoaded(loaded);
         });
     }
 
     private async Task NewAsync()
     {
+        _warning = null;
         if (await ConfirmDiscardAsync())
         {
             Error = null;
@@ -106,10 +387,40 @@
         }
     }
 
-    private void AddLine() => _lines.Add(CreateLine());
+    // A new line goes below the selected line and becomes the selected line
+    private void AddLine()
+    {
+        _warning = null;
+        _selected = _lines.InsertAfter(_selected, CreateLine(_header));
+    }
+
+    // Toggle: a saved line is marked (and unmarked), a new line is removed at once
+    private void MarkDelete()
+    {
+        _warning = null;
+        _lines.ToggleDelete(_selected!);
+        DropSelectionIfRemoved();
+    }
+
+    // Loaded values back; a new line is removed
+    private void RestoreLine()
+    {
+        _warning = null;
+        _lines.Restore(_selected!);
+        DropSelectionIfRemoved();
+    }
+
+    private void DropSelectionIfRemoved()
+    {
+        if (_selected is not null && !_lines.All.Contains(_selected))
+        {
+            _selected = null;
+        }
+    }
 
     private async Task SaveAsync()
     {
+        _warning = null;
         if (!CheckRequired(_form.FirstMissing(), _grid?.FirstMissing()))
         {
             return;
@@ -123,6 +434,7 @@
 
     private async Task DeleteAsync()
     {
+        _warning = null;
         if (_form.IsNew || !await Confirm.ConfirmAsync(L["Common.ConfirmDelete"]))
         {
             return;
@@ -139,15 +451,23 @@
     {
         _header = Create();
         _form.IsNew = true;
+        _form.ReadOnly = false;
         _snapshot = Snapshot.Of(_header);
         _lines.Clear();
+        _selected = null;
     }
 
     private void SetLoaded(HeaderLines<THeader, TLine> document)
     {
         _header = document.Header;
         _form.IsNew = false;
+        _form.ReadOnly = CanSave?.Invoke(_header) == false;
         _snapshot = Snapshot.Of(_header);
         _lines.Load(document.Lines);
+        _selected = null;
     }
+
+    // Shown in the browser's language format. TODO: user time zone once a user time zone setting exists
+    private static string Stamp(DateTimeOffset? at, string? by) =>
+        string.Join(' ', new[] { at?.ToString("g", System.Globalization.CultureInfo.CurrentCulture), by }.Where(s => !string.IsNullOrEmpty(s)));
 }

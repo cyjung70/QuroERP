@@ -120,6 +120,16 @@ public sealed class SampleStore
         }
     }
 
+    /// <summary>Orders for the document search dialog.</summary>
+    public IReadOnlyList<SampleOrder> FindOrders(string? keyword)
+    {
+        lock (_lock)
+        {
+            return [.. _orders.Where(o => string.IsNullOrWhiteSpace(keyword) || (o.OrderNo?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false))
+                              .OrderBy(o => o.OrderNo).Select(o => o.Copy())];
+        }
+    }
+
     public (SampleOrder Order, IReadOnlyList<SampleLine> Lines)? FindOrder(string? orderNo)
     {
         lock (_lock)

@@ -1,0 +1,22 @@
+@* Status chip of a document (entry-frame.md 6): one per document, color only for the meaning of the status.
+   The text is the translated status name; the screen spec maps the code to a kind. *@
+
+<span class="quro-chip quro-chip-@KindClass" data-status="@Code" data-testid="@TestId">@(Text ?? Code)</span>
+
+@code {
+    /// <summary>Status code, e.g. DR.</summary>
+    [Parameter, EditorRequired]
+    public string Code { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public ChipKind Kind { get; set; }
+
+    /// <summary>Translated status name (sys_code_minor_translation). Defaults to the code.</summary>
+    [Parameter]
+    public string? Text { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private string KindClass => Kind.ToString().ToLowerInvariant();
+}

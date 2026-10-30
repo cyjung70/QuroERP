@@ -35,6 +35,10 @@ public abstract class QuroInputBase<TValue> : ComponentBase, IQuroField, IDispos
     [Parameter]
     public string? TestId { get; set; }
 
+    /// <summary>Columns the field takes in a 4-column header (entry-frame.md 3): 1, 2 or 4.</summary>
+    [Parameter]
+    public int Span { get; set; } = 1;
+
     protected string InputId { get; } = "q" + Guid.NewGuid().ToString("N")[..10];
 
     public bool IsLocked => Form is { ReadOnly: true } || LockMode switch
@@ -45,6 +49,18 @@ public abstract class QuroInputBase<TValue> : ComponentBase, IQuroField, IDispos
     };
 
     public bool IsRequiredNow => !IsLocked && (Required || LockMode == LockMode.NewOnly);
+
+    /// <summary>
+    /// Field color by state (entry-frame.md 3): editable yellow, locked gray, required amber marker. Screens never set colors.
+    /// </summary>
+    protected string FieldClass(string? extra = null) => string.Join(' ', new[]
+    {
+        "quro-field",
+        extra,
+        IsLocked ? "quro-field-readonly" : "quro-field-editable",
+        IsRequiredNow ? "quro-field-required" : null,
+        Span is 2 or 4 ? $"quro-span-{Span}" : null,
+    }.Where(c => c is not null));
 
     public abstract bool IsEmpty { get; }
 

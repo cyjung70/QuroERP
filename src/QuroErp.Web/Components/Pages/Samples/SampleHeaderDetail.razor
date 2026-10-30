@@ -11,11 +11,13 @@
 @if (_store is not null)
 {
     <QuroHeaderDetail THeader="SampleOrder" TLine="SampleLine" Title="@L["Samples.HeaderDetail.Title"]" TestId="header-detail"
-                      Load="LoadAsync" Create="() => new SampleOrder()" CreateLine="() => new SampleLine { Qty = 1 }"
+                      Find="k => Task.FromResult(_store.FindOrders(k))" Load="LoadAsync" DocumentNo="o => o.OrderNo"
+                      Create="() => new SampleOrder()" CreateLine="_ => new SampleLine { Qty = 1 }"
                       Save="SaveAsync" Delete="order => { _store.DeleteOrder(order.Id); return Task.CompletedTask; }">
-        <SearchContent>
-            <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="_orderNo" TextCase="TextCase.Upper" TestId="header-detail-search-order-no" />
-        </SearchContent>
+        <FindColumns>
+            <QuroColumn TRow="SampleOrder" Title="@L["Samples.OrderNo"]" Value="o => o.OrderNo" />
+            <QuroColumn TRow="SampleOrder" Title="@L["Samples.OrderDt"]" Value="o => o.OrderDt" />
+        </FindColumns>
         <HeaderFields Context="order">
             <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="order.OrderNo" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="header-detail-header-order-no" />
             <QuroDate Label="@L["Samples.OrderDt"]" @bind-Value="order.OrderDt" Required TestId="header-detail-header-order-dt" />
@@ -33,7 +35,6 @@
 
 @code {
     private SampleStore? _store;
-    private string? _orderNo;
 
     protected override void OnInitialized()
     {
@@ -44,8 +45,8 @@
         }
     }
 
-    private Task<HeaderLines<SampleOrder, SampleLine>?> LoadAsync() =>
-        Task.FromResult(_store!.FindOrder(_orderNo) is { } found ? new HeaderLines<SampleOrder, SampleLine>(found.Order, found.Lines) : null);
+    private Task<HeaderLines<SampleOrder, SampleLine>?> LoadAsync(SampleOrder picked) =>
+        Task.FromResult(_store!.FindOrder(picked.OrderNo) is { } found ? new HeaderLines<SampleOrder, SampleLine>(found.Order, found.Lines) : null);
 
     // A real screen sends the header with a lines array in one request (screens.md "SM")
     private Task<HeaderLines<SampleOrder, SampleLine>> SaveAsync(SampleOrder order, bool isNew, BatchChanges<SampleLine> lines)

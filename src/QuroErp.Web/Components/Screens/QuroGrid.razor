@@ -1,6 +1,8 @@
 @* Grid as a plain table: QuickGrid cannot put data-row-index on its rows (TASK-CORE-013).
    Editable grids show the row state (I/U/D), a delete button and, on edited rows, an undo button per row; each row has its own
-   form context, so lock rules and the required check work per row. *@
+   form context, so lock rules and the required check work per row.
+   In EntryMode (line grid of the SM entry frame, entry-frame.md 5) a click selects the row and the row commands live in
+   the command bar instead of on each row. *@
 @typeparam TRow where TRow : class
 @attribute [CascadingTypeParameter(nameof(TRow))]
 @inject IStringLocalizer<SharedResource> L
@@ -9,8 +11,8 @@
     @Columns
 </CascadingValue>
 
-<div class="quro-grid" data-testid="@TestId">
-    @if (Editable && OnAddRow.HasDelegate)
+<div class="@(EntryMode ? "quro-grid quro-grid-selectable" : "quro-grid")" data-testid="@TestId">
+    @if (Editable && !EntryMode && OnAddRow.HasDelegate)
     {
         <button type="button" class="quro-add-row" disabled="@Busy" data-testid="@Id("add-row")" @onclick="OnAddRow">@L["Common.AddRow"]</button>
     }
@@ -29,7 +31,7 @@
                 {
                     <th scope="col">@column.Title</th>
                 }
-                @if (Editable)
+                @if (Editable && !EntryMode)
                 {
                     <th scope="col">@L["Common.Delete"]</th>
                 }
@@ -40,10 +42,11 @@
             {
                 var row = Rows.All[i];
                 @* Cells keep the column test id; the row index is on the row (quro-blazor rule) *@
-                <tr @key="row" class="@RowClass(row)" data-row-index="@i">
+                <tr @key="row" class="@RowClass(row)" data-row-index="@i" aria-selected="@(EntryMode ? (row == SelectedRow ? "true" : "false") : null)"
+                    @onclick="@(EntryMode ? EventCallback.Factory.Create(this, () => SelectRowAsync(row)) : default)">
                     @if (Editable)
                     {
-                        <td><span class="quro-row-state" data-state="@StateCode(row.State)">@StateText(row.State)</span></td>
+                        <td class="quro-cell-readonly"><span class="quro-row-state" data-state="@StateCode(row.State)">@StateText(row.State)</span></td>
                     }
                     @if (OnSelect.HasDelegate)
                     {
@@ -53,13 +56,13 @@
                     }
                     @foreach (var column in _columns.Items)
                     {
-                        <td>
+                        <td class="@(column.ChildContent is null ? "quro-cell-readonly" : null)">
                             <CascadingValue Value="FormOf(row)" IsFixed="true">
                                 @column.Cell(row.Item)
                             </CascadingValue>
                         </td>
                     }
-                    @if (Editable)
+                    @if (Editable && !EntryMode)
                     {
                         <td>
                             <button type="button" disabled="@Busy" data-testid="@Id("delete-row")" @onclick="() => ToggleDeleteAsync(row)">
@@ -94,6 +97,23 @@
 
     [Parameter]
     public bool Editable { get; set; }
+
+    /// <summary>
+    /// Line grid of the SM entry frame: no add-row button or per-row buttons, a click selects the row
+    /// (<see cref="SelectedRow"/>) and the frame's command bar adds, marks and restores rows.
+    /// </summary>
+    [Parameter]
+    public bool EntryMode { get; set; }
+
+    [Parameter]
+    public GridRow<TRow>? SelectedRow { get; set; }
+
+    [Parameter]
+    public EventCallback<GridRow<TRow>?> SelectedRowChanged { get; set; }
+
+    /// <summary>Rows whose cells are all locked, e.g. a received PO line (entry-frame.md 5 "잠김").</summary>
+    [Parameter]
+    public Func<TRow, bool>? IsRowLocked { get; set; }
 
     [Parameter]
     public EventCallback OnAddRow { get; set; }
@@ -140,7 +160,8 @@
         }
     }
 
-    // Loaded rows behave like a loaded record: NewOnly and AfterLoad cells are locked. A view-only grid locks every cell (BC-BR-214)
+    // Loaded rows behave like a loaded record: NewOnly and AfterLoad cells are locked. A view-only grid locks every cell (BC-BR-214),
+    // a locked row too
     private QuroFormContext FormOf(GridRow<TRow> row)
     {
         if (!_forms.TryGetValue(row, out var form))
@@ -148,9 +169,13 @@
             form = new QuroFormContext { IsNew = row.IsNew };
             _forms[row] = form;
         }
-        form.ReadOnly = !Editable;
+        form.ReadOnly = !Editable || IsLocked(row);
         return form;
     }
+
+    private bool IsLocked(GridRow<TRow> row) => IsRowLocked?.Invoke(row.Item) == true;
+
+    private Task SelectRowAsync(GridRow<TRow> row) => row != SelectedRow ? SelectedRowChanged.InvokeAsync(row) : Task.CompletedTask;
 
     private async Task ToggleDeleteAsync(GridRow<TRow> row)
     {
@@ -164,8 +189,16 @@
         await OnChanged.InvokeAsync();
     }
 
-    private string? RowClass(GridRow<TRow> row) =>
-        ReferenceEquals(row.Item, Selected) ? "quro-row-selected" : row.IsDeleted ? "quro-row-deleted" : null;
+    private string? RowClass(GridRow<TRow> row)
+    {
+        var classes = new[]
+        {
+            ReferenceEquals(row.Item, Selected) || (EntryMode && row == SelectedRow) ? "quro-row-selected" : null,
+            row.IsDeleted ? "quro-row-deleted" : null,
+            IsLocked(row) ? "quro-row-locked" : null,
+        }.Where(c => c is not null);
+        return classes.Any() ? string.Join(' ', classes) : null;
+    }
 
     private static string? StateCode(RowState state) => state switch
     {

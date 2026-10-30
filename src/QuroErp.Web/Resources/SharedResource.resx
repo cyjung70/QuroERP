@@ -71,6 +71,22 @@
   <data name="Common.Deleted" xml:space="preserve"><value>삭제했습니다.</value></data>
   <data name="Common.ConfirmUnsaved" xml:space="preserve"><value>저장하지 않은 변경 내용이 있습니다. 계속하면 변경 내용이 사라집니다. 계속할까요?</value></data>
   <data name="Common.ConfirmDelete" xml:space="preserve"><value>삭제할까요?</value></data>
+  <data name="Common.NewDocument" xml:space="preserve"><value>새 문서</value></data>
+  <data name="Common.Revision" xml:space="preserve"><value>Rev. {0}</value></data>
+  <data name="Common.Lines" xml:space="preserve"><value>상세 내역</value></data>
+  <data name="Common.LineCount" xml:space="preserve"><value>{0}줄</value></data>
+  <data name="Common.MarkDelete" xml:space="preserve"><value>삭제 표시</value></data>
+  <data name="Common.RestoreLine" xml:space="preserve"><value>행 복원</value></data>
+  <data name="Common.Pdf" xml:space="preserve"><value>PDF</value></data>
+  <data name="Common.FindDocument" xml:space="preserve"><value>문서 찾기</value></data>
+  <data name="Common.SaveFirst" xml:space="preserve"><value>변경 내용을 먼저 저장하세요.</value></data>
+  <data name="Common.Audit.Created" xml:space="preserve"><value>등록</value></data>
+  <data name="Common.Audit.Updated" xml:space="preserve"><value>수정</value></data>
+  <data name="Common.Totals.Subtotal" xml:space="preserve"><value>소계</value></data>
+  <data name="Common.Totals.Discount" xml:space="preserve"><value>할인</value></data>
+  <data name="Common.Totals.Tax" xml:space="preserve"><value>세액</value></data>
+  <data name="Common.Totals.Total" xml:space="preserve"><value>합계</value></data>
+  <data name="Common.Totals.BaseTotal" xml:space="preserve"><value>기준 통화 합계</value></data>
   <data name="Samples.Single.Title" xml:space="preserve"><value>샘플: 단일 (S)</value></data>
   <data name="Samples.Multi.Title" xml:space="preserve"><value>샘플: 다중 (M)</value></data>
   <data name="Samples.HeaderDetail.Title" xml:space="preserve"><value>샘플: 헤더·상세 (SM)</value></data>
@@ -95,6 +111,14 @@
   <data name="Samples.Fob" xml:space="preserve"><value>F.O.B 단가</value></data>
   <data name="Samples.Amount" xml:space="preserve"><value>금액</value></data>
   <data name="Samples.TotalAmt" xml:space="preserve"><value>합계 금액</value></data>
+  <data name="Samples.Path" xml:space="preserve"><value>샘플 > 구매</value></data>
+  <data name="Samples.Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Samples.PoStatus.DR" xml:space="preserve"><value>작성</value></data>
+  <data name="Samples.PoStatus.AP" xml:space="preserve"><value>승인</value></data>
+  <data name="Samples.Approve" xml:space="preserve"><value>승인</value></data>
+  <data name="Samples.DeletePo" xml:space="preserve"><value>발주 삭제</value></data>
+  <data name="Samples.SelectVendorFirst" xml:space="preserve"><value>공급자를 먼저 고르세요.</value></data>
+  <data name="Samples.ConfirmApprove" xml:space="preserve"><value>발주를 승인할까요?</value></data>
   <data name="Common-E-005" xml:space="preserve"><value>{0}을(를) 입력하세요.</value></data>
   <data name="BC-E-313" xml:space="preserve"><value>국가 {0}은(는) 지원하지 않거나(US·KR만 가능), 거래가 생긴 뒤라 바꿀 수 없습니다.</value></data>
   <data name="BC-E-401" xml:space="preserve"><value>언어 '{0}'이(가) 올바르지 않습니다. 목록에 있는 소문자 2~3자 코드를 쓰세요. en은 항상 사용합니다.</value></data>

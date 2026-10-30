@@ -190,19 +190,32 @@ public class SampleScreenTests : ScreenContext
         page.Find("[data-state=U]").Should().NotBeNull();
     }
 
-    // SM
+    // SM (entry frame: the toolbar search opens the document search dialog)
+
+    private static void OpenDocument<T>(IRenderedComponent<T> page, string screen, string keyword)
+        where T : Microsoft.AspNetCore.Components.IComponent
+    {
+        page.Find($"[data-testid={screen}-toolbar-search]").Click();
+        page.Find($"[data-testid={screen}-find-keyword]").Change(keyword);
+        page.Find($"[data-testid={screen}-find] form").Submit();
+        page.FindAll($"[data-testid={screen}-find-grid-select]").Should().ContainSingle().Which.Click();
+    }
+
+    private static void SelectLine<T>(IRenderedComponent<T> page, string screen, int index)
+        where T : Microsoft.AspNetCore.Components.IComponent =>
+        page.Find($"[data-testid={screen}-line] tr[data-row-index='{index}']").Click();
 
     [Fact]
     public void HeaderDetail_SaveHeaderAndLines_InOneSave()
     {
         var page = Render<SampleHeaderDetail>();
-        page.Find("[data-testid=header-detail-search-order-no]").Change("SO261000001");
-        page.Find("[data-testid=header-detail-toolbar-search]").Click();
+        OpenDocument(page, "header-detail", "SO261000001");
         page.WaitForAssertion(() => page.FindAll("[data-testid=header-detail-line-item-code]").Should().HaveCount(2));
 
-        page.FindAll("[data-testid=header-detail-line-delete-row]")[0].Click();
-        page.Find("[data-testid=header-detail-line-add-row]").Click();
-        page.FindAll("[data-testid=header-detail-line-item-code]")[2].Change("c300");
+        SelectLine(page, "header-detail", 0);
+        page.Find("[data-testid=header-detail-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=header-detail-toolbar-add-row]").Click();
+        page.FindAll("[data-testid=header-detail-line-item-code]")[1].Change("c300");
         page.Find("[data-testid=header-detail-toolbar-save]").Click();
 
         Store.FindOrder("SO261000001")!.Value.Lines.Select(l => l.ItemCode).Should().Equal("B200", "C300");
@@ -213,8 +226,7 @@ public class SampleScreenTests : ScreenContext
     public void HeaderDetail_LineChangeOnly_IsUnsavedChange()
     {
         var page = Render<SampleHeaderDetail>();
-        page.Find("[data-testid=header-detail-search-order-no]").Change("SO261000001");
-        page.Find("[data-testid=header-detail-toolbar-search]").Click();
+        OpenDocument(page, "header-detail", "SO261000001");
         page.WaitForAssertion(() => page.FindAll("[data-testid=header-detail-line-item-code]").Should().HaveCount(2));
         page.FindAll("[data-testid=header-detail-line-qty]")[0].Change("9");
         Confirm.Answer = false;
@@ -228,8 +240,7 @@ public class SampleScreenTests : ScreenContext
 
     private static IRenderedComponent<SamplePoEntry> SearchPo(IRenderedComponent<SamplePoEntry> page)
     {
-        page.Find("[data-testid=po-entry-search-po-no]").Change("PO261000001");
-        page.Find("[data-testid=po-entry-toolbar-search]").Click();
+        OpenDocument(page, "po-entry", "PO261000001");
         page.WaitForAssertion(() => page.FindAll("[data-testid=po-entry-line-item-code]").Should().HaveCount(2));
         return page;
     }
@@ -237,36 +248,40 @@ public class SampleScreenTests : ScreenContext
     private static string? Value(IRenderedComponent<SamplePoEntry> page, string testId, int index = 0) =>
         page.FindAll($"[data-testid={testId}]")[index].GetAttribute("value");
 
+    private static string Text(IRenderedComponent<SamplePoEntry> page, string testId) =>
+        page.Find($"[data-testid={testId}]").TextContent.Trim();
+
     [Fact]
     public void PoEntry_Search_LoadsHeaderLinesAndTotal()
     {
         var page = SearchPo(Render<SamplePoEntry>());
 
         Value(page, "po-entry-header-vendor-name").Should().Be("ABC Trading Co.");
-        Value(page, "po-entry-header-po-no").Should().Be("PO261000001");
-        page.Find("[data-testid=po-entry-header-po-no]").HasAttribute("readonly").Should().BeTrue();
-        Value(page, "po-entry-summary-total-amt").Should().Be("1,825.00");
+        page.Find("[data-testid=po-entry-header-vendor-name]").HasAttribute("readonly").Should().BeTrue();
+        Text(page, "po-entry-doc-no").Should().Be("PO261000001");
+        Text(page, "po-entry-status-chip").Should().Be("작성");
+        page.Find("[data-testid=po-entry-totals-total] b").TextContent.Should().Be("1,825.00");
     }
 
     [Fact]
     public void PoEntry_TypedItemCode_FillsNameAndDefaultPrice_AndUpdatesTotal()
     {
         var page = Render<SamplePoEntry>();
-        page.Find("[data-testid=po-entry-line-add-row]").Click();
+        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
 
         page.Find("[data-testid=po-entry-line-item-code]").Change("kbd10001");
         page.Find("[data-testid=po-entry-line-qty]").Change("4");
 
         page.Find("tr[data-row-index='0']").TextContent.Should().Contain("Keyboard USB");
         Value(page, "po-entry-line-fob").Should().Be("12.50");
-        Value(page, "po-entry-summary-total-amt").Should().Be("50.00");
+        page.Find("[data-testid=po-entry-totals-total] b").TextContent.Should().Be("50.00");
     }
 
     [Fact]
     public void PoEntry_ItemLookup_SelectFillsLine_AndCloses()
     {
         var page = Render<SamplePoEntry>();
-        page.Find("[data-testid=po-entry-line-add-row]").Click();
+        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
 
         page.Find("[data-testid=po-entry-line-item-lookup]").Click();
         page.FindAll("[data-testid=po-entry-item-lookup-grid-select]").Should().HaveCount(4);
@@ -292,27 +307,33 @@ public class SampleScreenTests : ScreenContext
     }
 
     [Fact]
-    public void PoEntry_UndoRow_RestoresLoadedValues()
+    public void PoEntry_RestoreRow_RestoresLoadedValues()
     {
         var page = SearchPo(Render<SamplePoEntry>());
         page.FindAll("[data-testid=po-entry-line-qty]")[0].Change("9");
         page.Find("[data-state=U]").Should().NotBeNull();
 
-        page.Find("[data-testid=po-entry-line-undo-row]").Click();
+        SelectLine(page, "po-entry", 0);
+        page.Find("[data-testid=po-entry-toolbar-restore-row]").Click();
 
         Value(page, "po-entry-line-qty").Should().Be("2");
         page.FindAll("[data-state]").Should().BeEmpty();
-        page.FindAll("[data-testid=po-entry-line-undo-row]").Should().BeEmpty();
+        page.Find("[data-testid=po-entry-toolbar-restore-row]").HasAttribute("disabled").Should().BeTrue();
     }
 
     [Fact]
-    public void PoEntry_DeletedLine_IsLeftOutOfTotal()
+    public void PoEntry_MarkDelete_LeavesLineOutOfTotal_AndTogglesBack()
     {
         var page = SearchPo(Render<SamplePoEntry>());
+        SelectLine(page, "po-entry", 0);
 
-        page.FindAll("[data-testid=po-entry-line-delete-row]")[0].Click();
+        page.Find("[data-testid=po-entry-toolbar-mark-delete]").Click();
 
-        Value(page, "po-entry-summary-total-amt").Should().Be("125.00");
+        page.Find("[data-testid=po-entry-totals-total] b").TextContent.Should().Be("125.00");
+        page.Find("tr[data-row-index='0']").ClassList.Should().Contain("quro-row-deleted");
+        page.Find("[data-testid=po-entry-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=po-entry-totals-total] b").TextContent.Should().Be("1,825.00");
+        page.FindAll("[data-state]").Should().BeEmpty();
     }
 
     [Fact]
@@ -320,13 +341,13 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code]").Change("v0003");
-        page.Find("[data-testid=po-entry-line-add-row]").Click();
+        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
         page.Find("[data-testid=po-entry-line-item-code]").Change("MOU10001");
         page.Find("[data-testid=po-entry-line-qty]").Change("3");
 
         page.Find("[data-testid=po-entry-toolbar-save]").Click();
 
-        var poNo = Value(page, "po-entry-header-po-no");
+        var poNo = Text(page, "po-entry-doc-no");
         poNo.Should().StartWith("PO");
         var saved = PoStore.FindPo(poNo)!.Value;
         saved.Po.VendorName.Should().Be("Global Parts Inc.");

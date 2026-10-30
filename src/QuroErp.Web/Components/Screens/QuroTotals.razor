@@ -1,0 +1,59 @@
+@* Totals panel of the entry frame (entry-frame.md 4): subtotal, discount, tax, total in a fixed order.
+   Display only; stored totals are calculated and rounded by the API. *@
+@using System.Globalization
+@inject IStringLocalizer<SharedResource> L
+
+<div class="quro-totals-row" data-testid="@Id("subtotal")"><span>@L["Common.Totals.Subtotal"]</span><b>@Amount(Subtotal)</b></div>
+@if (Discount != 0)
+{
+    <div class="quro-totals-row quro-totals-discount" data-testid="@Id("discount")"><span>@L["Common.Totals.Discount"]</span><b>@Amount(-Discount)</b></div>
+}
+<div class="quro-totals-row" data-testid="@Id("tax")"><span>@L["Common.Totals.Tax"]</span><b>@Amount(Tax)</b></div>
+<div class="quro-totals-total" data-testid="@Id("total")">
+    <span>@L["Common.Totals.Total"]</span>
+    <span><b>@Amount(Subtotal - Discount + Tax)</b><small>@CurrencyCode</small></span>
+</div>
+@if (BaseTotal is { } baseTotal && BaseCurrencyCode is not null && BaseCurrencyCode != CurrencyCode)
+{
+    <div class="quro-totals-base" data-testid="@Id("base-total")">
+        @L["Common.Totals.BaseTotal"] @baseTotal.ToString("N" + BaseDecimals.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture) @BaseCurrencyCode
+    </div>
+}
+
+@code {
+    /// <summary>Sum of the line gross amounts.</summary>
+    [Parameter]
+    public decimal Subtotal { get; set; }
+
+    /// <summary>Sum of the line discounts, as a positive amount. The row is left out when it is 0.</summary>
+    [Parameter]
+    public decimal Discount { get; set; }
+
+    [Parameter]
+    public decimal Tax { get; set; }
+
+    [Parameter]
+    public string? CurrencyCode { get; set; }
+
+    /// <summary>Amount decimals of the document currency (GET api/bc/localization).</summary>
+    [Parameter]
+    public int Decimals { get; set; } = 2;
+
+    /// <summary>Total in the base currency, shown under the total when the document currency differs.</summary>
+    [Parameter]
+    public decimal? BaseTotal { get; set; }
+
+    [Parameter]
+    public string? BaseCurrencyCode { get; set; }
+
+    [Parameter]
+    public int BaseDecimals { get; set; }
+
+    /// <summary>Prefix of the row test ids, e.g. purchase-order-totals.</summary>
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private string Amount(decimal value) => value.ToString("N" + Decimals.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture);
+
+    private string? Id(string part) => TestId is null ? null : $"{TestId}-{part}";
+}
