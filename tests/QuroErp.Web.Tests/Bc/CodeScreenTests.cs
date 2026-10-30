@@ -130,11 +130,20 @@ public class CodeScreenTests : BunitContext
         saved.MajorCode.Should().Be("UNIT");
         saved.Inserted.Should().ContainSingle().Which.Should().BeEquivalentTo(new
         {
-            MinorCode = "PC", SortOrder = 5, UseYn = true, Attr1 = "P", Names = new Dictionary<string, string?> { ["en"] = "Piece", ["ko"] = null },
+            MinorCode = "PC",
+            SortOrder = 5,
+            UseYn = true,
+            Attr1 = "P",
+            Names = new Dictionary<string, string?> { ["en"] = "Piece", ["ko"] = null },
         });
         saved.Updated.Should().ContainSingle().Which.Should().BeEquivalentTo(new
         {
-            Id = 12L, MinorCode = "BOX", SortOrder = 30, UseYn = false, UpdatedAt = Read, Names = new Dictionary<string, string?> { ["en"] = "Box", ["ko"] = "상자" },
+            Id = 12L,
+            MinorCode = "BOX",
+            SortOrder = 30,
+            UseYn = false,
+            UpdatedAt = Read,
+            Names = new Dictionary<string, string?> { ["en"] = "Box", ["ko"] = "상자" },
         });
         saved.Deleted.Should().Equal(new CodeMinorDelete(11, Read));
     }

@@ -63,7 +63,9 @@ public class PasswordChangeRedirectTests(WebFactory factory) : IClassFixture<Web
         // The session cookie is Secure, so the client must use https to send it back
         var browser = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
-            AllowAutoRedirect = false, HandleCookies = true, BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+            BaseAddress = new Uri("https://localhost"),
         });
         var loginPath = WebAuthentication.LoginPath + (returnUrl is null ? "" : "?ReturnUrl=" + Uri.EscapeDataString(returnUrl));
         var token = WebFactory.AntiforgeryToken(await browser.GetStringAsync(loginPath));

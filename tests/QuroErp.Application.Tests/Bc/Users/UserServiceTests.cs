@@ -342,8 +342,14 @@ public class UserServiceTests
             }
             Rows[id] = Rows[id] with
             {
-                UserName = fields.UserName, RoleId = fields.RoleId, Email = fields.Email, Phone = fields.Phone, LangCode = fields.LangCode,
-                UserValidDt = fields.UserValidDt, ValidFlag = fields.ValidFlag, UpdatedAt = Now,
+                UserName = fields.UserName,
+                RoleId = fields.RoleId,
+                Email = fields.Email,
+                Phone = fields.Phone,
+                LangCode = fields.LangCode,
+                UserValidDt = fields.UserValidDt,
+                ValidFlag = fields.ValidFlag,
+                UpdatedAt = Now,
             };
             if (raiseTokenVersion)
             {

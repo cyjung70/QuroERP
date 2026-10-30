@@ -77,9 +77,19 @@ internal sealed class FakeAppUserRepository : IAppUserRepository
     /// <summary>The user after ChangePasswordAsync: AppUser has init-only properties, so a copy replaces it.</summary>
     internal static AppUser WithNewPassword(AppUser u, string passwordHash, DateTimeOffset now) => new()
     {
-        Id = u.Id, UserId = u.UserId, PasswordHash = passwordHash, MustChangePassword = false, UserName = u.UserName,
-        RoleCode = u.RoleCode, ValidFlag = u.ValidFlag, UserValidDt = u.UserValidDt, PasswordValidDt = null, LangCode = u.LangCode,
-        PasswordChangedAt = now, DefaultWarehouseId = u.DefaultWarehouseId, TokenVersion = u.TokenVersion + 1,
+        Id = u.Id,
+        UserId = u.UserId,
+        PasswordHash = passwordHash,
+        MustChangePassword = false,
+        UserName = u.UserName,
+        RoleCode = u.RoleCode,
+        ValidFlag = u.ValidFlag,
+        UserValidDt = u.UserValidDt,
+        PasswordValidDt = null,
+        LangCode = u.LangCode,
+        PasswordChangedAt = now,
+        DefaultWarehouseId = u.DefaultWarehouseId,
+        TokenVersion = u.TokenVersion + 1,
     };
 
 

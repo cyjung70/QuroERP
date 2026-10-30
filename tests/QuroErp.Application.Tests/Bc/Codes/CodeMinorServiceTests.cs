@@ -247,7 +247,11 @@ public class CodeMinorServiceTests
             var (majorId, row) = _rows[id];
             _rows[id] = (majorId, row with
             {
-                SortOrder = fields.SortOrder, UseYn = fields.UseYn, Attr1 = fields.Attr1, Attr2 = fields.Attr2, UpdatedAt = Read.AddDays(1),
+                SortOrder = fields.SortOrder,
+                UseYn = fields.UseYn,
+                Attr1 = fields.Attr1,
+                Attr2 = fields.Attr2,
+                UpdatedAt = Read.AddDays(1),
             });
             return Task.FromResult(row.UpdatedAt == expectedUpdatedAt);
         }

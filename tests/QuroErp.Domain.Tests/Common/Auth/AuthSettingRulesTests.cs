@@ -35,8 +35,15 @@ public class AuthSettingRulesTests
     {
         var setting = AuthSettingRules.Normalize(new AuthSetting
         {
-            MaxFailedAttempts = 10, LockoutMinutes = 1440, AutoLoginValidDays = 90, SessionIdleMinutes = 5, PasswordMinLength = 128,
-            PasswordRequiredCategories = 1, PasswordHistoryCount = 0, PasswordExpireDays = 3650, PasswordResetMode = " email ",
+            MaxFailedAttempts = 10,
+            LockoutMinutes = 1440,
+            AutoLoginValidDays = 90,
+            SessionIdleMinutes = 5,
+            PasswordMinLength = 128,
+            PasswordRequiredCategories = 1,
+            PasswordHistoryCount = 0,
+            PasswordExpireDays = 3650,
+            PasswordResetMode = " email ",
         });
 
         setting.PasswordResetMode.Should().Be("EMAIL");

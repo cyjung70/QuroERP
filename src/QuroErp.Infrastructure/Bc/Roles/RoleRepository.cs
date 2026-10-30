@@ -124,7 +124,10 @@ internal sealed class RoleRepository : IRoleRepository
             UpdateMenu,
             new
             {
-                RoleId = roleId, MenuId = menuId, FullAccess = RoleMenuRules.ToFlag(fullAccess), By = updatedBy,
+                RoleId = roleId,
+                MenuId = menuId,
+                FullAccess = RoleMenuRules.ToFlag(fullAccess),
+                By = updatedBy,
                 ExpectedUpdatedAt = expectedUpdatedAt.UtcDateTime,
             },
             transaction,

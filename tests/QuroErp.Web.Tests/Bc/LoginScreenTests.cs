@@ -124,7 +124,9 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
     {
         var browser = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
-            AllowAutoRedirect = false, HandleCookies = true, BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+            BaseAddress = new Uri("https://localhost"),
         });
         var token = WebFactory.AntiforgeryToken(await browser.GetStringAsync(LoginPath(returnUrl)));
         return (browser, token);

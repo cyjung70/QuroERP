@@ -79,7 +79,11 @@ public sealed class InMemoryCodeMinorRepository : ICodeMinorRepository
             }
             _rows[id] = (majorId, row with
             {
-                SortOrder = fields.SortOrder, UseYn = fields.UseYn, Attr1 = fields.Attr1, Attr2 = fields.Attr2, UpdatedAt = Created.AddDays(1),
+                SortOrder = fields.SortOrder,
+                UseYn = fields.UseYn,
+                Attr1 = fields.Attr1,
+                Attr2 = fields.Attr2,
+                UpdatedAt = Created.AddDays(1),
             });
             return Task.FromResult(true);
         }

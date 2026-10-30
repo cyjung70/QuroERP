@@ -129,9 +129,20 @@ internal sealed class InventoryRepository : IInventoryRepository
             InsertMovement,
             new
             {
-                movement.DocumentNo, movement.DocumentDt, movement.MovType, movement.ItemId, movement.WarehouseId,
-                movement.Qty, movement.Prc, movement.Amount, movement.RefKey, movement.RefSeq,
-                movement.ParentMovementId, movement.NegativeStock, movement.SetItemId, User = user,
+                movement.DocumentNo,
+                movement.DocumentDt,
+                movement.MovType,
+                movement.ItemId,
+                movement.WarehouseId,
+                movement.Qty,
+                movement.Prc,
+                movement.Amount,
+                movement.RefKey,
+                movement.RefSeq,
+                movement.ParentMovementId,
+                movement.NegativeStock,
+                movement.SetItemId,
+                User = user,
             },
             transaction,
             cancellationToken: cancellationToken));

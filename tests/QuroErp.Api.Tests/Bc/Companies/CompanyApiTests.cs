@@ -174,7 +174,12 @@ public class CompanySaveApiTests
         var client = await factory.AdminAsync();
         var body = new
         {
-            Request.Name, Request.CountryCode, Request.BaseCurrencyCode, Request.DefaultLangCode, Request.RegisterNo, Request.UpdatedAt,
+            Request.Name,
+            Request.CountryCode,
+            Request.BaseCurrencyCode,
+            Request.DefaultLangCode,
+            Request.RegisterNo,
+            Request.UpdatedAt,
             CloseYearMonth = "202610",
         };
 

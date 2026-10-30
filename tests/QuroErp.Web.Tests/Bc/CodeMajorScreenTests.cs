@@ -100,11 +100,17 @@ public class CodeMajorScreenTests : BunitContext
         var saved = _api.Saved.Should().ContainSingle().Subject;
         saved.Inserted.Should().ContainSingle().Which.Should().BeEquivalentTo(new
         {
-            MajorCode = "SHIP_VIA", UseYn = true, Names = new Dictionary<string, string?> { ["en"] = "Ship Via", ["ko"] = null },
+            MajorCode = "SHIP_VIA",
+            UseYn = true,
+            Names = new Dictionary<string, string?> { ["en"] = "Ship Via", ["ko"] = null },
         });
         saved.Updated.Should().ContainSingle().Which.Should().BeEquivalentTo(new
         {
-            Id = 3L, MajorCode = "TEMP", UseYn = false, UpdatedAt = Read, Names = new Dictionary<string, string?> { ["en"] = "Temporary", ["ko"] = "임시" },
+            Id = 3L,
+            MajorCode = "TEMP",
+            UseYn = false,
+            UpdatedAt = Read,
+            Names = new Dictionary<string, string?> { ["en"] = "Temporary", ["ko"] = "임시" },
         });
         saved.Deleted.Should().Equal(new CodeMajorDelete(2, Read));
     }

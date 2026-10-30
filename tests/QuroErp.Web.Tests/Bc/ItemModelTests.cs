@@ -32,10 +32,27 @@ public class ItemModelTests
 
         request.Should().BeEquivalentTo(new UpdateItemRequest
         {
-            ItemName = "APPLE", ItemName2 = "RED", ItemDesc = "DESC", ItemType = "SET", Unit = "BX", ItemClass = "FR",
-            ValidFlag = "N", UsdPrc = 1.5m, SoUsdPrc = 2m, UpcCode = "123", Location = "L1", ReorderPoint = 3m,
-            Memo1 = "M1", Memo2 = "M2", Memo3 = "M3", Memo4 = "M4", Memo5 = "M5", ItemGrade = "A01",
-            Taxable = false, VatKind = "EXEMPT", UpdatedAt = updatedAt,
+            ItemName = "APPLE",
+            ItemName2 = "RED",
+            ItemDesc = "DESC",
+            ItemType = "SET",
+            Unit = "BX",
+            ItemClass = "FR",
+            ValidFlag = "N",
+            UsdPrc = 1.5m,
+            SoUsdPrc = 2m,
+            UpcCode = "123",
+            Location = "L1",
+            ReorderPoint = 3m,
+            Memo1 = "M1",
+            Memo2 = "M2",
+            Memo3 = "M3",
+            Memo4 = "M4",
+            Memo5 = "M5",
+            ItemGrade = "A01",
+            Taxable = false,
+            VatKind = "EXEMPT",
+            UpdatedAt = updatedAt,
         });
     }
 

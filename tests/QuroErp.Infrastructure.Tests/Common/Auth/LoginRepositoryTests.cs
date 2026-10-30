@@ -62,8 +62,11 @@ public class LoginRepositoryTests(AuthSchemaFixture db)
         var saved = (await users.FindByIdAsync(id, check.Transaction, CancellationToken.None))!;
         saved.Should().BeEquivalentTo(new
         {
-            FailedCount = 0, LockedUntil = (DateTimeOffset?)null, LastLoginAt = (DateTimeOffset?)Now.AddHours(2),
-            LastLoginIp = "10.0.0.9", LangCode = "en",
+            FailedCount = 0,
+            LockedUntil = (DateTimeOffset?)null,
+            LastLoginAt = (DateTimeOffset?)Now.AddHours(2),
+            LastLoginIp = "10.0.0.9",
+            LangCode = "en",
         });
         (await UpdatedAtAsync(id)).Should().Be(updatedAt);
     }

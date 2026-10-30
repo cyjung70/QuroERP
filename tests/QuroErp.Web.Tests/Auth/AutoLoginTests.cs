@@ -253,7 +253,9 @@ public class AutoLoginTests(WebFactory factory) : IClassFixture<WebFactory>
     // The session and token cookies are Secure, so the client uses https to send them back
     private HttpClient Browser(bool handleCookies = false) => factory.CreateClient(new WebApplicationFactoryClientOptions
     {
-        AllowAutoRedirect = false, HandleCookies = handleCookies, BaseAddress = new Uri("https://localhost"),
+        AllowAutoRedirect = false,
+        HandleCookies = handleCookies,
+        BaseAddress = new Uri("https://localhost"),
     });
 
     // A browser page request carrying only the token cookie (no session)

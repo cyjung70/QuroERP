@@ -33,15 +33,26 @@ public class UserProfileApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         // Unknown fields are ignored (api.md); the target is still the signed-in user (BC-BR-101, 102, 103)
         using var response = await client.PutAsJsonAsync(UserProfileRoutes.Base, new
         {
-            userName = "Profile Kim", email = "profile@example.com", phone = "010-1111-2222", langCode = "en", defaultWarehouseId = 1,
-            loaded.UpdatedAt, userId = ApiFactory.UserId, roleCode = "admin", password = "Other-Pass-1",
+            userName = "Profile Kim",
+            email = "profile@example.com",
+            phone = "010-1111-2222",
+            langCode = "en",
+            defaultWarehouseId = 1,
+            loaded.UpdatedAt,
+            userId = ApiFactory.UserId,
+            roleCode = "admin",
+            password = "Other-Pass-1",
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var saved = (await response.Content.ReadFromJsonAsync<UserProfileDto>())!;
         saved.Should().BeEquivalentTo(new
         {
-            UserId = ApiFactory.ProfileUserId, UserName = "Profile Kim", Email = "profile@example.com", LangCode = "en", DefaultWarehouseId = 1L,
+            UserId = ApiFactory.ProfileUserId,
+            UserName = "Profile Kim",
+            Email = "profile@example.com",
+            LangCode = "en",
+            DefaultWarehouseId = 1L,
         });
         saved.UpdatedAt.Should().BeAfter(loaded.UpdatedAt);
         factory.UserProfiles.Rows[7].UserName.Should().Be("Kim");

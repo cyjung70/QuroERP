@@ -80,8 +80,14 @@ public sealed class InMemoryUserRepository : IUserRepository
         }
         Rows[id] = row with
         {
-            UserName = fields.UserName, RoleId = fields.RoleId, Email = fields.Email, Phone = fields.Phone, LangCode = fields.LangCode,
-            UserValidDt = fields.UserValidDt, ValidFlag = fields.ValidFlag, UpdatedAt = row.UpdatedAt.AddMinutes(1),
+            UserName = fields.UserName,
+            RoleId = fields.RoleId,
+            Email = fields.Email,
+            Phone = fields.Phone,
+            LangCode = fields.LangCode,
+            UserValidDt = fields.UserValidDt,
+            ValidFlag = fields.ValidFlag,
+            UpdatedAt = row.UpdatedAt.AddMinutes(1),
         };
         if (raiseTokenVersion)
         {

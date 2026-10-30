@@ -146,7 +146,9 @@ public sealed class IdleSessionTests : IClassFixture<WebFactory>, IDisposable
     // The session cookie is Secure, so the client uses https to send it back
     private HttpClient Browser() => _host.CreateClient(new WebApplicationFactoryClientOptions
     {
-        AllowAutoRedirect = false, HandleCookies = true, BaseAddress = new Uri("https://localhost"),
+        AllowAutoRedirect = false,
+        HandleCookies = true,
+        BaseAddress = new Uri("https://localhost"),
     });
 
     private static HttpRequestMessage Page(string path)

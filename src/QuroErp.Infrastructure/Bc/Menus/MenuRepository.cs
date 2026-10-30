@@ -68,7 +68,14 @@ internal sealed class MenuRepository : IMenuRepository
             Update,
             new
             {
-                Id = id, fields.Name, fields.Type, fields.ProgramId, fields.Module, ParentMenuId = parentMenuId, fields.ValidFlag, By = updatedBy,
+                Id = id,
+                fields.Name,
+                fields.Type,
+                fields.ProgramId,
+                fields.Module,
+                ParentMenuId = parentMenuId,
+                fields.ValidFlag,
+                By = updatedBy,
                 ExpectedUpdatedAt = expectedUpdatedAt.UtcDateTime,
             },
             transaction,

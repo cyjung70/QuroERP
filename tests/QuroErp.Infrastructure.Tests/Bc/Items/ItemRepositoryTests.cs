@@ -28,9 +28,21 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
 
         row.Should().BeEquivalentTo(new
         {
-            ItemCd = "IT-B100", ItemName = "HEX BOLT", ItemType = "INVENTORY", ItemClass = "PART", UsdPrc = 2.5m, SoUsdPrc = 4m,
-            ReorderPoint = 10m, Memo5 = "m5", Taxable = false, VatKind = "EXEMPT", Plating = "R", ItemGroupCd = "IT-B100",
-            MvgCost = 2.5m, OnhandQty = 0m, StkVal = 0m,
+            ItemCd = "IT-B100",
+            ItemName = "HEX BOLT",
+            ItemType = "INVENTORY",
+            ItemClass = "PART",
+            UsdPrc = 2.5m,
+            SoUsdPrc = 4m,
+            ReorderPoint = 10m,
+            Memo5 = "m5",
+            Taxable = false,
+            VatKind = "EXEMPT",
+            Plating = "R",
+            ItemGroupCd = "IT-B100",
+            MvgCost = 2.5m,
+            OnhandQty = 0m,
+            StkVal = 0m,
         });
         (await repository.CodeExistsAsync("IT-B100", uow.Transaction, None)).Should().BeTrue();
         (await repository.CodeExistsAsync("IT-B101", uow.Transaction, None)).Should().BeFalse();

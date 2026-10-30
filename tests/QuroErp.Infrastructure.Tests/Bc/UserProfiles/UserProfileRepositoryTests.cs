@@ -49,7 +49,11 @@ public class UserProfileRepositoryTests(AuthSchemaFixture db)
         saved.Should().BeTrue();
         after.Should().BeEquivalentTo(new
         {
-            UserName = "Prof Two", Email = "p2@example.com", Phone = "010-2", LangCode = "en", DefaultWarehouseId = warehouseId,
+            UserName = "Prof Two",
+            Email = "p2@example.com",
+            Phone = "010-2",
+            LangCode = "en",
+            DefaultWarehouseId = warehouseId,
             DefaultWarehouseCode = "PROF2",
         });
         after.UpdatedAt.Should().BeAfter(before.UpdatedAt);

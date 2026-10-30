@@ -29,7 +29,13 @@ public class UserRepositoryTests(AuthSchemaFixture db)
 
         row.Should().BeEquivalentTo(new
         {
-            UserId = "usr.new", UserName = "New", RoleId = roleId, RoleCode = "admin", LangCode = "ko", ValidFlag = "Y", MustChangePassword = true,
+            UserId = "usr.new",
+            UserName = "New",
+            RoleId = roleId,
+            RoleCode = "admin",
+            LangCode = "ko",
+            ValidFlag = "Y",
+            MustChangePassword = true,
             FailedCount = 0,
         });
         expiry.Should().BeNull();

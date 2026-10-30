@@ -21,8 +21,15 @@ internal sealed class UserLoginLogRepository : IUserLoginLogRepository
             Insert,
             new
             {
-                log.LogDt, log.AppUserId, log.LoginUserId, IpAddr = NullIfEmpty(log.IpAddr), log.Success, log.EventType, log.ResultCode,
-                UserAgent = NullIfEmpty(log.UserAgent), AuditUser,
+                log.LogDt,
+                log.AppUserId,
+                log.LoginUserId,
+                IpAddr = NullIfEmpty(log.IpAddr),
+                log.Success,
+                log.EventType,
+                log.ResultCode,
+                UserAgent = NullIfEmpty(log.UserAgent),
+                AuditUser,
             },
             transaction,
             cancellationToken: cancellationToken));
