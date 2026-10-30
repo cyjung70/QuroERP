@@ -109,6 +109,28 @@ internal sealed class ItemRepository : IItemRepository
             OR EXISTS (SELECT 1 FROM sd_production_result_line WHERE item_id = @Id)
         """;
 
+    // MM-BR-820, SD-BR-607: own image first, then the item group's plating R or empty, then by item code; legacy Clear left empty images
+    private const string SelectImage = """
+        SELECT g.img
+        FROM bc_item i
+        JOIN bc_item g ON g.id = i.id
+                       OR coalesce(g.item_group_cd, g.item_cd) = coalesce(i.item_group_cd, i.item_cd)
+        WHERE i.item_cd = @ItemCd AND octet_length(g.img) > 0
+        ORDER BY g.id = i.id DESC, coalesce(g.plating, '') IN ('', 'R') DESC, g.item_cd
+        LIMIT 1
+        """;
+
+    // MM-BR-822: the whole value is replaced; updated_at is kept so an open item form can still be saved
+    private const string UpdateImage = "UPDATE bc_item SET img = @Image WHERE item_cd = @ItemCd";
+
+    public Task<byte[]?> FindImageAsync(string itemCd, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.QuerySingleOrDefaultAsync<byte[]?>(
+            new CommandDefinition(SelectImage, new { ItemCd = itemCd }, transaction, cancellationToken: cancellationToken));
+
+    public async Task<bool> SaveImageAsync(string itemCd, byte[]? image, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        await transaction.Connection!.ExecuteAsync(
+            new CommandDefinition(UpdateImage, new { ItemCd = itemCd, Image = image }, transaction, cancellationToken: cancellationToken)) == 1;
+
     public async Task<ItemRow?> FindAsync(long id, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var row = await transaction.Connection!.QuerySingleOrDefaultAsync<Row>(new CommandDefinition(

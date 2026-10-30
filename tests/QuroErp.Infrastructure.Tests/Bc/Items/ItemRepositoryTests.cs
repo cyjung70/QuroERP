@@ -149,4 +149,41 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
         (await repository.DeleteAsync(unused, row.UpdatedAt, uow.Transaction, None)).Should().BeTrue();
         (await repository.FindAsync(unused, forUpdate: false, uow.Transaction, None)).Should().BeNull();
     }
+
+    [DatabaseFact, Trait("Id", "BC-UC-010-T01"), Trait("Id", "BC-UC-010-T03"), Trait("Id", "MM-UT-820"), Trait("Id", "MM-UT-822"), Trait("Id", "MM-UT-823")]
+    public async Task Image_ReplacedWhole_FallsBackToTheItemGroupInPlatingThenCodeOrder_AndKeepsUpdatedAt()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IItemRepository>();
+        byte[] large = [0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3, 4, 5, 6];
+        byte[] small = [0xFF, 0xD8, 0xFF, 0xDB];
+        byte[] other = [0xFF, 0xD8, 0xFF, 0xE1, 7];
+        // Plating other than R puts the item in the group of its code without the last letter (MM-BR-808)
+        var cover = await repository.InsertAsync(Item.Create("IMGG", Fields), "kim", uow.Transaction, None);
+        await repository.InsertAsync(Item.Restore(0, "IMGGX", Fields, "X", 1m, 0, 0), "kim", uow.Transaction, None);
+        await repository.InsertAsync(Item.Restore(0, "IMGGA", Fields, "A", 1m, 0, 0), "kim", uow.Transaction, None);
+        var before = (await repository.FindAsync(cover, forUpdate: false, uow.Transaction, None))!;
+
+        await repository.SaveImageAsync("IMGG", large, uow.Transaction, None);
+        await repository.SaveImageAsync("IMGG", small, uow.Transaction, None);
+        await repository.SaveImageAsync("IMGGA", other, uow.Transaction, None);
+        var own = await repository.FindImageAsync("IMGG", uow.Transaction, None);
+        var fromCover = await repository.FindImageAsync("IMGGX", uow.Transaction, None);
+        // The legacy Clear left an empty image, which counts as none
+        await uow.Transaction.Connection!.ExecuteAsync("UPDATE bc_item SET img = ''::bytea WHERE item_cd = 'IMGG'", transaction: uow.Transaction);
+        var fromNextByCode = await repository.FindImageAsync("IMGGX", uow.Transaction, None);
+        var coverFromMember = await repository.FindImageAsync("IMGG", uow.Transaction, None);
+        await repository.SaveImageAsync("IMGGA", null, uow.Transaction, None);
+        var none = await repository.FindImageAsync("IMGGX", uow.Transaction, None);
+        var after = (await repository.FindAsync(cover, forUpdate: false, uow.Transaction, None))!;
+
+        own.Should().Equal(small);
+        fromCover.Should().Equal(small);
+        fromNextByCode.Should().Equal(other);
+        coverFromMember.Should().Equal(other);
+        none.Should().BeNull();
+        after.UpdatedAt.Should().Be(before.UpdatedAt);
+        (await repository.SaveImageAsync("IMG-NONE", small, uow.Transaction, None)).Should().BeFalse();
+        (await repository.FindImageAsync("IMG-NONE", uow.Transaction, None)).Should().BeNull();
+    }
 }

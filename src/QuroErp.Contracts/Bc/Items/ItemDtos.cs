@@ -13,6 +13,20 @@ public static class ItemRoutes
     public const string Previous = "previous";
     public const string Next = "next";
 
+    /// <summary>
+    /// GET, PUT and DELETE {Base}/{itemCd}/image (BC-UC-010). GET returns the item image or its item group's; PUT uploads one JPEG
+    /// as multipart/form-data field ImageFormField.
+    /// </summary>
+    public const string Image = "image";
+
+    public const string ImageFormField = "file";
+
+    /// <summary>Upload limit (JPEG up to 10 MB, MM-BR-821). The API checks it again.</summary>
+    public const int ImageMaxBytes = 10 * 1024 * 1024;
+
+    /// <summary>The image route of one item; the code is escaped for the path.</summary>
+    public static string ImageOf(string itemCd) => $"{Base}/{Uri.EscapeDataString(itemCd)}/{Image}";
+
     /// <summary>Default and largest page size (api.md "기타").</summary>
     public const int DefaultPageSize = 50;
     public const int MaxPageSize = 500;
