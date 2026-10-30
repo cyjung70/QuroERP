@@ -7,11 +7,16 @@
     <PackageReference Include="Quro.Grid" Version="$(QuroGridVersion)" Condition="'$(ManagePackageVersionsCentrally)' != 'true'" />
     <PackageReference Include="Quro.Grid" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
     <PackageVersion Include="Quro.Grid" Version="$(QuroGridVersion)" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
+    <!-- Quro.UI (text box, combo box, date picker) ships with the same version as Quro.Grid -->
+    <PackageReference Include="Quro.UI" Version="$(QuroGridVersion)" Condition="'$(ManagePackageVersionsCentrally)' != 'true'" />
+    <PackageReference Include="Quro.UI" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
+    <PackageVersion Include="Quro.UI" Version="$(QuroGridVersion)" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
   </ItemGroup>
 
   <!-- local mode: source projects from the QuroGrid repository (local verification only) -->
   <ItemGroup Condition="'$(UsesQuroGrid)' == 'true' And '$(QuroGridSource)' == 'local'">
     <ProjectReference Include="$(QuroGridRoot)/src/Quro.Grid/Quro.Grid.csproj" />
+    <ProjectReference Include="$(QuroGridRoot)/src/Quro.UI/Quro.UI.csproj" />
   </ItemGroup>
 
   <Target Name="QuroGridCheckSource" BeforeTargets="CollectPackageReferences;ResolveProjectReferences"

@@ -2,7 +2,7 @@
   <!-- QuroGrid consumption settings. Import from Directory.Build.props.
        "Pulling" a new QuroGrid = changing QuroGridVersion to a version published in the local feed. -->
   <PropertyGroup>
-    <QuroGridVersion>0.2.0-alpha.1</QuroGridVersion>
+    <QuroGridVersion>0.4.0-alpha.4</QuroGridVersion>
     <!-- package (default) | local -->
     <QuroGridSource Condition="'$(QuroGridSource)' == ''">package</QuroGridSource>
     <!-- Used only in local mode. Default: sibling folder /WRK/QuroGrid -->
