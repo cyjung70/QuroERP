@@ -1,3 +1,4 @@
+using System.Data;
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.Persistence;
@@ -44,7 +45,7 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
         return row is null ? null : ToDto(row);
     }
 
-    /// <exception cref="DomainException">MM-E-801 (also for a used code), 802, 803, 825, 831; Common-E-002 for an unknown code value.</exception>
+    /// <exception cref="DomainException">MM-E-801 (also for a used code), 802, 803, 817, 825, 831; Common-E-002 for an unknown code value.</exception>
     public async Task<ItemDto> CreateAsync(CreateItemRequest request, string createdBy, CancellationToken cancellationToken)
     {
         var item = Item.Create(request.ItemCd, ToFields(request));
@@ -55,13 +56,14 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
         {
             throw new DomainException(Item.InvalidCodeCode, item.ItemCd);
         }
+        await EnsureBarcodeUnusedAsync(item.Fields.UpcCode, [], uow.Transaction, cancellationToken);
         var id = await items.InsertAsync(item, createdBy, uow.Transaction, cancellationToken);
         var saved = await items.FindAsync(id, forUpdate: false, uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return ToDto(saved!);
     }
 
-    /// <exception cref="DomainException">MM-E-802, 803, 806, 825, 831; Common-E-002 for an unknown code value.</exception>
+    /// <exception cref="DomainException">MM-E-802, 803, 806, 817, 825, 831; Common-E-002 for an unknown code value.</exception>
     /// <exception cref="ConcurrencyException">updatedAt differs from the stored row.</exception>
     /// <exception cref="NotFoundException">Common-E-006.</exception>
     public async Task<ItemDto> UpdateAsync(long id, UpdateItemRequest request, string updatedBy, CancellationToken cancellationToken)
@@ -78,6 +80,7 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
         var item = ToItem(row);
         var typeLocked = fields.ItemType != item.Fields.ItemType && await items.IsTypeLockedAsync(id, uow.Transaction, cancellationToken);
         item.Change(fields, typeLocked);
+        await EnsureBarcodeUnusedAsync(item.Fields.UpcCode, [id], uow.Transaction, cancellationToken);
 
         if (!await items.UpdateAsync(item, request.UpdatedAt, updatedBy, uow.Transaction, cancellationToken))
         {
@@ -105,6 +108,21 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
             throw new ConcurrencyException();
         }
         await uow.CommitAsync(cancellationToken);
+    }
+
+    // MM-BR-817: a typed barcode is checked like generated ones
+    private async Task EnsureBarcodeUnusedAsync(
+        string? upcCode, IReadOnlyCollection<long> exceptIds, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (upcCode is null)
+        {
+            return;
+        }
+        var owners = await items.FindBarcodeOwnersAsync([upcCode], exceptIds, transaction, cancellationToken);
+        if (owners.Count > 0)
+        {
+            throw ItemBarcode.Duplicate(owners.Select(o => o.ItemCd));
+        }
     }
 
     private async Task EnsureCodesAsync(ItemFields fields, CancellationToken cancellationToken)

@@ -347,7 +347,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
     }
 
-    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE.</summary>
+    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE, DISPLAY_OPTIONS.</summary>
     private sealed class FakeCodeRepository : ICodeRepository
     {
         private static readonly List<CodeMinorRow> ValidFlag = [new(1, "Y", 10), new(2, "N", 20), new(3, "S", 30)];
@@ -356,8 +356,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         {
             ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"],
             ["UNIT"] = ["EA", "PCS"],
-            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2", "ZZAUD1", "ZZAUD2"],
+            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2", "ZZAUD1", "ZZAUD2", "ZZBC1", "ZZBC2", "ZZBC3", "ZZBC4", "ZZBC5"],
             ["GRADE"] = ["A01"],
+            ["DISPLAY_OPTIONS"] = ["Y", "N", "ALL"],
         };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(
@@ -617,6 +618,31 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public Task<bool> DeleteAsync(long id, DateTimeOffset expectedUpdatedAt, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(_rows.TryGetValue(id, out var row) && row.UpdatedAt == expectedUpdatedAt && _rows.TryRemove(id, out _));
+
+        public Task<IReadOnlyList<ItemBarcodeRow>> ListForBarcodeAsync(
+            string itemClass, string? validFlag, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ItemBarcodeRow>>(_rows.Values
+                .Where(r => r.ItemClass == itemClass && (validFlag is null || r.ValidFlag == validFlag))
+                .OrderBy(r => r.ItemCd, StringComparer.Ordinal)
+                .Select(r => new ItemBarcodeRow(r.Id, r.ItemCd, r.ItemName, r.SoUsdPrc, r.UpcCode))
+                .ToList());
+
+        public Task<IReadOnlyList<ItemBarcodeOwner>> FindBarcodeOwnersAsync(
+            IReadOnlyCollection<string> upcCodes, IReadOnlyCollection<long> exceptIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ItemBarcodeOwner>>(_rows.Values
+                .Where(r => r.UpcCode is not null && upcCodes.Contains(r.UpcCode) && !exceptIds.Contains(r.Id))
+                .Select(r => new ItemBarcodeOwner(r.UpcCode!, r.ItemCd))
+                .ToList());
+
+        public Task SaveBarcodesAsync(
+            IReadOnlyList<(long Id, string UpcCode)> barcodes, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            foreach (var (id, upcCode) in barcodes)
+            {
+                _rows[id] = _rows[id] with { UpcCode = upcCode, UpdatedAt = _rows[id].UpdatedAt.AddSeconds(1) };
+            }
+            return Task.CompletedTask;
+        }
 
         /// <summary>Stored images by item code.</summary>
         public ConcurrentDictionary<string, byte[]> Images { get; } = new();
