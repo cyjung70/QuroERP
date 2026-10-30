@@ -1,0 +1,30 @@
+{
+  "id": "TASK-CORE-044",
+  "project": "core",
+  "title": "상단바 역할 이름: 리소스 `Role.<role_code>`",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/app-shell.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-037"
+  ],
+  "acceptance": [
+    "시드 역할 5개의 리소스 `Role.poweruser`·`Role.salesman`·`Role.admin`·`Role.manager`·`Role.srep`를 en·ko에 넣는다 (app-shell.md 5장 표)",
+    "상단바 역할(`shell-role`)은 `L[\"Role.\" + roleCode]`, 키가 없으면 역할 코드를 보인다",
+    "`/api/auth/me`에 `roleName`이 있으면 지운다 (역할 이름은 응답에 넣지 않는다). `sys_role`에 이름 컬럼을 만들지 않는다",
+    "bUnit: en·ko 역할 이름, 키가 없는 역할은 코드"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

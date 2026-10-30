@@ -80,7 +80,7 @@
     },
     {
       "path": "docs/architecture/app-shell.md",
-      "sha256": "235d183cda577fc69ad3250f8f7da70aa953900b26347403a85391251e7adb3f"
+      "sha256": "add08149d78ba51c86ac482ece61186e7bb132f213d3edf52a4fec06800a569b"
     },
     {
       "path": "docs/architecture/codes.md",
@@ -92,7 +92,7 @@
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "b69e28a534575cb868eab2a4cd31068c82428de9f964ad7f83f158a30a125ec5"
+      "sha256": "36db944ae6ba6f8e2719068a9892d416f68a932cb1754832fb39d59b32b02c2e"
     },
     {
       "path": "docs/architecture/entry-frame.md",
@@ -1140,7 +1140,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-010.json",
-      "sha256": "b0e3039247c987c014b7499a6a7aa4226e18af24785fa60105938d5dd6969f4b"
+      "sha256": "0802c572b2a2130fe680a92ec74c8d175ba78f280768b6265c18bc70202dd85a"
     },
     {
       "path": "harness/tasks/TASK-CORE-011.json",
@@ -1248,7 +1248,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-037.json",
-      "sha256": "57e0e859683ee87718fc09b9a533fe6b891862ded8fca30d6c9a565a46fd3752"
+      "sha256": "6980a2406399e38c60305bb47fd1dd3ad527769489897feb505304d746e71de7"
     },
     {
       "path": "harness/tasks/TASK-CORE-038.json",
@@ -1273,6 +1273,14 @@
     {
       "path": "harness/tasks/TASK-CORE-043.json",
       "sha256": "f1638134d1558da83f041354c1b9ba063b31215b4d6fd325b3a4fa431b8f61a5"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-044.json",
+      "sha256": "691f4636ff6114a86d19f4703c30052c3c01039dc24099f40132bd30f4aec7cb"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-045.json",
+      "sha256": "40e25b3c79c2c7a7894b1b4dbe11df341f00b8c3c55970d6a51e62e86f8ec8e8"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",

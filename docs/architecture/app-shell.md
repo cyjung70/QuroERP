@@ -27,7 +27,7 @@
 | 2 | 제품 로고·이름 | 누르면 홈 `/` | `Shell.ProductName` | `shell-logo` |
 | 3 | 회사 이름 | `GET /api/auth/me`의 `companyName` | — | `shell-company` |
 | 4 | 언어 선택 | 드롭다운. 목록은 사용 중 언어(`GET /api/bc/localization`의 `languages`)라 언어가 늘어도 같은 컨트롤이다. 바꾸는 동작은 지금과 같다 ([화면유형 표준](screens.md) 헤더) | `Common.Language` | `shell-language` |
-| 5 | 역할 | `roleName`(없으면 `roleCode`) | — | `shell-role` |
+| 5 | 역할 | 리소스 `Role.<roleCode>` (키가 없으면 `roleCode`) | — | `shell-role` |
 | 6 | 사용자 메뉴 | 사용자 ID·이름을 누르면 열린다: 내 정보, 비밀번호 변경, 로그아웃 (지금과 같다) | — | `user-menu`, `user-menu-profile`, `user-menu-change-password`, `user-menu-logout` |
 | 7 | 로그아웃 | 바로 로그아웃한다. 사용자 메뉴의 로그아웃과 같은 동작이다 | `Shell.Logout` | `shell-logout` |
 
@@ -77,9 +77,18 @@
 | 필드 | 내용 |
 | --- | --- |
 | `companyName` | 회사 이름 (`bc_company`) |
-| `roleName` | 역할 이름 (`sys_role`) |
 | `menus[].type` | `M`·`P`·`U` |
 | 상위 메뉴 | 배정된 `P` 메뉴의 상위 `M` 메뉴를 배정과 상관없이 함께 돌려준다 (`fullAccess`는 null). 사용 안 함 상위 메뉴 아래 항목은 빠진다 |
+
+역할 이름은 응답에 넣지 않는다. 역할은 시드로만 만들고 관리 화면이 없으므로, 메뉴 이름(`Menu.<menu_code>`)처럼 Web이 리소스 키 `Role.<role_code>`(en·ko)로 보인다. `sys_role`에 이름 컬럼을 두지 않는다. 시드 역할의 리소스:
+
+| `role_code` | en | ko |
+| --- | --- | --- |
+| `poweruser` | Power User | 파워 유저 |
+| `salesman` | Salesperson | 영업 사원 |
+| `admin` | Administrator | 관리자 |
+| `manager` | Manager | 매니저 |
+| `srep` | Sales Rep | 영업 담당 |
 
 ## 6. 홈 1단계 (`/`)
 
