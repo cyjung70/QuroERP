@@ -79,21 +79,22 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `sys_auto_login_token` | 자동 로그인 토큰 | BC | login.md | id, app_user_id, token_hash varchar UNIQUE (SHA-256 16진수 64자, 길이는 Domain에서 검사), expires_at, revoked_at, user_agent, created_at |
 | `sys_password_history` | 비밀번호 이력 | BC | login.md | id, app_user_id, password_hash, created_at |
 | `bc_business_place` | 사업장 | BC | organization.md, BC company.md | id, business_place_code UNIQUE, business_place_name, is_default, business_reg_no, sub_business_no, ceo_name, business_type, business_item, 주소, tel_no, use_yn. MVP는 1행 (BC-BR-319) |
+| `bc_field_policy` | 필드 정책 회사 재정의 | BC | field-policy.md, BC localization.md | id, field_key (라벨 리소스 키), state (HIDDEN, OPTIONAL, REQUIRED, READONLY, NULL = 국가팩 값), default_value, label_key (라벨 재정의 리소스 키). UNIQUE (field_key) (BC-BR-431·433) |
 | `bc_warehouse` | 창고 | MM | inventory.md, MM warehouse.md | id, warehouse_code UNIQUE, warehouse_name, business_place_id, is_default, use_yn |
 | `mm_onhand` | 창고별 현재고 | MM | inventory.md, MM ledger.md | id, item_id, warehouse_id, onhand_qty. UNIQUE (item_id, warehouse_id) |
 | `mm_stock_transfer` | 창고 이동 | MM | MM warehouse.md | id, transfer_no UNIQUE, transfer_dt, from_warehouse_id, to_warehouse_id |
 | `mm_stock_transfer_line` | 창고 이동 상세 | MM | MM warehouse.md | id, stock_transfer_id, seq, item_id, lot_id, qty, prc, amt |
-| `sd_shipment` | 출하 | SD | SD shipment.md | id, ship_no UNIQUE, customer_id, sales_order_id, ship_dt, warehouse_id, business_place_id, currency_code, exchange_rate, status (OP, PB, BL, VO), 배송지 |
+| `sd_shipment` | 출하 | SD | SD shipment.md | id, ship_no UNIQUE, customer_id, sales_order_id, ship_dt, warehouse_id, business_place_id, currency_code, exchange_rate, status (OP, PB, BL, VO), 배송지, ext_attrs |
 | `sd_shipment_line` | 출하 상세 | SD | SD shipment.md | id, shipment_id, seq, item_id, warehouse_id, lot_id, ship_qty, ship_prc, billed_qty, returned_qty, returned_unbilled_qty, sales_order_line_id |
-| `sd_sales_return` | 매출 반품 | SD | SD sales-return.md | id, return_no UNIQUE (`SR` + yymm + 6자리), customer_id, shipment_id, business_place_id, return_dt, status (OP, VO), cm_reason01~08 boolean, remarks |
+| `sd_sales_return` | 매출 반품 | SD | SD sales-return.md | id, return_no UNIQUE (`SR` + yymm + 6자리), customer_id, shipment_id, business_place_id, return_dt, status (OP, VO), cm_reason01~08 boolean, remarks, ext_attrs |
 | `sd_sales_return_line` | 매출 반품 상세 | SD | SD sales-return.md | id, sales_return_id, seq, shipment_line_id, item_id, warehouse_id, lot_id, return_qty, unbilled_qty, credit_qty, cost_prc (원 출고 단가). UNIQUE (sales_return_id, shipment_line_id) |
-| `mm_supplier_invoice` | 공급자 송장 | MM | MM supplier-invoice.md | id, invoice_no UNIQUE (`VI` + yymm + 6자리), type (INV, DM), vendor_id, business_place_id, ref_no (공급자 송장 번호, 공급자마다 UNIQUE — Void 제외), invoice_dt, due_dt, terms, 통화·환율·세금 헤더, tot_amt, cls_amt, bal_amt, status (OP, PA, CL, VO), tax_invoice_received, vendor_return_id (Debit Memo만), remarks |
+| `mm_supplier_invoice` | 공급자 송장 | MM | MM supplier-invoice.md | id, invoice_no UNIQUE (`VI` + yymm + 6자리), type (INV, DM), vendor_id, business_place_id, ref_no (공급자 송장 번호, 공급자마다 UNIQUE — Void 제외), invoice_dt, due_dt, terms, 통화·환율·세금 헤더, tot_amt, cls_amt, bal_amt, status (OP, PA, CL, VO), tax_invoice_received, vendor_return_id (Debit Memo만), remarks, ext_attrs |
 | `mm_supplier_invoice_line` | 공급자 송장 상세 | MM | MM supplier-invoice.md | id, supplier_invoice_id, seq, goods_receipt_line_id, vendor_return_line_id (Debit Memo만), item_id, qty (Debit Memo는 음수), prc, 세금 줄, deductible, pv_amt (원가 조정 금액, 기준 통화) |
-| `mm_vendor_return` | 공급자 반품 | MM | MM vendor-return.md | id, return_no UNIQUE (`VR` + yymm + 6자리), goods_receipt_id, vendor_id, business_place_id, return_dt, status (OP, VO), void_dt, remarks |
+| `mm_vendor_return` | 공급자 반품 | MM | MM vendor-return.md | id, return_no UNIQUE (`VR` + yymm + 6자리), goods_receipt_id, vendor_id, business_place_id, return_dt, status (OP, VO), void_dt, remarks, ext_attrs |
 | `mm_vendor_return_line` | 공급자 반품 상세 | MM | MM vendor-return.md | id, vendor_return_id, seq, goods_receipt_line_id, item_id, warehouse_id, lot_id, return_qty, debit_qty, cost_prc (원 입고 단가) |
-| `sd_quotation` | 견적 | SD | SD quotation.md | id, quotation_no UNIQUE (`QT` + yymm + 6자리), customer_id, business_place_id, quotation_dt, valid_to, status (OP, LO), lost_reason, 통화·환율·세금 헤더, 배송지, remarks |
+| `sd_quotation` | 견적 | SD | SD quotation.md | id, quotation_no UNIQUE (`QT` + yymm + 6자리), customer_id, business_place_id, quotation_dt, valid_to, status (OP, LO), lost_reason, 통화·환율·세금 헤더, 배송지, remarks, ext_attrs |
 | `sd_quotation_line` | 견적 상세 | SD | SD quotation.md | id, quotation_id, seq, item_id, qty, prc, dc_cd, dc_rate, 세금 줄, converted_qty (수주 줄 수량 합) |
-| `mm_purchase_request` | 구매 요청 | MM | MM purchase-request.md | id, request_no UNIQUE (`PR` + yymm + 6자리), requester_id, request_dt, need_dt, status (OP, PO, CL), remarks |
+| `mm_purchase_request` | 구매 요청 | MM | MM purchase-request.md | id, request_no UNIQUE (`PR` + yymm + 6자리), requester_id, request_dt, need_dt, status (OP, PO, CL), remarks, ext_attrs |
 | `mm_purchase_request_line` | 구매 요청 상세 | MM | MM purchase-request.md | id, purchase_request_id, seq, item_id, qty, warehouse_id, vendor_id (희망, NULL 허용), ordered_qty (발주 줄 수량 합) |
 | `mm_lot` | 로트 | MM | MM lot.md | id, item_id, lot_no (최대 30자, `MIGRATED`·`UNKNOWN`은 시스템). UNIQUE (item_id, lot_no) (MM-BR-352) |
 | `mm_lot_onhand` | 로트 잔고 | MM | MM lot.md, inventory.md | id, item_id, warehouse_id, lot_id, onhand_qty (≥ 0). UNIQUE (item_id, warehouse_id, lot_id). 창고 합 = `mm_onhand` (MM-BR-354·356) |
@@ -291,6 +292,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `ship_zip_code` | varchar |  |  |
 | `ship_phone` | varchar |  |  |
 | `remarks` | varchar |  |  |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
@@ -419,6 +421,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
 | `exchange_rate` | numeric | NOT NULL | 문서 통화 1단위당 기준 통화, > 0, 소수 10자리. 기준 통화면 1 (BC-BR-412) |  |
 | `business_place_id` | bigint | FK NOT NULL | → `bc_business_place.id`. 지급 사업장, 기본값 = 기본 사업장 (BC-BR-321) |  |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -468,6 +471,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
 | `exchange_rate` | numeric | NOT NULL | 문서 통화 1단위당 기준 통화, > 0, 소수 10자리. 기준 통화면 1 (BC-BR-412) |  |
 | `business_place_id` | bigint | FK NOT NULL | → `bc_business_place.id`. 입금 사업장, 기본값 = 기본 사업장 (BC-BR-321) |  |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -633,6 +637,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `business_type` | varchar |  | 업태 |  |
 | `business_item` | varchar |  | 종목 |  |
 | `billing_flow` | varchar | NOT NULL DEFAULT 'SHIP_AND_BILL' | 청구 흐름, 새 수주 기본값 (SD-BR-335) |  |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -678,6 +683,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `lot_managed_from` | date |  | 로트 관리를 켠 날. 이 날 앞 일자 재고 이동 불가 (MM-BR-356) |  |
 | `taxable` | boolean | NOT NULL DEFAULT true | US Sales Tax 대상 (MM-BR-831) |  |
 | `vat_kind` | varchar | NOT NULL DEFAULT 'TAXABLE' | KR `TAXABLE`·`EXEMPT` (MM-BR-831) |  |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -780,6 +786,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `ceo_name` | varchar |  | 대표자 (BC-BR-522) |  |
 | `business_type` | varchar |  | 업태 |  |
 | `business_item` | varchar |  | 종목 |  |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -1001,6 +1008,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `business_place_id` | bigint | FK NOT NULL | → `bc_business_place.id`. 입고 사업장, 기본값 = 기본 사업장 (BC-BR-321) |  |
 | `type` | varchar |  | NOT NULL 후보 (참고) | Expense or Item |
 | `remarks` | varchar |  | NOT NULL 후보 (참고) | Remarks |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -1076,6 +1084,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `release_dt` | date |  | 미사용 후보 (참고) | Release Date |
 | `confirm_dt` | date |  | 미사용 후보 (참고) | Confirm Date-Goods Receipt Date |
 | `remarks` | varchar |  |  | Vendor Message |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -1410,6 +1419,7 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `cm_reason07` | boolean |  | 0/1 → boolean |  |
 | `cm_reason08` | boolean |  | 0/1 → boolean |  |
 | `ship_name` | varchar |  |  |  |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -1523,6 +1533,7 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `ship_phone` | varchar |  |  |  |
 | `ship_fax` | varchar |  |  |  |
 | `ship_name` | varchar |  |  |  |
+| `ext_attrs` | jsonb | NOT NULL DEFAULT '{}'::jsonb | 국가팩이 선언한 입력 전용 필드 (BC-BR-436). 로직·세금·리포트·검색에 쓰지 않는다 |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |

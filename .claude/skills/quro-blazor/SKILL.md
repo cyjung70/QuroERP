@@ -39,6 +39,7 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM/
 2. 화면 모델은 `Contracts` DTO를 쓴다. 화면 전용 모델이 필요하면 `Pages/<Module>/Models/`에 둔다.
 3. 명세 "화면 필드" 표대로 입력 컴포넌트를 배치한다.
    - 필수 → `Required`, 잠김 상태 → `LockMode` (`NewOnly`, `Always`, `AfterLoad`), 대·소문자 → `TextCase`
+   - 국가마다 다른 필드 → `Policy="<라벨 리소스 키>"` (`docs/architecture/field-policy.md`). 정책이 숨김·필수·읽기 전용·라벨을 정한다. `if (country == ...)`로 필드를 숨기지 않는다
    - 코드 필드 → `<QuroCodeSelect Major="..." />` (값은 `minor_code`)
    - 고객·품목·공급자 → 코드 입력(`QuroText`) 옆 찾기 버튼 + `QuroLookupDialog<TItem>` (검색어 조회 → 행 선택, 선택한 행이 무엇을 채울지는 화면이 정한다). 코드를 직접 입력하면 `@bind-Value:after`로 이름을 채운다
    - 그리드(M·SM·MM)의 품목 등 코드 열 → QuroGrid `Popup` 셀 (Tab·Enter 확정: 1건 자동 확정, 여러 건 `QuroLookupDialog`, 0건 편집 유지, F4 항상 대화상자). 붙여 넣은 코드는 한 번에 조회 (`docs/architecture/screens.md` 공통 동작 "그리드 코드 열"·"그리드 붙여 넣기"). 거래처 먼저 고르는 문서는 "SM 화면 배치"
