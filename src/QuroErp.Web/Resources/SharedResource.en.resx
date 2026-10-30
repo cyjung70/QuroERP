@@ -223,6 +223,17 @@
   <data name="Bc.ItemImageUpload.Hint" xml:space="preserve"><value>JPEG, 10 MB or less. Saving replaces the current image. Without an item image, the item group image is shown.</value></data>
   <data name="Bc.ItemImageUpload.Delete" xml:space="preserve"><value>Delete Image</value></data>
   <data name="Bc.ItemImageUpload.ConfirmDelete" xml:space="preserve"><value>Delete the item image? The item group image is shown if there is one.</value></data>
+  <data name="Bc.ItemBarcode.Title" xml:space="preserve"><value>Item Barcode</value></data>
+  <data name="Bc.ItemBarcode.ItemClass" xml:space="preserve"><value>Item Class</value></data>
+  <data name="Bc.ItemBarcode.ValidFlag" xml:space="preserve"><value>Valid Flag</value></data>
+  <data name="Bc.ItemBarcode.StartNo" xml:space="preserve"><value>Start No.</value></data>
+  <data name="Bc.ItemBarcode.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Bc.ItemBarcode.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Bc.ItemBarcode.SoUsdPrc" xml:space="preserve"><value>Sales Price</value></data>
+  <data name="Bc.ItemBarcode.UpcCode" xml:space="preserve"><value>Bar Code</value></data>
+  <data name="Bc.ItemBarcode.Generate" xml:space="preserve"><value>Generate Barcodes</value></data>
+  <data name="Bc.ItemBarcode.ConfirmGenerate" xml:space="preserve"><value>Of {0} selected items, {1} already have a barcode, which will be overwritten. Assign {2} to {3} in item code order?</value></data>
+  <data name="Bc.ItemBarcode.Generated" xml:space="preserve"><value>Generated {0} barcodes.</value></data>
   <data name="Bc.ChangePassword.Title" xml:space="preserve"><value>Change Password</value></data>
   <data name="Bc.ChangePassword.CurrentPassword" xml:space="preserve"><value>Current Password</value></data>
   <data name="Bc.ChangePassword.NewPassword" xml:space="preserve"><value>New Password</value></data>
