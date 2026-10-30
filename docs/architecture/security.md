@@ -44,7 +44,7 @@
 - 화면은 Blazor 기본 출력(`@value`, 컴포넌트 매개변수)만 쓴다. 사용자 입력·DB 값·API 오류 메시지를 `MarkupString`으로 내보내지 않는다.
 - JS로 값을 넘길 때는 `IJSRuntime.InvokeAsync("함수", 값)`의 인수로만 넘긴다. 값을 넣어 JS 코드 문자열을 만들거나 `eval`·`Function`·`setTimeout(문자열)`을 부르지 않는다. JS 쪽은 `textContent`로 쓰고 `innerHTML`·`insertAdjacentHTML`을 쓰지 않는다.
 - `MarkupString`은 리소스 문장의 서식처럼 코드가 만든 고정 문자열에만 쓴다. 그 안에 사용자·DB 값을 끼워 넣지 않는다.
-- PDF(FastReport)는 값을 텍스트로 넣는다 (HTML 태그 해석 끔). 엑셀(ClosedXML)·CSV는 값을 문자열 셀로 넣는다. `=`·`+`·`-`·`@`로 시작하는 문자열도 수식으로 넣지 않는다 (CSV는 앞에 `'`를 붙인다).
+- PDF의 HTML 템플릿은 Razor 기본 출력(`@value`)으로 값을 넣는다. `MarkupString`을 쓰지 않는다. Chromium page는 JavaScript를 끄고 네트워크 요청을 모두 막는다 ([리포트](reports.md)). 고객사 양식(FastReport)은 값을 텍스트로 넣는다 (HTML 태그 해석 끔). 엑셀(ClosedXML)·CSV는 값을 문자열 셀로 넣는다. `=`·`+`·`-`·`@`로 시작하는 문자열도 수식으로 넣지 않는다 (CSV는 앞에 `'`를 붙인다).
 - 검증: 리뷰는 스킬 `quro-code-review` 보안 항목, E2E는 Tester `BC-TS-007`.
 
 ## 로그

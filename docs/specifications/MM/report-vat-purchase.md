@@ -40,7 +40,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 | --- | --- | --- |
 | GET | /api/mm/reports/vat-purchase?조건 | 과세·영세율·면세 공급가액·세액, 공제·불공제, 거래처별 합계 (MM-BR-982) |
 | GET | /api/mm/reports/vat-purchase.csv?조건 | CSV 내보내기 |
-| GET | /api/mm/reports/vat-purchase/print.pdf?조건 | PDF (FastReport) |
+| GET | /api/mm/reports/vat-purchase/print.pdf?조건 | PDF |
 
 ## 관련 테이블
 

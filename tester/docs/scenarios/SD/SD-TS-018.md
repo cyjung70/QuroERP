@@ -47,7 +47,7 @@
 | --- | --- | --- | --- | --- |
 | 1 | 200 | — | I 줄 출하 4, 반품 0, 반품 가능 4, 미청구 0 | — |
 | 2 | 422 | `SD-E-553` | `args`: 줄, 반품 가능 수량 4 | 반품·재고 이동 없음 |
-| 3 | 201 | — | 번호 `SR` + `yymm` + 5자리, Credit Memo 번호가 온다 | R1 줄 `unbilled_qty = 0`, `credit_qty = 2`. 재고 이동 `mov_type = 'RT'`, `qty = 2`, `prc = 5`(원 출고 단가). 현재고 7. Credit Memo `tot_dn_amt = bal_amt = -60`, `sales_return_id` = R1, 사유 Broken, 재고 이동 추가 없음 |
+| 3 | 201 | — | 번호 `SR` + `yymm` + 6자리, Credit Memo 번호가 온다 | R1 줄 `unbilled_qty = 0`, `credit_qty = 2`. 재고 이동 `mov_type = 'RT'`, `qty = 2`, `prc = 5`(원 출고 단가). 현재고 7. Credit Memo `tot_dn_amt = bal_amt = -60`, `sales_return_id` = R1, 사유 Broken, 재고 이동 추가 없음 |
 | 4 | 422 | `SD-E-558` | — | Credit Memo 그대로 |
 | 5 | 422 | `SD-E-561` | — | H1 상태 그대로 |
 | 6 | 201 | — | Credit Memo 번호가 온다 | R2 줄 `unbilled_qty = 2`, `credit_qty = 1`. Credit Memo 합계 −30. `RT` 이동 `qty = 3`, `prc = 5`. 현재고 10 |

@@ -1,0 +1,30 @@
+{
+  "id": "TASK-CORE-034",
+  "project": "core",
+  "title": "브랜드 토큰을 로고 색으로 바꾸기",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/entry-frame.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-031"
+  ],
+  "acceptance": [
+    "`--q-brand`·`--q-brand-strong`·`--q-brand-tint` 라이트·다크 값을 entry-frame.md 7장 표대로 바꾼다 (라이트 `#0049a8`·`#00367d`·`#e0eaf8`, 다크 `#6ea6f5`·`#a3c6f8`·`#14294a`)",
+    "다른 토큰·컴포넌트·레이아웃은 바꾸지 않는다. 색 값을 CSS 변수 밖(컴포넌트·인라인 스타일)에 직접 쓴 곳이 있으면 변수로 바꾼다",
+    "흰 글자 대비 4.5:1 이상 (타이틀바·주 동작 버튼), 다크 모드에서 선택 행·포커스가 보인다",
+    "글꼴 폴더에 `OFL.txt`(SIL OFL-1.1)가 없으면 넣는다",
+    "샘플 `/samples/po-entry` 라이트·다크 화면으로 확인, bUnit 테스트 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

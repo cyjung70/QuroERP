@@ -5,7 +5,7 @@
 
 - API: `GET /api/{module}/{resource}/{id}/print/{document}.pdf` — 권한은 그 문서 조회 권한과 같다. 아래 목록에 없는 문서 이름은 404다.
 - 엑셀: 아래 표 "엑셀"이 있는 문서는 같은 경로의 `.xlsx`로도 받는다 (`GET .../print/{document}.xlsx`, 권한 같음). PDF와 같은 DTO로 ClosedXML이 만든다: 시트 1개, 위에 회사·헤더 필드, 아래 줄 표(열 제목은 사용자 언어 리소스 키), 금액·단가·수량은 숫자 셀(자릿수는 문서 통화·모듈 설정), 일자는 날짜 셀. 회사 로고는 넣지 않는다.
-- 템플릿: `src/QuroErp.Infrastructure/Reports/Templates/<module>/<document>.frx`.
+- 템플릿: `src/QuroErp.Infrastructure/Reports/Templates/<module>/<Document>.razor` (HTML → PDF, Playwright). 고객사 양식이 있으면 `Reports/Custom/<module>/<document>.frx`(FastReport)를 쓴다 ([리포트](reports.md)).
 - 회사 이름·주소·연락처는 `bc_company`에서, 로고는 `bc_company.logo_image`(`logo_content_type`)에서 가져온다. 로고가 없으면 회사 이름만 찍는다.
 - 문서 번호는 저장된 번호 전체를 찍는다. 금액은 저장된 값을 그대로 찍는다 (출력 때 다시 계산하지 않는다).
 

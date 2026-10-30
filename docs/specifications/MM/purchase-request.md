@@ -33,7 +33,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 
 | 영역 | TO BE 속성 (제안) | 입력 형식 | 비고 |
 | --- | --- | --- | --- |
-| 헤더 | `RequestNo` | text | 채번 `PR` + `yymm` + 5자리 (조회 키, MM-BR-552) |
+| 헤더 | `RequestNo` | text | 채번 `PR` + `yymm` + 6자리 (조회 키, MM-BR-552) |
 | 헤더 | `RequesterId` | 사용자 찾기 | 기본 로그인 사용자 |
 | 헤더 | `RequestDt` | date | 기본 오늘 |
 | 헤더 | `NeedDt` | date | 요청일 이후 (MM-BR-551) |

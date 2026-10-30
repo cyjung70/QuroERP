@@ -23,5 +23,5 @@
 - [품목 마스터·대체 품목](item.md): MM-BR-801 ~ MM-BR-833
 - [공급자 마스터](vendor.md): MM-BR-851 ~ MM-BR-872
 - [구매 단가](purchase-price.md): MM-BR-901 ~ MM-BR-905
-- [지급 처리](ap-payment.md): MM-BR-951 ~ MM-BR-965
+- [지급 처리](ap-payment.md): MM-BR-951 ~ MM-BR-966
 - [매입채무 리포트](ap-report.md): MM-BR-971 ~ MM-BR-982

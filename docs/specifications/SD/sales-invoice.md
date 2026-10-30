@@ -108,7 +108,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/sd/sales-invoices/{id}/cancel-unshipped | 미출하 취소 { cancelDt, reasons[8], lines[{ salesInvoiceLineId, qty }], updatedAt } → 201 { creditMemoId, cmNo } (SD-BR-145). 422 SD-E-145 |
 | DELETE | /api/sd/sales-invoices/{id}/cancellations/{creditMemoId} | 취소 되돌리기 → 204: 자동 Credit Memo 삭제, 위탁 창고로 다시 `TR`, 취소 수량·청구 수량 복원 (SD-BR-146). Credit Memo가 적용됐으면 422 SD-E-146 |
 | GET | /api/sd/sales-invoices/{id}/print/tax-invoice.pdf | KR 세금계산서 인쇄 (SD-BR-134). 사업자 고객이 아니거나 사업자 정보가 없으면 422 SD-E-134, US 회사는 404 |
-| GET | /api/sd/sales-invoices/{id}/print/sales-invoice.pdf | 송장 인쇄 (FastReport PDF) |
+| GET | /api/sd/sales-invoices/{id}/print/sales-invoice.pdf | 송장 인쇄 (PDF) |
 
 ## 관련 테이블
 

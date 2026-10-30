@@ -36,7 +36,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 
 | 영역 | TO BE 속성 (제안) | 입력 형식 | 비고 |
 | --- | --- | --- | --- |
-| 헤더 | `QuotationNo` | text | 채번 `QT` + `yymm` + 5자리 (조회 키, SD-BR-652) |
+| 헤더 | `QuotationNo` | text | 채번 `QT` + `yymm` + 6자리 (조회 키, SD-BR-652) |
 | 헤더 | `CustomerId` | `bc_customer` 찾기 | 필수. 전환된 줄이 있으면 잠금 (SD-BR-656) |
 | 헤더 | `QuotationDt` | date | 기본 오늘 |
 | 헤더 | `ValidTo` | date | 기본 견적일 + 30일 (SD-BR-653) |

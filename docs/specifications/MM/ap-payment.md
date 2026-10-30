@@ -30,6 +30,8 @@
 - 저장한 줄의 금액을 고치려 하면 막는다. 줄을 지우고 다시 넣는다 (MM-BR-956).
 - 줄을 지우면 송장 잔액·지급 누계를 되돌린다. 지급을 삭제하면 모든 줄을 되돌린다 (MM-BR-955·959).
 - 지급일을 바꾸면 줄 일자도 바꾼다 (MM-BR-960).
+- 지급 합계가 지급액보다 크면 저장을 막는다. 지급액을 줄일 때도 같다 (MM-BR-958).
+- 저장한 지급의 공급자는 잠긴다. 다른 공급자로 바꿔 보내면 서버가 막는다 (MM-BR-966).
 - 다른 사용자가 먼저 고쳤으면(updatedAt 불일치) 저장을 막고 다시 조회하게 한다.
 
 ## 화면 필드
@@ -102,6 +104,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `get_auto_num`, `update_hdr_am
 - [MM-BR-961](../../business-rules/MM/ap-payment.md)
 - [MM-BR-962](../../business-rules/MM/ap-payment.md)
 - [MM-BR-963](../../business-rules/MM/ap-payment.md)
+- [MM-BR-966](../../business-rules/MM/ap-payment.md)
 - [MM-BR-964](../../business-rules/MM/ap-payment.md)
 - [MM-BR-965](../../business-rules/MM/ap-payment.md)
 - [MM-BR-761](../../business-rules/MM/supplier-invoice.md)
@@ -129,11 +132,13 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `get_auto_num`, `update_hdr_am
 - `MM-UC-020-T08` 저장한 줄 금액 수정 차단
 - `MM-UC-020-T09` 줄 삭제·지급 삭제 시 송장 잔액·지급 누계 복원
 - `MM-UC-020-T10` 합계는 요청 값이 아니라 줄 합
-- `MM-UC-020-T11` 지급일 변경 시 줄 일자 변경
-- `MM-UC-020-T12` 지급 줄이 있는 송장은 수정 차단, 줄을 지우면 수정 가능 (MM-BR-760)
-- `MM-UC-020-T13` 입고는 불러오기 목록에 없다
-- `MM-UC-020-T14` 동시 지급 2건이 같은 송장 잔액을 넘지 않음 (행 잠금)
-- `MM-UC-020-T15` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-951 → MM-UT-951)
+- `MM-UC-020-T11` 지급 합계 > 지급액이면 차단
+- `MM-UC-020-T12` 저장한 지급의 공급자 변경 차단
+- `MM-UC-020-T13` 지급일 변경 시 줄 일자 변경
+- `MM-UC-020-T14` 지급 줄이 있는 송장은 수정 차단, 줄을 지우면 수정 가능 (MM-BR-760)
+- `MM-UC-020-T15` 입고는 불러오기 목록에 없다
+- `MM-UC-020-T16` 동시 지급 2건이 같은 송장 잔액을 넘지 않음 (행 잠금)
+- `MM-UC-020-T17` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-951 → MM-UT-951)
 
 ## AS IS 근거
 

@@ -15,7 +15,7 @@ Credit Memo(`sd_sales_invoice` `type = 'CM'`, `sd_sales_invoice_line`) 규칙이
 | SD-BR-203 | Credit Memo 수정·삭제는 송장에 적용하기 전에만 할 수 있다. Void 기능은 없다. 매출 반품이 만든 Credit Memo(SD-BR-558)와 선청구 미출하 취소가 만든 Credit Memo(SD-BR-146)는 고치거나 지울 수 없다 | `tot_dn_amt = bal_amt` | 차단, 메시지 SD-E-203 | AS IS CM 저장 적용 검사 ("This Credit Memo is already applied") | SD-UT-203, SD-TS-005, SD-TS-020 |
 | SD-BR-204 | Credit Memo 상태는 송장과 같은 식(SD-BR-105)으로 계산한다 | 조회·저장 시 | (상태 계산) | AS IS `get_dn_status` | SD-UT-204, SD-TS-005 |
 | SD-BR-205 | Credit Memo는 재고를 움직이지 않는다. 재고 반입은 매출 반품(SD-BR-555)이 한다. `restock` 컬럼은 이관한 Credit Memo의 반입 여부를 보관할 뿐이고, 새 Credit Memo는 false다 | 저장 | 재고 이동 없음 | AS IS는 사유와 관계없이 항상 반입했다 — TO BE 변경 (업무 규칙 버전업, 스테이블영 확정) | SD-UT-205, SD-TS-005 |
-| SD-BR-206 | Credit Memo 번호 형식은 `CM` + `yymm` + 5자리다. 채번은 SD-BR-006을 따른다 | 신규 저장 | (채번 규칙) | AS IS `get_auto_num('CM')` | SD-UT-206, SD-TS-005 |
+| SD-BR-206 | Credit Memo 번호 형식은 `CM` + `yymm` + 6자리다. 채번은 SD-BR-006을 따른다 | 신규 저장 | (채번 규칙) | AS IS `get_auto_num('CM')`, 5자리 → 6자리: TO BE 변경 (스테이블영 확정) | SD-UT-206, SD-TS-005 |
 | SD-BR-207 | 직접 만드는 Credit Memo는 원 송장과 연결하지 않는다. 고객과 품목(Inventory·Service)만 고르고, 할인 코드·할인율은 쓰지 않는다. 매출 반품이 만든 Credit Memo만 반품(`sales_return_id`)과 원 송장 줄에 연결된다 (SD-BR-557) | 입력 | (입력 규칙) | AS IS CM 화면. 반품 연결은 TO BE 변경 (업무 규칙 버전업, 스테이블영 확정) | SD-UT-207 |
 | SD-BR-208 | 사유는 8개(Broken, Price Adjustment, Defective Merchandise, Wrong Order, Wrong Shipment, Unsatisfactory Design, Unsatisfactory Price, Exchange) 중 0개 이상 고른다 | `cm_reason01`~`08` boolean | 저장 | AS IS CM 사유 체크박스 | SD-UT-208 |
 | SD-BR-209 | Credit Memo 합계는 줄 금액 합(음수)이고, 적용 전이므로 잔액은 합계와 같다 | 줄 변경 | `tot_dn_amt = bal_amt = sum(dn_amt)` | AS IS `update_hdr_amt('DN')` | SD-UT-209, SD-TS-005 |

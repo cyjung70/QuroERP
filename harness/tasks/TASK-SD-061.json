@@ -28,12 +28,13 @@
     "TASK-CORE-003",
     "TASK-CORE-005",
     "TASK-CORE-006",
-    "TASK-CORE-007"
+    "TASK-CORE-007",
+    "TASK-CORE-033"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
-    "FastReport PDF 출력"
+    "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)"
   ],
   "estimateHours": 2,
   "status": "todo"

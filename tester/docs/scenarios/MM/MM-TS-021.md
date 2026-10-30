@@ -40,7 +40,7 @@
 | 1 | 200 | — | G1 줄 미대사 6, G2 줄 미대사 4 (입고일·번호 순) | — |
 | 2 | 422 | `MM-E-753` | G2 줄, 미대사 수량 4 | 송장 없음 |
 | 3 | 422 | `MM-W-754` | `confirmField` = `confirmPriceDifference`, G1 줄 (발주 단가 10) | 송장 없음, `PV` 없음 |
-| 4 | 201 | — | 번호 `VI` + `yymm` + 5자리, 합계 112, 잔액 112, 상태 `OP` | G1·G2 줄 `invoiced_qty` = 6·4. `mm_goods_movement` `mov_type = 'PV'` 1행: I, `qty = 0`, `amount = 12`, 일자 = 송장 일자. `bc_item.stk_val = 112`, 재고 수량 10 그대로 |
+| 4 | 201 | — | 번호 `VI` + `yymm` + 6자리, 합계 112, 잔액 112, 상태 `OP` | G1·G2 줄 `invoiced_qty` = 6·4. `mm_goods_movement` `mov_type = 'PV'` 1행: I, `qty = 0`, `amount = 12`, 일자 = 송장 일자. `bc_item.stk_val = 112`, 재고 수량 10 그대로 |
 | 5 | 200 | — | G1·G2 줄이 없다 | — |
 | 6 | 201 | — | — | S1 `bal_amt = 62`, `cls_amt = 50`, 상태 `PA`. `mm_ap_clear.supplier_invoice_id = S1` |
 | 7 | 422 | `MM-E-760` | 지급된 송장 | S1 그대로 |
