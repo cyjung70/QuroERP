@@ -240,6 +240,17 @@ public class ItemScreenTests : BunitContext
         page.Find("[data-testid=item-header-valid-flag-n]").HasAttribute("disabled").Should().BeTrue();
     }
 
+    [Fact, Trait("Id", "BC-UC-010-T04")]
+    public void ImageLink_IsShownForALoadedItem_AndOpensTheImageScreen()
+    {
+        var page = RenderAs("user");
+        page.FindAll("[data-testid=item-header-image]").Should().BeEmpty();
+
+        Search(page, "A100");
+
+        page.Find("[data-testid=item-header-image]").GetAttribute("href").Should().Be("/bc/item-image-upload?itemCd=A100");
+    }
+
     [Theory, Trait("Id", "BC-UC-009-T08")]
     [InlineData("SALES_TAX", "item-header-taxable", "item-header-vat-kind")]
     [InlineData("VAT", "item-header-vat-kind", "item-header-taxable")]

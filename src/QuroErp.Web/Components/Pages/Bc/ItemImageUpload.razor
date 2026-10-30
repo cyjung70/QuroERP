@@ -1,0 +1,168 @@
+@page "/bc/item-image-upload"
+@rendermode InteractiveServer
+@using System.Net
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Common
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject ItemApiClient Api
+@inject IQuroConfirm Confirm
+@inject IStringLocalizer<SharedResource> L
+
+@* BC-UC-010 item image upload, screen type S. Save uploads the picked file. The API checks the file content (MM-BR-821);
+   this screen only checks the size before sending. *@
+
+<PageTitle>@L["Bc.ItemImageUpload.Title"]</PageTitle>
+
+@if (_ready)
+{
+    <QuroSingleForm @ref="_form" TModel="ItemImageModel" Title="@L["Bc.ItemImageUpload.Title"]" TestId="item-image-upload" ReadOnly="!_canEdit"
+                    CanCreate="false" LoadOnStart="!string.IsNullOrWhiteSpace(_searchCd)"
+                    Load="LoadAsync" Create="() => new ItemImageModel()" Save="UploadAsync">
+        <SearchContent>
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Bc.ItemImageUpload.ItemCd"]" @bind-Value="_searchCd" Required TextCase="TextCase.Upper" TestId="item-image-upload-search-item-cd" />
+                <button type="button" aria-label="@L["Bc.Item.FindItem"]" data-testid="item-image-upload-search-item-lookup" @onclick="() => _lookupOpen = true">…</button>
+            </div>
+            <QuroText Label="@L["Bc.ItemImageUpload.ItemName"]" Value="@_searchName" LockMode="LockMode.Always" TestId="item-image-upload-search-item-name" />
+        </SearchContent>
+        <Fields Context="item">
+            <QuroText Label="@L["Bc.ItemImageUpload.ItemCd"]" @bind-Value="item.ItemCd" Required LockMode="LockMode.Always" TestId="item-image-upload-header-item-cd" />
+            <QuroText Label="@L["Bc.ItemImageUpload.ItemName"]" @bind-Value="item.ItemName" LockMode="LockMode.Always" TestId="item-image-upload-header-item-name" />
+            @* Shown at its own size within the frame; the server never shrinks it (MM-BR-820, MM-BR-822) *@
+            <figure class="item-image" data-testid="item-image-upload-header-image">
+                @if (item.ItemCd is not null && item.Id != 0 && !_imageMissing)
+                {
+                    <img src="@ItemImageEndpoint.Of(item.ItemCd, _imageVersion)" alt="@L["Bc.ItemImageUpload.Image"]" @onerror="() => _imageMissing = true" />
+                }
+                else
+                {
+                    <figcaption>@L["Bc.ItemImageUpload.Image.None"]</figcaption>
+                }
+            </figure>
+            @if (_canEdit && item.Id != 0)
+            {
+                <div class="quro-field">
+                    <label for="item-image-file">@L["Bc.ItemImageUpload.File"]</label>
+                    <InputFile id="item-image-file" accept="image/jpeg" OnChange="e => PickFile(item, e)" data-testid="item-image-upload-header-file" />
+                    <small>@L["Bc.ItemImageUpload.Hint"]</small>
+                </div>
+            }
+        </Fields>
+        <Actions>
+            <button type="button" data-testid="item-image-upload-toolbar-delete" @onclick="DeleteImageAsync">@L["Bc.ItemImageUpload.Delete"]</button>
+        </Actions>
+    </QuroSingleForm>
+
+    <QuroLookupDialog TItem="ItemDto" Title="@L["Bc.Item.FindItem"]" TestId="item-image-upload-item-lookup"
+                      @bind-Visible="_lookupOpen" Search="keyword => Api.LookupAsync(keyword, CancellationToken.None)" OnSelected="SelectItemAsync">
+        <Columns>
+            <QuroColumn TRow="ItemDto" Title="@L["Bc.Item.ItemCd"]" Value="i => i.ItemCd" />
+            <QuroColumn TRow="ItemDto" Title="@L["Bc.Item.ItemName"]" Value="i => i.ItemName" />
+            <QuroColumn TRow="ItemDto" Title="@L["Bc.Item.ItemClass"]" Value="i => i.ItemClass" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    /// <summary>No file, not JPEG, larger than 10 MB, or no item (MM-BR-821).</summary>
+    private const string InvalidFileCode = "MM-E-821";
+
+    private QuroSingleForm<ItemImageModel>? _form;
+    private IBrowserFile? _file;
+    private bool _canEdit;
+    private bool _ready;
+    private bool _lookupOpen;
+    private bool _imageMissing;
+    private int _imageVersion;
+    private string? _searchCd;
+    private string? _searchName;
+
+    /// <summary>Item to open, e.g. from the item screen.</summary>
+    [SupplyParameterFromQuery(Name = "itemCd")]
+    public string? ItemCd { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    /// <summary>This screen for one item.</summary>
+    public static string PathOf(string itemCd) => $"/bc/item-image-upload?itemCd={Uri.EscapeDataString(itemCd)}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy exists, as in ItemController (MM-BR-824, BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        _searchCd = ItemCd?.Trim().ToUpperInvariant();
+        _ready = true;
+    }
+
+    private async Task<ItemImageModel?> LoadAsync()
+    {
+        _searchName = null;
+        _file = null;
+        if (string.IsNullOrWhiteSpace(_searchCd))
+        {
+            return null;
+        }
+        var item = await Api.FindByCodeAsync(_searchCd, CancellationToken.None);
+        _searchName = item?.ItemName;
+        ReloadImage();
+        return item is null ? null : new ItemImageModel { Id = item.Id, ItemCd = item.ItemCd, ItemName = item.ItemName };
+    }
+
+    private void PickFile(ItemImageModel item, InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+        item.FileName = e.File.Name;
+        item.FileSize = e.File.Size;
+    }
+
+    // Save: replaces the whole image with the picked file (MM-BR-821, MM-BR-822), then shows it again (MM-BR-824)
+    private async Task<ItemImageModel> UploadAsync(ItemImageModel item, bool isNew)
+    {
+        if (_file is null || item.FileName is null || _file.Size > ItemRoutes.ImageMaxBytes)
+        {
+            throw new ApiProblemException(new ApiProblem((int)HttpStatusCode.BadRequest, InvalidFileCode, []));
+        }
+        using var buffer = new MemoryStream();
+        await using (var stream = _file.OpenReadStream(ItemRoutes.ImageMaxBytes))
+        {
+            await stream.CopyToAsync(buffer);
+        }
+        await Api.UploadImageAsync(item.ItemCd!, buffer.ToArray(), _file.Name, CancellationToken.None);
+        _file = null;
+        ReloadImage();
+        return Loaded(item);
+    }
+
+    // MM-BR-823: after it the item group image or none is shown
+    private async Task DeleteImageAsync()
+    {
+        if (!await Confirm.ConfirmAsync(L["Bc.ItemImageUpload.ConfirmDelete"]))
+        {
+            return;
+        }
+        await _form!.RunActionAsync(async item =>
+        {
+            await Api.DeleteImageAsync(item.ItemCd!, CancellationToken.None);
+            _file = null;
+            ReloadImage();
+            return Loaded(item);
+        }, L["Common.Deleted"]);
+    }
+
+    private async Task SelectItemAsync(ItemDto item)
+    {
+        _searchCd = item.ItemCd;
+        await _form!.SearchAsync();
+    }
+
+    private void ReloadImage()
+    {
+        _imageVersion++;
+        _imageMissing = false;
+    }
+
+    private static ItemImageModel Loaded(ItemImageModel item) => new() { Id = item.Id, ItemCd = item.ItemCd, ItemName = item.ItemName };
+}

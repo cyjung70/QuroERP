@@ -66,6 +66,11 @@
             <QuroText Label="@L["Bc.Item.Memo3"]" @bind-Value="item.Memo3" TextCase="TextCase.Upper" TestId="item-header-memo3" />
             <QuroText Label="@L["Bc.Item.Memo4"]" @bind-Value="item.Memo4" TextCase="TextCase.Upper" TestId="item-header-memo4" />
             <QuroText Label="@L["Bc.Item.Memo5"]" @bind-Value="item.Memo5" TextCase="TextCase.Upper" TestId="item-header-memo5" />
+            @* The image is viewed and uploaded on its own screen (item spec step 6, BC-UC-010) *@
+            @if (item.Id != 0)
+            {
+                <a href="@ItemImageUpload.PathOf(item.ItemCd!)" data-testid="item-header-image">@L["Bc.Item.Image"]</a>
+            }
         </Fields>
     </QuroSingleForm>
 
@@ -83,7 +88,6 @@
 @code {
     private const string SalesTaxMethod = "SALES_TAX";
     private const string VatMethod = "VAT";
-    private const int LookupPageSize = 100;
 
     private QuroSingleForm<ItemModel>? _form;
     private LocalizationDto? _localization;
@@ -188,18 +192,7 @@
         _picked = null;
     }
 
-    // The keyword matches the item code prefix or the item name, in item class, item code order
-    private async Task<IReadOnlyList<ItemDto>> FindItemsAsync(string? keyword)
-    {
-        var byCode = await Api.SearchAsync(new ItemSearchQuery { ItemCd = keyword, Size = LookupPageSize }, CancellationToken.None);
-        if (string.IsNullOrWhiteSpace(keyword))
-        {
-            return byCode.Items;
-        }
-        var byName = await Api.SearchAsync(new ItemSearchQuery { ItemName = keyword, Size = LookupPageSize }, CancellationToken.None);
-        return byCode.Items.Concat(byName.Items).DistinctBy(i => i.Id)
-            .OrderBy(i => i.ItemClass, StringComparer.Ordinal).ThenBy(i => i.ItemCd, StringComparer.Ordinal).ToList();
-    }
+    private Task<IReadOnlyList<ItemDto>> FindItemsAsync(string? keyword) => Api.LookupAsync(keyword, CancellationToken.None);
 
     private async Task SelectItemAsync(ItemDto item)
     {

@@ -65,3 +65,6 @@ h1:focus {
 .page-notice { color: #1b5e20; }
 .quro-hint { color: #555; font-size: 0.9em; margin: 0; }
 .quro-actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-top: 1rem; }
+/* Item image (BC-UC-010): the original file, shrunk only for display (MM-BR-820) */
+.item-image { margin: 0; }
+.item-image img { display: block; max-width: 100%; max-height: 20rem; object-fit: contain; }

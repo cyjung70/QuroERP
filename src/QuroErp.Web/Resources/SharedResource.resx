@@ -144,6 +144,16 @@
   <data name="Bc.Item.Memo4" xml:space="preserve"><value>메모 4</value></data>
   <data name="Bc.Item.Memo5" xml:space="preserve"><value>메모 5</value></data>
   <data name="Bc.Item.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
+  <data name="Bc.Item.Image" xml:space="preserve"><value>이미지</value></data>
+  <data name="Bc.ItemImageUpload.Title" xml:space="preserve"><value>품목 이미지 업로드</value></data>
+  <data name="Bc.ItemImageUpload.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Bc.ItemImageUpload.ItemName" xml:space="preserve"><value>품목 이름</value></data>
+  <data name="Bc.ItemImageUpload.Image" xml:space="preserve"><value>품목 이미지</value></data>
+  <data name="Bc.ItemImageUpload.Image.None" xml:space="preserve"><value>이미지가 없습니다.</value></data>
+  <data name="Bc.ItemImageUpload.File" xml:space="preserve"><value>이미지 파일</value></data>
+  <data name="Bc.ItemImageUpload.Hint" xml:space="preserve"><value>JPEG, 10 MB 이하. 저장하면 지금 이미지를 바꿉니다. 품목 이미지가 없으면 품목 그룹 이미지를 보입니다.</value></data>
+  <data name="Bc.ItemImageUpload.Delete" xml:space="preserve"><value>이미지 지우기</value></data>
+  <data name="Bc.ItemImageUpload.ConfirmDelete" xml:space="preserve"><value>품목 이미지를 지울까요? 품목 그룹 이미지가 있으면 그 이미지를 보입니다.</value></data>
   <data name="Bc.ChangePassword.Title" xml:space="preserve"><value>비밀번호 변경</value></data>
   <data name="Bc.ChangePassword.CurrentPassword" xml:space="preserve"><value>현재 비밀번호</value></data>
   <data name="Bc.ChangePassword.NewPassword" xml:space="preserve"><value>새 비밀번호</value></data>
