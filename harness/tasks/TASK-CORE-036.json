@@ -30,5 +30,5 @@
     "기존 테스트로 두 패널 구조·`data-testid` 유지 확인, 1280px·375px 너비에서 en·ko 화면 확인"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

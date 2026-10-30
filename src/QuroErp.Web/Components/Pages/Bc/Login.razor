@@ -14,78 +14,93 @@
 @inject ProblemMessages Messages
 
 @* BC-UC-001 로그인. 쿠키를 써야 해서 정적 SSR로 렌더링한다 (rendermode 없음).
-   Remember ID, Caps Lock, show password and the busy button run in js/quro.js (quroLogin). *@
+   Remember ID, Caps Lock, show password and the busy button run in js/quro.js (quroLogin).
+   Split layout (TASK-CORE-036): brand panel on the left, form panel on the right. *@
 
 <PageTitle>@L["Bc.Login.Title"]</PageTitle>
 
 <main class="login-page">
-    <section class="login-card" aria-labelledby="login-title">
-        <h1 id="login-title" class="login-title">@L["Bc.Login.Title"]</h1>
+    @* Product logo, name and one-line intro only; hidden below 768px *@
+    <section class="login-brand" data-testid="login-brand">
+        <img class="login-brand-logo" src="@Assets["img/quro-logo-white.png"]" alt="@L["Bc.Login.ProductName"]" width="320" height="65" />
+        <p class="login-tagline">@L["Bc.Login.Tagline"]</p>
+        <span class="login-edition">@L["Bc.Login.Edition"]</span>
+    </section>
 
-        @* 9: one line above the form, cleared when the user types again *@
-        <p class="login-error" role="alert" data-testid="login-message" data-login-error hidden="@(_error is null)">@_error</p>
+    <div class="login-panel" data-testid="login-panel">
+        <section class="login-card" aria-labelledby="login-title">
+            @* The blue logo on light surfaces, the white one in dark mode (login.md, entry-frame.md 7) *@
+            <img class="login-logo login-logo-light" src="@Assets["img/quro-logo.png"]" alt="@L["Bc.Login.ProductName"]" width="168" height="34" />
+            <img class="login-logo login-logo-dark" src="@Assets["img/quro-logo-white.png"]" alt="" width="168" height="34" />
+            <h1 id="login-title" class="login-title">@L["Bc.Login.Title"]</h1>
 
-        <EditForm class="login-form" Model="Input" FormName="login" OnSubmit="LoginAsync" method="post" data-login-form
-                  data-busy-text="@L["Bc.Login.Submitting"]">
-            <div class="login-field">
-                <label for="user-id">@L["Bc.Login.UserId"]</label>
-                <InputText id="user-id" @bind-Value="Input!.UserId" autocomplete="username" maxlength="50" autofocus
-                           aria-describedby="user-id-error" data-testid="login-header-user-id" data-login-user-id />
-                <span id="user-id-error" class="login-field-error" data-login-field-error>@_userIdError</span>
-            </div>
-            <div class="login-field">
-                <label for="password">@L["Bc.Login.Password"]</label>
-                <div class="login-password">
-                    <InputText id="password" type="password" @bind-Value="Input!.Password" autocomplete="current-password" maxlength="128"
-                               aria-describedby="password-error caps-lock" data-testid="login-header-password" data-login-password />
-                    <button type="button" class="login-toggle" aria-pressed="false" aria-controls="password"
-                            aria-label="@L["Bc.Login.ShowPassword"]" data-show-label="@L["Bc.Login.ShowPassword"]"
-                            data-hide-label="@L["Bc.Login.HidePassword"]" data-testid="login-header-show-password" data-login-toggle>👁</button>
+            @* 9: one line above the form, cleared when the user types again *@
+            <p class="login-error" role="alert" data-testid="login-message" data-login-error hidden="@(_error is null)">@_error</p>
+
+            <EditForm class="login-form" Model="Input" FormName="login" OnSubmit="LoginAsync" method="post" data-login-form
+                      data-busy-text="@L["Bc.Login.Submitting"]">
+                <div class="login-field">
+                    <label for="user-id">@L["Bc.Login.UserId"]</label>
+                    <InputText id="user-id" @bind-Value="Input!.UserId" autocomplete="username" maxlength="50" autofocus
+                               aria-describedby="user-id-error" data-testid="login-header-user-id" data-login-user-id />
+                    <span id="user-id-error" class="login-field-error" data-login-field-error>@_userIdError</span>
                 </div>
-                <span id="caps-lock" class="login-hint" role="status" data-testid="login-caps-lock" data-login-caps hidden>@Messages.Get(CapsLockCode)</span>
-                <span id="password-error" class="login-field-error" data-login-field-error>@_passwordError</span>
-            </div>
-            <label class="login-check">
-                <input type="checkbox" data-testid="login-header-remember-id" data-login-remember />
-                @L["Bc.Login.RememberId"]
-            </label>
-            @if (_options.AutoLoginEnabled)
-            {
+                <div class="login-field">
+                    <label for="password">@L["Bc.Login.Password"]</label>
+                    <div class="login-password">
+                        <InputText id="password" type="password" @bind-Value="Input!.Password" autocomplete="current-password" maxlength="128"
+                                   aria-describedby="password-error caps-lock" data-testid="login-header-password" data-login-password />
+                        <button type="button" class="login-toggle" aria-pressed="false" aria-controls="password"
+                                aria-label="@L["Bc.Login.ShowPassword"]" data-show-label="@L["Bc.Login.ShowPassword"]"
+                                data-hide-label="@L["Bc.Login.HidePassword"]" data-testid="login-header-show-password" data-login-toggle>👁</button>
+                    </div>
+                    <span id="caps-lock" class="login-hint" role="status" data-testid="login-caps-lock" data-login-caps hidden>@Messages.Get(CapsLockCode)</span>
+                    <span id="password-error" class="login-field-error" data-login-field-error>@_passwordError</span>
+                </div>
                 <label class="login-check">
-                    <InputCheckbox @bind-Value="Input!.KeepSignedIn" aria-describedby="keep-signed-in-warning"
-                                   data-testid="login-header-keep-signed-in" data-login-keep />
-                    @L["Bc.Login.KeepSignedIn"]
+                    <input type="checkbox" data-testid="login-header-remember-id" data-login-remember />
+                    @L["Bc.Login.RememberId"]
                 </label>
-                <span id="keep-signed-in-warning" class="login-hint" data-testid="login-keep-signed-in-warning" data-login-keep-warning
-                      hidden="@(!Input!.KeepSignedIn)">@Messages.Get(SharedComputerCode)</span>
-            }
-            <button class="login-submit" type="submit" data-testid="login-toolbar-login">@L["Bc.Login.Submit"]</button>
-        </EditForm>
+                @if (_options.AutoLoginEnabled)
+                {
+                    <label class="login-check">
+                        <InputCheckbox @bind-Value="Input!.KeepSignedIn" aria-describedby="keep-signed-in-warning"
+                                       data-testid="login-header-keep-signed-in" data-login-keep />
+                        @L["Bc.Login.KeepSignedIn"]
+                    </label>
+                    <span id="keep-signed-in-warning" class="login-hint" data-testid="login-keep-signed-in-warning" data-login-keep-warning
+                          hidden="@(!Input!.KeepSignedIn)">@Messages.Get(SharedComputerCode)</span>
+                }
+                <button class="login-submit" type="submit" data-testid="login-toolbar-login">@L["Bc.Login.Submit"]</button>
+            </EditForm>
 
-        @if (_options.PasswordResetMode != EmailResetMode)
-        {
-            <p class="login-forgot" data-testid="login-forgot-password">@L["Bc.Login.ForgotPassword"]</p>
-        }
+            @if (_options.PasswordResetMode != EmailResetMode)
+            {
+                <p class="login-forgot" data-testid="login-forgot-password">@L["Bc.Login.ForgotPassword"]</p>
+            }
+        </section>
+
+        @* 1: shown at the top right of the panel but last in the markup, so it stays last in tab order *@
+        <form class="login-language" method="post" action="@WebLocalization.CulturePath">
+            <AntiforgeryToken />
+            <input type="hidden" name="returnUrl" value="@CurrentUrl" />
+            <label for="login-language">@L["Common.Language"]</label>
+            <select id="login-language" name="culture" data-testid="login-language" data-login-language>
+                @foreach (var culture in WebLocalization.Cultures)
+                {
+                    <option value="@culture" lang="@culture" selected="@(culture == CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)">
+                        @L[$"Common.Language.{culture}"]
+                    </option>
+                }
+            </select>
+            <noscript><button type="submit">@L["Common.Language"]</button></noscript>
+        </form>
 
         <footer class="login-footer">
             <p class="login-version" data-testid="login-version">@L["Bc.Login.Version", Version]</p>
             <p class="login-copyright">@L["Bc.Login.Copyright"]</p>
-            <form class="login-language" method="post" action="@WebLocalization.CulturePath">
-                <AntiforgeryToken />
-                <input type="hidden" name="returnUrl" value="@CurrentUrl" />
-                <label for="login-language">@L["Common.Language"]</label>
-                <select id="login-language" name="culture" data-testid="login-language" data-login-language>
-                    @foreach (var culture in WebLocalization.Cultures)
-                    {
-                        <option value="@culture" lang="@culture" selected="@(culture == CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)">
-                            @L[$"Common.Language.{culture}"]
-                        </option>
-                    }
-                </select>
-                <noscript><button type="submit">@L["Common.Language"]</button></noscript>
-            </form>
         </footer>
-    </section>
+    </div>
 </main>
 
 @code {
