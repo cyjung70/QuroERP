@@ -365,6 +365,12 @@
   <data name="Bc.CodeMajor.NameIn" xml:space="preserve"><value>Name ({0})</value></data>
   <data name="Bc.CodeMajor.UseYn" xml:space="preserve"><value>In Use</value></data>
   <data name="Bc.CodeMajor.MinorCount" xml:space="preserve"><value>Minor Codes</value></data>
+  <data name="Bc.Currency.Title" xml:space="preserve"><value>Currencies</value></data>
+  <data name="Bc.Currency.CurrencyCode" xml:space="preserve"><value>Currency Code</value></data>
+  <data name="Bc.Currency.Name" xml:space="preserve"><value>Name ({0})</value></data>
+  <data name="Bc.Currency.Decimals" xml:space="preserve"><value>Amount Decimals</value></data>
+  <data name="Bc.Currency.CountryCode" xml:space="preserve"><value>Country</value></data>
+  <data name="Bc.Currency.UseYn" xml:space="preserve"><value>In Use</value></data>
   <data name="SD-E-901" xml:space="preserve"><value>Major code {0} is empty, is not up to 30 upper-case letters, digits or _, already exists, or has no English name.</value></data>
   <data name="SD-E-902" xml:space="preserve"><value>The value of Major code {0} cannot be changed.</value></data>
   <data name="SD-E-903" xml:space="preserve"><value>Major code {0} has Minor codes and cannot be deleted. Delete its Minor codes first, or set it not in use.</value></data>
