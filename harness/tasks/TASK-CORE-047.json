@@ -1,0 +1,42 @@
+{
+  "id": "TASK-CORE-047",
+  "project": "core",
+  "title": "필드 정책 엔진·국가팩 KR·US·Lint·API",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/field-policy.md",
+    "docs/business-rules/BC/localization.md",
+    "docs/architecture/localization.md",
+    "docs/architecture/database-tables.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-046",
+    "TASK-CORE-021"
+  ],
+  "acceptance": [
+    "국가팩 폴더 `countrypacks/{US,KR}/`: `field-policy.yaml`, `defaults.yaml`, `labels.en.yaml`·`labels.ko.yaml`(라벨 재정의). 빌드 때 포함하고 코드에서 국가 분기를 하지 않는다 (field-policy.md 2장)",
+    "Domain `FieldPolicy`: 시스템 기본(`OPTIONAL`) → 국가팩 → 회사 재정의 순으로 합친 결과를 키마다 상태·기본값·라벨 키로 준다 (BC-BR-430·431)",
+    "마이그레이션: `bc_field_policy`(회사 재정의), 거래처·공급자·품목·매출·매입 문서 헤더의 `ext_attrs jsonb NOT NULL DEFAULT '{}'` (지금 있는 테이블만, 없는 테이블은 그 태스크가 처음부터 넣는다)",
+    "`FieldPolicyService.Validate(screenCode, dto)`: `REQUIRED` 빈 값 → 422 BC-E-432(인수 필드 라벨 키), `HIDDEN`·`READONLY` 입력은 무시하고 기본값(신규) 또는 저장된 값을 둔다. 응답에서 `HIDDEN` 필드는 null (BC-BR-432·434)",
+    "`ext_attrs`는 국가팩에 선언된 키만 저장, 선언되지 않은 키 → 422 BC-E-436 (BC-BR-436)",
+    "`GET /api/bc/field-policies?screen=`(합친 결과, 로그인 사용자), `PUT /api/bc/field-policies`(회사 재정의 일괄 저장, 지역화 설정 Full Access). `HIDDEN` + 필수 업무 필드 → 422 BC-E-433 (BC-BR-433·435)",
+    "Lint xUnit `FieldPolicyLintTests`: 국가팩마다 없는 키(리소스에 없는 라벨 키), `HIDDEN`인데 필수 업무 필드, 없는 기본값 코드 → 실패 (BC-BR-437)",
+    "리소스 BC-E-432·433·436 (en·ko). 단위 테스트 BC-UT-430~437"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

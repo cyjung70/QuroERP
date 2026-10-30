@@ -73,6 +73,7 @@
 | 자동 로그인 토큰 | AutoLoginToken | sys_auto_login_token | BC | TO BE 신규 |
 | 비밀번호 이력 | PasswordHistory | sys_password_history | BC | TO BE 신규 |
 | 사업장 | BusinessPlace | bc_business_place | BC | TO BE 신규 |
+| 필드 정책 회사 재정의 | FieldPolicy | bc_field_policy | BC | TO BE 신규 |
 | 창고 | Warehouse | bc_warehouse | MM | TO BE 신규 |
 | 창고별 현재고 | Onhand | mm_onhand | MM | TO BE 신규 |
 | 창고 이동 | StockTransfer | mm_stock_transfer | MM | TO BE 신규 |

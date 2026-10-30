@@ -142,6 +142,7 @@
 - [MVP 테이블 정의](architecture/database-tables.md)
 - [DB 설계 규칙 (PostgreSQL)](architecture/database.md)
 - [공통 엔트리 화면 프레임](architecture/entry-frame.md)
+- [필드 정책 (Field Policy)·국가팩](architecture/field-policy.md)
 - [다국어](architecture/i18n.md)
 - [재고 처리 공통 규칙](architecture/inventory.md)
 - [레이어드 아키텍처](architecture/layers.md)
@@ -161,7 +162,7 @@
 
 - [BC - 로그인·세션](business-rules/BC/auth.md)
 - [BC - 회사 정보·설정](business-rules/BC/company.md)
-- [BC - 지역화 (언어·통화·자릿수)](business-rules/BC/localization.md)
+- [BC - 지역화 (언어·통화·자릿수·필드 정책)](business-rules/BC/localization.md)
 - [BC - 메뉴·역할 권한](business-rules/BC/menu-role.md)
 - [BC - 비밀번호](business-rules/BC/password.md)
 - [BC 업무 규칙 (기초정보·공통)](business-rules/BC/README.md)

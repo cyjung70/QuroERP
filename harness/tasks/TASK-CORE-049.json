@@ -1,0 +1,36 @@
+{
+  "id": "TASK-CORE-049",
+  "project": "core",
+  "title": "필드 정책 파일럿: 고객·공급자 마스터 → 구매 요청",
+  "module": "CORE",
+  "layer": [
+    "Application",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/field-policy.md",
+    "docs/specifications/SD/customer.md",
+    "docs/specifications/MM/vendor.md",
+    "docs/specifications/MM/purchase-request.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-048"
+  ],
+  "acceptance": [
+    "고객·공급자 화면의 입력 필드에 `Policy`를 단다. 국가팩 값은 field-policy.md 4장 표(US: 주·Zip 필수, 사업자등록번호 영역 숨김 / KR: 주 숨김, 우편번호 필수, 사업자등록번호 영역 표시, 면세 증명서 영역 숨김)",
+    "고객·공급자·구매 요청 API가 `FieldPolicyService.Validate`를 부른다. 기존 국가 검사(BC-BR-521·524)는 `ICountryProfile`에 그대로 둔다",
+    "구매 요청 헤더·줄 필드에 `Policy`. 국가 차이가 없는 필드는 모두 `OPTIONAL`/명세 값",
+    "Tester BC-TS 필드 정책 시나리오(US·KR × 고객·공급자·구매 요청, 보임·필수 검사, DOM 검사)가 통과",
+    "이 태스크 뒤 발주·수주로 넓히는 것은 별도 태스크"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

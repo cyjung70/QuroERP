@@ -8,11 +8,11 @@
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "7368040c3c19103d9daf925d36d5e3ad775de2bbefa84edc681413f20667653a"
+      "sha256": "c6322d6d171ff403ec094c096f6d3d793642c2558b6a8fbb75944da976c7edc7"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
-      "sha256": "fde885687db57f251833b452db8b276f9060c009ded57a19b02a5b50ecab5d94"
+      "sha256": "de135fc5f581cb4cd45847f32a4fceb70edc6abbf90b77c97ffeb2bfcddc2e0e"
     },
     {
       "path": ".agents/skills/quro-dapper/SKILL.md",
@@ -40,11 +40,11 @@
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "7368040c3c19103d9daf925d36d5e3ad775de2bbefa84edc681413f20667653a"
+      "sha256": "c6322d6d171ff403ec094c096f6d3d793642c2558b6a8fbb75944da976c7edc7"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
-      "sha256": "fde885687db57f251833b452db8b276f9060c009ded57a19b02a5b50ecab5d94"
+      "sha256": "de135fc5f581cb4cd45847f32a4fceb70edc6abbf90b77c97ffeb2bfcddc2e0e"
     },
     {
       "path": ".claude/skills/quro-dapper/SKILL.md",
@@ -88,15 +88,19 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "4b02834f32a3edc7e8d882e5913654d771837efb3e2ff8837c9667f0b012595f"
+      "sha256": "d4c442db64c14ffff76df89769e7ea904647e189dc3c9063d60bed9b79333154"
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "ee07d9581894bc39a563554d08c787ec523bc187845bcb1824ef2da235360a1d"
+      "sha256": "06a4667dbaeaf15e29f60824c610af68e2e68b2087e783b34d6a715247cdb606"
     },
     {
       "path": "docs/architecture/entry-frame.md",
       "sha256": "4aa7444e5c29ce2dc01d746f1c3e1f4e01705eb1eb6f5a1d792b0119163bb089"
+    },
+    {
+      "path": "docs/architecture/field-policy.md",
+      "sha256": "d8ba416e48bd0ae35becf3b76ce432df3a2d21857d2c6c9623d55bca9a3b7af5"
     },
     {
       "path": "docs/architecture/i18n.md",
@@ -112,7 +116,7 @@
     },
     {
       "path": "docs/architecture/localization.md",
-      "sha256": "49b7d4621ffa5551d1dd2e9f5a1e7ddb0759c12582d31cdbead8fa16321eafd2"
+      "sha256": "b2007404a0cc7581d65780a78b2e8dd38aecefcad3a7a08658cf354dcd7b7366"
     },
     {
       "path": "docs/architecture/login.md",
@@ -140,7 +144,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "712854ab90293907ba1d3dcdfb214fc880c1ee489b84ae5476ecdad94e69bfda"
+      "sha256": "9bac1dec72f41445c86d867971543a32140a2108eafc175d9d1c43848b8e4f6e"
     },
     {
       "path": "docs/architecture/security.md",
@@ -164,7 +168,7 @@
     },
     {
       "path": "docs/business-rules/BC/localization.md",
-      "sha256": "0e2d3f27a6fc5474d60bccc248761ac84282595bc6a1d012bd75e55c701c0905"
+      "sha256": "3f4e95a2cce34d60e3dcf9bb6a11960e7e7fbe1881da07d4a930eff01674bfaf"
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
@@ -344,11 +348,11 @@
     },
     {
       "path": "docs/glossary.md",
-      "sha256": "3178c557850e1b296c2b29271f69c6b7998bd5931dfcb6a3106405d2bf2e188e"
+      "sha256": "f37e96afa2e3915fb0f8d56dfd9233b3c73e8656899e3ddfd7c37ab50c2b93ef"
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "30200eba25e4f11d2896fe20ef7f9aa85ee7548ec385ce04c1a0d60d8597a062"
+      "sha256": "9e810c5610dba3e671e971025a164012e0e95542df09a5a0e60724fe1d438955"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -1291,6 +1295,18 @@
       "sha256": "99006fd2415f9c2590efdefe9f1730e0ae9ecc11b7d655dc58e5a31d47222ab7"
     },
     {
+      "path": "harness/tasks/TASK-CORE-047.json",
+      "sha256": "a3d2649e089e56d2539d10c9a16993e3d9491966635528266cef8bce085fcd94"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-048.json",
+      "sha256": "9fe4c54639fb15fe7fafcbc2bb842e33d9e1bbf343195e292ad1b73ccbab1bf1"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-049.json",
+      "sha256": "9cdc7ac5dd0c5d2c0d42c5ecd7dd9e6b7ba5b9409fb2fd640212d2204ef26742"
+    },
+    {
       "path": "harness/tasks/TASK-MM-001.json",
       "sha256": "5c01e9229511081d352c04ab8c395ec301d1da1f60c979bdbb6eef7da70e2925"
     },
@@ -1788,7 +1804,7 @@
     },
     {
       "path": "tester/docs/INDEX.md",
-      "sha256": "b4e131ec792d6a388b3e7da5726f5315863db900dcd997856eab923045e3fec7"
+      "sha256": "b99661d2db0eda7091e4e53caf696e3efcb268148cc9d431aeeedb100f3db6e5"
     },
     {
       "path": "tester/docs/qa/defects.md",
@@ -1837,6 +1853,10 @@
     {
       "path": "tester/docs/scenarios/BC/BC-TS-007.md",
       "sha256": "48a8596978294af37e5314e824987575c5dfc58ab5172c0a9b263c3a2ad80963"
+    },
+    {
+      "path": "tester/docs/scenarios/BC/BC-TS-008.md",
+      "sha256": "710c6f43304eb14d018fb203aa08a2fb536bf43cebb5e588c48e8f87b426d517"
     },
     {
       "path": "tester/docs/scenarios/migration/.gitkeep",
