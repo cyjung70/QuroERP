@@ -28,6 +28,8 @@
 
 - 공급자 송장으로 대사한 줄이나 공급자 반품이 있는 입고는 수정·삭제할 수 없다 (MM-BR-104·790). 상태는 대사 상태다 (MM-BR-105).
 - 저장한 줄은 고칠 수 없다. 지우고 다시 넣는다 (MM-BR-107). 줄을 지우면 반입과 발주 입고 수량을 되돌린다.
+- 공급자는 신규 때만 고른다. 저장 후에는 잠기고, API로 바꾸면 422 MM-E-116이다 (MM-BR-116).
+- 줄이 있는 입고는 입고일을 바꿀 수 없다 (MM-BR-117, MM-E-117). 참조 번호·비고는 바꿀 수 있다.
 - 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
 - 재고를 줄이는 저장은 마이너스 재고 모드를 따른다. 품목+창고 현재고(MM-BR-001·002)와 수불일자 시점·이후 일자 잔고(MM-BR-009·010)를 본다.
 - 로트 관리 품목 줄에는 로트 열이 있다. 재고를 늘리는 줄은 로트 번호를 넣고(비우면 자동 번호), 줄이는 줄은 로트 찾기로 하나 고른다. 로트 잔고는 모드와 상관없이 음수가 될 수 없다 (MM-BR-353·355·356·362).
@@ -110,6 +112,8 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_nu
 - [MM-BR-113](../../business-rules/MM/goods-receipt.md)
 - [MM-BR-114](../../business-rules/MM/goods-receipt.md)
 - [MM-BR-115](../../business-rules/MM/goods-receipt.md)
+- [MM-BR-116](../../business-rules/MM/goods-receipt.md)
+- [MM-BR-117](../../business-rules/MM/goods-receipt.md)
 - [MM-BR-024](../../business-rules/MM/purchase-order.md)
 - [MM-BR-161](../../business-rules/MM/goods-receipt.md)
 - [MM-BR-162](../../business-rules/MM/goods-receipt.md)

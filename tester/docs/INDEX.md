@@ -34,7 +34,7 @@
 
 - [MM-TS-001 발주 → 전량 입고 → 출하 출고 (기본 흐름)](scenarios/MM/MM-TS-001.md)
 - [MM-TS-002 분할 입고와 과납 입고 확인](scenarios/MM/MM-TS-002.md)
-- [MM-TS-003 입고 삭제 → 반입 취소와 발주 상태 되돌림](scenarios/MM/MM-TS-003.md)
+- [MM-TS-003 입고 삭제 → 반입 취소와 발주 상태 되돌림, 저장 후 공급자·입고일 잠금](scenarios/MM/MM-TS-003.md)
 - [MM-TS-004 입고가 있는 발주와 송장으로 대사한 입고의 수정 차단](scenarios/MM/MM-TS-004.md)
 - [MM-TS-005 출고 뒤 입고 삭제 — 마이너스 재고 모드별 결과](scenarios/MM/MM-TS-005.md)
 - [MM-TS-006 두 번 입고한 품목의 이동평균원가와 출고 원가](scenarios/MM/MM-TS-006.md)

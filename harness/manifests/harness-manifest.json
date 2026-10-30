@@ -152,7 +152,7 @@
     },
     {
       "path": "docs/business-rules/BC/localization.md",
-      "sha256": "49e3df9c478e965f3b45cd923d4f85e38d5221474174a7019f65c953673f0d23"
+      "sha256": "0e2d3f27a6fc5474d60bccc248761ac84282595bc6a1d012bd75e55c701c0905"
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
@@ -196,7 +196,7 @@
     },
     {
       "path": "docs/business-rules/MM/goods-receipt.md",
-      "sha256": "f7fc1d5658e2e7f7f508992ad1a15195fc3d542c02a235f42a7c0969f77c8daa"
+      "sha256": "7f084355c1f44e00039acdb8180c5f7fd220e84930dfabbd57bf85d4a82b3973"
     },
     {
       "path": "docs/business-rules/MM/inventory-report.md",
@@ -336,7 +336,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "8b77ba55f57fafad7ed653c6f4a3b5544545cd416cb3f81f6911af778bd1034a"
+      "sha256": "308fcfee07c02cf6d4513a03d651db0d4d5c91bcf9e6391c336b7368f399d5b2"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -384,7 +384,7 @@
     },
     {
       "path": "docs/specifications/BC/currency.md",
-      "sha256": "d4c68da9867d6bc73ce7417c51b37a13878ac92555d0701c2cf6369ee6a4c2d6"
+      "sha256": "ce9b22d24c49b9518461d12f6902da49b202857a01c0487f5f5cd59197c2a385"
     },
     {
       "path": "docs/specifications/BC/exchange-rate.md",
@@ -416,7 +416,7 @@
     },
     {
       "path": "docs/specifications/BC/login.md",
-      "sha256": "866e32e522f8ebeef129c19d18e81450c6fdd111861b0d2b4e83baeca06984ee"
+      "sha256": "0e3f5fe6b9d455aae0176b10407ef700750dd15d53dfff779a4bced899b15993"
     },
     {
       "path": "docs/specifications/BC/purchase-price.md",
@@ -464,7 +464,7 @@
     },
     {
       "path": "docs/specifications/MM/goods-receipt.md",
-      "sha256": "f4946424da6bc0a7a47f471033dab0c814b19ef3266a38a3ab6fe65a620705e8"
+      "sha256": "ff48276c35e8bffcc75b171a94d09b435bae2f0df551b63f73de1434711014ea"
     },
     {
       "path": "docs/specifications/MM/inventory-closing-cancel.md",
@@ -1064,11 +1064,11 @@
     },
     {
       "path": "harness/tasks/TASK-BC-051.json",
-      "sha256": "090622ec41d901c5197f5c7ce463a53380c82292983c6e377110001bb6f335a4"
+      "sha256": "2958cd214a5b3b754b59c6df31fcb97ea1b5b81d28a337f264981a78462f2c52"
     },
     {
       "path": "harness/tasks/TASK-BC-052.json",
-      "sha256": "6ddfd511c9254913e282104f1aa83e70ed6b879a4e8a77e4620681df9f5ba9fe"
+      "sha256": "a1cf57d7c4b4f50692e061fcad834d8bad64d7a42cae2540e4b25e727b1102f6"
     },
     {
       "path": "harness/tasks/TASK-BC-053.json",
@@ -1231,6 +1231,14 @@
       "sha256": "25d642560693f0efb954af079c8cbb9ee0b6c5c5c65752d2f18cc68e0d8b6e4d"
     },
     {
+      "path": "harness/tasks/TASK-CORE-035.json",
+      "sha256": "7d7cc7e8d5e4e3e39752b8e0900f5862ae265f11e4169d0bd8dbe5789603e367"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-036.json",
+      "sha256": "6e1c4eb512efb7c9fb9070674c93e9fe4cc72c56ef9fad4c3b3abe9a08d766c2"
+    },
+    {
       "path": "harness/tasks/TASK-MM-001.json",
       "sha256": "5c01e9229511081d352c04ab8c395ec301d1da1f60c979bdbb6eef7da70e2925"
     },
@@ -1256,11 +1264,11 @@
     },
     {
       "path": "harness/tasks/TASK-MM-007.json",
-      "sha256": "8aaa0ed976f2faaefa4555a5ba628655d7dcd4e61d07c087e5cf9b78fe1eb72e"
+      "sha256": "34a01de5aa9aa936932133f0f671b5fa9523a1fae6392b0b1f1369df1e74f8c2"
     },
     {
       "path": "harness/tasks/TASK-MM-008.json",
-      "sha256": "fba025582e663ad5e351a1caf71e449ef01e986cd0489ad46a3d0649ce00222c"
+      "sha256": "5837264c48d1fd3500c5328a3fca47c0540ed962a5189bfbd6ef627f2452f3a1"
     },
     {
       "path": "harness/tasks/TASK-MM-009.json",
@@ -1728,7 +1736,7 @@
     },
     {
       "path": "tester/docs/INDEX.md",
-      "sha256": "26336764e8dbc2469bbbd219303445dd6bf27c7013f95adbea39faef86e5a6bf"
+      "sha256": "b4e131ec792d6a388b3e7da5726f5315863db900dcd997856eab923045e3fec7"
     },
     {
       "path": "tester/docs/qa/defects.md",
@@ -1804,7 +1812,7 @@
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-001.md",
-      "sha256": "ce925ec480d5434bd7cb69e6019d7adc691f5ee7df0c210536f603743d06ef62"
+      "sha256": "c230ed90454b1c120aba2724d154476243669bcdbf50154670604707ce624c3a"
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-002.md",
@@ -1812,7 +1820,7 @@
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-003.md",
-      "sha256": "a510945fce7f712dc64d87edb4b48f762add40219b889d189bb0e5d392336d0d"
+      "sha256": "3b8e94576f317a625211baf23a71b7db0eb41d351ce52f1519fdce1dfac4b5c1"
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-004.md",
@@ -1836,7 +1844,7 @@
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-009.md",
-      "sha256": "56ffd9534cf88847ca70c8f47a33fd06c85569c6dface76600a73e67daf8691d"
+      "sha256": "186b1cf99009a303051dde00bfa2583c044274e46738537313d073cfbef9384a"
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-010.md",
