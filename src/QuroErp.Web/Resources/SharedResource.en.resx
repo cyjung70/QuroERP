@@ -390,4 +390,9 @@
   <data name="Menu.G5AD03" xml:space="preserve"><value>Users</value></data>
   <data name="Menu.G5AD04" xml:space="preserve"><value>Menus</value></data>
   <data name="Menu.G5AD05" xml:space="preserve"><value>Role Menus</value></data>
+  <data name="Role.poweruser" xml:space="preserve"><value>Power User</value></data>
+  <data name="Role.salesman" xml:space="preserve"><value>Salesperson</value></data>
+  <data name="Role.admin" xml:space="preserve"><value>Administrator</value></data>
+  <data name="Role.manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="Role.srep" xml:space="preserve"><value>Sales Rep</value></data>
 </root>

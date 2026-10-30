@@ -50,7 +50,6 @@ public sealed record LoginOptionsResponse(bool AutoLoginEnabled, string Password
 /// without an access level (app-shell.md 5).
 /// </param>
 /// <param name="CompanyName">Company name for the shell top bar (bc_company).</param>
-/// <param name="RoleName">Role name; null while roles have no name, so the shell shows the role code.</param>
 public sealed record MeResponse(
     string UserId,
     string? UserName,
@@ -61,8 +60,7 @@ public sealed record MeResponse(
     string? LastLoginIp,
     AuthWarehouse? DefaultWarehouse,
     IReadOnlyList<AuthMenu> Menus,
-    string? CompanyName,
-    string? RoleName);
+    string? CompanyName);
 
 /// <summary>A menu of the user's role (sys_role_menu, sys_menu), or a parent menu group of one (FullAccess null).</summary>
 /// <param name="Type">M menu group, P program, U popup.</param>

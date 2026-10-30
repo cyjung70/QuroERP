@@ -502,7 +502,6 @@ public class LoginServiceTests
             DefaultWarehouse = new AuthWarehouse(1, "W01", "Main"),
             Menus = new[] { new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y", "P") },
             CompanyName = "Quro Test Co.",
-            RoleName = (string?)null,
         });
     }
 

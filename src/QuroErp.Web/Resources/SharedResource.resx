@@ -390,4 +390,9 @@
   <data name="Menu.G5AD03" xml:space="preserve"><value>사용자</value></data>
   <data name="Menu.G5AD04" xml:space="preserve"><value>메뉴</value></data>
   <data name="Menu.G5AD05" xml:space="preserve"><value>역할 메뉴</value></data>
+  <data name="Role.poweruser" xml:space="preserve"><value>파워 유저</value></data>
+  <data name="Role.salesman" xml:space="preserve"><value>영업 사원</value></data>
+  <data name="Role.admin" xml:space="preserve"><value>관리자</value></data>
+  <data name="Role.manager" xml:space="preserve"><value>매니저</value></data>
+  <data name="Role.srep" xml:space="preserve"><value>영업 담당</value></data>
 </root>

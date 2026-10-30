@@ -50,8 +50,10 @@
     [Parameter]
     public ShellProfile? Profile { get; set; }
 
-    // Role name, or the role code while roles have no name (app-shell.md 2 item 5)
-    private string? Role => Profile?.Me.RoleName ?? Profile?.Me.RoleCode;
+    // Role.<role_code> resource, else the role code (app-shell.md 2 item 5, 5)
+    private string? Role => Profile?.Me.RoleCode is { } code
+        ? L[$"Role.{code}"] is { ResourceNotFound: false } name ? name.Value : code
+        : null;
 
     private IReadOnlyList<string> Languages => Profile?.Languages ?? WebLocalization.Cultures;
 

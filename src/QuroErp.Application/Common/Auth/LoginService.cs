@@ -258,10 +258,9 @@ public sealed class LoginService(
         var companyName = await users.FindCompanyNameAsync(tx, cancellationToken);
         await uow.CommitAsync(cancellationToken);
 
-        // sys_role has no name yet: RoleName stays null and the shell shows the role code (app-shell.md 2)
         return new MeResponse(
             user.UserId, user.UserName, user.RoleCode, user.LangCode, user.RequiresPasswordChange(now, today, setting),
-            user.LastLoginAt, user.LastLoginIp, warehouse, menus, companyName, RoleName: null);
+            user.LastLoginAt, user.LastLoginIp, warehouse, menus, companyName);
     }
 
     /// <summary>
