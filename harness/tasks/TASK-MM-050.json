@@ -1,0 +1,69 @@
+{
+  "id": "TASK-MM-050",
+  "project": "core",
+  "title": "공급자 반품 화면 (SM)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/MM/vendor-return.md"
+  ],
+  "rules": [
+    "MM-BR-781",
+    "MM-BR-782",
+    "MM-BR-783",
+    "MM-BR-784",
+    "MM-BR-785",
+    "MM-BR-786",
+    "MM-BR-787",
+    "MM-BR-788",
+    "MM-BR-789",
+    "MM-BR-790",
+    "MM-BR-753",
+    "MM-BR-758",
+    "MM-BR-762",
+    "MM-BR-001",
+    "MM-BR-002",
+    "MM-BR-003",
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008",
+    "MM-BR-009",
+    "MM-BR-010",
+    "MM-BR-601",
+    "MM-BR-602",
+    "MM-BR-603",
+    "MM-BR-604",
+    "MM-BR-606",
+    "MM-BR-607",
+    "MM-BR-703",
+    "MM-BR-353",
+    "MM-BR-354",
+    "MM-BR-355",
+    "MM-BR-356",
+    "MM-BR-360",
+    "MM-BR-362"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-MM-049"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스",
+    "헤더 창고(기본 창고)·줄 창고 선택 (MM-BR-703)",
+    "로트 관리 품목 줄의 로트 열: 늘리는 줄 입력(빈 값 = 자동), 줄이는 줄 로트 찾기 (MM-BR-353·355·362)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

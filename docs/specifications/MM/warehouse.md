@@ -10,7 +10,7 @@
 | 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
-> AS IS에 없는 TO BE 신규 기능이다. 설치·이관 때 기본 창고 1개가 만들어진다.
+> AS IS에 없는 TO BE 신규 기능이다. 설치·이관 때 기본 창고 1개와 위탁 창고 1개(`CONSIGN`, 선청구 재고, MM-BR-709)가 만들어진다. 위탁 창고 행은 유형·사용 여부를 바꿀 수 없다.
 
 ## 기본 흐름
 
@@ -39,6 +39,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 | 그리드 | `WarehouseName` | text | 필수 |
 | 그리드 | `IsDefault` | checkbox | 1개만. 체크하면 다른 행 체크를 푼다 (MM-BR-702) |
 | 그리드 | `UseYn` | checkbox | 기본 true |
+| 그리드 | `WarehouseType` | text (읽기 전용) | `NORMAL`·`CONSIGNMENT` (MM-BR-709) |
 | 그리드 | `Remarks` | text |  |
 
 ## REST API
@@ -63,6 +64,9 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 - [MM-BR-702](../../business-rules/MM/warehouse.md)
 - [MM-BR-703](../../business-rules/MM/warehouse.md)
 - [MM-BR-704](../../business-rules/MM/warehouse.md)
+- [MM-BR-709](../../business-rules/MM/warehouse.md)
+- [MM-BR-710](../../business-rules/MM/warehouse.md)
+- [MM-BR-711](../../business-rules/MM/warehouse.md)
 
 ## 다국어 리소스 키
 

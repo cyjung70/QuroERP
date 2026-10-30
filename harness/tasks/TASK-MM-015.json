@@ -9,7 +9,7 @@
     "Domain",
     "Infrastructure"
   ],
-  "screenType": "S",
+  "screenType": "SM",
   "specs": [
     "docs/specifications/MM/inventory-closing.md"
   ],
@@ -28,6 +28,12 @@
     "MM-BR-412",
     "MM-BR-413",
     "MM-BR-414",
+    "MM-BR-416",
+    "MM-BR-417",
+    "MM-BR-418",
+    "MM-BR-419",
+    "MM-BR-420",
+    "MM-BR-421",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
@@ -43,7 +49,13 @@
     "MM-BR-603",
     "MM-BR-604",
     "MM-BR-606",
-    "MM-BR-607"
+    "MM-BR-607",
+    "MM-BR-353",
+    "MM-BR-354",
+    "MM-BR-355",
+    "MM-BR-356",
+    "MM-BR-360",
+    "MM-BR-362"
   ],
   "skills": [
     "quro-api",
@@ -64,9 +76,14 @@
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
-    "마이너스 재고 모드 3종 테스트 (현재고·시점별·월말)",
-    "마감 전 재고 대사 점검 (MM-BR-408)"
+    "마이너스 재고 모드 2개 테스트 (현재고·시점별·월말)",
+    "로트 관리 품목 줄: 로트 입력·선택, 로트 잔고 검사 (MM-BR-353~356)",
+    "마감 전 재고 대사 점검 (MM-BR-408)",
+    "`mm_cost_adjustment`·`mm_cost_adjustment_line` 마이그레이션 (database-tables.md). 부분 UNIQUE: `year_month` WHERE `status = 'CONFIRMED'`, DRAFT 1개",
+    "계산은 수불·월 재고·`close_year_month`를 바꾸지 않는다. 확인은 다시 계산한 값이 문서와 다르면 409 MM-E-418 (MM-BR-416·418)",
+    "단위 테스트: 조정 금액 수정 차이를 기말 수량이 가장 많은 창고 기말 금액에 넣는다, 다음 달 이동평균이 그 기말에서 출발한다 (MM-BR-421·413)",
+    "마감 취소는 CONFIRMED → CANCELLED, DRAFT 삭제 (MM-BR-403·419)"
   ],
-  "estimateHours": 2,
+  "estimateHours": 3,
   "status": "todo"
 }

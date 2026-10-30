@@ -46,7 +46,8 @@
     "TASK-MM-007",
     "TASK-MM-009",
     "TASK-MM-030",
-    "TASK-MM-035"
+    "TASK-MM-035",
+    "TASK-MM-047"
   ],
   "acceptance": [
     "tests/api/MM/test_item_master_integrity.py: MM-TS-013. 이미지 파일 3개(JPEG 약 20KB·2KB, 확장자만 jpg인 PNG)는 tests/data/에 두고 공개 가능한 직접 만든 이미지만 쓴다",

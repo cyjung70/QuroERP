@@ -1,0 +1,54 @@
+{
+  "id": "TASK-MM-048",
+  "project": "core",
+  "title": "공급자 송장 화면 (SM)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/MM/supplier-invoice.md"
+  ],
+  "rules": [
+    "MM-BR-751",
+    "MM-BR-752",
+    "MM-BR-753",
+    "MM-BR-754",
+    "MM-BR-755",
+    "MM-BR-756",
+    "MM-BR-757",
+    "MM-BR-758",
+    "MM-BR-759",
+    "MM-BR-760",
+    "MM-BR-761",
+    "MM-BR-762",
+    "MM-BR-763",
+    "MM-BR-764",
+    "MM-BR-765",
+    "MM-BR-164",
+    "MM-BR-409",
+    "MM-BR-410",
+    "MM-BR-416",
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-601",
+    "MM-BR-606"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-MM-047"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

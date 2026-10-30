@@ -1,0 +1,49 @@
+{
+  "id": "TASK-TESTER-021",
+  "project": "tester",
+  "title": "견적 → 수주, 구매 요청 → 발주 테스트: 분할 전환·만료·실주, 여러 요청 → 한 발주·희망 공급자·닫기",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-019.md",
+    "tester/docs/scenarios/MM/MM-TS-020.md"
+  ],
+  "rules": [
+    "SD-BR-651",
+    "SD-BR-652",
+    "SD-BR-653",
+    "SD-BR-654",
+    "SD-BR-655",
+    "SD-BR-656",
+    "SD-BR-657",
+    "SD-BR-658",
+    "MM-BR-551",
+    "MM-BR-552",
+    "MM-BR-553",
+    "MM-BR-554",
+    "MM-BR-555",
+    "MM-BR-556"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-SD-003",
+    "TASK-MM-005",
+    "TASK-SD-067",
+    "TASK-MM-045"
+  ],
+  "acceptance": [
+    "tests/api/SD/test_quotation.py: SD-TS-019",
+    "tests/api/MM/test_purchase_request.py: MM-TS-020",
+    "전환·발주 수량은 DB SELECT로 확인한다 (converted_qty, ordered_qty)",
+    "날짜는 실행일 기준으로 계산한다 (만료 견적)",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k \"quotation or purchase_request\" 통과, uv run ruff check 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

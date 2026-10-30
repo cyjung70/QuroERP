@@ -67,6 +67,8 @@
 | 화면 설정 | UiSetting | sys_ui_setting | BC | TO BE 신규 |
 | 할인율 | DiscountRate | sd_discount_rate | SD | TO BE 신규 |
 | 재고 설정 | InventorySetting | mm_inventory_setting | MM | TO BE 신규 |
+| 원가 조정 문서 | CostAdjustment | mm_cost_adjustment | MM | TO BE 신규 |
+| 원가 조정 줄 | CostAdjustmentLine | mm_cost_adjustment_line | MM | TO BE 신규 |
 | 인증 설정 | AuthSetting | sys_auth_setting | BC | TO BE 신규 |
 | 자동 로그인 토큰 | AutoLoginToken | sys_auto_login_token | BC | TO BE 신규 |
 | 비밀번호 이력 | PasswordHistory | sys_password_history | BC | TO BE 신규 |
@@ -76,6 +78,18 @@
 | 창고 이동 상세 | StockTransferLine | mm_stock_transfer_line | MM | TO BE 신규 |
 | 출하 | Shipment | sd_shipment | SD | TO BE 신규 |
 | 출하 상세 | ShipmentLine | sd_shipment_line | SD | TO BE 신규 |
+| 매출 반품 | SalesReturn | sd_sales_return | SD | TO BE 신규 |
+| 매출 반품 상세 | SalesReturnLine | sd_sales_return_line | SD | TO BE 신규 |
+| 공급자 송장 | SupplierInvoice | mm_supplier_invoice | MM | TO BE 신규 |
+| 공급자 송장 상세 | SupplierInvoiceLine | mm_supplier_invoice_line | MM | TO BE 신규 |
+| 공급자 반품 | VendorReturn | mm_vendor_return | MM | TO BE 신규 |
+| 공급자 반품 상세 | VendorReturnLine | mm_vendor_return_line | MM | TO BE 신규 |
+| 견적 | Quotation | sd_quotation | SD | TO BE 신규 |
+| 견적 상세 | QuotationLine | sd_quotation_line | SD | TO BE 신규 |
+| 구매 요청 | PurchaseRequest | mm_purchase_request | MM | TO BE 신규 |
+| 구매 요청 상세 | PurchaseRequestLine | mm_purchase_request_line | MM | TO BE 신규 |
+| 로트 | Lot | mm_lot | MM | TO BE 신규 |
+| 로트 잔고 | LotOnhand | mm_lot_onhand | MM | TO BE 신규 |
 | 언어 | Language | sys_language | BC | TO BE 신규 |
 | 통화 | Currency | bc_currency | BC | TO BE 신규 |
 | 통화 번역 | CurrencyTranslation | bc_currency_translation | BC | TO BE 신규 |
@@ -109,7 +123,8 @@
 | 결제 조건 | Terms | code_major 'TERMS' | BC | 코드 (AS IS A300) |
 | 단위 | Unit | code_major 'UNIT' | BC | 코드 (AS IS S100) |
 | 사용 여부 | ValidFlag | code_major 'VALID_FLAG' | BC | 코드 (AS IS S300) |
-| 마이너스 재고 모드 | NegativeStockMode | negative_stock_mode | MM | 현재고보다 많이 출고하는 것을 허용하는 시스템 설정: ALLOW, ALLOW_IN_MONTH, DENY (inventory.md) |
+| 마이너스 재고 모드 | NegativeStockMode | negative_stock_mode | MM | 현재고보다 많이 출고하는 것을 허용하는 시스템 설정: ALLOW_IN_MONTH, DENY (inventory.md) |
+| 초과 입고 모드 | OverReceiptMode | over_receipt_mode | MM | 발주 남은 수량을 넘는 입고 처리: DENY(차단, 기본), WARN(경고 후 허용) (MM-BR-102) |
 | 원 이동 | ParentMovement | parent_movement_id | MM | 취소·수정 이동이 가리키는 원래 재고 이동 (MM ledger.md) |
 | 시점 잔고 | BalanceAsOf | - | MM | 직전 마감 기말 + 그 날짜까지 이동 합 (품목+창고) |
 | 재고 대사 | StockReconciliation | - | MM | 현재고와 원장 잔고 비교 (MM-BR-605) |
@@ -130,7 +145,8 @@
 | 사업자등록번호 | BusinessRegNo | business_reg_no | 공통 | KR 10자리, 검증 숫자 (BC-BR-521) |
 | 세금 계산 단위 | TaxCalcMode | tax_calc_mode | BC | DOCUMENT, LINE (BC-BR-543) |
 | 회사 시간대 | TimeZone | time_zone | BC | IANA 시간대 이름. 업무 일자(오늘)·화면 시각 기준 (BC-BR-318) |
-| 청구 시점 | BillingMode | billing_mode | BC | WITH_SHIPMENT(출하와 같이 청구), SEPARATE(출하 뒤 따로 청구) (BC-BR-316) |
+| 청구 흐름 | BillingFlow | billing_flow | SD | SHIP_AND_BILL(출하와 같이 청구), SHIP_THEN_BILL(출하 뒤 따로 청구), BILL_THEN_SHIP(청구 뒤 출하). 고객 기본값 → 수주 (SD-BR-035·335) |
+| 청구 흐름 기본값 | DefaultBillingFlow | default_billing_flow | BC | 새 고객의 청구 흐름 기본값 (BC-BR-316) |
 | 출하 | Shipment | sd_shipment | SD | 재고 출고 문서. 청구는 매출 송장 |
 | 출하 번호 | ShipNo | ship_no | SD | `SH` + 7자리 (SD-BR-164) |
 | 출하 수량 | ShipQty | ship_qty | SD | 출하 줄 수량, 수주 줄 출하 수량 합 (SD-BR-165) |

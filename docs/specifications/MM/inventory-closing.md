@@ -5,31 +5,50 @@
 | --- | --- |
 | 유즈케이스 ID | MM-UC-008 |
 | 모듈 | MM (구매·재고) |
-| 화면유형 | **S** (자동) |
+| 화면유형 | **SM** (확정) |
 | 화면 경로 | `/mm/inventory-closing` (`Pages/Mm/InventoryClosing.razor`) |
 | 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
+
+> 마감은 2단계다: 계산하면 원가 조정 문서(`DRAFT`)가 생기고, 줄을 검토한 뒤 확인하면 마감이 확정된다 (MM-BR-416~418). 마감 취소는 재고 마감 취소 화면에서 한다 (MM-BR-415).
 
 ## 기본 흐름
 
 관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
 1. 화면을 열면 마지막 마감 달과 다음 마감 대상 달을 보여 준다 (MM-BR-406).
-2. 마감을 누르면 대상 달을 보여 주고 확인을 받는다 (MM-BR-404).
-3. 재고 대사(MM-BR-605)를 먼저 실행한다 (MM-BR-408).
-4. 회사 행을 잠근 한 트랜잭션에서 품목마다 월총평균 단가를 계산해 수불에 채우고(MM-BR-409~412), 월 재고(품목+창고)를 월총평균 금액으로 확정 저장한다 (MM-BR-401·402·405).
-5. 같은 트랜잭션에서 다음 달 이후 수불의 이동평균과 품목 현재 원가를 확정 기말에서 다시 계산하고 마감 기준 월을 다음 달로 바꾼다 (MM-BR-413).
-6. 마감 취소는 확인 뒤 마지막 마감 달의 확정 값과 월총평균을 지우고 그 달부터 이동평균을 다시 계산한 뒤 마감 기준 월을 되돌린다 (MM-BR-403·413).
+2. 계산을 누르면 재고 대사(MM-BR-605)와 음수 기말 검사를 한 뒤 품목마다 월총평균을 계산해 원가 조정 문서(`DRAFT`)를 만들고 줄을 보여 준다. 수불·월 재고는 아직 바뀌지 않는다 (MM-BR-407·408·409~412·416·417).
+3. 사용자가 줄(출고 수량, 이동평균 원가, 월총평균 원가, 조정 금액)을 검토한다. 설정이 허용하면 조정 금액과 수정 사유를 고쳐 저장한다 (MM-BR-420).
+4. 확인을 누르면 대상 달을 보여 주고 확인을 받는다 (MM-BR-404).
+5. 회사 행을 잠근 한 트랜잭션에서 다시 계산해 문서와 같은지 보고, 월총평균을 수불에 채우고 월 재고(품목+창고)를 확정 저장한다. 고친 조정 금액의 차이는 기말 금액에 넣는다 (MM-BR-401·402·405·418·421).
+6. 같은 트랜잭션에서 다음 달 이후 수불의 이동평균과 품목 현재 원가를 확정 기말에서 다시 계산하고, 마감 기준 월을 다음 달로 바꾸고, 문서를 `CONFIRMED`로 바꾼다 (MM-BR-413·419).
 
 ## 대체 흐름
 
 - 재고 이동이 없거나 대상 달이 이번 달 이후면 마감하지 않는다 (MM-BR-401·402).
 - 재고 대사에 차이가 있는 품목+창고가 있으면 마감하지 않고 그 목록을 보여 준다 (MM-BR-408).
-- 마이너스 재고 모드가 `ALLOW_IN_MONTH`이고 대상 달 기말 수량이 음수인 품목+창고가 있으면 마감하지 않고 그 목록을 보여 준다 (MM-BR-407).
 - 다른 사용자가 마감·취소 중이면 끝날 때까지 기다린다. 그동안 재고 이동 저장도 기다린다 (MM-BR-405·413).
-- 마이너스 재고 모드가 `ALLOW`이고 기말 수량이 음수인 품목이 있으면 마감하고, 그 품목·적용 단가를 경고로 보여 준다 (MM-BR-411).
+- 기말 수량이 음수인 품목+창고가 있으면 모드와 상관없이 마감하지 않고 목록을 보여 준다. 실사로 맞춘 뒤 다시 마감한다 (MM-BR-407).
 - 마감한 달의 재고 이동은 모든 문서에서 막힌다 (MM-BR-004).
+- 계산 뒤 그 달 재고 이동이 바뀌었으면 확인이 409 MM-E-418이다. 다시 계산하면 새 `DRAFT`가 생기고 고친 조정 금액은 없어진다 (MM-BR-416·418·420).
+- 설정이 조정 금액 수정을 허용하지 않으면 조정 금액은 읽기 전용이다. 기말 수량이 0 이하인 품목도 고칠 수 없다 (MM-BR-420·421).
 - 재고를 줄이는 저장은 마이너스 재고 모드를 따른다. 품목+창고 현재고(MM-BR-001·002)와 수불일자 시점·이후 일자 잔고(MM-BR-009·010)를 본다.
+- 로트 관리 품목 줄에는 로트 열이 있다. 재고를 늘리는 줄은 로트 번호를 넣고(비우면 자동 번호), 줄이는 줄은 로트 찾기로 하나 고른다. 로트 잔고는 모드와 상관없이 음수가 될 수 없다 (MM-BR-353·355·356·362).
+
+## 화면 항목
+
+이 화면은 아래 항목으로 새로 만든다. 아래 'AS IS 화면 필드'는 참고만 한다.
+
+| No | 항목 | 유형 | 필수 | 기본값 | 설명·검증 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 마지막 마감 달 | 텍스트 (읽기 전용) |  |  | `YYYY-MM`. 없으면 `Mm.InventoryClosing.None` (MM-BR-406) |
+| 2 | 마감 대상 달 | 텍스트 (읽기 전용) |  |  | `nextTargetMonth` (MM-BR-401) |
+| 3 | 계산 | 버튼 |  |  | 대상 달을 계산해 원가 조정 문서를 만든다. 이미 DRAFT가 있으면 "다시 계산하면 수정한 조정 금액이 없어집니다" 확인 뒤 실행 (MM-BR-416·420) |
+| 4 | 문서 번호·상태·계산 일시 | 텍스트 (읽기 전용) |  |  | DRAFT가 없으면 비어 있고 그리드도 비어 있다 |
+| 5 | 원가 조정 줄 | 그리드 |  |  | 열: 품목 코드, 품목명, 출고 수량, 이동평균 원가, 월총평균 단가, 월총평균 원가, 계산 조정 금액, 조정 금액, 수정 사유, 기말 수량. 조정 금액·수정 사유만 편집, `allowCostAdjustmentEdit`가 false거나 기말 수량 ≤ 0이면 읽기 전용 (MM-BR-417·420·421). 합계 줄: 이동평균 원가·월총평균 원가·조정 금액 |
+| 6 | 저장 | 버튼 |  |  | 고친 줄만 `PUT .../lines/{lineId}`로 저장 (MM-BR-420) |
+| 7 | 확인(마감) | 버튼 |  |  | DRAFT가 있고 고친 줄이 저장됐을 때만. 대상 달 확인 대화상자(`confirmClosing`) 뒤 실행. 409 MM-E-418이면 "다시 계산하세요" 안내 (MM-BR-404·418) |
+
 
 ## 화면 필드
 
@@ -49,15 +68,22 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/mm/inventory-closing | { lastClosedMonth, nextTargetMonth } (`YYYY-MM`, 마감한 달이 없으면 lastClosedMonth null, MM-BR-406) |
-| POST | /api/mm/inventory-closing/close | 마감 { yearMonth } — 화면이 확인한 대상 달 (MM-BR-404). 200 { closedMonth, warnings: [{ itemId, itemCode, balQty, periodAvgPrc }] } — `ALLOW` 모드 음수 기말 품목 (MM-W-411). 대상 달과 다르면 409, 422 MM-E-401·402·407·408 (`args`에 품목·창고 목록) |
-| POST | /api/mm/inventory-closing/cancel | 마감 취소 { yearMonth } — 마지막 마감 달 (MM-BR-403). 200 { reopenedMonth }. 마감한 달이 없거나 마지막 마감 달과 다르면 409 |
+| GET | /api/mm/inventory-closing | { lastClosedMonth, nextTargetMonth, draft: { costAdjustmentId, adjustNo, yearMonth, calculatedAt } \| null, allowCostAdjustmentEdit } (`YYYY-MM`, 마감한 달이 없으면 lastClosedMonth null, MM-BR-406·416) |
+| POST | /api/mm/inventory-closing/calculate | 마감 계산 { yearMonth } — 대상 달 (MM-BR-416). 201 { costAdjustmentId, adjustNo }. 같은 달 DRAFT는 지우고 새로 만든다. 대상 달과 다르면 409, 422 MM-E-401·402·407·408 (`args`에 품목·창고 목록) |
+| GET | /api/mm/cost-adjustments | 원가 조정 문서 목록 ?yearMonth=&status= → [{ costAdjustmentId, adjustNo, yearMonth, status, calculatedAt, confirmedAt, cancelledAt }] (최근 순) |
+| GET | /api/mm/cost-adjustments/{id} | 원가 조정 문서 1건 → 헤더 + lines[{ lineId, itemId, itemCode, itemName, issueQty, movingAvgAmt, periodAvgPrc, periodAvgAmt, calcAdjustAmt, adjustAmt, editReason, endingQty, diffWarehouseCode, updatedAt }] (MM-BR-417). 없으면 404 |
+| PUT | /api/mm/cost-adjustments/{id}/lines/{lineId} | 조정 금액 수정 { adjustAmt, editReason, updatedAt } → 200 줄. DRAFT만 (409 MM-E-419), 설정 false 422 MM-E-420, 사유 없음 422 MM-E-421, 기말 수량 ≤ 0 422 MM-E-422, 409 Common-E-004 (MM-BR-420·421) |
+| POST | /api/mm/inventory-closing/close | 마감 확인 { yearMonth, costAdjustmentId } — 화면이 확인한 대상 달 (MM-BR-404·418). 200 { closedMonth, adjustNo }. 계산 뒤 수불이 바뀌었으면 409 MM-E-418, DRAFT가 아니거나 다른 달이면 409 MM-E-419, 대상 달과 다르면 409, 422 MM-E-402·407·408 |
+| POST | /api/mm/inventory-closing/cancel | 마감 취소 { yearMonth } — 재고 마감 취소 화면이 부른다. 그 메뉴 Full Access 권한 (MM-BR-415). 마지막 마감 달 (MM-BR-403). 200 { reopenedMonth }. 마감한 달이 없거나 마지막 마감 달과 다르면 409 |
 
 ## 관련 테이블
 
 | TO BE 테이블 | AS IS | CRUD (AS IS) |
 | --- | --- | --- |
 | `bc_company` | `B_COMPANY` | R |
+| `mm_cost_adjustment` | (TO BE 신규) | CRUD |
+| `mm_cost_adjustment_line` | (TO BE 신규) | CRUD |
+| `mm_inventory_setting` | (TO BE 신규) | R |
 
 AS IS DB 루틴 (C# Application으로 옮긴다): `run_closing`
 
@@ -77,6 +103,12 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `run_closing`
 - [MM-BR-412](../../business-rules/MM/closing.md)
 - [MM-BR-413](../../business-rules/MM/closing.md)
 - [MM-BR-414](../../business-rules/MM/closing.md)
+- [MM-BR-416](../../business-rules/MM/closing.md)
+- [MM-BR-417](../../business-rules/MM/closing.md)
+- [MM-BR-418](../../business-rules/MM/closing.md)
+- [MM-BR-419](../../business-rules/MM/closing.md)
+- [MM-BR-420](../../business-rules/MM/closing.md)
+- [MM-BR-421](../../business-rules/MM/closing.md)
 - [MM-BR-001](../../business-rules/MM/inventory.md)
 - [MM-BR-002](../../business-rules/MM/inventory.md)
 - [MM-BR-003](../../business-rules/MM/inventory.md)
@@ -93,29 +125,34 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `run_closing`
 - [MM-BR-604](../../business-rules/MM/ledger.md)
 - [MM-BR-606](../../business-rules/MM/ledger.md)
 - [MM-BR-607](../../business-rules/MM/ledger.md)
+- [MM-BR-353](../../business-rules/MM/lot.md)
+- [MM-BR-354](../../business-rules/MM/lot.md)
+- [MM-BR-355](../../business-rules/MM/lot.md)
+- [MM-BR-356](../../business-rules/MM/lot.md)
+- [MM-BR-360](../../business-rules/MM/lot.md)
+- [MM-BR-362](../../business-rules/MM/lot.md)
 
 ## 다국어 리소스 키
 
 - 제목: `Mm.InventoryClosing.Title`
-- 필드: `Mm.InventoryClosing.<속성>` — `<속성>`은 C# 속성 이름이다 (보통 TO BE 컬럼의 PascalCase, [다국어](../../architecture/i18n.md)). 위 'TO BE 속성 (제안)' 열과 다르면 C# 속성 이름을 따른다
-- 오류: `MM-E-<번호>` (BR에서 정한다)
+- 화면 문구: `Mm.InventoryClosing.LastClosedMonth`, `Mm.InventoryClosing.TargetMonth`, `Mm.InventoryClosing.None`, `Mm.InventoryClosing.Calculate`, `Mm.InventoryClosing.ConfirmRecalculate`, `Mm.InventoryClosing.Close`, `Mm.InventoryClosing.Recalculate`, 그리드 열 `Mm.CostAdjustment.<C# 속성>`, 상태 `Mm.CostAdjustment.Status.<DRAFT·CONFIRMED·CANCELLED>`
+- 오류: `MM-E-401`·`402`·`407`·`408`·`418`~`422`, `Common-E-004`
 
 ## 테스트 시나리오
 
-- `MM-UC-008-T01` 신규 저장 성공
-- `MM-UC-008-T02` 필수 값 누락 시 저장 차단
-- `MM-UC-008-T03` 동시 수정 충돌 409
-- `MM-UC-008-T04` 없는 코드 값 저장 시 422
-- `MM-UC-008-T05` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-401 → MM-UT-401)
-- `MM-UC-008-T06` 마이너스 재고 DENY: 그 창고 현재고 부족 시 저장 차단 (MM-BR-001)
-- `MM-UC-008-T07` 마이너스 재고 ALLOW·ALLOW_IN_MONTH: 저장되고 이력 표시 (MM-BR-002)
-- `MM-UC-008-T08` DENY: 과거 일자 출고로 이후 일자 잔고가 음수가 되면 차단 (MM-BR-009)
-- `MM-UC-008-T09` ALLOW_IN_MONTH: 월중 음수는 저장, 월말 잔고 음수는 차단 — 말일에 거래가 없는 달 포함 (MM-BR-010)
+- `MM-UC-008-T01` 계산 뒤 같은 달 입고를 넣으면 확인 409 MM-E-418, 다시 계산 뒤 확인 200
+- `MM-UC-008-T02` 조정 금액을 고치면 차이가 기말 수량이 가장 많은 창고의 기말 금액에 들어간다
+- `MM-UC-008-T03` 관련 BR마다 단위 테스트 (`MM-UT-` + BR 번호, 예: MM-BR-401 → MM-UT-401)
+- `MM-UC-008-T04` 로트 관리 품목: 줄이는 줄 로트 없음 MM-E-355, 로트 잔고 부족은 ALLOW_IN_MONTH에서도 MM-E-356 (MM-BR-355·356)
+- `MM-UC-008-T05` 마이너스 재고 DENY: 그 창고 현재고 부족 시 저장 차단 (MM-BR-001)
+- `MM-UC-008-T06` 마이너스 재고 ALLOW_IN_MONTH: 월중 음수는 저장되고 이력 표시 (MM-BR-002)
+- `MM-UC-008-T07` DENY: 과거 일자 출고로 이후 일자 잔고가 음수가 되면 차단 (MM-BR-009)
+- `MM-UC-008-T08` ALLOW_IN_MONTH: 월중 음수는 저장, 월말 잔고 음수는 차단 — 말일에 거래가 없는 달 포함 (MM-BR-010)
 
 ## AS IS 근거
 
 - 레거시 화면·SQL 분석 자료는 비공개 Harness 저장소(QuroHarness)에 있다. 유즈케이스 ID로 찾는다.
-- 화면유형 판정 근거: 그리드 0, 입력 필드 1
+- 화면유형 판정 근거: 마감 계산 → 원가 조정 줄 검토·수정 → 확인 (업무 규칙 버전업 2026-10-30) (자동 판정: 그리드 0, 입력 필드 1)
 
 ## 메모
 

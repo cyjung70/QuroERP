@@ -1,0 +1,37 @@
+{
+  "id": "TASK-CORE-029",
+  "project": "core",
+  "title": "위탁 창고: 창고 유형, 설치·기존 DB 위탁 창고 생성, 선택 목록 제외",
+  "module": "CORE",
+  "layer": [
+    "Infrastructure",
+    "Application",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/business-rules/MM/warehouse.md",
+    "docs/architecture/inventory.md",
+    "docs/architecture/database-tables.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-008",
+    "TASK-CORE-022"
+  ],
+  "acceptance": [
+    "마이그레이션: `bc_warehouse.warehouse_type`(varchar NOT NULL, 기본 `NORMAL`, CHECK `NORMAL`·`CONSIGNMENT`), 위탁 창고 1개만(부분 UNIQUE `WHERE warehouse_type = 'CONSIGNMENT'`), 위탁 창고는 `is_default = false` CHECK (MM-BR-709)",
+    "설치(`CompanySetup`)와 기존 DB 마이그레이션이 위탁 창고 `CONSIGN`·`Consignment`를 만든다 (MM-BR-709)",
+    "`GET /api/mm/warehouses/options`는 위탁 창고를 뺀다. `includeConsignment=true`면 넣고 항목에 `warehouseType`을 더한다 (MM-BR-710)",
+    "재고 서비스 도우미: 위탁 창고 id 조회, 사용자 문서 줄 창고가 위탁 창고면 422 MM-E-710. 판매 가능 재고 조회는 위탁 창고를 뺀다 (MM-BR-711)",
+    "단위 테스트: 위탁 창고 1개, 기본 창고 불가, 선택 목록 제외, 사용자 기본 창고로 고를 수 없음"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

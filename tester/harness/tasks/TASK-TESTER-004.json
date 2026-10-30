@@ -34,6 +34,7 @@
     "SD-BR-201",
     "SD-BR-203",
     "SD-BR-205",
+    "SD-BR-207",
     "SD-BR-209",
     "SD-BR-251",
     "SD-BR-252",
@@ -47,8 +48,7 @@
     "SD-BR-709",
     "SD-BR-711",
     "SD-BR-712",
-    "MM-BR-007",
-    "MM-BR-601"
+    "MM-BR-007"
   ],
   "skills": [
     "quro-pytest"

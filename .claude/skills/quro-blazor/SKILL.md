@@ -43,6 +43,7 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
    - SM 표시용 합계 → `QuroHeaderDetail`의 `LineSummary` (삭제 표시 행을 뺀 상세 행을 받는다). 표시만 하고 저장 값은 API가 계산·반올림한다
    - 확인 질문(삭제, 화면별 확인, 저장 경고 `confirmField`)은 `IQuroConfirm.ConfirmAsync(L["..."])`만 부른다. 대화상자는 공통 `QuroConfirmDialog`가 그린다 — 브라우저 `confirm()`·`IJSRuntime` 직접 호출 금지 (`docs/architecture/screens.md` "확인 대화상자")
    - 수정한 조회 행 되돌리기(Undo Row)는 그리드가 기본으로 준다. 화면에서 따로 만들지 않는다
+   - 줄을 더하는 화면별 동작(장바구니 가져오기, 줄 파일 올리기)은 `QuroHeaderDetail`의 `LineToolbar`에 넣는다 (그리드 툴바, 줄 추가 뒤). 문서 툴바에 넣지 않고, 있는 줄을 지우지 않는다
 4. 라벨·제목·메시지는 모두 `L["Sd.SalesOrder.SoDt"]` 형식 리소스 키. `ko`(`SharedResource.resx`, 기본)와 `en`(`SharedResource.en.resx`) 두 파일에 모두 넣는다. 금액·단가·수량 입력 칸 자릿수는 `GET /api/bc/localization` 값으로 정한다.
 5. 데이터는 `Contracts`의 API 클라이언트 인터페이스로만 읽고 쓴다.
 6. 서버 오류(ProblemDetails `code`, `args`)는 화면유형 공통 컴포넌트가 화면 위 메시지(`{화면}-message`)에 보인다. 공통 컴포넌트 밖에서 부른 API는 `ProblemMessages.Get(e.Problem)`(코드 → 사용자 언어 문장, 없는 코드는 `Common-E-001`)으로 바꿔 `QuroScreenFrame`의 `Error`·`Notice`에 넘긴다. API에 연결할 수 없으면 `BC-E-003`이다.

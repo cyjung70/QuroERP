@@ -85,8 +85,8 @@ tester/
 | `base_codes` | session | Seed가 Minor를 넣지 않는 업무 데이터 코드(`ITEM_CLASS`, `SALES_REP`, `GRADE`, `OFFSET`, `DISCOUNT_STATUS`)에 사용 중 값이 2개 미만이면 `POST /api/bc/codes/batch`로 `TST1`·`TST2`(ko·en 이름)를 만든다. 품목·고객을 만드는 테스트는 이 값을 쓴다. 테스트 DB는 Schema·Seed만 적용해 이 코드들이 비어 있다 |
 | `lang` | function | 기본 언어(`QURO_LANGS`의 첫 값) 1개. `Accept-Language` 설정 |
 | `run_id` | session | 이번 실행의 고유 접두어. 테스트 데이터 업무 키에 붙인다 |
-| `negative_stock_mode` | function | 재고 설정 API로 모드를 바꾸고, 끝나면 원래 값으로 되돌린다. `ALLOW`·`ALLOW_IN_MONTH`·`DENY`로 매개변수화. 이 fixture를 쓰는 테스트는 `serial` |
-| `inventory_closing` | function | 시작할 때 마감한 달이 없는지 확인하고(있으면 실패로 멈춤), 끝나면 이 테스트가 마감한 달을 최근 달부터 모두 취소한다. 선행 마감 도우미 `close_until(month)`는 `nextTargetMonth`가 `month`가 될 때까지 차례로 마감한다 — 다른 테스트가 지난달 이전 날짜로 재고 이동을 만들 수 있어 첫 마감 대상 달을 가정하지 않는다. 이 fixture를 쓰는 테스트는 `serial` |
+| `negative_stock_mode` | function | 재고 설정 API로 모드를 바꾸고, 끝나면 원래 값으로 되돌린다. `ALLOW_IN_MONTH`·`DENY`로 매개변수화. 이 fixture를 쓰는 테스트는 `serial` |
+| `inventory_closing` | function | 시작할 때 마감한 달이 없는지 확인하고(있으면 실패로 멈춤), 끝나면 이 테스트가 마감한 달을 최근 달부터 모두 취소한다. 마감 도우미 `close_month(month)`는 계산(`POST .../calculate`) 뒤 받은 `costAdjustmentId`로 확인(`POST .../close`)한다. 시나리오 표의 "`calculate` → `close`"가 이 도우미다. 계산이 오류면 그 상태·오류 코드를 단계 결과로 본다. 선행 마감 도우미 `close_until(month)`는 `nextTargetMonth`가 `month`가 될 때까지 차례로 마감한다 — 다른 테스트가 지난달 이전 날짜로 재고 이동을 만들 수 있어 첫 마감 대상 달을 가정하지 않는다. 이 fixture를 쓰는 테스트는 `serial` |
 | `user_client` | function | 테스트 사용자 전용 httpx 클라이언트를 만든다 (로그인·토큰을 관리자 `api`와 나눈다). 인증 시나리오(BC)가 쓴다 |
 | `error_lang` | function | 오류를 내는 테스트용. `ko`, `en`으로 매개변수화해 `Accept-Language`를 바꾼다. 정상 흐름 테스트는 쓰지 않는다 |
 | `page` | function | Playwright 페이지. 로그인 상태를 세션에서 한 번 저장해 재사용한다 |
@@ -113,7 +113,7 @@ tester/
 - 마이너스 재고 모드 (재고를 줄이는 경우)
 - 국가 (`공통`, `US`, `KR`)
 
-출하·청구: 재고 관리 품목은 `POST /api/sd/shipments`로 출하한다. 회사 기본 청구 시점 `WITH_SHIPMENT`에서는 출하를 저장하면 송장이 함께 생긴다 (응답에 송장 번호가 온다). 재고 이동·수주 출하 수량은 출하가, 금액·잔액·세액은 그 송장이 기준이다. 출하로 만든 송장의 Void는 출하에서 한다. 재고와 무관한 송장(세금·통화·입금 검사)은 서비스 품목으로 `POST /api/sd/sales-invoices`에 직접 만든다. `SEPARATE` 동작은 SD-TS-015에서만 본다.
+출하·청구: 재고 관리 품목은 `POST /api/sd/shipments`로 출하한다. 청구 흐름 기본값 `SHIP_AND_BILL`에서는 출하를 저장하면 송장이 함께 생긴다 (응답에 송장 번호가 온다). 재고 이동·수주 출하 수량은 출하가, 금액·잔액·세액은 그 송장이 기준이다. 출하로 만든 송장의 Void는 출하에서 한다. 재고와 무관한 송장(세금·통화·입금 검사)은 서비스 품목으로 `POST /api/sd/sales-invoices`에 직접 만든다. `SHIP_THEN_BILL`·`BILL_THEN_SHIP` 동작은 SD-TS-015에서만 본다.
 
 ## 실행
 

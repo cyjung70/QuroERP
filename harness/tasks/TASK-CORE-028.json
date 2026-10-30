@@ -1,0 +1,37 @@
+{
+  "id": "TASK-CORE-028",
+  "project": "core",
+  "title": "재고 서비스: 이동 유형 `PV`(송장 단가 차이)·`VR`(공급자 반품)",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/inventory.md",
+    "docs/business-rules/MM/ledger.md",
+    "docs/business-rules/MM/inventory.md",
+    "docs/business-rules/MM/supplier-invoice.md",
+    "docs/business-rules/MM/vendor-return.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-011"
+  ],
+  "acceptance": [
+    "`MovementType`에 `PV`·`VR`, Seed `MOVEMENT_TYPE` Minor `PV`·`VR`와 ko·en 이름. 원 이동 부호: `VR` −, `PV`는 `qty = 0`·`amount ≠ 0`만 (MM-BR-606). `mm_goods_movement` CHECK가 있으면 맞춘다",
+    "`PostAsync`가 금액만 있는 `PV` 요청을 받는다: 현재고는 그대로, `bc_item.stk_val`만 바꾸고 재고수량 > 0이면 이동평균원가를 다시 계산한다 (MM-BR-005). 마이너스 재고 검사는 하지 않는다",
+    "`VR`은 요청 단가(원 입고 단가)로 출고하고 이동평균원가를 다시 계산한다. 마이너스 재고·로트 잔고 검사는 출고와 같다 (MM-BR-602·356)",
+    "`PV` 일자가 마감한 달이면 다음 열린 달 첫날로 바꿔 넣는 도우미 (MM-BR-759). `ReverseAsync`는 두 유형 모두 반대 부호 (MM-BR-601)",
+    "단위 테스트: `PV` 뒤 원가 = 재고금액/재고수량, 재고 0일 때 원가 유지, `VR` 재고 부족 차단, 마감 달 `PV` 일자 이동"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

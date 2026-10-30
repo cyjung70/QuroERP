@@ -29,7 +29,8 @@
     "TASK-CORE-003",
     "TASK-CORE-005",
     "TASK-CORE-006",
-    "TASK-CORE-007"
+    "TASK-CORE-007",
+    "TASK-MM-047"
   ],
   "acceptance": [
     "명세 REST API 구현",

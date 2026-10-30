@@ -11,17 +11,19 @@
 
 | 유형 | 뜻 | 원 이동 `qty` |
 | --- | --- | --- |
-| `GR` | 입고 (Bill) | + |
-| `RT` | 반입 (Credit Memo 재고 반입) | + |
+| `GR` | 입고 | + |
+| `RT` | 반입 (매출 반품 재고 반입. 이관 데이터는 Credit Memo 반입) | + |
 | `BP` | 세트 조립 | + |
 | `UR` | 예외 입고 | + |
 | `CT` | 실사 조정 | 차이 부호 (+/−) |
 | `GI` | 출고 (불출) | − |
 | `DN` | 출고 (송장) | − |
 | `TR` | 창고 이동 (TO BE 신규) | 보내는 창고 −, 받는 창고 + |
+| `VR` | 공급자 반품 출고 (원 입고 단가, TO BE 신규) | − |
+| `PV` | 송장 단가 차이 원가 조정 (TO BE 신규) | 0 (금액만, 차이 부호) |
 
 - 증감 방향은 `qty`(와 `amount`) 부호로 저장한다. AS IS의 입출고 구분 컬럼(`C`/`D`)은 옮기지 않는다. 취소 이동은 같은 유형에 반대 부호다.
-- 원 이동 `qty`는 0이 아니고 부호가 위 표와 같아야 한다. 이미 취소한 이동이나 취소 이동을 다시 취소할 수 없다. 어기면 MM-E-606 (MM-BR-606).
+- 원 이동 `qty`는 0이 아니고 부호가 위 표와 같아야 한다. `PV`만 `qty = 0`이고 `amount ≠ 0`이다 — 재고 금액만 바꿔 이동평균원가에 반영하고 월총평균에서는 당월 입고 금액에 넣는다 (MM-BR-005·410·758·759). 이미 취소한 이동이나 취소 이동을 다시 취소할 수 없다. 어기면 MM-E-606 (MM-BR-606).
 - 취소 이동은 취소 일자로 넣고 원 이동의 유형·단가·출처·세트를 그대로 쓴다 (MM-BR-601). 재고를 줄이는 취소(입고 취소 등)는 출고와 같이 검사한다 (MM-BR-602).
 - 이동마다 번호 `document_no`(채번 형식 `ID`, 월마다 다시 시작)를 붙인다. 취소 이동도 자기 번호를 받는다.
 - 단가를 주지 않은 이동(출고)은 그 시점 이동평균원가를 쓴다 — 같은 문서의 앞 줄을 반영한 뒤 값이다. 세트 구성품은 구성품 이동평균원가다 (MM-BR-007). 입고는 문서 단가를 넘긴다.
@@ -37,12 +39,25 @@
 - 창고 마스터는 `bc_warehouse`다. 기본 창고는 정확히 1개이고 설치·이관 때 만든다 (MM-BR-702). AS IS 데이터는 모두 기본 창고로 들어간다.
 - 재고 문서는 헤더 창고가 줄 창고의 기본값이고 줄마다 바꿀 수 있다. 실사는 창고 하나로 한다 (MM-BR-703).
 - 창고 간 재고 이동(`mm_stock_transfer`, SM)은 줄마다 보내는 창고 출고와 받는 창고 입고를 한 트랜잭션에 남긴다 (MM-BR-705).
+- 위탁 창고(`warehouse_type = 'CONSIGNMENT'`) 1개는 선청구(`BILL_THEN_SHIP`) 재고를 둔다. 선청구 송장 저장 때 줄 창고 → 위탁 창고 `TR`, 출하 때 위탁 창고에서 `DN`(매출 원가 시점 = 출하), 미출하 취소 때 위탁 창고 → 줄 창고 `TR`. 사용자는 위탁 창고를 문서 창고로 고를 수 없고, 판매 가능 재고에서 뺀다 (MM-BR-709~711, SD-BR-142·145·176).
 - 양품·불량 구분은 MVP에 없다. 현재고는 하나다.
+
+## 로트
+
+규칙은 [로트](../business-rules/MM/lot.md)(MM-BR-351~362)다.
+
+- 로트 관리 품목(`bc_item.lot_managed`)은 잔고를 `mm_lot_onhand(item_id, warehouse_id, lot_id, onhand_qty)`로도 둔다. 품목+창고 현재고(`mm_onhand`) = 로트 잔고 합 (MM-BR-354).
+- 재고 이동(`mm_goods_movement.lot_id`)과 문서 줄(입고, 예외 입고, 실사, 창고 이동, 출하, 매출 반품)에 로트가 있다. 로트 관리를 하지 않는 품목은 NULL.
+- 재고 서비스 `PostAsync` 요청에 로트를 더한다. 늘리는 이동은 로트를 찾거나 만들고(빈 값 = `yymmdd-nnn`), 줄이는 이동은 로트가 필수다. 잠금 순서는 `mm_onhand` 다음 `mm_lot_onhand`다 (MM-BR-603).
+- 로트 잔고 검사는 마이너스 재고 모드와 상관없다: 저장 시점과 수불일자 시점·이후 일자 로트 잔고가 0 이상이어야 한다 (MM-BR-356).
+- 원가(이동평균·월총평균)와 월 재고는 로트와 상관없이 품목(+창고) 단위다 (MM-BR-360).
+- 시스템 로트: `MIGRATED`(로트 관리를 켤 때 있던 재고, MM-BR-351), `UNKNOWN`(원 로트를 모르는 매출 반품, MM-BR-359).
 
 ## 마이너스 재고 허용 옵션
 
 ```sql
-mm_inventory_setting(id, negative_stock_mode varchar NOT NULL DEFAULT 'DENY', 감사 컬럼)  -- 1행만 둔다
+mm_inventory_setting(id, negative_stock_mode varchar NOT NULL DEFAULT 'DENY', over_receipt_mode varchar NOT NULL DEFAULT 'DENY',
+                     allow_cost_adjustment_edit boolean NOT NULL DEFAULT false, 감사 컬럼)  -- 1행만 둔다
 ```
 
 - 시스템 전체(글로벌) 설정 하나다. 회사·플랜트·창고별 설정은 없다 (다중 회사를 지원하지 않는다).
@@ -51,9 +66,8 @@ mm_inventory_setting(id, negative_stock_mode varchar NOT NULL DEFAULT 'DENY', �
 
 | 모드 | 이름 | 출고·이동으로 현재고가 0보다 작아질 때 | 월 마감 |
 | --- | --- | --- | --- |
-| `ALLOW` | 항상 허용 | 저장한다. `mm_goods_movement.negative_stock = true`로 이력을 남긴다 | 그대로 마감한다 |
-| `ALLOW_IN_MONTH` | 월중 허용, 월말 불가 | 저장하고 이력을 남긴다. 단, 어느 달이든 월말 잔고가 음수가 되면 막는다 (MM-BR-010) | 대상 달 기말 수량이 음수인 품목+창고가 있으면 마감하지 않는다 (MM-BR-407) |
-| `DENY` | 허용 안 함 (기본값) | 저장을 막는다. 현재고(MM-BR-001)뿐 아니라 수불일자 시점과 이후 모든 일자 잔고(MM-BR-009)도 본다 | 그대로 마감한다 |
+| `ALLOW_IN_MONTH` | 월중 허용, 월말 불가 | 저장하고 이력을 남긴다. 단, 어느 달이든 월말 잔고가 음수가 되면 막는다 (MM-BR-010) | 대상 달 기말 수량이 음수인 품목+창고가 있으면 마감하지 않는다 (MM-BR-407, 모든 모드) |
+| `DENY` | 허용 안 함 (기본값) | 저장을 막는다. 현재고(MM-BR-001)뿐 아니라 수불일자 시점과 이후 모든 일자 잔고(MM-BR-009)도 본다 | 같다 (MM-BR-407) |
 
 - 검사 단위는 품목+창고다. 재고를 줄이는 모든 이동(출고, 입고 취소, 반품, 실사 음수 차이, 창고 이동 출고)에 같은 규칙을 쓰고, 늘리는 이동은 검사하지 않는다 (MM-BR-602).
 - 미래 일자 이동도 허용한다. 미래 달의 월말 잔고도 같은 규칙으로 검사한다.
@@ -72,11 +86,10 @@ mm_inventory_setting(id, negative_stock_mode varchar NOT NULL DEFAULT 'DENY', �
 
 재고를 줄이는 이동 1줄 (품목, 창고, 일자 d, 수량 q > 0)
  1. mm_onhand (품목, 창고) SELECT ... FOR UPDATE  -- 없으면 0 행 INSERT 후 잠금. 같은 품목+창고 저장은 여기서 줄을 선다
- 2. 현재고 검사      onhand - q < 0 ?            → DENY: MM-E-001 / 그 밖: negative_stock = true
+ 2. 현재고 검사      onhand - q < 0 ?            → DENY: MM-E-001 / ALLOW_IN_MONTH: negative_stock = true
  3. 시점별 검사      d 이후 일자 잔고 조회 (아래 SQL)
       DENY           min(그날 잔고, 이후 각 거래일 잔고) - q < 0   → MM-E-009
       ALLOW_IN_MONTH min(d가 속한 달부터 각 달 월말 잔고) - q < 0 → MM-E-010 (월중 음수는 통과)
-      ALLOW          검사 안 함
  4. mm_onhand·bc_item 반영, mm_goods_movement INSERT
  오류가 나면 문서 저장 트랜잭션 전체를 롤백한다. 세트 구성품 오류는 인자 끝에 세트 품목 코드를 붙인다
 ```

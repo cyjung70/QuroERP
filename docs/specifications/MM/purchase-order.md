@@ -25,6 +25,7 @@
 
 ## 대체 흐름
 
+- '요청 가져오기'로 닫히지 않은 구매 요청의 남은 수량을 가져온다. 희망 공급자가 다른 줄은 나오지 않는다 (MM-BR-554·555)
 - 상태가 `PO`가 아니면(입고 시작) 수정·삭제를 막는다 (MM-BR-013).
 - 발주 상태는 입고 줄이 바뀔 때 서버가 다시 계산한다 (MM-BR-018).
 - 다른 사용자가 먼저 수정했으면 409 메시지를 보이고 다시 조회하게 한다.
@@ -63,6 +64,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/mm/purchase-orders | 신규 |
 | PUT | /api/mm/purchase-orders/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/mm/purchase-orders/{id} | 삭제 |
+| GET | /api/mm/purchase-orders/open-request-lines?vendorId | 요청 가져오기: `CL`이 아닌 구매 요청에서 남은 수량 > 0이고 희망 공급자가 이 공급자이거나 빈 줄 (MM-BR-554) |
 | GET | /api/mm/purchase-orders/{id}/print/purchase-order.pdf | 발주서 인쇄 (FastReport PDF) |
 | GET | /api/mm/purchase-orders/{id}/print/purchase-order.xlsx | 발주서 엑셀 내보내기 (XLSX, PDF와 같은 내용) |
 
@@ -91,6 +93,8 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 - [MM-BR-018](../../business-rules/MM/purchase-order.md)
 - [MM-BR-031](../../business-rules/MM/purchase-order.md)
 - [MM-BR-032](../../business-rules/MM/purchase-order.md)
+- [MM-BR-554](../../business-rules/MM/purchase-request.md)
+- [MM-BR-555](../../business-rules/MM/purchase-request.md)
 - [BC-BR-412](../../business-rules/BC/localization.md)
 - [BC-BR-413](../../business-rules/BC/localization.md)
 - [BC-BR-421](../../business-rules/BC/localization.md)

@@ -1,0 +1,44 @@
+{
+  "id": "TASK-MM-045",
+  "project": "core",
+  "title": "구매 요청 API (Application·Domain·Infrastructure)",
+  "module": "MM",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/MM/purchase-request.md"
+  ],
+  "rules": [
+    "MM-BR-551",
+    "MM-BR-552",
+    "MM-BR-553",
+    "MM-BR-554",
+    "MM-BR-555",
+    "MM-BR-556",
+    "MM-BR-014"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-017",
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

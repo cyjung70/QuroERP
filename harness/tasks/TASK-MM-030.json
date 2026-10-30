@@ -29,6 +29,9 @@
     "MM-BR-963",
     "MM-BR-964",
     "MM-BR-965",
+    "MM-BR-761",
+    "MM-BR-788",
+    "MM-BR-789",
     "BC-BR-412",
     "BC-BR-414",
     "BC-BR-421"
@@ -48,12 +51,15 @@
     "TASK-CORE-015",
     "TASK-CORE-018",
     "TASK-CORE-019",
-    "TASK-CORE-021"
+    "TASK-CORE-021",
+    "TASK-MM-047"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
+    "마이그레이션: `mm_ap_clear.goods_receipt_id` → `supplier_invoice_id`(→ `mm_supplier_invoice.id`), UNIQUE (`ap_payment_id`, `supplier_invoice_id`) (MM-BR-953)",
+    "Debit Memo 줄은 음수 지급 금액, 지급 합계 ≥ 0 MM-E-957, 잔액 부호가 바뀌면 MM-E-955 (MM-BR-954·955·957)",
     "새 Seed 스크립트로 `AP_PAYMENT_METHOD` Minor `CASH`·`MONEY_ORDER`·`CREDIT_CARD`·`CHECK`·`WIRE_TRANSFER`(정렬 10~50)와 ko·en 이름을 넣는다 (MM-BR-952). 이관 데이터와 같은 코드라 이관 적재 때 겹치지 않는다"
   ],
   "estimateHours": 3,

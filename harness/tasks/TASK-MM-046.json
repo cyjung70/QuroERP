@@ -1,0 +1,38 @@
+{
+  "id": "TASK-MM-046",
+  "project": "core",
+  "title": "구매 요청 화면 (SM)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/MM/purchase-request.md"
+  ],
+  "rules": [
+    "MM-BR-551",
+    "MM-BR-552",
+    "MM-BR-553",
+    "MM-BR-554",
+    "MM-BR-555",
+    "MM-BR-556",
+    "MM-BR-014"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-MM-045"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
