@@ -35,9 +35,9 @@
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
-| 1 | 201 | — | 발주 번호 `PO` + 오늘 `yymm` + 5자리, 상태 `DR`, 줄 금액 123.45, 합계 123.45 | — |
+| 1 | 201 | — | 발주 번호 `PO` + 오늘 `yymm` + 6자리, 상태 `DR`, 줄 금액 123.45, 합계 123.45 | — |
 | 2 | 200 | — | 상태 `PO`(승인), 줄 입고 수량 0 | `approved_at`·`approved_by` 있음 |
-| 3 | 201 | — | 입고 번호 `GR` + `yymm` + 5자리, 합계 = 잔액 = 123.45 | `mm_goods_movement`: 품목 I, 창고 `MAIN`, `mov_type = 'GR'`, `qty = 10`, `prc = 12.345`, `document_no`는 `ID` + `yymm` + 10자리, `negative_stock = false` |
+| 3 | 201 | — | 입고 번호 `GR` + `yymm` + 6자리, 합계 = 잔액 = 123.45 | `mm_goods_movement`: 품목 I, 창고 `MAIN`, `mov_type = 'GR'`, `qty = 10`, `prc = 12.345`, `document_no`는 `ID` + `yymm` + 10자리, `negative_stock = false` |
 | 4 | 200 | — | 상태 `CL`, 줄 입고 수량 10 | — |
 | 5 | 201 | — | — | `mm_goods_movement`(출하 줄): `mov_type = 'DN'`, `qty = -4`, `prc` = 12.345 (그 시점 이동평균원가), `negative_stock = false` |
 | 6 | 200 | — | 현재고 6, 이동평균원가 12.345, 표준 구매단가 12.345 | `mm_onhand`(I, `MAIN`).`onhand_qty = 6` |

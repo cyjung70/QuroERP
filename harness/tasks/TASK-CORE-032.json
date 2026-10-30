@@ -1,0 +1,33 @@
+{
+  "id": "TASK-CORE-032",
+  "project": "core",
+  "title": "문서 번호 일련번호 6자리",
+  "module": "CORE",
+  "layer": [
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/business-rules/SD/sales-order.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-007"
+  ],
+  "acceptance": [
+    "기간마다 다시 세는 문서(`PO`·`GR`·`UR`·`CT`·`PR`·`VI`·`VR`·`CP`·`SO`·`QT`·`SR`·`CM`·`CR` 등)의 번호를 접두어 + `yymm` + 6자리로 만든다 (SD-BR-006, 예: `PO2610000012`)",
+    "자릿수가 다른 유형은 그대로: 재고 이동 `ID`·창고 이동 `TR`(10자리, MM-BR-607·708), 연속 번호 문서(기간 없음)",
+    "999,999를 넘으면 저장 차단 SD-E-006 (번호를 다시 쓰지 않는다)",
+    "이관한 레거시 번호(5자리)는 바꾸지 않는다. 그 기간 카운터는 마지막 번호에서 이어 센다 — 같은 기간에 5자리·6자리 번호가 함께 있어도 겹치지 않음을 테스트한다",
+    "5자리를 가정한 코드·테스트·화면 정의(.toon 폭)·예시를 찾아 고친다",
+    "단위 테스트: 형식, 경계값 999,999 → 차단, 동시 채번 겹침 없음"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

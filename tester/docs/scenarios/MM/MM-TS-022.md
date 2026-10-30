@@ -5,7 +5,7 @@
 | --- | --- |
 | 시나리오 ID | MM-TS-022 |
 | 계층 | scenario |
-| 관련 BR | MM-BR-104, MM-BR-762, MM-BR-781, MM-BR-782, MM-BR-783, MM-BR-785, MM-BR-786, MM-BR-787, MM-BR-788, MM-BR-789, MM-BR-790, MM-BR-953, MM-BR-954, MM-BR-957, MM-BR-961 |
+| 관련 BR | MM-BR-104, MM-BR-762, MM-BR-781, MM-BR-782, MM-BR-783, MM-BR-785, MM-BR-786, MM-BR-787, MM-BR-788, MM-BR-789, MM-BR-790, MM-BR-953, MM-BR-954, MM-BR-957, MM-BR-958, MM-BR-961 |
 | 국가 | 공통 (세금 코드 `NONE`, 기준 통화, 정수 단가·금액) |
 | 마이너스 재고 모드 | `DENY` (반품 출고는 재고 안에서만 한다) |
 | 직렬 실행 | 아니오 (실행마다 새 품목) |
@@ -33,14 +33,15 @@
 | 9 | `DELETE /api/mm/ap-payments/{P1}` | — |
 | 10 | `POST /api/mm/vendor-returns/{R2}/void` | updatedAt |
 | 11 | `DELETE /api/mm/goods-receipts/{G}` | — |
+| 12 | `POST /api/mm/ap-payments` | V, 지급액 10, 줄: S1 지급 금액 20 |
 
 ## 기대 결과
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
 | 1 | 422 | `MM-E-783` | 반품 가능 수량 10 | 반품 없음 |
-| 2 | 201 | — | 번호 `VR` + `yymm` + 5자리, `debitMemoId` = null | `VR` 이동 `qty = −3`, `prc = 10`, `amount = −30`. G 줄 `returned_qty = 3`, `invoiced_qty = 6`. 반품 줄 `debit_qty = 0`. `stk_val = 82` |
-| 3 | 201 | — | Debit Memo D1 번호 `VI` + `yymm` + 5자리 | 반품 줄 `debit_qty = 3`. D1: `type = 'DM'`, `vendor_return_id = R2`, 줄 `qty = −3` 단가 12, 합계 −36, 잔액 −36, 상태 `OP`. `VR` 이동 `qty = −4`, `amount = −40`. D1의 `PV` `amount = −6`. G 줄 `returned_qty = 7`, `invoiced_qty = 3`. `stk_val = 36`, 재고 수량 3 |
+| 2 | 201 | — | 번호 `VR` + `yymm` + 6자리, `debitMemoId` = null | `VR` 이동 `qty = −3`, `prc = 10`, `amount = −30`. G 줄 `returned_qty = 3`, `invoiced_qty = 6`. 반품 줄 `debit_qty = 0`. `stk_val = 82` |
+| 3 | 201 | — | Debit Memo D1 번호 `VI` + `yymm` + 6자리 | 반품 줄 `debit_qty = 3`. D1: `type = 'DM'`, `vendor_return_id = R2`, 줄 `qty = −3` 단가 12, 합계 −36, 잔액 −36, 상태 `OP`. `VR` 이동 `qty = −4`, `amount = −40`. D1의 `PV` `amount = −6`. G 줄 `returned_qty = 7`, `invoiced_qty = 3`. `stk_val = 36`, 재고 수량 3 |
 | 4 | 422 | `MM-E-762` | 반품을 Void하라는 안내 | D1 그대로 |
 | 5 | 200 | — | S1 잔액 72, D1 잔액 −36 (지급 예정일 순). 입고 G는 없다 | — |
 | 6 | 422 | `MM-E-957` | 지급 합계 음수 | 지급 없음 |
@@ -49,7 +50,8 @@
 | 9 | 204 | — | — | S1 잔액 72, D1 잔액 −36 |
 | 10 | 200 | — | — | R2 `VO`, D1 상태 `VO`. 반대 부호 `VR`(`qty = +4`)과 `PV`(`amount = +6`). G 줄 `returned_qty = 3`, `invoiced_qty = 6`. `stk_val = 82` |
 | 11 | 422 | `MM-E-104` | 대사·반품이 있는 입고 | G가 있다 |
+| 12 | 422 | `MM-E-958` | 지급 합계 20 > 지급액 10 | 지급 없음, S1 잔액 72 그대로 |
 
-- 1·4·6·8·11의 오류는 `ko`, `en` 두 언어로 메시지를 확인한다.
+- 1·4·6·8·11·12의 오류는 `ko`, `en` 두 언어로 메시지를 확인한다.
 - 3 뒤 남은 재고 3개의 금액 36 = 송장 단가 12 × 3이다 (반품은 입고 단가로 나가고, 반품 수량 몫의 단가 차이는 Debit Memo `PV`가 되돌린다).
 - 로트 관리 품목 반품(원 입고 로트로 출고, MM-BR-785)은 MM-TS-019 로트 흐름과 xUnit에서 본다.

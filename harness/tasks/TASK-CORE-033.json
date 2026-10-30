@@ -1,0 +1,39 @@
+{
+  "id": "TASK-CORE-033",
+  "project": "core",
+  "title": "출력 기반: HTML → PDF(Playwright), 엑셀(ClosedXML), 고객사 양식 자리",
+  "module": "CORE",
+  "layer": [
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/reports.md",
+    "docs/architecture/print-documents.md",
+    "docs/architecture/security.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-004",
+    "TASK-CORE-014"
+  ],
+  "acceptance": [
+    "`IPdfRenderer`: Razor 템플릿 + DTO → Blazor `HtmlRenderer` HTML → Playwright for .NET(`Microsoft.Playwright`, Apache-2.0) PDF",
+    "Chromium 1개를 처음 쓸 때 띄우고 요청마다 새 context·page. 동시 변환 기본 4(설정), 1건 30초 제한, 종료 때 브라우저 정리",
+    "page는 JavaScript 끔, 모든 네트워크 요청 차단(route abort). 글꼴·로고는 data URI로 HTML에 넣는다",
+    "용지: 회사 국가 US Letter, KR A4, 여백 12mm, 바닥글 쪽 번호 `n / N`",
+    "IBM Plex Sans KR·Mono 글꼴(SIL OFL-1.1)을 앱 파일로 배포하고 `OFL.txt`를 같이 둔다",
+    "엑셀: ClosedXML 공통 writer (시트 1개, 열 제목 리소스 키, 숫자·날짜 셀, 수식 해석 없음)",
+    "`IPrintTemplateResolver`: `Reports/Custom/<module>/<document>.frx`가 있으면 고객사 양식, 없으면 HTML. FastReport 패키지는 넣지 않는다 (고객사 양식이 처음 생길 때)",
+    "배포·CI: Chromium 설치(`playwright.ps1 install chromium`)를 Dockerfile·GitHub Actions에 넣고, 헬스체크가 Chromium 실행을 확인한다",
+    "샘플 PDF 1종(회사 머리·한글·표·쪽 번호)으로 통합 테스트: PDF 텍스트에 한글·문서 번호가 있고, `<script>` 값은 글자로 찍히며, 외부 요청이 0건"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

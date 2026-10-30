@@ -90,9 +90,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | PUT | /api/sd/sales-orders/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/sd/sales-orders/{id} | 삭제 |
 | GET | /api/sd/sales-orders/open-quotation-lines?customerId&currencyCode | 견적 가져오기: 같은 고객·통화의 `OP` 견적에서 남은 수량 > 0인 줄 (SD-BR-657). 단가·할인·세금 코드 포함 |
-| GET | /api/sd/sales-orders/{id}/print/sales-order.pdf | 수주서 인쇄 (FastReport PDF) |
-| GET | /api/sd/sales-orders/{id}/print/picking-list.pdf | 피킹 리스트 인쇄 (FastReport PDF) |
-| GET | /api/sd/sales-orders/{id}/print/set-component-list.pdf | 세트 구성품 목록 인쇄 (FastReport PDF) |
+| GET | /api/sd/sales-orders/{id}/print/sales-order.pdf | 수주서 인쇄 (PDF) |
+| GET | /api/sd/sales-orders/{id}/print/picking-list.pdf | 피킹 리스트 인쇄 (PDF) |
+| GET | /api/sd/sales-orders/{id}/print/set-component-list.pdf | 세트 구성품 목록 인쇄 (PDF) |
 
 ## 관련 테이블
 

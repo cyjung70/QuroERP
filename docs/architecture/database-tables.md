@@ -84,15 +84,15 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `mm_stock_transfer_line` | 창고 이동 상세 | MM | MM warehouse.md | id, stock_transfer_id, seq, item_id, lot_id, qty, prc, amt |
 | `sd_shipment` | 출하 | SD | SD shipment.md | id, ship_no UNIQUE, customer_id, sales_order_id, ship_dt, warehouse_id, currency_code, exchange_rate, status (OP, PB, BL, VO), 배송지 |
 | `sd_shipment_line` | 출하 상세 | SD | SD shipment.md | id, shipment_id, seq, item_id, warehouse_id, lot_id, ship_qty, ship_prc, billed_qty, returned_qty, returned_unbilled_qty, sales_order_line_id |
-| `sd_sales_return` | 매출 반품 | SD | SD sales-return.md | id, return_no UNIQUE (`SR` + yymm + 5자리), customer_id, shipment_id, return_dt, status (OP, VO), cm_reason01~08 boolean, remarks |
+| `sd_sales_return` | 매출 반품 | SD | SD sales-return.md | id, return_no UNIQUE (`SR` + yymm + 6자리), customer_id, shipment_id, return_dt, status (OP, VO), cm_reason01~08 boolean, remarks |
 | `sd_sales_return_line` | 매출 반품 상세 | SD | SD sales-return.md | id, sales_return_id, seq, shipment_line_id, item_id, warehouse_id, lot_id, return_qty, unbilled_qty, credit_qty, cost_prc (원 출고 단가). UNIQUE (sales_return_id, shipment_line_id) |
-| `mm_supplier_invoice` | 공급자 송장 | MM | MM supplier-invoice.md | id, invoice_no UNIQUE (`VI` + yymm + 5자리), type (INV, DM), vendor_id, ref_no (공급자 송장 번호, 공급자마다 UNIQUE — Void 제외), invoice_dt, due_dt, terms, 통화·환율·세금 헤더, tot_amt, cls_amt, bal_amt, status (OP, PA, CL, VO), tax_invoice_received, vendor_return_id (Debit Memo만), remarks |
+| `mm_supplier_invoice` | 공급자 송장 | MM | MM supplier-invoice.md | id, invoice_no UNIQUE (`VI` + yymm + 6자리), type (INV, DM), vendor_id, ref_no (공급자 송장 번호, 공급자마다 UNIQUE — Void 제외), invoice_dt, due_dt, terms, 통화·환율·세금 헤더, tot_amt, cls_amt, bal_amt, status (OP, PA, CL, VO), tax_invoice_received, vendor_return_id (Debit Memo만), remarks |
 | `mm_supplier_invoice_line` | 공급자 송장 상세 | MM | MM supplier-invoice.md | id, supplier_invoice_id, seq, goods_receipt_line_id, vendor_return_line_id (Debit Memo만), item_id, qty (Debit Memo는 음수), prc, 세금 줄, deductible, pv_amt (원가 조정 금액, 기준 통화) |
-| `mm_vendor_return` | 공급자 반품 | MM | MM vendor-return.md | id, return_no UNIQUE (`VR` + yymm + 5자리), goods_receipt_id, vendor_id, return_dt, status (OP, VO), void_dt, remarks |
+| `mm_vendor_return` | 공급자 반품 | MM | MM vendor-return.md | id, return_no UNIQUE (`VR` + yymm + 6자리), goods_receipt_id, vendor_id, return_dt, status (OP, VO), void_dt, remarks |
 | `mm_vendor_return_line` | 공급자 반품 상세 | MM | MM vendor-return.md | id, vendor_return_id, seq, goods_receipt_line_id, item_id, warehouse_id, lot_id, return_qty, debit_qty, cost_prc (원 입고 단가) |
-| `sd_quotation` | 견적 | SD | SD quotation.md | id, quotation_no UNIQUE (`QT` + yymm + 5자리), customer_id, quotation_dt, valid_to, status (OP, LO), lost_reason, 통화·환율·세금 헤더, 배송지, remarks |
+| `sd_quotation` | 견적 | SD | SD quotation.md | id, quotation_no UNIQUE (`QT` + yymm + 6자리), customer_id, quotation_dt, valid_to, status (OP, LO), lost_reason, 통화·환율·세금 헤더, 배송지, remarks |
 | `sd_quotation_line` | 견적 상세 | SD | SD quotation.md | id, quotation_id, seq, item_id, qty, prc, dc_cd, dc_rate, 세금 줄, converted_qty (수주 줄 수량 합) |
-| `mm_purchase_request` | 구매 요청 | MM | MM purchase-request.md | id, request_no UNIQUE (`PR` + yymm + 5자리), requester_id, request_dt, need_dt, status (OP, PO, CL), remarks |
+| `mm_purchase_request` | 구매 요청 | MM | MM purchase-request.md | id, request_no UNIQUE (`PR` + yymm + 6자리), requester_id, request_dt, need_dt, status (OP, PO, CL), remarks |
 | `mm_purchase_request_line` | 구매 요청 상세 | MM | MM purchase-request.md | id, purchase_request_id, seq, item_id, qty, warehouse_id, vendor_id (희망, NULL 허용), ordered_qty (발주 줄 수량 합) |
 | `mm_lot` | 로트 | MM | MM lot.md | id, item_id, lot_no (최대 30자, `MIGRATED`·`UNKNOWN`은 시스템). UNIQUE (item_id, lot_no) (MM-BR-352) |
 | `mm_lot_onhand` | 로트 잔고 | MM | MM lot.md, inventory.md | id, item_id, warehouse_id, lot_id, onhand_qty (≥ 0). UNIQUE (item_id, warehouse_id, lot_id). 창고 합 = `mm_onhand` (MM-BR-354·356) |

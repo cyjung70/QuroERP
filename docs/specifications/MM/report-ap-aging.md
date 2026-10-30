@@ -52,7 +52,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
 | GET | /api/mm/reports/ap-aging?조건 | 조회 (JSON) |
-| GET | /api/mm/reports/ap-aging.pdf?조건 | 인쇄 (FastReport PDF) |
+| GET | /api/mm/reports/ap-aging.pdf?조건 | 인쇄 (PDF) |
 
 ## 관련 테이블
 

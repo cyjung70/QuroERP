@@ -35,7 +35,7 @@
 
 | 단계 | 상태 코드 | 오류 코드 | 확인 값 | DB 검증 (SELECT) |
 | --- | --- | --- | --- | --- |
-| 1 | 201 | — | 번호 `CM` + `yymm` + 5자리, 줄 수량 2·1(양수로 보임), 합계 150 | `sd_sales_invoice`(`type = 'CM'`): `tot_dn_amt = bal_amt = -150`, 줄 `restock = false`. 재고 이동 없음 |
+| 1 | 201 | — | 번호 `CM` + `yymm` + 6자리, 줄 수량 2·1(양수로 보임), 합계 150 | `sd_sales_invoice`(`type = 'CM'`): `tot_dn_amt = bal_amt = -150`, 줄 `restock = false`. 재고 이동 없음 |
 | 2 | 200 | — | 현재고 10 | — |
 | 3 | 422 | `SD-E-252` | — | 적용 행 없음, D `bal_amt = 300` |
 | 4 | 200 | — | 송장 잔액 150 | D `bal_amt = 150`(상태 `PA`), Credit Memo `bal_amt = 0`(상태 `CL`), `sd_cm_apply.total_amt = 150` |

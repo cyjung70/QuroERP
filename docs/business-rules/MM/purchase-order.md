@@ -6,6 +6,16 @@
 - 서버(Domain)에서 검사한다. 화면 검사는 편의일 뿐이다.
 - "TO BE 변경"은 AS IS 동작을 바꾼 규칙이다 (스테이블영 확정).
 - 발주 상태는 `PO_STATUS` 코드다 (MM-BR-019): `DR` 작성중, `PO` 승인, `RE` 부분 입고, `CL` 입고 완료, `MC` 마감, `CN` 취소. 레거시 값 `PO`·`RE`·`CL`은 그대로 옮기고, 이관한 발주는 `PO`(승인)다.
+- 상태 이름(코드 번역 `sys_code_minor_translation`)은 아래 표가 기준이다. 레거시 이름(입력·확정 뜻)은 쓰지 않는다.
+
+| 코드 | 정렬 | en | ko | 상태 칩 |
+| --- | --- | --- | --- | --- |
+| `DR` | 5 | Draft | 작성중 | neutral |
+| `PO` | 10 | Approved | 승인 | brand |
+| `RE` | 20 | Partially Received | 부분 입고 | warn |
+| `CL` | 30 | Received | 입고 완료 | ok |
+| `MC` | 40 | Closed | 마감 | neutral |
+| `CN` | 50 | Cancelled | 취소 | danger |
 - 화면은 [공통 엔트리 화면 프레임](../../architecture/entry-frame.md)을 쓴다. 상태 칩: `DR` neutral, `PO` brand, `RE` warn, `CL` ok, `MC` neutral, `CN` danger.
 
 | ID | 규칙 | 조건 | 위반 시 처리 | AS IS 근거 | 테스트 |
@@ -16,7 +26,7 @@
 | MM-BR-014 | 발주 줄 품목은 품목 마스터에 있어야 하고, 유형이 Inventory·Service여야 한다 | `bc_item` 존재, 유형 | 저장 차단, 메시지 MM-E-014 | AS IS `check_item`, 발주 품목 선택 조건 | MM-UT-014 |
 | MM-BR-015 | 줄 금액과 합계는 서버에서 계산한다. 총액 `gross_amt = round(po_qty × po_prc, 금액 자릿수)`, 할인 `dc_amt = round(gross_amt × dc_rate / 100, 금액 자릿수)`, 줄 금액 `po_amt = gross_amt − dc_amt`(공급가액). 헤더 `tot_po_amt = sum(supply_amt) + sum(tax_amt)` (MM-BR-032). 반올림은 문서 통화 자릿수·모듈 반올림 방식(BC-BR-421·424), 삭제 표시 줄은 뺀다 | 저장 | 계산 값 저장 | AS IS 발주 금액·합계 재계산(할인 없음). 줄 할인: TO BE 변경 (스테이블영 확정) | MM-UT-015, MM-TS-001, MM-TS-023 |
 | MM-BR-016 | 단가가 품목 표준 구매단가와도, 공급자 가격 그룹 단가와도 다르면 저장 때 공급자 단가를 바꿀지 묻는다. 예이면 `bc_purchase_price`를 추가·수정한다. Service 품목과 가격 그룹이 없는 공급자는 제외한다 | `po_prc ≠ 표준 구매단가 && po_prc ≠ 그룹 단가` | 사용자 선택 (`updateVendorPrice`) | AS IS는 묻지 않고 항상 갱신했다 — TO BE 변경 | MM-UT-016 |
-| MM-BR-017 | 발주 번호 형식은 `PO` + `yymm`(발주일) + 5자리다 (예: `PO261000012`). `DR`로 처음 저장할 때 같은 트랜잭션에서 잠가 매긴다 (SD-BR-006). 승인해도 번호는 바뀌지 않고, 지운 번호는 다시 쓰지 않는다 | 신규 저장 | (채번 규칙) | AS IS `get_auto_num('PO')` | MM-UT-017, MM-TS-001, MM-TS-023 |
+| MM-BR-017 | 발주 번호 형식은 `PO` + `yymm`(발주일) + 6자리다 (예: `PO2610000012`). `DR`로 처음 저장할 때 같은 트랜잭션에서 잠가 매긴다 (SD-BR-006). 승인해도 번호는 바뀌지 않고, 지운 번호는 다시 쓰지 않는다 | 신규 저장 | (채번 규칙) | AS IS `get_auto_num('PO')`, 5자리 → 6자리: TO BE 변경 (스테이블영 확정) | MM-UT-017, MM-TS-001, MM-TS-023 |
 | MM-BR-018 | 상태가 `PO`·`RE`·`CL`인 발주는 입고 줄이 바뀔 때마다 상태를 다시 계산한다: 입고 수량 합 0 → `PO`, 남은 수량 합 ≤ 0 → `CL`, 그 밖 → `RE`. `MC`(마감)는 입고 줄을 지워도 `MC`로 둔다 | 입고 줄 저장·삭제 | 상태 갱신 (MM-BR-109) | AS IS는 삭제 때 입고 0일 때만 되돌렸다 — TO BE 변경 | MM-UT-018, MM-TS-001, MM-TS-002, MM-TS-003, MM-TS-023 |
 | MM-BR-019 | 발주 상태 전이는 다음만 허용한다. 신규 저장 → `DR`. 승인 `DR` → `PO` (MM-BR-020). 입고 재계산 `PO`·`RE`·`CL` 사이 (MM-BR-018). 마감 `PO`·`RE` → `MC` (MM-BR-022). 취소 `PO` → `CN` (MM-BR-023). `CL`·`MC`·`CN`은 끝 상태이고 되돌리지 않는다 | 상태 동작 요청 | 차단 422, 메시지 MM-E-019 | AS IS는 입력·일부 입고·완료 3개만 있었다. 승인·마감·취소: TO BE 변경 (스테이블영 확정) | MM-UT-019, MM-TS-001, MM-TS-010, MM-TS-023 |
 | MM-BR-020 | 승인은 저장된 `DR` 발주에만 한다. 줄이 1개 이상이어야 하고, 요청의 `updatedAt`이 저장 값과 같아야 한다(저장하지 않은 변경 없음). 승인하면 상태 `PO`, `approved_at`·`approved_by`를 남긴다. 승인은 그 메뉴의 변경 권한(Full Access, BC-BR-214)으로 한다 | `POST .../{id}/approve` | 줄 없음·상태 다름 422 MM-E-020, `updatedAt` 다름 409 | TO BE 신규 (스테이블영 확정) | MM-UT-020, MM-TS-001, MM-TS-023 |

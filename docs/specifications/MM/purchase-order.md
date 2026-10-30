@@ -45,7 +45,7 @@
 | No | 항목 | 유형 | 필수 | 기본값 | 설명·검증 |
 | --- | --- | --- | --- | --- | --- |
 | 1 | 경로 · 화면 이름 | 텍스트 (타이틀바) |  |  | `MM > Purchasing` · `Mm.PurchaseOrder.Title` (발주 등록 / PO Entry) |
-| 2 | 발주 번호 | 텍스트 (타이틀바, 읽기 전용) |  | 신규면 `Common.NewDocument` | mono. 첫 저장 때 서버가 매긴다 `PO` + `yymm` + 5자리 (MM-BR-017) |
+| 2 | 발주 번호 | 텍스트 (타이틀바, 읽기 전용) |  | 신규면 `Common.NewDocument` | mono. 첫 저장 때 서버가 매긴다 `PO` + `yymm` + 6자리 (MM-BR-017) |
 | 3 | 상태 칩 · 개정 | 칩 (타이틀바) |  |  | `DR` neutral, `PO` brand, `RE` warn, `CL` ok, `MC` neutral, `CN` danger. `revision_no ≥ 1`이면 `Rev. n` (MM-BR-019·021) |
 | 4 | 조회 · 신규 · 저장 | 버튼 (File) |  |  | 조회 F3 = 발주 찾기 대화상자(번호·공급자·기간·상태). 저장 Ctrl+S, 저장만 brand 채움 |
 | 5 | 행 추가 · 삭제 표시 · 행 복원 · 요청 가져오기 | 버튼 (Rows) |  |  | 행 추가 Ctrl+Insert, 삭제 표시 Ctrl+Delete(토글). 요청 가져오기 = 구매 요청 남은 수량 (MM-BR-554·555) |
@@ -117,7 +117,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/mm/purchase-orders/{id}/close | 마감 `PO`·`RE` → `MC` (MM-BR-022, updatedAt 필수) |
 | POST | /api/mm/purchase-orders/{id}/cancel | 취소 `PO`(입고 0) → `CN` (MM-BR-023, updatedAt 필수) |
 | GET | /api/mm/purchase-orders/open-request-lines?vendorId | 요청 가져오기: `CL`이 아닌 구매 요청에서 남은 수량 > 0이고 희망 공급자가 이 공급자이거나 빈 줄 (MM-BR-554) |
-| GET | /api/mm/purchase-orders/{id}/print/purchase-order.pdf | 발주서 인쇄 (FastReport PDF) |
+| GET | /api/mm/purchase-orders/{id}/print/purchase-order.pdf | 발주서 인쇄 (PDF) |
 | GET | /api/mm/purchase-orders/{id}/print/purchase-order.xlsx | 발주서 엑셀 내보내기 (XLSX, PDF와 같은 내용) |
 
 ## 관련 테이블
@@ -174,7 +174,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_item`, `get_auto_num`
 
 ## 테스트 시나리오
 
-- `MM-UC-003-T01` 신규 저장 → `DR`, 번호 `PO` + `yymm` + 5자리
+- `MM-UC-003-T01` 신규 저장 → `DR`, 번호 `PO` + `yymm` + 6자리
 - `MM-UC-003-T02` 줄 없는 `DR` 승인 422 MM-E-020, 저장 후 승인 → `PO`·approved_at
 - `MM-UC-003-T03` `PO` 수정 저장 → 상태 `PO` 유지, revision_no 1 → 2
 - `MM-UC-003-T04` 입고 1건 뒤 수정·삭제·취소 422 (MM-E-013·023), 마감 → `MC`

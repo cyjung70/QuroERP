@@ -83,7 +83,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | PUT | /api/sd/credit-memos/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/sd/credit-memos/{id} | 삭제 |
 | GET | /api/sd/credit-memos/{id}/print/tax-invoice.pdf | KR 수정세금계산서 인쇄 (SD-BR-232). 사업자 고객이 아니면 422 SD-E-134, US 회사는 404 |
-| GET | /api/sd/credit-memos/{id}/print/credit-memo.pdf | Credit Memo 인쇄 (FastReport PDF) |
+| GET | /api/sd/credit-memos/{id}/print/credit-memo.pdf | Credit Memo 인쇄 (PDF) |
 
 ## 관련 테이블
 

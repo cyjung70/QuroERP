@@ -37,7 +37,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 
 | 영역 | TO BE 속성 (제안) | 입력 형식 | 비고 |
 | --- | --- | --- | --- |
-| 헤더 | `InvoiceNo` | text | 채번 `VI` + `yymm` + 5자리 (조회 키, MM-BR-752) |
+| 헤더 | `InvoiceNo` | text | 채번 `VI` + `yymm` + 6자리 (조회 키, MM-BR-752) |
 | 헤더 | `VendorId` | `bc_vendor` 찾기 | 필수. 줄이 있으면 잠금 |
 | 헤더 | `RefNo` | text | 공급자 송장 번호, 필수, 공급자마다 하나 (MM-BR-751·764) |
 | 헤더 | `InvoiceDt` | date | 기본 오늘 |
