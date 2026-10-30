@@ -56,6 +56,17 @@ public class DocumentNumberFormatTests
         format.Next(Day, null).Should().Be($"{prefix}261000001");
     }
 
+    [Theory, Trait("Id", "MM-UT-017"), Trait("Rule", "MM-BR-017")]
+    [InlineData("2026-10-27", "PO261000011", "PO261000012")]
+    [InlineData("2026-11-02", "PO261000012", "PO261100001")]
+    [InlineData("2026-10-27", null, "PO261000001")]
+    public void Next_PurchaseOrder_IsPoYymmOfPoDateAndRestartsMonthly(string poDt, string? last, string expected)
+    {
+        var date = DateOnly.Parse(poDt, System.Globalization.CultureInfo.InvariantCulture);
+
+        DocumentNumberFormat.PurchaseOrder.Next(date, last).Should().Be(expected);
+    }
+
     [Fact, Trait("Id", "MM-UT-607"), Trait("Rule", "MM-BR-607")]
     public void Next_GoodsMovement_IsIdYymmTenDigits()
     {

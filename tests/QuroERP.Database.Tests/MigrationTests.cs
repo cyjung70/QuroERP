@@ -105,6 +105,36 @@ public partial class MigrationTests(MigratedSchemaFixture db)
         Query<string>("SELECT lang_code FROM sys_language WHERE NOT use_yn").Should().Equal("sw");
     }
 
+    [DatabaseFact, Trait("Id", "DB-IT-09"), Trait("Rule", "MM-BR-015")]
+    public void PurchaseOrder_HasEntryColumnsAsDocumented()
+    {
+        // database-tables.md mm_purchase_order / mm_purchase_order_line: name, NOT NULL, default
+        var columns = Query<string>("""
+            SELECT table_name || '.' || column_name || ' ' || is_nullable || ' ' || coalesce(column_default, '-')
+            FROM information_schema.columns
+            WHERE table_schema = @schema AND table_name IN ('mm_purchase_order', 'mm_purchase_order_line')
+              AND column_name IN ('incoterms', 'due_dt', 'warehouse_id', 'payment_terms', 'buyer', 'revision_no',
+                                  'approved_at', 'approved_by', 'closed_at', 'closed_by', 'cancelled_at', 'cancelled_by',
+                                  'gross_amt', 'dc_rate', 'dc_amt', 'purchase_request_line_id')
+            """);
+        var foreignKeys = Query<string>("""
+            SELECT conname::text FROM pg_constraint
+            WHERE contype = 'f' AND connamespace = @schema::regnamespace
+              AND confrelid = 'bc_warehouse'::regclass AND conrelid::regclass::text LIKE 'mm_purchase_order%'
+            """);
+
+        columns.Should().BeEquivalentTo(
+            "mm_purchase_order.incoterms YES -", "mm_purchase_order.due_dt YES -", "mm_purchase_order.warehouse_id YES -",
+            "mm_purchase_order.payment_terms YES -", "mm_purchase_order.buyer YES -", "mm_purchase_order.revision_no NO 0",
+            "mm_purchase_order.approved_at YES -", "mm_purchase_order.approved_by YES -",
+            "mm_purchase_order.closed_at YES -", "mm_purchase_order.closed_by YES -",
+            "mm_purchase_order.cancelled_at YES -", "mm_purchase_order.cancelled_by YES -",
+            "mm_purchase_order_line.gross_amt NO 0", "mm_purchase_order_line.dc_rate NO 0", "mm_purchase_order_line.dc_amt NO 0",
+            "mm_purchase_order_line.due_dt YES -", "mm_purchase_order_line.warehouse_id YES -",
+            "mm_purchase_order_line.purchase_request_line_id YES -");
+        foreignKeys.Should().BeEquivalentTo("fk_mm_purchase_order_warehouse_id", "fk_mm_purchase_order_line_warehouse_id");
+    }
+
     /// <summary>database-tables.md의 "목록"과 "새 테이블" 표에 있는 테이블 이름.</summary>
     private static IEnumerable<string> DocumentedTables()
     {
