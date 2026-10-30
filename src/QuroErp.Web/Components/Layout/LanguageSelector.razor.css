@@ -15,7 +15,7 @@
 }
 
 .language-selector button[aria-pressed="true"] {
-    border-color: #9a861d;
-    background: #f4efd2;
+    border-color: var(--q-brand);
+    background: var(--q-brand-tint);
     font-weight: bold;
 }

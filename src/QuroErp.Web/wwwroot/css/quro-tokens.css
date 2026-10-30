@@ -15,9 +15,9 @@
     --q-line: #d3d9e2;
     --q-ink: #18202b;
     --q-ink-muted: #566174;
-    --q-brand: #1d4e89;
-    --q-brand-strong: #14396a;
-    --q-brand-tint: #e2ebf7;
+    --q-brand: #0049a8;
+    --q-brand-strong: #00367d;
+    --q-brand-tint: #e0eaf8;
     --q-on-brand: #ffffff;
     --q-field-editable: #fff8dc;
     --q-field-required: #b07800;
@@ -57,9 +57,9 @@
         --q-line: #343d4b;
         --q-ink: #e8edf4;
         --q-ink-muted: #9ba7b9;
-        --q-brand: #78aaea;
-        --q-brand-strong: #a5c7f3;
-        --q-brand-tint: #1b2c44;
+        --q-brand: #6ea6f5;
+        --q-brand-strong: #a3c6f8;
+        --q-brand-tint: #14294a;
         --q-on-brand: #0f1620;
         --q-field-editable: #2d2a19;
         --q-field-required: #d8a838;
@@ -81,9 +81,9 @@
     --q-line: #343d4b;
     --q-ink: #e8edf4;
     --q-ink-muted: #9ba7b9;
-    --q-brand: #78aaea;
-    --q-brand-strong: #a5c7f3;
-    --q-brand-tint: #1b2c44;
+    --q-brand: #6ea6f5;
+    --q-brand-strong: #a3c6f8;
+    --q-brand-tint: #14294a;
     --q-on-brand: #0f1620;
     --q-field-editable: #2d2a19;
     --q-field-required: #d8a838;
