@@ -488,8 +488,9 @@ public class LoginServiceTests
     [Fact, Trait("Id", "BC-UC-001-T02")]
     public async Task MeAsync_ReturnsUserMenusAndDefaultWarehouse()
     {
-        _users.Menus.Add(new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y"));
+        _users.Menus.Add(new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y", "P"));
         _users.DefaultWarehouse = new AuthWarehouse(1, "W01", "Main");
+        _users.CompanyName = "Quro Test Co.";
 
         var me = await Service.MeAsync(7, CancellationToken.None);
 
@@ -499,7 +500,9 @@ public class LoginServiceTests
             RoleCode = "admin",
             MustChangePassword = false,
             DefaultWarehouse = new AuthWarehouse(1, "W01", "Main"),
-            Menus = new[] { new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y") },
+            Menus = new[] { new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y", "P") },
+            CompanyName = "Quro Test Co.",
+            RoleName = (string?)null,
         });
     }
 

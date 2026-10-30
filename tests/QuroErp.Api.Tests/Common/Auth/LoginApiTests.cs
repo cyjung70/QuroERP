@@ -93,8 +93,10 @@ public class LoginApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var me = await client.GetFromJsonAsync<MeResponse>(AuthRoutes.Me);
 
         me!.UserId.Should().Be(ApiFactory.UserId);
-        me.Menus.Should().ContainSingle().Which.MenuCode.Should().Be("BC01");
+        me.Menus.Should().ContainSingle().Which.Should().BeEquivalentTo(new { MenuCode = "BC01", Type = "P" });
         me.DefaultWarehouse!.WarehouseCode.Should().Be("W01");
+        me.CompanyName.Should().Be("Quro Test Co.");
+        me.RoleName.Should().BeNull();
     }
 
     [Fact, Trait("Id", "BC-UC-001-T19")]

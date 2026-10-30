@@ -1,3 +1,30 @@
+/* App shell (app-shell.md 1): a 48px top bar over the side menu and the open screen */
+.shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--q-surface-1);
+    color: var(--q-ink);
+}
+
+.shell-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.shell-main {
+    flex: 1;
+    min-width: 0;
+    padding: var(--q-panel-gap);
+}
+
+.shell-plain-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.5rem 1rem;
+}
+
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;
