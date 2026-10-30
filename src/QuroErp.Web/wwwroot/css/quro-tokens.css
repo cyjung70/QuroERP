@@ -1,0 +1,103 @@
+/* Design tokens (entry-frame.md 7). Light by default, dark from the OS setting; <html data-theme="light|dark"> overrides it.
+   Fonts are served by the app (wwwroot/fonts, SIL OFL 1.1), no external CDN. */
+
+@font-face { font-family: "IBM Plex Sans KR"; font-weight: 400; font-style: normal; font-display: swap; src: url("../fonts/IBMPlexSansKR-Regular.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans KR"; font-weight: 500; font-style: normal; font-display: swap; src: url("../fonts/IBMPlexSansKR-Medium.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans KR"; font-weight: 600; font-style: normal; font-display: swap; src: url("../fonts/IBMPlexSansKR-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-style: normal; font-display: swap; src: url("../fonts/IBMPlexMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 600; font-style: normal; font-display: swap; src: url("../fonts/IBMPlexMono-SemiBold.woff2") format("woff2"); }
+
+:root {
+    --q-surface-0: #f3f5f8;
+    --q-surface-1: #ffffff;
+    --q-surface-2: #eceff4;
+    --q-surface-header: #e6eaf0;
+    --q-line: #d3d9e2;
+    --q-ink: #18202b;
+    --q-ink-muted: #566174;
+    --q-brand: #1d4e89;
+    --q-brand-strong: #14396a;
+    --q-brand-tint: #e2ebf7;
+    --q-on-brand: #ffffff;
+    --q-field-editable: #fff8dc;
+    --q-field-required: #b07800;
+    --q-ok: #1c6e46;
+    --q-ok-tint: #e2f3ea;
+    --q-warn: #9a5200;
+    --q-warn-tint: #fcefdc;
+    --q-danger: #b42318;
+    --q-danger-tint: #fbe5e3;
+    --q-neutral-tint: #eceff4;
+
+    --q-font-sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --q-font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+    /* Sizes: 4px steps */
+    --q-control-h: 32px;
+    --q-commandbar-h: 52px;
+    --q-panel-pad: 16px;
+    --q-panel-gap: 16px;
+    --q-field-gap: 12px;
+    --q-totals-w: 320px;
+    --q-min-w: 1280px;
+
+    --q-radius-input: 4px;
+    --q-radius-button: 6px;
+    --q-radius-panel: 10px;
+    --q-radius-chip: 999px;
+    --q-shadow-dialog: 0 8px 24px rgb(0 0 0 / .18);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --q-surface-0: #11151b;
+        --q-surface-1: #1a2029;
+        --q-surface-2: #232a35;
+        --q-surface-header: #262e3a;
+        --q-line: #343d4b;
+        --q-ink: #e8edf4;
+        --q-ink-muted: #9ba7b9;
+        --q-brand: #78aaea;
+        --q-brand-strong: #a5c7f3;
+        --q-brand-tint: #1b2c44;
+        --q-on-brand: #0f1620;
+        --q-field-editable: #2d2a19;
+        --q-field-required: #d8a838;
+        --q-ok: #58c793;
+        --q-ok-tint: #173024;
+        --q-warn: #eba65a;
+        --q-warn-tint: #33261a;
+        --q-danger: #f2766b;
+        --q-danger-tint: #3a1c1b;
+        --q-neutral-tint: #2a313c;
+    }
+}
+
+:root[data-theme="dark"] {
+    --q-surface-0: #11151b;
+    --q-surface-1: #1a2029;
+    --q-surface-2: #232a35;
+    --q-surface-header: #262e3a;
+    --q-line: #343d4b;
+    --q-ink: #e8edf4;
+    --q-ink-muted: #9ba7b9;
+    --q-brand: #78aaea;
+    --q-brand-strong: #a5c7f3;
+    --q-brand-tint: #1b2c44;
+    --q-on-brand: #0f1620;
+    --q-field-editable: #2d2a19;
+    --q-field-required: #d8a838;
+    --q-ok: #58c793;
+    --q-ok-tint: #173024;
+    --q-warn: #eba65a;
+    --q-warn-tint: #33261a;
+    --q-danger: #f2766b;
+    --q-danger-tint: #3a1c1b;
+    --q-neutral-tint: #2a313c;
+}
+
+body {
+    background: var(--q-surface-0);
+    color: var(--q-ink);
+    font: 400 13px/20px var(--q-font-sans);
+}

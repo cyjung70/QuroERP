@@ -83,6 +83,19 @@ public sealed class GridRows<TRow>
         return row;
     }
 
+    /// <summary>Adds a new row below <paramref name="after"/>, or at the end without one (entry-frame.md 5 "행 추가").</summary>
+    public GridRow<TRow> InsertAfter(GridRow<TRow>? after, TRow item)
+    {
+        var index = after is null ? -1 : _rows.IndexOf(after);
+        if (index < 0)
+        {
+            return Add(item);
+        }
+        var row = new GridRow<TRow>(item, isNew: true);
+        _rows.Insert(index + 1, row);
+        return row;
+    }
+
     /// <summary>
     /// Marks a loaded row deleted, or restores it. A new row is just removed: the server never saw it.
     /// </summary>
@@ -103,6 +116,17 @@ public sealed class GridRows<TRow>
         {
             row.Undo();
         }
+    }
+
+    /// <summary>Restore Row of the entry frame (entry-frame.md 5): loaded values back, a new row is removed.</summary>
+    public void Restore(GridRow<TRow> row)
+    {
+        if (row.IsNew)
+        {
+            _rows.Remove(row);
+            return;
+        }
+        Undo(row);
     }
 
     public BatchChanges<TRow> Changes() => new(

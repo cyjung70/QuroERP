@@ -1,0 +1,90 @@
+/* Entry frame of SM screens (entry-frame.md 1-6) and the field and grid colors shared by all screen types (3, 5).
+   Colors come only from the --q-* tokens (quro-tokens.css). */
+
+/* Fields: editable = yellow, read-only/calculated = gray, required = amber left marker + "*" (3) */
+.quro-field label, .quro-field legend { font: 500 12px/16px var(--q-font-sans); color: var(--q-ink-muted); }
+.quro-field input:not([type=checkbox], [type=radio]), .quro-field select, .quro-field textarea {
+    box-sizing: border-box; min-height: var(--q-control-h); padding: 0 8px; border: 1px solid var(--q-line);
+    border-radius: var(--q-radius-input); color: var(--q-ink); font: inherit;
+}
+.quro-field textarea { padding: 6px 8px; }
+.quro-field input[type=number] { text-align: right; font-family: var(--q-font-mono); font-variant-numeric: tabular-nums; }
+.quro-field-editable input:not([type=checkbox], [type=radio]), .quro-field-editable select, .quro-field-editable textarea { background: var(--q-field-editable); }
+.quro-field-readonly input:not([type=checkbox], [type=radio]), .quro-field-readonly select, .quro-field-readonly textarea { background: var(--q-surface-2); }
+.quro-field-required input:not([type=checkbox], [type=radio]), .quro-field-required select, .quro-field-required textarea {
+    box-shadow: inset 3px 0 0 var(--q-field-required);
+}
+.quro-required { color: var(--q-field-required); margin-left: 2px; }
+.quro-field input:focus-visible, .quro-field select:focus-visible, .quro-field textarea:focus-visible { outline: 2px solid var(--q-brand); outline-offset: -1px; }
+.quro-span-2 { grid-column: span 2; }
+.quro-span-4 { grid-column: span 4; }
+
+/* Grids: header row, read-only cells, row states (5) */
+.quro-grid table { border-collapse: collapse; }
+.quro-grid th { background: var(--q-surface-header); font: 600 12px/16px var(--q-font-sans); text-align: left; }
+.quro-grid th, .quro-grid td { border: 1px solid var(--q-line); height: var(--q-control-h); padding: 0 8px; }
+.quro-grid td.quro-cell-readonly { background: var(--q-surface-2); }
+.quro-grid tr.quro-row-selected td { background: var(--q-brand-tint); }
+.quro-grid tr.quro-row-selected td:first-child { box-shadow: inset 3px 0 0 var(--q-brand); }
+.quro-grid tr.quro-row-deleted td { background: var(--q-danger-tint); color: var(--q-danger); text-decoration: line-through; }
+.quro-grid tr.quro-row-locked td, .quro-grid tr.quro-row-locked .quro-field input, .quro-grid tr.quro-row-locked .quro-field select { background: var(--q-surface-2); }
+.quro-grid-selectable tbody tr { cursor: pointer; }
+
+/* Status chip (6) */
+.quro-chip { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: var(--q-radius-chip); font: 600 12px/20px var(--q-font-sans); white-space: nowrap; }
+.quro-chip-neutral { background: var(--q-neutral-tint); color: var(--q-ink); }
+.quro-chip-brand { background: var(--q-brand-tint); color: var(--q-brand); }
+.quro-chip-warn { background: var(--q-warn-tint); color: var(--q-warn); }
+.quro-chip-ok { background: var(--q-ok-tint); color: var(--q-ok); }
+.quro-chip-danger { background: var(--q-danger-tint); color: var(--q-danger); }
+
+/* Entry frame: five parts (1), at least 1280px wide, scrolls sideways instead of stacking */
+.quro-entry { min-width: var(--q-min-w); box-sizing: border-box; padding: 0 24px 24px; display: flex; flex-direction: column; gap: var(--q-panel-gap); }
+.quro-panel { background: var(--q-surface-1); border: 1px solid var(--q-line); border-radius: var(--q-radius-panel); padding: var(--q-panel-pad); }
+
+.quro-entry-title { padding-top: 14px; }
+.quro-entry-path { font: 500 12px/16px var(--q-font-sans); color: var(--q-ink-muted); }
+.quro-entry-title-row { display: flex; align-items: center; gap: 12px; }
+.quro-entry-title-row h1 { margin: 0; font: 600 20px/28px var(--q-font-sans); }
+.quro-entry-doc-no { font: 600 15px/28px var(--q-font-mono); }
+.quro-entry-new { font: 400 13px/28px var(--q-font-sans); color: var(--q-ink-muted); }
+.quro-entry-revision { font: 500 12px/16px var(--q-font-mono); color: var(--q-ink-muted); }
+.quro-entry-message { margin: 0; }
+.quro-entry-message[data-level=error] { color: var(--q-danger); }
+.quro-entry-message[data-level=warn] { color: var(--q-warn); }
+.quro-entry-message[data-level=info] { color: var(--q-ok); }
+
+/* Command bar: File | Rows | Status | Output (2) */
+.quro-commandbar { display: flex; align-items: center; gap: 8px; min-height: var(--q-commandbar-h); box-sizing: border-box; padding: 0 16px;
+    background: var(--q-surface-1); border: 1px solid var(--q-line); border-radius: var(--q-radius-panel); }
+.quro-commandbar-group { display: flex; align-items: center; gap: 8px; }
+.quro-commandbar-sep { width: 1px; align-self: stretch; margin: 10px 4px; background: var(--q-line); }
+.quro-commandbar button { height: var(--q-control-h); padding: 0 12px; border: 1px solid var(--q-line); border-radius: var(--q-radius-button);
+    background: var(--q-surface-1); color: var(--q-ink); font: 500 13px/20px var(--q-font-sans); white-space: nowrap; cursor: pointer; }
+.quro-commandbar button.quro-primary { background: var(--q-brand); border-color: var(--q-brand); color: var(--q-on-brand); }
+.quro-commandbar button.quro-danger-text { color: var(--q-danger); }
+.quro-commandbar button:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Header panel: 4-column field grid + 320px totals panel (3, 4) */
+.quro-entry-top { display: flex; gap: var(--q-panel-gap); align-items: stretch; }
+.quro-entry-header { flex: 1 1 0; min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-content: start; }
+.quro-entry-totals { flex: 0 0 var(--q-totals-w); box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
+.quro-totals-row { display: flex; justify-content: space-between; color: var(--q-ink-muted); }
+.quro-totals-row b, .quro-totals-total b { font-family: var(--q-font-mono); font-variant-numeric: tabular-nums; color: var(--q-ink); }
+.quro-totals-row b { font-weight: 400; }
+.quro-totals-discount b { color: var(--q-danger); }
+.quro-totals-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px solid var(--q-line); }
+.quro-totals-total b { font-size: 22px; line-height: 28px; font-weight: 600; }
+.quro-totals-total small, .quro-totals-base { font: 400 11px/16px var(--q-font-sans); color: var(--q-ink-muted); margin-left: 6px; }
+.quro-totals-base { text-align: right; }
+
+/* Line panel and audit (1) */
+.quro-entry-lines-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.quro-entry-lines-head h2 { margin: 0; font: 600 14px/20px var(--q-font-sans); }
+.quro-entry-lines-head span { font: 400 12px/16px var(--q-font-sans); color: var(--q-ink-muted); }
+.quro-entry-audit { display: flex; gap: 24px; font: 400 11px/16px var(--q-font-sans); color: var(--q-ink-muted); }
+.quro-entry-audit dl { display: flex; gap: 6px; margin: 0; }
+.quro-entry-audit dd { margin: 0; font-family: var(--q-font-mono); }
+
+/* Dialogs: the only place with a shadow (7) */
+.quro-dialog { background: var(--q-surface-1); color: var(--q-ink); border-radius: var(--q-radius-panel); box-shadow: var(--q-shadow-dialog); }

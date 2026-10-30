@@ -174,3 +174,29 @@ window.quroSubmit = (form) => form.requestSubmit();
         window.Blazor?.addEventListener?.("enhancedload", start);
     });
 })();
+
+// Entry frame shortcuts (entry-frame.md 2): F3 search, Ctrl+S save, Ctrl+Insert add row, Ctrl+Delete mark delete.
+// One entry frame is on a page; it registers while mounted and disposes the returned reference when it goes.
+window.quroEntryShortcuts = (frame) => {
+    const commands = (e) => {
+        if (e.key === "F3" && !e.ctrlKey && !e.altKey) return "search";
+        if (!e.ctrlKey || e.altKey || e.shiftKey) return null;
+        if (e.key === "s" || e.key === "S") return "save";
+        if (e.key === "Insert") return "add-row";
+        if (e.key === "Delete") return "mark-delete";
+        return null;
+    };
+    const onKeyDown = (e) => {
+        const command = commands(e);
+        if (!command || document.querySelector(".quro-dialog-backdrop")) return;
+        e.preventDefault();
+        // An edited input commits its value on change, so let it fire before the command runs
+        const input = document.activeElement;
+        if (input?.matches?.("input:not([type=checkbox]):not([type=radio]), textarea")) {
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        frame.invokeMethodAsync("OnShortcut", command);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return DotNet.createJSObjectReference({ dispose: () => document.removeEventListener("keydown", onKeyDown) });
+};

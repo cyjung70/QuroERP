@@ -137,4 +137,33 @@ public class GridRowsTests
         row.Item.Code.Should().Be("N");
         row.State.Should().Be(RowState.Added);
     }
+
+    [Fact]
+    public void InsertAfter_SelectedRow_InsertsBelowIt_WithoutOne_Appends()
+    {
+        var rows = Loaded();
+
+        var below = rows.InsertAfter(rows.All[0], new SampleItem { Code = "N" });
+        var last = rows.InsertAfter(null, new SampleItem { Code = "M" });
+
+        rows.All.Select(r => r.Item.Code).Should().Equal("A", "N", "B", "M");
+        below.State.Should().Be(RowState.Added);
+        last.State.Should().Be(RowState.Added);
+    }
+
+    [Fact]
+    public void Restore_LoadedRow_GetsLoadedValues_NewRow_IsRemoved()
+    {
+        var rows = Loaded();
+        rows.All[0].Item.Code = "X";
+        rows.ToggleDelete(rows.All[1]);
+        var added = rows.Add(new SampleItem { Code = "N" });
+
+        rows.Restore(rows.All[0]);
+        rows.Restore(rows.All[1]);
+        rows.Restore(added);
+
+        rows.All.Select(r => r.Item.Code).Should().Equal("A", "B");
+        rows.IsDirty.Should().BeFalse();
+    }
 }

@@ -5,7 +5,7 @@
 @inject CodeApiClient Codes
 
 <QuroSelect Label="@Label" Value="@Value" ValueChanged="ValueChanged" Options="_options" Radio="Radio"
-            Required="Required" LockMode="LockMode" HideLabel="HideLabel" TestId="@TestId" />
+            Required="Required" LockMode="LockMode" HideLabel="HideLabel" Span="Span" TestId="@TestId" />
 
 @code {
     private IReadOnlyList<CodeItemDto> _options = [];
@@ -37,6 +37,10 @@
 
     [Parameter]
     public string? TestId { get; set; }
+
+    /// <summary>Columns the field takes in a 4-column header: 1, 2 or 4.</summary>
+    [Parameter]
+    public int Span { get; set; } = 1;
 
     protected override async Task OnInitializedAsync()
     {

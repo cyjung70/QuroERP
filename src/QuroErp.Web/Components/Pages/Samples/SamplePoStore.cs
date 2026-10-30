@@ -15,6 +15,16 @@ public sealed class SamplePo
 
     public string? VendorMessage { get; set; }
 
+    /// <summary>DR draft, AP approved. Only a draft can be changed or deleted.</summary>
+    public string Status { get; set; } = SamplePoStore.Draft;
+
+    /// <summary>Raised on each save after approval in a real PO; here on each save of a saved PO.</summary>
+    public int Revision { get; set; }
+
+    public string? UpdatedBy { get; set; }
+
+    public DateTimeOffset? UpdatedAt { get; set; }
+
     public SamplePo Copy() => (SamplePo)MemberwiseClone();
 }
 
@@ -51,6 +61,10 @@ public sealed record SampleLookupRow(string Code, string Name, decimal? DefaultP
 /// </summary>
 public sealed class SamplePoStore
 {
+    public const string Draft = "DR";
+    public const string Approved = "AP";
+    private const string SampleUser = "sample";
+
     private readonly Lock _lock = new();
     private readonly List<SampleLookupRow> _vendors =
     [
@@ -85,6 +99,18 @@ public sealed class SamplePoStore
 
     public SampleLookupRow? Item(string? code) => _items.FirstOrDefault(i => i.Code == code);
 
+    /// <summary>POs for the document search dialog, newest first.</summary>
+    public IReadOnlyList<SamplePo> FindPos(string? keyword)
+    {
+        lock (_lock)
+        {
+            return [.. _pos.Where(p => string.IsNullOrWhiteSpace(keyword)
+                                       || (p.PoNo?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+                                       || (p.VendorName?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false))
+                           .OrderByDescending(p => p.PoNo).Select(p => p.Copy())];
+        }
+    }
+
     public (SamplePo Po, IReadOnlyList<SamplePoLine> Lines)? FindPo(string? poNo)
     {
         lock (_lock)
@@ -102,6 +128,8 @@ public sealed class SamplePoStore
         {
             var saved = po.Copy();
             saved.VendorName = Vendor(saved.VendorCode)?.Name;
+            saved.UpdatedBy = SampleUser;
+            saved.UpdatedAt = DateTimeOffset.Now;
             if (saved.Id == 0)
             {
                 saved.Id = ++_nextId;
@@ -110,6 +138,7 @@ public sealed class SamplePoStore
             }
             else
             {
+                saved.Revision++;
                 _pos[_pos.FindIndex(p => p.Id == saved.Id)] = saved;
             }
             foreach (var line in added.Concat(updated))
@@ -130,6 +159,19 @@ public sealed class SamplePoStore
             var deletedIds = deleted.Select(l => l.Id).ToHashSet();
             _lines.RemoveAll(l => deletedIds.Contains(l.Id));
             return (saved.Copy(), LinesOf(saved.Id));
+        }
+    }
+
+    /// <summary>Approves a draft PO; the lines stay as saved.</summary>
+    public (SamplePo Po, IReadOnlyList<SamplePoLine> Lines) ApprovePo(long id)
+    {
+        lock (_lock)
+        {
+            var po = _pos.First(p => p.Id == id);
+            po.Status = Approved;
+            po.UpdatedBy = SampleUser;
+            po.UpdatedAt = DateTimeOffset.Now;
+            return (po.Copy(), LinesOf(id));
         }
     }
 

@@ -1,6 +1,6 @@
 @inherits QuroInputBase<string>
 
-<div class="quro-field">
+<div class="@FieldClass()">
     <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
     @if (Rows > 1)
     {

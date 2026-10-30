@@ -71,6 +71,22 @@
   <data name="Common.Deleted" xml:space="preserve"><value>Deleted.</value></data>
   <data name="Common.ConfirmUnsaved" xml:space="preserve"><value>You have unsaved changes. If you continue, they will be lost. Continue?</value></data>
   <data name="Common.ConfirmDelete" xml:space="preserve"><value>Delete this record?</value></data>
+  <data name="Common.NewDocument" xml:space="preserve"><value>New document</value></data>
+  <data name="Common.Revision" xml:space="preserve"><value>Rev. {0}</value></data>
+  <data name="Common.Lines" xml:space="preserve"><value>Lines</value></data>
+  <data name="Common.LineCount" xml:space="preserve"><value>{0} lines</value></data>
+  <data name="Common.MarkDelete" xml:space="preserve"><value>Mark Delete</value></data>
+  <data name="Common.RestoreLine" xml:space="preserve"><value>Restore Row</value></data>
+  <data name="Common.Pdf" xml:space="preserve"><value>PDF</value></data>
+  <data name="Common.FindDocument" xml:space="preserve"><value>Find Document</value></data>
+  <data name="Common.SaveFirst" xml:space="preserve"><value>Save your changes first.</value></data>
+  <data name="Common.Audit.Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Common.Audit.Updated" xml:space="preserve"><value>Updated</value></data>
+  <data name="Common.Totals.Subtotal" xml:space="preserve"><value>Subtotal</value></data>
+  <data name="Common.Totals.Discount" xml:space="preserve"><value>Discount</value></data>
+  <data name="Common.Totals.Tax" xml:space="preserve"><value>Tax</value></data>
+  <data name="Common.Totals.Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Common.Totals.BaseTotal" xml:space="preserve"><value>Base currency total</value></data>
   <data name="Samples.Single.Title" xml:space="preserve"><value>Sample: Single (S)</value></data>
   <data name="Samples.Multi.Title" xml:space="preserve"><value>Sample: Multi (M)</value></data>
   <data name="Samples.HeaderDetail.Title" xml:space="preserve"><value>Sample: Header and Lines (SM)</value></data>
@@ -95,6 +111,14 @@
   <data name="Samples.Fob" xml:space="preserve"><value>F.O.B</value></data>
   <data name="Samples.Amount" xml:space="preserve"><value>Amount</value></data>
   <data name="Samples.TotalAmt" xml:space="preserve"><value>Total Amount</value></data>
+  <data name="Samples.Path" xml:space="preserve"><value>Samples > Purchasing</value></data>
+  <data name="Samples.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Samples.PoStatus.DR" xml:space="preserve"><value>Draft</value></data>
+  <data name="Samples.PoStatus.AP" xml:space="preserve"><value>Approved</value></data>
+  <data name="Samples.Approve" xml:space="preserve"><value>Approve</value></data>
+  <data name="Samples.DeletePo" xml:space="preserve"><value>Delete PO</value></data>
+  <data name="Samples.SelectVendorFirst" xml:space="preserve"><value>Select the vendor first.</value></data>
+  <data name="Samples.ConfirmApprove" xml:space="preserve"><value>Approve this PO?</value></data>
   <data name="Common-E-005" xml:space="preserve"><value>Please enter {0}.</value></data>
   <data name="BC-E-313" xml:space="preserve"><value>Country {0} is not supported (only US or KR), or it cannot change because transactions exist.</value></data>
   <data name="BC-E-401" xml:space="preserve"><value>Language '{0}' is not valid. Use a listed code of 2 or 3 lower-case letters; en is always in use.</value></data>

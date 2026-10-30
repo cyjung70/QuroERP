@@ -1,25 +1,42 @@
 @page "/samples/po-entry"
+@page "/samples/po-entry/{PoNo}"
 @rendermode InteractiveServer
 @inject IServiceProvider Services
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 
-@* Screen type SM example: PO Entry (header + lines saved together, lookup dialogs, display total, undo row).
+@* Screen type SM example on the entry frame: PO Entry (header + lines saved together, lookup dialogs, display totals,
+   status chip and an approve status command).
    Development only, in-memory data. A real screen reads and saves through a Contracts API client. *@
 
 <PageTitle>@L["Samples.PoEntry.Title"]</PageTitle>
 
 @if (_store is not null)
 {
-    <QuroHeaderDetail THeader="SamplePo" TLine="SamplePoLine" Title="@L["Samples.PoEntry.Title"]" TestId="po-entry"
-                      Load="LoadAsync" Create="() => new SamplePo { PoDt = DateOnly.FromDateTime(DateTime.Today) }"
-                      CreateLine="() => new SamplePoLine()" Save="SaveAsync"
-                      Delete="po => { _store.DeletePo(po.Id); return Task.CompletedTask; }">
-        <SearchContent>
-            <QuroText Label="@L["Samples.PoNo"]" @bind-Value="_poNo" TextCase="TextCase.Upper" TestId="po-entry-search-po-no" />
-        </SearchContent>
+    <QuroHeaderDetail @ref="_frame" THeader="SamplePo" TLine="SamplePoLine" Title="@L["Samples.PoEntry.Title"]" TestId="po-entry"
+                      Path="@L["Samples.Path"]" DocumentNo="po => po.PoNo" Revision="po => po.Revision"
+                      Audit="po => new QuroAudit(null, null, po.UpdatedBy, po.UpdatedAt)"
+                      Find="k => Task.FromResult(_store.FindPos(k))" Load="LoadAsync" Initial="Initial"
+                      Create="() => new SamplePo { PoDt = DateOnly.FromDateTime(DateTime.Today) }"
+                      CreateLine="_ => new SamplePoLine()" Save="SaveAsync"
+                      CanSave="po => po.Status == SamplePoStore.Draft" CanDelete="po => po.Status == SamplePoStore.Draft"
+                      Delete="po => { _store.DeletePo(po.Id); return Task.CompletedTask; }" DeleteText="@L["Samples.DeletePo"]"
+                      LinesHint="LinesHint">
+        <FindColumns>
+            <QuroColumn TRow="SamplePo" Title="@L["Samples.PoNo"]" Value="p => p.PoNo" />
+            <QuroColumn TRow="SamplePo" Title="@L["Samples.PoDt"]" Value="p => p.PoDt" />
+            <QuroColumn TRow="SamplePo" Title="@L["Samples.VendorName"]" Value="p => p.VendorName" />
+            <QuroColumn TRow="SamplePo" Title="@L["Samples.Status"]" Value="p => StatusText(p.Status)" />
+        </FindColumns>
+        <StatusChip Context="po">
+            <QuroStatusChip Code="@po.Status" Kind="@(po.Status == SamplePoStore.Approved ? ChipKind.Brand : ChipKind.Neutral)"
+                            Text="@StatusText(po.Status)" />
+        </StatusChip>
+        <StatusCommands Context="po">
+            <button type="button" disabled="@(po.Status != SamplePoStore.Draft)" data-testid="po-entry-toolbar-approve"
+                    @onclick="ApproveAsync">@L["Samples.Approve"]</button>
+        </StatusCommands>
         <HeaderFields Context="po">
-            <QuroText Label="@L["Samples.PoNo"]" @bind-Value="po.PoNo" LockMode="LockMode.Always" TestId="po-entry-header-po-no" />
             <QuroDate Label="@L["Samples.PoDt"]" @bind-Value="po.PoDt" Required TestId="po-entry-header-po-dt" />
             <div class="quro-lookup-field">
                 <QuroText Label="@L["Samples.Vendor"]" @bind-Value="po.VendorCode" @bind-Value:after="() => FillVendor(po)"
@@ -27,13 +44,12 @@
                 <button type="button" aria-label="@L["Samples.FindVendor"]" data-testid="po-entry-header-vendor-lookup"
                         @onclick="() => OpenVendorLookup(po)">…</button>
             </div>
-            <QuroText Label="@L["Samples.VendorName"]" @bind-Value="po.VendorName" LockMode="LockMode.Always" TestId="po-entry-header-vendor-name" />
-            <QuroText Label="@L["Samples.VendorMessage"]" @bind-Value="po.VendorMessage" Rows="3" TestId="po-entry-header-vendor-message" />
+            <QuroText Label="@L["Samples.VendorName"]" @bind-Value="po.VendorName" LockMode="LockMode.Always" Span="2" TestId="po-entry-header-vendor-name" />
+            <QuroText Label="@L["Samples.VendorMessage"]" @bind-Value="po.VendorMessage" Rows="3" Span="4" TestId="po-entry-header-vendor-message" />
         </HeaderFields>
-        <LineSummary Context="lines">
-            <QuroText Label="@L["Samples.TotalAmt"]" Value="@lines.Sum(l => l.Amount).ToString("N2")" LockMode="LockMode.Always"
-                      TestId="po-entry-summary-total-amt" />
-        </LineSummary>
+        <Totals Context="lines">
+            <QuroTotals Subtotal="@lines.Sum(l => l.Amount)" TestId="po-entry-totals" />
+        </Totals>
         <LineColumns>
             <QuroColumn TRow="SamplePoLine" Title="@L["Samples.Item"]" Value="l => l.ItemCode" Context="line">
                 <div class="quro-lookup-field">
@@ -74,7 +90,7 @@
 
 @code {
     private SamplePoStore? _store;
-    private string? _poNo;
+    private QuroHeaderDetail<SamplePo, SamplePoLine>? _frame;
     private SamplePo? _vendorTarget;
     private SamplePoLine? _itemTarget;
     private bool _vendorLookupOpen;
@@ -89,16 +105,34 @@
         }
     }
 
-    private Task<HeaderLines<SamplePo, SamplePoLine>?> LoadAsync() =>
-        Task.FromResult(_store!.FindPo(_poNo) is { } found ? new HeaderLines<SamplePo, SamplePoLine>(found.Po, found.Lines) : null);
+    /// <summary>PO number from the address /samples/po-entry/{PoNo}.</summary>
+    [Parameter]
+    public string? PoNo { get; set; }
+
+    private Task<HeaderLines<SamplePo, SamplePoLine>?> LoadAsync(SamplePo picked) => Task.FromResult(Read(picked.PoNo));
+
+    private Func<Task<HeaderLines<SamplePo, SamplePoLine>?>>? Initial => PoNo is null ? null : () => Task.FromResult(Read(PoNo));
+
+    private HeaderLines<SamplePo, SamplePoLine>? Read(string? poNo) =>
+        _store!.FindPo(poNo) is { } found ? new HeaderLines<SamplePo, SamplePoLine>(found.Po, found.Lines) : null;
 
     // A real screen sends the header with a lines array in one request (screens.md "SM")
     private Task<HeaderLines<SamplePo, SamplePoLine>> SaveAsync(SamplePo po, bool isNew, BatchChanges<SamplePoLine> lines)
     {
         var saved = _store!.SavePo(po, lines.Added, lines.Updated, lines.Deleted);
-        _poNo = saved.Po.PoNo;
         return Task.FromResult(new HeaderLines<SamplePo, SamplePoLine>(saved.Po, saved.Lines));
     }
+
+    // A status command: the frame asks to save first when there are changes
+    private Task ApproveAsync() => _frame!.RunStatusAsync(po =>
+    {
+        var approved = _store!.ApprovePo(po.Id);
+        return Task.FromResult(new HeaderLines<SamplePo, SamplePoLine>(approved.Po, approved.Lines));
+    }, L["Samples.ConfirmApprove"]);
+
+    private string? LinesHint(SamplePo po) => string.IsNullOrEmpty(po.VendorCode) ? L["Samples.SelectVendorFirst"].Value : null;
+
+    private string StatusText(string status) => L[$"Samples.PoStatus.{status}"];
 
     private void FillVendor(SamplePo po) => po.VendorName = _store!.Vendor(po.VendorCode)?.Name;
 

@@ -71,9 +71,9 @@ public class TestIdTests : ScreenContext
             .Which.GetAttribute("data-level").Should().Be("error");
     }
 
-    // {screen} alone (the screen root) or {screen}-{area}[-{field}] in kebab-case
+    // {screen} alone (the screen root) or {screen}-{area}[-{field}] in kebab-case (SM areas: entry-frame.md 8)
     private static string Rule(string screen) =>
-        $"^{Regex.Escape(screen)}(-(header|line|search|grid|toolbar|message)(-[a-z0-9]+)*)?$";
+        $"^{Regex.Escape(screen)}(-(header|line|search|grid|toolbar|message|title|doc-no|status-chip|revision|totals|audit|find)(-[a-z0-9]+)*)?$";
 
     /// <summary>Renders the sample with rows in every grid (SM loads an order, MM selects a source).</summary>
     private IRenderedComponent<ContainerFragment> RenderSample(Type page, string screen)
@@ -85,8 +85,10 @@ public class TestIdTests : ScreenContext
         });
         if (screen == "header-detail")
         {
-            cut.Find("[data-testid=header-detail-search-order-no]").Change("SO261000001");
             cut.Find("[data-testid=header-detail-toolbar-search]").Click();
+            cut.Find("[data-testid=header-detail-find-keyword]").Change("SO261000001");
+            cut.Find("[data-testid=header-detail-find] form").Submit();
+            cut.Find("[data-testid=header-detail-find-grid-select]").Click();
         }
         if (screen == "master-detail")
         {
