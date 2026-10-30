@@ -1,0 +1,98 @@
+@page "/bc/currency"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject CurrencyApiClient Api
+@inject LocalizationApiClient Localization
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-026 currencies, screen type M. Every currency is listed on open; add, change or delete currencies and save them together.
+   Names are edited per language in use. The API checks every rule (BC-BR-404, 411, 412, 428, 312), including the 409 for
+   decimals or a country that documents use. *@
+
+<PageTitle>@L["Bc.Currency.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="currency-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid TRow="CurrencyRow" Title="@L["Bc.Currency.Title"]" TestId="currency" LoadOnStart="true"
+                   Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)" CreateRow="@(_canEdit ? NewRow : null)">
+        <Columns>
+            <QuroColumn Title="@L["Bc.Currency.CurrencyCode"]" Value="r => r.CurrencyCode" Context="row">
+                <QuroText Label="@L["Bc.Currency.CurrencyCode"]" HideLabel @bind-Value="row.CurrencyCode" Required LockMode="LockMode.NewOnly"
+                          TextCase="TextCase.Upper" TestId="currency-grid-currency-code" />
+            </QuroColumn>
+            @foreach (var lang in _languages)
+            {
+                <QuroColumn Title="@NameTitle(lang)" Value="r => r.Names.GetValueOrDefault(lang)" Context="row">
+                    <QuroText Label="@NameTitle(lang)" HideLabel @bind-Value="row.Names[lang]" Required="@(lang == FallbackLang)"
+                              TestId="@($"currency-grid-name-{lang}")" />
+                </QuroColumn>
+            }
+            <QuroColumn Title="@L["Bc.Currency.Decimals"]" Value="r => r.Decimals" Context="row">
+                <QuroNumber Label="@L["Bc.Currency.Decimals"]" HideLabel @bind-Value="row.Decimals" Decimals="0" TestId="currency-grid-decimals" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.Currency.CountryCode"]" Value="r => r.CountryCode" Context="row">
+                <QuroText Label="@L["Bc.Currency.CountryCode"]" HideLabel @bind-Value="row.CountryCode" TextCase="TextCase.Upper"
+                          TestId="currency-grid-country-code" />
+            </QuroColumn>
+            <QuroColumn Title="@L["Bc.Currency.UseYn"]" Value="r => r.UseYn" Context="row">
+                <QuroCheckbox Label="@L["Bc.Currency.UseYn"]" HideLabel @bind-Value="row.UseYn" TestId="currency-grid-use-yn" />
+            </QuroColumn>
+        </Columns>
+    </QuroMultiGrid>
+}
+
+@code {
+    // The en name is required (BC-BR-404); its column comes first
+    private const string FallbackLang = "en";
+    private const string UnavailableCode = "BC-E-003";
+
+    private IReadOnlyList<string> _languages = [FallbackLang];
+    private bool _canEdit;
+    private bool _ready;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    private static string Lang => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy is applied, as in CurrencyController (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        try
+        {
+            var languages = (await Localization.GetAsync(Lang, CancellationToken.None)).Languages.OrderBy(l => l.SortOrder).Select(l => l.LangCode);
+            _languages = [FallbackLang, .. languages.Where(l => l != FallbackLang)];
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    private async Task<IReadOnlyList<CurrencyRow>> LoadAsync() =>
+        (await Api.SearchAsync(Lang, CancellationToken.None)).Select(c => CurrencyRow.From(c, _languages)).ToList();
+
+    // TODO(Harness): the API does not yet block deleting the base currency or a currency that documents use (TASK-BC-051)
+    private Task SaveAsync(BatchChanges<CurrencyRow> changes) => Api.SaveAsync(CurrencyRow.ToRequest(changes), Lang, CancellationToken.None);
+
+    private CurrencyRow NewRow() => CurrencyRow.New(_languages);
+
+    private string NameTitle(string lang) =>
+        string.Format(CultureInfo.CurrentCulture, L["Bc.Currency.Name"], L[$"Common.Language.{lang}"] is { ResourceNotFound: false } name ? name.Value : lang);
+}
