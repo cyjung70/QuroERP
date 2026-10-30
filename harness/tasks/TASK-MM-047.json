@@ -1,0 +1,68 @@
+{
+  "id": "TASK-MM-047",
+  "project": "core",
+  "title": "공급자 송장 API (Application·Domain·Infrastructure)",
+  "module": "MM",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/MM/supplier-invoice.md"
+  ],
+  "rules": [
+    "MM-BR-751",
+    "MM-BR-752",
+    "MM-BR-753",
+    "MM-BR-754",
+    "MM-BR-755",
+    "MM-BR-756",
+    "MM-BR-757",
+    "MM-BR-758",
+    "MM-BR-759",
+    "MM-BR-760",
+    "MM-BR-761",
+    "MM-BR-762",
+    "MM-BR-763",
+    "MM-BR-764",
+    "MM-BR-765",
+    "MM-BR-164",
+    "MM-BR-409",
+    "MM-BR-410",
+    "MM-BR-416",
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-601",
+    "MM-BR-606"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007",
+    "TASK-CORE-011",
+    "TASK-CORE-014",
+    "TASK-CORE-015",
+    "TASK-CORE-018",
+    "TASK-CORE-019",
+    "TASK-CORE-021",
+    "TASK-CORE-028",
+    "TASK-MM-007"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트",
+    "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

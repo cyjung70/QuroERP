@@ -21,7 +21,8 @@
     "MM-BR-973",
     "MM-BR-974",
     "MM-BR-975",
-    "MM-BR-978"
+    "MM-BR-978",
+    "MM-BR-751"
   ],
   "skills": [
     "quro-pytest"
@@ -32,6 +33,7 @@
     "TASK-MM-007",
     "TASK-MM-009",
     "TASK-MM-030",
+    "TASK-MM-047",
     "TASK-SD-003",
     "TASK-SD-005",
     "TASK-SD-063"

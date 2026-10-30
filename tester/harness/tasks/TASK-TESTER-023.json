@@ -1,0 +1,49 @@
+{
+  "id": "TASK-TESTER-023",
+  "project": "tester",
+  "title": "선청구(BILL_THEN_SHIP) 테스트: 송장 때 위탁 이동, 송장 가져오기 출하, 미출하 취소와 취소 되돌리기",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-020.md"
+  ],
+  "rules": [
+    "SD-BR-141",
+    "SD-BR-142",
+    "SD-BR-143",
+    "SD-BR-144",
+    "SD-BR-145",
+    "SD-BR-146",
+    "SD-BR-203",
+    "SD-BR-174",
+    "SD-BR-175",
+    "SD-BR-176",
+    "SD-BR-177",
+    "MM-BR-709",
+    "MM-BR-710",
+    "MM-BR-711"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-016",
+    "TASK-CORE-029",
+    "TASK-SD-003",
+    "TASK-SD-005",
+    "TASK-SD-007",
+    "TASK-SD-063"
+  ],
+  "acceptance": [
+    "tests/scenario/SD/test_bill_then_ship.py: SD-TS-020 (DENY 모드)",
+    "창고별 현재고·TR·DN 이동·stk_val·shipped_qty·cancelled_qty·dn_qty·Credit Memo 유무는 DB SELECT로 확인한다",
+    "위탁 창고는 코드 CONSIGN으로 찾는다 (설치 때 생성)",
+    "실행마다 새 품목을 만들어 다른 테스트의 재고와 섞이지 않게 한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k bill_then_ship 통과, uv run ruff check 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

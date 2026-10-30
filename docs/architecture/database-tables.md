@@ -72,16 +72,30 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `sys_api_client` | 외부 API 클라이언트 | BC | security.md | id, client_code UNIQUE, key_hash, role_id, revoked_at |
 | `sys_ui_setting` | 화면 설정 | BC | codes.md (AS IS 코드 BA00) | id, screen_code UNIQUE, default_rows |
 | `sd_discount_rate` | 할인율 | SD | codes.md (AS IS 코드 SC00) | id, discount_code UNIQUE, rate numeric |
-| `mm_inventory_setting` | 재고 설정 | MM | inventory.md | id, negative_stock_mode (ALLOW, ALLOW_IN_MONTH, DENY). 1행 |
+| `mm_inventory_setting` | 재고 설정 | MM | inventory.md | id, negative_stock_mode (ALLOW_IN_MONTH, DENY), over_receipt_mode (DENY, WARN), allow_cost_adjustment_edit boolean. 1행 |
+| `mm_cost_adjustment` | 원가 조정 문서 | MM | MM closing.md | id, adjust_no UNIQUE (`CA` + yymm + 4자리), year_month (`YYYYMM`), status (DRAFT, CONFIRMED, CANCELLED), calculated_at, calculated_by, confirmed_at, confirmed_by, cancelled_at, cancelled_by. UNIQUE (year_month) WHERE status = 'CONFIRMED', DRAFT는 전체 1개 (MM-BR-416·419) |
+| `mm_cost_adjustment_line` | 원가 조정 줄 | MM | MM closing.md | id, cost_adjustment_id, seq, item_id, issue_qty, moving_avg_amt, period_avg_prc, period_avg_amt, calc_adjust_amt, adjust_amt, edit_reason, ending_qty, diff_warehouse_id (확인 때 차이를 넣은 창고). UNIQUE (cost_adjustment_id, item_id) (MM-BR-417·420·421) |
 | `sys_auth_setting` | 인증 설정 | BC | login.md | id, max_failed_attempts, lockout_minutes, show_remaining_attempts, auto_login_enabled, auto_login_valid_days, session_idle_minutes, allow_concurrent_login, password_min_length, password_required_categories, password_expire_days, password_history_count, password_reset_mode (ADMIN_ONLY, EMAIL). 1행 |
 | `sys_auto_login_token` | 자동 로그인 토큰 | BC | login.md | id, app_user_id, token_hash varchar UNIQUE (SHA-256 16진수 64자, 길이는 Domain에서 검사), expires_at, revoked_at, user_agent, created_at |
 | `sys_password_history` | 비밀번호 이력 | BC | login.md | id, app_user_id, password_hash, created_at |
 | `bc_warehouse` | 창고 | MM | inventory.md, MM warehouse.md | id, warehouse_code UNIQUE, warehouse_name, is_default, use_yn |
 | `mm_onhand` | 창고별 현재고 | MM | inventory.md, MM ledger.md | id, item_id, warehouse_id, onhand_qty. UNIQUE (item_id, warehouse_id) |
 | `mm_stock_transfer` | 창고 이동 | MM | MM warehouse.md | id, transfer_no UNIQUE, transfer_dt, from_warehouse_id, to_warehouse_id |
-| `mm_stock_transfer_line` | 창고 이동 상세 | MM | MM warehouse.md | id, stock_transfer_id, seq, item_id, qty, prc, amt |
+| `mm_stock_transfer_line` | 창고 이동 상세 | MM | MM warehouse.md | id, stock_transfer_id, seq, item_id, lot_id, qty, prc, amt |
 | `sd_shipment` | 출하 | SD | SD shipment.md | id, ship_no UNIQUE, customer_id, sales_order_id, ship_dt, warehouse_id, currency_code, exchange_rate, status (OP, PB, BL, VO), 배송지 |
-| `sd_shipment_line` | 출하 상세 | SD | SD shipment.md | id, shipment_id, seq, item_id, warehouse_id, ship_qty, ship_prc, billed_qty, sales_order_line_id |
+| `sd_shipment_line` | 출하 상세 | SD | SD shipment.md | id, shipment_id, seq, item_id, warehouse_id, lot_id, ship_qty, ship_prc, billed_qty, returned_qty, returned_unbilled_qty, sales_order_line_id |
+| `sd_sales_return` | 매출 반품 | SD | SD sales-return.md | id, return_no UNIQUE (`SR` + yymm + 5자리), customer_id, shipment_id, return_dt, status (OP, VO), cm_reason01~08 boolean, remarks |
+| `sd_sales_return_line` | 매출 반품 상세 | SD | SD sales-return.md | id, sales_return_id, seq, shipment_line_id, item_id, warehouse_id, lot_id, return_qty, unbilled_qty, credit_qty, cost_prc (원 출고 단가). UNIQUE (sales_return_id, shipment_line_id) |
+| `mm_supplier_invoice` | 공급자 송장 | MM | MM supplier-invoice.md | id, invoice_no UNIQUE (`VI` + yymm + 5자리), type (INV, DM), vendor_id, ref_no (공급자 송장 번호, 공급자마다 UNIQUE — Void 제외), invoice_dt, due_dt, terms, 통화·환율·세금 헤더, tot_amt, cls_amt, bal_amt, status (OP, PA, CL, VO), tax_invoice_received, vendor_return_id (Debit Memo만), remarks |
+| `mm_supplier_invoice_line` | 공급자 송장 상세 | MM | MM supplier-invoice.md | id, supplier_invoice_id, seq, goods_receipt_line_id, vendor_return_line_id (Debit Memo만), item_id, qty (Debit Memo는 음수), prc, 세금 줄, deductible, pv_amt (원가 조정 금액, 기준 통화) |
+| `mm_vendor_return` | 공급자 반품 | MM | MM vendor-return.md | id, return_no UNIQUE (`VR` + yymm + 5자리), goods_receipt_id, vendor_id, return_dt, status (OP, VO), void_dt, remarks |
+| `mm_vendor_return_line` | 공급자 반품 상세 | MM | MM vendor-return.md | id, vendor_return_id, seq, goods_receipt_line_id, item_id, warehouse_id, lot_id, return_qty, debit_qty, cost_prc (원 입고 단가) |
+| `sd_quotation` | 견적 | SD | SD quotation.md | id, quotation_no UNIQUE (`QT` + yymm + 5자리), customer_id, quotation_dt, valid_to, status (OP, LO), lost_reason, 통화·환율·세금 헤더, 배송지, remarks |
+| `sd_quotation_line` | 견적 상세 | SD | SD quotation.md | id, quotation_id, seq, item_id, qty, prc, dc_cd, dc_rate, 세금 줄, converted_qty (수주 줄 수량 합) |
+| `mm_purchase_request` | 구매 요청 | MM | MM purchase-request.md | id, request_no UNIQUE (`PR` + yymm + 5자리), requester_id, request_dt, need_dt, status (OP, PO, CL), remarks |
+| `mm_purchase_request_line` | 구매 요청 상세 | MM | MM purchase-request.md | id, purchase_request_id, seq, item_id, qty, warehouse_id, vendor_id (희망, NULL 허용), ordered_qty (발주 줄 수량 합) |
+| `mm_lot` | 로트 | MM | MM lot.md | id, item_id, lot_no (최대 30자, `MIGRATED`·`UNKNOWN`은 시스템). UNIQUE (item_id, lot_no) (MM-BR-352) |
+| `mm_lot_onhand` | 로트 잔고 | MM | MM lot.md, inventory.md | id, item_id, warehouse_id, lot_id, onhand_qty (≥ 0). UNIQUE (item_id, warehouse_id, lot_id). 창고 합 = `mm_onhand` (MM-BR-354·356) |
 | `sys_language` | 언어 | BC | i18n.md, BC localization.md | id, lang_code UNIQUE (en, ko 사용. sw 행은 use_yn = false), sort_order, use_yn |
 | `bc_currency` | 통화 | BC | localization.md, BC localization.md | id, currency_code UNIQUE (ISO 4217), decimals (0~4), country_code (ISO 3166-1, NULL 허용), use_yn |
 | `bc_currency_translation` | 통화 번역 | BC | i18n.md | id, currency_id, lang_code, name. UNIQUE (currency_id, lang_code) |
@@ -162,6 +176,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `warehouse_code` | varchar | NOT NULL | 최대 10자, 대문자·숫자·`-`·`_`. 저장 뒤 바꿀 수 없다 (MM-BR-701) |
 | `warehouse_name` | varchar | NOT NULL | 번역하지 않는다 (고유 이름) |
 | `is_default` | boolean | NOT NULL DEFAULT false | 기본 창고는 정확히 1개 (MM-BR-702) |
+| `warehouse_type` | varchar | NOT NULL DEFAULT 'NORMAL' | `NORMAL`·`CONSIGNMENT`. 위탁 창고는 1개, 기본 창고 불가 (MM-BR-709) |
 | `use_yn` | boolean | NOT NULL DEFAULT true |  |
 | `remarks` | varchar |  |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
@@ -211,6 +226,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `stock_transfer_id` | bigint | FK NOT NULL | → `mm_stock_transfer.id` |
 | `seq` | integer | NOT NULL |  |
 | `item_id` | bigint | FK NOT NULL | → `bc_item.id` |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 보내는 창고 로트 = 받는 창고 로트 (MM-BR-357) |
 | `qty` | numeric | NOT NULL | > 0 |
 | `prc` | numeric | NOT NULL | 이동 시점 이동평균원가 (기준 통화, MM-BR-706) |
 | `amt` | numeric | NOT NULL | `round(qty × prc, 기준 통화 자릿수)`. 출고·입고 이동 금액 (MM-BR-706) |
@@ -234,6 +250,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `currency_code` | varchar | NOT NULL | 문서 통화 (SD-BR-170, BC-BR-412) |
 | `exchange_rate` | numeric | NOT NULL | 문서 통화 1단위당 기준 통화 금액, 소수 10자리 |
 | `status` | varchar | NOT NULL DEFAULT 'OP' | `OP`·`PB`·`BL`·`VO` (SD-BR-166) |
+| `billing_flow` | varchar | NOT NULL | `SHIP_AND_BILL`·`SHIP_THEN_BILL`·`BILL_THEN_SHIP`. 신규 저장 때 수주(없으면 고객) 값, 송장 줄을 가져오면 `BILL_THEN_SHIP` (SD-BR-174·175) |
 | `ship_via` | varchar |  |  |
 | `ship_name` | varchar |  |  |
 | `ship_addr1` | varchar |  |  |
@@ -261,12 +278,16 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `item_id` | bigint | FK NOT NULL | → `bc_item.id` |
 | `item_name` | varchar |  |  |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 재고 이동 창고 (MM-BR-703) |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 로트 관리 품목만 (MM-BR-353·355) |
 | `ship_qty` | numeric | NOT NULL | > 0 (SD-BR-161) |
 | `ship_prc` | numeric | NOT NULL | 판매 단가 (문서 통화, SD-BR-161). 송장 단가 기본값 |
 | `dc_cd` | varchar |  |  |
 | `dc_rate` | numeric |  |  |
 | `billed_qty` | numeric | NOT NULL DEFAULT 0 | 송장으로 청구한 수량 (SD-BR-108) |
+| `returned_qty` | numeric | NOT NULL DEFAULT 0 | Void가 아닌 매출 반품 수량 합 (SD-BR-553) |
+| `returned_unbilled_qty` | numeric | NOT NULL DEFAULT 0 | 반품으로 미청구에서 뺀 수량 합. 남은 청구 수량 = ship_qty − billed_qty − 이 값 (SD-BR-556) |
 | `sales_order_line_id` | bigint | FK | → `sd_sales_order_line.id`. 직접 넣은 줄은 NULL (SD-BR-173) |
+| `sales_invoice_line_id` | bigint | FK | → `sd_sales_invoice_line.id`. 선청구 송장 줄을 출하한 줄 (SD-BR-175·176) |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |
@@ -337,17 +358,18 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
 | `ap_payment_id` | bigint | FK [추정] | → `mm_ap_payment.id` | AS IS cls_ap_no |
 | `seq` | integer | NOT NULL | 지급 안 줄 순번 (MM-BR-963) |  |
-| `goods_receipt_id` | bigint | FK [추정] | → `mm_goods_receipt.id` | AS IS gr_no |
+| `supplier_invoice_id` | bigint | FK NOT NULL | → `mm_supplier_invoice.id`. 송장·Debit Memo (MM-BR-953) |  |
 | `cls_dt` | date | NOT NULL | 헤더 지급일과 같다 (MM-BR-960) | Payment Date |
-| `cls_amt` | numeric | NOT NULL | 지급 금액 > 0 (MM-BR-954) | Payment Amount |
+| `cls_amt` | numeric | NOT NULL | 지급 금액 ≠ 0, 송장 잔액과 같은 부호 — Debit Memo는 음수 (MM-BR-954) | Payment Amount |
 | `fx_diff_base_amt` | numeric | NOT NULL DEFAULT 0 | 환율 차이 기준 통화 금액 (BC-BR-414) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
-- UNIQUE: (ap_payment_id, goods_receipt_id)
-- INDEX: (goods_receipt_id)
+- UNIQUE: (ap_payment_id, supplier_invoice_id)
+- INDEX: (supplier_invoice_id)
+- AS IS `gr_no`는 옮기지 않는다: 반제 대상은 공급자 송장 `supplier_invoice_id` (MM-BR-953·765)
 
 ## mm_ap_payment
 
@@ -499,7 +521,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `default_lang_code` | varchar | NOT NULL | 회사 기본 언어 → `sys_language` (BC-BR-314) |  |
 | `time_zone` | varchar | NOT NULL | IANA 시간대 이름, 업무 일자 기준 (BC-BR-318) |  |
 | `tax_calc_mode` | varchar | NOT NULL DEFAULT 'DOCUMENT' | `DOCUMENT`·`LINE` (BC-BR-543) |  |
-| `billing_mode` | varchar | NOT NULL DEFAULT 'WITH_SHIPMENT' | `WITH_SHIPMENT`·`SEPARATE` 청구 시점 (BC-BR-316) |  |
+| `default_billing_flow` | varchar | NOT NULL DEFAULT 'SHIP_AND_BILL' | 새 고객 청구 흐름 기본값 `SHIP_AND_BILL`·`SHIP_THEN_BILL`·`BILL_THEN_SHIP` (BC-BR-316) |  |
 | `business_type` | varchar |  | 업태 (KR 세금계산서, BC-BR-315) |  |
 | `business_item` | varchar |  | 종목 (KR 세금계산서, BC-BR-315) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -578,6 +600,7 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `ceo_name` | varchar |  | 대표자 (BC-BR-522) |  |
 | `business_type` | varchar |  | 업태 |  |
 | `business_item` | varchar |  | 종목 |  |
+| `billing_flow` | varchar | NOT NULL DEFAULT 'SHIP_AND_BILL' | 청구 흐름, 새 수주 기본값 (SD-BR-335) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -619,6 +642,8 @@ Credit Memo 적용 — AS IS `A_AC_HDR`
 | `item_name2` | varchar |  |  |  |
 | `memo4` | varchar |  |  |  |
 | `memo5` | varchar |  |  |  |
+| `lot_managed` | boolean | NOT NULL DEFAULT false | 로트 관리 품목 (MM-BR-351) |  |
+| `lot_managed_from` | date |  | 로트 관리를 켠 날. 이 날 앞 일자 재고 이동 불가 (MM-BR-356) |  |
 | `taxable` | boolean | NOT NULL DEFAULT true | US Sales Tax 대상 (MM-BR-831) |  |
 | `vat_kind` | varchar | NOT NULL DEFAULT 'TAXABLE' | KR `TAXABLE`·`EXEMPT` (MM-BR-831) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -756,11 +781,12 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `id` | bigint | PK | GENERATED BY DEFAULT AS IDENTITY |  |
 | `document_no` | varchar | NOT NULL | `ID` + yymm(수불일자) + 10자리. 취소 이동도 새 번호 (MM-BR-607) | Document No |
 | `document_dt` | date | NOT NULL | 수불일자. 시점 잔고·마감 판정 기준 (MM-BR-004·604) | Document Date |
-| `mov_type` | varchar | NOT NULL | 이동 유형 `GR`·`RT`·`BP`·`UR`·`CT`·`GI`·`DN`·`TR` (MM-BR-606) | Movement Type |
+| `mov_type` | varchar | NOT NULL | 이동 유형 `GR`·`RT`·`BP`·`UR`·`CT`·`GI`·`DN`·`TR`·`VR`·`PV` (MM-BR-606) | Movement Type |
 | `item_id` | bigint | FK NOT NULL | → `bc_item.id` | Item Code |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id` |  |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 로트 관리 품목 이동만. 취소 행은 원 이동의 로트 (MM-BR-354·355) |  |
 | `set_item_id` | bigint | FK | → `bc_item.id`. 세트 줄을 구성품으로 전개한 이동이면 그 세트 품목, 아니면 NULL. 취소 행은 원 이동 값을 그대로 쓴다 (MM-BR-007·601) |  |
-| `qty` | numeric | NOT NULL | 재고 증감 (+ 증가, − 감소). 0 불가 (MM-BR-606) | Quantity |
+| `qty` | numeric | NOT NULL | 재고 증감 (+ 증가, − 감소). 0 불가, 단 `PV`는 0 (MM-BR-606·758) | Quantity |
 | `prc` | numeric | NOT NULL | 단가 (이동평균원가 또는 반입 단가, 월중 잠정). 마감·취소 때 다음 달 이후 다시 계산 (MM-BR-413) | Price |
 | `amount` | numeric | NOT NULL | 재고 금액 증감. `qty`와 같은 부호 | Amount |
 | `period_avg_prc` | numeric |  | 월총평균 단가. 그 달 마감 때 채우고 마감 취소 때 지운다 (MM-BR-409·412·403) |  |
@@ -776,6 +802,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 
 - UNIQUE: (document_no)
 - INDEX: (item_id, warehouse_id, document_dt)
+- INDEX: (item_id, warehouse_id, lot_id, document_dt)
 - INDEX: (ref_key, ref_seq)
 - INDEX: (parent_movement_id)
 - INDEX: (set_item_id)
@@ -817,6 +844,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `stock_count_id` | bigint | FK [추정] | → `mm_stock_count.id` | AS IS ct_no |
 | `seq` | integer | NOT NULL |  |  |
 | `item_id` | bigint | FK [추정] | → `bc_item.id` | AS IS item_cd |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 로트 관리 품목은 품목+로트마다 1줄 (MM-BR-358) |  |
 | `old_qty` | numeric |  |  |  |
 | `old_amt` | numeric |  |  |  |
 | `new_qty` | numeric |  |  |  |
@@ -901,9 +929,12 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `seq` | integer | NOT NULL |  | Sequence |
 | `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 재고 이동 창고 (MM-BR-703) |  |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 로트 관리 품목만 (MM-BR-353·355) |  |
 | `gr_qty` | numeric |  | NOT NULL 후보 (참고) | G/R Quantity |
 | `gr_prc` | numeric |  | NOT NULL 후보 (참고) | G/R Unit Price |
 | `gr_amt` | numeric |  | NOT NULL 후보 (참고) | G/R Amount |
+| `invoiced_qty` | numeric | NOT NULL DEFAULT 0 | 순 대사 수량 = Void가 아닌 공급자 송장 줄 수량 합, Debit Memo는 음수 (MM-BR-753·757) |  |
+| `returned_qty` | numeric | NOT NULL DEFAULT 0 | Void가 아닌 공급자 반품 수량 합 (MM-BR-783·786) |  |
 | `tax_code_id` | bigint | FK NOT NULL | → `bc_tax_code.id` (BC-BR-542) |  |
 | `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 (가격 포함 코드는 역산, BC-BR-544) |  |
 | `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 (BC-BR-543·545) |  |
@@ -929,25 +960,24 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `gr_dt` | date |  | NOT NULL 후보 (참고) | Goods Receipt Date |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 줄 창고의 기본값 (MM-BR-703) |  |
 | `ref_no` | varchar |  | NOT NULL 후보 (참고) | Reference No(=InvoiceNo) |
-| `tax_invoice_received` | boolean | NOT NULL DEFAULT false | 공급자 세금계산서·청구서 수취 (MM-BR-163) |  |
 | `tot_gr_amt` | numeric |  | NOT NULL 후보 (참고) | Total G/R Amount |
 | `currency_code` | varchar | NOT NULL | 문서 통화 ISO 4217 (BC-BR-412) |  |
 | `exchange_rate` | numeric | NOT NULL | 문서 통화 1단위당 기준 통화, > 0, 소수 10자리. 기준 통화면 1 (BC-BR-412) |  |
 | `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 = 줄 공급가액 합 (BC-BR-541) |  |
 | `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 = 줄 세액 합 (BC-BR-541) |  |
 | `tot_base_amt` | numeric | NOT NULL DEFAULT 0 | 합계의 기준 통화 금액 (BC-BR-413) |  |
-| `due_dt` | date |  | NOT NULL 후보 (참고) |  |
-| `cls_amt` | numeric |  | NOT NULL 후보 (참고) | AP Clear Amount |
-| `bal_amt` | numeric |  | NOT NULL 후보 (참고) | Balance Amount |
 | `type` | varchar |  | NOT NULL 후보 (참고) | Expense or Item |
 | `remarks` | varchar |  | NOT NULL 후보 (참고) | Remarks |
-| `terms` | varchar |  | NOT NULL 후보 (참고) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (gr_no)
+- AS IS `cls_amt`는 옮기지 않는다: 지급 누계는 공급자 송장 `mm_supplier_invoice.cls_amt` (MM-BR-755)
+- AS IS `bal_amt`는 옮기지 않는다: 잔액은 공급자 송장 `mm_supplier_invoice.bal_amt` (MM-BR-755)
+- AS IS `due_dt`는 옮기지 않는다: 지급 예정일은 공급자 송장 (MM-BR-756)
+- AS IS `terms`는 옮기지 않는다: 결제 조건은 공급자 송장 (MM-BR-756)
 
 ## mm_purchase_order_line
 
@@ -965,6 +995,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `tax_code_id` | bigint | FK NOT NULL | → `bc_tax_code.id` (BC-BR-542) |  |
 | `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 (가격 포함 코드는 역산, BC-BR-544) |  |
 | `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 (BC-BR-543·545) |  |
+| `purchase_request_line_id` | bigint | FK | → `mm_purchase_request_line.id`. 구매 요청에서 가져온 줄 (MM-BR-554·555) |  |
 | `receipt_qty` | numeric |  | NOT NULL 후보 (참고) | Actual Receipt Quantity |
 | `item_name` | varchar |  | NOT NULL 후보 (참고) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -1096,6 +1127,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `seq` | integer | NOT NULL |  | Sequence |
 | `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 재고 이동 창고 (MM-BR-703) |  |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 로트 관리 품목만 (MM-BR-353·355) |  |
 | `ur_qty` | numeric |  |  | Unplanned Receipt Quantity |
 | `ur_amt` | numeric |  |  | Unplanned Receipt Amount |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -1257,6 +1289,8 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 재고 이동 창고 (MM-BR-703) |  |
 | `shipment_line_id` | bigint | FK | → `sd_shipment_line.id`. 청구한 출하 줄, 직접 입력 줄은 NULL (SD-BR-108·116) |  |
+| `sales_return_line_id` | bigint | FK | → `sd_sales_return_line.id`. 매출 반품이 만든 Credit Memo 줄 (SD-BR-557) |  |
+| `cancelled_invoice_line_id` | bigint | FK | → `sd_sales_invoice_line.id`. 선청구 미출하 취소가 만든 Credit Memo 줄 (SD-BR-145·146) |  |
 | `dn_qty` | numeric |  | NOT NULL 후보 (참고) |  |
 | `dn_prc` | numeric |  | NOT NULL 후보 (참고) |  |
 | `dn_amt` | numeric |  | NOT NULL 후보 (참고) |  |
@@ -1267,7 +1301,9 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `item_name` | varchar |  | NOT NULL 후보 (참고) |  |
 | `dc_cd` | varchar |  |  |  |
 | `dc_rate` | numeric |  |  |  |
-| `restock` | boolean | NOT NULL DEFAULT true | Credit Memo 재고 반입 여부 (SD-BR-205). 송장 줄은 true |  |
+| `restock` | boolean | NOT NULL DEFAULT true | 이관한 Credit Memo의 재고 반입 여부. 새 Credit Memo는 false, 재고 반입은 매출 반품 (SD-BR-205·555) |  |
+| `shipped_qty` | numeric | NOT NULL DEFAULT 0 | 선청구 송장 줄의 출하 수량 (SD-BR-143·176) |  |
+| `cancelled_qty` | numeric | NOT NULL DEFAULT 0 | 선청구 송장 줄의 미출하 취소 수량 (SD-BR-143·145) |  |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
 | `created_by` | varchar | NOT NULL | 감사 컬럼 |  |
 | `updated_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -1287,6 +1323,7 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `sales_order_id` | bigint | FK [추정] | → `sd_sales_order.id` | AS IS so_no |
 | `dn_dt` | date |  | NOT NULL 후보 (참고) |  |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 줄 창고의 기본값 (MM-BR-703) |  |
+| `sales_return_id` | bigint | FK | → `sd_sales_return.id`. 매출 반품이 만든 Credit Memo (SD-BR-557·558) |  |
 | `ship_dt` | date |  | 미사용 후보 (참고) |  |
 | `due_dt` | date |  |  |  |
 | `tot_dn_amt` | numeric |  | NOT NULL 후보 (참고) |  |
@@ -1383,6 +1420,7 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 (BC-BR-543·545) |  |
 | `dn_qty` | numeric |  | NOT NULL 후보 (참고) |  |
 | `ship_qty` | numeric | NOT NULL DEFAULT 0 | 출하 수량 합. 남은 수량·수주 상태 기준 (SD-BR-012·165) |  |
+| `quotation_line_id` | bigint | FK | → `sd_quotation_line.id`. 견적에서 가져온 줄 (SD-BR-657·658) |  |
 | `item_name` | varchar |  |  |  |
 | `dc_cd` | varchar |  |  |  |
 | `dc_rate` | numeric |  | NOT NULL 후보 (참고) |  |
@@ -1411,6 +1449,7 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 = 줄 공급가액 합 (BC-BR-541) |  |
 | `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 = 줄 세액 합 (BC-BR-541) |  |
 | `tot_base_amt` | numeric | NOT NULL DEFAULT 0 | 합계의 기준 통화 금액 (BC-BR-413) |  |
+| `billing_flow` | varchar | NOT NULL DEFAULT 'SHIP_AND_BILL' | 청구 흐름, 기본값 = 고객 (SD-BR-035) |  |
 | `release_dt` | date |  | 미사용 후보 (참고) | Release Date |
 | `confirm_dt` | date |  | 미사용 후보 (참고) | Confirm Date |
 | `remarks` | varchar |  |  | Remarks |

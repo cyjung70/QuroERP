@@ -28,6 +28,7 @@
     "MM-BR-111",
     "MM-BR-112",
     "MM-BR-113",
+    "MM-BR-757",
     "MM-BR-601",
     "MM-BR-606",
     "MM-BR-607",
@@ -42,13 +43,14 @@
     "TASK-MM-005",
     "TASK-MM-007",
     "TASK-MM-030",
+    "TASK-MM-047",
     "TASK-SD-001",
     "TASK-SD-005",
     "TASK-BC-017",
     "TASK-SD-063"
   ],
   "acceptance": [
-    "tests/scenario/MM/test_purchase_to_issue.py: MM-TS-001(3개 모드, serial), MM-TS-002, MM-TS-003(3개 모드, serial)",
+    "tests/scenario/MM/test_purchase_to_issue.py: MM-TS-001(2개 모드, serial), MM-TS-002(초과 입고 DENY·WARN, serial), MM-TS-003(2개 모드, serial)",
     "tests/api/MM/test_purchase_locks.py: MM-TS-004",
     "테스트마다 ts·br 마커와 country(\"US\")",
     "사전 데이터(공급자·품목·고객)를 만드는 fixture를 tests/scenario/MM/conftest.py에 두고 업무 키에 run_id를 붙인다",

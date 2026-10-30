@@ -1,0 +1,44 @@
+{
+  "id": "TASK-TESTER-019",
+  "project": "tester",
+  "title": "SD 매출 반품 테스트: 원 출고 단가 반입, 미청구 수량 먼저, Credit Memo 자동, Void 차단·취소",
+  "module": "SD",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-018.md"
+  ],
+  "rules": [
+    "SD-BR-115",
+    "SD-BR-551",
+    "SD-BR-552",
+    "SD-BR-553",
+    "SD-BR-555",
+    "SD-BR-556",
+    "SD-BR-557",
+    "SD-BR-558",
+    "SD-BR-559",
+    "SD-BR-561",
+    "SD-BR-251",
+    "MM-BR-601"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-TESTER-016",
+    "TASK-SD-007",
+    "TASK-SD-063",
+    "TASK-SD-065"
+  ],
+  "acceptance": [
+    "tests/scenario/SD/test_sales_return.py: SD-TS-018",
+    "반입 이동 단가·현재고·Credit Memo 금액·출하 줄 미청구 수량은 DB SELECT로 확인한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k sales_return 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

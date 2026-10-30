@@ -17,7 +17,10 @@
     "MM-BR-701",
     "MM-BR-702",
     "MM-BR-703",
-    "MM-BR-704"
+    "MM-BR-704",
+    "MM-BR-709",
+    "MM-BR-710",
+    "MM-BR-711"
   ],
   "skills": [
     "quro-api",
@@ -28,7 +31,8 @@
   "dependsOn": [
     "TASK-CORE-003",
     "TASK-CORE-005",
-    "TASK-CORE-007"
+    "TASK-CORE-007",
+    "TASK-CORE-029"
   ],
   "acceptance": [
     "명세 REST API 구현",

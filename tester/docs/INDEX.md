@@ -35,7 +35,7 @@
 - [MM-TS-001 발주 → 전량 입고 → 출하 출고 (기본 흐름)](scenarios/MM/MM-TS-001.md)
 - [MM-TS-002 분할 입고와 과납 입고 확인](scenarios/MM/MM-TS-002.md)
 - [MM-TS-003 입고 삭제 → 반입 취소와 발주 상태 되돌림](scenarios/MM/MM-TS-003.md)
-- [MM-TS-004 입고가 있는 발주와 지급한 입고의 수정 차단](scenarios/MM/MM-TS-004.md)
+- [MM-TS-004 입고가 있는 발주와 송장으로 대사한 입고의 수정 차단](scenarios/MM/MM-TS-004.md)
 - [MM-TS-005 출고 뒤 입고 삭제 — 마이너스 재고 모드별 결과](scenarios/MM/MM-TS-005.md)
 - [MM-TS-006 두 번 입고한 품목의 이동평균원가와 출고 원가](scenarios/MM/MM-TS-006.md)
 - [MM-TS-007 재고 월 마감 → 마감한 달 이동 차단 → 마감 취소](scenarios/MM/MM-TS-007.md)
@@ -43,12 +43,17 @@
 - [MM-TS-009 실사 장부 수량은 실사 일자 기준 — 차이 부호, 품목 유형, 일자 잠금](scenarios/MM/MM-TS-009.md)
 - [MM-TS-010 구매 시뮬레이션 — 부족분만 추천, 미입고 발주 반영, 정수 기준량](scenarios/MM/MM-TS-010.md)
 - [MM-TS-011 재고 리포트 — 품목 목록 All, 품목 거래 내역, 연령 분석, 재고 수불부](scenarios/MM/MM-TS-011.md)
-- [MM-TS-012 매입채무 리포트 — 현황 실행, 지급 예정일 기준 연령, 기간 안 공급자 잔액](scenarios/MM/MM-TS-012.md)
+- [MM-TS-012 매입채무 리포트 — 현황 실행, 지급 예정일 기준 연령, 기간 안 공급자 잔액 (공급자 송장 기준)](scenarios/MM/MM-TS-012.md)
 - [MM-TS-013 품목 마스터 무결성 — 유형 변경, 재고 값 무시, 세트 구성, 대체 품목, 바코드, 이미지](scenarios/MM/MM-TS-013.md)
 - [MM-TS-014 예외 입고 줄 파일 검사, 지급 줄 수정 차단, 공급자 메모·삭제](scenarios/MM/MM-TS-014.md)
 - [MM-TS-015 연도 경계 마감과 이동 없는 달의 이월](scenarios/MM/MM-TS-015.md)
 - [MM-TS-016 마스터 일괄 등록 — 실제 데이터 길이, 화면과 같은 검사, 전체 차단, 재고 없이 등록](scenarios/MM/MM-TS-016.md)
 - [MM-TS-017 월총평균 원가 마감 → 다음 달 이동평균 재계산 → 마감 취소](scenarios/MM/MM-TS-017.md)
+- [MM-TS-018 월 마감 2단계 — 원가 조정 문서 계산·수정·확인](scenarios/MM/MM-TS-018.md)
+- [MM-TS-019 로트 — 입고 로트 번호, 출하 로트 필수, 로트 잔고 음수 차단, 창고 이동, 반품 UNKNOWN, 로트 관리 켜기](scenarios/MM/MM-TS-019.md)
+- [MM-TS-020 구매 요청 → 발주 (여러 요청을 한 발주로), 희망 공급자, 닫기](scenarios/MM/MM-TS-020.md)
+- [MM-TS-021 공급자 송장 — 입고 2건 대사, 단가 차이 경고·원가 조정(PV), 지급 반제와 수정 잠금](scenarios/MM/MM-TS-021.md)
+- [MM-TS-022 공급자 반품 — 대사 전 반품, 대사 뒤 반품의 Debit Memo, 지급 상계, Void](scenarios/MM/MM-TS-022.md)
 
 ## SD 시나리오
 
@@ -56,7 +61,7 @@
 - [SD-TS-002 수주 남은 수량 초과 출하와 출하 이후 수주·출하·송장 수정 차단](scenarios/SD/SD-TS-002.md)
 - [SD-TS-003 세트 품목이 있는 출하 Void — 송장 Void, 출고 취소, 수주 되돌림](scenarios/SD/SD-TS-003.md)
 - [SD-TS-004 입금 반제 → 송장 잠금 → 입금 삭제로 되돌림](scenarios/SD/SD-TS-004.md)
-- [SD-TS-005 Credit Memo 재고 반입 선택 → 송장 적용 → 적용 취소와 삭제](scenarios/SD/SD-TS-005.md)
+- [SD-TS-005 Credit Memo(가격 조정) → 송장 적용 → 적용 취소와 삭제](scenarios/SD/SD-TS-005.md)
 - [SD-TS-006 미국 Sales Tax — 세율 변경, 면세 품목, 면세 증명서](scenarios/SD/SD-TS-006.md)
 - [SD-TS-007 한국 VAT — 과세·영세율·면세 혼합 송장, 원 단위 배분, 세금계산서](scenarios/SD/SD-TS-007.md)
 - [SD-TS-008 외화 송장과 입금 — 기준 통화 금액, 환율 차이, 통화 불일치 차단](scenarios/SD/SD-TS-008.md)
@@ -66,9 +71,12 @@
 - [SD-TS-012 기준일 매출채권 잔액 — Credit 적용 줄 일자, 기준일 상세, 최대 고객 수](scenarios/SD/SD-TS-012.md)
 - [SD-TS-013 판매·구매 단가표 저장과 삭제, 신용 한도 경고, 장바구니 담기 검사](scenarios/SD/SD-TS-013.md)
 - [SD-TS-014 문서 번호 동시 채번과 입금 줄 수정 차단](scenarios/SD/SD-TS-014.md)
-- [SD-TS-015 출하와 청구 분리 — 출하와 같이 청구, 따로 모아 청구](scenarios/SD/SD-TS-015.md)
+- [SD-TS-015 수주별 청구 흐름 — 출하와 같이 청구, 따로 모아 청구, 선청구](scenarios/SD/SD-TS-015.md)
 - [SD-TS-016 출력 문서 PDF 내용 — 송장 번호·줄·합계, 세트 구성품 목록](scenarios/SD/SD-TS-016.md)
 - [SD-TS-017 출하 입력 검사 — 수주 가져오기, 수량·단가, 수주 줄과 직접 줄 혼합, 통화](scenarios/SD/SD-TS-017.md)
+- [SD-TS-018 매출 반품 — 재고 반입, 미청구 수량 먼저, Credit Memo 자동, Void](scenarios/SD/SD-TS-018.md)
+- [SD-TS-019 견적 → 수주 분할 전환, 만료·실주, 전환 수량 복원](scenarios/SD/SD-TS-019.md)
+- [SD-TS-020 선청구(BILL_THEN_SHIP) — 송장 때 위탁 이동, 송장 가져오기로 출하, 미출하 취소와 취소 되돌리기](scenarios/SD/SD-TS-020.md)
 
 ## 이관 검증 시나리오
 

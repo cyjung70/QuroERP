@@ -10,7 +10,7 @@
 | 액터 | 이 메뉴가 역할에 배정된 로그인 사용자 (Full Access면 조회·변경, 아니면 조회만 — BC-BR-214) |
 | 사전조건 | 로그인 (security.md) |
 
-> 시스템의 유일한 회사다 (다중 회사 미지원). 재고 설정(마이너스 재고 모드, `docs/architecture/inventory.md`)도 이 화면에서 바꾼다. 레거시의 거래 데이터 일괄 삭제(Truncate) 기능은 옮기지 않는다 — 쓰지 않는 품목은 사용 안 함으로 바꾼다. 보안 설정(`sys_auth_setting` — 잠금, 자동 로그인, 세션, 비밀번호 정책, `docs/architecture/login.md`)도 이 화면에서 바꾼다. 출력 문서의 회사 로고를 이 화면에서 올리고 바꾼다 (`logo_image`, `logo_content_type` — PNG·JPEG). 로고는 `GET /api/bc/company/logo`로 읽는다 (`docs/architecture/print-documents.md`). 회사는 1행이고 신규·삭제가 없다 (BC-BR-301). 국가(US·KR)와 기준 통화는 설치 때 정하고, 문서·재고 이동·환율이 생긴 뒤에는 바꿀 수 없다 (BC-BR-312·313). KR 회사는 사업자등록번호·업태·종목을 넣는다 (BC-BR-315). 언어·자릿수·세금 계산 단위는 [지역화 설정](localization-setting.md)에서 바꾼다. 청구 시점(`billing_mode` — `WITH_SHIPMENT` 출하와 같이 청구, `SEPARATE` 출하 뒤 따로 청구)은 이 화면에서 바꾼다 (BC-BR-316).
+> 시스템의 유일한 회사다 (다중 회사 미지원). 재고 설정(마이너스 재고 모드, `docs/architecture/inventory.md`)도 이 화면에서 바꾼다. 레거시의 거래 데이터 일괄 삭제(Truncate) 기능은 옮기지 않는다 — 쓰지 않는 품목은 사용 안 함으로 바꾼다. 보안 설정(`sys_auth_setting` — 잠금, 자동 로그인, 세션, 비밀번호 정책, `docs/architecture/login.md`)도 이 화면에서 바꾼다. 출력 문서의 회사 로고를 이 화면에서 올리고 바꾼다 (`logo_image`, `logo_content_type` — PNG·JPEG). 로고는 `GET /api/bc/company/logo`로 읽는다 (`docs/architecture/print-documents.md`). 회사는 1행이고 신규·삭제가 없다 (BC-BR-301). 국가(US·KR)와 기준 통화는 설치 때 정하고, 문서·재고 이동·환율이 생긴 뒤에는 바꿀 수 없다 (BC-BR-312·313). KR 회사는 사업자등록번호·업태·종목을 넣는다 (BC-BR-315). 언어·자릿수·세금 계산 단위는 [지역화 설정](localization-setting.md)에서 바꾼다. 새 고객의 청구 흐름 기본값(`default_billing_flow` — `SHIP_AND_BILL` 출하와 같이 청구, `SHIP_THEN_BILL` 출하 뒤 청구, `BILL_THEN_SHIP` 선청구)은 이 화면에서 바꾼다 (BC-BR-316).
 
 ## 기본 흐름
 
@@ -26,7 +26,7 @@
 
 - 필수 칸이 비면 보내지 않고 Common-E-005다. 국가가 KR이면 사업자등록번호가 필수다 (BC-BR-315).
 - 필드 오류(BC-E-302·303·309·315)는 화면이 속성 이름 대신 필드 라벨로 보인다.
-- 문서·재고 이동·환율이 생긴 뒤 국가·기준 통화를 바꾸면 409 BC-E-313·312, 미청구 출하 줄이 있을 때 청구 시점을 `SEPARATE`에서 `WITH_SHIPMENT`로 바꾸면 409 BC-E-316이다.
+- 문서·재고 이동·환율이 생긴 뒤 국가·기준 통화를 바꾸면 409 BC-E-313·312. 청구 흐름 기본값은 언제든 바꿀 수 있고 이미 있는 고객·수주는 그대로다 (BC-BR-316).
 - 다른 사용자가 먼저 수정했으면 409 Common-E-004다. 다시 조회한다.
 - 로고 파일이 1 MB를 넘으면 보내지 않고 BC-E-005, PNG·JPEG가 아니면 422 BC-E-004다.
 - 자동 로그인을 끄고 저장하면 먼저 확인(`Bc.Company.Security.ConfirmRevoke`)한다. 저장하면 모든 사용자의 자동 로그인이 풀린다 (BC-BR-310).
@@ -48,10 +48,10 @@
 | 7 | 기준 통화 | 드롭다운 | ● |  | 사용 중 통화 (`GET /api/bc/localization`), "코드 이름"으로 보인다. 거래 데이터가 있으면 바꿀 수 없다 (BC-BR-312) |
 | 8 | 기본 언어 | 드롭다운 | ● |  | 사용 중 언어, 이름은 `Common.Language.<언어 코드>` (BC-BR-314) |
 | 8-1 | 시간대 | 드롭다운 | ● | 국가 기본값 | IANA 이름 (`America/New_York` 등). 업무 일자(오늘)와 화면 시각의 기준 (BC-BR-318) |
-| 9 | 청구 시점 | 라디오 | ● |  | `WITH_SHIPMENT`·`SEPARATE`. 미청구 출하 줄이 있으면 `SEPARATE`에서 바꿀 수 없다 (BC-BR-316) |
+| 9 | 청구 흐름 기본값 | 라디오 | ● | `SHIP_AND_BILL` | `SHIP_AND_BILL`·`SHIP_THEN_BILL`·`BILL_THEN_SHIP`. 새 고객의 기본값이다. 이미 있는 고객·수주는 바뀌지 않는다 (BC-BR-316) |
 | 10 | 조회·저장 | 툴바 버튼 |  |  | 열면 바로 조회한다. 신규·삭제 버튼은 없다 (BC-BR-301). 툴바 저장은 회사 정보만 저장한다 (BC-BR-317) |
 | 11 | 로고 영역 | 이미지 + 파일 선택 + 버튼 |  |  | 현재 로고, 없으면 `Bc.Company.Logo.None`. PNG·JPEG를 골라 올리기(1 MB가 넘으면 보내지 않고 BC-E-005), 지우기는 확인(`Bc.Company.Logo.ConfirmDelete`) 뒤 (BC-BR-306) |
-| 12 | 재고 설정 영역 | 라디오 + 저장 버튼 |  |  | 마이너스 재고 모드 `ALLOW`·`ALLOW_IN_MONTH`·`DENY`. 저장 버튼은 모드를 바꿨을 때만 쓸 수 있다 (MM-BR-003) |
+| 12 | 재고 설정 영역 | 라디오 + 저장 버튼 |  |  | 마이너스 재고 모드 `ALLOW_IN_MONTH`·`DENY`(MM-BR-003), 초과 입고 모드 `DENY`·`WARN`(MM-BR-102). 저장 버튼은 값을 바꿨을 때만 쓸 수 있다 |
 | 13 | 보안 설정 영역 | 숫자·체크박스·라디오 + 저장 버튼 |  |  | 잠금 기준 횟수·잠금 시간·남은 횟수 표시·자동 로그인 사용·자동 로그인 유효 일수·미사용 만료 시간·동시 로그인 허용·비밀번호 최소 길이·문자 종류 수·만료 일수·재사용 금지 개수·비밀번호 찾기 방식(`ADMIN_ONLY`·`EMAIL`). 숫자는 모두 필수. 안내 `Bc.Company.Security.Hint` (BC-BR-309·310) |
 | 14 | 영역 메시지 | 알림 |  | 숨김 | 회사 정보 폼 아래(`company-settings-message`). 영역 저장 결과(`Common.Saved`, `Common.Deleted`)와 오류 |
 
@@ -82,15 +82,15 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 
 | 메서드 | 경로 (제안) | 설명 |
 | --- | --- | --- |
-| GET | /api/bc/company | 회사 정보 1건 → { name, billto, shipto, contact, telNo, faxNo, registerNo, represent, email, businessType, businessItem, countryCode, baseCurrencyCode, defaultLangCode, timeZone, billingMode, hasLogo, updatedAt } (BC-BR-301). POST·DELETE는 405 |
-| PUT | /api/bc/company | 회사 정보 수정 { 위 필드(hasLogo 제외), updatedAt } (BC-BR-302~305·312~316·318). 모르는 속성(예: 마감 기준 월)은 400 (BC-BR-307). 422 BC-E-302~316, 409 Common-E-004 또는 거래 데이터가 있어 못 바꾸면 BC-E-312·313·316 |
+| GET | /api/bc/company | 회사 정보 1건 → { name, billto, shipto, contact, telNo, faxNo, registerNo, represent, email, businessType, businessItem, countryCode, baseCurrencyCode, defaultLangCode, timeZone, defaultBillingFlow, hasLogo, updatedAt } (BC-BR-301). POST·DELETE는 405 |
+| PUT | /api/bc/company | 회사 정보 수정 { 위 필드(hasLogo 제외), updatedAt } (BC-BR-302~305·312~316·318). 모르는 속성(예: 마감 기준 월)은 400 (BC-BR-307). 422 BC-E-302~316, 409 Common-E-004 또는 거래 데이터가 있어 못 바꾸면 BC-E-312·313 |
 | PUT | /api/bc/company/logo | 로고 올리기 (multipart 필드 `file`, PNG·JPEG, 1 MB 이하) → 204 (BC-BR-306). 422 BC-E-004·BC-E-005, 회사 행이 없으면 404 BC-E-006 |
 | DELETE | /api/bc/company/logo | 로고 지우기 → 204 (BC-BR-306) |
 | GET | /api/bc/company/logo | 로고 이미지 (저장한 형식 그대로). 없으면 404 BC-E-007 |
 | GET | /api/sys/auth-settings | 보안 설정 → { maxFailedAttempts, lockoutMinutes, showRemainingAttempts, autoLoginEnabled, autoLoginValidDays, sessionIdleMinutes, allowConcurrentLogin, passwordMinLength, passwordRequiredCategories, passwordExpireDays, passwordHistoryCount, passwordResetMode, updatedAt } |
 | PUT | /api/sys/auth-settings | 보안 설정 수정 { 위 필드, updatedAt } (BC-BR-309·310). 422 BC-E-309(인자 속성 이름), 409 Common-E-004 |
-| GET | /api/mm/inventory-setting | 재고 설정 → { negativeStockMode, updatedAt, updatedBy } (행이 없으면 DENY, MM-BR-003). 로그인한 모든 사용자 |
-| PUT | /api/mm/inventory-setting | 마이너스 재고 모드 변경 { negativeStockMode(ALLOW, ALLOW_IN_MONTH, DENY), updatedAt } → 200 저장한 설정. 회사 정보 메뉴 Full Access 권한 (BC-BR-305). 409 Common-E-004 |
+| GET | /api/mm/inventory-setting | 재고 설정 → { negativeStockMode, overReceiptMode, allowCostAdjustmentEdit, updatedAt, updatedBy } (행이 없으면 DENY·DENY·false, MM-BR-003·102·420). 로그인한 모든 사용자 |
+| PUT | /api/mm/inventory-setting | 재고 설정 변경 { negativeStockMode(ALLOW_IN_MONTH, DENY), overReceiptMode(DENY, WARN), allowCostAdjustmentEdit, updatedAt } → 200 저장한 설정. 회사 정보 메뉴 Full Access 권한 (BC-BR-305). 409 Common-E-004 |
 
 ## 관련 테이블
 
@@ -124,9 +124,9 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 ## 다국어 리소스 키
 
 - 제목: `Bc.Company.Title`
-- 필드 라벨: `Bc.Company.<C# 속성>` — `Name`, `Billto`, `Shipto`, `Contact`, `TelNo`, `FaxNo`, `RegisterNo`, `Represent`, `Email`, `BusinessType`, `BusinessItem`, `CountryCode`, `BaseCurrencyCode`, `DefaultLangCode`, `TimeZone`, `BillingMode`. 보안 설정도 같은 접두어다 — `MaxFailedAttempts`, `LockoutMinutes`, `ShowRemainingAttempts`, `AutoLoginEnabled`, `AutoLoginValidDays`, `SessionIdleMinutes`, `AllowConcurrentLogin`, `PasswordMinLength`, `PasswordRequiredCategories`, `PasswordExpireDays`, `PasswordHistoryCount`, `PasswordResetMode` ([다국어](../../architecture/i18n.md) 규칙)
-- 값 이름: `Bc.Company.Country.<US·KR>`, `Bc.Company.BillingMode.<WITH_SHIPMENT·SEPARATE>`, `Bc.Company.PasswordResetMode.<ADMIN_ONLY·EMAIL>`, `Mm.InventorySetting.Mode.<모드>`, 언어 이름 `Common.Language.<언어 코드>`
-- 화면 문구: `Bc.Company.Logo`, `Bc.Company.Logo.None`, `Bc.Company.Logo.Hint`, `Bc.Company.Logo.Upload`, `Bc.Company.Logo.Delete`, `Bc.Company.Logo.ConfirmDelete`, `Bc.Company.Security`, `Bc.Company.Security.Hint`, `Bc.Company.Security.ConfirmRevoke`, `Mm.InventorySetting.Title`, `Mm.InventorySetting.NegativeStockMode`, 공통 `Common.Save`, `Common.Saved`, `Common.Deleted`, `Common.ConfirmUnsaved`, `Common.ConfirmSectionsUnsaved`
+- 필드 라벨: `Bc.Company.<C# 속성>` — `Name`, `Billto`, `Shipto`, `Contact`, `TelNo`, `FaxNo`, `RegisterNo`, `Represent`, `Email`, `BusinessType`, `BusinessItem`, `CountryCode`, `BaseCurrencyCode`, `DefaultLangCode`, `TimeZone`, `DefaultBillingFlow`. 보안 설정도 같은 접두어다 — `MaxFailedAttempts`, `LockoutMinutes`, `ShowRemainingAttempts`, `AutoLoginEnabled`, `AutoLoginValidDays`, `SessionIdleMinutes`, `AllowConcurrentLogin`, `PasswordMinLength`, `PasswordRequiredCategories`, `PasswordExpireDays`, `PasswordHistoryCount`, `PasswordResetMode` ([다국어](../../architecture/i18n.md) 규칙)
+- 값 이름: `Bc.Company.Country.<US·KR>`, `Common.BillingFlow.<SHIP_AND_BILL·SHIP_THEN_BILL·BILL_THEN_SHIP>`, `Mm.InventorySetting.OverReceipt.<DENY·WARN>`, `Bc.Company.PasswordResetMode.<ADMIN_ONLY·EMAIL>`, `Mm.InventorySetting.Mode.<모드>`, 언어 이름 `Common.Language.<언어 코드>`
+- 화면 문구: `Bc.Company.Logo`, `Bc.Company.Logo.None`, `Bc.Company.Logo.Hint`, `Bc.Company.Logo.Upload`, `Bc.Company.Logo.Delete`, `Bc.Company.Logo.ConfirmDelete`, `Bc.Company.Security`, `Bc.Company.Security.Hint`, `Bc.Company.Security.ConfirmRevoke`, `Mm.InventorySetting.Title`, `Mm.InventorySetting.NegativeStockMode`, `Mm.InventorySetting.OverReceiptMode`, `Mm.InventorySetting.AllowCostAdjustmentEdit`, 공통 `Common.Save`, `Common.Saved`, `Common.Deleted`, `Common.ConfirmUnsaved`, `Common.ConfirmSectionsUnsaved`
 - 오류: `BC-E-302`~`BC-E-318`(`302`·`303`·`309`·`315`는 인자 속성 이름, 화면은 필드 라벨로 바꿔 보인다), 로고 `BC-E-004`·`BC-E-005`, `Common-E-004`, 화면 `Common-E-005`·`BC-E-003`
 
 ## 테스트 시나리오

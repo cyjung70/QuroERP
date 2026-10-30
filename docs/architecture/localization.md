@@ -26,7 +26,7 @@ QuroERP MVP 1.0은 미국(`US`)과 한국(`KR`) 중소기업을 지원한다. �
 
 - 통화 마스터 `bc_currency(currency_code, decimals, country_code, use_yn)` + 이름 번역. `currency_code`는 ISO 4217 대문자 3자다. `decimals`는 금액 자릿수(USD 2, KRW 0, 기본값은 ISO 4217)다. `country_code`는 그 통화의 국가(USD `US`, KRW `KR`, 비울 수 있음)이고 단가 자릿수를 고르는 데 쓴다.
 - 기준 통화: 회사 설정 1개. 재고 금액·이동평균원가·재고 리포트는 기준 통화다.
-- 문서 통화: 수주, 매출 송장, Credit Memo, 입금, 발주, 입고(Bill), 지급에 `currency_code`, `exchange_rate`를 둔다.
+- 문서 통화: 수주, 매출 송장, Credit Memo, 입금, 발주, 입고, 공급자 송장(Debit Memo 포함), 지급에 `currency_code`, `exchange_rate`를 둔다.
   - 기본값: 거래처 통화 → 기준 통화. 기준 통화면 환율은 1이다.
   - 환율은 문서 통화(외화) 1단위당 기준 통화 금액이다 (`bc_exchange_rate`, 소수 10자리). 예: KR 회사 USD 문서 1350, US 회사 KRW 문서 0.0007407407. 문서 일자의 환율을 기본으로 채우고 사용자가 바꿀 수 있다.
   - 금액은 문서 통화로 저장하고 기준 통화 금액(`*_base_amt` = 문서 금액 × 환율, 기준 통화 자릿수로 반올림)을 함께 저장한다.

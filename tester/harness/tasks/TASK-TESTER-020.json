@@ -1,0 +1,47 @@
+{
+  "id": "TASK-TESTER-020",
+  "project": "tester",
+  "title": "MM 로트 테스트: 로트 번호 입력·자동, 감소 줄 로트 필수, 로트 잔고 음수 차단(모드 무관), 창고 이동, 반품 UNKNOWN, 로트 관리 켜기",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-019.md"
+  ],
+  "rules": [
+    "MM-BR-351",
+    "MM-BR-352",
+    "MM-BR-353",
+    "MM-BR-354",
+    "MM-BR-355",
+    "MM-BR-356",
+    "MM-BR-357",
+    "MM-BR-359",
+    "MM-BR-361",
+    "MM-BR-362",
+    "SD-BR-555"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-TESTER-019",
+    "TASK-CORE-027",
+    "TASK-MM-007",
+    "TASK-MM-027",
+    "TASK-SD-063",
+    "TASK-SD-065",
+    "TASK-BC-025"
+  ],
+  "acceptance": [
+    "tests/scenario/MM/test_lot.py: MM-TS-019, serial (negative_stock_mode fixture로 ALLOW_IN_MONTH)",
+    "로트 잔고·현재고·로트 행은 DB SELECT로 확인한다 (mm_lot, mm_lot_onhand, mm_onhand)",
+    "자동 로트 번호는 실행일 yymmdd로 계산한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -m serial -k lot 통과, uv run ruff check 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

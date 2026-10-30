@@ -1,0 +1,37 @@
+{
+  "id": "TASK-MM-044",
+  "project": "core",
+  "title": "재고 마감 취소 화면 (S)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "S",
+  "specs": [
+    "docs/specifications/MM/inventory-closing-cancel.md"
+  ],
+  "rules": [
+    "MM-BR-403",
+    "MM-BR-404",
+    "MM-BR-405",
+    "MM-BR-406",
+    "MM-BR-413",
+    "MM-BR-415"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-MM-043"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

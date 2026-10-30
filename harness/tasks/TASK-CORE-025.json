@@ -1,0 +1,36 @@
+{
+  "id": "TASK-CORE-025",
+  "project": "core",
+  "title": "재고 설정: 마이너스 재고 모드 2개, 초과 입고 모드",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/inventory.md",
+    "docs/business-rules/MM/inventory.md",
+    "docs/business-rules/MM/goods-receipt.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-014"
+  ],
+  "acceptance": [
+    "`NegativeStockMode`에서 `Allow`를 지운다. 마이그레이션: `mm_inventory_setting.negative_stock_mode = 'ALLOW'` 행을 `ALLOW_IN_MONTH`로 바꾸고 CHECK를 (`ALLOW_IN_MONTH`, `DENY`)로 (MM-BR-003)",
+    "`mm_inventory_setting.over_receipt_mode`(varchar, NOT NULL, 기본 `DENY`, CHECK `DENY`·`WARN`) 마이그레이션. `GET`·`PUT /api/mm/inventory-setting`에 `overReceiptMode`, 회사 정보 화면 재고 설정 영역에 라디오 (MM-BR-102). 입고 저장 검사는 입고 태스크가 한다",
+    "`mm_inventory_setting.allow_cost_adjustment_edit`(boolean, NOT NULL, 기본 false) 마이그레이션. API `allowCostAdjustmentEdit`, 회사 정보 화면 재고 설정 영역에 체크 상자 (MM-BR-420)",
+    "단위 테스트: 모드 값 2개만 받고 `ALLOW`는 400, 초과 입고 값 2개, 원가 조정 수정 허용 기본 false. 리소스 키 ko·en"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

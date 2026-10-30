@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-026",
+  "project": "core",
+  "title": "회사 청구 설정을 청구 흐름 기본값으로",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/business-rules/BC/company.md",
+    "docs/business-rules/SD/shipment.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-021"
+  ],
+  "acceptance": [
+    "마이그레이션: `bc_company.billing_mode` → `default_billing_flow`(`WITH_SHIPMENT` → `SHIP_AND_BILL`, `SEPARATE` → `SHIP_THEN_BILL`, CHECK 값 3개, 기본 `SHIP_AND_BILL`). `sd_shipment.billing_flow`(varchar NOT NULL, CHECK `SHIP_AND_BILL`·`SHIP_THEN_BILL`·`BILL_THEN_SHIP`) 추가 — 기존 행은 회사 값으로 채운다 (BC-BR-316, SD-BR-174)",
+    "회사 API·화면: `billingMode` → `defaultBillingFlow`, 값 3개. 바꾸기 제한(미청구 출하 검사, BC-E-316 409)을 지운다. 리소스 키 `Common.BillingFlow.*` ko·en",
+    "고객·수주의 `billing_flow`와 출하 저장 분기는 고객·수주·출하 태스크가 만든다 (SD-BR-035·167·168·174·335)",
+    "단위 테스트: 값 3개, 바꿔도 기존 출하 `billing_flow`가 그대로"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

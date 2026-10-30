@@ -1,7 +1,7 @@
 {
   "id": "TASK-MM-007",
   "project": "core",
-  "title": "입고 (Bill) API (Application·Domain·Infrastructure)",
+  "title": "입고 API (Application·Domain·Infrastructure)",
   "module": "MM",
   "layer": [
     "Api",
@@ -34,6 +34,9 @@
     "MM-BR-163",
     "MM-BR-164",
     "MM-BR-165",
+    "MM-BR-753",
+    "MM-BR-757",
+    "MM-BR-790",
     "BC-BR-412",
     "BC-BR-413",
     "BC-BR-421",
@@ -60,7 +63,13 @@
     "MM-BR-604",
     "MM-BR-606",
     "MM-BR-607",
-    "MM-BR-703"
+    "MM-BR-703",
+    "MM-BR-353",
+    "MM-BR-354",
+    "MM-BR-355",
+    "MM-BR-356",
+    "MM-BR-360",
+    "MM-BR-362"
   ],
   "skills": [
     "quro-api",
@@ -82,15 +91,19 @@
     "TASK-CORE-018",
     "TASK-CORE-019",
     "TASK-CORE-021",
+    "TASK-CORE-027",
     "TASK-MM-025"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
-    "마이너스 재고 모드 3종 테스트 (현재고·시점별·월말)",
+    "마이너스 재고 모드 2개 테스트 (현재고·시점별·월말)",
+    "로트 관리 품목 줄: 로트 입력·선택, 로트 잔고 검사 (MM-BR-353~356)",
     "줄 창고별 재고 이동, 줄 변경·삭제는 반대 부호 이동 (MM-BR-703·601)",
-    "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)"
+    "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)",
+    "마이그레이션: `mm_goods_receipt`에서 `cls_amt`·`bal_amt`·`due_dt`·`terms`·`tax_invoice_received`를 지운다 — 채무는 공급자 송장 (MM-BR-112·163). 지급이 입고를 보지 않는다",
+    "수정·삭제 잠금은 줄 `invoiced_qty`·`returned_qty`로 본다 (MM-BR-104). 상태는 대사 수량으로 계산한다 (MM-BR-105)"
   ],
   "estimateHours": 3,
   "status": "todo"

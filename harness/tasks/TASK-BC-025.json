@@ -22,7 +22,8 @@
     "SD-BR-506",
     "SD-BR-507",
     "SD-BR-508",
-    "SD-BR-509"
+    "SD-BR-509",
+    "MM-BR-361"
   ],
   "skills": [
     "quro-api",
@@ -33,7 +34,8 @@
   "dependsOn": [
     "TASK-CORE-003",
     "TASK-CORE-005",
-    "TASK-CORE-007"
+    "TASK-CORE-007",
+    "TASK-CORE-027"
   ],
   "acceptance": [
     "명세 REST API 구현",

@@ -14,7 +14,10 @@
     "MM-BR-701",
     "MM-BR-702",
     "MM-BR-703",
-    "MM-BR-704"
+    "MM-BR-704",
+    "MM-BR-709",
+    "MM-BR-710",
+    "MM-BR-711"
   ],
   "skills": [
     "quro-blazor",

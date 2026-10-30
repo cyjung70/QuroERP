@@ -1,0 +1,42 @@
+{
+  "id": "TASK-MM-043",
+  "project": "core",
+  "title": "재고 마감 취소 API (Application·Domain·Infrastructure)",
+  "module": "MM",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "S",
+  "specs": [
+    "docs/specifications/MM/inventory-closing-cancel.md"
+  ],
+  "rules": [
+    "MM-BR-403",
+    "MM-BR-404",
+    "MM-BR-405",
+    "MM-BR-406",
+    "MM-BR-413",
+    "MM-BR-415"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

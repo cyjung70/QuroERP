@@ -29,7 +29,7 @@
 | 단계 | 호출 | 입력 |
 | --- | --- | --- |
 | 1 | `SELECT prc, amount, period_avg_prc, period_avg_amt FROM mm_goods_movement` (품목 I) | — |
-| 2 | `POST /api/mm/inventory-closing/close` | `yearMonth` = `M-1` |
+| 2 | `POST /api/mm/inventory-closing/calculate` → `close` | `yearMonth` = `M-1` |
 | 3 | 1단계와 같은 SELECT, `mm_monthly_inventory`(I, `MAIN`, `M-1`), `bc_item`(I) | — |
 | 4 | `POST /api/mm/inventory-closing/cancel` | `yearMonth` = `M-1` |
 | 5 | 3단계와 같은 SELECT | — |

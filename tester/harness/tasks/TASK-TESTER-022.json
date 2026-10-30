@@ -1,0 +1,65 @@
+{
+  "id": "TASK-TESTER-022",
+  "project": "tester",
+  "title": "공급자 송장·공급자 반품 테스트: 입고 대사, 단가 차이 원가 조정(PV), Debit Memo 지급 상계, 반품 Void",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-021.md",
+    "tester/docs/scenarios/MM/MM-TS-022.md"
+  ],
+  "rules": [
+    "MM-BR-104",
+    "MM-BR-105",
+    "MM-BR-751",
+    "MM-BR-752",
+    "MM-BR-753",
+    "MM-BR-754",
+    "MM-BR-755",
+    "MM-BR-757",
+    "MM-BR-758",
+    "MM-BR-759",
+    "MM-BR-760",
+    "MM-BR-761",
+    "MM-BR-762",
+    "MM-BR-763",
+    "MM-BR-781",
+    "MM-BR-782",
+    "MM-BR-783",
+    "MM-BR-785",
+    "MM-BR-786",
+    "MM-BR-787",
+    "MM-BR-788",
+    "MM-BR-789",
+    "MM-BR-790",
+    "MM-BR-953",
+    "MM-BR-954",
+    "MM-BR-955",
+    "MM-BR-957",
+    "MM-BR-961"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-MM-005",
+    "TASK-MM-007",
+    "TASK-MM-030",
+    "TASK-MM-047",
+    "TASK-MM-049"
+  ],
+  "acceptance": [
+    "tests/scenario/MM/test_supplier_invoice.py: MM-TS-021",
+    "tests/scenario/MM/test_vendor_return.py: MM-TS-022 (DENY 모드)",
+    "대사 수량·반품 수량·PV·VR 이동·stk_val은 DB SELECT로 확인한다 (invoiced_qty, returned_qty, mm_goods_movement, bc_item.stk_val)",
+    "단가 차이 경고는 confirmField = confirmPriceDifference를 확인한 뒤 다시 보낸다",
+    "실행마다 새 품목을 만들어 다른 테스트의 원가와 섞이지 않게 한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k \"supplier_invoice or vendor_return\" 통과, uv run ruff check 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

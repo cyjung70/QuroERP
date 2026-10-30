@@ -1,0 +1,43 @@
+{
+  "id": "TASK-CORE-027",
+  "project": "core",
+  "title": "로트 기반: 로트·로트 잔고 테이블, 재고 서비스 로트 검사, 품목 로트 관리, 로트 찾기",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/inventory.md",
+    "docs/business-rules/MM/lot.md",
+    "docs/business-rules/MM/item.md",
+    "docs/business-rules/MM/ledger.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-011",
+    "TASK-BC-017"
+  ],
+  "acceptance": [
+    "마이그레이션: `mm_lot`, `mm_lot_onhand`, `mm_goods_movement.lot_id`(+ 인덱스), `bc_item.lot_managed`·`lot_managed_from` (database-tables.md)",
+    "재고 서비스 `PostAsync` 요청에 로트(id 또는 번호)를 더한다. 로트 관리 품목: 늘리는 이동은 로트를 찾거나 만들고(빈 값 = `yymmdd-nnn`), 줄이는 이동은 로트 필수 MM-E-355, `mm_lot_onhand`를 `mm_onhand`와 같은 트랜잭션·잠금 순서로 바꾼다 (MM-BR-353~355)",
+    "로트 잔고 음수 검사(저장 시점 + 수불일자 시점·이후, 모드 무관) MM-E-356, `lot_managed_from` 앞 일자 차단. `ReverseAsync`는 원 이동 로트 (MM-BR-356·601)",
+    "품목 API·화면에 `lotManaged`. 켜면 창고별 현재고를 로트 `MIGRATED`로, 음수 창고·세트 구성품이면 422 MM-E-351·361. 끄기는 로트 잔고 0일 때만 (MM-BR-351·361)",
+    "`GET /api/mm/lots?itemId&warehouseId&date` 로트별 잔고 (0 초과, 로트 번호 순) — 재고 문서 화면의 로트 찾기 (MM-BR-362)",
+    "재고 대사(MM-BR-605)에 로트 잔고 합 = 현재고 검사를 더한다 (MM-BR-354)",
+    "단위 테스트: 로트 자동 번호, 로트 잔고 부족은 ALLOW_IN_MONTH에서도 차단, 로트 관리 켜기·끄기"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

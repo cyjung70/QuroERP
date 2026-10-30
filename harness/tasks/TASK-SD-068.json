@@ -1,0 +1,47 @@
+{
+  "id": "TASK-SD-068",
+  "project": "core",
+  "title": "견적 화면 (SM)",
+  "module": "SD",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/SD/quotation.md"
+  ],
+  "rules": [
+    "SD-BR-651",
+    "SD-BR-652",
+    "SD-BR-653",
+    "SD-BR-654",
+    "SD-BR-655",
+    "SD-BR-656",
+    "SD-BR-657",
+    "SD-BR-658",
+    "SD-BR-659",
+    "SD-BR-401",
+    "SD-BR-404",
+    "SD-BR-405",
+    "SD-BR-031",
+    "SD-BR-032",
+    "SD-BR-033",
+    "SD-BR-034"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-SD-067"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
