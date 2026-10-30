@@ -17,6 +17,9 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
         "login-header-keep-signed-in", "login-toolbar-login", "login-forgot-password", "login-language",
     ];
 
+    // Split layout (TASK-CORE-036): the form, then the language selector, then version and copyright
+    private static readonly string[] FormPanelOrder = ["login-header-user-id", "login-toolbar-login", "login-language", "login-version"];
+
     [Fact, Trait("Id", "BC-002-WT-01")]
     public async Task Page_ShowsItemsInTabOrder_WithLimitsAndAutocomplete()
     {
@@ -40,6 +43,23 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
         var html = await factory.CreateClient().GetStringAsync(WebAuthentication.LoginPath);
 
         html.Should().NotContain("login-header-keep-signed-in").And.Contain("login-header-remember-id");
+    }
+
+    [Fact, Trait("Id", "CORE-036-WT-01")]
+    public async Task Page_IsSplit_BrandPanelThenFormPanel_WithLanguageAndVersionInTheFormPanel()
+    {
+        factory.LoginOptions = new LoginOptionsResponse(false, "ADMIN_ONLY", 30);
+
+        var html = WebUtility.HtmlDecode(await factory.CreateClient().GetStringAsync(WebAuthentication.LoginPath));
+
+        var brand = html.IndexOf("data-testid=\"login-brand\"", StringComparison.Ordinal);
+        var panel = html.IndexOf("data-testid=\"login-panel\"", StringComparison.Ordinal);
+        brand.Should().BeGreaterThanOrEqualTo(0).And.BeLessThan(panel);
+        html[brand..panel].Should().Contain("img/quro-logo-white").And.Contain("alt=\"QuroERP\"")
+            .And.Contain("오픈소스 ERP 플랫폼").And.Contain("Community Edition").And.NotContain("<input");
+        FormPanelOrder.Select(id => html.IndexOf($"data-testid=\"{id}\"", StringComparison.Ordinal))
+            .Should().OnlyContain(i => i > panel).And.BeInAscendingOrder();
+        html.Should().Contain("img/quro-logo").And.NotContain("login-scene");
     }
 
     [Fact, Trait("Id", "BC-002-WT-02")]

@@ -232,6 +232,9 @@
   <data name="Bc.Login.Submitting" xml:space="preserve"><value>Signing in…</value></data>
   <data name="Bc.Login.ForgotPassword" xml:space="preserve"><value>Forgot your password? Please contact your administrator.</value></data>
   <data name="Bc.Login.Version" xml:space="preserve"><value>QuroERP {0} · Open source license LGPL-3.0</value></data>
+  <data name="Bc.Login.ProductName" xml:space="preserve"><value>QuroERP</value></data>
+  <data name="Bc.Login.Tagline" xml:space="preserve"><value>A Modern, .NET-Based, Open-Source ERP Platform Built for the World.</value></data>
+  <data name="Bc.Login.Edition" xml:space="preserve"><value>Community Edition · MM · SD</value></data>
   <data name="Common.LastLogin" xml:space="preserve"><value>Last sign-in: {0} (IP {1})</value></data>
   <data name="Common.Session.ExpiringSoon" xml:space="preserve"><value>You will be signed out in 2 minutes due to inactivity. Choose Stay signed in to continue.</value></data>
   <data name="Common.Session.Extend" xml:space="preserve"><value>Stay signed in</value></data>

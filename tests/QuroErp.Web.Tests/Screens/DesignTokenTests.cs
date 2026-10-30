@@ -44,17 +44,24 @@ public partial class DesignTokenTests
     [Fact]
     public void ComponentStyles_DoNotHardCodeTheOldBrandColours()
     {
-        // Login.razor.css is rewritten by TASK-CORE-036
         var files = Directory.GetFiles(Path.Combine(RepositoryRoot(), "src", "QuroErp.Web"), "*.css", SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-                && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-                && !f.EndsWith("Login.razor.css", StringComparison.Ordinal));
+                && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
 
         foreach (var file in files)
         {
             var css = File.ReadAllText(file).ToLowerInvariant();
             OldBrandColors.Where(css.Contains).Should().BeEmpty(file);
         }
+    }
+
+    [Fact, Trait("Id", "CORE-036-WT-02")]
+    public void LoginStyles_UseTokensOnly_InLightAndDark()
+    {
+        var css = File.ReadAllText(Path.Combine(RepositoryRoot(), "src", "QuroErp.Web", "Components", "Pages", "Bc", "Login.razor.css"));
+
+        HexColor().Matches(CssComment().Replace(css, "")).Select(m => m.Value).Should().BeEmpty();
+        css.Should().Contain("var(--q-brand)").And.Contain("@media (max-width: 767.98px)").And.Contain(":root[data-theme=\"dark\"] .login-brand");
     }
 
     private static Dictionary<string, string> Tokens(string block)
@@ -95,4 +102,10 @@ public partial class DesignTokenTests
 
     [GeneratedRegex(@"--q-([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})\s*;")]
     private static partial Regex TokenLine();
+
+    [GeneratedRegex(@"#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bwhite\b|\bblack\b")]
+    private static partial Regex HexColor();
+
+    [GeneratedRegex(@"/\*.*?\*/", RegexOptions.Singleline)]
+    private static partial Regex CssComment();
 }
