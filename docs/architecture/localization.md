@@ -54,7 +54,7 @@ QuroERP MVP 1.0은 미국(`US`)과 한국(`KR`) 중소기업을 지원한다. �
 
 - 회사 시간대 `bc_company.time_zone`(IANA 이름) 하나를 쓴다 (BC-BR-318). 설치 때 국가 기본값으로 들어가고 회사 정보 화면에서 바꿀 수 있다. 서버·컨테이너 시간대(`TZ`)는 결과에 영향을 주지 않는다.
 - 업무 일자(오늘)·이번 달·이번 연은 `IBusinessClock.Today()`로만 구한다. `DateTime.Now`, `DateTime.Today`, `TimeProvider.GetLocalNow()`, `TimeZoneInfo.Local`을 업무 코드에 쓰지 않는다.
-- 시각(`timestamptz`)은 UTC로 저장·비교한다. 화면과 메시지에 보이는 시각은 `IBusinessClock.ToCompanyTime`으로 회사 시간대로 바꾼다.
+- 시각(`timestamptz`)은 UTC로 저장·비교한다. 화면과 메시지에 보이는 시각은 회사 시간대다. 서버 메시지는 `IBusinessClock.ToCompanyTime`으로 바꾸고, 웹은 API가 준 UTC 시각을 `GET /api/bc/localization`의 `timeZone`으로 바꿔 보인다 (공통 형식 함수 하나). 서버·브라우저 시간대를 쓰지 않는다.
 - 일자(`date`)는 시간대 없이 저장한다. 시간대를 바꿔도 저장된 일자는 바뀌지 않는다.
 
 ## 표시 형식
