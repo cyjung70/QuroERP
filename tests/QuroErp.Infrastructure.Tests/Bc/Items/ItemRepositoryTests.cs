@@ -155,8 +155,9 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
         await uow.Transaction.Connection!.ExecuteAsync(
             """
             WITH po AS (
-                INSERT INTO mm_purchase_order (po_no, created_by, updated_by) VALUES ('PO-IT', 's', 's') RETURNING id)
-            INSERT INTO mm_purchase_order_line (purchase_order_id, seq, item_id, created_by, updated_by) SELECT id, 1, @Item, 's', 's' FROM po
+                INSERT INTO mm_purchase_order (po_no, currency_code, exchange_rate, created_by, updated_by) VALUES ('PO-IT', 'USD', 1, 's', 's') RETURNING id)
+            INSERT INTO mm_purchase_order_line (purchase_order_id, seq, item_id, tax_code_id, created_by, updated_by)
+            SELECT id, 1, @Item, (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 's', 's' FROM po
             """,
             new { Item = used }, uow.Transaction);
         var row = (await repository.FindAsync(unused, forUpdate: false, uow.Transaction, None))!;

@@ -31,5 +31,5 @@
     "마이그레이션 뒤 각 테이블의 컬럼·NOT NULL·UNIQUE가 database-tables.md와 같은지 확인하는 통합 테스트"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
