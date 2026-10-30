@@ -20,5 +20,7 @@ Credit Memo(`sd_sales_invoice` `type = 'CM'`, `sd_sales_invoice_line`) 규칙이
 | SD-BR-208 | 사유는 8개(Broken, Price Adjustment, Defective Merchandise, Wrong Order, Wrong Shipment, Unsatisfactory Design, Unsatisfactory Price, Exchange) 중 0개 이상 고른다 | `cm_reason01`~`08` boolean | 저장 | AS IS CM 사유 체크박스 | SD-UT-208 |
 | SD-BR-209 | Credit Memo 합계는 줄 금액 합(음수)이고, 적용 전이므로 잔액은 합계와 같다 | 줄 변경 | `tot_dn_amt = bal_amt = sum(dn_amt)` | AS IS `update_hdr_amt('DN')` | SD-UT-209, SD-TS-005 |
 | SD-BR-210 | Credit Memo는 재고를 반입하지 않으므로 품목 이동평균원가를 검사하지 않는다. 매출 반품의 반입 단가는 원 출고 단가다 (SD-BR-555) | 저장 | (검사 없음) | AS IS `issue_inv`의 원가 0 검사는 반입 단가 때문이었다 — TO BE 변경 (업무 규칙 버전업, 스테이블영 확정) | SD-UT-210 |
+| SD-BR-211 | 직접 만든 Credit Memo는 송장에 적용하기 전(SD-BR-203)이면 저장한 줄의 수량·단가·세금 코드를 고칠 수 있다. 재고를 움직이지 않으므로(SD-BR-205) 되돌릴 것이 없고, 합계·잔액만 다시 계산한다(SD-BR-209). 매출 반품·미출하 취소가 만든 Credit Memo는 고칠 수 없다 | 저장한 줄 수정 | 적용 후·자동 Credit Memo면 차단, 메시지 SD-E-203 | AS IS는 줄 수정을 말없이 무시했다. 수정 허용: TO BE 변경 (스테이블영 확정) | SD-UT-211 |
+| SD-BR-212 | Credit Memo 고객은 신규 때만 정한다. 저장한 뒤에는 바꿀 수 없다 (수주 SD-BR-023, 송장 SD-BR-119와 같다). 틀렸으면 지우고 새로 만든다 | 저장된 Credit Memo의 `customer_id` 변경 | 저장 차단, 메시지 SD-E-212 | AS IS는 저장 후 고객 변경을 허용했다. 고객 변경 금지: TO BE 변경 (스테이블영 확정) | SD-UT-212 |
 | SD-BR-231 | Credit Memo는 원 송장이 있으면 그 통화·환율·세금 코드·세율을 쓰고(BC-BR-546), 없으면 고객 거래 통화와 문서 일자 세율이다. 공급가액·세액·합계를 크레딧 금액으로 저장한다 | 저장 | 통화가 원 송장과 다르면 저장 차단, 메시지 SD-E-231 | TO BE 신규 | SD-UT-231 |
 | SD-BR-232 | KR 과세 Credit Memo의 고객이 사업자면 수정세금계산서(공급가액·세액 음수)를 출력할 수 있다. 원 송장 번호를 함께 쓴다 | 인쇄 | (출력 규칙) | TO BE 신규 | SD-UT-232 |

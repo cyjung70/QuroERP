@@ -19,7 +19,7 @@
 관련 BR 기준 흐름이다. 검사는 서버(Domain)가 하고, 화면 검사는 편의다.
 
 1. 입고 번호로 조회하거나 신규를 누른다.
-2. 공급자를 고르고 발주 가져오기로 남은 발주 줄을 고르거나(MM-BR-113), 품목을 직접 넣는다 (MM-BR-114). 품목은 Inventory·Service다 (MM-BR-115).
+2. 공급자를 고르고 발주 가져오기로 승인·부분 입고 발주(`PO`·`RE`)의 남은 줄을 고르거나(MM-BR-113·024), 품목을 직접 넣는다 (MM-BR-114). 품목은 Inventory·Service다 (MM-BR-115).
 3. 저장하면 서버가 수량·단가를 검사하고(MM-BR-101·103) 합계를 계산한다 (MM-BR-112). 입고는 채무를 만들지 않는다 — 공급자 송장이 입고 줄을 대사한다 (MM-BR-751).
 4. 발주 줄의 남은 수량을 넘으면 경고하고, 사용자가 확인하면 저장한다 (MM-BR-102).
 5. 한 트랜잭션에서 헤더·줄·채번(MM-BR-106), 발주 입고 수량(MM-BR-108), 재고 반입(MM-BR-111), 표준 구매단가(MM-BR-110), 발주 상태(MM-BR-109)를 저장한다.
@@ -75,7 +75,7 @@ AS IS 화면 정의 XML에서 옮긴 것이다. 속성 이름은 제안이며 gl
 | POST | /api/mm/goods-receipts | 신규 |
 | PUT | /api/mm/goods-receipts/{id} | 수정 (updatedAt 필수) |
 | DELETE | /api/mm/goods-receipts/{id} | 삭제 |
-| GET | /api/mm/goods-receipts/open-po-lines?vendorId | 발주 가져오기: 같은 공급자의 발주에서 남은 수량 > 0인 줄 (MM-BR-113) |
+| GET | /api/mm/goods-receipts/open-po-lines?vendorId | 발주 가져오기: 같은 공급자의 `PO`·`RE` 발주에서 남은 수량 > 0인 줄 (MM-BR-113) |
 
 ## 관련 테이블
 
@@ -110,6 +110,7 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `delete_mov_inv`, `get_auto_nu
 - [MM-BR-113](../../business-rules/MM/goods-receipt.md)
 - [MM-BR-114](../../business-rules/MM/goods-receipt.md)
 - [MM-BR-115](../../business-rules/MM/goods-receipt.md)
+- [MM-BR-024](../../business-rules/MM/purchase-order.md)
 - [MM-BR-161](../../business-rules/MM/goods-receipt.md)
 - [MM-BR-162](../../business-rules/MM/goods-receipt.md)
 - [MM-BR-163](../../business-rules/MM/goods-receipt.md)

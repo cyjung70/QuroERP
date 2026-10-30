@@ -992,6 +992,11 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `po_qty` | numeric |  | NOT NULL 후보 (참고) | P/O Quantity |
 | `po_prc` | numeric |  | NOT NULL 후보 (참고) | P/O Unit Price |
 | `po_amt` | numeric |  | NOT NULL 후보 (참고) | P/O Amount |
+| `gross_amt` | numeric | NOT NULL DEFAULT 0 | 총액 = round(수량 × 단가) (MM-BR-015) |  |
+| `dc_rate` | numeric | NOT NULL DEFAULT 0 | 할인율 % 0~100 (MM-BR-025) |  |
+| `dc_amt` | numeric | NOT NULL DEFAULT 0 | 할인 금액. `po_amt = gross_amt − dc_amt` (MM-BR-015) |  |
+| `due_dt` | date |  | 줄 납기일, 기본값 헤더 (MM-BR-026) |  |
+| `warehouse_id` | bigint | FK | → `bc_warehouse.id`. 입고 창고 기본값, 기본값 헤더 (MM-BR-026) |  |
 | `tax_code_id` | bigint | FK NOT NULL | → `bc_tax_code.id` (BC-BR-542) |  |
 | `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 (가격 포함 코드는 역산, BC-BR-544) |  |
 | `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 (BC-BR-543·545) |  |
@@ -1022,6 +1027,18 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `supply_amt` | numeric | NOT NULL DEFAULT 0 | 공급가액 = 줄 공급가액 합 (BC-BR-541) |  |
 | `tax_amt` | numeric | NOT NULL DEFAULT 0 | 세액 = 줄 세액 합 (BC-BR-541) |  |
 | `tot_base_amt` | numeric | NOT NULL DEFAULT 0 | 합계의 기준 통화 금액 (BC-BR-413) |  |
+| `incoterms` | varchar |  | Incoterms 2020 코드 11개 중 하나 (MM-BR-027) |  |
+| `due_dt` | date |  | 납기일. 줄 납기일 기본값 (MM-BR-026) |  |
+| `warehouse_id` | bigint | FK | → `bc_warehouse.id`. 줄 입고 창고 기본값 (MM-BR-026) |  |
+| `payment_terms` | varchar |  | 결제 조건 텍스트, 발주서 출력 |  |
+| `buyer` | varchar |  | 구매 담당 텍스트, 발주서 출력 |  |
+| `revision_no` | integer | NOT NULL DEFAULT 0 | 승인 뒤 저장 횟수 (MM-BR-021) |  |
+| `approved_at` | timestamptz |  | 승인 시각 (MM-BR-020) |  |
+| `approved_by` | varchar |  | 승인 사용자 (MM-BR-020) |  |
+| `closed_at` | timestamptz |  | 마감 시각 (MM-BR-022) |  |
+| `closed_by` | varchar |  | 마감 사용자 (MM-BR-022) |  |
+| `cancelled_at` | timestamptz |  | 취소 시각 (MM-BR-023) |  |
+| `cancelled_by` | varchar |  | 취소 사용자 (MM-BR-023) |  |
 | `release_dt` | date |  | 미사용 후보 (참고) | Release Date |
 | `confirm_dt` | date |  | 미사용 후보 (참고) | Confirm Date-Goods Receipt Date |
 | `remarks` | varchar |  |  | Vendor Message |

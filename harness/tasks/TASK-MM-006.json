@@ -19,6 +19,15 @@
     "MM-BR-016",
     "MM-BR-017",
     "MM-BR-018",
+    "MM-BR-019",
+    "MM-BR-020",
+    "MM-BR-021",
+    "MM-BR-022",
+    "MM-BR-023",
+    "MM-BR-024",
+    "MM-BR-025",
+    "MM-BR-026",
+    "MM-BR-027",
     "MM-BR-031",
     "MM-BR-032",
     "MM-BR-554",
@@ -40,12 +49,20 @@
   ],
   "dependsOn": [
     "TASK-CORE-006",
+    "TASK-CORE-031",
     "TASK-MM-005"
   ],
   "acceptance": [
     "화면유형 공통 컴포넌트 사용",
     "명세 화면 필드 반영",
-    "ko·en 리소스"
+    "ko·en 리소스",
+    "공통 엔트리 프레임 5단 (docs/architecture/entry-frame.md): 입력 노란색·읽기 전용 회색·필수 마커, 상태 칩, 비활성 버튼은 숨기지 않음",
+    "엔트리 프레임 5단 (TASK-CORE-031), 명세 '화면 항목' No 1~21과 '상태와 버튼' 표",
+    "상태 칩 `DR` neutral·`PO` brand·`RE` warn·`CL` ok·`MC` neutral·`CN` danger, 비활성 버튼은 숨기지 않음",
+    "승인·마감·취소 확인 대화상자, 변경이 있으면 먼저 저장 안내",
+    "입고된 줄은 모든 셀 잠김",
+    "행 추가 때 헤더 납기일·창고·세금 코드 복사",
+    "en·ko 전환 때 날짜·숫자 형식과 라벨 길이 (줄바꿈 없음)"
   ],
   "estimateHours": 3,
   "status": "todo"

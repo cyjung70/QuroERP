@@ -1,0 +1,38 @@
+{
+  "id": "TASK-CORE-031",
+  "project": "core",
+  "title": "SM 공통 엔트리 프레임 5단과 디자인 토큰",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/entry-frame.md",
+    "docs/architecture/screens.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-CORE-013"
+  ],
+  "acceptance": [
+    "`QuroHeaderDetail`을 엔트리 프레임 5단으로 바꾼다: 타이틀바(경로·제목·문서 번호·`StatusChip`·개정) → 커맨드바 4그룹(File·Rows·Status·Output) → 헤더 4열(`Span` 1·2·4) + 합계 패널 320px → 라인 그리드 → 감사 정보",
+    "새 자리: `StatusChip`, `RowCommands`(Rows 그룹 끝, 예전 `LineToolbar`), `StatusCommands`, `Totals`(예전 `LineSummary`). 조회 조건 영역(`SearchContent`)은 문서 찾기 대화상자로 바꾼다. 예전 매개변수는 한 번에 바꾸고 이미 만든 SM 화면도 같이 고친다",
+    "디자인 토큰 CSS 변수 `--q-*` 라이트·다크 (entry-frame.md 7장), IBM Plex Sans KR·Mono 글꼴 파일을 앱이 제공 (외부 CDN 없음)",
+    "입력 컴포넌트 바탕: 입력 가능 `field-editable`(노란색), 잠김·계산 `surface-2`(회색), 필수 호박색 왼쪽 마커 + `*` — `Required`·`LockMode`로 정한다 (S·M·MM도 같다)",
+    "`QuroStatusChip`(`Code`, `Kind` neutral·brand·warn·ok·danger), `QuroTotals`(소계·할인·세액·합계, 할인 0이면 할인 줄 없음)",
+    "커맨드바 단축키 F3 조회·Ctrl+S 저장·Ctrl+Insert 행 추가·Ctrl+Delete 삭제 표시. 상태·권한으로 막힌 버튼은 비활성화(숨기지 않음)",
+    "그리드 행 상태: 선택 `brand-tint`, 삭제 표시 `danger-tint` + 취소선(토글), 잠긴 행 회색",
+    "`data-testid` entry-frame.md 8장, 최소 폭 1280px",
+    "샘플 화면 `/samples/po-entry`를 새 프레임으로 바꾸고, bUnit 테스트로 영역 순서·비활성 버튼·색 클래스를 확인한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

@@ -1,0 +1,46 @@
+{
+  "id": "TASK-TESTER-024",
+  "project": "tester",
+  "title": "MM 발주 상태 흐름 테스트: 작성중·승인·승인 후 수정(개정)·마감·취소, 줄 할인, 상태별 입고 차단",
+  "module": "MM",
+  "layer": [
+    "Tester"
+  ],
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-023.md"
+  ],
+  "rules": [
+    "MM-BR-013",
+    "MM-BR-015",
+    "MM-BR-017",
+    "MM-BR-018",
+    "MM-BR-019",
+    "MM-BR-020",
+    "MM-BR-021",
+    "MM-BR-022",
+    "MM-BR-023",
+    "MM-BR-024",
+    "MM-BR-025",
+    "MM-BR-026",
+    "MM-BR-027",
+    "MM-BR-553"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-MM-005",
+    "TASK-MM-007"
+  ],
+  "acceptance": [
+    "tests/scenario/MM/test_purchase_order_status.py: MM-TS-023",
+    "MM-TS-001~004·021의 사전 데이터에 발주 승인 단계를 더한다 (MM-BR-024)",
+    "상태·개정 번호·승인·마감·취소 일시는 DB SELECT로 확인한다",
+    "실행마다 새 공급자·품목을 만들어 다른 테스트의 발주와 섞이지 않게 한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -k purchase_order_status 통과, uv run ruff check 통과"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

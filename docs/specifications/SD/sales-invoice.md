@@ -32,6 +32,7 @@
 - 입금·Credit 적용이 있는 송장은 수정·삭제·Void할 수 없다 (SD-BR-104, SD-BR-261).
 - Credit 적용 버튼으로 고객의 Credit Memo를 이 송장에 적용한다 (Credit Memo 적용 명세, SD-BR-251~259).
 - 저장한 줄은 고칠 수 없다. 지우고 다시 넣는다 (SD-BR-107). 줄을 지우면 출하·수주 청구 수량을 되돌린다.
+- 저장한 송장의 고객은 잠긴다. 다른 고객으로 바꿔 보내면 서버가 막는다 (SD-BR-119).
 - Void는 출하·수주 청구 수량 되돌리기, 헤더 `VO`·금액 0, 출하 상태 재계산을 한 트랜잭션으로 한다 (SD-BR-113). 출하로 만든 송장은 출하에서 Void한다.
 - 선청구(`BILL_THEN_SHIP`): 수주 가져오기로 선청구 수주 줄을 고른다. 저장하면 수주 청구 수량이 늘고 재고가 줄 창고 → 위탁 창고로 옮겨진다(원가 그대로). 출하·취소가 없을 때만 줄 삭제·Void한다 (SD-BR-141~144).
 - 선청구 미출하 취소: 줄별 취소 수량과 사유를 넣으면 위탁 재고를 줄 창고로 되돌리고, 수주 청구 수량을 줄이고, Credit Memo를 자동으로 만든다. 송장의 취소 되돌리기는 그 Credit Memo를 지우고 취소를 되돌린다. Credit Memo가 적용됐으면 되돌릴 수 없다 (SD-BR-145·146).
@@ -148,6 +149,8 @@ AS IS DB 루틴 (C# Application으로 옮긴다): `check_credit`, `delete_mov_in
 - [SD-BR-116](../../business-rules/SD/sales-invoice.md)
 - [SD-BR-117](../../business-rules/SD/sales-invoice.md)
 - [SD-BR-118](../../business-rules/SD/sales-invoice.md)
+- [SD-BR-119](../../business-rules/SD/sales-invoice.md)
+- [SD-BR-120](../../business-rules/SD/sales-invoice.md)
 - [SD-BR-401](../../business-rules/SD/pricing.md)
 - [SD-BR-402](../../business-rules/SD/pricing.md)
 - [SD-BR-403](../../business-rules/SD/pricing.md)

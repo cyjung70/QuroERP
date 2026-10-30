@@ -40,17 +40,20 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
    - 고객·품목·공급자 → 코드 입력(`QuroText`) 옆 찾기 버튼 + `QuroLookupDialog<TItem>` (검색어 조회 → 행 선택, 선택한 행이 무엇을 채울지는 화면이 정한다). 코드를 직접 입력하면 `@bind-Value:after`로 이름을 채운다
    - 그리드(M·SM·MM)의 품목 등 코드 열 → QuroGrid `Popup` 셀 (Tab·Enter 확정: 1건 자동 확정, 여러 건 `QuroLookupDialog`, 0건 편집 유지, F4 항상 대화상자). 붙여 넣은 코드는 한 번에 조회 (`docs/architecture/screens.md` 공통 동작 "그리드 코드 열"·"그리드 붙여 넣기"). 거래처 먼저 고르는 문서는 "SM 화면 배치"
    - 메모 필드 → `QuroText Rows="3"` (여러 줄)
-   - SM 표시용 합계 → `QuroHeaderDetail`의 `LineSummary` (삭제 표시 행을 뺀 상세 행을 받는다). 표시만 하고 저장 값은 API가 계산·반올림한다
+   - SM 화면은 [공통 엔트리 프레임](../../../docs/architecture/entry-frame.md) 5단(타이틀바·커맨드바·헤더 4열 + 합계 패널·라인·감사 정보)이다. `QuroHeaderDetail`이 그리고, 화면은 `HeaderFields`(4열, `Span` 1·2·4)·`Totals`·`LineColumns`·`RowCommands`·`StatusCommands`만 채운다
+   - 입력 가능 칸은 노란색(`field-editable`), 읽기 전용·계산 값은 회색(`surface-2`), 필수는 호박색 왼쪽 마커 + `*`다. 색은 공통 컴포넌트가 `Required`·`LockMode`로 정한다 — 화면에서 색을 직접 쓰지 않는다
+   - 상태 칩 → `QuroStatusChip Code Kind` (명세 "상태 코드 → 칩"). 상태·권한이 막는 커맨드는 숨기지 않고 비활성화한다
+   - SM 표시용 합계 → `QuroHeaderDetail`의 `Totals` (삭제 표시 행을 뺀 상세 행을 받는다, 소계·할인·세액·합계). 표시만 하고 저장 값은 API가 계산·반올림한다
    - 확인 질문(삭제, 화면별 확인, 저장 경고 `confirmField`)은 `IQuroConfirm.ConfirmAsync(L["..."])`만 부른다. 대화상자는 공통 `QuroConfirmDialog`가 그린다 — 브라우저 `confirm()`·`IJSRuntime` 직접 호출 금지 (`docs/architecture/screens.md` "확인 대화상자")
-   - 수정한 조회 행 되돌리기(Undo Row)는 그리드가 기본으로 준다. 화면에서 따로 만들지 않는다
-   - 줄을 더하는 화면별 동작(장바구니 가져오기, 줄 파일 올리기)은 `QuroHeaderDetail`의 `LineToolbar`에 넣는다 (그리드 툴바, 줄 추가 뒤). 문서 툴바에 넣지 않고, 있는 줄을 지우지 않는다
+   - 행 추가·삭제 표시·행 복원은 `QuroHeaderDetail`이 커맨드바 Rows 그룹에 그린다. 화면에서 따로 만들지 않는다. 행 추가 때 복사할 헤더 값은 `CreateLine`이 정한다
+   - 줄을 더하는 화면별 동작(장바구니 가져오기, 줄 파일 올리기, 발주 가져오기)은 `QuroHeaderDetail`의 `RowCommands`에 넣는다 (커맨드바 Rows 그룹 끝). 있는 줄을 지우지 않는다. 승인·마감·취소 같은 상태 동작은 `StatusCommands`에 넣는다
 4. 라벨·제목·메시지는 모두 `L["Sd.SalesOrder.SoDt"]` 형식 리소스 키. `ko`(`SharedResource.resx`, 기본)와 `en`(`SharedResource.en.resx`) 두 파일에 모두 넣는다. 금액·단가·수량 입력 칸 자릿수는 `GET /api/bc/localization` 값으로 정한다.
 5. 데이터는 `Contracts`의 API 클라이언트 인터페이스로만 읽고 쓴다.
 6. 서버 오류(ProblemDetails `code`, `args`)는 화면유형 공통 컴포넌트가 화면 위 메시지(`{화면}-message`)에 보인다. 공통 컴포넌트 밖에서 부른 API는 `ProblemMessages.Get(e.Problem)`(코드 → 사용자 언어 문장, 없는 코드는 `Common-E-001`)으로 바꿔 `QuroScreenFrame`의 `Error`·`Notice`에 넘긴다. API에 연결할 수 없으면 `BC-E-003`이다.
 7. 메뉴 경로 `/<module>/<feature-kebab>`를 `@page`로 둔다.
 8. 화면 자동 테스트(Tester E2E)가 찾을 수 있게 입력·버튼·그리드·메시지에 `data-testid`를 단다.
    - 이름: `{화면}-{영역}-{필드}`, 모두 kebab-case. 화면은 메뉴 경로의 마지막 부분이다 (`sales-order`).
-   - 영역: `header`, `line`, `search`, `grid`, `toolbar`, `message`. 필드는 DTO 속성 이름의 kebab-case (`so-dt`), 버튼은 동작 (`save`, `delete`).
+   - 영역: `header`, `line`, `search`, `grid`, `toolbar`, `message`. SM은 `title`, `doc-no`, `status-chip`, `totals`, `audit`도 있다 (엔트리 프레임 8장). 필드는 DTO 속성 이름의 kebab-case (`so-dt`), 버튼은 동작 (`save`, `delete`).
    - 예: `sales-order-header-so-dt`, `sales-order-line-so-qty`, `sales-order-toolbar-save`, `sales-order-message`.
    - 공통 컴포넌트는 `TestId` 매개변수를 받아 실제 입력 요소에 붙인다. 그리드 줄 안의 칸은 줄 번호를 붙이지 않고 줄 요소에 `data-row-index`를 둔다.
 
@@ -64,21 +67,21 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
 <QuroHeaderDetail THeader="PurchaseOrderDto" TLine="PurchaseOrderLineDto" Title="@L["Mm.PurchaseOrder.Title"]" TestId="purchase-order"
                   Load="() => Api.FindAsync(_poNo)" Create="() => new()" CreateLine="() => new()"
                   Save="Api.SaveAsync" Delete="po => Api.DeleteAsync(po.Id)">
-    <SearchContent>
-        <QuroText Label="@L["Mm.PurchaseOrder.PoNo"]" @bind-Value="_poNo" TextCase="TextCase.Upper" TestId="purchase-order-search-po-no" />
-    </SearchContent>
+    <StatusChip Context="po"><QuroStatusChip Code="@po.Status" Kind="PurchaseOrderStatus.ChipOf(po.Status)" /></StatusChip>
+    <StatusCommands Context="po">
+        <QuroButton Text="@L["Mm.PurchaseOrder.Approve"]" Disabled="@(!PurchaseOrderStatus.CanApprove(po))" OnClick="() => Approve(po)" TestId="purchase-order-toolbar-approve" />
+    </StatusCommands>
     <HeaderFields Context="po">
-        <QuroText Label="@L["Mm.PurchaseOrder.PoNo"]" @bind-Value="po.PoNo" LockMode="LockMode.Always" TestId="purchase-order-header-po-no" />
-        <QuroDate Label="@L["Mm.PurchaseOrder.PoDt"]" @bind-Value="po.PoDt" Required TestId="purchase-order-header-po-dt" />
+        <QuroDate Label="@L["Mm.PurchaseOrder.PoDt"]" @bind-Value="po.PoDt" Required Span="1" TestId="purchase-order-header-po-dt" />
         <div class="quro-lookup-field">
             <QuroText Label="@L["Mm.PurchaseOrder.Vendor"]" @bind-Value="po.VendorCode" Required TestId="purchase-order-header-vendor-code" />
             <button type="button" aria-label="@L["Mm.PurchaseOrder.FindVendor"]" @onclick="() => OpenVendorLookup(po)">…</button>
         </div>
         <QuroText Label="@L["Mm.PurchaseOrder.Remarks"]" @bind-Value="po.Remarks" Rows="3" TestId="purchase-order-header-remarks" />
     </HeaderFields>
-    <LineSummary Context="lines">
-        <QuroText Label="@L["Mm.PurchaseOrder.TotalAmt"]" Value="@lines.Sum(l => l.Amount).ToString("N2")" LockMode="LockMode.Always" />
-    </LineSummary>
+    <Totals Context="lines">
+        <QuroTotals Subtotal="@lines.Sum(l => l.GrossAmt)" Discount="@lines.Sum(l => l.DcAmt)" Tax="@lines.Sum(l => l.TaxAmt)" CurrencyCode="@_currency" />
+    </Totals>
     <LineColumns>
         <QuroColumn TRow="PurchaseOrderLineDto" Title="@L["Mm.PurchaseOrder.Item"]" Value="l => l.ItemCode" Context="line">
             <QuroText Label="@L["Mm.PurchaseOrder.Item"]" HideLabel @bind-Value="line.ItemCode" Required TestId="purchase-order-line-item-code" />
@@ -98,7 +101,7 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
 </QuroLookupDialog>
 ```
 
-동작하는 전체 예제: QuroERP `src/QuroErp.Web/Components/Pages/Samples/SamplePoEntry.razor` (`/samples/po-entry`, 개발 환경 전용).
+동작하는 전체 예제: QuroERP `src/QuroErp.Web/Components/Pages/Samples/SamplePoEntry.razor` (`/samples/po-entry`, 개발 환경 전용). TASK-CORE-031 전에는 예전 SM 배치(헤더 2열·합계 줄)다 — 배치는 이 스킬과 엔트리 프레임을 따른다.
 
 ## 금지 사항
 
@@ -111,7 +114,8 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM)
 
 ## 완료 체크리스트
 
-- [ ] 명세의 화면유형과 같은 공통 컴포넌트를 썼다
+- [ ] 명세의 화면유형과 같은 공통 컴포넌트를 썼다 (SM은 엔트리 프레임 5단)
+- [ ] 입력 칸 노란색·읽기 전용 회색·필수 마커를 공통 컴포넌트 속성으로만 정했다
 - [ ] 명세 "화면 필드"의 필수·잠김·코드 속성을 모두 반영했다
 - [ ] 모든 문자열이 리소스 키이고 ko·en이 모두 있다
 - [ ] 금액·단가·수량 자릿수를 하드코딩하지 않았다

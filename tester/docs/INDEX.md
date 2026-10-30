@@ -54,6 +54,7 @@
 - [MM-TS-020 구매 요청 → 발주 (여러 요청을 한 발주로), 희망 공급자, 닫기](scenarios/MM/MM-TS-020.md)
 - [MM-TS-021 공급자 송장 — 입고 2건 대사, 단가 차이 경고·원가 조정(PV), 지급 반제와 수정 잠금](scenarios/MM/MM-TS-021.md)
 - [MM-TS-022 공급자 반품 — 대사 전 반품, 대사 뒤 반품의 Debit Memo, 지급 상계, Void](scenarios/MM/MM-TS-022.md)
+- [MM-TS-023 발주 상태 흐름 — 작성중·승인·승인 후 수정·마감·취소, 줄 할인](scenarios/MM/MM-TS-023.md)
 
 ## SD 시나리오
 
