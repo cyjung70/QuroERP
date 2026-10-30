@@ -34,8 +34,8 @@ public class ShellTests : BunitContext
         AddAuthorization().SetAuthorized("kim");
     }
 
-    private static ShellProfile Profile(IReadOnlyList<AuthMenu> menus, string? roleName = null) =>
-        new(new MeResponse("kim", "Kim", "ADMIN", "ko", false, null, null, null, menus, "Quro Co.", roleName), ["ko", "en"]);
+    private static ShellProfile Profile(IReadOnlyList<AuthMenu> menus, string? roleCode = "admin") =>
+        new(new MeResponse("kim", "Kim", roleCode, "ko", false, null, null, null, menus, "Quro Co."), ["ko", "en"]);
 
     private static void UseCulture(string name) =>
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo(name);
@@ -94,7 +94,7 @@ public class ShellTests : BunitContext
     }
 
     [Fact, Trait("Id", "CORE-037-WT-06")]
-    public void TopBar_ShowsItemsInOrder_WithCompanyRoleCodeAndForms()
+    public void TopBar_ShowsItemsInOrder_WithCompanyRoleAndForms()
     {
         var top = Render<ShellTopBar>(p => p.Add(x => x.Profile, Profile(AdminMenus)));
 
@@ -102,7 +102,7 @@ public class ShellTests : BunitContext
             .Where(id => id!.StartsWith("shell-", StringComparison.Ordinal) && id != "shell-top" || id == "user-menu")
             .Should().Equal("shell-menu-toggle", "shell-logo", "shell-company", "shell-language", "shell-role", "user-menu", "shell-logout");
         top.Find("[data-testid=shell-company]").TextContent.Should().Be("Quro Co.");
-        top.Find("[data-testid=shell-role]").TextContent.Should().Be("ADMIN", "roles have no name yet, so the code shows");
+        top.Find("[data-testid=shell-role]").TextContent.Should().Be("관리자");
         var language = top.Find("[data-testid=shell-language]");
         language.Closest("form")!.GetAttribute("action").Should().Be(WebLocalization.CulturePath);
         language.QuerySelectorAll("option").Select(o => o.GetAttribute("value")).Should().Equal("ko", "en");
@@ -110,15 +110,47 @@ public class ShellTests : BunitContext
         top.Find("[data-testid=shell-logout]").Closest("form")!.GetAttribute("action").Should().Be(WebAuthentication.LogoutPath);
     }
 
-    [Fact, Trait("Id", "CORE-037-WT-07")]
-    public void TopBar_RoleName_WinsOverCode_AndUserMenuCarriesCompanyAndRole()
+    [Theory, Trait("Id", "CORE-044-WT-01")]
+    [InlineData("ko", "admin", "관리자")]
+    [InlineData("en", "admin", "Administrator")]
+    [InlineData("ko", "poweruser", "파워 유저")]
+    [InlineData("en", "poweruser", "Power User")]
+    [InlineData("ko", "salesman", "영업 사원")]
+    [InlineData("en", "salesman", "Salesperson")]
+    [InlineData("ko", "manager", "매니저")]
+    [InlineData("en", "manager", "Manager")]
+    [InlineData("ko", "srep", "영업 담당")]
+    [InlineData("en", "srep", "Sales Rep")]
+    public void TopBar_SeedRole_ShowsItsResourceName_InTopBarAndUserMenu(string culture, string roleCode, string name)
     {
-        var top = Render<ShellTopBar>(p => p.Add(x => x.Profile, Profile(AdminMenus, roleName: "Administrator")));
+        UseCulture(culture);
 
-        top.Find("[data-testid=shell-role]").TextContent.Should().Be("Administrator");
+        var top = Render<ShellTopBar>(p => p.Add(x => x.Profile, Profile(AdminMenus, roleCode)));
+
+        top.Find("[data-testid=shell-role]").TextContent.Should().Be(name);
         top.Find("[data-testid=user-menu-company]").TextContent.Should().Be("Quro Co.");
-        top.Find("[data-testid=user-menu-role]").TextContent.Should().Be("Administrator");
+        top.Find("[data-testid=user-menu-role]").TextContent.Should().Be(name);
         top.Find("[data-testid=user-menu] summary").TextContent.Should().Be("kim");
+    }
+
+    [Theory, Trait("Id", "CORE-044-WT-02")]
+    [InlineData("guest")]
+    [InlineData("ADMIN")]
+    public void TopBar_RoleWithoutResource_ShowsTheRoleCode(string roleCode)
+    {
+        var top = Render<ShellTopBar>(p => p.Add(x => x.Profile, Profile(AdminMenus, roleCode)));
+
+        top.Find("[data-testid=shell-role]").TextContent.Should().Be(roleCode);
+        top.Find("[data-testid=user-menu-role]").TextContent.Should().Be(roleCode);
+    }
+
+    [Fact, Trait("Id", "CORE-044-WT-03")]
+    public void TopBar_NoRoleCode_ShowsNoRole()
+    {
+        var top = Render<ShellTopBar>(p => p.Add(x => x.Profile, Profile(AdminMenus, roleCode: null)));
+
+        top.FindAll("[data-testid=shell-role]").Should().BeEmpty();
+        top.FindAll("[data-testid=user-menu-role]").Should().BeEmpty();
     }
 
     [Fact, Trait("Id", "CORE-037-WT-08")]
