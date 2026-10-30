@@ -132,7 +132,9 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
         // The session cookie is Secure, so the client must use https to send it back
         var browser = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
-            AllowAutoRedirect = false, HandleCookies = true, BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+            BaseAddress = new Uri("https://localhost"),
         });
         var token = WebFactory.AntiforgeryToken(await browser.GetStringAsync(WebAuthentication.LoginPath));
         var response = await browser.PostAsync(WebAuthentication.LoginPath, new FormUrlEncodedContent(new Dictionary<string, string>

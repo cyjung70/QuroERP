@@ -167,8 +167,12 @@ public class UserProfileServiceTests
             UpdatedBy.Add(updatedBy);
             Rows[appUserId] = Rows[appUserId] with
             {
-                UserName = fields.UserName, Email = fields.Email, Phone = fields.Phone, LangCode = fields.LangCode,
-                DefaultWarehouseId = fields.DefaultWarehouseId, UpdatedAt = expectedUpdatedAt.AddSeconds(1),
+                UserName = fields.UserName,
+                Email = fields.Email,
+                Phone = fields.Phone,
+                LangCode = fields.LangCode,
+                DefaultWarehouseId = fields.DefaultWarehouseId,
+                UpdatedAt = expectedUpdatedAt.AddSeconds(1),
             };
             return Task.FromResult(true);
         }

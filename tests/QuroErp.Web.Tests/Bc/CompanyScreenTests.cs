@@ -76,7 +76,11 @@ public class CompanyScreenTests : BunitContext
         var request = _api.CompanyUpdates.Should().ContainSingle().Subject;
         request.Should().BeEquivalentTo(new
         {
-            Name = "Quro Inc", BusinessType = "제조", BillingMode = "SEPARATE", CountryCode = "US", UpdatedAt = DateTimeOffset.UnixEpoch,
+            Name = "Quro Inc",
+            BusinessType = "제조",
+            BillingMode = "SEPARATE",
+            CountryCode = "US",
+            UpdatedAt = DateTimeOffset.UnixEpoch,
         });
         // BC-BR-302: the name is not a key
         page.Find("[data-testid=company-header-name]").HasAttribute("readonly").Should().BeFalse();

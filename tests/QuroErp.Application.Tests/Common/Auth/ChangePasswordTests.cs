@@ -25,8 +25,14 @@ public class ChangePasswordTests
         _clock.SetLocalTimeZone(TimeZoneInfo.Utc);
         _users.Users.Add(new AppUser
         {
-            Id = 7, UserId = "kim", PasswordHash = "hash:" + Current, UserName = "Kim", RoleCode = "admin", ValidFlag = "Y",
-            MustChangePassword = true, PasswordValidDt = new DateOnly(2026, 1, 1),
+            Id = 7,
+            UserId = "kim",
+            PasswordHash = "hash:" + Current,
+            UserName = "Kim",
+            RoleCode = "admin",
+            ValidFlag = "Y",
+            MustChangePassword = true,
+            PasswordValidDt = new DateOnly(2026, 1, 1),
         });
     }
 

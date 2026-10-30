@@ -134,8 +134,13 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var item = await CreateAsync(client, "T03");
         var change = new UpdateItemRequest
         {
-            ItemName = "NUT", ItemType = item.ItemType, Unit = item.Unit, ItemClass = item.ItemClass, ValidFlag = item.ValidFlag,
-            UsdPrc = 9m, UpdatedAt = item.UpdatedAt,
+            ItemName = "NUT",
+            ItemType = item.ItemType,
+            Unit = item.Unit,
+            ItemClass = item.ItemClass,
+            ValidFlag = item.ValidFlag,
+            UsdPrc = 9m,
+            UpdatedAt = item.UpdatedAt,
         };
 
         using var saved = await client.PutAsJsonAsync(ItemUrl(item.Id), change);
@@ -171,8 +176,13 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         using var response = await client.PutAsJsonAsync(ItemUrl(item.Id), new UpdateItemRequest
         {
-            ItemName = item.ItemName, ItemType = "SERVICE", Unit = item.Unit, ItemClass = item.ItemClass, ValidFlag = item.ValidFlag,
-            UsdPrc = item.UsdPrc, UpdatedAt = item.UpdatedAt,
+            ItemName = item.ItemName,
+            ItemType = "SERVICE",
+            Unit = item.Unit,
+            ItemClass = item.ItemClass,
+            ValidFlag = item.ValidFlag,
+            UsdPrc = item.UsdPrc,
+            UpdatedAt = item.UpdatedAt,
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);

@@ -224,8 +224,12 @@ public class UserProfileScreenTests : BunitContext
                 Updates.Add(update);
                 _profile = _profile with
                 {
-                    UserName = update.UserName, Email = update.Email, Phone = update.Phone, LangCode = update.LangCode,
-                    DefaultWarehouseId = update.DefaultWarehouseId, UpdatedAt = Loaded.AddSeconds(1),
+                    UserName = update.UserName,
+                    Email = update.Email,
+                    Phone = update.Phone,
+                    LangCode = update.LangCode,
+                    DefaultWarehouseId = update.DefaultWarehouseId,
+                    UpdatedAt = Loaded.AddSeconds(1),
                 };
                 return Json(_profile);
             }

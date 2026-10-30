@@ -29,7 +29,12 @@ public class LoginServiceTests
         _clock.SetLocalTimeZone(TimeZoneInfo.Utc);
         _users.Users.Add(new AppUser
         {
-            Id = 7, UserId = "kim", PasswordHash = "hash:secret", UserName = "Kim", RoleCode = "admin", ValidFlag = "Y",
+            Id = 7,
+            UserId = "kim",
+            PasswordHash = "hash:secret",
+            UserName = "Kim",
+            RoleCode = "admin",
+            ValidFlag = "Y",
         });
     }
 
@@ -246,7 +251,10 @@ public class LoginServiceTests
     {
         _users.Users.Add(new AppUser
         {
-            Id = 8, UserId = "lee", PasswordHash = "hash:secret", ValidFlag = validFlag,
+            Id = 8,
+            UserId = "lee",
+            PasswordHash = "hash:secret",
+            ValidFlag = validFlag,
             UserValidDt = userValidDt is null ? null : DateOnly.Parse(userValidDt, System.Globalization.CultureInfo.InvariantCulture),
         });
 
@@ -269,7 +277,11 @@ public class LoginServiceTests
     {
         _users.Users.Add(new AppUser
         {
-            Id = 9, UserId = "admin", PasswordHash = "hash:init", ValidFlag = "Y", MustChangePassword = true,
+            Id = 9,
+            UserId = "admin",
+            PasswordHash = "hash:init",
+            ValidFlag = "Y",
+            MustChangePassword = true,
         });
 
         var response = await LoginAsync("admin", "init");
@@ -284,7 +296,11 @@ public class LoginServiceTests
         _settings.Setting = new AuthSetting { PasswordExpireDays = 90 };
         _users.Users.Add(new AppUser
         {
-            Id = 9, UserId = "old", PasswordHash = "hash:secret", ValidFlag = "Y", PasswordChangedAt = Now.AddDays(-91),
+            Id = 9,
+            UserId = "old",
+            PasswordHash = "hash:secret",
+            ValidFlag = "Y",
+            PasswordChangedAt = Now.AddDays(-91),
         });
 
         (await LoginAsync("old", "secret")).MustChangePassword.Should().BeTrue();
@@ -372,7 +388,11 @@ public class LoginServiceTests
         _settings.Setting = new AuthSetting { AutoLoginEnabled = true };
         _users.Users.Add(new AppUser
         {
-            Id = 8, UserId = "lee", PasswordHash = "hash:secret", ValidFlag = "Y", PasswordChangedAt = Now.AddMinutes(1),
+            Id = 8,
+            UserId = "lee",
+            PasswordHash = "hash:secret",
+            ValidFlag = "Y",
+            PasswordChangedAt = Now.AddMinutes(1),
         });
         var token = AutoLoginToken.Create();
         await _autoLoginTokens.InsertAsync(8, AutoLoginToken.Hash(token), Now.AddDays(14), null, Now, null!, CancellationToken.None);
@@ -475,7 +495,9 @@ public class LoginServiceTests
 
         me.Should().BeEquivalentTo(new
         {
-            UserId = "kim", RoleCode = "admin", MustChangePassword = false,
+            UserId = "kim",
+            RoleCode = "admin",
+            MustChangePassword = false,
             DefaultWarehouse = new AuthWarehouse(1, "W01", "Main"),
             Menus = new[] { new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y") },
         });

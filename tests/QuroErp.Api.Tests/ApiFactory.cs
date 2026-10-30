@@ -204,8 +204,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             var u = users[index];
             users[index] = new AppUser
             {
-                Id = u.Id, UserId = u.UserId, PasswordHash = passwordHash, UserName = u.UserName, RoleCode = u.RoleCode,
-                ValidFlag = u.ValidFlag, LangCode = u.LangCode, PasswordChangedAt = now, TokenVersion = u.TokenVersion + 1,
+                Id = u.Id,
+                UserId = u.UserId,
+                PasswordHash = passwordHash,
+                UserName = u.UserName,
+                RoleCode = u.RoleCode,
+                ValidFlag = u.ValidFlag,
+                LangCode = u.LangCode,
+                PasswordChangedAt = now,
+                TokenVersion = u.TokenVersion + 1,
             };
             return Task.CompletedTask;
         }
@@ -339,7 +346,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         private static readonly Dictionary<string, string[]> ItemCodes = new()
         {
-            ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"], ["UNIT"] = ["EA", "PCS"], ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2"], ["GRADE"] = ["A01"],
+            ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"],
+            ["UNIT"] = ["EA", "PCS"],
+            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2"],
+            ["GRADE"] = ["A01"],
         };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(
@@ -639,8 +649,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             }
             Rows[appUserId] = row with
             {
-                UserName = fields.UserName, Email = fields.Email, Phone = fields.Phone, LangCode = fields.LangCode,
-                DefaultWarehouseId = fields.DefaultWarehouseId, UpdatedAt = row.UpdatedAt.AddSeconds(1),
+                UserName = fields.UserName,
+                Email = fields.Email,
+                Phone = fields.Phone,
+                LangCode = fields.LangCode,
+                DefaultWarehouseId = fields.DefaultWarehouseId,
+                UpdatedAt = row.UpdatedAt.AddSeconds(1),
             };
             return Task.FromResult(true);
         }

@@ -73,7 +73,11 @@ internal sealed class AppUserRepository : IAppUserRepository
             UpdateLoginState,
             new
             {
-                user.Id, user.FailedCount, user.LockedUntil, user.LastLoginAt, LastLoginIp = NullIfEmpty(user.LastLoginIp),
+                user.Id,
+                user.FailedCount,
+                user.LockedUntil,
+                user.LastLoginAt,
+                LastLoginIp = NullIfEmpty(user.LastLoginIp),
                 LangCode = langCode,
             },
             transaction,

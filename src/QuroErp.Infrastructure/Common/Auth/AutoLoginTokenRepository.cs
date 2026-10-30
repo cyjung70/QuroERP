@@ -54,8 +54,12 @@ internal sealed class AutoLoginTokenRepository : IAutoLoginTokenRepository
             Insert,
             new
             {
-                AppUserId = appUserId, TokenHash = tokenHash, ExpiresAt = expiresAt,
-                UserAgent = string.IsNullOrEmpty(userAgent) ? null : userAgent, Now = now, AuditUser,
+                AppUserId = appUserId,
+                TokenHash = tokenHash,
+                ExpiresAt = expiresAt,
+                UserAgent = string.IsNullOrEmpty(userAgent) ? null : userAgent,
+                Now = now,
+                AuditUser,
             },
             transaction,
             cancellationToken: cancellationToken));
