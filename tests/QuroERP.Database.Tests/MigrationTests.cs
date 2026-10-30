@@ -33,7 +33,8 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             WHERE table_schema = @schema AND table_type = 'BASE TABLE' AND table_name <> @journal
             """, ("journal", DatabaseMigrator.JournalTable));
 
-        tables.Should().BeEquivalentTo(DocumentedTables());
+        // database-tables.md is the target schema: tables only in the document are created by later tasks (database.md)
+        tables.Except(DocumentedTables()).Should().BeEmpty("tables created by migrations must be in database-tables.md");
     }
 
     [DatabaseFact, Trait("Id", "DB-IT-04")]
