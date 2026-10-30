@@ -137,6 +137,7 @@
 ## 아키텍처
 
 - [REST API 규칙](architecture/api.md)
+- [앱 셸과 홈](architecture/app-shell.md)
 - [코드 (Major / Minor)](architecture/codes.md)
 - [MVP 테이블 정의](architecture/database-tables.md)
 - [DB 설계 규칙 (PostgreSQL)](architecture/database.md)

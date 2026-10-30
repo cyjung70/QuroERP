@@ -1,0 +1,32 @@
+{
+  "id": "TASK-CORE-038",
+  "project": "core",
+  "title": "홈 1단계: 구매·판매 프로세스 흐름과 바로가기",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/app-shell.md",
+    "docs/specifications/BC/login.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-037"
+  ],
+  "acceptance": [
+    "홈 `/`: 환영 문구·직전 로그인 시각(회사 시간대)·IP, 구매 흐름 4단계, 판매 흐름 4단계, 기준정보·설정 바로가기 (app-shell.md 6장)",
+    "단계·바로가기 상태 `ready`·`no-permission`·`not-ready`를 `data-state`로. 권한은 `/me` 메뉴, 화면 준비 여부는 홈 코드의 경로 목록 값",
+    "건수·금액은 보이지 않는다. 아이콘은 `brand` 단색, 768px 미만은 흐름 세로",
+    "문구는 리소스 키(en·ko)만. 목업의 고정 데모 값(회사 이름·금액·문서 번호)은 쓰지 않는다",
+    "bUnit: 권한 없는 단계 비활성, 준비 안 된 단계 배지, 링크 경로. en·ko 화면 확인"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
