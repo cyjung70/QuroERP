@@ -79,6 +79,10 @@
       "sha256": "7d6cc6926a0f1c44585f09d550dfb25deeae22fa0105bba6655aef3bcf252715"
     },
     {
+      "path": "docs/architecture/app-shell.md",
+      "sha256": "5e948370d54e017a0a9ed83df6c23168e9b9804b13920fb2019075d93ec1e739"
+    },
+    {
       "path": "docs/architecture/codes.md",
       "sha256": "7deffdeab67945d8ae501dab9aa55a32a39b1df428642b7b0ca742b668534794"
     },
@@ -128,7 +132,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "cb7419e93aa88bb2f6d5634ac624ce2c7a17c2f3e49fec739ce2977d2b58a664"
+      "sha256": "67e3cb5152e714d3b58ae3cd2d6840b18c455a917068f4a23b7452286724746e"
     },
     {
       "path": "docs/architecture/security.md",
@@ -336,7 +340,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "308fcfee07c02cf6d4513a03d651db0d4d5c91bcf9e6391c336b7368f399d5b2"
+      "sha256": "fb6d9647a2eae4b8a1bf2b089ea963d06303946e77c796639c26a56993a2c7d1"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -1237,6 +1241,18 @@
     {
       "path": "harness/tasks/TASK-CORE-036.json",
       "sha256": "6e1c4eb512efb7c9fb9070674c93e9fe4cc72c56ef9fad4c3b3abe9a08d766c2"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-037.json",
+      "sha256": "57e0e859683ee87718fc09b9a533fe6b891862ded8fca30d6c9a565a46fd3752"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-038.json",
+      "sha256": "80e47b38c3da38cb3b8836038bd3273a0087c920ba80900fab3b4bb693949a31"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-039.json",
+      "sha256": "28a4b2d42c54d06ac8162f0cdd3d0363c608a1ee30e9cad237bd3c5aaef2ca2a"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",

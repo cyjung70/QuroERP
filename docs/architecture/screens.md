@@ -16,7 +16,7 @@
 
 | 동작 | 규칙 |
 | --- | --- |
-| 헤더 | 로그인한 사용자에게만 보인다. 사용자 메뉴(사용자 ID를 누르면 열린다: 내 정보 `/bc/user-profile`, 비밀번호 변경 `/bc/change-password`, 로그아웃 — 메뉴 권한과 상관없다, BC-BR-101·051, `data-testid` `user-menu`·`user-menu-profile`·`user-menu-change-password`·`user-menu-logout`), 언어 선택, 미사용 세션 만료 안내([로그인](login.md)) |
+| 헤더 | 로그인한 사용자에게만 보인다. 상단바·사이드 메뉴 배치와 홈은 [앱 셸](app-shell.md)이 정한다. 사용자 메뉴(사용자 ID를 누르면 열린다: 내 정보 `/bc/user-profile`, 비밀번호 변경 `/bc/change-password`, 로그아웃 — 메뉴 권한과 상관없다, BC-BR-101·051, `data-testid` `user-menu`·`user-menu-profile`·`user-menu-change-password`·`user-menu-logout`), 언어 선택, 미사용 세션 만료 안내([로그인](login.md)) |
 | 툴바 | S·M·MM: 조회, 이전·다음(S, 있을 때), 신규, 저장, 삭제, 인쇄(있을 때), 엑셀 내보내기(M) — 순서 고정. SM은 [엔트리 프레임](entry-frame.md)의 커맨드바 4그룹 |
 | 이전·다음 | S 화면은 명세가 정한 순서로 이전·다음 레코드를 연다. 이동 전에 변경 확인을 하고, 처음·끝이면 안내 메시지(`Common.FirstRecord`·`Common.LastRecord`)를 보인다. API는 `GET /resources/{id}/previous`·`/next`이고 처음·끝이면 204다 ([API](api.md)) |
 | 조회 조건 | S·M·MM은 화면 위쪽, Enter로 조회. SM은 조회 버튼이 문서 찾기 대화상자를 연다 |
@@ -43,7 +43,7 @@
 | 커맨드바 | File(조회·신규·저장) · Rows(행 추가·삭제 표시·행 복원·화면별 줄 가져오기) · Status(화면별 상태 동작) · Output(삭제·PDF·엑셀). 상태·권한이 막는 버튼은 비활성화한다 (숨기지 않음) |
 | 화면별 줄 가져오기 | 수주의 장바구니 가져오기·줄 파일 올리기, 입고의 발주 가져오기처럼 줄을 더하는 동작은 커맨드바 Rows 그룹 끝에 둔다. `QuroHeaderDetail`의 `RowCommands` 자리(RenderFragment)에 화면이 버튼을 넣는다. 가져온 줄은 그리드에 더하기만 하고 있는 줄을 지우지 않는다. `data-testid`는 `{화면}-toolbar-{동작}` (예: `sales-order-toolbar-import-cart`, `sales-order-toolbar-upload-file`) |
 | 상태 동작 | 승인·마감·취소처럼 문서 상태를 바꾸는 동작은 `StatusCommands` 자리에 넣는다. 저장된 문서에만 쓴다 |
-| 메뉴 | 화면 안에 메뉴 버튼을 두지 않는다. 메뉴는 셸이 보여 준다 |
+| 메뉴 | 화면 안에 메뉴 버튼을 두지 않는다. 메뉴는 셸의 사이드 메뉴가 보여 준다 ([앱 셸](app-shell.md)) |
 | 헤더 패널 | 4열 필드 그리드(span 1·2·4) + 오른쪽 합계 패널(320px). 문서 번호·상태는 타이틀바에 둔다 |
 | 합계 | 합계 패널(`Totals`): 소계 · 할인(있는 문서만) · 세액 · 합계. 표시만 하고 저장 값은 API가 계산한다 |
 | 조회 | 조회 조건 영역이 없다. 조회 버튼(F3)이 문서 찾기 대화상자를 연다 |

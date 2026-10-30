@@ -1,0 +1,42 @@
+{
+  "id": "TASK-CORE-037",
+  "project": "core",
+  "title": "앱 셸: 상단바·사이드 메뉴, `/api/auth/me` 메뉴 트리",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/app-shell.md",
+    "docs/architecture/screens.md",
+    "docs/business-rules/BC/menu-role.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-001",
+    "TASK-BC-011",
+    "TASK-CORE-034"
+  ],
+  "acceptance": [
+    "`GET /api/auth/me`에 `companyName`, `roleName`, `menus[].type`을 더하고, 배정된 `P` 메뉴의 상위 `M` 메뉴를 함께 돌려준다 (app-shell.md 5장). 기존 필드는 그대로",
+    "`MainLayout`: 상단바 7항목과 사이드 메뉴 트리 (app-shell.md 1~3장). 그룹 = 최상위 `M`, 항목 = 사용 중 배정 `P`, 순서 `menu_code`, 이름 `Menu.<menu_code>` 리소스",
+    "현재 메뉴 강조(`aria-current`), 그룹 접기·사이드 메뉴 접기 상태 localStorage, 768px 미만 덮개 메뉴(Esc·바깥 클릭으로 닫힘)",
+    "기본 메뉴 그룹 시드 `G1BA`·`G2MM`·`G3SD`·`G4RP`·`G5AD`(en·ko 리소스)와 이미 있는 시드 메뉴의 상위 그룹 지정. `program_id`는 화면 경로 (app-shell.md 3.1·4장)",
+    "탭(MDI)·역할 전환·그라데이션은 만들지 않는다. 색은 토큰만",
+    "`data-testid` app-shell.md 2·3장. 기존 `user-menu-*`는 유지",
+    "단위 테스트: 상위 메뉴 포함, 사용 안 함 메뉴 제외, 트리 순서. bUnit: 권한별 보이는 그룹·항목, 현재 메뉴 강조. 1280px·375px, en·ko 화면 확인"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
