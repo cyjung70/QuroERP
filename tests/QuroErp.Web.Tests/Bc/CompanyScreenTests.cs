@@ -151,7 +151,9 @@ public class CompanyScreenTests : BunitContext
         _api.HasLogo = true;
         var page = RenderAs("user");
 
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().Equal("company-toolbar-search");
+        // Blocked buttons stay on the bar, disabled (screen-templates.md 0)
+        page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")).Should().Equal("company-toolbar-search");
+        page.Find("[data-testid=company-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=company-header-name]").HasAttribute("readonly").Should().BeTrue();
         page.Find("[data-testid=company-header-country-code]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=company-security-lockout-minutes]").HasAttribute("readonly").Should().BeTrue();

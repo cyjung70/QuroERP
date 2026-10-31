@@ -42,6 +42,13 @@ public abstract class QuroScreenBase : ComponentBase
     [Parameter, EditorRequired]
     public string Title { get; set; } = "";
 
+    /// <summary>
+    /// Menu path above the title. S, M and MM pass the menu group (<c>Menu.&lt;group&gt;</c>) and the frame adds
+    /// " › title" (screen-templates.md 0); SM shows it as given, e.g. "MM > Purchasing" (entry-frame.md 1).
+    /// </summary>
+    [Parameter]
+    public string? Path { get; set; }
+
     /// <summary>Search conditions (top of the screen). Enter runs the search.</summary>
     [Parameter]
     public RenderFragment? SearchContent { get; set; }

@@ -13,7 +13,7 @@
 
 @if (_ready)
 {
-    <QuroMultiGrid TRow="CompanyMenuRow" Title="@L["Bc.CompanyMenu.Title"]" TestId="company-menu" LoadOnStart="true"
+    <QuroMultiGrid TRow="CompanyMenuRow" Title="@L["Bc.CompanyMenu.Title"]" TestId="company-menu" Path="@L["Menu.G5AD"]" LoadOnStart="true"
                    Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)" CreateRow="@(_canEdit ? CompanyMenuRow.New : null)">
         <SearchContent>
             <QuroText Label="@L["Bc.CompanyMenu.MenuCode"]" @bind-Value="_menuCode" TextCase="TextCase.Upper" TestId="company-menu-search-menu-code" />

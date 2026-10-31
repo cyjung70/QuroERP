@@ -1,16 +1,26 @@
-@* Toolbar in a fixed order: search, previous, next, new, save, delete, print, Excel export (screens.md "툴바").
-   A button appears only when the screen handles it. *@
+@* Command bar of the S, M and MM screens in a fixed order: search, previous, next, new, save, delete, print, Excel export
+   (screens.md "툴바"), then the screen's own commands after a separator (screen-templates.md 0).
+   A button appears only when the screen handles it; a button blocked by state or permission is disabled, never hidden. *@
 @inject IStringLocalizer<SharedResource> L
 
-<div class="quro-toolbar" role="toolbar" data-testid="@(TestId is null ? null : $"{TestId}-toolbar")" aria-label="@L["Common.Toolbar"]">
-    @Button(OnSearch, "Common.Search", "search")
-    @Button(OnPrevious, "Common.Previous", "previous", !CanMove)
-    @Button(OnNext, "Common.Next", "next", !CanMove)
-    @Button(OnNew, "Common.New", "new")
-    @Button(OnSave, "Common.Save", "save")
-    @Button(OnDelete, "Common.Delete", "delete", !CanDelete)
-    @Button(OnPrint, "Common.Print", "print")
-    @Button(OnExport, "Common.ExportExcel", "export")
+<div class="quro-commandbar quro-toolbar" role="toolbar" data-testid="@(TestId is null ? null : $"{TestId}-toolbar")" aria-label="@L["Common.Toolbar"]">
+    <div class="quro-commandbar-group" data-group="standard">
+        @Button(OnSearch, "Common.Search", "search")
+        @Button(OnPrevious, "Common.Previous", "previous", !CanMove)
+        @Button(OnNext, "Common.Next", "next", !CanMove)
+        @Button(OnNew, "Common.New", "new", !CanNew)
+        @Button(OnSave, "Common.Save", "save", !CanSave, "quro-primary")
+        @Button(OnDelete, "Common.Delete", "delete", !CanDelete, "quro-danger-text")
+        @Button(OnPrint, "Common.Print", "print")
+        @Button(OnExport, "Common.ExportExcel", "export")
+    </div>
+    @if (ExtraCommands is not null)
+    {
+        <span class="quro-commandbar-sep" aria-hidden="true"></span>
+        <div class="quro-commandbar-group" data-group="extra">
+            @ExtraCommands
+        </div>
+    }
 </div>
 
 @code {
@@ -31,11 +41,23 @@
     [Parameter]
     public EventCallback OnNew { get; set; }
 
+    /// <summary>False while new is blocked, e.g. for a user who may only read.</summary>
+    [Parameter]
+    public bool CanNew { get; set; } = true;
+
     [Parameter]
     public EventCallback OnSave { get; set; }
 
+    /// <summary>False while save is blocked, e.g. for a user who may only read.</summary>
+    [Parameter]
+    public bool CanSave { get; set; } = true;
+
     [Parameter]
     public EventCallback OnDelete { get; set; }
+
+    /// <summary>False while there is nothing to delete (a new record) or delete is blocked.</summary>
+    [Parameter]
+    public bool CanDelete { get; set; } = true;
 
     [Parameter]
     public EventCallback OnPrint { get; set; }
@@ -43,9 +65,9 @@
     [Parameter]
     public EventCallback OnExport { get; set; }
 
-    /// <summary>False while there is nothing to delete (a new record).</summary>
+    /// <summary>The screen's own commands, after the standard buttons and a separator (e.g. copy as new).</summary>
     [Parameter]
-    public bool CanDelete { get; set; } = true;
+    public RenderFragment? ExtraCommands { get; set; }
 
     [Parameter]
     public bool Busy { get; set; }
@@ -53,9 +75,9 @@
     [Parameter]
     public string? TestId { get; set; }
 
-    private RenderFragment? Button(EventCallback handler, string label, string id, bool disabled = false) =>
+    private RenderFragment? Button(EventCallback handler, string label, string id, bool disabled = false, string? css = null) =>
         handler.HasDelegate
-            ? @<button type="button" disabled="@(Busy || disabled)" data-testid="@(TestId is null ? null : $"{TestId}-toolbar-{id}")"
+            ? @<button type="button" class="@css" disabled="@(Busy || disabled)" data-testid="@(TestId is null ? null : $"{TestId}-toolbar-{id}")"
                        @onclick="handler">@L[label]</button>
             : null;
 }

@@ -35,6 +35,7 @@
 @if (_ready)
 {
     <QuroSingleForm TModel="CompanyModel" Title="@L["Bc.Company.Title"]" TestId="company" ReadOnly="!_canEdit" LoadOnStart CanCreate="false"
+                    Path="@L["Menu.G5AD"]" RecordCode="company => company.Name" Audit="company => new QuroAudit(null, null, null, company.UpdatedAt)"
                     Load="LoadAsync" Create="() => new CompanyModel()" Save="SaveAsync" HasSectionChanges="HasSectionChanges">
         <Fields Context="company">
             @* BC-BR-302: the name is not a key, so it stays editable after loading *@

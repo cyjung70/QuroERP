@@ -4,16 +4,27 @@
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 
-@* Screen type S sample (TASK-CORE-006). Development only, in-memory data. *@
+@* Screen type S sample (TASK-CORE-006, frame TASK-CORE-040). Development only, in-memory data. *@
 
 <PageTitle>@L["Samples.Single.Title"]</PageTitle>
 
 @if (_store is not null)
 {
-    <QuroSingleForm TModel="SampleItem" Title="@L["Samples.Single.Title"]" TestId="single"
+    <QuroSingleForm @ref="_form" TModel="SampleItem" Title="@L["Samples.Single.Title"]" TestId="single" Path="@L["Samples.Menu"]"
+                    RecordCode="item => item.Code" Audit="item => new QuroAudit(null, null, item.UpdatedBy, item.UpdatedAt)"
                     Load="() => Task.FromResult(_store.FindItem(_code))" Create="NewItem"
                     Save="(item, _) => Task.FromResult(_store.SaveItem(item))"
                     Delete="item => { _store.DeleteItem(item.Id); return Task.CompletedTask; }">
+        <StatusChip Context="item">
+            <QuroStatusChip Code="@(item.Active ? "Y" : "N")" Kind="@(item.Active ? ChipKind.Ok : ChipKind.Neutral)"
+                            Text="@L[item.Active ? "Samples.Active" : "Samples.Inactive"]" />
+        </StatusChip>
+        <ExtraCommands Context="item">
+            <button type="button" class="quro-danger-text" data-testid="single-toolbar-deactivate" disabled="@(item.Id == 0 || !item.Active)"
+                    @onclick="() => SetActiveAsync(false)">@L["Samples.Deactivate"]</button>
+            <button type="button" data-testid="single-toolbar-activate" disabled="@(item.Id == 0 || item.Active)"
+                    @onclick="() => SetActiveAsync(true)">@L["Samples.Activate"]</button>
+        </ExtraCommands>
         <SearchContent>
             <QuroText Label="@L["Samples.Code"]" @bind-Value="_code" TextCase="TextCase.Upper" TestId="single-search-code" />
         </SearchContent>
@@ -28,6 +39,7 @@
 
 @code {
     private SampleStore? _store;
+    private QuroSingleForm<SampleItem>? _form;
     private string? _code;
 
     protected override void OnInitialized()
@@ -40,4 +52,7 @@
     }
 
     private static SampleItem NewItem() => new() { Qty = 0 };
+
+    private Task SetActiveAsync(bool active) =>
+        _form!.RunActionAsync(item => Task.FromResult(_store!.SetItemActive(item.Id, active)), L["Common.Saved"]);
 }

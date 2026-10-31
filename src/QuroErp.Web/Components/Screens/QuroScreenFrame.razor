@@ -1,33 +1,56 @@
-@* Layout shared by the four screen types: title, unsaved-changes lock, toolbar, messages, search area, body. *@
+@* Frame shared by the S, M and MM screen types (screen-templates.md 0): title bar → message → command bar → search
+   conditions → body → audit (S only). Same look as the SM entry frame; no tabs (MDI) and no screen numbers. *@
 @inject IStringLocalizer<SharedResource> L
 
-<section class="quro-screen" data-testid="@TestId">
-    <h1>@Title</h1>
+<section class="quro-entry quro-screen" data-testid="@TestId">
     <NavigationLock ConfirmExternalNavigation="IsDirty" OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-    @Toolbar
-    @* One message area: an error or a notice (data-level tells which) *@
+
+    <header class="quro-entry-title" data-testid="@Id("title")">
+        @if (Path is not null)
+        {
+            <div class="quro-entry-path">@Path › @Title</div>
+        }
+        <div class="quro-entry-title-row">
+            <h1>@Title</h1>
+            @TitleContent
+        </div>
+    </header>
+
+    @* One message line under the title bar: an error or a notice (data-level tells which) *@
     @if (Error is not null)
     {
-        <p class="page-error" role="alert" data-level="error" data-testid="@Id("message")">@Error</p>
+        <p class="quro-entry-message" role="alert" data-level="error" data-testid="@Id("message")">@Error</p>
     }
     else if (Notice is not null)
     {
-        <p class="page-notice" role="status" data-level="info" data-testid="@Id("message")">@Notice</p>
+        <p class="quro-entry-message" role="status" data-level="info" data-testid="@Id("message")">@Notice</p>
     }
+
+    @Toolbar
+
     @if (SearchContent is not null)
     {
-        <form class="quro-search" role="search" aria-label="@L["Common.SearchConditions"]" data-testid="@Id("search")" @onsubmit="OnSearch" @onsubmit:preventDefault>
+        <form class="quro-panel quro-search" role="search" aria-label="@L["Common.SearchConditions"]" data-testid="@Id("search")" @onsubmit="OnSearch" @onsubmit:preventDefault>
             @SearchContent
             @* Enter in a search field submits the form *@
             <button type="submit" hidden></button>
         </form>
     }
     @ChildContent
+    @Footer
 </section>
 
 @code {
     [Parameter, EditorRequired]
     public string Title { get; set; } = "";
+
+    /// <summary>Menu group above the title (<c>Menu.&lt;group&gt;</c>); the frame adds " › title".</summary>
+    [Parameter]
+    public string? Path { get; set; }
+
+    /// <summary>After the title: the open record's code and status chip (S).</summary>
+    [Parameter]
+    public RenderFragment? TitleContent { get; set; }
 
     [Parameter]
     public string? TestId { get; set; }
@@ -41,6 +64,7 @@
     [Parameter]
     public EventCallback OnSearch { get; set; }
 
+    /// <summary>The command bar, usually <see cref="QuroToolbar"/>.</summary>
     [Parameter]
     public RenderFragment? Toolbar { get; set; }
 
@@ -49,6 +73,10 @@
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Below the body: the audit line (S).</summary>
+    [Parameter]
+    public RenderFragment? Footer { get; set; }
 
     [Parameter]
     public string? Error { get; set; }

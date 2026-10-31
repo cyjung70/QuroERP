@@ -3,12 +3,12 @@
 @typeparam TTarget where TTarget : class
 @inherits QuroScreenBase
 
-<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
+<QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
     <Toolbar>
-        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync"
-                     OnNew="@(_selected is null ? default : EventCallback.Factory.Create(this, AddTarget))"
-                     OnSave="@(_selected is null ? default : EventCallback.Factory.Create(this, SaveAsync))" />
+        @* New and save need a selected source row; until then they are disabled (screen-templates.md 0) *@
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanNew="_selected is not null" CanSave="_selected is not null"
+                     OnNew="AddTarget" OnSave="SaveAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
         <div class="quro-master-detail">
@@ -53,6 +53,10 @@
     [Parameter]
     public bool LoadOnStart { get; set; }
 
+    /// <summary>The screen's own commands after the standard buttons and a separator (screen-templates.md 0).</summary>
+    [Parameter]
+    public RenderFragment? ExtraCommands { get; set; }
+
     public override bool IsDirty => _targets.IsDirty;
 
     protected override async Task OnInitializedAsync()
@@ -84,7 +88,13 @@
         });
     }
 
-    private void AddTarget() => _targets.Add(CreateTarget(_selected!));
+    private void AddTarget()
+    {
+        if (_selected is not null)
+        {
+            _targets.Add(CreateTarget(_selected));
+        }
+    }
 
     private async Task SaveAsync()
     {

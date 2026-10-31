@@ -124,13 +124,7 @@
     </div>
 
     @* ⑤ Audit: empty for a new document *@
-    <footer class="quro-entry-audit" data-testid="@Id("audit")">
-        @if (!_form.IsNew && Audit?.Invoke(_header) is { } audit)
-        {
-            <dl><dt>@L["Common.Audit.Created"]</dt><dd>@Stamp(audit.CreatedAt, audit.CreatedBy)</dd></dl>
-            <dl><dt>@L["Common.Audit.Updated"]</dt><dd>@Stamp(audit.UpdatedAt, audit.UpdatedBy)</dd></dl>
-        }
-    </footer>
+    <QuroAuditFooter Audit="@(_form.IsNew ? null : Audit?.Invoke(_header))" TestId="@Id("audit")" />
 </section>
 
 <QuroLookupDialog TItem="THeader" Title="@L["Common.FindDocument"]" TestId="@Id("find")" @bind-Visible="_findOpen"
@@ -147,10 +141,6 @@
     private bool _findOpen;
     private DotNetObjectReference<QuroHeaderDetail<THeader, TLine>>? _self;
     private IJSObjectReference? _shortcuts;
-
-    /// <summary>Menu path above the title, e.g. "MM > Purchasing".</summary>
-    [Parameter]
-    public string? Path { get; set; }
 
     /// <summary>Header fields in a 4-column grid; each field sets <c>Span</c> 1, 2 or 4.</summary>
     [Parameter, EditorRequired]
@@ -466,8 +456,4 @@
         _lines.Load(document.Lines);
         _selected = null;
     }
-
-    // Shown in the browser's language format. TODO: user time zone once a user time zone setting exists
-    private static string Stamp(DateTimeOffset? at, string? by) =>
-        string.Join(' ', new[] { at?.ToString("g", System.Globalization.CultureInfo.CurrentCulture), by }.Where(s => !string.IsNullOrEmpty(s)));
 }

@@ -4,13 +4,13 @@
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 
-@* Screen type M sample (TASK-CORE-006). Development only, in-memory data. *@
+@* Screen type M sample (TASK-CORE-006, frame TASK-CORE-040). Development only, in-memory data. *@
 
 <PageTitle>@L["Samples.Multi.Title"]</PageTitle>
 
 @if (_store is not null)
 {
-    <QuroMultiGrid TRow="SampleItem" Title="@L["Samples.Multi.Title"]" TestId="multi" LoadOnStart="true"
+    <QuroMultiGrid TRow="SampleItem" Title="@L["Samples.Multi.Title"]" TestId="multi" Path="@L["Samples.Menu"]" LoadOnStart="true"
                    Load="() => Task.FromResult(_store.Items())" CreateRow="() => new SampleItem()" Save="SaveAsync">
         <Columns>
             <QuroColumn Title="@L["Samples.Code"]" Value="r => r.Code" Context="row">
