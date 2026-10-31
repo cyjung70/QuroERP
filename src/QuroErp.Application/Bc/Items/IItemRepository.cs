@@ -40,8 +40,31 @@ public sealed record ItemRow(
 /// <summary>List conditions as given by the caller; the repository escapes LIKE wildcards.</summary>
 public sealed record ItemSearch(string? ItemCd, string? ItemName, string? ItemClass, string? ValidFlag, int Offset, int Limit);
 
+/// <summary>An item of the barcode screen (BC-UC-011).</summary>
+public sealed record ItemBarcodeRow(long Id, string ItemCd, string? ItemName, decimal? SoUsdPrc, string? UpcCode);
+
+/// <summary>An item that already has one of the asked barcodes.</summary>
+public sealed record ItemBarcodeOwner(string UpcCode, string ItemCd);
+
 public interface IItemRepository
 {
+    /// <summary>Items of an item class in item code order (MM-BR-815).</summary>
+    /// <param name="validFlag">Y or N; null for all.</param>
+    /// <param name="forUpdate">Lock the rows until the transaction ends.</param>
+    Task<IReadOnlyList<ItemBarcodeRow>> ListForBarcodeAsync(
+        string itemClass, string? validFlag, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Items other than exceptIds that have one of these barcodes (MM-BR-817).</summary>
+    Task<IReadOnlyList<ItemBarcodeOwner>> FindBarcodeOwnersAsync(
+        IReadOnlyCollection<string> upcCodes, IReadOnlyCollection<long> exceptIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Replaces the barcodes of these items, changing updated_at so an open item form must read them again.
+    /// Barcodes may move between the given items.
+    /// </summary>
+    Task SaveBarcodesAsync(
+        IReadOnlyList<(long Id, string UpcCode)> barcodes, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <param name="forUpdate">Lock the row until the transaction ends.</param>
     Task<ItemRow?> FindAsync(long id, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken);
 

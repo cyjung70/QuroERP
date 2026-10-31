@@ -123,6 +123,61 @@ internal sealed class ItemRepository : IItemRepository
     // MM-BR-822: the whole value is replaced; updated_at is kept so an open item form can still be saved
     private const string UpdateImage = "UPDATE bc_item SET img = @Image WHERE item_cd = @ItemCd";
 
+    // MM-BR-815: item code order as ordinal text, so the numbering does not depend on the database collation
+    private const string SelectForBarcode = """
+        SELECT id, item_cd, item_name, so_usd_prc, upc_code
+        FROM bc_item
+        WHERE class = @ItemClass AND (@ValidFlag IS NULL OR valid_flag = @ValidFlag)
+        ORDER BY item_cd COLLATE "C"
+        """;
+
+    private const string SelectForBarcodeForUpdate = SelectForBarcode + " FOR UPDATE";
+
+    private const string SelectBarcodeOwners = """
+        SELECT upc_code, item_cd
+        FROM bc_item
+        WHERE upc_code = ANY(@UpcCodes) AND NOT (id = ANY(@ExceptIds))
+        """;
+
+    // Cleared first so barcodes can move between the given items without hitting uq_bc_item_upc_code (MM-BR-817)
+    private const string ClearBarcodes = "UPDATE bc_item SET upc_code = NULL WHERE id = ANY(@Ids)";
+
+    private const string UpdateBarcodes = """
+        UPDATE bc_item i
+        SET upc_code = b.upc_code, updated_at = now(), updated_by = @UserId
+        FROM unnest(@Ids, @UpcCodes) AS b (id, upc_code)
+        WHERE i.id = b.id
+        """;
+
+    public async Task<IReadOnlyList<ItemBarcodeRow>> ListForBarcodeAsync(
+        string itemClass, string? validFlag, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<ItemBarcodeRow>(new CommandDefinition(
+            forUpdate ? SelectForBarcodeForUpdate : SelectForBarcode,
+            new { ItemClass = itemClass, ValidFlag = validFlag },
+            transaction,
+            cancellationToken: cancellationToken))).ToList();
+
+    public async Task<IReadOnlyList<ItemBarcodeOwner>> FindBarcodeOwnersAsync(
+        IReadOnlyCollection<string> upcCodes, IReadOnlyCollection<long> exceptIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<ItemBarcodeOwner>(new CommandDefinition(
+            SelectBarcodeOwners,
+            new { UpcCodes = upcCodes.ToArray(), ExceptIds = exceptIds.ToArray() },
+            transaction,
+            cancellationToken: cancellationToken))).ToList();
+
+    public async Task SaveBarcodesAsync(
+        IReadOnlyList<(long Id, string UpcCode)> barcodes, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var ids = barcodes.Select(b => b.Id).ToArray();
+        await transaction.Connection!.ExecuteAsync(
+            new CommandDefinition(ClearBarcodes, new { Ids = ids }, transaction, cancellationToken: cancellationToken));
+        await transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            UpdateBarcodes,
+            new { Ids = ids, UpcCodes = barcodes.Select(b => b.UpcCode).ToArray(), UserId = updatedBy },
+            transaction,
+            cancellationToken: cancellationToken));
+    }
+
     public Task<byte[]?> FindImageAsync(string itemCd, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.QuerySingleOrDefaultAsync<byte[]?>(
             new CommandDefinition(SelectImage, new { ItemCd = itemCd }, transaction, cancellationToken: cancellationToken));
