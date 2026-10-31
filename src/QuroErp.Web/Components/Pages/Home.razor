@@ -14,8 +14,11 @@
 
 <AuthorizeView>
     <Authorized>
-        <HomeBoard UserName="@(_profile?.Me.UserName ?? context.User.Identity?.Name)" LastLogin="@LastLogin(context.User)"
-                   Menus="@(_profile?.Me.Menus ?? [])" />
+        @* Screen type F without a title bar: the welcome is the heading (screen-templates.md 5) *@
+        <QuroFreeForm TestId="home">
+            <HomeBoard UserName="@(_profile?.Me.UserName ?? context.User.Identity?.Name)" LastLogin="@LastLogin(context.User)"
+                       Menus="@(_profile?.Me.Menus ?? [])" />
+        </QuroFreeForm>
     </Authorized>
 </AuthorizeView>
 

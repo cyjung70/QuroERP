@@ -445,4 +445,17 @@
   <data name="Samples.DocDt" xml:space="preserve"><value>일자</value></data>
   <data name="Samples.TransactionsNote" xml:space="preserve"><value>행을 더블클릭하면 그 문서 화면이 열립니다.</value></data>
   <data name="Samples.ConfirmDeactivate" xml:space="preserve"><value>이 품목을 사용 중지할까요?</value></data>
+  <data name="Samples.FreeForm.Title" xml:space="preserve"><value>샘플: 자유 배치 (F)</value></data>
+  <data name="Samples.FreeForm.Orders" xml:space="preserve"><value>발주</value></data>
+  <data name="Samples.FreeForm.Receipts" xml:space="preserve"><value>입고</value></data>
+  <data name="Samples.FreeForm.Invoices" xml:space="preserve"><value>송장</value></data>
+  <data name="Samples.FreeForm.Chip.brand" xml:space="preserve"><value>진행</value></data>
+  <data name="Samples.FreeForm.Chip.ok" xml:space="preserve"><value>완료</value></data>
+  <data name="Samples.FreeForm.Chip.neutral" xml:space="preserve"><value>대기</value></data>
+  <data name="Samples.FreeForm.Flow" xml:space="preserve"><value>구매 흐름</value></data>
+  <data name="Samples.FreeForm.Step.Order" xml:space="preserve"><value>발주</value></data>
+  <data name="Samples.FreeForm.Step.Receipt" xml:space="preserve"><value>입고</value></data>
+  <data name="Samples.FreeForm.Step.Invoice" xml:space="preserve"><value>공급자 송장</value></data>
+  <data name="Samples.FreeForm.ShowNotice" xml:space="preserve"><value>안내 보기</value></data>
+  <data name="Samples.FreeForm.Notice" xml:space="preserve"><value>F 화면은 메시지 한 줄을 보입니다.</value></data>
 </root>
