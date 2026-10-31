@@ -33,5 +33,5 @@
     "단위 테스트: KR 회사 USD SD 단가 12.50 허용, KRW SD 단가 12.5 차단(BC-E-423), US 회사 KRW SD 단가 12.5 차단, 국가 없는 통화는 회사 국가 행"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
