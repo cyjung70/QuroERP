@@ -34,5 +34,5 @@
     "이후 새 S 화면 API는 처음부터 네 필드를 돌려준다 (quro-api 체크리스트)"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

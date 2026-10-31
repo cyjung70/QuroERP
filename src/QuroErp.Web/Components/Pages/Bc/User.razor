@@ -30,7 +30,7 @@
 @if (_ready)
 {
     <QuroSingleForm @ref="_form" TModel="UserModel" Title="@L["Bc.User.Title"]" TestId="user" ReadOnly="!_canEdit"
-                    Path="@L["Menu.G5AD"]" RecordCode="user => user.UserId" Audit="user => new QuroAudit(null, null, null, user.UpdatedAt)"
+                    Path="@L["Menu.G5AD"]" RecordCode="user => user.UserId" Audit="user => QuroAudit.From(user.Audit)"
                     Load="LoadAsync" Create="() => new UserModel()" Save="SaveAsync"
                     LoadPrevious="user => LoadAdjacentAsync(user, forward: false)" LoadNext="user => LoadAdjacentAsync(user, forward: true)">
         <SearchContent>

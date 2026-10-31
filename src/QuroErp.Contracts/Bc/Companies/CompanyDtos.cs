@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using QuroErp.Contracts.Common;
 
 namespace QuroErp.Contracts.Bc.Companies;
 
@@ -7,7 +8,8 @@ namespace QuroErp.Contracts.Bc.Companies;
 public sealed record CompanyDto(
     string Name, string? Billto, string? Shipto, string? Contact, string? TelNo, string? FaxNo, string? RegisterNo, string? Represent,
     string? Email, string? BusinessType, string? BusinessItem, string CountryCode, string BaseCurrencyCode, string DefaultLangCode,
-    string TimeZone, string BillingMode, bool HasLogo, DateTimeOffset UpdatedAt);
+    string TimeZone, string BillingMode, bool HasLogo, DateTimeOffset CreatedAt, string CreatedBy, DateTimeOffset UpdatedAt, string UpdatedBy)
+    : AuditInfo(CreatedAt, CreatedBy, UpdatedAt, UpdatedBy);
 
 /// <summary>
 /// PUT body. Unknown properties are rejected with 400, so the close month (BC-BR-307), logo and other settings

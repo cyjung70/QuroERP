@@ -63,6 +63,15 @@ public class CompanyScreenTests : BunitContext
             .Should().Equal("company-toolbar-search", "company-toolbar-save");
     }
 
+    [Fact, Trait("Id", "CORE-050-WT-03")]
+    public void Open_ShowsTheFourAuditValuesOfTheCompany()
+    {
+        var page = RenderAs("admin");
+
+        page.WaitForAssertion(() => page.FindAll("[data-testid=company-audit] dd").Select(d => d.TextContent)
+            .Should().Equal(AuditTimes.Shown("setup", "kim")));
+    }
+
     [Fact, Trait("Id", "BC-UC-007-T01")]
     public void Save_PutsTheChangesWithUpdatedAt_AndKeepsTheNameEditable()
     {
@@ -81,7 +90,7 @@ public class CompanyScreenTests : BunitContext
             BusinessType = "제조",
             BillingMode = "SEPARATE",
             CountryCode = "US",
-            UpdatedAt = DateTimeOffset.UnixEpoch,
+            UpdatedAt = AuditTimes.Updated,
         });
         // BC-BR-302: the name is not a key
         page.Find("[data-testid=company-header-name]").HasAttribute("readonly").Should().BeFalse();
@@ -394,7 +403,8 @@ public class CompanyScreenTests : BunitContext
         }
 
         private CompanyDto Company(string name) =>
-            new(name, null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York", "WITH_SHIPMENT", HasLogo, DateTimeOffset.UnixEpoch);
+            new(name, null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York", "WITH_SHIPMENT", HasLogo,
+                AuditTimes.Created, "setup", AuditTimes.Updated, "kim");
 
         private static HttpResponseMessage Json<T>(T body) => new(HttpStatusCode.OK) { Content = JsonContent.Create(body, options: Web) };
     }

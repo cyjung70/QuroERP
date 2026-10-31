@@ -69,6 +69,24 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
         after.MvgCost.Should().Be(2.5m);
     }
 
+    [DatabaseFact, Trait("Id", "CORE-050-IT-11")]
+    public async Task Find_ReturnsTheFourAuditColumns_UpdateChangesOnlyTheUpdatedPair()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IItemRepository>();
+        var id = await repository.InsertAsync(Item.Create("IT-AUD1", Fields), "kim", uow.Transaction, None);
+        var row = (await repository.FindAsync(id, forUpdate: false, uow.Transaction, None))!;
+        var item = Item.Restore(id, row.ItemCd, Fields, row.Plating, row.MvgCost!.Value, 0, 0);
+        item.Change(Fields with { ItemName = "NUT" }, typeLocked: false);
+
+        await repository.UpdateAsync(item, row.UpdatedAt, "lee", uow.Transaction, None);
+        var after = (await repository.FindAsync(id, forUpdate: false, uow.Transaction, None))!;
+
+        (row.CreatedBy, row.UpdatedBy).Should().Be(("kim", "kim"));
+        row.CreatedAt.Should().NotBe(default).And.Be(row.UpdatedAt);
+        (after.CreatedAt, after.CreatedBy, after.UpdatedBy).Should().Be((row.CreatedAt, "kim", "lee"));
+    }
+
     [DatabaseFact, Trait("Id", "CORE-020-IT-01")]
     public async Task FindAdjacent_FollowsClassThenCode_WithoutClassFirst()
     {

@@ -356,7 +356,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         {
             ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"],
             ["UNIT"] = ["EA", "PCS"],
-            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2"],
+            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2", "ZZAUD1", "ZZAUD2"],
             ["GRADE"] = ["A01"],
         };
 
@@ -400,7 +400,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public static readonly DateTimeOffset Created = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
         public CompanyDto? Company { get; set; } = new(
-            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Created);
+            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Created, "setup", Created, "setup");
 
         public CompanyLogoRow? Logo { get; set; }
 
@@ -423,7 +423,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             Company = new CompanyDto(
                 fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.RegisterNo, fields.Represent,
                 fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!, fields.TimeZone!,
-                fields.BillingMode!, false, Company.UpdatedAt.AddMinutes(1));
+                fields.BillingMode!, false, Company.CreatedAt, Company.CreatedBy, Company.UpdatedAt.AddMinutes(1), updatedBy);
             UpdatedBy = updatedBy;
             return Task.FromResult(true);
         }
@@ -585,7 +585,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public Task<long> InsertAsync(Item item, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken)
         {
             var id = Interlocked.Increment(ref _nextId);
-            _rows[id] = ToRow(id, item, new DateTimeOffset(2026, 10, 29, 0, 0, 0, TimeSpan.Zero));
+            var created = new DateTimeOffset(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
+            _rows[id] = ToRow(id, item, created, createdBy, created, createdBy);
             return Task.FromResult(id);
         }
 
@@ -596,7 +597,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             {
                 return Task.FromResult(false);
             }
-            _rows[item.Id] = ToRow(item.Id, item, row.UpdatedAt.AddSeconds(1));
+            _rows[item.Id] = ToRow(item.Id, item, row.CreatedAt, row.CreatedBy, row.UpdatedAt.AddSeconds(1), updatedBy);
             return Task.FromResult(true);
         }
 
@@ -652,13 +653,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             return Task.FromResult(true);
         }
 
-        private static ItemRow ToRow(long id, Item item, DateTimeOffset updatedAt)
+        private static ItemRow ToRow(
+            long id, Item item, DateTimeOffset createdAt, string createdBy, DateTimeOffset updatedAt, string updatedBy)
         {
             var f = item.Fields;
             return new ItemRow(
                 id, item.ItemCd, f.ItemName, f.ItemName2, f.ItemDesc, f.ItemType, f.Unit, f.ItemClass, f.ValidFlag, f.UsdPrc, f.SoUsdPrc,
                 f.UpcCode, f.Location, f.ReorderPoint, f.Memo1, f.Memo2, f.Memo3, f.Memo4, f.Memo5, f.ItemGrade, f.Taxable ?? true,
-                f.VatKind ?? Item.VatTaxable, item.Plating, item.ItemGroupCd, item.MvgCost, item.OnhandQty, item.StkVal, updatedAt);
+                f.VatKind ?? Item.VatTaxable, item.Plating, item.ItemGroupCd, item.MvgCost, item.OnhandQty, item.StkVal,
+                createdAt, createdBy, updatedAt, updatedBy);
         }
     }
 

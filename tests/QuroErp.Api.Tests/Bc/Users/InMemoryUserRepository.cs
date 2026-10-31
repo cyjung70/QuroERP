@@ -27,7 +27,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public static UserRow Row(long id, string userId, long roleId, DateTimeOffset? lockedUntil = null) =>
         new(id, userId, userId, roleId, roleId == AdminRoleId ? "admin" : "user", null, null, "ko", null, "Y", false,
-            lockedUntil is null ? 0 : 5, lockedUntil, null, null, Start);
+            lockedUntil is null ? 0 : 5, lockedUntil, null, null, Start, "setup", Start, "setup");
 
     public Task<(IReadOnlyList<UserRow> Users, int Total)> SearchAsync(UserSearch search, IDbTransaction transaction, CancellationToken cancellationToken)
     {
@@ -65,7 +65,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         var id = Rows.Keys.Max() + 1;
         Hashes[id] = passwordHash;
         Rows[id] = new UserRow(id, userId, fields.UserName, fields.RoleId, "user", fields.Email, fields.Phone, fields.LangCode, fields.UserValidDt,
-            fields.ValidFlag, true, 0, null, null, null, Start.AddMinutes(1));
+            fields.ValidFlag, true, 0, null, null, null, Start.AddMinutes(1), createdBy, Start.AddMinutes(1), createdBy);
         return Task.FromResult(id);
     }
 
@@ -88,6 +88,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             UserValidDt = fields.UserValidDt,
             ValidFlag = fields.ValidFlag,
             UpdatedAt = row.UpdatedAt.AddMinutes(1),
+            UpdatedBy = updatedBy,
         };
         if (raiseTokenVersion)
         {

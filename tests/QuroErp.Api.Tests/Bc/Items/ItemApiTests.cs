@@ -214,4 +214,36 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    [Fact, Trait("Id", "CORE-050-IT-01")]
+    public async Task GetPreviousNextAndPut_ReturnTheFourAuditFields_PutChangesOnlyTheUpdatedPair()
+    {
+        var client = await factory.AdminAsync();
+        var first = (await (await client.PostAsJsonAsync(ItemRoutes.Base, NewItem("AUD2") with { ItemClass = "ZZAUD1" }))
+            .Content.ReadFromJsonAsync<ItemDto>())!;
+        var second = (await (await client.PostAsJsonAsync(ItemRoutes.Base, NewItem("AUD1") with { ItemClass = "ZZAUD2" }))
+            .Content.ReadFromJsonAsync<ItemDto>())!;
+
+        using var get = await client.GetAsync(ItemUrl(first.Id));
+        (await get.ReadAuditFieldsAsync()).Should().Equal("createdAt", "createdBy", "updatedAt", "updatedBy");
+        var next = await client.GetFromJsonAsync<ItemDto>($"{ItemUrl(first.Id)}/{ItemRoutes.Next}");
+        var previous = await client.GetFromJsonAsync<ItemDto>($"{ItemUrl(second.Id)}/{ItemRoutes.Previous}");
+        (next!.CreatedBy, next.CreatedAt, next.UpdatedBy).Should().Be((ApiFactory.UserId, second.CreatedAt, ApiFactory.UserId));
+        (previous!.CreatedBy, previous.CreatedAt, previous.UpdatedBy).Should().Be((ApiFactory.UserId, first.CreatedAt, ApiFactory.UserId));
+
+        using var put = await client.PutAsJsonAsync(ItemUrl(first.Id), new UpdateItemRequest
+        {
+            ItemName = "NUT",
+            ItemType = first.ItemType,
+            Unit = first.Unit,
+            ItemClass = first.ItemClass,
+            ValidFlag = first.ValidFlag,
+            UsdPrc = 1m,
+            UpdatedAt = first.UpdatedAt,
+        });
+
+        var saved = (await put.Content.ReadFromJsonAsync<ItemDto>())!;
+        (saved.CreatedAt, saved.CreatedBy, saved.UpdatedBy).Should().Be((first.CreatedAt, first.CreatedBy, ApiFactory.UserId));
+        saved.UpdatedAt.Should().BeAfter(first.UpdatedAt);
+    }
 }
