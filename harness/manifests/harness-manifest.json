@@ -1300,7 +1300,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-048.json",
-      "sha256": "9fe4c54639fb15fe7fafcbc2bb842e33d9e1bbf343195e292ad1b73ccbab1bf1"
+      "sha256": "ef4fb6f179bfb7d1806ef654d430343bc578440d9cc89a5deff3c62ec222350f"
     },
     {
       "path": "harness/tasks/TASK-CORE-049.json",
@@ -1324,7 +1324,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-054.json",
-      "sha256": "396259d6019bd2f351f474e385221d1629cfb6df7531b2d885377a3f9e33a89f"
+      "sha256": "1ea67bcdb536d50bc24de8ac9fe3da746f0ab7f0b51bac19b004cf380a8abb6e"
     },
     {
       "path": "harness/tasks/TASK-CORE-055.json",
@@ -1336,7 +1336,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-057.json",
-      "sha256": "8c3c5b093bf215d50487aa034307cd88e5517a8d51fbfeca0db7b9a90dc84781"
+      "sha256": "86e5508004c6b06307f88c43b4bb5db0bfeca743570f97304d291150a482963e"
     },
     {
       "path": "harness/tasks/TASK-CORE-058.json",

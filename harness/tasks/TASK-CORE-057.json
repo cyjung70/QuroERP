@@ -23,6 +23,7 @@
   ],
   "acceptance": [
     "`/bc/*` 업무 화면(회사, 사용자, 품목, 품목 바코드, 코드, 코드 그룹, 통화, 회사 메뉴, 역할 메뉴 등)이 TASK-CORE-054~056의 틀을 쓴다. M 화면은 `.toon` 정의를 둔다",
+    "S 화면(회사, 품목, 품목 이미지 올리기, 사용자 등)의 입력 칸이 `@bind-Value` 대신 `Field`로 DataSet 열에 묶인다. 전환 뒤 `@bind-Value`로 남은 래퍼는 DataSet 폼 밖(조회 조건·대화상자)만",
     "앱 `Components/Screens/QuroGrid.razor`·`QuroLabel.razor`를 지우고 참조 0건. 전체 이름(`Quro.Grid.QuroGrid`) 우회도 지운다",
     "화면마다 지금 bUnit·Tester 시나리오가 통과 (동작 변화 없음). 바뀐 DOM은 Page Object로 흡수한다",
     "남은 `TODO(QuroGrid-R*)` 목록을 PR 설명에 적는다"
