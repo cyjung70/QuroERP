@@ -1,0 +1,37 @@
+{
+  "id": "TASK-CORE-054",
+  "project": "core",
+  "title": "S 화면 틀을 QuroDataSet·Quro.UI 입력 컨트롤로 전환 (샘플 S)",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/qurogrid-integration.md",
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/screens.md",
+    "docs/architecture/field-policy.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-053"
+  ],
+  "acceptance": [
+    "`QuroSingleForm`이 1행 `QuroDataSet<TModel>`을 갖고, 저장 전 `Validate`·변경 여부(`HasChanges`)·저장하지 않은 변경 확인을 DataSet으로 한다 (qurogrid-integration.md 10장)",
+    "앱 입력 칸 래퍼 `QuroText`·`QuroSelect`·`QuroCodeSelect`·`QuroDate`·`QuroNumber`·`QuroCheckbox`가 DataSet 열에 묶인다. `QuroText`→`QuroTextBox`(`TextCase`는 대·소문자 변환 유지, `CharType`·`MaxLength`), `QuroDate`→`QuroDatePicker`, `QuroSelect`·`QuroCodeSelect`→`QuroComboBox`(코드 DataSet 캐시 `OptionsSource`). 라벨·필수 마커·`LockMode`·`Policy`·`TestId`는 래퍼가 그대로 맡는다",
+    "숫자·체크박스·라디오는 패키지에 없다: 래퍼가 DataSet 열에 묶어 지금 요소로 그리고 `// TODO(QuroGrid-R1)`·`R2`를 남긴다. 입력 요소의 `data-testid`는 래퍼 요소 기준으로 지금 이름을 유지한다 (`TODO(QuroGrid-R3)`)",
+    "날짜: 사용자 언어 culture에 `ShortDatePattern`(ko `yyyy-MM-dd`, en `MM/dd/yyyy`)을 지정해 넘긴다",
+    "필수: DTO `[Required]`는 공통 필수만. 필드 정책으로 필수가 되는 필드는 `SetColumn`으로 열 `Required`를 준다. 필수 마커와 `Validate` 결과가 같다",
+    "앱 디자인 토큰을 `--quro-*` 토큰에 연결해 입력 칸 색(노란 편집·회색 읽기 전용)이 지금과 같다. `quro-ui.css`·`quro-ui.js`를 `App.razor`에 연결",
+    "샘플 `/samples/single`과 같은 틀을 쓰는 S 화면이 빌드·bUnit 통과. bUnit: 입력 → DataSet 값, 필수 비움 → 저장 차단, 잠김, 정책 숨김·필수, 날짜 ko·en 표시. 바뀐 DOM에 맞춰 기존 bUnit·Tester Page Object를 고친다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

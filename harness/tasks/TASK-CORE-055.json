@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-055",
+  "project": "core",
+  "title": "M 화면 틀을 패키지 QuroGrid·.toon 정의로 전환 (샘플 M)",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/qurogrid-integration.md",
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/screens.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-054"
+  ],
+  "acceptance": [
+    "`QuroMultiGrid`이 앱 `QuroGrid.razor` 대신 패키지 `<Quro.Grid.QuroGrid DataSet Definition>`을 쓴다. 열·검증 규칙은 `src/QuroErp.Web/Definitions/screens/<module>/*.screen.toon` (qurogrid-integration.md 5장), 정의 검증 카탈로그 `ErpDefinitionCatalog`",
+    "샘플 `/samples/multi`의 `.toon`을 만들고 `quro-deflint`·`Category=ScreenDefinition` 테스트가 통과한다",
+    "행 추가·삭제 표시·복원·행 상태 표시는 틀이 그린다. TASK-CORE-051이 만든 `CanWrite` 동작(막힌 버튼 비활성화, 그리드 편집 잠금, 조회 가능)과 그 bUnit 테스트는 바뀌지 않고 통과한다. 그리드 편집 잠금은 패키지 지원(R4) 전까지 열 `ReadOnly` 일괄 + `OnCellValueChanging`·`OnRowAdding`·`OnRowDeleting`·`OnPasting` 취소로 하고 `TODO(QuroGrid-R4)`",
+    "조회형(`ReadOnly`)·필터 행·정렬·엑셀은 지금 동작과 같다. 큰 목록은 `ItemsProvider`(서버 페이징, `request.Filters` 반영), 작은 목록은 메모리 모드",
+    "그리드 `data-testid`·`data-row-index`는 패키지 지원(R3) 전까지 틀의 래퍼 요소에 단다. 기존 bUnit·Tester M Page Object를 새 DOM에 맞춘다",
+    "Combo 열은 코드 DataSet `OptionsSource`(연동 콤보 `FilterField`·`ParentField`)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

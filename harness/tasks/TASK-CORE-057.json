@@ -1,0 +1,32 @@
+{
+  "id": "TASK-CORE-057",
+  "project": "core",
+  "title": "BC 업무 화면 전환과 앱의 옛 그리드·라벨 컴포넌트 삭제",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/qurogrid-integration.md",
+    "docs/architecture/screen-templates.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-056"
+  ],
+  "acceptance": [
+    "`/bc/*` 업무 화면(회사, 사용자, 품목, 품목 바코드, 코드, 코드 그룹, 통화, 회사 메뉴, 역할 메뉴 등)이 TASK-CORE-054~056의 틀을 쓴다. M 화면은 `.toon` 정의를 둔다",
+    "앱 `Components/Screens/QuroGrid.razor`·`QuroLabel.razor`를 지우고 참조 0건. 전체 이름(`Quro.Grid.QuroGrid`) 우회도 지운다",
+    "화면마다 지금 bUnit·Tester 시나리오가 통과 (동작 변화 없음). 바뀐 DOM은 Page Object로 흡수한다",
+    "남은 `TODO(QuroGrid-R*)` 목록을 PR 설명에 적는다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

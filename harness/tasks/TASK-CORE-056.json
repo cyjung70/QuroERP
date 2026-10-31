@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-056",
+  "project": "core",
+  "title": "SM·MM 화면 틀을 패키지 QuroGrid로 전환 (샘플 SM·발주 입력·MM)",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/qurogrid-integration.md",
+    "docs/architecture/entry-frame.md",
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/screens.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-055"
+  ],
+  "acceptance": [
+    "`QuroHeaderDetail`: 헤더는 1행 DataSet + Quro.UI 래퍼(TASK-CORE-054), 라인은 패키지 QuroGrid + `.toon`. `QuroSubGrid`·`QuroLookupDialog`의 그리드도 패키지로",
+    "표시용 금액은 `OnCellValueChanged`에서 정의 `rules`를 `RuleExpression`으로 계산, `Totals`는 삭제 표시 행을 뺀 라인 DataSet에서 (저장 값은 API가 다시 계산)",
+    "코드 열은 `Popup` 셀 + `LookupFor`·`*.lookup.toon`, 붙여 넣은 코드는 한 번에 조회 (screens.md 공통 동작)",
+    "`QuroMasterMultiDetail`: 원천·대상 그리드 모두 패키지 QuroGrid, `CanWrite`는 TASK-CORE-055와 같은 방식",
+    "샘플 `/samples/header-detail`·`/samples/po-entry`·`/samples/master-detail`의 `.toon`과 bUnit 통과, `quro-deflint` 통과. Tester SM·MM Page Object를 새 DOM에 맞춘다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
