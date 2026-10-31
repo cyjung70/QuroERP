@@ -47,6 +47,22 @@
 .quro-grid-selectable tbody tr { cursor: pointer; }
 
 /* Status chip (6) */
+/* F screens (screen-templates.md 5): shared button, card grid and flow; one column below 768px */
+.quro-free { display: flex; flex-direction: column; gap: var(--q-panel-gap); }
+.quro-free h2 { margin: 0 0 12px; font: 600 16px/24px var(--q-font-sans); color: var(--q-ink); }
+.quro-btn { height: var(--q-control-h); padding: 0 12px; border: 1px solid var(--q-line); border-radius: var(--q-radius-button);
+    background: var(--q-surface-1); color: var(--q-ink); font: 500 13px/20px var(--q-font-sans); white-space: nowrap; cursor: pointer; }
+.quro-btn-primary { background: var(--q-brand); border-color: var(--q-brand); color: var(--q-on-brand); }
+.quro-btn:disabled { opacity: .45; cursor: not-allowed; }
+.quro-free-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--q-panel-gap); }
+.quro-free-flow { display: flex; gap: 24px; margin: 0 0 12px; padding: 0; list-style: none; }
+.quro-free-flow > li { position: relative; flex: 1; padding: 12px; border: 1px solid var(--q-line); border-radius: var(--q-radius-panel); font-weight: 600; }
+.quro-free-flow > li + li::before { content: "\2192"; position: absolute; left: -18px; top: 50%; transform: translateY(-50%); color: var(--q-ink-muted); }
+@media (max-width: 767.98px) {
+    .quro-free-grid { grid-template-columns: 1fr; }
+    .quro-free-flow { flex-direction: column; }
+    .quro-free-flow > li + li::before { content: "\2193"; left: 50%; top: -20px; transform: translateX(-50%); }
+}
 .quro-chip { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: var(--q-radius-chip); font: 600 12px/20px var(--q-font-sans); white-space: nowrap; }
 .quro-chip-neutral { background: var(--q-neutral-tint); color: var(--q-ink); }
 .quro-chip-brand { background: var(--q-brand-tint); color: var(--q-brand); }

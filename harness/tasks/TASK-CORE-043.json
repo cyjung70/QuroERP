@@ -28,5 +28,5 @@
     "샘플 `/samples/free-form`(타이틀바·카드·흐름 단계)과 bUnit 테스트: 타이틀 없을 때 타이틀바 없음, 메시지 표시. 1280px·375px 화면 확인"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

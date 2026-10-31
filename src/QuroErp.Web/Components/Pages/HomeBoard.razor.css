@@ -17,14 +17,7 @@
     color: var(--q-ink-muted);
 }
 
-.home-panel {
-    padding: var(--q-panel-pad);
-    background: var(--q-surface-0);
-    border: 1px solid var(--q-line);
-    border-radius: var(--q-radius-panel);
-}
-
-    .home-panel h2 {
+    .home .quro-panel h2 {
         margin: 0 0 0.75rem;
         font-size: 1rem;
         color: var(--q-ink);

@@ -445,4 +445,17 @@
   <data name="Samples.DocDt" xml:space="preserve"><value>Date</value></data>
   <data name="Samples.TransactionsNote" xml:space="preserve"><value>Double-click a row to open its document.</value></data>
   <data name="Samples.ConfirmDeactivate" xml:space="preserve"><value>Deactivate this item?</value></data>
+  <data name="Samples.FreeForm.Title" xml:space="preserve"><value>Sample: Free-Form (F)</value></data>
+  <data name="Samples.FreeForm.Orders" xml:space="preserve"><value>Orders</value></data>
+  <data name="Samples.FreeForm.Receipts" xml:space="preserve"><value>Receipts</value></data>
+  <data name="Samples.FreeForm.Invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="Samples.FreeForm.Chip.brand" xml:space="preserve"><value>Open</value></data>
+  <data name="Samples.FreeForm.Chip.ok" xml:space="preserve"><value>Done</value></data>
+  <data name="Samples.FreeForm.Chip.neutral" xml:space="preserve"><value>Waiting</value></data>
+  <data name="Samples.FreeForm.Flow" xml:space="preserve"><value>Purchase Flow</value></data>
+  <data name="Samples.FreeForm.Step.Order" xml:space="preserve"><value>Order</value></data>
+  <data name="Samples.FreeForm.Step.Receipt" xml:space="preserve"><value>Receipt</value></data>
+  <data name="Samples.FreeForm.Step.Invoice" xml:space="preserve"><value>Supplier Invoice</value></data>
+  <data name="Samples.FreeForm.ShowNotice" xml:space="preserve"><value>Show Notice</value></data>
+  <data name="Samples.FreeForm.Notice" xml:space="preserve"><value>An F screen shows one message line.</value></data>
 </root>
