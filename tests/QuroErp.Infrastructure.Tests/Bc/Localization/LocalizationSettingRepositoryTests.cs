@@ -62,8 +62,8 @@ public class LocalizationSettingRepositoryTests(AuthSchemaFixture db)
             UPDATE sys_language SET updated_at = 'epoch', updated_by = 'old';
             UPDATE bc_country_decimal SET updated_at = 'epoch', updated_by = 'old';
             UPDATE sys_decimal_setting SET updated_at = 'epoch', updated_by = 'old';
-            INSERT INTO bc_company (id, name, country_code, base_currency_code, default_lang_code, created_by, updated_by)
-            VALUES (1, 'Quro', 'KR', 'KRW', 'ko', 's', 'old');
+            INSERT INTO bc_company (id, name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
+            VALUES (1, 'Quro', 'KR', 'KRW', 'ko', 'Asia/Seoul', 's', 'old');
             """,
             transaction: uow.Transaction);
 

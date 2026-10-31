@@ -18,7 +18,7 @@ public class CodeMajorServiceTests
     private static readonly CancellationToken None = CancellationToken.None;
 
     private readonly FakeCodeMajorRepository _majors = new();
-    private readonly FakeLocalizationRepository _localization = new() { Company = new("US", "USD", "en", "DOCUMENT") };
+    private readonly FakeLocalizationRepository _localization = new() { Company = new("US", "USD", "en", "DOCUMENT", "America/New_York") };
     private readonly FakeUnitOfWorkFactory _uow = new();
     private readonly CodeMajorService _service;
 

@@ -14,6 +14,7 @@ public class UserMenuTests : BunitContext
     {
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
     }
 
     [Fact, Trait("Id", "CORE-023-T01")]

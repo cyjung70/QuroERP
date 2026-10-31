@@ -7,9 +7,10 @@ using QuroERP.Database;
 //   --demo: 이어서 Scripts/Demo도 적용한다 (기록: schemaversions_demo)
 //   --create-admin <userid>: 마이그레이션 대신 관리자 계정을 만들거나 비밀번호를 초기화한다.
 //                            비밀번호는 콘솔에서 입력받는다 (화면에 보이지 않는다)
-//   --set-country <US|KR> [--company-name <name>]: sets the company country, base currency, default language
-//                            and module decimals from the country profile (BC-BR-313). Run after migration,
-//                            before any transaction. --company-name is required when there is no company yet
+//   --set-country <US|KR> [--company-name <name>] [--time-zone <IANA>]: sets the company country, base currency,
+//                            default language, time zone (BC-BR-318) and module decimals from the country profile
+//                            (BC-BR-313). Run after migration, before any transaction. --company-name is required when
+//                            there is no company yet; --time-zone replaces the country default time zone
 // 연결 문자열 우선순위: --connection 인자 > 환경변수 ConnectionStrings__QuroErp > dotnet user-secrets
 
 const string ConnectionKey = "ConnectionStrings:QuroErp";
@@ -36,7 +37,7 @@ if (adminUserId is not null)
 var countryCode = configuration["set-country"];
 if (countryCode is not null)
 {
-    return await SetCountryAsync(connectionString, countryCode, configuration["company-name"]);
+    return await SetCountryAsync(connectionString, countryCode, configuration["company-name"], configuration["time-zone"]);
 }
 
 var includeDemo = args.Contains("--demo", StringComparer.OrdinalIgnoreCase);
@@ -80,15 +81,21 @@ static async Task<int> CreateAdminAsync(string connectionString, string userId)
     }
 }
 
-static async Task<int> SetCountryAsync(string connectionString, string countryCode, string? companyName)
+static async Task<int> SetCountryAsync(string connectionString, string countryCode, string? companyName, string? timeZone)
 {
     try
     {
-        var created = await CompanySetup.SetCountryAsync(connectionString, countryCode.Trim().ToUpperInvariant(), companyName, CancellationToken.None);
+        var created = await CompanySetup.SetCountryAsync(
+            connectionString, countryCode.Trim().ToUpperInvariant(), companyName, timeZone, CancellationToken.None);
         Console.WriteLine(created
             ? $"회사를 만들고 국가를 {countryCode.ToUpperInvariant()}로 설정했습니다."
             : $"회사 국가를 {countryCode.ToUpperInvariant()}로 설정했습니다.");
         return 0;
+    }
+    catch (ArgumentException ex) when (ex.ParamName == "timeZone")
+    {
+        Console.Error.WriteLine($"Unknown time zone: {timeZone}. Enter an IANA name such as America/New_York or Asia/Seoul.");
+        return 2;
     }
     catch (ArgumentException)
     {

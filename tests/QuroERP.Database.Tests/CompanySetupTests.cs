@@ -14,28 +14,47 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
     [DatabaseFact, Trait("Id", "CORE-014-IT-20")]
     public async Task SetCountry_NoCompanyThenKrThenUs_UsesCountryProfileDefaults()
     {
-        var withoutName = () => CompanySetup.SetCountryAsync(_db.ConnectionString, "KR", null, CancellationToken.None);
+        var withoutName = () => CompanySetup.SetCountryAsync(_db.ConnectionString, "KR", null, null, CancellationToken.None);
         await withoutName.Should().ThrowAsync<InvalidOperationException>();
 
-        var created = await CompanySetup.SetCountryAsync(_db.ConnectionString, "KR", "Quro Korea", CancellationToken.None);
+        var created = await CompanySetup.SetCountryAsync(_db.ConnectionString, "KR", "Quro Korea", null, CancellationToken.None);
 
         created.Should().BeTrue();
         Company().Should().Be(("Quro Korea", "KR", "KRW", "ko"));
+        TimeZone().Should().Be("Asia/Seoul");
         Decimals().Should().Equal(("MM", 2, "HALF_UP"), ("SD", 0, "HALF_UP"));
 
-        var updated = await CompanySetup.SetCountryAsync(_db.ConnectionString, "US", null, CancellationToken.None);
+        var updated = await CompanySetup.SetCountryAsync(_db.ConnectionString, "US", null, null, CancellationToken.None);
 
         updated.Should().BeFalse();
         Company().Should().Be(("Quro Korea", "US", "USD", "en"));
+        TimeZone().Should().Be("America/New_York");
         Decimals().Should().Equal(("MM", 2, "HALF_UP"), ("SD", 0, "HALF_UP"));
+
+        // --time-zone overrides the country default (TASK-CORE-024)
+        await CompanySetup.SetCountryAsync(_db.ConnectionString, "US", null, " America/Chicago ", CancellationToken.None);
+
+        TimeZone().Should().Be("America/Chicago");
     }
 
     [DatabaseFact, Trait("Id", "CORE-014-IT-21")]
     public async Task SetCountry_UnsupportedCountry_ThrowsBcE313()
     {
-        var act = () => CompanySetup.SetCountryAsync(_db.ConnectionString, "JP", "Quro Japan", CancellationToken.None);
+        var act = () => CompanySetup.SetCountryAsync(_db.ConnectionString, "JP", "Quro Japan", null, CancellationToken.None);
 
         (await act.Should().ThrowAsync<ArgumentException>()).Which.Message.Should().StartWith("BC-E-313");
+    }
+
+    [Theory, Trait("Id", "CORE-024-IT-03"), Trait("Rule", "BC-BR-318")]
+    [InlineData("Mars/Olympus")]
+    [InlineData("Korea Standard Time")]
+    public async Task SetCountry_UnknownTimeZone_ThrowsBcE318(string timeZone)
+    {
+        var act = () => CompanySetup.SetCountryAsync("Host=unused", "KR", "Quro Korea", timeZone, CancellationToken.None);
+
+        var thrown = (await act.Should().ThrowAsync<ArgumentException>()).Which;
+        thrown.Message.Should().StartWith("BC-E-318");
+        thrown.ParamName.Should().Be("timeZone");
     }
 
     [Fact, Trait("Id", "CORE-014-T10")]
@@ -46,7 +65,7 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
         {
             var profile = CountryProfiles.Get(code);
             defaults.Should().BeEquivalentTo(new CountryDefaults(
-                profile.CountryCode, profile.BaseCurrencyCode, profile.DefaultLangCode,
+                profile.CountryCode, profile.BaseCurrencyCode, profile.DefaultLangCode, profile.DefaultTimeZone,
                 profile.DefaultDecimalSettings
                     .Select(s => new DecimalDefaults(s.Module, s.QtyDecimals, Rounding.ToCode(s.RoundingMode)))
                     .ToList()));
@@ -63,6 +82,13 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
         var row = (reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
         reader.Read().Should().BeFalse("there is one company");
         return row;
+    }
+
+    private string TimeZone()
+    {
+        using var connection = _db.Open();
+        using var command = new NpgsqlCommand("SELECT time_zone FROM bc_company", connection);
+        return (string)command.ExecuteScalar()!;
     }
 
     private List<(string, int, string)> Decimals()
@@ -93,15 +119,15 @@ public class CompanySetupWithTransactionsTests : IClassFixture<MigratedSchemaFix
         using (var connection = _db.Open())
         using (var command = new NpgsqlCommand(
             """
-            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, created_by, updated_by)
-            VALUES ('Quro', 'US', 'USD', 'en', 's', 's');
+            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
+            VALUES ('Quro', 'US', 'USD', 'en', 'America/New_York', 's', 's');
             INSERT INTO bc_exchange_rate (cur_dt, created_by, updated_by) VALUES (DATE '2026-10-01', 's', 's');
             """, connection))
         {
             command.ExecuteNonQuery();
         }
 
-        var act = () => CompanySetup.SetCountryAsync(_db.ConnectionString, "KR", null, CancellationToken.None);
+        var act = () => CompanySetup.SetCountryAsync(_db.ConnectionString, "KR", null, null, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
         using var check = _db.Open();

@@ -19,7 +19,8 @@ public sealed class LoginService(
     IPasswordHashService passwords,
     IAccessTokenIssuer tokens,
     IUnitOfWorkFactory unitOfWork,
-    TimeProvider clock)
+    TimeProvider clock,
+    IBusinessClock businessClock)
 {
     private static readonly string[] Languages = ["ko", "en"];
 
@@ -341,7 +342,8 @@ public sealed class LoginService(
     }
 
     // [추정] 업무 날짜는 서버 현지 날짜로 본다
-    private DateOnly Today() => DateOnly.FromDateTime(clock.GetLocalNow().DateTime);
+    // Sign-in validity and password expiry dates are business dates in the company time zone (BC-BR-318)
+    private DateOnly Today() => businessClock.Today();
 
     private async Task<AuthSetting> GetSettingAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
         await settings.GetAsync(transaction, cancellationToken) ?? new AuthSetting();

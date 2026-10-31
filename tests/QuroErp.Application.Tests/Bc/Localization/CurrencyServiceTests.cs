@@ -18,7 +18,7 @@ public class CurrencyServiceTests
     private static readonly CancellationToken None = CancellationToken.None;
 
     private readonly FakeCurrencyRepository _currencies = new();
-    private readonly FakeLocalizationRepository _localization = new() { Company = new("KR", "KRW", "ko", "DOCUMENT") };
+    private readonly FakeLocalizationRepository _localization = new() { Company = new("KR", "KRW", "ko", "DOCUMENT", "Asia/Seoul") };
     private readonly FakeUnitOfWorkFactory _uow = new();
     private readonly CurrencyService _service;
 

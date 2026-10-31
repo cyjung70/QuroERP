@@ -32,6 +32,7 @@ public class CodeMajorScreenTests : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         Services.AddSingleton<IQuroConfirm>(new FakeConfirm());
         Services.AddSingleton(TimeProvider.System);
         Services.AddSingleton<AccessTokenStore>();
@@ -206,7 +207,7 @@ public class CodeMajorScreenTests : BunitContext
             var path = request.RequestUri!.AbsolutePath;
             if (path == "/" + LocalizationRoutes.Base)
             {
-                return Json(new LocalizationDto("US", "USD", "en", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT", [new("ko", 1), new("en", 2)], [], [], []));
+                return Json(new LocalizationDto("US", "USD", "en", "America/New_York", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT", [new("ko", 1), new("en", 2)], [], [], []));
             }
             if (path != "/" + CodeMajorRoutes.Base)
             {

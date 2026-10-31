@@ -32,6 +32,7 @@ public class ItemScreenTests : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         Services.AddSingleton<IQuroConfirm>(_confirm);
         Services.AddSingleton(TimeProvider.System);
         Services.AddSingleton<AccessTokenStore>();
@@ -312,7 +313,7 @@ public class ItemScreenTests : BunitContext
             }
             if (path == "/" + LocalizationRoutes.Base)
             {
-                return Json(new LocalizationDto("US", "USD", "en", TaxMethod, "MM/dd/yyyy", "DOCUMENT", [],
+                return Json(new LocalizationDto("US", "USD", "en", "America/New_York", TaxMethod, "MM/dd/yyyy", "DOCUMENT", [],
                     [new CurrencyDto("USD", "US Dollar", 2, "US")],
                     [new CountryDecimalDto("US", "MM", 2), new CountryDecimalDto("US", "SD", 4)],
                     [new DecimalSettingDto("MM", 3, "HALF_UP")]));

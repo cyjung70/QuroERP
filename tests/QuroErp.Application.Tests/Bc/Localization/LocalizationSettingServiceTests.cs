@@ -12,7 +12,7 @@ public class LocalizationSettingServiceTests
 {
     private readonly FakeUnitOfWorkFactory _unitOfWork = new();
 
-    private readonly FakeLocalizationRepository _localization = new() { Company = new("KR", "KRW", "ko", "DOCUMENT") };
+    private readonly FakeLocalizationRepository _localization = new() { Company = new("KR", "KRW", "ko", "DOCUMENT", "Asia/Seoul") };
 
     private readonly FakeLocalizationSettingRepository _settings = new();
 
@@ -123,7 +123,7 @@ public class LocalizationSettingServiceTests
     [Fact, Trait("Id", "BC-UC-027-T05")]
     public async Task UpdateAsync_LanguageOff_MovesItsUsersToCompanyDefaultLanguage()
     {
-        _localization.Company = new("US", "USD", "en", "DOCUMENT");
+        _localization.Company = new("US", "USD", "en", "DOCUMENT", "America/New_York");
 
         await Service.UpdateAsync(Request([new("ko", false), new("sw", true)]), "admin", CancellationToken.None);
 

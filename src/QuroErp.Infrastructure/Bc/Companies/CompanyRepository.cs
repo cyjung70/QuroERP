@@ -11,7 +11,7 @@ internal sealed class CompanyRepository : ICompanyRepository
     // Single company (BC-BR-301): the lowest id is the company
     private const string Select = """
         SELECT name, billto, shipto, contact, tel_no, fax_no, register_no, represent, email, business_type, business_item,
-               country_code, base_currency_code, default_lang_code, billing_mode, logo_image IS NOT NULL AS has_logo, updated_at
+               country_code, base_currency_code, default_lang_code, time_zone, billing_mode, logo_image IS NOT NULL AS has_logo, updated_at
         FROM bc_company
         WHERE id = (SELECT min(id) FROM bc_company)
         """;
@@ -23,7 +23,7 @@ internal sealed class CompanyRepository : ICompanyRepository
         SET name = @Name, billto = @Billto, shipto = @Shipto, contact = @Contact, tel_no = @TelNo, fax_no = @FaxNo,
             register_no = @RegisterNo, represent = @Represent, email = @Email, business_type = @BusinessType, business_item = @BusinessItem,
             country_code = @CountryCode, base_currency_code = @BaseCurrencyCode, default_lang_code = @DefaultLangCode,
-            billing_mode = @BillingMode, updated_at = now(), updated_by = @UpdatedBy
+            time_zone = @TimeZone, billing_mode = @BillingMode, updated_at = now(), updated_by = @UpdatedBy
         WHERE id = (SELECT min(id) FROM bc_company) AND updated_at = @ExpectedUpdatedAt
         """;
 
@@ -88,6 +88,7 @@ internal sealed class CompanyRepository : ICompanyRepository
                 fields.CountryCode,
                 fields.BaseCurrencyCode,
                 fields.DefaultLangCode,
+                fields.TimeZone,
                 fields.BillingMode,
                 UpdatedBy = updatedBy,
                 ExpectedUpdatedAt = expectedUpdatedAt.UtcDateTime,
@@ -126,10 +127,10 @@ internal sealed class CompanyRepository : ICompanyRepository
     private sealed record CompanyRow(
         string Name, string? Billto, string? Shipto, string? Contact, string? TelNo, string? FaxNo, string? RegisterNo, string? Represent,
         string? Email, string? BusinessType, string? BusinessItem, string CountryCode, string BaseCurrencyCode, string DefaultLangCode,
-        string BillingMode, bool HasLogo, DateTime UpdatedAt)
+        string TimeZone, string BillingMode, bool HasLogo, DateTime UpdatedAt)
     {
         public CompanyDto ToDto() => new(
             Name, Billto, Shipto, Contact, TelNo, FaxNo, RegisterNo, Represent, Email, BusinessType, BusinessItem, CountryCode, BaseCurrencyCode,
-            DefaultLangCode, BillingMode, HasLogo, new DateTimeOffset(DateTime.SpecifyKind(UpdatedAt, DateTimeKind.Utc)));
+            DefaultLangCode, TimeZone, BillingMode, HasLogo, new DateTimeOffset(DateTime.SpecifyKind(UpdatedAt, DateTimeKind.Utc)));
     }
 }

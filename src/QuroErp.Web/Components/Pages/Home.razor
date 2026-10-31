@@ -2,6 +2,7 @@
 @using System.Globalization
 @using System.Security.Claims
 @using QuroErp.Web.Auth
+@using QuroErp.Web.Common
 @using QuroErp.Web.Components.Layout
 @inject ShellProfileLoader Profiles
 @inject IStringLocalizer<SharedResource> L
@@ -32,9 +33,9 @@
         }
     }
 
-    // Shown in the server's local time [추정] until the company time zone reaches the Web (app-shell.md 6)
+    // In the company time zone (app-shell.md 6, BC-BR-318); UTC when the profile could not be read
     private string? LastLogin(ClaimsPrincipal user) =>
         DateTimeOffset.TryParse(user.FindFirst(WebAuthClaims.LastLoginAt)?.Value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var at)
-            ? L["Common.LastLogin", at.ToLocalTime().ToString("g", CultureInfo.CurrentCulture), user.FindFirst(WebAuthClaims.LastLoginIp)?.Value ?? "-"].Value
+            ? L["Common.LastLogin", CompanyTime.Format(at, CompanyTime.Find(_profile?.TimeZone)), user.FindFirst(WebAuthClaims.LastLoginIp)?.Value ?? "-"].Value
             : null;
 }

@@ -5,11 +5,11 @@ using QuroErp.Domain.Common;
 
 namespace QuroErp.Domain.Tests.Bc.Companies;
 
-/// <summary>Company rules (BC-BR-302, 303, 313, 315, 316) and the KR business number (BC-BR-521).</summary>
+/// <summary>Company rules (BC-BR-302, 303, 313, 315, 316, 318) and the KR business number (BC-BR-521).</summary>
 public class CompanyRulesTests
 {
     private static readonly CompanyFields Us = new(
-        "Quro", null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", null);
+        "Quro", null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York", null);
 
     [Fact, Trait("Id", "BC-UT-302")]
     public void Text_IsTrimmed_CodesAreCased_AndBillingModeDefaultsToWithShipment()
@@ -134,4 +134,18 @@ public class CompanyRulesTests
     [InlineData("SEPARATE", "SEPARATE", false)]
     public void OnlySeparateToWithShipment_NeedsAllShipmentsBilled(string current, string next, bool expected) =>
         CompanyRules.NeedsAllShipmentsBilled(current, next).Should().Be(expected);
+
+    [Theory, Trait("Id", "BC-UT-318"), Trait("Rule", "BC-BR-318")]
+    [InlineData("America/New_York", true)]
+    [InlineData("Asia/Seoul", true)]
+    [InlineData("Mars/Olympus", false)]
+    [InlineData("Korea Standard Time", false)]
+    [InlineData(" ", false)]
+    [InlineData(null, false)]
+    public void TimeZone_MustBeAKnownIanaName(string? timeZone, bool known) =>
+        CompanyRules.IsKnownTimeZone(timeZone).Should().Be(known);
+
+    [Fact, Trait("Id", "BC-UT-318"), Trait("Rule", "BC-BR-318")]
+    public void Normalize_TrimsTheTimeZone() =>
+        CompanyRules.Normalize(Us with { TimeZone = " Asia/Seoul " }).TimeZone.Should().Be("Asia/Seoul");
 }

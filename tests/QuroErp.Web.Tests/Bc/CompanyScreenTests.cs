@@ -37,6 +37,7 @@ public class CompanyScreenTests : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         Services.AddSingleton<IQuroConfirm>(_confirm);
         Services.AddSingleton(TimeProvider.System);
         Services.AddSingleton<AccessTokenStore>();
@@ -84,6 +85,21 @@ public class CompanyScreenTests : BunitContext
         });
         // BC-BR-302: the name is not a key
         page.Find("[data-testid=company-header-name]").HasAttribute("readonly").Should().BeFalse();
+    }
+
+    [Fact, Trait("Id", "CORE-024-WT-02"), Trait("Rule", "BC-BR-318")]
+    public void TimeZone_IsADropdownOfIanaNames_AndIsSaved()
+    {
+        var page = RenderAs("admin");
+        Selected(page, "company-header-time-zone").Should().Be("America/New_York");
+        var options = page.FindAll("[data-testid=company-header-time-zone] option").Select(o => o.GetAttribute("value")).ToList();
+        options.Should().Contain(["America/New_York", "Asia/Seoul"]).And.NotContain("Korea Standard Time");
+
+        page.Find("[data-testid=company-header-time-zone]").Change("Asia/Seoul");
+        page.Find("[data-testid=company-toolbar-save]").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=company-message]").TextContent.Should().Be("저장했습니다."));
+        _api.CompanyUpdates.Should().ContainSingle().Which.TimeZone.Should().Be("Asia/Seoul");
     }
 
     [Fact, Trait("Id", "BC-UC-007-T02")]
@@ -342,7 +358,7 @@ public class CompanyScreenTests : BunitContext
             switch (path)
             {
                 case "/" + LocalizationRoutes.Base:
-                    return Json(new LocalizationDto("US", "USD", "en", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT",
+                    return Json(new LocalizationDto("US", "USD", "en", "America/New_York", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT",
                         [new LanguageDto("ko", 1), new LanguageDto("en", 2)],
                         [new CurrencyDto("USD", "미국 달러", 2, "US"), new CurrencyDto("KRW", "원", 0, "KR")], [], []));
                 case "/" + CompanyRoutes.Base when request.Method == HttpMethod.Put:
@@ -378,7 +394,7 @@ public class CompanyScreenTests : BunitContext
         }
 
         private CompanyDto Company(string name) =>
-            new(name, null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", "WITH_SHIPMENT", HasLogo, DateTimeOffset.UnixEpoch);
+            new(name, null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York", "WITH_SHIPMENT", HasLogo, DateTimeOffset.UnixEpoch);
 
         private static HttpResponseMessage Json<T>(T body) => new(HttpStatusCode.OK) { Content = JsonContent.Create(body, options: Web) };
     }

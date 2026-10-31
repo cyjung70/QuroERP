@@ -3,6 +3,7 @@ using FluentAssertions;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Common;
 using QuroErp.Application.Tests.Bc.Localization;
+using QuroErp.Application.Tests.Common;
 using QuroErp.Application.Tests.Common.Auth;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Domain.Bc.Companies;
@@ -18,14 +19,15 @@ public class CompanyServiceTests
 
     private static readonly UpdateCompanyRequest Request = new(
         "Quro", "1 Main St", null, null, "010-0000-0000", null, "220-81-62517", "Kim", "info@quro.kr", "Service", "Software",
-        "KR", "KRW", "ko", "WITH_SHIPMENT", Read);
+        "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", Read);
 
     private readonly FakeCompanies _companies = new();
     private readonly FakeLocalizationRepository _localization = new();
     private readonly FakeUnitOfWorkFactory _uow = new();
+    private readonly FakeBusinessClock _clock = new();
     private readonly CompanyService _service;
 
-    public CompanyServiceTests() => _service = new CompanyService(_companies, _localization, _uow);
+    public CompanyServiceTests() => _service = new CompanyService(_companies, _localization, _uow, _clock);
 
     [Fact, Trait("Id", "BC-UT-301")]
     public async Task Get_WithoutACompany_IsNotFoundBcE006()
@@ -46,6 +48,28 @@ public class CompanyServiceTests
         saved.BusinessType.Should().Be("Service");
         saved.UpdatedAt.Should().BeAfter(Read);
         _uow.Commits.Should().Be(1);
+    }
+
+    [Fact, Trait("Id", "BC-UT-318"), Trait("Rule", "BC-BR-318")]
+    public async Task Update_SavesTheTimeZone_AndResetsTheBusinessClock()
+    {
+        var saved = await _service.UpdateAsync(Request with { TimeZone = "America/New_York" }, "kim", None);
+
+        saved.TimeZone.Should().Be("America/New_York");
+        _clock.Resets.Should().Be(1);
+    }
+
+    [Theory, Trait("Id", "BC-UT-318"), Trait("Rule", "BC-BR-318")]
+    [InlineData("Mars/Olympus")]
+    [InlineData("Korea Standard Time")]
+    [InlineData(null)]
+    public async Task Update_WithAnUnknownTimeZone_Is400BcE318_AndWritesNothing(string? timeZone)
+    {
+        var act = () => _service.UpdateAsync(Request with { TimeZone = timeZone }, "kim", None);
+
+        (await act.Should().ThrowAsync<BadRequestException>()).Which.Code.Should().Be(CompanyRules.TimeZoneCode);
+        _uow.Commits.Should().Be(0);
+        _clock.Resets.Should().Be(0);
     }
 
     [Fact, Trait("Id", "BC-UC-007-T02")]
@@ -156,7 +180,7 @@ public class CompanyServiceTests
     private sealed class FakeCompanies : ICompanyRepository
     {
         public CompanyDto? Company { get; set; } = new(
-            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "WITH_SHIPMENT", false, Read);
+            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Read);
 
         public bool HasTransactions { get; set; }
 
@@ -178,7 +202,7 @@ public class CompanyServiceTests
             }
             Company = new CompanyDto(
                 fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.RegisterNo, fields.Represent,
-                fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!,
+                fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!, fields.TimeZone!,
                 fields.BillingMode!, Company.HasLogo, Company.UpdatedAt.AddMinutes(1));
             return Task.FromResult(true);
         }

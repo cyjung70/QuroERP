@@ -99,6 +99,7 @@
     private QuroSingleForm<UserModel>? _form;
     private IReadOnlyList<CodeItemDto> _roles = [];
     private IReadOnlyList<CodeItemDto> _languages = [];
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
     private bool _canEdit;
     private bool _ready;
     private bool _lookupOpen;
@@ -126,6 +127,7 @@
             // BC-BR-403: only languages in use can be chosen
             var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
             _languages = localization.Languages.Select(l => new CodeItemDto(l.LangCode, LanguageName(l.LangCode))).ToList();
+            _zone = CompanyTime.Find(localization.TimeZone);
         }
         catch (ApiProblemException e)
         {
@@ -276,7 +278,8 @@
 
     private static ApiProblemException Problem(string code, params string[] args) => new(new ApiProblem(400, code, args));
 
-    private static string? Format(DateTimeOffset? value) => value?.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+    // In the company time zone (BC-BR-318)
+    private string? Format(DateTimeOffset? value) => value is { } at ? CompanyTime.Format(at, _zone) : null;
 
     private string LanguageName(string langCode) =>
         L[$"Common.Language.{langCode}"] is { ResourceNotFound: false } name ? name.Value : langCode;

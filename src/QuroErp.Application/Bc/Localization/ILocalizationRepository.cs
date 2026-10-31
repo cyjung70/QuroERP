@@ -2,8 +2,8 @@ using System.Data;
 
 namespace QuroErp.Application.Bc.Localization;
 
-/// <summary>Country values of the single company (bc_company, BC-BR-312~314, BC-BR-543).</summary>
-public sealed record CompanyLocalizationRow(string CountryCode, string BaseCurrencyCode, string DefaultLangCode, string TaxCalcMode);
+/// <summary>Country values of the single company (bc_company, BC-BR-312~314, BC-BR-318, BC-BR-543).</summary>
+public sealed record CompanyLocalizationRow(string CountryCode, string BaseCurrencyCode, string DefaultLangCode, string TaxCalcMode, string TimeZone);
 
 /// <summary>sys_language row.</summary>
 public sealed record LanguageRow(string LangCode, int SortOrder, bool UseYn);

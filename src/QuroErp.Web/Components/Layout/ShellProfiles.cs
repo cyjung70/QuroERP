@@ -7,7 +7,8 @@ using QuroErp.Web.Common;
 namespace QuroErp.Web.Components.Layout;
 
 /// <summary>What the app shell shows for the signed-in user: /me (menus, company, role) and the languages to pick from.</summary>
-public sealed record ShellProfile(MeResponse Me, IReadOnlyList<string> Languages);
+/// <param name="TimeZone">Company time zone (IANA) for the times the static pages show, e.g. the previous sign-in.</param>
+public sealed record ShellProfile(MeResponse Me, IReadOnlyList<string> Languages, string TimeZone);
 
 /// <summary>
 /// Reads the shell profile once per page load and keeps it for the session (app-shell.md 3 "데이터"). A full load or a browser
@@ -56,11 +57,11 @@ public sealed class ShellProfileLoader(
             var me = await authApi.GetMeAsync(token, cancellationToken);
             // JSON leaves a missing list null; the shell then shows an empty menu instead of failing the page
             me = me with { Menus = me.Menus ?? [] };
-            var inUse = (await localization.GetAsync(uiLanguage, cancellationToken)).Languages
-                .OrderBy(l => l.SortOrder).Select(l => l.LangCode).ToList();
+            var localized = await localization.GetAsync(uiLanguage, cancellationToken);
+            var inUse = localized.Languages.OrderBy(l => l.SortOrder).Select(l => l.LangCode).ToList();
             // Only languages the screens have resources for can be picked (WebLocalization ignores the rest)
             var languages = inUse.Where(WebLocalization.Cultures.Contains).ToList();
-            var profile = new ShellProfile(me, languages.Count > 0 ? languages : WebLocalization.Cultures);
+            var profile = new ShellProfile(me, languages.Count > 0 ? languages : WebLocalization.Cultures, localized.TimeZone);
             cache.Set(key, profile, new MemoryCacheEntryOptions { SlidingExpiration = CacheFor });
             return profile;
         }
