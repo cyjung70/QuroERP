@@ -1,4 +1,5 @@
-@* Combo box or radio buttons over (code, name) options (codes.md "화면"). The value is the code. *@
+@* Combo box or radio buttons over (code, name) options (codes.md "화면"). The value is the code.
+   Radio options are cards; the selected one has the brand border and tint (screen-templates.md 1). *@
 @using QuroErp.Contracts.Common.Codes
 @inherits QuroInputBase<string>
 
@@ -13,7 +14,7 @@
         </legend>
         @foreach (var option in Options)
         {
-            <label>
+            <label class="@(option.Code == Value ? "quro-radio-card quro-radio-card-selected" : "quro-radio-card")">
                 <input type="radio" name="@InputId" value="@option.Code" checked="@(option.Code == Value)" disabled="@IsLocked"
                        data-testid="@(TestId is null ? null : $"{TestId}-{option.Code.ToLowerInvariant()}")"
                        @onchange="() => SetValueAsync(option.Code)" />

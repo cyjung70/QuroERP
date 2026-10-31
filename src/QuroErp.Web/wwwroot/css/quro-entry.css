@@ -19,6 +19,22 @@
 .quro-span-2 { grid-column: span 2; }
 .quro-span-4 { grid-column: span 4; }
 
+/* S screens: 4-column field grid, tabs, read-only sub-grid and radio cards (screen-templates.md 1) */
+.quro-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-items: end; align-content: start; }
+.quro-form[hidden], .quro-tab-panel[hidden] { display: none; }
+.quro-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--q-line); }
+.quro-tab { height: var(--q-control-h); padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none;
+    color: var(--q-ink-muted); font: 500 13px/20px var(--q-font-sans); cursor: pointer; }
+.quro-tab[aria-selected=true] { color: var(--q-brand); border-bottom-color: var(--q-brand); }
+.quro-subgrid-note { margin: 8px 0 0; color: var(--q-ink-muted); font: 400 12px/16px var(--q-font-sans); }
+.quro-grid tr.quro-grid-total td { background: var(--q-surface-header); font-weight: 600; }
+.quro-grid tr.quro-row-openable { cursor: pointer; }
+.quro-radio { display: flex; flex-wrap: wrap; gap: 8px; min-inline-size: 0; margin: 0; padding: 0; border: 0; }
+.quro-radio legend { flex-basis: 100%; padding: 0; }
+.quro-radio-card { display: flex; align-items: center; gap: 8px; min-height: var(--q-control-h); box-sizing: border-box; padding: 0 12px;
+    border: 1px solid var(--q-line); border-radius: var(--q-radius-input); background: var(--q-surface-1); color: var(--q-ink); cursor: pointer; }
+.quro-radio-card-selected { border-color: var(--q-brand); background: var(--q-brand-tint); }
+
 /* Grids: header row, read-only cells, row states (5) */
 .quro-grid table { border-collapse: collapse; }
 .quro-grid th { background: var(--q-surface-header); font: 600 12px/16px var(--q-font-sans); text-align: left; }

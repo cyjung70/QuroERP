@@ -23,7 +23,7 @@ public class SampleScreenTests : ScreenContext
 
         page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
             .Should().Equal("single-toolbar-search", "single-toolbar-new", "single-toolbar-save", "single-toolbar-delete",
-                "single-toolbar-deactivate", "single-toolbar-activate");
+                "single-toolbar-copy", "single-toolbar-deactivate", "single-toolbar-activate");
     }
 
     [Fact]

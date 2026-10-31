@@ -43,7 +43,8 @@
                 var row = Rows.All[i];
                 @* Cells keep the column test id; the row index is on the row (quro-blazor rule) *@
                 <tr @key="row" class="@RowClass(row)" data-row-index="@i" aria-selected="@(EntryMode ? (row == SelectedRow ? "true" : "false") : null)"
-                    @onclick="@(EntryMode ? EventCallback.Factory.Create(this, () => SelectRowAsync(row)) : default)">
+                    @onclick="@(EntryMode ? EventCallback.Factory.Create(this, () => SelectRowAsync(row)) : default)"
+                    @ondblclick="@(OnRowDoubleClick.HasDelegate ? EventCallback.Factory.Create(this, () => OnRowDoubleClick.InvokeAsync(row.Item)) : default)">
                     @if (Editable)
                     {
                         <td class="quro-cell-readonly"><span class="quro-row-state" data-state="@StateCode(row.State)">@StateText(row.State)</span></td>
@@ -77,6 +78,12 @@
                 </tr>
             }
         </tbody>
+        @if (FooterRow is not null && Rows.All.Count > 0)
+        {
+            <tfoot>
+                <tr class="quro-grid-total" data-testid="@Id("total")">@FooterRow</tr>
+            </tfoot>
+        }
     </table>
     @if (Rows.All.Count == 0)
     {
@@ -131,6 +138,14 @@
 
     [Parameter]
     public TRow? Selected { get; set; }
+
+    /// <summary>Cells of a total row under the rows (display only), one td per column.</summary>
+    [Parameter]
+    public RenderFragment? FooterRow { get; set; }
+
+    /// <summary>Opens the row, e.g. the document of a transaction row (screen-templates.md 1).</summary>
+    [Parameter]
+    public EventCallback<TRow> OnRowDoubleClick { get; set; }
 
     /// <summary>Called after a row was deleted or restored, so the screen can update its state.</summary>
     [Parameter]
@@ -213,6 +228,7 @@
             ReferenceEquals(row.Item, Selected) || (EntryMode && row == SelectedRow) ? "quro-row-selected" : null,
             row.IsDeleted ? "quro-row-deleted" : null,
             IsLocked(row) ? "quro-row-locked" : null,
+            OnRowDoubleClick.HasDelegate ? "quro-row-openable" : null,
         }.Where(c => c is not null);
         return classes.Any() ? string.Join(' ', classes) : null;
     }

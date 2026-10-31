@@ -427,4 +427,22 @@
   <data name="Home.Link.Company" xml:space="preserve"><value>회사 정보</value></data>
   <data name="Home.NoPermission" xml:space="preserve"><value>이 화면을 열 권한이 없습니다.</value></data>
   <data name="Home.NotReady" xml:space="preserve"><value>2단계</value></data>
+  <data name="Common.BasicInfo" xml:space="preserve"><value>기본정보</value></data>
+  <data name="Common.CopyAsNew" xml:space="preserve"><value>복사해서 신규</value></data>
+  <data name="Common.Total" xml:space="preserve"><value>합계</value></data>
+  <data name="Samples.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Samples.Supply" xml:space="preserve"><value>조달 구분</value></data>
+  <data name="Samples.Supply.P" xml:space="preserve"><value>구매</value></data>
+  <data name="Samples.Supply.M" xml:space="preserve"><value>생산</value></data>
+  <data name="Samples.StockTab" xml:space="preserve"><value>창고별 재고</value></data>
+  <data name="Samples.TransactionsTab" xml:space="preserve"><value>거래내역</value></data>
+  <data name="Samples.Warehouse" xml:space="preserve"><value>창고</value></data>
+  <data name="Samples.OnHand" xml:space="preserve"><value>현재고</value></data>
+  <data name="Samples.Allocated" xml:space="preserve"><value>할당</value></data>
+  <data name="Samples.Available" xml:space="preserve"><value>가용</value></data>
+  <data name="Samples.StockNote" xml:space="preserve"><value>가용 = 현재고 - 할당.</value></data>
+  <data name="Samples.DocNo" xml:space="preserve"><value>문서 번호</value></data>
+  <data name="Samples.DocDt" xml:space="preserve"><value>일자</value></data>
+  <data name="Samples.TransactionsNote" xml:space="preserve"><value>행을 더블클릭하면 그 문서 화면이 열립니다.</value></data>
+  <data name="Samples.ConfirmDeactivate" xml:space="preserve"><value>이 품목을 사용 중지할까요?</value></data>
 </root>

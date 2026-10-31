@@ -29,5 +29,5 @@
     "샘플 `/samples/single`을 품목 배치 예(기본정보·창고별 재고·거래내역 탭, 메모리 데이터)로 바꾸고 bUnit 테스트: 탭 전환 후 변경 유지, 하위 그리드 읽기 전용, 복사해서 신규"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

@@ -33,9 +33,27 @@
     </Toolbar>
     <ChildContent>
         <CascadingValue Value="_form" IsFixed="true">
-            <div class="quro-panel quro-form" data-testid="@Id("header")">
+            @if (Tabs is not null)
+            {
+                @* The first tab is the saved fields; switching tabs keeps every input (screen-templates.md 1) *@
+                <div class="quro-tabs" role="tablist">
+                    @TabButton(QuroTabSet.FieldsId, FieldsTitle ?? L["Common.BasicInfo"])
+                    @foreach (var tab in _tabs.Items)
+                    {
+                        @TabButton(tab.Id, tab.Title)
+                    }
+                </div>
+            }
+            <div class="quro-panel quro-form" role="@(Tabs is null ? null : "tabpanel")" hidden="@(_tabs.Active != QuroTabSet.FieldsId)"
+                 data-testid="@Id("header")">
                 @Fields(_model)
             </div>
+            @if (Tabs is not null)
+            {
+                <CascadingValue Value="_tabs" IsFixed="true">
+                    @Tabs(_model)
+                </CascadingValue>
+            }
         </CascadingValue>
         @if (Actions is not null && !_form.IsNew && !ReadOnly)
         {
@@ -51,12 +69,24 @@
 
 @code {
     private readonly QuroFormContext _form = new();
+    private readonly QuroTabSet _tabs = new();
     private TModel _model = default!;
     private string _snapshot = "";
 
     /// <summary>Input fields of the record.</summary>
     [Parameter, EditorRequired]
     public RenderFragment<TModel> Fields { get; set; } = default!;
+
+    /// <summary>
+    /// Tabs after the saved fields (<see cref="QuroTab"/>), e.g. read-only sub-queries of the record. With tabs the
+    /// fields become the first tab; save still saves once, whatever tab is open.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<TModel>? Tabs { get; set; }
+
+    /// <summary>Title of the fields tab when there are <see cref="Tabs"/>; the default is <c>Common.BasicInfo</c>.</summary>
+    [Parameter]
+    public string? FieldsTitle { get; set; }
 
     /// <summary>Reads the record for the current search conditions; null when there is none.</summary>
     [Parameter, EditorRequired]
@@ -148,6 +178,39 @@
     }
 
     protected override void OnParametersSet() => _form.ReadOnly = ReadOnly;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Tabs register while the first render runs, so their buttons appear in the second one
+        if (firstRender && _tabs.Items.Count > 0)
+        {
+            StateHasChanged();
+        }
+        // The open tab reads its data when it is opened or shows another record
+        if (!_form.IsNew && _tabs.TakeActiveToLoad() is { } tab)
+        {
+            await RunAsync(tab.LoadTab!);
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Starts a new record from the open one (copy as new, screen-templates.md 1). <paramref name="copy"/> returns the
+    /// values to keep with the key cleared. The copy counts as unsaved changes until it is saved.
+    /// </summary>
+    public void CopyAsNew(Func<TModel, TModel> copy)
+    {
+        if (_form.IsNew || ReadOnly)
+        {
+            return;
+        }
+        var copied = copy(_model);
+        StartNew();
+        _model = copied;
+        Error = null;
+        Notice = null;
+        StateHasChanged();
+    }
 
     /// <summary>Runs the search, e.g. after the screen filled the search conditions from a lookup dialog.</summary>
     public async Task SearchAsync()
@@ -251,6 +314,7 @@
         _model = Create();
         _form.IsNew = true;
         _snapshot = Snapshot.Of(_model);
+        _tabs.NextRecord();
     }
 
     private void SetLoaded(TModel model)
@@ -258,5 +322,12 @@
         _model = model;
         _form.IsNew = false;
         _snapshot = Snapshot.Of(_model);
+        _tabs.NextRecord();
     }
+
+    private void OpenTab(string id) => _tabs.Active = id;
+
+    private RenderFragment TabButton(string id, string title) =>
+        @<button type="button" role="tab" class="quro-tab" aria-selected="@(_tabs.Active == id ? "true" : "false")" disabled="@Busy"
+                 data-testid="@Id($"tab-{id}")" @onclick="() => OpenTab(id)">@title</button>;
 }
