@@ -1,10 +1,13 @@
 @* Combo box or radio buttons over (code, name) options (codes.md "화면"). The value is the code.
    Radio options are cards; the selected one has the brand border and tint (screen-templates.md 1). *@
+@using Quro.Grid.Data
 @using QuroErp.Contracts.Common.Codes
 @inherits QuroInputBase<string>
+@inject IStringLocalizer<SharedResource> L
 
 @if (Radio)
 {
+    @* Quro.UI has no radio buttons yet: a bound field keeps these on the data set column (TODO(QuroGrid-R2)) *@
     <fieldset class="@FieldClass("quro-radio")" data-testid="@TestId" aria-required="@(IsRequiredNow ? "true" : null)">
         <legend class="@(HideLabel ? "quro-visually-hidden" : null)">
             @Label@if (IsRequiredNow)
@@ -14,14 +17,22 @@
         </legend>
         @foreach (var option in Options)
         {
-            <label class="@(option.Code == Value ? "quro-radio-card quro-radio-card-selected" : "quro-radio-card")">
-                <input type="radio" name="@InputId" value="@option.Code" checked="@(option.Code == Value)" disabled="@IsLocked"
+            <label class="@(option.Code == Current ? "quro-radio-card quro-radio-card-selected" : "quro-radio-card")">
+                <input type="radio" name="@InputId" value="@option.Code" checked="@(option.Code == Current)" disabled="@IsLocked"
                        data-testid="@(TestId is null ? null : $"{TestId}-{option.Code.ToLowerInvariant()}")"
                        @onchange="() => SetValueAsync(option.Code)" />
                 @option.Name
             </label>
         }
     </fieldset>
+}
+else if (Bound)
+{
+    @* Quro.UI combo box over a code data set; test id on the field (TODO(QuroGrid-R3)) *@
+    <div class="@FieldClass()" data-testid="@TestId">
+        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @Form!.Data!.ComboBox(Field!, Codes, IsLocked, L)
+    </div>
 }
 else
 {
@@ -44,14 +55,37 @@ else
 }
 
 @code {
+    private IReadOnlyList<CodeItemDto>? _loadedOptions;
+    private QuroDataSet<CodeItemDto> _optionSet = new();
+
     [Parameter]
     public IReadOnlyList<CodeItemDto> Options { get; set; } = [];
+
+    /// <summary>
+    /// The options as a shared code data set (<see cref="QuroErp.Web.Common.CodeDataSets"/>) for the bound combo box.
+    /// Without it the combo box reads <see cref="Options"/>.
+    /// </summary>
+    [Parameter]
+    public QuroDataSet<CodeItemDto>? OptionsSource { get; set; }
 
     /// <summary>Radio buttons instead of a combo box.</summary>
     [Parameter]
     public bool Radio { get; set; }
 
-    public override bool IsEmpty => string.IsNullOrEmpty(Value);
+    public override bool IsEmpty => string.IsNullOrEmpty(Current);
+
+    private QuroDataSet<CodeItemDto> Codes => OptionsSource ?? _optionSet;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Bound && OptionsSource is null && !ReferenceEquals(_loadedOptions, Options))
+        {
+            _loadedOptions = Options;
+            _optionSet = new QuroDataSet<CodeItemDto>();
+            _optionSet.Load(Options);
+        }
+    }
 
     private Task OnChangeAsync(ChangeEventArgs e) =>
         SetValueAsync(e.Value?.ToString() is { Length: > 0 } code ? code : null);

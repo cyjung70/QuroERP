@@ -1,14 +1,26 @@
 @using System.Globalization
+@using QuroErp.Web.Common
 @inherits QuroInputBase<DateOnly?>
 
-<div class="@FieldClass()">
-    <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
-    <input id="@InputId" type="date" value="@Value?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" readonly="@IsLocked"
-           aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
-</div>
+@if (Bound)
+{
+    @* Quro.UI date picker in the user language's date pattern (i18n.md "숫자·날짜"); test id on the field (TODO(QuroGrid-R3)) *@
+    <div class="@FieldClass()" data-testid="@TestId">
+        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @Form!.Data!.DatePicker(Field!, DisplayCulture.Current, IsLocked)
+    </div>
+}
+else
+{
+    <div class="@FieldClass()">
+        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        <input id="@InputId" type="date" value="@Value?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" readonly="@IsLocked"
+               aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+    </div>
+}
 
 @code {
-    public override bool IsEmpty => Value is null;
+    public override bool IsEmpty => Current is null;
 
     private Task OnChangeAsync(ChangeEventArgs e) =>
         SetValueAsync(DateOnly.TryParseExact(e.Value?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)

@@ -1,6 +1,7 @@
 @using System.Globalization
 @inherits QuroInputBase<decimal?>
 
+@* Quro.UI has no number box yet: a bound field keeps this input on the data set column (TODO(QuroGrid-R1)) *@
 <div class="@FieldClass()">
     <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
     <input id="@InputId" type="number" step="@Step" value="@Text" readonly="@IsLocked"
@@ -12,13 +13,13 @@
     [Parameter]
     public int? Decimals { get; set; }
 
-    public override bool IsEmpty => Value is null;
+    public override bool IsEmpty => Current is null;
 
     private string Step => Decimals is { } d ? (1m / (decimal)Math.Pow(10, d)).ToString(CultureInfo.InvariantCulture) : "any";
 
     private string? Text => Decimals is { } d
-        ? Value?.ToString("F" + d.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)
-        : Value?.ToString(CultureInfo.InvariantCulture);
+        ? Current?.ToString("F" + d.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)
+        : Current?.ToString(CultureInfo.InvariantCulture);
 
     private Task OnChangeAsync(ChangeEventArgs e) =>
         SetValueAsync(decimal.TryParse(e.Value?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var number)

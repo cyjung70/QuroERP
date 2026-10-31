@@ -35,6 +35,8 @@ public static class WebApiClients
         services.AddHttpClient<CodeMinorApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CodeMajorApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CurrencyApiClient>(http => http.BaseAddress = apiBaseUrl);
+        // Code lists for combo boxes, read once per circuit
+        services.AddScoped<CodeDataSets>();
         // Company time zone for every shown time (BC-BR-318)
         services.AddScoped(CompanyTime.Create);
         return services;

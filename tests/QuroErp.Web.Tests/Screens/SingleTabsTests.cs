@@ -20,15 +20,16 @@ public class SingleTabsTests : ScreenContext
         page.Find("[data-testid=single-toolbar-search]").Click();
     }
 
+    // A Quro.UI control has the test id on its field, a plain input on itself (TODO(QuroGrid-R3))
     private static string? Value(IRenderedComponent<SampleSingle> page, string testId) =>
-        page.Find($"[data-testid={testId}]").GetAttribute("value");
+        page.Find($"[data-testid={testId}] input, input[data-testid={testId}]").GetAttribute("value");
 
     [Fact, Trait("Id", "CORE-041-WT-01")]
     public void Tabs_SwitchingKeepsTheChange_AndSaveStoresItOnce()
     {
         var page = Render<SampleSingle>();
         Search(page, "A100");
-        page.Find("[data-testid=single-header-name]").Change("Apricot");
+        page.Find("[data-testid=single-header-name] input").Change("Apricot");
 
         page.Find("[data-testid=single-tab-stock]").Click();
         page.Find("[data-testid=single-header]").HasAttribute("hidden").Should().BeTrue();
@@ -108,14 +109,14 @@ public class SingleTabsTests : ScreenContext
 
         page.Find("[data-testid=single-doc-no]").ClassList.Should().Contain("quro-entry-new");
         Value(page, "single-header-code").Should().BeNullOrEmpty();
-        page.Find("[data-testid=single-header-code]").HasAttribute("readonly").Should().BeFalse();
+        page.Find("[data-testid=single-header-code] input").HasAttribute("readonly").Should().BeFalse();
         Value(page, "single-header-name").Should().Be("Apple");
         page.Find("[data-testid=single-audit]").TextContent.Trim().Should().BeEmpty();
         Confirm.Answer = false;
         page.Find("[data-testid=single-toolbar-search]").Click();
         Confirm.Questions.Should().Equal(Unsaved);
 
-        page.Find("[data-testid=single-header-code]").Change("C300");
+        page.Find("[data-testid=single-header-code] input").Change("C300");
         page.Find("[data-testid=single-toolbar-save]").Click();
         Store.FindItem("C300")!.Name.Should().Be("Apple");
         Store.FindItem("A100").Should().NotBeNull();
@@ -143,7 +144,7 @@ public class SingleTabsTests : ScreenContext
         var page = Render<SampleSingle>();
 
         page.Find("[data-testid=single-header]").ClassList.Should().Contain("quro-form");
-        page.Find("[data-testid=single-header-name]").Closest(".quro-field")!.ClassList.Should().Contain("quro-span-2");
+        page.Find("[data-testid=single-header-name] input").Closest(".quro-field")!.ClassList.Should().Contain("quro-span-2");
         page.Find("[data-testid=single-header-remarks]").Closest(".quro-field")!.ClassList.Should().Contain("quro-span-4");
         page.Find("[data-testid=single-header-supply-p]").ParentElement!.ClassList.Should().Contain("quro-radio-card-selected");
 

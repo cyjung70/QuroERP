@@ -30,6 +30,9 @@ public interface IQuroField
 {
     string Label { get; }
 
+    /// <summary>The data set column the input is bound to, or null for an input bound with @bind-Value.</summary>
+    string? Field => null;
+
     bool IsRequiredNow { get; }
 
     bool IsEmpty { get; }
@@ -48,10 +51,40 @@ public sealed class QuroFormContext
     /// <summary>The user may only read (no Full Access, BC-BR-214): every input is locked.</summary>
     public bool ReadOnly { get; internal set; }
 
+    /// <summary>The record as a one-row data set (S forms); inputs with a <c>Field</c> bind to it. Null in other forms.</summary>
+    public QuroFormData? Data { get; internal set; }
+
+    /// <summary>
+    /// Raised when the record, its values or the lock state change. Bound inputs have no callback parameter, so the form
+    /// drawing again does not draw them; they draw on this instead.
+    /// </summary>
+    public event Action? Changed;
+
+    internal void NotifyChanged() => Changed?.Invoke();
+
     internal void Register(IQuroField field) => _fields.Add(field);
 
     internal void Unregister(IQuroField field) => _fields.Remove(field);
 
     /// <summary>The first required input that is empty, or null.</summary>
     public IQuroField? FirstMissing() => _fields.FirstOrDefault(f => f.IsRequiredNow && f.IsEmpty);
+
+    /// <summary>
+    /// Sets the required columns of the bound inputs as they are now. NewOnly inputs stop being required once the record is
+    /// loaded, which does not always set their parameters again.
+    /// </summary>
+    internal void SyncRequired()
+    {
+        foreach (var field in _fields)
+        {
+            if (Data is not null && field.Field is { } column)
+            {
+                Data.Require(column, field.IsRequiredNow);
+            }
+        }
+    }
+
+    /// <summary>The input bound to a data set column, for the label in a validation message.</summary>
+    public IQuroField? Find(string field) =>
+        _fields.FirstOrDefault(f => string.Equals(f.Field, field, StringComparison.OrdinalIgnoreCase));
 }
