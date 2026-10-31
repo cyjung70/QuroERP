@@ -88,7 +88,6 @@
     private async Task<IReadOnlyList<CurrencyRow>> LoadAsync() =>
         (await Api.SearchAsync(Lang, CancellationToken.None)).Select(c => CurrencyRow.From(c, _languages)).ToList();
 
-    // TODO(Harness): the API does not yet block deleting the base currency or a currency that documents use (TASK-BC-051)
     private Task SaveAsync(BatchChanges<CurrencyRow> changes) => Api.SaveAsync(CurrencyRow.ToRequest(changes), Lang, CancellationToken.None);
 
     private CurrencyRow NewRow() => CurrencyRow.New(_languages);

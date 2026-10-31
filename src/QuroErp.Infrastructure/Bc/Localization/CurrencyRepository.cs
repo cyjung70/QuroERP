@@ -46,17 +46,13 @@ internal sealed partial class CurrencyRepository : ICurrencyRepository
         .Select(r => new CurrencyRecord(r.Id, r.CurrencyCode, r.Decimals, r.CountryCode, r.UseYn, Utc(r.UpdatedAt)))
         .ToList();
 
-    public async Task<IReadOnlySet<string>> FindUsedByDocumentsAsync(
-        IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken)
-    {
-        if (currencyCodes.Count == 0 || CurrencyRules.DocumentColumns.Count == 0)
-        {
-            return new HashSet<string>();
-        }
-        return (await transaction.Connection!.QueryAsync<string>(new CommandDefinition(
-            UsedSql(CurrencyRules.DocumentColumns), new { Codes = currencyCodes.ToArray() }, transaction, cancellationToken: cancellationToken)))
-            .ToHashSet(StringComparer.Ordinal);
-    }
+    public Task<IReadOnlySet<string>> FindUsedByDocumentsAsync(
+        IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        FindUsedAsync(currencyCodes, CurrencyRules.DocumentColumns, transaction, cancellationToken);
+
+    public Task<IReadOnlySet<string>> FindUsedByPartnersAsync(
+        IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        FindUsedAsync(currencyCodes, CurrencyRules.PartnerColumns, transaction, cancellationToken);
 
     public Task<long> InsertAsync(
         string currencyCode, CurrencyFields fields, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -95,8 +91,20 @@ internal sealed partial class CurrencyRepository : ICurrencyRepository
             ? Task.CompletedTask
             : transaction.Connection!.ExecuteAsync(new CommandDefinition(Delete, new { Ids = ids.ToArray() }, transaction, cancellationToken: cancellationToken));
 
+    private static async Task<IReadOnlySet<string>> FindUsedAsync(
+        IReadOnlyCollection<string> currencyCodes, IReadOnlyList<CurrencyColumn> columns, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (currencyCodes.Count == 0 || columns.Count == 0)
+        {
+            return new HashSet<string>();
+        }
+        return (await transaction.Connection!.QueryAsync<string>(new CommandDefinition(
+            UsedSql(columns), new { Codes = currencyCodes.ToArray() }, transaction, cancellationToken: cancellationToken)))
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
     /// <summary>
-    /// One SELECT per document column. Table and column names come only from the Domain list, never from a request, and are checked
+    /// One SELECT per column. Table and column names come only from the Domain list, never from a request, and are checked
     /// against a plain identifier pattern before they go into the SQL; the codes are a parameter.
     /// </summary>
     private static string UsedSql(IEnumerable<CurrencyColumn> columns) =>

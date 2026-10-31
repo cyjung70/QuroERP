@@ -10,7 +10,7 @@ using QuroErp.Domain.Common.I18n;
 
 namespace QuroErp.Application.Bc.Localization;
 
-/// <summary>Currency management (BC-UC-026, BC-BR-404, BC-BR-411, BC-BR-428, BC-BR-312).</summary>
+/// <summary>Currency management (BC-UC-026, BC-BR-404, BC-BR-411, BC-BR-416, BC-BR-428, BC-BR-312).</summary>
 public sealed class CurrencyService(
     ICurrencyRepository currencies, ITranslationRepository translations, ILocalizationRepository localization, IUnitOfWorkFactory unitOfWork)
 {
@@ -31,7 +31,10 @@ public sealed class CurrencyService(
     /// Returns every currency after the save, with names in langCode.
     /// </summary>
     /// <exception cref="DomainException">422 BC-E-411, BC-E-428, BC-E-404, BC-E-405 or BC-E-312.</exception>
-    /// <exception cref="ConflictException">409 BC-E-411 or BC-E-428 when documents use a currency whose decimals or country change.</exception>
+    /// <exception cref="ConflictException">
+    /// 409 BC-E-411 or BC-E-428 when documents use a currency whose decimals or country change; 409 BC-E-416 when a deleted currency is
+    /// the base currency or documents or partners use it.
+    /// </exception>
     /// <exception cref="ConcurrencyException">409 Common-E-004 when a row changed after it was read.</exception>
     public async Task<IReadOnlyList<CurrencyMasterDto>> SaveAsync(
         BatchRequest<CurrencySaveRow, CurrencyKey> request, string? langCode, string updatedBy, CancellationToken cancellationToken)
@@ -95,7 +98,19 @@ public sealed class CurrencyService(
                 throw new ConflictException(blocked.Error, blocked.Code);
             }
         }
-        // TODO(Harness): block deleting the base currency or a currency documents use, with the error code Harness defines
+
+        // BC-BR-416: checked before anything is deleted, so one blocked row saves nothing
+        var deletedCodes = deleted.Select(d => stored[d.Id].CurrencyCode).ToList();
+        if (deletedCodes.Count > 0)
+        {
+            var used = (await currencies.FindUsedByDocumentsAsync(deletedCodes, uow.Transaction, cancellationToken))
+                .Union(await currencies.FindUsedByPartnersAsync(deletedCodes, uow.Transaction, cancellationToken))
+                .ToHashSet(StringComparer.Ordinal);
+            if (CurrencyRules.FirstUndeletable(deletedCodes, company?.BaseCurrencyCode, used) is { } undeletable)
+            {
+                throw new ConflictException(CurrencyRules.InUseCode, undeletable);
+            }
+        }
 
         // Deletes first: a new row may reuse a deleted code
         await currencies.DeleteAsync(deletedIds, uow.Transaction, cancellationToken);

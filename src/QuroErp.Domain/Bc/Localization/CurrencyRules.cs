@@ -11,10 +11,10 @@ public sealed record CurrencyFields(int Decimals, string? CountryCode, bool UseY
 /// <summary>A stored currency as the rules see it.</summary>
 public sealed record StoredCurrency(string CurrencyCode, int Decimals, string? CountryCode);
 
-/// <summary>A document column that stores currency codes.</summary>
+/// <summary>A document or partner column that stores currency codes.</summary>
 public sealed record CurrencyColumn(string Table, string Column);
 
-/// <summary>Currency master rules (BC-BR-404, BC-BR-411, BC-BR-412, BC-BR-428, BC-BR-312). Every error names the currency code.</summary>
+/// <summary>Currency master rules (BC-BR-404, BC-BR-411, BC-BR-412, BC-BR-416, BC-BR-428, BC-BR-312). Every error names the currency code.</summary>
 public static partial class CurrencyRules
 {
     /// <summary>Invalid code or decimals (422), or decimals changed while documents use the currency (409). Arg: currency code.</summary>
@@ -63,11 +63,27 @@ public static partial class CurrencyRules
         ["UYW"] = 4,
     };
 
+    /// <summary>The base currency or a currency in use cannot be deleted (BC-BR-416). Arg: currency code.</summary>
+    public const string InUseCode = "BC-E-416";
+
     /// <summary>
-    /// Document columns that store a currency code. A currency stored in any of them is used by documents: its decimals and country
-    /// cannot change. Add a column here when a document table gets currency_code.
+    /// Document columns that store a currency code (BC-BR-412). A currency stored in any of them is used by documents: its decimals
+    /// and country cannot change and it cannot be deleted. Add a column here when a document table gets currency_code.
+    /// bc_exchange_rate has no currency column yet; the task that adds one adds it to the delete check (BC-BR-416).
     /// </summary>
-    public static readonly IReadOnlyList<CurrencyColumn> DocumentColumns = [new("sd_shipment", "currency_code")];
+    public static readonly IReadOnlyList<CurrencyColumn> DocumentColumns =
+    [
+        new("sd_sales_order", "currency_code"),
+        new("sd_shipment", "currency_code"),
+        new("sd_sales_invoice", "currency_code"),
+        new("sd_ar_receipt", "currency_code"),
+        new("mm_purchase_order", "currency_code"),
+        new("mm_goods_receipt", "currency_code"),
+        new("mm_ap_payment", "currency_code"),
+    ];
+
+    /// <summary>Partner trade currencies (BC-BR-415). A currency stored here cannot be deleted; its decimals and country may change.</summary>
+    public static readonly IReadOnlyList<CurrencyColumn> PartnerColumns = [new("bc_customer", "currency_code"), new("bc_vendor", "currency_code")];
 
     /// <summary>BC-BR-411: trimmed upper-case ISO 4217 code.</summary>
     /// <exception cref="DomainException">BC-E-411 when it is not 3 letters.</exception>
@@ -121,6 +137,13 @@ public static partial class CurrencyRules
         fields.Decimals != stored.Decimals ? InvalidCode
         : !string.Equals(fields.CountryCode, stored.CountryCode, StringComparison.Ordinal) ? InvalidCountryCode
         : null;
+
+    /// <summary>
+    /// BC-BR-416: the first deleted code that is the base currency or that documents or partners use, for a 409 BC-E-416, or null
+    /// when every deleted currency may go. Such a currency is set not in use instead.
+    /// </summary>
+    public static string? FirstUndeletable(IEnumerable<string> deletedCodes, string? baseCurrencyCode, IReadOnlySet<string> usedCodes) =>
+        deletedCodes.FirstOrDefault(code => code == baseCurrencyCode || usedCodes.Contains(code));
 
     /// <summary>BC-BR-312: the company base currency stays in use.</summary>
     /// <exception cref="DomainException">BC-E-312 with the code.</exception>

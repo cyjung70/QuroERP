@@ -142,6 +142,7 @@
   <data name="BC-E-403" xml:space="preserve"><value>Language '{0}' is the company default language and must stay in use.</value></data>
   <data name="BC-E-411" xml:space="preserve"><value>Currency '{0}' is not valid. Use 3 upper-case letters and 0 to 4 decimals.</value></data>
   <data name="BC-E-412" xml:space="preserve"><value>Currency '{0}' is not in use.</value></data>
+  <data name="BC-E-416" xml:space="preserve"><value>Currency '{0}' is the base currency or is used by documents or partners, so it cannot be deleted. Set it not in use instead.</value></data>
   <data name="BC-E-404" xml:space="preserve"><value>Enter the English (en) name of '{0}'.</value></data>
   <data name="BC-E-428" xml:space="preserve"><value>The country of currency '{0}' is not valid. Use 2 upper-case letters or leave it empty. The country of a currency that documents use cannot change.</value></data>
   <data name="BC-E-422" xml:space="preserve"><value>{0} decimals are out of range. Unit price allows 0 to 6, quantity 0 to 4.</value></data>

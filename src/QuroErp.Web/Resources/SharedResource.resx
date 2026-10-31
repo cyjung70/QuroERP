@@ -142,6 +142,7 @@
   <data name="BC-E-403" xml:space="preserve"><value>언어 '{0}'은(는) 회사 기본 언어라서 사용 안 함으로 바꿀 수 없습니다.</value></data>
   <data name="BC-E-411" xml:space="preserve"><value>통화 '{0}'이(가) 올바르지 않습니다. 통화 코드는 영문 대문자 3자, 자릿수는 0~4입니다.</value></data>
   <data name="BC-E-412" xml:space="preserve"><value>통화 '{0}'은(는) 사용 중인 통화가 아닙니다.</value></data>
+  <data name="BC-E-416" xml:space="preserve"><value>통화 '{0}'은(는) 기준 통화이거나 문서·거래처가 쓰고 있어 삭제할 수 없습니다. 사용 안 함으로 바꾸세요.</value></data>
   <data name="BC-E-404" xml:space="preserve"><value>'{0}'의 영어(en) 이름을 입력하세요.</value></data>
   <data name="BC-E-428" xml:space="preserve"><value>통화 '{0}'의 국가가 올바르지 않습니다. 국가 코드는 영문 대문자 2자이거나 비워 둡니다. 문서가 있는 통화의 국가는 바꿀 수 없습니다.</value></data>
   <data name="BC-E-422" xml:space="preserve"><value>{0} 자릿수가 범위를 벗어났습니다. 단가는 0~6, 수량은 0~4입니다.</value></data>

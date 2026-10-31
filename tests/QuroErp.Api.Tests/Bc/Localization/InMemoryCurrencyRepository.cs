@@ -51,6 +51,11 @@ public sealed class InMemoryCurrencyRepository : ICurrencyRepository
         IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlySet<string>>(currencyCodes.Where(_used.Contains).ToHashSet(StringComparer.Ordinal));
 
+    /// <summary>No partner trades in these currencies.</summary>
+    public Task<IReadOnlySet<string>> FindUsedByPartnersAsync(
+        IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlySet<string>>(new HashSet<string>(StringComparer.Ordinal));
+
     public Task<long> InsertAsync(string currencyCode, CurrencyFields fields, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         lock (_gate)
