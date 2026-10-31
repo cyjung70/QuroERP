@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-051",
+  "project": "core",
+  "title": "M·MM 화면 읽기 전용 권한: 막힌 버튼 비활성화·그리드 잠금",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/screens.md",
+    "docs/business-rules/BC/menu-role.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-040"
+  ],
+  "acceptance": [
+    "`QuroMultiGrid`·`QuroMasterMultiDetail`에 권한 매개변수 `CanWrite`(기본 true). 메뉴 Full Access가 없으면 화면이 `CanWrite=false`를 준다 (BC-BR-214). `QuroMultiGrid`의 `ReadOnly`는 목록형(화면 기능, screen-templates.md 2장)이라 권한에 쓰지 않는다",
+    "`CanWrite=false`면 신규·저장·삭제(행 삭제)와 저장하는 화면별 동작을 숨기지 않고 비활성화하고, 그리드는 편집·행 추가를 막는다. 조회·인쇄·엑셀은 그대로. 핸들러도 아무것도 하지 않는다",
+    "저장 기능이 아예 없는 목록형은 지금처럼 신규 외 저장 버튼을 그리지 않는다. 권한(`CanWrite`)과 화면 기능(`ReadOnly`·저장 핸들러 유무)을 섞지 않는다",
+    "이미 만든 M 화면(코드, 코드 그룹, 통화, 회사 메뉴, 역할 메뉴)은 지금 권한이 없으면 저장·신규 핸들러를 넘기지 않아 버튼을 숨긴다. 핸들러는 늘 넘기고 권한은 `CanWrite`로 준다",
+    "공통 커맨드바: `Busy` 동안 `ExtraCommands` 버튼도 비활성화된다 (화면이 따로 막지 않아도 되게 `fieldset disabled` 등 공통 처리)",
+    "bUnit: 읽기 권한 사용자는 M·MM 화면에서 신규·저장이 비활성, 그리드 편집 불가, 조회 가능. Full Access는 지금과 같음. 처리 중 화면별 동작 비활성"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

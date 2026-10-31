@@ -140,7 +140,7 @@
     },
     {
       "path": "docs/architecture/screen-templates.md",
-      "sha256": "f26fd7da65d2c527a72faee432242b2a7970dfb4dd7418a0b2ce78099886b17e"
+      "sha256": "6e32f4b57f22ba13894aba30b9607c53ae8a9092522ef67bf57b5da2e2cad630"
     },
     {
       "path": "docs/architecture/screens.md",
@@ -1309,6 +1309,10 @@
     {
       "path": "harness/tasks/TASK-CORE-050.json",
       "sha256": "6340082a9fca118ebeb7910402abe3afb715a3607a1472f8f591681bd93cced1"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-051.json",
+      "sha256": "e7b90600611ba7e59d4e2b63bf1510622c42d9761020911f80bd8170dd16caab"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
