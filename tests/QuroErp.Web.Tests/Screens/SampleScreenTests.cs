@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using FluentAssertions;
@@ -122,6 +123,18 @@ public class SampleScreenTests : ScreenContext
         page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
         page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
             .Should().Equal("multi-toolbar-search", "multi-toolbar-new", "multi-toolbar-save", "multi-toolbar-export");
+    }
+
+    [Theory, Trait("Id", "CORE-058-WT-06")]
+    [InlineData("ko", "2026-01-01")]
+    [InlineData("en", "01/01/2026")]
+    public void Multi_DateColumn_UsesTheLanguageDatePattern(string lang, string shown)
+    {
+        CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo(lang);
+
+        var page = Render<SampleMulti>();
+
+        page.WaitForAssertion(() => page.FindAll("td").Select(c => c.TextContent.Trim()).Should().Contain(shown));
     }
 
     [Fact]

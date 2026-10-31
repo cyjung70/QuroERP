@@ -29,5 +29,5 @@
     "단위 테스트: ko·en × 오전·오후 × 날짜·날짜+시각의 기대 글자를 표의 고정 문자열로 둔다. TASK-CORE-052에서 호스트 culture로 기대값을 만들게 바꾼 웹 테스트 6개를 고정 문자열로 되돌린다. Linux CI와 Windows에서 같은 결과"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
