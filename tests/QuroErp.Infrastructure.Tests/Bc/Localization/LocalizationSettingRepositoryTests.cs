@@ -37,8 +37,9 @@ public class LocalizationSettingRepositoryTests(AuthSchemaFixture db)
         await uow.Transaction.Connection!.ExecuteAsync(
             """
             WITH po AS (
-                INSERT INTO mm_purchase_order (po_no, created_by, updated_by) VALUES ('PO-IT', 's', 's') RETURNING id)
-            INSERT INTO mm_purchase_order_line (purchase_order_id, seq, created_by, updated_by) SELECT id, 1, 's', 's' FROM po
+                INSERT INTO mm_purchase_order (po_no, currency_code, exchange_rate, created_by, updated_by) VALUES ('PO-IT', 'USD', 1, 's', 's') RETURNING id)
+            INSERT INTO mm_purchase_order_line (purchase_order_id, seq, tax_code_id, created_by, updated_by)
+            SELECT id, 1, (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 's', 's' FROM po
             """,
             transaction: uow.Transaction);
 
