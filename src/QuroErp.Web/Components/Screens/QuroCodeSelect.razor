@@ -1,14 +1,21 @@
-@* Code field: options from GET api/codes/{Major} in the UI language, stored value is the minor_code (codes.md "화면"). *@
+@* Code field: options from GET api/codes/{Major} in the UI language, stored value is the minor_code (codes.md "화면").
+   Bound to a form data set column (Field), the combo box shares the code data set of the circuit. *@
 @using System.Globalization
+@using Quro.Grid.Data
 @using QuroErp.Contracts.Common.Codes
 @using QuroErp.Web.Common
 @inject CodeApiClient Codes
+@inject IServiceProvider Services
 
-<QuroSelect Label="@Label" Value="@Value" ValueChanged="ValueChanged" Options="_options" Radio="Radio"
-            Required="Required" LockMode="LockMode" HideLabel="HideLabel" Span="Span" TestId="@TestId" />
+<QuroSelect Label="@Label" Value="@Value" ValueChanged="ValueChanged" Options="_options" OptionsSource="_optionSet" Radio="Radio"
+            Required="Required" LockMode="LockMode" HideLabel="HideLabel" Span="Span" TestId="@TestId" Field="@Field" />
 
 @code {
     private IReadOnlyList<CodeItemDto> _options = [];
+    private QuroDataSet<CodeItemDto>? _optionSet;
+
+    [CascadingParameter]
+    public QuroFormContext? Form { get; set; }
 
     /// <summary>Major code, e.g. ITEM_TYPE.</summary>
     [Parameter, EditorRequired]
@@ -22,6 +29,10 @@
 
     [Parameter]
     public EventCallback<string?> ValueChanged { get; set; }
+
+    /// <summary>Column of the form's data set to bind to instead of <see cref="Value"/>.</summary>
+    [Parameter]
+    public string? Field { get; set; }
 
     [Parameter]
     public bool Radio { get; set; }
@@ -44,9 +55,15 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         try
         {
-            _options = await Codes.GetAsync(Major, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+            if (Field is not null && Form?.Data is not null && !Radio)
+            {
+                _optionSet = await ActivatorUtilities.GetServiceOrCreateInstance<CodeDataSets>(Services).GetAsync(Major, lang);
+                return;
+            }
+            _options = await Codes.GetAsync(Major, lang, CancellationToken.None);
         }
         catch (Exception e) when (e is ApiProblemException or HttpRequestException)
         {

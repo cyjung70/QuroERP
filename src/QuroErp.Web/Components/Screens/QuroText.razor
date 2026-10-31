@@ -1,18 +1,30 @@
 @inherits QuroInputBase<string>
 
-<div class="@FieldClass()">
-    <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
-    @if (Rows > 1)
-    {
-        <textarea id="@InputId" rows="@Rows" value="@Value" readonly="@IsLocked"
-                  aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync"></textarea>
-    }
-    else
-    {
-        <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked"
-               aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
-    }
-</div>
+@if (Bound && Rows <= 1)
+{
+    @* Quro.UI text box on the data set column; the test id is on the field until the package takes one (TODO(QuroGrid-R3)) *@
+    <div class="@FieldClass()" data-testid="@TestId">
+        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @Form!.Data!.TextBox(Field!, CharType, MaxLength, Password, IsLocked)
+    </div>
+}
+else
+{
+    <div class="@FieldClass()">
+        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @if (Rows > 1)
+        {
+            @* Quro.UI has no multi-line text box yet: a bound memo keeps the text area (TODO(QuroGrid-request)) *@
+            <textarea id="@InputId" rows="@Rows" value="@Current" readonly="@IsLocked"
+                      aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync"></textarea>
+        }
+        else
+        {
+            <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked"
+                   aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+        }
+    </div>
+}
 
 @code {
     [Parameter]
@@ -25,18 +37,37 @@
     [Parameter]
     public int Rows { get; set; } = 1;
 
-    public override bool IsEmpty => string.IsNullOrWhiteSpace(Value);
+    /// <summary>Characters the bound text box accepts (Quro.UI). Unbound inputs accept any.</summary>
+    [Parameter]
+    public Quro.UI.QuroCharType CharType { get; set; }
 
-    private Task OnChangeAsync(ChangeEventArgs e)
+    /// <summary>Longest text of the bound text box; null takes the column's [MaxLength].</summary>
+    [Parameter]
+    public int? MaxLength { get; set; }
+
+    public override bool IsEmpty => string.IsNullOrWhiteSpace(Current);
+
+    protected override void OnInitialized()
     {
-        var text = e.Value?.ToString() ?? "";
+        base.OnInitialized();
+        if (Bound)
+        {
+            // The text box sets the typed text; the case and empty-as-null rules apply to it here
+            Form!.Data!.Normalize(Field!, value => Kept(value as string));
+        }
+    }
+
+    private Task OnChangeAsync(ChangeEventArgs e) => SetValueAsync(Kept(e.Value?.ToString()));
+
+    // database.md: empty strings are stored as NULL
+    private string? Kept(string? text)
+    {
         text = TextCase switch
         {
-            TextCase.Upper => text.ToUpperInvariant(),
-            TextCase.Lower => text.ToLowerInvariant(),
+            TextCase.Upper => text?.ToUpperInvariant(),
+            TextCase.Lower => text?.ToLowerInvariant(),
             _ => text,
         };
-        // database.md: empty strings are stored as NULL
-        return SetValueAsync(text.Length == 0 ? null : text);
+        return string.IsNullOrEmpty(text) ? null : text;
     }
 }

@@ -31,9 +31,19 @@ public abstract class QuroInputBase<TValue> : ComponentBase, IQuroField, IDispos
     [Parameter]
     public bool HideLabel { get; set; }
 
-    /// <summary>Written as <c>data-testid</c> on the input element.</summary>
+    /// <summary>
+    /// Written as <c>data-testid</c> on the input element; on the field element when the input is a Quro.UI control
+    /// bound to <see cref="Field"/>.
+    /// </summary>
     [Parameter]
     public string? TestId { get; set; }
+
+    /// <summary>
+    /// Column of the form's data set (an S form record property) to bind to instead of <see cref="Value"/>
+    /// (qurogrid-integration.md 10). Without a data set form the input stays bound to <see cref="Value"/>.
+    /// </summary>
+    [Parameter]
+    public string? Field { get; set; }
 
     /// <summary>Columns the field takes in a 4-column header (entry-frame.md 3): 1, 2 or 4.</summary>
     [Parameter]
@@ -64,12 +74,54 @@ public abstract class QuroInputBase<TValue> : ComponentBase, IQuroField, IDispos
 
     public abstract bool IsEmpty { get; }
 
-    protected override void OnInitialized() => Form?.Register(this);
+    /// <summary>The input is bound to a column of the form's data set.</summary>
+    protected bool Bound => Field is not null && Form?.Data is not null;
 
-    protected Task SetValueAsync(TValue? value) => ValueChanged.InvokeAsync(value);
+    /// <summary>The bound column's value, or <see cref="Value"/>.</summary>
+    protected TValue? Current => Bound ? (TValue?)Form!.Data!.GetValue(Field!) : Value;
+
+    string? IQuroField.Field => Bound ? Field : null;
+
+    protected override void OnInitialized()
+    {
+        Form?.Register(this);
+        if (Bound)
+        {
+            Form!.Changed += OnFormChanged;
+        }
+    }
+
+    // NewOnly fields are required only while the record is new, so the column follows the lock state
+    protected override void OnParametersSet()
+    {
+        if (Bound)
+        {
+            Form!.Data!.Require(Field!, IsRequiredNow);
+        }
+    }
+
+    private void OnFormChanged()
+    {
+        Form!.Data!.Require(Field!, IsRequiredNow);
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    protected Task SetValueAsync(TValue? value)
+    {
+        if (Bound)
+        {
+            Form!.Data!.SetValue(Field!, value);
+            return Task.CompletedTask;
+        }
+        return ValueChanged.InvokeAsync(value);
+    }
 
     public void Dispose()
     {
+        if (Form is not null)
+        {
+            Form.Changed -= OnFormChanged;
+        }
         Form?.Unregister(this);
         GC.SuppressFinalize(this);
     }

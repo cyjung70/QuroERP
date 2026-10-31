@@ -33,13 +33,14 @@
         <SearchContent>
             <QuroText Label="@L["Samples.Code"]" @bind-Value="_code" TextCase="TextCase.Upper" TestId="single-search-code" />
         </SearchContent>
-        <Fields Context="item">
-            <QuroText Label="@L["Samples.Code"]" @bind-Value="item.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="single-header-code" />
-            <QuroText Label="@L["Samples.Name"]" @bind-Value="item.Name" Required Span="2" TestId="single-header-name" />
-            <QuroDate Label="@L["Samples.ValidFrom"]" @bind-Value="item.ValidFrom" TestId="single-header-valid-from" />
-            <QuroNumber Label="@L["Samples.Qty"]" @bind-Value="item.Qty" TestId="single-header-qty" />
-            <QuroSelect Label="@L["Samples.Supply"]" @bind-Value="item.Supply" Options="Supplies" Radio Span="2" TestId="single-header-supply" />
-            <QuroText Label="@L["Samples.Remarks"]" @bind-Value="item.Remarks" Rows="3" Span="4" TestId="single-header-remarks" />
+        @* The fields bind to the form's data set columns (TASK-CORE-054, qurogrid-integration.md 10) *@
+        <Fields>
+            <QuroText Label="@L["Samples.Code"]" Field="Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="single-header-code" />
+            <QuroText Label="@L["Samples.Name"]" Field="Name" Required Span="2" TestId="single-header-name" />
+            <QuroDate Label="@L["Samples.ValidFrom"]" Field="ValidFrom" TestId="single-header-valid-from" />
+            <QuroNumber Label="@L["Samples.Qty"]" Field="Qty" TestId="single-header-qty" />
+            <QuroSelect Label="@L["Samples.Supply"]" Field="Supply" Options="Supplies" Radio Span="2" TestId="single-header-supply" />
+            <QuroText Label="@L["Samples.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="single-header-remarks" />
         </Fields>
         <Tabs Context="item">
             <QuroTab Id="stock" Title="@L["Samples.StockTab"]" LoadTab="() => LoadStock(item)">

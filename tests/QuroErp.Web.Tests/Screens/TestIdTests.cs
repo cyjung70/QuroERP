@@ -33,7 +33,9 @@ public class TestIdTests : ScreenContext
         elements.Should().NotBeEmpty();
         foreach (var element in elements)
         {
-            var id = element.GetAttribute("data-testid");
+            // Quro.UI inputs take no test id yet; their field element has it (TODO(QuroGrid-R3))
+            var id = element.GetAttribute("data-testid")
+                ?? (element.ClassList.Contains("quro-ui-input") ? element.Closest("[data-testid]")?.GetAttribute("data-testid") : null);
             id.Should().NotBeNull($"{element.OuterHtml} needs a data-testid");
             id.Should().MatchRegex(Rule(screen));
         }

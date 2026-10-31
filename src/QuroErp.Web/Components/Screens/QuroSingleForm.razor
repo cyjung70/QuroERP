@@ -1,5 +1,6 @@
 @* Screen type S: search conditions → one record form → save/delete (screens.md), in the common frame with the record
    code, status chip and audit line (screen-templates.md 0, 1). *@
+@using Quro.Grid.Data
 @typeparam TModel where TModel : class
 @inherits QuroScreenBase
 
@@ -70,8 +71,11 @@
 @code {
     private readonly QuroFormContext _form = new();
     private readonly QuroTabSet _tabs = new();
-    private TModel _model = default!;
+    // The record is one row of a data set (qurogrid-integration.md 10); inputs with a Field bind to its columns
+    private readonly QuroFormData<TModel> _data = new();
     private string _snapshot = "";
+
+    private TModel _model => _data.Item;
 
     /// <summary>Input fields of the record.</summary>
     [Parameter, EditorRequired]
@@ -163,11 +167,25 @@
     [Parameter]
     public bool ReadOnly { get; set; }
 
-    public override bool IsDirty => Snapshot.Of(_model) != _snapshot || HasSectionChanges?.Invoke() == true;
+    // Inputs bound with @bind-Value change the record object without the data set knowing, so the snapshot still counts
+    public override bool IsDirty =>
+        _data.DataSet.HasChanges || Snapshot.Of(_model) != _snapshot || HasSectionChanges?.Invoke() == true;
 
     public bool IsNew => _form.IsNew;
 
-    protected override void OnInitialized() => StartNew();
+    /// <summary>The record as a one-row data set, e.g. for a screen that reads a column or sets a column rule.</summary>
+    public QuroDataSet<TModel> DataSet => _data.DataSet;
+
+    protected override void OnInitialized()
+    {
+        _form.Data = _data;
+        _data.Changed += () =>
+        {
+            _form.NotifyChanged();
+            InvokeAsync(StateHasChanged);
+        };
+        StartNew();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -177,7 +195,14 @@
         }
     }
 
-    protected override void OnParametersSet() => _form.ReadOnly = ReadOnly;
+    protected override void OnParametersSet()
+    {
+        if (_form.ReadOnly != ReadOnly)
+        {
+            _form.ReadOnly = ReadOnly;
+            _form.NotifyChanged();
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -204,9 +229,7 @@
         {
             return;
         }
-        var copied = copy(_model);
-        StartNew();
-        _model = copied;
+        StartNew(copy(_model));
         Error = null;
         Notice = null;
         StateHasChanged();
@@ -280,7 +303,7 @@
 
     private async Task SaveAsync()
     {
-        if (ReadOnly || !CheckRequired(_form.FirstMissing()))
+        if (ReadOnly || !CheckRequired(_form.FirstMissing()) || !CheckValid())
         {
             return;
         }
@@ -309,23 +332,47 @@
         });
     }
 
-    private void StartNew()
+    // The data set's own check: the DTO's [Required] and the required columns the bound inputs set
+    private bool CheckValid()
     {
-        _model = Create();
+        _form.SyncRequired();
+        if (_data.DataSet.Validate() is { IsValid: false } result)
+        {
+            var field = result.Errors[0].Field;
+            return CheckRequired(_form.Find(field) ?? new MissingColumn(field));
+        }
+        return true;
+    }
+
+    // A copy (copy as new) is a change from the new record, so the snapshot is of an empty new record
+    private void StartNew(TModel? copy = null)
+    {
+        var created = Create();
         _form.IsNew = true;
-        _snapshot = Snapshot.Of(_model);
+        _snapshot = Snapshot.Of(created);
+        _data.StartNew(copy ?? created);
         _tabs.NextRecord();
+        _form.NotifyChanged();
     }
 
     private void SetLoaded(TModel model)
     {
-        _model = model;
+        _data.SetLoaded(model);
         _form.IsNew = false;
+        _form.NotifyChanged();
         _snapshot = Snapshot.Of(_model);
         _tabs.NextRecord();
     }
 
     private void OpenTab(string id) => _tabs.Active = id;
+
+    // A required column with no input on the screen is named by its property
+    private sealed record MissingColumn(string Label) : IQuroField
+    {
+        public bool IsRequiredNow => true;
+
+        public bool IsEmpty => true;
+    }
 
     private RenderFragment TabButton(string id, string title) =>
         @<button type="button" role="tab" class="quro-tab" aria-selected="@(_tabs.Active == id ? "true" : "false")" disabled="@Busy"

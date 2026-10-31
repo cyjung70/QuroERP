@@ -15,6 +15,13 @@
     box-shadow: inset 3px 0 0 var(--q-field-required);
 }
 .quro-required { color: var(--q-field-required); margin-left: 2px; }
+/* Quro.UI controls in the input wrappers take the same colors through the --quro-* tokens (qurogrid-integration.md 10 "테마").
+   Required stays the editable yellow: the wrapper draws the amber marker and "*" */
+.quro-field {
+    --quro-bg: var(--q-field-editable); --quro-required-bg: var(--q-field-editable); --quro-readonly-bg: var(--q-surface-2);
+    --quro-text: var(--q-ink); --quro-border: var(--q-line); --quro-active: var(--q-brand); --quro-hover-bg: var(--q-brand-tint);
+    --quro-label: var(--q-ink-muted);
+}
 .quro-field input:focus-visible, .quro-field select:focus-visible, .quro-field textarea:focus-visible { outline: 2px solid var(--q-brand); outline-offset: -1px; }
 .quro-span-2 { grid-column: span 2; }
 .quro-span-4 { grid-column: span 4; }
