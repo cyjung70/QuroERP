@@ -87,8 +87,8 @@ public partial class DocumentCurrencyTaxMigrationTests(MigratedSchemaFixture db)
         using var schema = new ScratchSchema();
         schema.ApplySchemaScriptsBefore(Script);
         schema.Execute("""
-            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, created_by, updated_by)
-            VALUES ('Quro', 'KR', 'KRW', 'ko', 't', 't');
+            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
+            VALUES ('Quro', 'KR', 'KRW', 'ko', 'Asia/Seoul', 't', 't');
             WITH po AS (INSERT INTO mm_purchase_order (po_no, tot_po_amt, created_by, updated_by)
                         VALUES ('PO1', 3000, 't', 't') RETURNING id)
             INSERT INTO mm_purchase_order_line (purchase_order_id, seq, po_amt, created_by, updated_by)
