@@ -1,10 +1,13 @@
 @page "/samples/single"
 @rendermode InteractiveServer
+@using QuroErp.Contracts.Common.Codes
 @inject IServiceProvider Services
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
+@inject IQuroConfirm Confirm
 
-@* Screen type S sample (TASK-CORE-006, frame TASK-CORE-040). Development only, in-memory data. *@
+@* Screen type S sample in the item layout (TASK-CORE-006, frame TASK-CORE-040, tabs TASK-CORE-041): basic info,
+   stock by warehouse and transactions tabs, copy as new and deactivate. Development only, in-memory data. *@
 
 <PageTitle>@L["Samples.Single.Title"]</PageTitle>
 
@@ -20,8 +23,10 @@
                             Text="@L[item.Active ? "Samples.Active" : "Samples.Inactive"]" />
         </StatusChip>
         <ExtraCommands Context="item">
+            <button type="button" data-testid="single-toolbar-copy" disabled="@(item.Id == 0)"
+                    @onclick="() => _form!.CopyAsNew(CopyOf)">@L["Common.CopyAsNew"]</button>
             <button type="button" class="quro-danger-text" data-testid="single-toolbar-deactivate" disabled="@(item.Id == 0 || !item.Active)"
-                    @onclick="() => SetActiveAsync(false)">@L["Samples.Deactivate"]</button>
+                    @onclick="DeactivateAsync">@L["Samples.Deactivate"]</button>
             <button type="button" data-testid="single-toolbar-activate" disabled="@(item.Id == 0 || item.Active)"
                     @onclick="() => SetActiveAsync(true)">@L["Samples.Activate"]</button>
         </ExtraCommands>
@@ -30,10 +35,40 @@
         </SearchContent>
         <Fields Context="item">
             <QuroText Label="@L["Samples.Code"]" @bind-Value="item.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="single-header-code" />
-            <QuroText Label="@L["Samples.Name"]" @bind-Value="item.Name" Required TestId="single-header-name" />
+            <QuroText Label="@L["Samples.Name"]" @bind-Value="item.Name" Required Span="2" TestId="single-header-name" />
             <QuroDate Label="@L["Samples.ValidFrom"]" @bind-Value="item.ValidFrom" TestId="single-header-valid-from" />
             <QuroNumber Label="@L["Samples.Qty"]" @bind-Value="item.Qty" TestId="single-header-qty" />
+            <QuroSelect Label="@L["Samples.Supply"]" @bind-Value="item.Supply" Options="Supplies" Radio Span="2" TestId="single-header-supply" />
+            <QuroText Label="@L["Samples.Remarks"]" @bind-Value="item.Remarks" Rows="3" Span="4" TestId="single-header-remarks" />
         </Fields>
+        <Tabs Context="item">
+            <QuroTab Id="stock" Title="@L["Samples.StockTab"]" LoadTab="() => LoadStock(item)">
+                <QuroSubGrid TRow="SampleStock" Items="_stock" Note="@L["Samples.StockNote"]" TestId="single-grid-stock">
+                    <Columns>
+                        <QuroColumn TRow="SampleStock" Title="@L["Samples.Warehouse"]" Value="s => s.Warehouse" />
+                        <QuroColumn TRow="SampleStock" Title="@L["Samples.OnHand"]" Value="s => s.OnHand" Format="N2" />
+                        <QuroColumn TRow="SampleStock" Title="@L["Samples.Allocated"]" Value="s => s.Allocated" Format="N2" />
+                        <QuroColumn TRow="SampleStock" Title="@L["Samples.Available"]" Value="s => s.Available" Format="N2" />
+                    </Columns>
+                    <FooterRow>
+                        <td>@L["Common.Total"]</td>
+                        <td>@_stock.Sum(s => s.OnHand).ToString("N2")</td>
+                        <td>@_stock.Sum(s => s.Allocated).ToString("N2")</td>
+                        <td>@_stock.Sum(s => s.Available).ToString("N2")</td>
+                    </FooterRow>
+                </QuroSubGrid>
+            </QuroTab>
+            <QuroTab Id="transactions" Title="@L["Samples.TransactionsTab"]" LoadTab="() => LoadTransactions(item)">
+                <QuroSubGrid TRow="SampleTransaction" Items="_transactions" Note="@L["Samples.TransactionsNote"]" TestId="single-grid-transactions"
+                             OnOpen="OpenDocument">
+                    <Columns>
+                        <QuroColumn TRow="SampleTransaction" Title="@L["Samples.DocNo"]" Value="t => t.DocNo" />
+                        <QuroColumn TRow="SampleTransaction" Title="@L["Samples.DocDt"]" Value="t => t.DocDt" Format="yyyy-MM-dd" />
+                        <QuroColumn TRow="SampleTransaction" Title="@L["Samples.Qty"]" Value="t => t.Qty" Format="N2" />
+                    </Columns>
+                </QuroSubGrid>
+            </QuroTab>
+        </Tabs>
     </QuroSingleForm>
 }
 
@@ -41,6 +76,10 @@
     private SampleStore? _store;
     private QuroSingleForm<SampleItem>? _form;
     private string? _code;
+    private IReadOnlyList<SampleStock> _stock = [];
+    private IReadOnlyList<SampleTransaction> _transactions = [];
+
+    private IReadOnlyList<CodeItemDto> Supplies => [new("P", L["Samples.Supply.P"]), new("M", L["Samples.Supply.M"])];
 
     protected override void OnInitialized()
     {
@@ -52,6 +91,40 @@
     }
 
     private static SampleItem NewItem() => new() { Qty = 0 };
+
+    // Copy as new keeps the values and clears the key and what belongs to the stored record
+    private static SampleItem CopyOf(SampleItem item)
+    {
+        var copy = item.Copy();
+        copy.Id = 0;
+        copy.Code = null;
+        copy.Active = true;
+        copy.UpdatedBy = null;
+        copy.UpdatedAt = null;
+        return copy;
+    }
+
+    private Task LoadStock(SampleItem item)
+    {
+        _stock = _store!.Stock(item.Code);
+        return Task.CompletedTask;
+    }
+
+    private Task LoadTransactions(SampleItem item)
+    {
+        _transactions = _store!.Transactions(item.Code);
+        return Task.CompletedTask;
+    }
+
+    private void OpenDocument(SampleTransaction row) => Navigation.NavigateTo($"/samples/po-entry/{row.DocNo}");
+
+    private async Task DeactivateAsync()
+    {
+        if (await Confirm.ConfirmAsync(L["Samples.ConfirmDeactivate"]))
+        {
+            await SetActiveAsync(false);
+        }
+    }
 
     private Task SetActiveAsync(bool active) =>
         _form!.RunActionAsync(item => Task.FromResult(_store!.SetItemActive(item.Id, active)), L["Common.Saved"]);

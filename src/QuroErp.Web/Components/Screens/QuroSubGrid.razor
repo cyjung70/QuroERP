@@ -1,0 +1,48 @@
+@* Read-only sub-query of the open S record, e.g. stock by warehouse or transactions (screen-templates.md 1).
+   A record with editable sub-lines is an SM screen, not this. The total row is for display only. *@
+@typeparam TRow where TRow : class
+@attribute [CascadingTypeParameter(nameof(TRow))]
+
+<div class="quro-subgrid">
+    <QuroGrid TRow="TRow" Rows="_rows" Columns="Columns" FooterRow="FooterRow" OnRowDoubleClick="OnOpen" TestId="@TestId" />
+    @if (Note is not null)
+    {
+        <p class="quro-subgrid-note" data-testid="@(TestId is null ? null : $"{TestId}-note")">@Note</p>
+    }
+</div>
+
+@code {
+    private readonly GridRows<TRow> _rows = new();
+    private IReadOnlyList<TRow>? _shown;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TRow> Items { get; set; } = [];
+
+    /// <summary>QuroColumn declarations, without editors.</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment Columns { get; set; } = default!;
+
+    /// <summary>Cells of a total row under the rows, one td per column.</summary>
+    [Parameter]
+    public RenderFragment? FooterRow { get; set; }
+
+    /// <summary>One line under the grid, e.g. how a value is calculated.</summary>
+    [Parameter]
+    public string? Note { get; set; }
+
+    /// <summary>Opens the row's document on double-click, e.g. the transaction's screen.</summary>
+    [Parameter]
+    public EventCallback<TRow> OnOpen { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(Items, _shown))
+        {
+            _shown = Items;
+            _rows.Load(Items);
+        }
+    }
+}

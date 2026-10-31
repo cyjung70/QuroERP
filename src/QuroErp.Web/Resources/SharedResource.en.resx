@@ -427,4 +427,22 @@
   <data name="Home.Link.Company" xml:space="preserve"><value>Company</value></data>
   <data name="Home.NoPermission" xml:space="preserve"><value>You do not have permission to open this screen.</value></data>
   <data name="Home.NotReady" xml:space="preserve"><value>Phase 2</value></data>
+  <data name="Common.BasicInfo" xml:space="preserve"><value>Basic Info</value></data>
+  <data name="Common.CopyAsNew" xml:space="preserve"><value>Copy as New</value></data>
+  <data name="Common.Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Samples.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Samples.Supply" xml:space="preserve"><value>Supply Type</value></data>
+  <data name="Samples.Supply.P" xml:space="preserve"><value>Purchased</value></data>
+  <data name="Samples.Supply.M" xml:space="preserve"><value>Made</value></data>
+  <data name="Samples.StockTab" xml:space="preserve"><value>Stock by Warehouse</value></data>
+  <data name="Samples.TransactionsTab" xml:space="preserve"><value>Transactions</value></data>
+  <data name="Samples.Warehouse" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Samples.OnHand" xml:space="preserve"><value>On Hand</value></data>
+  <data name="Samples.Allocated" xml:space="preserve"><value>Allocated</value></data>
+  <data name="Samples.Available" xml:space="preserve"><value>Available</value></data>
+  <data name="Samples.StockNote" xml:space="preserve"><value>Available = on hand - allocated.</value></data>
+  <data name="Samples.DocNo" xml:space="preserve"><value>Document No.</value></data>
+  <data name="Samples.DocDt" xml:space="preserve"><value>Date</value></data>
+  <data name="Samples.TransactionsNote" xml:space="preserve"><value>Double-click a row to open its document.</value></data>
+  <data name="Samples.ConfirmDeactivate" xml:space="preserve"><value>Deactivate this item?</value></data>
 </root>

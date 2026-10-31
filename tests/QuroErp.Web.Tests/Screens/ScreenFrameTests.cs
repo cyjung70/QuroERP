@@ -50,7 +50,7 @@ public class ScreenFrameTests : ScreenContext
         var extra = page.Find("[data-testid=single-toolbar] [data-group=extra]");
         extra.PreviousElementSibling!.ClassList.Should().Contain("quro-commandbar-sep");
         extra.QuerySelectorAll("button").Select(b => b.GetAttribute("data-testid"))
-            .Should().Equal("single-toolbar-deactivate", "single-toolbar-activate");
+            .Should().Equal("single-toolbar-copy", "single-toolbar-deactivate", "single-toolbar-activate");
     }
 
     [Fact, Trait("Id", "CORE-040-WT-03")]

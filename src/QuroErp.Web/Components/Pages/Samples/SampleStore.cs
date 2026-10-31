@@ -13,6 +13,11 @@ public sealed class SampleItem
 
     public decimal? Qty { get; set; }
 
+    /// <summary>Supply type P (purchased) or M (made), shown as radio cards.</summary>
+    public string? Supply { get; set; } = "P";
+
+    public string? Remarks { get; set; }
+
     /// <summary>In use; the S sample's status chip and its deactivate command.</summary>
     public bool Active { get; set; } = true;
 
@@ -22,6 +27,15 @@ public sealed class SampleItem
 
     public SampleItem Copy() => (SampleItem)MemberwiseClone();
 }
+
+/// <summary>Stock of an item in a warehouse, the S sample's read-only sub-grid.</summary>
+public sealed record SampleStock(string Warehouse, decimal OnHand, decimal Allocated)
+{
+    public decimal Available => OnHand - Allocated;
+}
+
+/// <summary>Document that moved an item, the S sample's transactions tab.</summary>
+public sealed record SampleTransaction(string DocNo, DateOnly DocDt, decimal Qty);
 
 /// <summary>Header of the SM sample.</summary>
 public sealed class SampleOrder
@@ -79,6 +93,15 @@ public sealed class SampleStore
     ];
     private readonly List<SampleGroup> _groups = [new() { Id = 1, Code = "G1", Name = "Fruit" }, new() { Id = 2, Code = "G2", Name = "Snack" }];
     private readonly List<SampleLine> _members = [new() { Id = 1, OwnerId = 1, ItemCode = "A100", Qty = 1 }];
+    private readonly Dictionary<string, SampleStock[]> _stock = new()
+    {
+        ["A100"] = [new("WH01", 10, 2), new("WH02", 5, 0)],
+        ["B200"] = [new("WH01", 20, 5)],
+    };
+    private readonly Dictionary<string, SampleTransaction[]> _transactions = new()
+    {
+        ["A100"] = [new("PO261000001", new DateOnly(2026, 10, 1), 15), new("SO261000001", new DateOnly(2026, 10, 2), -3)],
+    };
     private const string SampleUser = "sample";
     private long _nextId = 100;
 
@@ -87,6 +110,26 @@ public sealed class SampleStore
         lock (_lock)
         {
             return _items.FirstOrDefault(i => i.Code == code)?.Copy();
+        }
+    }
+
+    /// <summary>How often <see cref="Stock"/> was read, so the sample tests can check that a tab reads once.</summary>
+    public int StockReads { get; private set; }
+
+    public IReadOnlyList<SampleStock> Stock(string? itemCode)
+    {
+        lock (_lock)
+        {
+            StockReads++;
+            return itemCode is not null && _stock.TryGetValue(itemCode, out var stock) ? [.. stock] : [];
+        }
+    }
+
+    public IReadOnlyList<SampleTransaction> Transactions(string? itemCode)
+    {
+        lock (_lock)
+        {
+            return itemCode is not null && _transactions.TryGetValue(itemCode, out var rows) ? [.. rows] : [];
         }
     }
 
