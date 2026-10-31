@@ -4,11 +4,11 @@
   "files": [
     {
       "path": ".agents/skills/quro-api/SKILL.md",
-      "sha256": "eff7f783a166288b54b83ab6102b081d7ff23ce999d13a899c06c8667a6aa7ef"
+      "sha256": "12f14c869fd810aa902606a2633f4f911cfb64d9b8a7367e10f980bab1e87d12"
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "c6322d6d171ff403ec094c096f6d3d793642c2558b6a8fbb75944da976c7edc7"
+      "sha256": "290b61612f5722648225b2767fe555b563bdb21a57ff35be58d2dfaf8b6774f8"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
@@ -36,11 +36,11 @@
     },
     {
       "path": ".claude/skills/quro-api/SKILL.md",
-      "sha256": "eff7f783a166288b54b83ab6102b081d7ff23ce999d13a899c06c8667a6aa7ef"
+      "sha256": "12f14c869fd810aa902606a2633f4f911cfb64d9b8a7367e10f980bab1e87d12"
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "c6322d6d171ff403ec094c096f6d3d793642c2558b6a8fbb75944da976c7edc7"
+      "sha256": "290b61612f5722648225b2767fe555b563bdb21a57ff35be58d2dfaf8b6774f8"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
@@ -76,7 +76,7 @@
     },
     {
       "path": "docs/architecture/api.md",
-      "sha256": "7d6cc6926a0f1c44585f09d550dfb25deeae22fa0105bba6655aef3bcf252715"
+      "sha256": "fe537aefd6a1e89ae4c8bdbe3e78074a0516d7dded92f7ec44381f6207005617"
     },
     {
       "path": "docs/architecture/app-shell.md",
@@ -140,7 +140,7 @@
     },
     {
       "path": "docs/architecture/screen-templates.md",
-      "sha256": "2923353299b10558f5b81b2e2f09fec524d973455e86daf295ee5daec872a83a"
+      "sha256": "f26fd7da65d2c527a72faee432242b2a7970dfb4dd7418a0b2ce78099886b17e"
     },
     {
       "path": "docs/architecture/screens.md",
@@ -1305,6 +1305,10 @@
     {
       "path": "harness/tasks/TASK-CORE-049.json",
       "sha256": "9cdc7ac5dd0c5d2c0d42c5ecd7dd9e6b7ba5b9409fb2fd640212d2204ef26742"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-050.json",
+      "sha256": "6340082a9fca118ebeb7910402abe3afb715a3607a1472f8f591681bd93cced1"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",

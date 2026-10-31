@@ -1,0 +1,38 @@
+{
+  "id": "TASK-CORE-050",
+  "project": "core",
+  "title": "S 화면 1건 조회 응답에 감사 필드 4개, 감사 정보 영역 채우기",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/api.md",
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/database.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-040"
+  ],
+  "acceptance": [
+    "공통 응답 record `AuditInfo(CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)`를 두고, 이미 있는 S 화면 1건 조회 API(품목·회사·사용자·고객·공급자·창고 등 `screenType` S 태스크가 만든 `GET /{id}`·이전·다음·1행 설정 `GET`)의 DTO가 네 필드를 모두 돌려준다 (api.md)",
+    "Repository SELECT에 `created_at`·`created_by`·`updated_by`를 더한다. 수정 요청 본문과 동시 수정 검사(`updatedAt`)는 바뀌지 않는다",
+    "`QuroSingleForm` 감사 정보 영역이 등록자·등록 시각·수정자·수정 시각을 보인다. 시각은 화면 공통 시각 형식(회사 시간대)을 쓴다. 신규는 비운다",
+    "API 테스트: 각 S 1건 조회 응답에 네 필드, 수정 뒤 `updatedBy`·`updatedAt`이 바뀌고 `createdBy`·`createdAt`은 그대로. bUnit: 감사 정보 네 값 표시, 신규 빈 칸",
+    "이후 새 S 화면 API는 처음부터 네 필드를 돌려준다 (quro-api 체크리스트)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
