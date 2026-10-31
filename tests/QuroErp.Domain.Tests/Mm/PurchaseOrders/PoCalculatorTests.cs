@@ -1,4 +1,5 @@
 using FluentAssertions;
+using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Mm.PurchaseOrders;
 
 namespace QuroErp.Domain.Tests.Mm.PurchaseOrders;
@@ -29,6 +30,16 @@ public class PoCalculatorTests
         amounts.Gross.Should().Be(1402.50m);
         amounts.Discount.Should().Be(70.13m); // 70.125 → 70.13
         amounts.Net.Should().Be(1332.37m);
+    }
+
+    [Fact, Trait("Rule", "BC-BR-424")]
+    public void CalcLine_Down_CutsGrossAndDiscount()
+    {
+        PoCalculator.CalcLine(Line(3m, 1.3333m), Usd, RoundingMode.Down).Gross.Should().Be(3.99m); // 3.9999 → 3.99
+
+        var amounts = PoCalculator.CalcLine(Line(5m, 280.5m, discount: 5m), Usd, RoundingMode.Down);
+
+        amounts.Should().Be(new PoLineAmounts(1402.50m, 70.12m, 1332.38m)); // 70.125 → 70.12
     }
 
     [Fact, Trait("Id", "MM-UC-003-T07"), Trait("Rule", "MM-BR-025")]

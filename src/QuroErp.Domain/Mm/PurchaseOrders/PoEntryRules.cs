@@ -25,8 +25,11 @@ public sealed record PurchaseOrderTotals(decimal GrossAmt, decimal DcAmt, decima
 public sealed record PurchaseOrderMasters(
     IReadOnlyDictionary<long, string> ItemTypes, IReadOnlySet<long> UsableWarehouses, IReadOnlyDictionary<long, TaxCodeRate> TaxRates);
 
-/// <summary>Company settings for amounts: base currency and tax unit (BC-BR-543).</summary>
-public sealed record PurchaseOrderSettings(string BaseCurrencyCode, string TaxCalcMode);
+/// <summary>
+/// Company settings for amounts: base currency, tax unit (BC-BR-543) and the MM module rounding mode, which rounds every
+/// calculated amount and the tax (BC-BR-424, BC-BR-545).
+/// </summary>
+public sealed record PurchaseOrderSettings(string BaseCurrencyCode, string TaxCalcMode, RoundingMode RoundingMode = RoundingMode.HalfUp);
 
 /// <summary>
 /// Purchase order input checked on the server before save (MM-UC-003, docs/business-rules/MM/purchase-order.md). Line amounts
@@ -71,7 +74,7 @@ public static class PoEntryRules
         {
             CheckLine(line, seq, header, masters);
             var poLine = new PoLine(seq, line.PoQty, line.PoPrc, line.DcRate);
-            var amounts = PoCalculator.CalcLine(poLine, decimals);
+            var amounts = PoCalculator.CalcLine(poLine, decimals, settings.RoundingMode);
             poLines.Add(poLine);
             computed.Add(new PurchaseOrderLine(
                 line.Id, seq, line.ItemId, line.ItemName, line.PoQty, line.PoPrc, amounts.Gross, line.DcRate, amounts.Discount,
@@ -81,12 +84,12 @@ public static class PoEntryRules
         // MM-BR-032: tax of the supply amounts, as an estimate (BC-BR-547)
         var tax = new TaxCalculator(rounder).Calculate(
             [.. computed.Select(l => new TaxLineInput(l.TaxCodeId, l.PoAmt))], masters.TaxRates, settings.TaxCalcMode, header.CurrencyCode,
-            RoundingMode.HalfUp);
+            settings.RoundingMode);
         computed = [.. computed.Select((l, i) => l with { SupplyAmt = tax.Lines[i].SupplyAmt, TaxAmt = tax.Lines[i].TaxAmt })];
-        var sums = PoCalculator.CalcTotals(poLines, decimals);
+        var sums = PoCalculator.CalcTotals(poLines, decimals, settings.RoundingMode);
         var totals = new PurchaseOrderTotals(
             sums.Subtotal, sums.Discount, tax.SupplyAmt, tax.TaxAmt, tax.TotalAmt,
-            rounder.Round(tax.TotalAmt * header.ExchangeRate, settings.BaseCurrencyCode));
+            rounder.Round(tax.TotalAmt * header.ExchangeRate, settings.BaseCurrencyCode, settings.RoundingMode));
         return (computed, totals);
     }
 
