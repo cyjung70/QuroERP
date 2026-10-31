@@ -46,6 +46,18 @@
   <data name="MM-E-002" xml:space="preserve"><value>{0} is in a closed month (closed through {1}), so stock movements cannot be saved.</value></data>
   <data name="MM-E-606" xml:space="preserve"><value>The stock movement quantity does not match its type, or the movement is already cancelled. Type: {0}, quantity: {1}</value></data>
   <data name="MM-E-009" xml:space="preserve"><value>Item {0} in warehouse {1} would have {3} on {2}, below zero, so the movement cannot be saved.</value></data>
+  <data name="MM-E-011" xml:space="preserve"><value>Line {0}: quantity must be greater than 0.</value></data>
+  <data name="MM-E-012" xml:space="preserve"><value>Line {0}: unit price cannot be 0.</value></data>
+  <data name="MM-E-013" xml:space="preserve"><value>Purchase order {0} cannot be changed or deleted. Only draft or approved orders with nothing received can.</value></data>
+  <data name="MM-E-014" xml:space="preserve"><value>Line {0}: the item does not exist or is not an inventory or service item.</value></data>
+  <data name="MM-E-019" xml:space="preserve"><value>The purchase order status cannot change from {0} to {1}.</value></data>
+  <data name="MM-E-020" xml:space="preserve"><value>Purchase order {0} cannot be approved. Only drafts with lines can.</value></data>
+  <data name="MM-E-022" xml:space="preserve"><value>Purchase order {0} cannot be closed. Only approved or partially received orders can.</value></data>
+  <data name="MM-E-023" xml:space="preserve"><value>Purchase order {0} cannot be cancelled. Only approved orders with nothing received can; delete a draft instead.</value></data>
+  <data name="MM-E-025" xml:space="preserve"><value>Line {0}: discount rate must be between 0 and 100.</value></data>
+  <data name="MM-E-026" xml:space="preserve"><value>Line {0}: due date {1} is before the PO date. Line 0 is the header.</value></data>
+  <data name="MM-E-027" xml:space="preserve"><value>Incoterms '{0}' is not valid. Choose an Incoterms 2020 code (EXW, FCA, FAS, FOB, CFR, CIF, CPT, CIP, DAP, DPU, DDP).</value></data>
+  <data name="MM-E-031" xml:space="preserve"><value>Currency {0} with rate {1} cannot be used. The rate must be above 0 and 1 for the base currency, and the currency cannot change once the order has lines.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>Item {0} in warehouse {1} would end month {2} at {3}, below zero, so the movement cannot be saved.</value></data>
   <data name="SD-E-006" xml:space="preserve"><value>All document numbers for {0} are used, so no more documents can be saved.</value></data>
   <data name="Common.Search" xml:space="preserve"><value>Search</value></data>
