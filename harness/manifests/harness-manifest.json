@@ -156,7 +156,7 @@
     },
     {
       "path": "docs/architecture/tax.md",
-      "sha256": "c819fa684ba68d5f52c43024d1e90129c5a0449660e568461367c410c90f582f"
+      "sha256": "f0f21a8977209ab7d31cd8811ad22e15b475c895001e68f9f1456ddc553a5a58"
     },
     {
       "path": "docs/business-rules/BC/auth.md",
@@ -184,7 +184,7 @@
     },
     {
       "path": "docs/business-rules/BC/tax.md",
-      "sha256": "265b008745dbe3638221c6a6967d6d3db0ea38f94fca14d9804e64b4b1cae797"
+      "sha256": "9582848760568ea028adb7e4b365ef27378039dd61df98cde684c019722972e5"
     },
     {
       "path": "docs/business-rules/BC/user.md",
