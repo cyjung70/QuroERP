@@ -233,8 +233,11 @@ public class ItemScreenTests : BunitContext
         var page = RenderAs("user");
         Search(page, "A100");
 
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
+        // Blocked buttons stay on the bar, disabled (screen-templates.md 0)
+        page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid"))
             .Should().Equal("item-toolbar-search", "item-toolbar-previous", "item-toolbar-next");
+        page.FindAll("[role=toolbar] button[disabled]").Select(b => b.GetAttribute("data-testid"))
+            .Should().Equal("item-toolbar-new", "item-toolbar-save", "item-toolbar-delete");
         page.Find("[data-testid=item-header-item-name]").HasAttribute("readonly").Should().BeTrue();
         page.Find("[data-testid=item-header-unit]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=item-header-valid-flag-n]").HasAttribute("disabled").Should().BeTrue();

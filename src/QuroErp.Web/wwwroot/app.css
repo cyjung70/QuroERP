@@ -40,10 +40,8 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
-/* Screen type components (screens.md) */
-.quro-screen { padding: 1rem; }
-.quro-toolbar { display: flex; gap: .5rem; margin-bottom: .75rem; }
-.quro-search, .quro-form { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; margin-bottom: .75rem; }
+/* Screen type components (screens.md); the frame itself is in css/quro-entry.css */
+.quro-search, .quro-form { display: flex; flex-wrap: wrap; gap: var(--q-field-gap) 24px; align-items: flex-end; }
 .quro-field { display: flex; flex-direction: column; gap: .25rem; }
 .quro-summary { display: flex; justify-content: flex-end; margin-bottom: .75rem; }
 .quro-summary input { text-align: right; }

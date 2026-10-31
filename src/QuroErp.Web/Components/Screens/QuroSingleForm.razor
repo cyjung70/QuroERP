@@ -1,23 +1,39 @@
-@* Screen type S: search conditions → one record form → save/delete (screens.md). *@
+@* Screen type S: search conditions → one record form → save/delete (screens.md), in the common frame with the record
+   code, status chip and audit line (screen-templates.md 0, 1). *@
 @typeparam TModel where TModel : class
 @inherits QuroScreenBase
 
-<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
+<QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+    <TitleContent>
+        @if (_form.IsNew)
+        {
+            <span class="quro-entry-new" data-testid="@Id("doc-no")">@L["Common.NewDocument"]</span>
+        }
+        else
+        {
+            <span class="quro-entry-doc-no" data-testid="@Id("doc-no")">@RecordCode?.Invoke(_model)</span>
+            @if (StatusChip is not null)
+            {
+                <span class="quro-entry-status" data-testid="@Id("status-chip")">@StatusChip(_model)</span>
+            }
+        }
+    </TitleContent>
     <Toolbar>
-        @* Read-only users get search and print only (BC-BR-214) *@
-        <QuroToolbar TestId="@TestId" Busy="Busy" CanDelete="!_form.IsNew" CanMove="!_form.IsNew"
+        @* Read-only users see new, save and delete disabled (BC-BR-214, screen-templates.md 0) *@
+        <QuroToolbar TestId="@TestId" Busy="Busy" CanMove="!_form.IsNew" CanNew="!ReadOnly" CanSave="!ReadOnly"
+                     CanDelete="!_form.IsNew && !ReadOnly"
                      OnSearch="SearchAsync"
                      OnPrevious="@(LoadPrevious is null ? default : EventCallback.Factory.Create(this, () => MoveAsync(LoadPrevious, "Common.FirstRecord")))"
                      OnNext="@(LoadNext is null ? default : EventCallback.Factory.Create(this, () => MoveAsync(LoadNext, "Common.LastRecord")))"
-                     OnNew="@(ReadOnly || !CanCreate ? default : EventCallback.Factory.Create(this, NewAsync))"
-                     OnSave="@(ReadOnly ? default : EventCallback.Factory.Create(this, SaveAsync))"
-                     OnDelete="@(Delete is null || ReadOnly ? default : EventCallback.Factory.Create(this, DeleteAsync))"
-                     OnPrint="OnPrint" />
+                     OnNew="@(CanCreate ? EventCallback.Factory.Create(this, NewAsync) : default)"
+                     OnSave="SaveAsync"
+                     OnDelete="@(Delete is null ? default : EventCallback.Factory.Create(this, DeleteAsync))"
+                     OnPrint="OnPrint" ExtraCommands="@(ExtraCommands?.Invoke(_model))" />
     </Toolbar>
     <ChildContent>
         <CascadingValue Value="_form" IsFixed="true">
-            <div class="quro-form" data-testid="@Id("header")">
+            <div class="quro-panel quro-form" data-testid="@Id("header")">
                 @Fields(_model)
             </div>
         </CascadingValue>
@@ -28,6 +44,9 @@
             </div>
         }
     </ChildContent>
+    <Footer>
+        <QuroAuditFooter Audit="@(_form.IsNew ? null : Audit?.Invoke(_model))" TestId="@Id("audit")" />
+    </Footer>
 </QuroScreenFrame>
 
 @code {
@@ -72,6 +91,25 @@
     /// </summary>
     [Parameter]
     public RenderFragment<TModel>? Actions { get; set; }
+
+    /// <summary>
+    /// Commands on the loaded record after the standard buttons and a separator, e.g. copy as new or deactivate
+    /// (screen-templates.md 1). The screen disables them when they do not apply.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<TModel>? ExtraCommands { get; set; }
+
+    /// <summary>Code of the open record shown after the title in mono, e.g. the item code.</summary>
+    [Parameter]
+    public Func<TModel, string?>? RecordCode { get; set; }
+
+    /// <summary>Status chip of the open record after its code (the screen spec maps the code to a chip).</summary>
+    [Parameter]
+    public RenderFragment<TModel>? StatusChip { get; set; }
+
+    /// <summary>Created and updated time and user of the open record, shown at the bottom.</summary>
+    [Parameter]
+    public Func<TModel, QuroAudit?>? Audit { get; set; }
 
     [Parameter]
     public EventCallback OnPrint { get; set; }
@@ -169,7 +207,7 @@
 
     private async Task NewAsync()
     {
-        if (await ConfirmDiscardAsync())
+        if (!ReadOnly && await ConfirmDiscardAsync())
         {
             Error = null;
             Notice = null;
@@ -179,7 +217,7 @@
 
     private async Task SaveAsync()
     {
-        if (!CheckRequired(_form.FirstMissing()))
+        if (ReadOnly || !CheckRequired(_form.FirstMissing()))
         {
             return;
         }
@@ -196,7 +234,7 @@
 
     private async Task DeleteAsync()
     {
-        if (_form.IsNew || !await Confirm.ConfirmAsync(L["Common.ConfirmDelete"]))
+        if (_form.IsNew || ReadOnly || !await Confirm.ConfirmAsync(L["Common.ConfirmDelete"]))
         {
             return;
         }

@@ -23,7 +23,7 @@
 
 @if (_ready)
 {
-    <QuroMultiGrid @ref="_grid" TRow="RoleMenuRow" Title="@L["Bc.RoleMenu.Title"]" TestId="role-menu" LoadOnStart="_roleId is not null"
+    <QuroMultiGrid @ref="_grid" TRow="RoleMenuRow" Title="@L["Bc.RoleMenu.Title"]" TestId="role-menu" Path="@L["Menu.G5AD"]" LoadOnStart="_roleId is not null"
                    Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)"
                    OnAddRequested="@(_canEdit ? EventCallback.Factory.Create(this, OpenAddDialog) : default)">
         <SearchContent>

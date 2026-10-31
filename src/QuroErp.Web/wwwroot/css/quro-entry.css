@@ -38,7 +38,8 @@
 .quro-chip-ok { background: var(--q-ok-tint); color: var(--q-ok); }
 .quro-chip-danger { background: var(--q-danger-tint); color: var(--q-danger); }
 
-/* Entry frame: five parts (1), at least 1280px wide, scrolls sideways instead of stacking */
+/* Entry frame: five parts (1), at least 1280px wide, scrolls sideways instead of stacking.
+   S, M and MM screens use the same title bar, message line, command bar and audit (screen-templates.md 0). */
 .quro-entry { min-width: var(--q-min-w); box-sizing: border-box; padding: 0 24px 24px; display: flex; flex-direction: column; gap: var(--q-panel-gap); }
 .quro-panel { background: var(--q-surface-1); border: 1px solid var(--q-line); border-radius: var(--q-radius-panel); padding: var(--q-panel-pad); }
 

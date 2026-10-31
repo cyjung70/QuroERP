@@ -4,13 +4,14 @@
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 
-@* Screen type MM sample (TASK-CORE-006). Development only, in-memory data. *@
+@* Screen type MM sample (TASK-CORE-006, frame TASK-CORE-040). Development only, in-memory data. *@
 
 <PageTitle>@L["Samples.MasterDetail.Title"]</PageTitle>
 
 @if (_store is not null)
 {
     <QuroMasterMultiDetail TSource="SampleGroup" TTarget="SampleLine" Title="@L["Samples.MasterDetail.Title"]" TestId="master-detail"
+                           Path="@L["Samples.Menu"]"
                            LoadOnStart="true" LoadSources="() => Task.FromResult(_store.Groups())"
                            LoadTargets="group => Task.FromResult(_store.Members(group.Id))"
                            CreateTarget="group => new SampleLine { OwnerId = group.Id, Qty = 1 }"

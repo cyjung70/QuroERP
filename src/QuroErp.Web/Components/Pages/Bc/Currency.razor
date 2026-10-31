@@ -22,7 +22,7 @@
 
 @if (_ready)
 {
-    <QuroMultiGrid TRow="CurrencyRow" Title="@L["Bc.Currency.Title"]" TestId="currency" LoadOnStart="true"
+    <QuroMultiGrid TRow="CurrencyRow" Title="@L["Bc.Currency.Title"]" TestId="currency" Path="@L["Menu.G5AD"]" LoadOnStart="true"
                    Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)" CreateRow="@(_canEdit ? NewRow : null)">
         <Columns>
             <QuroColumn Title="@L["Bc.Currency.CurrencyCode"]" Value="r => r.CurrencyCode" Context="row">

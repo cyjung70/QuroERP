@@ -4,13 +4,13 @@
 @inherits QuroScreenBase
 @inject IJSRuntime JS
 
-<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
+<QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
     <Toolbar>
         <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync"
                      OnNew="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)"
                      OnSave="@(Editable ? EventCallback.Factory.Create(this, SaveAsync) : default)"
-                     OnPrint="OnPrint" OnExport="ExportAsync" />
+                     OnPrint="OnPrint" OnExport="ExportAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
         <QuroGrid @ref="_grid" TRow="TRow" Rows="_rows" Columns="Columns" Editable="Editable" Busy="Busy" TestId="@Id("grid")"
@@ -51,6 +51,10 @@
 
     [Parameter]
     public EventCallback OnPrint { get; set; }
+
+    /// <summary>The screen's own commands after the standard buttons and a separator (screen-templates.md 0).</summary>
+    [Parameter]
+    public RenderFragment? ExtraCommands { get; set; }
 
     public override bool IsDirty => _rows.IsDirty;
 

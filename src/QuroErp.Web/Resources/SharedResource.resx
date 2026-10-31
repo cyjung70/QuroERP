@@ -112,6 +112,11 @@
   <data name="Samples.Amount" xml:space="preserve"><value>금액</value></data>
   <data name="Samples.TotalAmt" xml:space="preserve"><value>합계 금액</value></data>
   <data name="Samples.Path" xml:space="preserve"><value>샘플 > 구매</value></data>
+  <data name="Samples.Menu" xml:space="preserve"><value>샘플</value></data>
+  <data name="Samples.Active" xml:space="preserve"><value>사용</value></data>
+  <data name="Samples.Inactive" xml:space="preserve"><value>사용 중지</value></data>
+  <data name="Samples.Deactivate" xml:space="preserve"><value>사용 중지</value></data>
+  <data name="Samples.Activate" xml:space="preserve"><value>다시 사용</value></data>
   <data name="Samples.Status" xml:space="preserve"><value>상태</value></data>
   <data name="Samples.PoStatus.DR" xml:space="preserve"><value>작성</value></data>
   <data name="Samples.PoStatus.AP" xml:space="preserve"><value>승인</value></data>

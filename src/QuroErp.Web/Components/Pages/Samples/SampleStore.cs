@@ -13,6 +13,13 @@ public sealed class SampleItem
 
     public decimal? Qty { get; set; }
 
+    /// <summary>In use; the S sample's status chip and its deactivate command.</summary>
+    public bool Active { get; set; } = true;
+
+    public string? UpdatedBy { get; set; }
+
+    public DateTimeOffset? UpdatedAt { get; set; }
+
     public SampleItem Copy() => (SampleItem)MemberwiseClone();
 }
 
@@ -72,6 +79,7 @@ public sealed class SampleStore
     ];
     private readonly List<SampleGroup> _groups = [new() { Id = 1, Code = "G1", Name = "Fruit" }, new() { Id = 2, Code = "G2", Name = "Snack" }];
     private readonly List<SampleLine> _members = [new() { Id = 1, OwnerId = 1, ItemCode = "A100", Qty = 1 }];
+    private const string SampleUser = "sample";
     private long _nextId = 100;
 
     public SampleItem? FindItem(string? code)
@@ -95,8 +103,23 @@ public sealed class SampleStore
         lock (_lock)
         {
             var saved = item.Copy();
+            saved.UpdatedBy = SampleUser;
+            saved.UpdatedAt = DateTimeOffset.Now;
             Upsert(_items, saved, i => i.Id, (i, id) => i.Id = id);
             return saved.Copy();
+        }
+    }
+
+    /// <summary>Puts a stored item in or out of use and returns it as stored.</summary>
+    public SampleItem SetItemActive(long id, bool active)
+    {
+        lock (_lock)
+        {
+            var item = _items.Single(i => i.Id == id);
+            item.Active = active;
+            item.UpdatedBy = SampleUser;
+            item.UpdatedAt = DateTimeOffset.Now;
+            return item.Copy();
         }
     }
 
