@@ -96,7 +96,7 @@
     },
     {
       "path": "docs/architecture/entry-frame.md",
-      "sha256": "4aa7444e5c29ce2dc01d746f1c3e1f4e01705eb1eb6f5a1d792b0119163bb089"
+      "sha256": "d612421a11712d257885f4d1d64c74772b2173befa57f03deed12ee611cb47d5"
     },
     {
       "path": "docs/architecture/field-policy.md",
@@ -104,7 +104,7 @@
     },
     {
       "path": "docs/architecture/i18n.md",
-      "sha256": "c23417a6342ff8ae37554b11e161b438b2f67464bd7df47569864641a7d6694b"
+      "sha256": "6ba276d6844fe6c989826fed0b57744d7f6f964c7bc61453ff70e5b803e94fbe"
     },
     {
       "path": "docs/architecture/inventory.md",
@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/architecture/localization.md",
-      "sha256": "8dfe4b37fe56732fd1ae29e1dd97636a20aeb389f8cd33678c8db9717bd2d31d"
+      "sha256": "c466f04a86c3c04386c28866c36bc14e73f7cf617d960fcf3379b8f635e6dcc9"
     },
     {
       "path": "docs/architecture/login.md",
@@ -132,7 +132,7 @@
     },
     {
       "path": "docs/architecture/qurogrid-integration.md",
-      "sha256": "b06e1b197bafeeed97354708319dd246d8e6dfaf413fe28ebc62291c294123d1"
+      "sha256": "26407d64ed3f6c9bab67a21f36a6de41cd31653c5a8ae2bf508eda51279ef4dd"
     },
     {
       "path": "docs/architecture/reports.md",
@@ -1228,7 +1228,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-030.json",
-      "sha256": "b037599d240c96672e1d2ebb2cf74da409d33e823f8e131755eec08df034d44e"
+      "sha256": "33ae63e6b730ba4a2e9c01befdf1145c5866399fe98e88218b9cd4af776c5057"
     },
     {
       "path": "harness/tasks/TASK-CORE-031.json",
@@ -1316,15 +1316,15 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-052.json",
-      "sha256": "9f6b9362558982f6c29a9a20778fa6d4dc0c720e5400011c718ab47640f45eab"
+      "sha256": "736b6118585ba11cbd22b3c8f4bb30872464894e029d4487e35aafdfb51199e5"
     },
     {
       "path": "harness/tasks/TASK-CORE-053.json",
-      "sha256": "d259e8c80fd5999a65179e6a514666be8d740ff275a620027ff68eb56b594745"
+      "sha256": "40dd72dde5a705b738a0bbc07bf94d879d296f78719df9a710010c2b7e81d9da"
     },
     {
       "path": "harness/tasks/TASK-CORE-054.json",
-      "sha256": "e757f264c409966b8a19417aabf64d4c0deb016b779adcd6b1f6f0146f4f6db9"
+      "sha256": "396259d6019bd2f351f474e385221d1629cfb6df7531b2d885377a3f9e33a89f"
     },
     {
       "path": "harness/tasks/TASK-CORE-055.json",
@@ -1337,6 +1337,10 @@
     {
       "path": "harness/tasks/TASK-CORE-057.json",
       "sha256": "8c3c5b093bf215d50487aa034307cd88e5517a8d51fbfeca0db7b9a90dc84781"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-058.json",
+      "sha256": "38a9efff19c3c0f5ac15e6732a38eeb171b72868d94e517072269994c3240e9f"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",

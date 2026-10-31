@@ -1,0 +1,33 @@
+{
+  "id": "TASK-CORE-058",
+  "project": "core",
+  "title": "날짜·시각 표시 형식을 사용자 언어별로 고정 (서버 ICU와 무관)",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/i18n.md",
+    "docs/architecture/localization.md",
+    "docs/architecture/qurogrid-integration.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-052"
+  ],
+  "acceptance": [
+    "표시 culture 팩토리 한 곳(예: `DisplayCulture.For(lang)`)이 `CultureInfo`를 복제해 `ShortDatePattern`·`ShortTimePattern`·`AMDesignator`·`PMDesignator`를 i18n.md \"숫자·날짜\" 표 값으로 덮어쓴다 (ko `yyyy-MM-dd`·`tt h:mm`·`오전`/`오후`, en `MM/dd/yyyy`·`h:mm tt`·`AM`/`PM`, 그 밖 언어는 en)",
+    "`CompanyTime.Format`이 `\"g\"`와 `CultureInfo.CurrentCulture` 대신 이 culture와 고정 패턴으로 만든다. 코드 주석의 표시 예를 표와 같게 고친다",
+    "날짜만 보이는 화면 표시(입력 칸·목록 열·감사 정보·홈 직전 로그인 시각)가 같은 culture를 쓴다. 그리드·Quro.UI `Culture`에 넘기는 값도 이 팩토리다 (TASK-CORE-054~056이 그대로 쓴다)",
+    "en 시각의 AM·PM 앞은 일반 공백(U+0020)이다. U+202F가 나오지 않는다",
+    "단위 테스트: ko·en × 오전·오후 × 날짜·날짜+시각의 기대 글자를 표의 고정 문자열로 둔다. TASK-CORE-052에서 호스트 culture로 기대값을 만들게 바꾼 웹 테스트 6개를 고정 문자열로 되돌린다. Linux CI와 Windows에서 같은 결과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
