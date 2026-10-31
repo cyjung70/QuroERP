@@ -31,6 +31,7 @@ public class CompanyMenuScreenTests : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         Services.AddSingleton<IQuroConfirm>(new FakeConfirm());
         Services.AddSingleton(TimeProvider.System);
         Services.AddSingleton<AccessTokenStore>();

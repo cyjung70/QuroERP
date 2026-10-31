@@ -22,6 +22,7 @@ public class LocalizationApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         dto!.CountryCode.Should().Be("KR");
         dto.BaseCurrencyCode.Should().Be("KRW");
         dto.DefaultLangCode.Should().Be("ko");
+        dto.TimeZone.Should().Be("Asia/Seoul");
         dto.TaxMethod.Should().Be("VAT");
         dto.DateFormat.Should().Be("yyyy-MM-dd");
         dto.TaxCalcMode.Should().Be("DOCUMENT");

@@ -31,11 +31,12 @@ public class ShellTests : BunitContext
     {
         UseCulture("ko");
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         AddAuthorization().SetAuthorized("kim");
     }
 
     private static ShellProfile Profile(IReadOnlyList<AuthMenu> menus, string? roleCode = "admin") =>
-        new(new MeResponse("kim", "Kim", roleCode, "ko", false, null, null, null, menus, "Quro Co."), ["ko", "en"]);
+        new(new MeResponse("kim", "Kim", roleCode, "ko", false, null, null, null, menus, "Quro Co."), ["ko", "en"], "Asia/Seoul");
 
     private static void UseCulture(string name) =>
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo(name);

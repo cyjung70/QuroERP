@@ -16,6 +16,7 @@
 @inject AuthSettingApiClient AuthSettingApi
 @inject InventorySettingApiClient InventorySettingApi
 @inject LocalizationApiClient LocalizationApi
+@inject CompanyTime CompanyTime
 @inject IQuroConfirm Confirm
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
@@ -59,6 +60,9 @@
                         TestId="company-header-base-currency-code" />
             <QuroSelect Label="@L["Bc.Company.DefaultLangCode"]" @bind-Value="company.DefaultLangCode" Options="_languages" Required
                         TestId="company-header-default-lang-code" />
+            @* BC-BR-318: the business date and every shown time follow it; stored dates do not change *@
+            <QuroSelect Label="@L["Bc.Company.TimeZone"]" @bind-Value="company.TimeZone" Options="TimeZones(company.TimeZone)" Required
+                        TestId="company-header-time-zone" />
             <QuroSelect Label="@L["Bc.Company.BillingMode"]" @bind-Value="company.BillingMode" Options="_billingModes" Radio Required
                         TestId="company-header-billing-mode" />
         </Fields>
@@ -251,9 +255,17 @@
         || (_setting is not null && _mode != _setting.NegativeStockMode)
         || (_security is not null && Snapshot.Of(_security) != _securitySnapshot);
 
+    // A stored name the system list lacks stays selectable
+    private static IReadOnlyList<CodeItemDto> TimeZones(string? current) =>
+        current is null || CompanyTime.TimeZoneOptions.Any(z => z.Code == current)
+            ? CompanyTime.TimeZoneOptions
+            : [new CodeItemDto(current, current), .. CompanyTime.TimeZoneOptions];
+
     private async Task<CompanyModel> SaveAsync(CompanyModel company, bool isNew)
     {
         var saved = await WithFieldLabelsAsync(() => CompanyApi.UpdateAsync(company.ToRequest(), CancellationToken.None));
+        // Times on the next screens follow the saved time zone
+        CompanyTime.Reset();
         return CompanyModel.From(saved);
     }
 

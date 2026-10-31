@@ -400,7 +400,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public static readonly DateTimeOffset Created = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
         public CompanyDto? Company { get; set; } = new(
-            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "WITH_SHIPMENT", false, Created);
+            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Created);
 
         public CompanyLogoRow? Logo { get; set; }
 
@@ -422,7 +422,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             }
             Company = new CompanyDto(
                 fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.RegisterNo, fields.Represent,
-                fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!,
+                fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!, fields.TimeZone!,
                 fields.BillingMode!, false, Company.UpdatedAt.AddMinutes(1));
             UpdatedBy = updatedBy;
             return Task.FromResult(true);
@@ -453,7 +453,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public sealed class InMemoryLocalizationRepository : ILocalizationRepository
     {
-        public CompanyLocalizationRow? Company { get; set; } = new("KR", "KRW", "ko", "DOCUMENT");
+        public CompanyLocalizationRow? Company { get; set; } = new("KR", "KRW", "ko", "DOCUMENT", "Asia/Seoul");
 
         public List<LanguageRow> Languages { get; } = [new("en", 1, true), new("ko", 2, true), new("sw", 3, false)];
 

@@ -20,6 +20,7 @@ public sealed class CompanyModel
     public string? CountryCode { get; set; }
     public string? BaseCurrencyCode { get; set; }
     public string? DefaultLangCode { get; set; }
+    public string? TimeZone { get; set; }
     public string? BillingMode { get; set; }
     public bool HasLogo { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
@@ -40,6 +41,7 @@ public sealed class CompanyModel
         CountryCode = dto.CountryCode,
         BaseCurrencyCode = dto.BaseCurrencyCode,
         DefaultLangCode = dto.DefaultLangCode,
+        TimeZone = dto.TimeZone,
         BillingMode = dto.BillingMode,
         HasLogo = dto.HasLogo,
         UpdatedAt = dto.UpdatedAt,
@@ -47,7 +49,7 @@ public sealed class CompanyModel
 
     public UpdateCompanyRequest ToRequest() => new(
         Name, Billto, Shipto, Contact, TelNo, FaxNo, RegisterNo, Represent, Email, BusinessType, BusinessItem, CountryCode, BaseCurrencyCode,
-        DefaultLangCode, BillingMode, UpdatedAt);
+        DefaultLangCode, TimeZone, BillingMode, UpdatedAt);
 }
 
 /// <summary>The security settings form (BC-BR-309). Numbers are decimal? for QuroNumber; the API checks the ranges.</summary>

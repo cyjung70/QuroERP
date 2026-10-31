@@ -29,6 +29,7 @@ public class HomeTests : BunitContext
     {
         UseCulture("ko");
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
     }
 
     private static void UseCulture(string name) =>

@@ -36,5 +36,5 @@
     "단위 테스트: UTC 2026-01-01 03:00이면 `America/New_York`의 오늘은 2025-12-31, `Asia/Seoul`은 2026-01-01. 모르는 시간대는 400 BC-E-318"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

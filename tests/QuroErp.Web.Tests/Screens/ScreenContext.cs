@@ -29,6 +29,7 @@ public abstract class ScreenContext : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         Services.AddSingleton<IQuroConfirm>(Confirm);
         Services.AddSingleton(Store);
         Services.AddSingleton(PoStore);

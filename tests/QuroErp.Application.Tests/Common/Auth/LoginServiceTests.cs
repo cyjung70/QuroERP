@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Time.Testing;
+using QuroErp.Application.Common;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Common.Auth;
@@ -41,7 +42,7 @@ public class LoginServiceTests
     private AppUser Kim => _users.Users.Single(u => u.Id == 7);
 
     private LoginService Service =>
-        new(_users, _logs, _settings, _autoLoginTokens, _history, _passwords, new FakeAccessTokenIssuer(), _unitOfWork, _clock);
+        new(_users, _logs, _settings, _autoLoginTokens, _history, _passwords, new FakeAccessTokenIssuer(), _unitOfWork, _clock, new BusinessClock(_clock, () => "UTC"));
 
     private Task<LoginResponse> LoginAsync(string loginId, string password, bool autoLogin = false, string? language = null) =>
         Service.LoginAsync(new LoginRequest(loginId, password, autoLogin, language), Client, CancellationToken.None);

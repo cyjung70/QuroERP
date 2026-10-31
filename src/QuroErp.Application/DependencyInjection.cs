@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
+using QuroErp.Application.Common;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
@@ -21,6 +22,7 @@ public static class DependencyInjection
     /// <summary>Application 서비스를 등록한다. TimeProvider와 Repository 구현은 호스트·Infrastructure가 등록한다.</summary>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddSingleton<IBusinessClock>(BusinessClock.Create);
         services.AddScoped<LoginService>();
         services.AddScoped<ApiKeyAuthenticator>();
         services.AddScoped<TranslationService>();

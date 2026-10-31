@@ -8,7 +8,8 @@ using QuroErp.Domain.Common;
 namespace QuroErp.Application.Bc.Companies;
 
 /// <summary>Company information (BC-UC-007, BC-BR-301~316). The company is one row made at installation; it is only read and changed.</summary>
-public sealed class CompanyService(ICompanyRepository companies, ILocalizationRepository localization, IUnitOfWorkFactory unitOfWork)
+public sealed class CompanyService(
+    ICompanyRepository companies, ILocalizationRepository localization, IUnitOfWorkFactory unitOfWork, IBusinessClock clock)
 {
     /// <exception cref="NotFoundException">BC-E-006 when there is no company.</exception>
     public async Task<CompanyDto> GetAsync(CancellationToken cancellationToken)
@@ -21,7 +22,7 @@ public sealed class CompanyService(ICompanyRepository companies, ILocalizationRe
     }
 
     /// <summary>Saves the company and returns it as stored.</summary>
-    /// <exception cref="BadRequestException">400 BC-E-313 for a country other than US or KR.</exception>
+    /// <exception cref="BadRequestException">400 BC-E-313 for a country other than US or KR, BC-E-318 for an unknown time zone.</exception>
     /// <exception cref="DomainException">422 BC-E-302, 303, 312, 314, 315, 316.</exception>
     /// <exception cref="ConflictException">409 BC-E-312 or 313 once trading started, BC-E-316 with unbilled shipments.</exception>
     /// <exception cref="ConcurrencyException">409 when the company changed after it was read (BC-BR-304).</exception>
@@ -30,10 +31,14 @@ public sealed class CompanyService(ICompanyRepository companies, ILocalizationRe
         var fields = CompanyRules.Normalize(new CompanyFields(
             request.Name, request.Billto, request.Shipto, request.Contact, request.TelNo, request.FaxNo, request.RegisterNo, request.Represent,
             request.Email, request.BusinessType, request.BusinessItem, request.CountryCode, request.BaseCurrencyCode, request.DefaultLangCode,
-            request.BillingMode));
+            request.TimeZone, request.BillingMode));
         if (fields.CountryCode is not { } country || !CompanyRules.Countries.Contains(country))
         {
             throw new BadRequestException(CompanyRules.CountryCode, fields.CountryCode ?? "");
+        }
+        if (!CompanyRules.IsKnownTimeZone(fields.TimeZone))
+        {
+            throw new BadRequestException(CompanyRules.TimeZoneCode, fields.TimeZone ?? "");
         }
 
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
@@ -76,6 +81,8 @@ public sealed class CompanyService(ICompanyRepository companies, ILocalizationRe
         }
         var saved = (await companies.FindAsync(false, uow.Transaction, cancellationToken))!;
         await uow.CommitAsync(cancellationToken);
+        // The business date follows the new time zone from the next call (BC-BR-318)
+        clock.Reset();
         return saved;
     }
 }

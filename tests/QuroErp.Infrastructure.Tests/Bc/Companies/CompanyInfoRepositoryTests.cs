@@ -19,7 +19,7 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
 
     private static readonly CompanyFields Fields = new(
         "Quro Korea", "Seoul", "Busan", "Lee", "02-000-0000", null, "2208162517", "Kim", "info@quro.kr", "Service", "Software",
-        "KR", "KRW", "ko", "SEPARATE");
+        "KR", "KRW", "ko", "Asia/Seoul", "SEPARATE");
 
     [DatabaseFact, Trait("Id", "BC-UC-007-IT-01")]
     public async Task Update_ChecksUpdatedAt_AndStoresBusinessTypeAndItem()
@@ -129,8 +129,8 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
     private static Task<int> AddCompanyAsync(IDbTransaction transaction) =>
         transaction.Connection!.ExecuteAsync(
             """
-            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, created_by, updated_by)
-            VALUES ('Quro', 'KR', 'KRW', 'ko', 'system', 'system')
+            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
+            VALUES ('Quro', 'KR', 'KRW', 'ko', 'Asia/Seoul', 'system', 'system')
             """,
             transaction: transaction);
 }

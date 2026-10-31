@@ -41,6 +41,9 @@ public interface ICountryProfile
     /// <summary>Region part of the display culture, e.g. "US" for en-US.</summary>
     string CultureRegion { get; }
 
+    /// <summary>Default company time zone, an IANA name (BC-BR-318).</summary>
+    string DefaultTimeZone { get; }
+
     /// <summary>Default sys_decimal_setting rows: quantity decimals and rounding mode (BC-BR-422).</summary>
     IReadOnlyList<DecimalSetting> DefaultDecimalSettings { get; }
 
@@ -61,6 +64,8 @@ public sealed class UsCountryProfile : ICountryProfile
     public string DateFormat => "MM/dd/yyyy";
 
     public string CultureRegion => CountryProfiles.Us;
+
+    public string DefaultTimeZone => "America/New_York";
 
     public IReadOnlyList<DecimalSetting> DefaultDecimalSettings { get; } =
     [
@@ -88,6 +93,8 @@ public sealed class KrCountryProfile : ICountryProfile
     public string DateFormat => "yyyy-MM-dd";
 
     public string CultureRegion => CountryProfiles.Kr;
+
+    public string DefaultTimeZone => "Asia/Seoul";
 
     public IReadOnlyList<DecimalSetting> DefaultDecimalSettings { get; } =
     [

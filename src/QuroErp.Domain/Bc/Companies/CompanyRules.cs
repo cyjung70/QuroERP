@@ -7,9 +7,9 @@ namespace QuroErp.Domain.Bc.Companies;
 public sealed record CompanyFields(
     string? Name, string? Billto, string? Shipto, string? Contact, string? TelNo, string? FaxNo, string? RegisterNo, string? Represent,
     string? Email, string? BusinessType, string? BusinessItem, string? CountryCode, string? BaseCurrencyCode, string? DefaultLangCode,
-    string? BillingMode);
+    string? TimeZone, string? BillingMode);
 
-/// <summary>Company rules BC-BR-302, 303, 313, 315 and 316. Master data checks (currency, language) and trading checks are the caller's.</summary>
+/// <summary>Company rules BC-BR-302, 303, 313, 315, 316 and 318. Master data checks (currency, language) and trading checks are the caller's.</summary>
 public static class CompanyRules
 {
     /// <summary>Name missing or too long. Arg: property name.</summary>
@@ -32,6 +32,9 @@ public static class CompanyRules
 
     /// <summary>Unknown billing mode (422) or unbilled shipments block WITH_SHIPMENT (409). Arg: billing mode.</summary>
     public const string BillingModeCode = "BC-E-316";
+
+    /// <summary>Time zone is not a known IANA name (400). Arg: time zone.</summary>
+    public const string TimeZoneCode = "BC-E-318";
 
     public const string WithShipment = "WITH_SHIPMENT";
     public const string Separate = "SEPARATE";
@@ -68,7 +71,7 @@ public static class CompanyRules
             Clean(fields.Name), Clean(fields.Billto), Clean(fields.Shipto), Clean(fields.Contact), Clean(fields.TelNo), Clean(fields.FaxNo),
             Clean(fields.RegisterNo), Clean(fields.Represent), Clean(fields.Email), Clean(fields.BusinessType), Clean(fields.BusinessItem),
             Clean(fields.CountryCode)?.ToUpperInvariant(), Clean(fields.BaseCurrencyCode)?.ToUpperInvariant(),
-            Clean(fields.DefaultLangCode)?.ToLowerInvariant(), Clean(fields.BillingMode)?.ToUpperInvariant() ?? WithShipment);
+            Clean(fields.DefaultLangCode)?.ToLowerInvariant(), Clean(fields.TimeZone), Clean(fields.BillingMode)?.ToUpperInvariant() ?? WithShipment);
 
         if (normalized.Name is null || normalized.Name.Length > NameMaxLength)
         {
@@ -98,6 +101,15 @@ public static class CompanyRules
         }
         return normalized;
     }
+
+    /// <summary>
+    /// BC-BR-318: an IANA time zone name the system knows, e.g. America/New_York. Windows names such as
+    /// "Korea Standard Time" are not IANA names and are refused.
+    /// </summary>
+    public static bool IsKnownTimeZone(string? timeZone) =>
+        !string.IsNullOrWhiteSpace(timeZone)
+        && TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out var zone)
+        && zone.HasIanaId;
 
     /// <summary>BC-BR-316: going back to billing with the shipment needs every shipment line billed.</summary>
     public static bool NeedsAllShipmentsBilled(string currentBillingMode, string newBillingMode) =>

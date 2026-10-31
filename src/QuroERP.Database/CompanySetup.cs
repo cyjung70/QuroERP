@@ -3,8 +3,9 @@ using Npgsql;
 namespace QuroERP.Database;
 
 /// <summary>
-/// Sets the company country at installation (BC-BR-313): country, base currency, default language and the
-/// module quantity decimals and rounding mode all come from the country profile (US = USD/en, KR = KRW/ko).
+/// Sets the company country at installation (BC-BR-313): country, base currency, default language, time zone
+/// (BC-BR-318) and the module quantity decimals and rounding mode all come from the country profile
+/// (US = USD/en/America/New_York, KR = KRW/ko/Asia/Seoul). The time zone can be given instead of the default.
 /// Unit price decimals (bc_country_decimal) are rows for every country and do not change with the company country.
 /// Blocked once any document, stock movement or exchange rate exists.
 /// </summary>
@@ -16,8 +17,8 @@ public static class CompanySetup
     /// ICountryProfile (UsCountryProfile, KrCountryProfile); a test keeps them equal.</summary>
     public static IReadOnlyDictionary<string, CountryDefaults> Countries { get; } = new Dictionary<string, CountryDefaults>
     {
-        ["US"] = new("US", "USD", "en", [new("MM", 2, "HALF_UP"), new("SD", 0, "HALF_UP")]),
-        ["KR"] = new("KR", "KRW", "ko", [new("MM", 2, "HALF_UP"), new("SD", 0, "HALF_UP")]),
+        ["US"] = new("US", "USD", "en", "America/New_York", [new("MM", 2, "HALF_UP"), new("SD", 0, "HALF_UP")]),
+        ["KR"] = new("KR", "KRW", "ko", "Asia/Seoul", [new("MM", 2, "HALF_UP"), new("SD", 0, "HALF_UP")]),
     };
 
     // Tables whose rows mean the company has started trading (BC-BR-312, BC-BR-313)
@@ -41,14 +42,14 @@ public static class CompanySetup
         """;
 
     private const string InsertCompany = """
-        INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, created_by, updated_by)
-        VALUES (@name, @country_code, @currency_code, @lang_code, @audit_user, @audit_user)
+        INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
+        VALUES (@name, @country_code, @currency_code, @lang_code, @time_zone, @audit_user, @audit_user)
         """;
 
     private const string UpdateCompany = """
         UPDATE bc_company
         SET name = coalesce(@name, name), country_code = @country_code, base_currency_code = @currency_code,
-            default_lang_code = @lang_code, updated_at = now(), updated_by = @audit_user
+            default_lang_code = @lang_code, time_zone = @time_zone, updated_at = now(), updated_by = @audit_user
         WHERE id = @id
         """;
 
@@ -63,14 +64,20 @@ public static class CompanySetup
         """;
 
     /// <param name="companyName">Required when there is no company yet; otherwise the name changes only when given.</param>
+    /// <param name="timeZone">IANA time zone instead of the country default (BC-BR-318).</param>
     /// <returns>true when the company was created, false when the existing company was updated.</returns>
-    /// <exception cref="ArgumentException">A country other than US or KR (BC-E-313).</exception>
+    /// <exception cref="ArgumentException">A country other than US or KR (BC-E-313), or an unknown time zone (BC-E-318).</exception>
     /// <exception cref="InvalidOperationException">Transactions exist, the name is missing, or the currency or language is not in use.</exception>
     public static async Task<bool> SetCountryAsync(
-        string connectionString, string countryCode, string? companyName, CancellationToken cancellationToken)
+        string connectionString, string countryCode, string? companyName, string? timeZone, CancellationToken cancellationToken)
     {
         var profile = Countries.GetValueOrDefault(countryCode)
             ?? throw new ArgumentException($"BC-E-313: {countryCode}", nameof(countryCode));
+        var zone = string.IsNullOrWhiteSpace(timeZone) ? profile.DefaultTimeZone : timeZone.Trim();
+        if (!IsKnownTimeZone(zone))
+        {
+            throw new ArgumentException($"BC-E-318: {zone}", nameof(timeZone));
+        }
 
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
@@ -96,7 +103,7 @@ public static class CompanySetup
         (string, object?)[] company =
         [
             ("name", name), ("country_code", profile.CountryCode), ("currency_code", profile.BaseCurrencyCode),
-            ("lang_code", profile.DefaultLangCode), ("audit_user", AuditUser), ("id", companyId),
+            ("lang_code", profile.DefaultLangCode), ("time_zone", zone), ("audit_user", AuditUser), ("id", companyId),
         ];
         await ExecuteAsync(connection, transaction, companyId is null ? InsertCompany : UpdateCompany, cancellationToken, company);
 
@@ -110,6 +117,10 @@ public static class CompanySetup
         await transaction.CommitAsync(cancellationToken);
         return companyId is null;
     }
+
+    /// <summary>Same check as CompanyRules.IsKnownTimeZone: an IANA name the system knows, not a Windows name.</summary>
+    public static bool IsKnownTimeZone(string timeZone) =>
+        TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out var zone) && zone.HasIanaId;
 
     private static async Task<object?> ScalarAsync(
         NpgsqlConnection connection, NpgsqlTransaction transaction, string sql, CancellationToken cancellationToken,
@@ -147,7 +158,7 @@ public static class CompanySetup
 
 /// <summary>Installation defaults of one country (bc_company and sys_decimal_setting values).</summary>
 public sealed record CountryDefaults(
-    string CountryCode, string BaseCurrencyCode, string DefaultLangCode, IReadOnlyList<DecimalDefaults> DecimalSettings);
+    string CountryCode, string BaseCurrencyCode, string DefaultLangCode, string DefaultTimeZone, IReadOnlyList<DecimalDefaults> DecimalSettings);
 
 /// <summary>One sys_decimal_setting row.</summary>
 public sealed record DecimalDefaults(string Module, int QtyDecimals, string RoundingMode);
