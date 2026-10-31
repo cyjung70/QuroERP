@@ -26,6 +26,7 @@ public static class WebApiClients
         services.AddHttpClient<CodeApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<LocalizationApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<ItemApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<ItemBarcodeApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<WarehouseApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserProfileApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserApiClient>(http => http.BaseAddress = apiBaseUrl);

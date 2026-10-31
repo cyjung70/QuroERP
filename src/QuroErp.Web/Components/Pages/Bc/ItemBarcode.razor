@@ -1,0 +1,122 @@
+@page "/bc/item-barcode"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Common
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Common
+@inject ItemBarcodeApiClient Api
+@inject LocalizationApiClient LocalizationApi
+@inject IQuroConfirm Confirm
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-011 item barcode, screen type M (view only). Generate asks with the counts of a preview, then saves on the server in one
+   transaction. The API checks every rule (MM-BR-815~818); this screen only checks that an item class is chosen. *@
+
+<PageTitle>@L["Bc.ItemBarcode.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="item-barcode-load-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="ItemBarcodeDto" Title="@L["Bc.ItemBarcode.Title"]" TestId="item-barcode" Load="LoadAsync">
+        <SearchContent>
+            <QuroCodeSelect Major="ITEM_CLASS" Label="@L["Bc.ItemBarcode.ItemClass"]" @bind-Value="_itemClass" Required TestId="item-barcode-search-item-class" />
+            <QuroCodeSelect Major="DISPLAY_OPTIONS" Label="@L["Bc.ItemBarcode.ValidFlag"]" @bind-Value="_validFlag" Radio TestId="item-barcode-search-valid-flag" />
+            <QuroText Label="@L["Bc.ItemBarcode.StartNo"]" @bind-Value="_startNo" TextCase="TextCase.Upper"
+                      LockMode="@(_canEdit ? LockMode.None : LockMode.Always)" TestId="item-barcode-search-start-no" />
+            @if (_canEdit)
+            {
+                <button type="button" data-testid="item-barcode-search-generate" @onclick="GenerateAsync">@L["Bc.ItemBarcode.Generate"]</button>
+            }
+        </SearchContent>
+        <Columns>
+            <QuroColumn Title="@L["Bc.ItemBarcode.ItemCd"]" Value="r => r.ItemCd" />
+            <QuroColumn Title="@L["Bc.ItemBarcode.ItemName"]" Value="r => r.ItemName" />
+            <QuroColumn Title="@L["Bc.ItemBarcode.SoUsdPrc"]" Value="r => r.SoUsdPrc" Format="@_priceFormat" />
+            <QuroColumn Title="@L["Bc.ItemBarcode.UpcCode"]" Value="r => r.UpcCode" />
+        </Columns>
+    </QuroMultiGrid>
+}
+
+@code {
+    private const string SdModule = "SD";
+    private const string RequiredCode = "Common-E-005";
+    private const string DuplicateCode = "MM-E-817";
+    private const string UnavailableCode = "BC-E-003";
+
+    private QuroMultiGrid<ItemBarcodeDto>? _grid;
+    private string? _itemClass;
+    private string? _validFlag = "Y";
+    private string? _startNo = "1000000000";
+    private string? _priceFormat;
+    private bool _canEdit;
+    private bool _ready;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy exists, as in ItemBarcodeController (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        try
+        {
+            var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+            _priceFormat = localization.UnitPrice(SdModule) is { } decimals ? $"N{decimals.ToString(CultureInfo.InvariantCulture)}" : null;
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    private async Task<IReadOnlyList<ItemBarcodeDto>> LoadAsync()
+    {
+        EnsureItemClass();
+        return await Api.ListAsync(_itemClass!, _validFlag, CancellationToken.None);
+    }
+
+    // MM-BR-815: the counts are shown and confirmed first; conflicts stop it before asking (MM-BR-817)
+    private Task GenerateAsync() => _grid!.RunActionAsync(async () =>
+    {
+        EnsureItemClass();
+        var preview = await Api.PreviewAsync(_itemClass!, _validFlag, _startNo, CancellationToken.None);
+        if (preview.Conflicts.Count > 0)
+        {
+            var others = string.Join(", ", preview.Conflicts.Select(c => c.OtherItemCd).Distinct().Order(StringComparer.Ordinal));
+            throw new ApiProblemException(new ApiProblem(422, DuplicateCode, [others]));
+        }
+        if (preview.TargetCount == 0)
+        {
+            return L["Common.NoData"];
+        }
+        var question = string.Format(CultureInfo.CurrentCulture, L["Bc.ItemBarcode.ConfirmGenerate"],
+            preview.TargetCount, preview.OverwriteCount, preview.Items[0].UpcCode, preview.Items[^1].UpcCode);
+        if (!await Confirm.ConfirmAsync(question))
+        {
+            return null;
+        }
+        var result = await Api.GenerateAsync(new GenerateItemBarcodesRequest(_itemClass, _validFlag, _startNo), CancellationToken.None);
+        return string.Format(CultureInfo.CurrentCulture, L["Bc.ItemBarcode.Generated"], result.UpdatedCount);
+    });
+
+    private void EnsureItemClass()
+    {
+        if (string.IsNullOrWhiteSpace(_itemClass))
+        {
+            throw new ApiProblemException(new ApiProblem(400, RequiredCode, [L["Bc.ItemBarcode.ItemClass"]]));
+        }
+    }
+}

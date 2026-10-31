@@ -88,6 +88,25 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Runs an action of the screen other than save (for example a bulk change on the server) with the grid's busy state and
+    /// messages, then reads the rows again. Unsaved changes are confirmed first. The action returns the notice to show, or null.
+    /// </summary>
+    public async Task RunActionAsync(Func<Task<string?>> action)
+    {
+        if (!await ConfirmDiscardAsync())
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            var notice = await action();
+            await LoadRowsAsync();
+            Notice = notice;
+        });
+        StateHasChanged();
+    }
+
     /// <summary>Adds rows as new (state I), e.g. the ones picked in the screen's dialog.</summary>
     public void AddRows(IEnumerable<TRow> items)
     {

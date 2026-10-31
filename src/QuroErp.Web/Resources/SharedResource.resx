@@ -223,6 +223,17 @@
   <data name="Bc.ItemImageUpload.Hint" xml:space="preserve"><value>JPEG, 10 MB 이하. 저장하면 지금 이미지를 바꿉니다. 품목 이미지가 없으면 품목 그룹 이미지를 보입니다.</value></data>
   <data name="Bc.ItemImageUpload.Delete" xml:space="preserve"><value>이미지 지우기</value></data>
   <data name="Bc.ItemImageUpload.ConfirmDelete" xml:space="preserve"><value>품목 이미지를 지울까요? 품목 그룹 이미지가 있으면 그 이미지를 보입니다.</value></data>
+  <data name="Bc.ItemBarcode.Title" xml:space="preserve"><value>품목 바코드</value></data>
+  <data name="Bc.ItemBarcode.ItemClass" xml:space="preserve"><value>품목군</value></data>
+  <data name="Bc.ItemBarcode.ValidFlag" xml:space="preserve"><value>사용 여부</value></data>
+  <data name="Bc.ItemBarcode.StartNo" xml:space="preserve"><value>시작 번호</value></data>
+  <data name="Bc.ItemBarcode.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Bc.ItemBarcode.ItemName" xml:space="preserve"><value>품목 이름</value></data>
+  <data name="Bc.ItemBarcode.SoUsdPrc" xml:space="preserve"><value>판매 단가</value></data>
+  <data name="Bc.ItemBarcode.UpcCode" xml:space="preserve"><value>바코드</value></data>
+  <data name="Bc.ItemBarcode.Generate" xml:space="preserve"><value>바코드 생성</value></data>
+  <data name="Bc.ItemBarcode.ConfirmGenerate" xml:space="preserve"><value>대상 품목 {0}건 중 {1}건은 바코드가 있어 덮어씁니다. 품목 코드 순으로 {2}~{3}을 넣을까요?</value></data>
+  <data name="Bc.ItemBarcode.Generated" xml:space="preserve"><value>바코드 {0}건을 만들었습니다.</value></data>
   <data name="Bc.ChangePassword.Title" xml:space="preserve"><value>비밀번호 변경</value></data>
   <data name="Bc.ChangePassword.CurrentPassword" xml:space="preserve"><value>현재 비밀번호</value></data>
   <data name="Bc.ChangePassword.NewPassword" xml:space="preserve"><value>새 비밀번호</value></data>
