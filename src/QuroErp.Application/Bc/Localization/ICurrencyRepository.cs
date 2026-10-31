@@ -16,6 +16,10 @@ public interface ICurrencyRepository
     Task<IReadOnlySet<string>> FindUsedByDocumentsAsync(
         IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>The given currency codes that a customer or vendor has as trade currency (CurrencyRules.PartnerColumns).</summary>
+    Task<IReadOnlySet<string>> FindUsedByPartnersAsync(
+        IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken);
+
     Task<long> InsertAsync(string currencyCode, CurrencyFields fields, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <returns>False when the row changed after expectedUpdatedAt.</returns>

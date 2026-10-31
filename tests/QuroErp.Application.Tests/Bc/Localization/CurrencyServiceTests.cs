@@ -141,6 +141,45 @@ public class CurrencyServiceTests
         (await act.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(CurrencyRules.BaseCurrencyCode);
     }
 
+    [Theory, Trait("Id", "BC-UC-026-T05"), Trait("Id", "BC-UT-416"), Trait("Rule", "BC-BR-416")]
+    [InlineData(1L, "KRW")] // the base currency
+    [InlineData(2L, "USD")] // used by documents
+    public async Task Delete_TheBaseCurrencyOrOneDocumentsUse_Is409BcE416(long id, string code)
+    {
+        var act = () => _service.SaveAsync(Batch(deleted: [new CurrencyKey(id, Read)]), "en", "kim", None);
+
+        (await act.Should().ThrowAsync<ConflictException>()).Which.Should().BeEquivalentTo(
+            new { Code = CurrencyRules.InUseCode, Args = new object[] { code } });
+        _currencies.Writes.Should().Be(0);
+        _uow.Commits.Should().Be(0);
+    }
+
+    [Fact, Trait("Id", "BC-UC-026-T05"), Trait("Id", "BC-UT-416"), Trait("Rule", "BC-BR-416")]
+    public async Task Delete_ACurrencyAPartnerTradesIn_Is409BcE416()
+    {
+        _currencies.Add(4, "GBP", 2, "GB", new() { ["en"] = "Pound" });
+        _currencies.UsedByPartners.Add("GBP");
+
+        var act = () => _service.SaveAsync(Batch(deleted: [new CurrencyKey(4, Read)]), "en", "kim", None);
+
+        (await act.Should().ThrowAsync<ConflictException>()).Which.Should().BeEquivalentTo(
+            new { Code = CurrencyRules.InUseCode, Args = new object[] { "GBP" } });
+    }
+
+    [Fact, Trait("Id", "BC-UC-026-T05"), Trait("Id", "BC-UT-416"), Trait("Rule", "BC-BR-416")]
+    public async Task Delete_ABlockedRowWithAFreeOne_DeletesNeither_AndAnUnusedCurrencyAloneIsDeleted()
+    {
+        var mixed = () => _service.SaveAsync(Batch(deleted: [new CurrencyKey(3, Read), new CurrencyKey(2, Read)]), "en", "kim", None);
+
+        (await mixed.Should().ThrowAsync<ConflictException>()).Which.Args.Should().Equal("USD");
+        _currencies.Writes.Should().Be(0);
+        (await _service.SearchAsync("en", null, None)).Select(c => c.CurrencyCode).Should().Equal("EUR", "KRW", "USD");
+
+        var after = await _service.SaveAsync(Batch(deleted: [new CurrencyKey(3, Read)]), "en", "kim", None);
+
+        after.Select(c => c.CurrencyCode).Should().Equal("KRW", "USD");
+    }
+
     [Fact, Trait("Id", "BC-UC-026")]
     public async Task Save_AStaleRow_Is409_AndWritesNothing()
     {
@@ -158,6 +197,8 @@ public class CurrencyServiceTests
 
         public HashSet<string> Used { get; } = [];
 
+        public HashSet<string> UsedByPartners { get; } = [];
+
         public int Writes { get; private set; }
 
         public void Add(long id, string code, int decimals, string? country, Dictionary<string, string> names, bool useYn = true)
@@ -172,6 +213,10 @@ public class CurrencyServiceTests
         public Task<IReadOnlySet<string>> FindUsedByDocumentsAsync(
             IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlySet<string>>(currencyCodes.Where(Used.Contains).ToHashSet());
+
+        public Task<IReadOnlySet<string>> FindUsedByPartnersAsync(
+            IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlySet<string>>(currencyCodes.Where(UsedByPartners.Contains).ToHashSet());
 
         public Task<long> InsertAsync(string currencyCode, CurrencyFields fields, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken)
         {

@@ -70,4 +70,25 @@ public class CurrencyRepositoryTests(AuthSchemaFixture db)
         used.Should().BeEquivalentTo(Seeded.Where(stored.Contains));
         (await db.Get<ICurrencyRepository>().FindUsedByDocumentsAsync([], uow.Transaction, None)).Should().BeEmpty();
     }
+
+    [DatabaseFact, Trait("Id", "BC-UT-416"), Trait("Rule", "BC-BR-416")]
+    public async Task FindUsed_ReadsPurchaseOrdersForDocuments_AndCustomersAndVendorsForPartners()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        await uow.Transaction.Connection!.ExecuteAsync(
+            """
+            INSERT INTO mm_purchase_order (po_no, currency_code, exchange_rate, created_by, updated_by) VALUES ('ZZPO416', 'ZZD', 1, 't', 't');
+            INSERT INTO bc_customer (c_name, currency_code, created_by, updated_by) VALUES ('Customer 416', 'ZZC', 't', 't');
+            INSERT INTO bc_vendor (v_name, currency_code, created_by, updated_by) VALUES ('Vendor 416', 'ZZV', 't', 't');
+            """,
+            transaction: uow.Transaction);
+        var repository = db.Get<ICurrencyRepository>();
+        string[] codes = ["ZZD", "ZZC", "ZZV", "ZZN"];
+
+        var byDocuments = await repository.FindUsedByDocumentsAsync(codes, uow.Transaction, None);
+        var byPartners = await repository.FindUsedByPartnersAsync(codes, uow.Transaction, None);
+
+        byDocuments.Should().BeEquivalentTo(["ZZD"]);
+        byPartners.Should().BeEquivalentTo(["ZZC", "ZZV"]);
+    }
 }

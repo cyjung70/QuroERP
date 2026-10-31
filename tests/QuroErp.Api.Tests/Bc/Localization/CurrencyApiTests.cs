@@ -84,6 +84,20 @@ public class CurrencySaveApiTests
         (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be(error);
     }
 
+    [Fact, Trait("Id", "BC-UC-026-T05"), Trait("Rule", "BC-BR-416")]
+    public async Task Delete_ACurrencyDocumentsUse_Returns409BcE416_WithTheCode()
+    {
+        await using var factory = new ApiFactory();
+        var client = await factory.AdminAsync();
+
+        using var response = await client.PostAsJsonAsync(CurrencyRoutes.Batch, CurrencyApiTests.Batch(deleted: [new CurrencyKey(UsdId, Created)]));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var problem = await response.ReadProblemAsync();
+        problem.GetProperty("code").GetString().Should().Be("BC-E-416");
+        problem.GetProperty("args")[0].GetString().Should().Be("USD");
+    }
+
     [Fact, Trait("Id", "BC-UC-026-T04")]
     public async Task Save_WithoutAnEnName_Returns422BcE404()
     {
