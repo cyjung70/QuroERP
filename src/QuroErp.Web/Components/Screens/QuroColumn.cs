@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
+using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Components.Screens;
 
@@ -21,7 +22,7 @@ public sealed class QuroColumn<TRow> : ComponentBase
     [Parameter]
     public Func<TRow, object?>? Value { get; set; }
 
-    /// <summary>Format of an IFormattable value, e.g. N2 or yyyy-MM-dd.</summary>
+    /// <summary>Format of an IFormattable value, e.g. N2. Without it a date shows in the user language's date pattern.</summary>
     [Parameter]
     public string? Format { get; set; }
 
@@ -34,6 +35,9 @@ public sealed class QuroColumn<TRow> : ComponentBase
     internal string Text(TRow row) => Value?.Invoke(row) switch
     {
         null => "",
+        DateOnly date when Format is null => DisplayCulture.FormatDate(date),
+        DateTime at when Format is null => DisplayCulture.FormatDate(at),
+        DateTimeOffset at when Format is null => DisplayCulture.FormatDate(at.DateTime),
         IFormattable formattable => formattable.ToString(Format, CultureInfo.CurrentCulture),
         var value => value.ToString() ?? "",
     };

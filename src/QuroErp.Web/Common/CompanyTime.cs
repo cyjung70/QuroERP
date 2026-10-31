@@ -38,9 +38,12 @@ public sealed class CompanyTime(Func<CancellationToken, Task<string>> readTimeZo
     /// <summary>Forgets the cached time zone, after the company screen saved a new one.</summary>
     public void Reset() => cache.Remove(CacheKey);
 
-    /// <summary>The time in the zone, short date and time of the current culture (ko 2026-10-30 오전 9:00, en 10/30/2026 9:00 AM).</summary>
+    /// <summary>
+    /// The time in the zone, in the user language's fixed date and time patterns (<see cref="DisplayCulture"/>):
+    /// ko 2026-10-30 오전 9:00, en 10/30/2026 9:00 AM.
+    /// </summary>
     public static string Format(DateTimeOffset at, TimeZoneInfo zone) =>
-        TimeZoneInfo.ConvertTime(at, zone).ToString("g", CultureInfo.CurrentCulture);
+        DisplayCulture.FormatDateTime(TimeZoneInfo.ConvertTime(at, zone).DateTime);
 
     /// <summary>
     /// IANA time zones the system knows, for the company time zone dropdown (BC-BR-318): code = IANA name,
