@@ -1,0 +1,90 @@
+# Build, test, Harness check and format check for every PR to main and every push to main (TASK-CORE-052).
+# The job name `ci` is fixed so branch protection can require it.
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        # Test-only credentials for a throwaway container; not used anywhere else.
+        env:
+          POSTGRES_USER: quro_test
+          POSTGRES_PASSWORD: quro_test
+          POSTGRES_DB: quro_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quro_test -d quro_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      ConnectionStrings__QuroErpTest: Host=localhost;Port=5432;Database=quro_test;Username=quro_test;Password=quro_test
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -warnaserror -p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: dotnet test --no-build --logger trx --results-directory TestResults
+
+      # A skipped test means a DB integration test did not run (no connection string), which counts as a failure.
+      - name: Fail on skipped tests
+        shell: pwsh
+        run: |
+          $skipped = 0
+          foreach ($file in Get-ChildItem TestResults -Filter *.trx -Recurse) {
+            # -LiteralPath: TRX names can contain [1], which Get-Content would read as a wildcard.
+            [xml]$trx = Get-Content -LiteralPath $file.FullName -Raw
+            # Skipped xUnit tests are results with outcome NotExecuted; the summary counter stays 0.
+            $skipped += @($trx.TestRun.Results.UnitTestResult | Where-Object outcome -eq 'NotExecuted').Count
+          }
+          if ($skipped -gt 0) {
+            Write-Error "$skipped test(s) were skipped."
+            exit 1
+          }
+
+      - name: Validate Harness
+        shell: pwsh
+        run: ./scripts/validate-harness.ps1
+
+      - name: Check format
+        run: dotnet format --no-restore --verify-no-changes
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: warn
