@@ -1,0 +1,97 @@
+@using QuroErp.Contracts.Common.Auth
+@inject IStringLocalizer<SharedResource> L
+
+@* The home page body (app-shell.md 6). No counts or amounts in phase 1. A step is a link only when it is ready; otherwise it is
+   grey: no permission (tooltip) or not built yet (badge). *@
+<div class="home">
+    <section class="home-welcome" data-testid="home-welcome">
+        <h1>@L["Home.Welcome", UserName ?? ""]</h1>
+        @if (LastLogin is not null)
+        {
+            <p data-testid="home-last-login">@LastLogin</p>
+        }
+    </section>
+
+    <section class="home-panel" data-testid="home-flow-purchase" aria-labelledby="home-flow-purchase-title">
+        <h2 id="home-flow-purchase-title">@L["Home.Flow.Purchase"]</h2>
+        @Flow(HomeSteps.PurchaseFlow)
+    </section>
+
+    <section class="home-panel" data-testid="home-flow-sales" aria-labelledby="home-flow-sales-title">
+        <h2 id="home-flow-sales-title">@L["Home.Flow.Sales"]</h2>
+        @Flow(HomeSteps.SalesFlow)
+    </section>
+
+    <div class="home-links">
+        <section class="home-panel" data-testid="home-links-master" aria-labelledby="home-links-master-title">
+            <h2 id="home-links-master-title">@L["Home.Links.Master"]</h2>
+            @Links(HomeSteps.MasterLinks)
+        </section>
+        <section class="home-panel" data-testid="home-links-settings" aria-labelledby="home-links-settings-title">
+            <h2 id="home-links-settings-title">@L["Home.Links.Settings"]</h2>
+            @Links(HomeSteps.SettingsLinks)
+        </section>
+    </div>
+</div>
+
+@code {
+    /// <summary>User name for the welcome; the user ID when the user has no name.</summary>
+    [Parameter]
+    public string? UserName { get; set; }
+
+    /// <summary>The previous sign-in line, already formatted; null on the first sign-in.</summary>
+    [Parameter]
+    public string? LastLogin { get; set; }
+
+    /// <summary>The user's menus from /me; an empty list shows no step as ready.</summary>
+    [Parameter]
+    public IReadOnlyList<AuthMenu> Menus { get; set; } = [];
+
+    private RenderFragment Flow(IReadOnlyList<HomeStep> steps) =>
+        @<ol class="home-flow">
+            @for (var i = 0; i < steps.Count; i++)
+            {
+                var number = i + 1;
+                <li>@Step(steps[i], "home-step", number.ToString(System.Globalization.CultureInfo.InvariantCulture))</li>
+            }
+        </ol>;
+
+    private RenderFragment Links(IReadOnlyList<HomeStep> links) =>
+        @<ul class="home-link-list">
+            @foreach (var link in links)
+            {
+                <li>@Step(link, "home-link", null)</li>
+            }
+        </ul>;
+
+    // One step or shortcut: a link when ready, otherwise a grey block that is not a link
+    private RenderFragment Step(HomeStep step, string testIdPrefix, string? number) => __builder =>
+    {
+        var state = HomeSteps.StateOf(step, Menus);
+        var dataState = HomeSteps.DataState(state);
+        var testId = $"{testIdPrefix}-{step.Id}";
+        var name = L[step.ResourceKey];
+        if (state == HomeStepState.Ready)
+        {
+            <a class="home-step" href="@step.Path" data-state="@dataState" data-testid="@testId">
+                <span class="home-step-icon" aria-hidden="true">@number</span>
+                <span class="home-step-name">@name</span>
+            </a>
+        }
+        else if (state == HomeStepState.NoPermission)
+        {
+            <span class="home-step" aria-disabled="true" title="@L["Home.NoPermission"]" data-state="@dataState" data-testid="@testId">
+                <span class="home-step-icon" aria-hidden="true">@number</span>
+                <span class="home-step-name">@name</span>
+            </span>
+        }
+        else
+        {
+            <span class="home-step" aria-disabled="true" data-state="@dataState" data-testid="@testId">
+                <span class="home-step-icon" aria-hidden="true">@number</span>
+                <span class="home-step-name">@name</span>
+                <span class="home-step-badge">@L["Home.NotReady"]</span>
+            </span>
+        }
+    };
+}

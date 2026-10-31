@@ -238,7 +238,6 @@
   <data name="Common.LastLogin" xml:space="preserve"><value>Last sign-in: {0} (IP {1})</value></data>
   <data name="Common.Session.ExpiringSoon" xml:space="preserve"><value>You will be signed out in 2 minutes due to inactivity. Choose Stay signed in to continue.</value></data>
   <data name="Common.Session.Extend" xml:space="preserve"><value>Stay signed in</value></data>
-  <data name="Common.Home.Welcome" xml:space="preserve"><value>Welcome, {0}.</value></data>
   <data name="Common.UserMenu" xml:space="preserve"><value>User menu</value></data>
   <data name="Common.MyInfo" xml:space="preserve"><value>My info</value></data>
   <data name="Bc.User.Title" xml:space="preserve"><value>User Management</value></data>
@@ -401,4 +400,24 @@
   <data name="Role.admin" xml:space="preserve"><value>Administrator</value></data>
   <data name="Role.manager" xml:space="preserve"><value>Manager</value></data>
   <data name="Role.srep" xml:space="preserve"><value>Sales Rep</value></data>
+  <data name="Home.Welcome" xml:space="preserve"><value>Welcome, {0}.</value></data>
+  <data name="Home.Flow.Purchase" xml:space="preserve"><value>Purchasing flow</value></data>
+  <data name="Home.Flow.Sales" xml:space="preserve"><value>Sales flow</value></data>
+  <data name="Home.Links.Master" xml:space="preserve"><value>Master data</value></data>
+  <data name="Home.Links.Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Home.Step.PurchaseOrder" xml:space="preserve"><value>Purchase Order</value></data>
+  <data name="Home.Step.GoodsReceipt" xml:space="preserve"><value>Goods Receipt</value></data>
+  <data name="Home.Step.SupplierInvoice" xml:space="preserve"><value>Supplier Invoice</value></data>
+  <data name="Home.Step.ApPayment" xml:space="preserve"><value>Payment</value></data>
+  <data name="Home.Step.SalesOrder" xml:space="preserve"><value>Sales Order</value></data>
+  <data name="Home.Step.Shipment" xml:space="preserve"><value>Shipment</value></data>
+  <data name="Home.Step.SalesInvoice" xml:space="preserve"><value>Sales Invoice</value></data>
+  <data name="Home.Step.ArReceipt" xml:space="preserve"><value>Receipt</value></data>
+  <data name="Home.Link.Item" xml:space="preserve"><value>Items</value></data>
+  <data name="Home.Link.Customer" xml:space="preserve"><value>Customers</value></data>
+  <data name="Home.Link.Vendor" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="Home.Link.Stock" xml:space="preserve"><value>Stock on Hand</value></data>
+  <data name="Home.Link.Company" xml:space="preserve"><value>Company</value></data>
+  <data name="Home.NoPermission" xml:space="preserve"><value>You do not have permission to open this screen.</value></data>
+  <data name="Home.NotReady" xml:space="preserve"><value>Phase 2</value></data>
 </root>

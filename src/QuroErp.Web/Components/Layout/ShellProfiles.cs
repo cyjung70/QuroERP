@@ -28,8 +28,14 @@ public sealed class ShellProfileLoader(
     public bool ShowsShell(HttpContext context) =>
         SessionId(context) is { } sessionId && store.Get(sessionId) is { MustChangePassword: false };
 
+    // The loader is scoped to the request, so the layout and the page (the home) share one read
+    private Task<ShellProfile?>? _loading;
+
     /// <returns>The profile, or null when the Api cannot be reached; the shell then shows no menu and no company.</returns>
-    public async Task<ShellProfile?> LoadAsync(HttpContext context, string uiLanguage, CancellationToken cancellationToken)
+    public Task<ShellProfile?> LoadAsync(HttpContext context, string uiLanguage, CancellationToken cancellationToken) =>
+        _loading ??= ReadAsync(context, uiLanguage, cancellationToken);
+
+    private async Task<ShellProfile?> ReadAsync(HttpContext context, string uiLanguage, CancellationToken cancellationToken)
     {
         if (SessionId(context) is not { } sessionId)
         {

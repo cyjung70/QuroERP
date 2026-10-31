@@ -126,7 +126,7 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
 
         var html = WebUtility.HtmlDecode(await browser.GetStringAsync("/"));
 
-        html.Should().MatchRegex("data-testid=\"home-last-login\">직전 로그인: [^<]+\\(IP 10\\.0\\.0\\.7\\)<");
+        html.Should().MatchRegex("data-testid=\"home-last-login\"[^>]*>직전 로그인: [^<]+\\(IP 10\\.0\\.0\\.7\\)<");
     }
 
     private void SignInResponse()
