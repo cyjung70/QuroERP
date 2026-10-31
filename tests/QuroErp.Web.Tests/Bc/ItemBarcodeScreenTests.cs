@@ -199,7 +199,7 @@ public class ItemBarcodeScreenTests : BunitContext
             }
             if (path == "/" + LocalizationRoutes.Base)
             {
-                return Json(new LocalizationDto("US", "USD", "en", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT", [],
+                return Json(new LocalizationDto("US", "USD", "en", "America/New_York", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT", [],
                     [new CurrencyDto("USD", "US Dollar", 2, "US")],
                     [new CountryDecimalDto("US", "MM", 2), new CountryDecimalDto("US", "SD", 4)],
                     [new DecimalSettingDto("MM", 3, "HALF_UP")]));
