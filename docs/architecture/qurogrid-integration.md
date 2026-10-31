@@ -129,7 +129,7 @@ csproj에는 패키지 이름이나 버전을 쓰지 않고 다음 한 줄만 �
 - 앱에 패키지와 같은 이름의 컴포넌트를 두지 않는다 (`QuroGrid`, `QuroLabel`). 전환 중에는 전체 이름(`Quro.Grid.QuroGrid`)으로 구분한다.
 - 패키지에 없는 것(숫자 박스, 체크박스·라디오, 셀·입력 `data-testid`, 그리드 단위 편집 잠금)은 7장대로 요청하고, 그동안 앱 래퍼가 DataSet에 묶어 그린다. 우회 코드에 `// TODO(QuroGrid-<요청ID>)`를 남긴다.
 - 권한(`CanWrite`)·행 추가·삭제 표시·복원·행 상태 표시는 화면 틀이 맡는다. 그리드에는 편집 잠금만 넘긴다.
-- 날짜: 앱이 `ShortDatePattern`을 지정한 culture를 `Culture`로 넘긴다 (ko `yyyy-MM-dd`, en `MM/dd/yyyy`).
+- 날짜: 앱의 표시 culture 팩토리가 만든 culture(날짜·시각 패턴과 오전·오후 고정, [다국어](i18n.md) "숫자·날짜")를 `Culture`로 넘긴다 (ko `yyyy-MM-dd`, en `MM/dd/yyyy`).
 - 필수: DTO `[Required]`는 국가와 상관없는 공통 필수에만 단다. 국가별 필수는 필드 정책 결과로 `SetColumn`해서 `Validate`가 검사하게 한다.
 - 공통코드 콤보: 코드 Major별 코드 DataSet을 한 번 읽어 캐시하고 화면들이 공유한다. 그리드 Combo 열과 `QuroComboBox`에 `OptionsSource`로 넘긴다. 연동 콤보는 `FilterField`·`ParentField`.
 - 목록 크기: 품목처럼 큰 목록은 서버 페이징(`ItemsProvider`, `request.Filters` 반영), 코드·통화 같은 작은 목록은 메모리 모드.
