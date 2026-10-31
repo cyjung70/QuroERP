@@ -35,5 +35,5 @@
     "샘플 `/samples/single`과 같은 틀을 쓰는 S 화면이 빌드·bUnit 통과. bUnit: 입력 → DataSet 값, 필수 비움 → 저장 차단, 잠김, 날짜 ko·en 표시, `Field` 없는 래퍼는 지금과 같음. 바뀐 DOM에 맞춰 기존 bUnit·Tester Page Object를 고친다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
