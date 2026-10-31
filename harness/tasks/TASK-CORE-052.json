@@ -1,0 +1,33 @@
+{
+  "id": "TASK-CORE-052",
+  "project": "core",
+  "title": "main CI: PR·push마다 빌드·테스트·Harness 검증·포맷 검사, 머지 차단",
+  "module": "CORE",
+  "layer": [
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "AGENTS.md",
+    "docs/architecture/database.md",
+    "docs/architecture/qurogrid-integration.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [],
+  "acceptance": [
+    "`.github/workflows/ci.yml`: main으로 가는 모든 PR과 main push에서 실행. 잡 이름은 고정(`ci`)해서 필수 검사로 지정할 수 있게 한다",
+    "`dotnet build -warnaserror -p:ContinuousIntegrationBuild=true` (경고 0, QuroGrid는 nuget.org 패키지로 복원 — qurogrid-integration.md)",
+    "`dotnet test` 전체. PostgreSQL 서비스 컨테이너를 띄우고 `ConnectionStrings__QuroErpTest`를 주어 DB 통합 테스트가 건너뛰지 않고 실행된다. 건너뛴 DB 테스트가 있으면 실패로 본다",
+    "`pwsh scripts/validate-harness.ps1`, `dotnet format --verify-no-changes`",
+    "테스트 결과(TRX)를 Actions 아티팩트로 올린다. 비밀번호·연결 문자열은 워크플로 안의 테스트 전용 값이나 Actions 비밀 변수만 쓰고 운영 값은 넣지 않는다",
+    "검증: 일부러 깨뜨린 브랜치(빌드 경고 1건)로 PR을 열어 `ci`가 실패하는지 확인한 뒤 닫는다",
+    "머지 차단: 메인테이너가 저장소 설정에서 main 브랜치 보호 규칙에 `ci`를 필수 검사로 지정한다 (저장소 설정이라 코드 변경이 아니다. PR 설명에 절차를 적는다)",
+    "Tester 잡·docker compose 테스트 환경은 TASK-CORE-012가 이 워크플로에 더한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
