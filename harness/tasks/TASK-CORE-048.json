@@ -20,14 +20,16 @@
   ],
   "dependsOn": [
     "TASK-CORE-047",
-    "TASK-CORE-040"
+    "TASK-CORE-040",
+    "TASK-CORE-054"
   ],
   "acceptance": [
     "`QuroText`·`QuroNumber`·`QuroDate`·`QuroCombo`… 와 QuroGrid 열 정의에 `Policy`(라벨 리소스 키) 속성: 정책 상태로 숨김·필수 표시·읽기 전용을 정한다. `Label`을 안 주면 정책의 라벨 키(재정의 포함)를 쓴다 (field-policy.md 3장)",
     "`LockMode`·`Required`를 함께 주면 더 엄격한 쪽 (BC-BR-432). 화면은 정책 값을 직접 분기하지 않는다",
     "화면 프레임이 `GET /api/bc/field-policies?screen=`을 한 번 읽어 캐시한다 (언어 전환 때 라벨만 다시)",
     "관리자 \"전체 필드 보기\" 토글(커맨드바, 지역화 설정 Full Access만): 숨김 필드를 읽기 전용 + 표식으로 보인다. 저장 요청에는 영향 없음 (BC-BR-435)",
-    "샘플 `/samples/single`에 정책 예(US·KR 국가팩으로 숨김·필수 전환) + bUnit: 숨김, 필수 마커, 읽기 전용, 관리자 토글"
+    "래퍼가 DataSet 열에 묶여 있으면(`Field`, TASK-CORE-054) 정책 결과를 DataSet 열에 반영한다: 필수는 `SetColumn`으로 열 `Required`(필수 마커와 `Validate` 결과가 같다), 숨김 필드는 `Validate`의 필수 검사에서 빠진다. `Field` 없는 래퍼는 지금 방식",
+    "샘플 `/samples/single`에 정책 예(US·KR 국가팩으로 숨김·필수 전환) + bUnit: 숨김, 필수 마커, 읽기 전용, 관리자 토글, DataSet 묶인 래퍼의 정책 필수 → `Validate` 오류·정책 숨김 → 검사 제외"
   ],
   "estimateHours": 3,
   "status": "todo"
