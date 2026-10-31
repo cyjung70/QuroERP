@@ -15,7 +15,7 @@
                            LoadOnStart="true" LoadSources="() => Task.FromResult(_store.Groups())"
                            LoadTargets="group => Task.FromResult(_store.Members(group.Id))"
                            CreateTarget="group => new SampleLine { OwnerId = group.Id, Qty = 1 }"
-                           SaveTargets="SaveAsync">
+                           SaveTargets="SaveAsync" CanWrite="CanWrite">
         <SourceColumns>
             <QuroColumn TRow="SampleGroup" Title="@L["Samples.Group"]" Value="g => g.Code" />
             <QuroColumn TRow="SampleGroup" Title="@L["Samples.Name"]" Value="g => g.Name" />
@@ -33,6 +33,10 @@
 
 @code {
     private SampleStore? _store;
+
+    /// <summary>Full Access of the user; false shows the read-only state (TASK-CORE-051).</summary>
+    [Parameter]
+    public bool CanWrite { get; set; } = true;
 
     protected override void OnInitialized()
     {

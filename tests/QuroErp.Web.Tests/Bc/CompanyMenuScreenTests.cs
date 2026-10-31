@@ -144,15 +144,26 @@ public class CompanyMenuScreenTests : BunitContext
             .Should().Be("다른 사용자가 먼저 수정했습니다. 다시 조회한 뒤 저장하세요."));
     }
 
-    [Fact, Trait("Id", "BC-UT-214")]
-    public void UserWithoutFullAccess_CanOnlyRead()
+    [Fact, Trait("Id", "BC-UT-214"), Trait("Id", "CORE-051-WT-04")]
+    public void UserWithoutFullAccess_CanOnlyRead_NewSaveAndRowButtonsAreDisabledNotHidden()
     {
         var page = RenderAs("user");
+        var rows = page.FindAll("[data-testid=company-menu-grid] tbody tr").Count;
 
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
-            .Should().NotContain(["company-menu-toolbar-new", "company-menu-toolbar-save"]);
+        page.Find("[data-testid=company-menu-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=company-menu-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=company-menu-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
+        page.Find("[data-testid=company-menu-toolbar-export]").HasAttribute("disabled").Should().BeFalse();
+        page.FindAll("[data-testid=company-menu-grid-delete-row]").Should().NotBeEmpty().And.OnlyContain(b => b.HasAttribute("disabled"));
         page.FindAll("[data-testid=company-menu-grid-name]").Should().OnlyContain(c => c.HasAttribute("readonly") || c.HasAttribute("disabled"));
-        page.FindAll("[data-testid=company-menu-grid-delete-row]").Should().BeEmpty();
+
+        // The handlers do nothing either
+        page.Find("[data-testid=company-menu-toolbar-new]").Click();
+        page.FindAll("[data-testid=company-menu-grid-delete-row]")[0].Click();
+        page.Find("[data-testid=company-menu-toolbar-save]").Click();
+        page.FindAll("[data-testid=company-menu-grid] tbody tr").Should().HaveCount(rows);
+        page.FindAll("[data-state=D]").Should().BeEmpty();
+        _api.Saved.Should().BeEmpty();
     }
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");

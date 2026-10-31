@@ -1,6 +1,8 @@
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using FluentAssertions;
 using QuroErp.Web.Components.Pages.Samples;
+using QuroErp.Web.Components.Screens;
 
 namespace QuroErp.Web.Tests.Screens;
 
@@ -366,6 +368,64 @@ public class SampleScreenTests : ScreenContext
         page.Find("[data-testid=po-entry-message]").TextContent.Should().Contain("공급자을(를) 입력하세요.");
     }
 
+    [Fact, Trait("Id", "CORE-051-WT-06"), Trait("Rule", "BC-BR-214")]
+    public void Multi_WithoutCanWrite_DisablesNewSaveAndRows_SearchStillWorks()
+    {
+        var page = Render<SampleMulti>(p => p.Add(x => x.CanWrite, false));
+        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+
+        page.Find("[data-testid=multi-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=multi-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
+        page.FindAll("[data-testid=multi-grid-delete-row]").Should().OnlyContain(b => b.HasAttribute("disabled"));
+        page.FindAll("[data-testid=multi-grid-name]").Should().OnlyContain(c => c.HasAttribute("readonly"));
+        page.Find("[data-testid=multi-toolbar-new]").Click();
+        page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2);
+
+        page.Find("[data-testid=multi-toolbar-search]").Click();
+        page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2);
+    }
+
+    [Fact, Trait("Id", "CORE-051-WT-07")]
+    public void Multi_ListWithoutSave_HasNoNewOrSave_WhateverCanWrite()
+    {
+        foreach (var canWrite in new[] { true, false })
+        {
+            var page = Render<QuroMultiGrid<SampleItem>>(p => p
+                .Add(x => x.Title, "List")
+                .Add(x => x.TestId, "list")
+                .Add(x => x.CanWrite, canWrite)
+                .Add(x => x.Load, () => Task.FromResult<IReadOnlyList<SampleItem>>([new SampleItem { Code = "A100" }]))
+                .Add(x => x.Columns, b =>
+                {
+                    b.OpenComponent<QuroColumn<SampleItem>>(0);
+                    b.AddAttribute(1, nameof(QuroColumn<SampleItem>.Title), "Code");
+                    b.AddAttribute(2, nameof(QuroColumn<SampleItem>.Value), (Func<SampleItem, object?>)(i => i.Code));
+                    b.CloseComponent();
+                }));
+
+            page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
+                .Should().Equal("list-toolbar-search", "list-toolbar-export");
+        }
+    }
+
+    [Fact, Trait("Id", "CORE-051-WT-08")]
+    public void Toolbar_WhileBusy_DisablesTheScreensOwnCommands()
+    {
+        RenderFragment extra = b =>
+        {
+            b.OpenElement(0, "button");
+            b.AddAttribute(1, "data-testid", "own");
+            b.CloseElement();
+        };
+
+        var idle = Render<QuroToolbar>(p => p.Add(x => x.ExtraCommands, extra));
+        var busy = Render<QuroToolbar>(p => p.Add(x => x.ExtraCommands, extra).Add(x => x.Busy, true));
+
+        idle.Find("fieldset[data-group=extra]").HasAttribute("disabled").Should().BeFalse();
+        busy.Find("fieldset[data-group=extra]").HasAttribute("disabled").Should().BeTrue();
+        busy.Find("fieldset[data-group=extra] [data-testid=own]").Should().NotBeNull();
+    }
+
     // MM
 
     [Fact]
@@ -397,5 +457,23 @@ public class SampleScreenTests : ScreenContext
         page.Find("[data-testid=master-detail-toolbar-save]").Click();
 
         Store.Members(2).Should().ContainSingle(m => m.ItemCode == "B200");
+    }
+
+    [Fact, Trait("Id", "CORE-051-WT-09"), Trait("Rule", "BC-BR-214")]
+    public void MasterDetail_WithoutCanWrite_SelectsAndShowsTargets_ButCannotChangeThem()
+    {
+        var page = Render<SampleMasterDetail>(p => p.Add(x => x.CanWrite, false));
+        page.WaitForAssertion(() => page.FindAll("[data-testid=master-detail-grid-select]").Should().HaveCount(2));
+        page.FindAll("[data-testid=master-detail-grid-select]")[0].Click();
+
+        page.FindAll("[data-testid=master-detail-line-item-code]").Should().ContainSingle().Which.HasAttribute("readonly").Should().BeTrue();
+        page.Find("[data-testid=master-detail-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=master-detail-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=master-detail-line-add-row]").HasAttribute("disabled").Should().BeTrue();
+        page.FindAll("[data-testid=master-detail-line-delete-row]").Should().OnlyContain(b => b.HasAttribute("disabled"));
+
+        page.Find("[data-testid=master-detail-toolbar-new]").Click();
+        page.Find("[data-testid=master-detail-line-add-row]").Click();
+        page.FindAll("[data-testid=master-detail-line-item-code]").Should().ContainSingle();
     }
 }

@@ -24,8 +24,7 @@
 @if (_ready)
 {
     <QuroMultiGrid @ref="_grid" TRow="RoleMenuRow" Title="@L["Bc.RoleMenu.Title"]" TestId="role-menu" Path="@L["Menu.G5AD"]" LoadOnStart="_roleId is not null"
-                   Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)"
-                   OnAddRequested="@(_canEdit ? EventCallback.Factory.Create(this, OpenAddDialog) : default)">
+                   Load="LoadAsync" Save="SaveAsync" OnAddRequested="OpenAddDialog" CanWrite="_canEdit">
         <SearchContent>
             <QuroSelect Label="@L["Bc.RoleMenu.Role"]" @bind-Value="_roleId" Options="_roles" Required TestId="role-menu-search-role" />
         </SearchContent>

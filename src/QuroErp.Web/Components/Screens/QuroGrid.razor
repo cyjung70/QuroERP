@@ -14,7 +14,7 @@
 <div class="@(EntryMode ? "quro-grid quro-grid-selectable" : "quro-grid")" data-testid="@TestId">
     @if (Editable && !EntryMode && OnAddRow.HasDelegate)
     {
-        <button type="button" class="quro-add-row" disabled="@Busy" data-testid="@Id("add-row")" @onclick="OnAddRow">@L["Common.AddRow"]</button>
+        <button type="button" class="quro-add-row" disabled="@(Busy || !CanWrite)" data-testid="@Id("add-row")" @onclick="AddRowAsync">@L["Common.AddRow"]</button>
     }
     <table>
         <thead>
@@ -65,12 +65,12 @@
                     @if (Editable && !EntryMode)
                     {
                         <td>
-                            <button type="button" disabled="@Busy" data-testid="@Id("delete-row")" @onclick="() => ToggleDeleteAsync(row)">
+                            <button type="button" disabled="@(Busy || !CanWrite)" data-testid="@Id("delete-row")" @onclick="() => ToggleDeleteAsync(row)">
                                 @(row.IsDeleted ? L["Common.RestoreRow"] : L["Common.DeleteRow"])
                             </button>
                             @if (row.State == RowState.Modified)
                             {
-                                <button type="button" disabled="@Busy" data-testid="@Id("undo-row")" @onclick="() => UndoAsync(row)">@L["Common.UndoRow"]</button>
+                                <button type="button" disabled="@(Busy || !CanWrite)" data-testid="@Id("undo-row")" @onclick="() => UndoAsync(row)">@L["Common.UndoRow"]</button>
                             }
                         </td>
                     }
@@ -97,6 +97,13 @@
 
     [Parameter]
     public bool Editable { get; set; }
+
+    /// <summary>
+    /// Permission, not the screen's function: false for a user without Full Access (BC-BR-214). An editable grid keeps its
+    /// row state and buttons, but every cell is locked and add, delete and undo are disabled and do nothing.
+    /// </summary>
+    [Parameter]
+    public bool CanWrite { get; set; } = true;
 
     /// <summary>
     /// Line grid of the SM entry frame: no add-row button or per-row buttons, a click selects the row
@@ -169,7 +176,7 @@
             form = new QuroFormContext { IsNew = row.IsNew };
             _forms[row] = form;
         }
-        form.ReadOnly = !Editable || IsLocked(row);
+        form.ReadOnly = !Editable || !CanWrite || IsLocked(row);
         return form;
     }
 
@@ -177,14 +184,24 @@
 
     private Task SelectRowAsync(GridRow<TRow> row) => row != SelectedRow ? SelectedRowChanged.InvokeAsync(row) : Task.CompletedTask;
 
+    private Task AddRowAsync() => CanWrite ? OnAddRow.InvokeAsync() : Task.CompletedTask;
+
     private async Task ToggleDeleteAsync(GridRow<TRow> row)
     {
+        if (!CanWrite)
+        {
+            return;
+        }
         Rows.ToggleDelete(row);
         await OnChanged.InvokeAsync();
     }
 
     private async Task UndoAsync(GridRow<TRow> row)
     {
+        if (!CanWrite)
+        {
+            return;
+        }
         Rows.Undo(row);
         await OnChanged.InvokeAsync();
     }

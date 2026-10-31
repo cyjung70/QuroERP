@@ -6,8 +6,8 @@
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
     <Toolbar>
-        @* New and save need a selected source row; until then they are disabled (screen-templates.md 0) *@
-        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanNew="_selected is not null" CanSave="_selected is not null"
+        @* New and save need a selected source row and Full Access; until then they are disabled (screen-templates.md 0, 2) *@
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanNew="CanChange" CanSave="CanChange"
                      OnNew="AddTarget" OnSave="SaveAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
@@ -16,7 +16,7 @@
                       Selected="_selected" OnSelect="SelectAsync" />
             @if (_selected is not null)
             {
-                <QuroGrid @ref="_grid" TRow="TTarget" Rows="_targets" Columns="TargetColumns" Editable="true" Busy="Busy"
+                <QuroGrid @ref="_grid" TRow="TTarget" Rows="_targets" Columns="TargetColumns" Editable="true" CanWrite="CanWrite" Busy="Busy"
                           TestId="@Id("line")" OnAddRow="AddTarget" OnChanged="StateHasChanged" />
             }
         </div>
@@ -50,6 +50,10 @@
     [Parameter, EditorRequired]
     public Func<TSource, BatchChanges<TTarget>, Task> SaveTargets { get; set; } = default!;
 
+    /// <summary>Permission: false for a user without Full Access (BC-BR-214). New, save and the target grid are disabled.</summary>
+    [Parameter]
+    public bool CanWrite { get; set; } = true;
+
     [Parameter]
     public bool LoadOnStart { get; set; }
 
@@ -58,6 +62,8 @@
     public RenderFragment? ExtraCommands { get; set; }
 
     public override bool IsDirty => _targets.IsDirty;
+
+    private bool CanChange => CanWrite && _selected is not null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,14 +96,18 @@
 
     private void AddTarget()
     {
-        if (_selected is not null)
+        if (CanChange)
         {
-            _targets.Add(CreateTarget(_selected));
+            _targets.Add(CreateTarget(_selected!));
         }
     }
 
     private async Task SaveAsync()
     {
+        if (!CanChange)
+        {
+            return;
+        }
         var changes = _targets.Changes();
         if (changes.IsEmpty)
         {

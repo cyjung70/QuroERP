@@ -7,13 +7,13 @@
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
     <Toolbar>
-        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync"
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanNew="CanWrite" CanSave="CanWrite"
                      OnNew="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)"
                      OnSave="@(Editable ? EventCallback.Factory.Create(this, SaveAsync) : default)"
                      OnPrint="OnPrint" OnExport="ExportAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
-        <QuroGrid @ref="_grid" TRow="TRow" Rows="_rows" Columns="Columns" Editable="Editable" Busy="Busy" TestId="@Id("grid")"
+        <QuroGrid @ref="_grid" TRow="TRow" Rows="_rows" Columns="Columns" Editable="Editable" CanWrite="CanWrite" Busy="Busy" TestId="@Id("grid")"
                   OnAddRow="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)" OnChanged="StateHasChanged" />
     </ChildContent>
 </QuroScreenFrame>
@@ -44,6 +44,13 @@
     /// <summary>Saves the changed rows. Without it the grid is view only.</summary>
     [Parameter]
     public Func<BatchChanges<TRow>, Task>? Save { get; set; }
+
+    /// <summary>
+    /// Permission: false for a user without Full Access (BC-BR-214). New, save and the grid are disabled, not hidden.
+    /// <see cref="QuroGrid{TRow}.Editable"/> stays the screen's function (a list without save has no new or save at all).
+    /// </summary>
+    [Parameter]
+    public bool CanWrite { get; set; } = true;
 
     /// <summary>Searches when the screen opens.</summary>
     [Parameter]
@@ -93,6 +100,10 @@
 
     private async Task AddRow()
     {
+        if (!CanWrite)
+        {
+            return;
+        }
         if (OnAddRequested.HasDelegate)
         {
             await OnAddRequested.InvokeAsync();
@@ -103,6 +114,10 @@
 
     private async Task SaveAsync()
     {
+        if (!CanWrite)
+        {
+            return;
+        }
         var changes = _rows.Changes();
         if (changes.IsEmpty)
         {

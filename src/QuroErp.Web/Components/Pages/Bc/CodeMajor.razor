@@ -24,7 +24,7 @@
 @if (_ready)
 {
     <QuroMultiGrid TRow="CodeMajorRow" Title="@L["Bc.CodeMajor.Title"]" TestId="code-major" Path="@L["Menu.G1BA"]" LoadOnStart="true"
-                   Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)" CreateRow="@(_canEdit ? NewRow : null)">
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit">
         <SearchContent>
             <QuroText Label="@L["Bc.CodeMajor.MajorCode"]" @bind-Value="_majorCode" TextCase="TextCase.Upper" TestId="code-major-search-major-code" />
             <QuroText Label="@L["Bc.CodeMajor.Name"]" Value="@_majorName" LockMode="LockMode.Always" TestId="code-major-search-name" />
