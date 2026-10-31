@@ -4,6 +4,7 @@ using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Common;
 using QuroErp.Application.Bc.Localization;
+using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Bc.UserProfiles;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<LocalizationService>();
         services.AddScoped<LocalizationSettingService>();
         services.AddScoped<CurrencyService>();
+        services.AddScoped<ITaxRateProvider, TaxAreaRateProvider>();
         services.AddScoped<InventorySettingService>();
         services.AddScoped<ItemService>();
         services.AddScoped<ItemImageService>();

@@ -139,6 +139,9 @@
   <data name="quro.validation.required" xml:space="preserve"><value>This field is required. Enter a value.</value></data>
   <data name="quro.validation.min" xml:space="preserve"><value>Enter a value at or above the minimum.</value></data>
   <data name="quro.validation.max" xml:space="preserve"><value>Enter a value at or below the maximum.</value></data>
+  <data name="BC-E-513" xml:space="preserve"><value>Tax code '{0}' has no rate valid on {1}. Add a tax area rate starting on or before that date.</value></data>
+  <data name="BC-E-521" xml:space="preserve"><value>Business registration number '{0}' is not valid. It must be 10 digits with a correct check digit.</value></data>
+  <data name="BC-W-525" xml:space="preserve"><value>The exemption certificate for this state has expired, so the customer's default tax code is used.</value></data>
   <data name="quro.validation.minExclusive" xml:space="preserve"><value>Enter a value greater than the minimum.</value></data>
   <data name="quro.validation.maxExclusive" xml:space="preserve"><value>Enter a value less than the maximum.</value></data>
   <data name="quro.validation.notEqual" xml:space="preserve"><value>This value is not allowed.</value></data>

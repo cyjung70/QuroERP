@@ -1,3 +1,4 @@
+using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Common.I18n;
 
@@ -49,6 +50,12 @@ public interface ICountryProfile
 
     /// <summary>bc_country_decimal rows of this country (BC-BR-422). Installed for every supported country.</summary>
     IReadOnlyList<CountryDecimal> DefaultUnitPriceDecimals { get; }
+
+    /// <summary>TaxKind values tax codes of this country may use (BC-BR-502).</summary>
+    IReadOnlyList<string> TaxKinds { get; }
+
+    /// <summary>Tax codes installed for this country (BC-BR-505). NONE cannot be deleted or disabled.</summary>
+    IReadOnlyList<DefaultTaxCode> DefaultTaxCodes { get; }
 }
 
 public sealed class UsCountryProfile : ICountryProfile
@@ -78,6 +85,14 @@ public sealed class UsCountryProfile : ICountryProfile
         new(CountryProfiles.Us, DecimalModule.Mm, unitPriceDecimals: 4),
         new(CountryProfiles.Us, DecimalModule.Sd, unitPriceDecimals: 2),
     ];
+
+    public IReadOnlyList<string> TaxKinds { get; } = [TaxKind.SalesTax, TaxKind.SalesTaxExempt, TaxKind.None];
+
+    public IReadOnlyList<DefaultTaxCode> DefaultTaxCodes { get; } =
+    [
+        new("EXEMPT", TaxKind.SalesTaxExempt, 0m),
+        new("NONE", TaxKind.None, 0m),
+    ];
 }
 
 public sealed class KrCountryProfile : ICountryProfile
@@ -106,6 +121,16 @@ public sealed class KrCountryProfile : ICountryProfile
     [
         new(CountryProfiles.Kr, DecimalModule.Mm, unitPriceDecimals: 2),
         new(CountryProfiles.Kr, DecimalModule.Sd, unitPriceDecimals: 0),
+    ];
+
+    public IReadOnlyList<string> TaxKinds { get; } = [TaxKind.VatStandard, TaxKind.VatZero, TaxKind.VatExempt, TaxKind.None];
+
+    public IReadOnlyList<DefaultTaxCode> DefaultTaxCodes { get; } =
+    [
+        new("VAT10", TaxKind.VatStandard, 10m),
+        new("VAT0", TaxKind.VatZero, 0m),
+        new("VATEX", TaxKind.VatExempt, 0m),
+        new("NONE", TaxKind.None, 0m),
     ];
 }
 
