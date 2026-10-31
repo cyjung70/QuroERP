@@ -33,6 +33,7 @@ public class ItemImageUploadScreenTests : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         Services.AddSingleton<IQuroConfirm>(_confirm);
         Services.AddSingleton(TimeProvider.System);
         Services.AddSingleton<AccessTokenStore>();
@@ -134,7 +135,8 @@ public class ItemImageUploadScreenTests : BunitContext
         var page = RenderAs("user", "A100");
 
         ImageSrc(page).Should().Be("/bc/item-image/A100?v=1");
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().Equal("item-image-upload-toolbar-search");
+        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().Equal("item-image-upload-toolbar-search", "item-image-upload-toolbar-save");
+        page.Find("[data-testid=item-image-upload-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
         page.FindAll("[data-testid=item-image-upload-header-file]").Should().BeEmpty();
         page.FindAll("[data-testid=item-image-upload-toolbar-delete]").Should().BeEmpty();
     }
@@ -187,7 +189,8 @@ public class ItemImageUploadScreenTests : BunitContext
     private sealed class FakeItemImageApi : HttpMessageHandler
     {
         private readonly ItemDto _item = new(1, "A100", "APPLE", null, null, "INVENTORY", "EA", "FR", "Y", 1.5m, 2m, null, null, 0m,
-            null, null, null, null, null, null, true, "TAXABLE", "A100", 1.2m, 5m, 6m, DateTimeOffset.UnixEpoch);
+            null, null, null, null, null, null, true, "TAXABLE", "A100", 1.2m, 5m, 6m,
+            AuditTimes.Created, "setup", AuditTimes.Updated, "kim");
 
         public List<(string Path, string? Field, string? FileName, byte[] Content)> Uploads { get; } = [];
 
