@@ -47,7 +47,7 @@ public class UserServiceTests
 
     private static UserRow Row(long id, string userId, long roleId, string validFlag = "Y", DateTimeOffset? lockedUntil = null) =>
         new(id, userId, userId.ToUpperInvariant(), roleId, "role" + roleId, null, null, "ko", null, validFlag, false,
-            lockedUntil is null ? 0 : 5, lockedUntil, null, null, Loaded);
+            lockedUntil is null ? 0 : 5, lockedUntil, null, null, Loaded, "setup", Loaded, "setup");
 
     private static CreateUserRequest Create(string? userId = " New.User ", string? password = "Initial-Pass-1") =>
         new(userId, password, " New User ", 2, "new@example.com", "010", "en", null, null);
@@ -328,7 +328,7 @@ public class UserServiceTests
             Inserted.Add((userId, passwordHash, createdBy));
             Hashes[id] = passwordHash;
             Rows[id] = new UserRow(id, userId, fields.UserName, fields.RoleId, "role" + fields.RoleId, fields.Email, fields.Phone, fields.LangCode,
-                fields.UserValidDt, fields.ValidFlag, true, 0, null, null, null, Now);
+                fields.UserValidDt, fields.ValidFlag, true, 0, null, null, null, Now, createdBy, Now, createdBy);
             return Task.FromResult(id);
         }
 

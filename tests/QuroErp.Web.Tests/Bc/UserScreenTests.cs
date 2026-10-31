@@ -61,6 +61,18 @@ public class UserScreenTests : BunitContext
         page.FindAll("[data-testid=user-actions]").Should().BeEmpty();
     }
 
+    [Fact, Trait("Id", "CORE-050-WT-02")]
+    public void Audit_IsEmptyForANewUser_AndShowsTheFourValuesOfALoadedOne()
+    {
+        var page = RenderAs("admin");
+        page.Find("[data-testid=user-audit]").TextContent.Trim().Should().BeEmpty();
+
+        Search(page, "lee");
+
+        page.WaitForAssertion(() => page.FindAll("[data-testid=user-audit] dd").Select(d => d.TextContent)
+            .Should().Equal(AuditTimes.Shown("setup", "kim")));
+    }
+
     [Fact, Trait("Id", "BC-UC-004-T01")]
     public void SaveNew_PostsALowerCaseUserIdWithThePassword_AndLocksTheUserId()
     {
@@ -336,10 +348,10 @@ public class UserScreenTests : BunitContext
     private sealed class FakeUserApi : HttpMessageHandler
     {
         private static readonly UserDto Kim = new(7, "kim", "Kim", 1, "admin", null, null, "ko", null, "Y", false, 0, null, null, null,
-            DateTimeOffset.UnixEpoch);
+            DateTimeOffset.UnixEpoch, "setup", DateTimeOffset.UnixEpoch, "setup");
 
         private UserDto _lee = new(5, "lee", "Lee", 2, "user", "lee@example.com", null, "ko", null, "Y", false, 0, null, null, null,
-            DateTimeOffset.UnixEpoch);
+            AuditTimes.Created, "setup", AuditTimes.Updated, "kim");
 
         public List<HttpRequestMessage> Requests { get; } = [];
 

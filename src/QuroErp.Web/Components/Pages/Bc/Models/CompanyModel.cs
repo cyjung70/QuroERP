@@ -1,4 +1,5 @@
 using QuroErp.Contracts.Bc.Companies;
+using QuroErp.Contracts.Common;
 using QuroErp.Contracts.Common.Auth;
 
 namespace QuroErp.Web.Components.Pages.Bc.Models;
@@ -25,6 +26,9 @@ public sealed class CompanyModel
     public bool HasLogo { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
+    /// <summary>Who created and last changed the record, for the audit area only (TASK-CORE-050).</summary>
+    public AuditInfo? Audit { get; set; }
+
     public static CompanyModel From(CompanyDto dto) => new()
     {
         Name = dto.Name,
@@ -45,6 +49,7 @@ public sealed class CompanyModel
         BillingMode = dto.BillingMode,
         HasLogo = dto.HasLogo,
         UpdatedAt = dto.UpdatedAt,
+        Audit = dto,
     };
 
     public UpdateCompanyRequest ToRequest() => new(

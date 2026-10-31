@@ -10,7 +10,7 @@ internal sealed class ItemRepository : IItemRepository
     private const string Columns = """
         id, item_cd, item_name, item_name2, item_desc, type AS item_type, unit, class AS item_class, valid_flag, usd_prc, so_usd_prc,
         upc_code, location, reorder_point, memo1, memo2, memo3, memo4, memo5, item_grade, taxable, vat_kind, plating, item_group_cd,
-        mvg_cost, onhand_qty, stk_val, updated_at
+        mvg_cost, onhand_qty, stk_val, created_at, created_by, updated_at, updated_by
         """;
 
     private const string SelectById = "SELECT " + Columns + " FROM bc_item WHERE id = @Id";
@@ -265,11 +265,16 @@ internal sealed class ItemRepository : IItemRepository
         decimal? MvgCost,
         decimal? OnhandQty,
         decimal? StkVal,
-        DateTime UpdatedAt)
+        DateTime CreatedAt,
+        string CreatedBy,
+        DateTime UpdatedAt,
+        string UpdatedBy)
     {
         public ItemRow ToItemRow() => new(
             Id, ItemCd, ItemName, ItemName2, ItemDesc, ItemType, Unit, ItemClass, ValidFlag, UsdPrc, SoUsdPrc, UpcCode, Location,
             ReorderPoint, Memo1, Memo2, Memo3, Memo4, Memo5, ItemGrade, Taxable, VatKind, Plating, ItemGroupCd, MvgCost, OnhandQty, StkVal,
-            new DateTimeOffset(DateTime.SpecifyKind(UpdatedAt, DateTimeKind.Utc)));
+            Utc(CreatedAt), CreatedBy, Utc(UpdatedAt), UpdatedBy);
+
+        private static DateTimeOffset Utc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
     }
 }

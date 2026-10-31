@@ -1,4 +1,5 @@
 using QuroErp.Contracts.Bc.Items;
+using QuroErp.Contracts.Common;
 
 namespace QuroErp.Web.Components.Pages.Bc.Models;
 
@@ -44,6 +45,9 @@ public sealed class ItemModel
     public decimal? StkVal { get; set; } = 0m;
     public DateTimeOffset UpdatedAt { get; set; }
 
+    /// <summary>Who created and last changed the record, for the audit area only (TASK-CORE-050).</summary>
+    public AuditInfo? Audit { get; set; }
+
     public static ItemModel From(ItemDto dto) => new()
     {
         Id = dto.Id,
@@ -72,6 +76,7 @@ public sealed class ItemModel
         OnhandQty = dto.OnhandQty,
         StkVal = dto.StkVal,
         UpdatedAt = dto.UpdatedAt,
+        Audit = dto,
     };
 
     public CreateItemRequest ToCreateRequest() => new()

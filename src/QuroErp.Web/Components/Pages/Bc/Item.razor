@@ -25,7 +25,7 @@
 @if (_ready)
 {
     <QuroSingleForm @ref="_form" TModel="ItemModel" Title="@L["Bc.Item.Title"]" TestId="item" ReadOnly="!_canEdit"
-                    Path="@L["Menu.G1BA"]" RecordCode="item => item.ItemCd" Audit="item => new QuroAudit(null, null, null, item.UpdatedAt)"
+                    Path="@L["Menu.G1BA"]" RecordCode="item => item.ItemCd" Audit="item => QuroAudit.From(item.Audit)"
                     Load="LoadAsync" Create="() => new ItemModel()" Save="SaveAsync" Delete="DeleteAsync"
                     LoadPrevious="item => LoadAdjacentAsync(item, forward: false)" LoadNext="item => LoadAdjacentAsync(item, forward: true)">
         <SearchContent>

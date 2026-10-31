@@ -224,5 +224,5 @@ public sealed class UserService(
 
     private static UserDto ToDto(UserRow r) => new(
         r.Id, r.UserId, r.UserName, r.RoleId, r.RoleCode, r.Email, r.Phone, r.LangCode, r.UserValidDt, r.ValidFlag, r.MustChangePassword,
-        r.FailedCount, r.LockedUntil, r.LastLoginAt, r.LastLoginIp, r.UpdatedAt);
+        r.FailedCount, r.LockedUntil, r.LastLoginAt, r.LastLoginIp, r.CreatedAt, r.CreatedBy, r.UpdatedAt, r.UpdatedBy);
 }

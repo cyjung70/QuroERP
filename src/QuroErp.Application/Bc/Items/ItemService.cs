@@ -134,5 +134,5 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
     private static ItemDto ToDto(ItemRow r) => new(
         r.Id, r.ItemCd, r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc ?? 0, r.SoUsdPrc ?? 0,
         r.UpcCode, r.Location, r.ReorderPoint ?? 0, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind,
-        r.ItemGroupCd ?? r.ItemCd, r.MvgCost ?? 0, r.OnhandQty ?? 0, r.StkVal ?? 0, r.UpdatedAt);
+        r.ItemGroupCd ?? r.ItemCd, r.MvgCost ?? 0, r.OnhandQty ?? 0, r.StkVal ?? 0, r.CreatedAt, r.CreatedBy, r.UpdatedAt, r.UpdatedBy);
 }

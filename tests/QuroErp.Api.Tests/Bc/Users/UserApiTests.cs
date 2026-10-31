@@ -218,4 +218,22 @@ public class UserApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.AccessToken);
         return client;
     }
+
+    [Fact, Trait("Id", "CORE-050-IT-02")]
+    public async Task GetPreviousAndPut_ReturnTheFourAuditFields_PutChangesOnlyTheUpdatedPair()
+    {
+        var client = await SignInAsync(ApiFactory.UserId);
+
+        using var get = await client.GetAsync(Path(InMemoryUserRepository.TargetId));
+        (await get.ReadAuditFieldsAsync()).Should().Equal("createdAt", "createdBy", "updatedAt", "updatedBy");
+        var previous = await client.GetFromJsonAsync<UserDto>(Path(InMemoryUserRepository.TargetId, UserRoutes.Previous));
+        previous!.CreatedBy.Should().Be("setup");
+        var loaded = (await client.GetFromJsonAsync<UserDto>(Path(InMemoryUserRepository.TargetId)))!;
+
+        using var put = await client.PutAsJsonAsync(Path(loaded.Id), Request(loaded) with { UserName = "Audited" });
+
+        var saved = (await put.Content.ReadFromJsonAsync<UserDto>())!;
+        (saved.CreatedAt, saved.CreatedBy, saved.UpdatedBy).Should().Be((loaded.CreatedAt, "setup", ApiFactory.UserId));
+        saved.UpdatedAt.Should().BeAfter(loaded.UpdatedAt);
+    }
 }

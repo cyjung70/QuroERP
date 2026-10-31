@@ -41,6 +41,22 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
             .Should().Be(("Quro Korea", "Busan", "Service", "Software", "SEPARATE", false));
     }
 
+    [DatabaseFact, Trait("Id", "CORE-050-IT-13")]
+    public async Task Find_ReturnsTheFourAuditColumns_UpdateChangesOnlyTheUpdatedPair()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var companies = db.Get<ICompanyRepository>();
+        await AddCompanyAsync(uow.Transaction);
+        var loaded = (await companies.FindAsync(true, uow.Transaction, None))!;
+
+        await companies.UpdateAsync(Fields, loaded.UpdatedAt, "kim", uow.Transaction, None);
+        var after = (await companies.FindAsync(false, uow.Transaction, None))!;
+
+        (loaded.CreatedBy, loaded.UpdatedBy).Should().Be(("system", "system"));
+        loaded.CreatedAt.Should().NotBe(default);
+        (after.CreatedAt, after.CreatedBy, after.UpdatedBy).Should().Be((loaded.CreatedAt, "system", "kim"));
+    }
+
     [DatabaseFact, Trait("Id", "BC-UT-306")]
     public async Task DeleteLogo_ClearsImageAndType()
     {

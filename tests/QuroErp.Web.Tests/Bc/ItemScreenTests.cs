@@ -61,6 +61,18 @@ public class ItemScreenTests : BunitContext
         _api.Requests.Should().OnlyContain(r => r.Headers.Authorization!.Parameter == "token-admin");
     }
 
+    [Fact, Trait("Id", "CORE-050-WT-01")]
+    public void Audit_IsEmptyForANewItem_AndShowsTheFourValuesOfALoadedOne()
+    {
+        var page = RenderAs("admin");
+        page.Find("[data-testid=item-audit]").TextContent.Trim().Should().BeEmpty();
+
+        Search(page, "A100");
+
+        page.WaitForAssertion(() => page.FindAll("[data-testid=item-audit] dd").Select(d => d.TextContent)
+            .Should().Equal(AuditTimes.Shown("setup", "kim")));
+    }
+
     [Fact, Trait("Id", "CORE-020-WT-01"), Trait("Id", "BC-UC-009-T12")]
     public void PreviousNext_AreAfterSearch_AndDisabledForANewRecord()
     {
@@ -289,7 +301,8 @@ public class ItemScreenTests : BunitContext
     private sealed class FakeItemApi : HttpMessageHandler
     {
         private ItemDto _item = new(1, "A100", "APPLE", null, null, "INVENTORY", "EA", "FR", "Y", 1.5m, 2m, null, null, 0m,
-            null, null, null, null, null, null, true, "TAXABLE", "A100", 1.2m, 5m, 6m, DateTimeOffset.UnixEpoch);
+            null, null, null, null, null, null, true, "TAXABLE", "A100", 1.2m, 5m, 6m,
+            AuditTimes.Created, "setup", AuditTimes.Updated, "kim");
 
         public List<HttpRequestMessage> Requests { get; } = [];
 

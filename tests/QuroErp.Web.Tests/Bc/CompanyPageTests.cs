@@ -107,7 +107,7 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
         "/" + CompanyRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = JsonContent.Create(new CompanyDto("Quro", null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York",
-                "WITH_SHIPMENT", withLogo, DateTimeOffset.UnixEpoch)),
+                "WITH_SHIPMENT", withLogo, DateTimeOffset.UnixEpoch, "setup", DateTimeOffset.UnixEpoch, "setup")),
         },
         "/" + LocalizationRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
         {

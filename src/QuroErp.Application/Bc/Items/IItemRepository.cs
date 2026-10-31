@@ -32,7 +32,10 @@ public sealed record ItemRow(
     decimal? MvgCost,
     decimal? OnhandQty,
     decimal? StkVal,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset CreatedAt,
+    string CreatedBy,
+    DateTimeOffset UpdatedAt,
+    string UpdatedBy);
 
 /// <summary>List conditions as given by the caller; the repository escapes LIKE wildcards.</summary>
 public sealed record ItemSearch(string? ItemCd, string? ItemName, string? ItemClass, string? ValidFlag, int Offset, int Limit);

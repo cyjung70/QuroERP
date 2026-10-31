@@ -180,7 +180,7 @@ public class CompanyServiceTests
     private sealed class FakeCompanies : ICompanyRepository
     {
         public CompanyDto? Company { get; set; } = new(
-            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Read);
+            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Read, "setup", Read, "setup");
 
         public bool HasTransactions { get; set; }
 
@@ -203,7 +203,7 @@ public class CompanyServiceTests
             Company = new CompanyDto(
                 fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.RegisterNo, fields.Represent,
                 fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!, fields.TimeZone!,
-                fields.BillingMode!, Company.HasLogo, Company.UpdatedAt.AddMinutes(1));
+                fields.BillingMode!, Company.HasLogo, Company.CreatedAt, Company.CreatedBy, Company.UpdatedAt.AddMinutes(1), updatedBy);
             return Task.FromResult(true);
         }
 

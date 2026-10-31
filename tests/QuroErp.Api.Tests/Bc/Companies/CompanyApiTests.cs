@@ -22,6 +22,14 @@ public class CompanyApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         company.UpdatedAt.Should().Be(Created);
     }
 
+    [Fact, Trait("Id", "CORE-050-IT-03")]
+    public async Task Company_ReturnsTheFourAuditFields()
+    {
+        using var response = await factory.NonAdmin().GetAsync(CompanyRoutes.Base);
+
+        (await response.ReadAuditFieldsAsync()).Should().Equal("createdAt", "createdBy", "updatedAt", "updatedBy");
+    }
+
     [Fact, Trait("Id", "BC-UT-305")]
     public async Task Company_WithoutSignIn_Returns401()
     {
@@ -103,6 +111,19 @@ public class CompanySaveApiTests
         var saved = await response.Content.ReadFromJsonAsync<CompanyDto>();
         (saved!.Name, saved.RegisterNo, saved.BusinessItem, saved.BillingMode).Should().Be(("Quro Korea", "2208162517", "Software", "SEPARATE"));
         factory.Companies.UpdatedBy.Should().Be(ApiFactory.UserId);
+    }
+
+    [Fact, Trait("Id", "CORE-050-IT-04")]
+    public async Task Update_ChangesOnlyTheUpdatedPair()
+    {
+        await using var factory = new ApiFactory();
+        var client = await factory.AdminAsync();
+
+        using var response = await client.PutAsJsonAsync(CompanyRoutes.Base, Request);
+
+        var saved = (await response.Content.ReadFromJsonAsync<CompanyDto>())!;
+        (saved.CreatedAt, saved.CreatedBy, saved.UpdatedBy).Should().Be((Created, "setup", ApiFactory.UserId));
+        saved.UpdatedAt.Should().BeAfter(Created);
     }
 
     [Fact, Trait("Id", "BC-UC-007-T02")]

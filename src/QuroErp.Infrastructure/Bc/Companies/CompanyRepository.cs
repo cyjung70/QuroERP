@@ -11,7 +11,8 @@ internal sealed class CompanyRepository : ICompanyRepository
     // Single company (BC-BR-301): the lowest id is the company
     private const string Select = """
         SELECT name, billto, shipto, contact, tel_no, fax_no, register_no, represent, email, business_type, business_item,
-               country_code, base_currency_code, default_lang_code, time_zone, billing_mode, logo_image IS NOT NULL AS has_logo, updated_at
+               country_code, base_currency_code, default_lang_code, time_zone, billing_mode, logo_image IS NOT NULL AS has_logo,
+               created_at, created_by, updated_at, updated_by
         FROM bc_company
         WHERE id = (SELECT min(id) FROM bc_company)
         """;
@@ -127,10 +128,12 @@ internal sealed class CompanyRepository : ICompanyRepository
     private sealed record CompanyRow(
         string Name, string? Billto, string? Shipto, string? Contact, string? TelNo, string? FaxNo, string? RegisterNo, string? Represent,
         string? Email, string? BusinessType, string? BusinessItem, string CountryCode, string BaseCurrencyCode, string DefaultLangCode,
-        string TimeZone, string BillingMode, bool HasLogo, DateTime UpdatedAt)
+        string TimeZone, string BillingMode, bool HasLogo, DateTime CreatedAt, string CreatedBy, DateTime UpdatedAt, string UpdatedBy)
     {
         public CompanyDto ToDto() => new(
             Name, Billto, Shipto, Contact, TelNo, FaxNo, RegisterNo, Represent, Email, BusinessType, BusinessItem, CountryCode, BaseCurrencyCode,
-            DefaultLangCode, TimeZone, BillingMode, HasLogo, new DateTimeOffset(DateTime.SpecifyKind(UpdatedAt, DateTimeKind.Utc)));
+            DefaultLangCode, TimeZone, BillingMode, HasLogo, Utc(CreatedAt), CreatedBy, Utc(UpdatedAt), UpdatedBy);
+
+        private static DateTimeOffset Utc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
     }
 }
