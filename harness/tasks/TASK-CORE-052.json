@@ -29,5 +29,5 @@
     "Tester 잡·docker compose 테스트 환경은 TASK-CORE-012가 이 워크플로에 더한다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
