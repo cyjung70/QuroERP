@@ -78,6 +78,13 @@ jobs:
         shell: pwsh
         run: ./scripts/validate-harness.ps1
 
+      # Screen definitions (.toon); the folder is kept with .gitkeep so an empty set runs as 0 files, not skipped.
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Check screen definitions
+        run: dotnet quro-deflint src/QuroErp.Web/Definitions
+
       - name: Check format
         run: dotnet format --no-restore --verify-no-changes
 
