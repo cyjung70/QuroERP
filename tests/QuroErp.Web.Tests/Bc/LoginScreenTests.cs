@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using QuroErp.Contracts.Bc.Localization;
@@ -132,10 +134,12 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
 
     // The previous sign-in was 2026-10-28 09:30 UTC: 05:30 in New York (EDT), 18:30 in Seoul
     [Theory, Trait("Id", "CORE-024-WT-01"), Trait("Rule", "BC-BR-318")]
-    [InlineData("America/New_York", "오전 5:30")]
-    [InlineData("Asia/Seoul", "오후 6:30")]
-    public async Task MainScreen_ShowsThePreviousSignIn_InTheCompanyTimeZone(string timeZone, string shown)
+    [InlineData("America/New_York", 5)]
+    [InlineData("Asia/Seoul", 18)]
+    public async Task MainScreen_ShowsThePreviousSignIn_InTheCompanyTimeZone(string timeZone, int hour)
     {
+        // Built from the ko culture, not hard-coded: ICU versions differ (Linux shows "AM 5:30", some Windows hosts "오전 5:30")
+        var shown = new DateTime(2026, 10, 28, hour, 30, 0).ToString("g", new CultureInfo("ko"));
         SignInResponse();
         factory.AuthRouteResponse = path => path.EndsWith(AuthRoutes.Me, StringComparison.Ordinal)
             ? new HttpResponseMessage(HttpStatusCode.OK)
@@ -155,8 +159,8 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
 
             var html = WebUtility.HtmlDecode(await browser.GetStringAsync("/"));
 
-            // The date part follows the ko culture of the host; the hour is what the time zone decides
-            html.Should().MatchRegex($"data-testid=\"home-last-login\"[^>]*>직전 로그인: 2026[^<]*28[^<]* {shown} \\(IP 10\\.0\\.0\\.7\\)<");
+            // The hour is what the time zone decides
+            html.Should().MatchRegex($"data-testid=\"home-last-login\"[^>]*>직전 로그인: {Regex.Escape(shown)} \\(IP 10\\.0\\.0\\.7\\)<");
         }
         finally
         {
