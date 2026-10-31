@@ -31,5 +31,5 @@
     "bUnit: 읽기 권한 사용자는 M·MM 화면에서 신규·저장이 비활성, 그리드 편집 불가, 조회 가능. Full Access는 지금과 같음. 처리 중 화면별 동작 비활성"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

@@ -11,7 +11,7 @@
 @if (_store is not null)
 {
     <QuroMultiGrid TRow="SampleItem" Title="@L["Samples.Multi.Title"]" TestId="multi" Path="@L["Samples.Menu"]" LoadOnStart="true"
-                   Load="() => Task.FromResult(_store.Items())" CreateRow="() => new SampleItem()" Save="SaveAsync">
+                   Load="() => Task.FromResult(_store.Items())" CreateRow="() => new SampleItem()" Save="SaveAsync" CanWrite="CanWrite">
         <Columns>
             <QuroColumn Title="@L["Samples.Code"]" Value="r => r.Code" Context="row">
                 <QuroText Label="@L["Samples.Code"]" HideLabel @bind-Value="row.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="multi-grid-code" />
@@ -29,6 +29,10 @@
 
 @code {
     private SampleStore? _store;
+
+    /// <summary>Full Access of the user; false shows the read-only state (TASK-CORE-051).</summary>
+    [Parameter]
+    public bool CanWrite { get; set; } = true;
 
     protected override void OnInitialized()
     {

@@ -59,6 +59,7 @@
 .quro-commandbar { display: flex; align-items: center; gap: 8px; min-height: var(--q-commandbar-h); box-sizing: border-box; padding: 0 16px;
     background: var(--q-surface-1); border: 1px solid var(--q-line); border-radius: var(--q-radius-panel); }
 .quro-commandbar-group { display: flex; align-items: center; gap: 8px; }
+fieldset.quro-commandbar-group { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .quro-commandbar-sep { width: 1px; align-self: stretch; margin: 10px 4px; background: var(--q-line); }
 .quro-commandbar button { height: var(--q-control-h); padding: 0 12px; border: 1px solid var(--q-line); border-radius: var(--q-radius-button);
     background: var(--q-surface-1); color: var(--q-ink); font: 500 13px/20px var(--q-font-sans); white-space: nowrap; cursor: pointer; }

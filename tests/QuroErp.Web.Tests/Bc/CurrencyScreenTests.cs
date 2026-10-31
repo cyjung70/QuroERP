@@ -148,15 +148,26 @@ public class CurrencyScreenTests : BunitContext
         Values(page, "currency-grid-decimals")[1].Should().Be("3");
     }
 
-    [Fact, Trait("Id", "BC-UT-214")]
-    public void UserWithoutFullAccess_CanOnlyRead()
+    [Fact, Trait("Id", "BC-UT-214"), Trait("Id", "CORE-051-WT-03")]
+    public void UserWithoutFullAccess_CanOnlyRead_NewSaveAndRowButtonsAreDisabledNotHidden()
     {
         var page = RenderAs("user");
+        var rows = page.FindAll("[data-testid=currency-grid] tbody tr").Count;
 
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
-            .Should().NotContain(["currency-toolbar-new", "currency-toolbar-save"]);
+        page.Find("[data-testid=currency-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=currency-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=currency-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
+        page.Find("[data-testid=currency-toolbar-export]").HasAttribute("disabled").Should().BeFalse();
+        page.FindAll("[data-testid=currency-grid-delete-row]").Should().NotBeEmpty().And.OnlyContain(b => b.HasAttribute("disabled"));
         page.FindAll("[data-testid=currency-grid-name-en]").Should().OnlyContain(c => c.HasAttribute("readonly"));
-        page.FindAll("[data-testid=currency-grid-delete-row]").Should().BeEmpty();
+
+        // The handlers do nothing either
+        page.Find("[data-testid=currency-toolbar-new]").Click();
+        page.FindAll("[data-testid=currency-grid-delete-row]")[0].Click();
+        page.Find("[data-testid=currency-toolbar-save]").Click();
+        page.FindAll("[data-testid=currency-grid] tbody tr").Should().HaveCount(rows);
+        page.FindAll("[data-state=D]").Should().BeEmpty();
+        _api.Saved.Should().BeEmpty();
     }
 
     [Fact]

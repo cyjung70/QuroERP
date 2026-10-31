@@ -1,6 +1,7 @@
 @* Command bar of the S, M and MM screens in a fixed order: search, previous, next, new, save, delete, print, Excel export
    (screens.md "툴바"), then the screen's own commands after a separator (screen-templates.md 0).
-   A button appears only when the screen handles it; a button blocked by state or permission is disabled, never hidden. *@
+   A button appears only when the screen handles it; a button blocked by state or permission is disabled, never hidden.
+   The screen's own commands sit in a fieldset that is disabled while busy, so the screen need not block them itself. *@
 @inject IStringLocalizer<SharedResource> L
 
 <div class="quro-commandbar quro-toolbar" role="toolbar" data-testid="@(TestId is null ? null : $"{TestId}-toolbar")" aria-label="@L["Common.Toolbar"]">
@@ -17,9 +18,9 @@
     @if (ExtraCommands is not null)
     {
         <span class="quro-commandbar-sep" aria-hidden="true"></span>
-        <div class="quro-commandbar-group" data-group="extra">
+        <fieldset class="quro-commandbar-group" data-group="extra" disabled="@Busy">
             @ExtraCommands
-        </div>
+        </fieldset>
     }
 </div>
 

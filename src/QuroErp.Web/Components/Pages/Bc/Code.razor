@@ -26,7 +26,7 @@
 @if (_ready)
 {
     <QuroMultiGrid @ref="_grid" TRow="CodeMinorRow" Title="@L["Bc.Code.Title"]" TestId="code" Path="@L["Menu.G1BA"]"
-                   Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)" CreateRow="@(_canEdit ? NewRow : null)">
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit">
         <SearchContent>
             <div class="quro-lookup-field">
                 <QuroText Label="@L["Bc.Code.MajorCode"]" @bind-Value="_majorCode" @bind-Value:after="MajorCodeChanged" Required

@@ -194,14 +194,26 @@ public class CodeScreenTests : BunitContext
             .Should().Be("다른 사용자가 먼저 수정했습니다. 다시 조회한 뒤 저장하세요."));
     }
 
-    [Fact, Trait("Id", "BC-UT-214")]
-    public void UserWithoutFullAccess_CanOnlyRead()
+    [Fact, Trait("Id", "BC-UT-214"), Trait("Id", "CORE-051-WT-01")]
+    public void UserWithoutFullAccess_CanOnlyRead_NewSaveAndRowButtonsAreDisabledNotHidden()
     {
         var page = SearchUnit(RenderAs("user"));
+        var rows = page.FindAll("[data-testid=code-grid] tbody tr").Count;
 
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().NotContain(["code-toolbar-new", "code-toolbar-save"]);
+        page.Find("[data-testid=code-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=code-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=code-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
+        page.Find("[data-testid=code-toolbar-export]").HasAttribute("disabled").Should().BeFalse();
+        page.FindAll("[data-testid=code-grid-delete-row]").Should().NotBeEmpty().And.OnlyContain(b => b.HasAttribute("disabled"));
         page.FindAll("[data-testid=code-grid-name-en]").Should().OnlyContain(c => c.HasAttribute("readonly"));
-        page.FindAll("[data-testid=code-grid-delete-row]").Should().BeEmpty();
+
+        // The handlers do nothing either
+        page.Find("[data-testid=code-toolbar-new]").Click();
+        page.FindAll("[data-testid=code-grid-delete-row]")[0].Click();
+        page.Find("[data-testid=code-toolbar-save]").Click();
+        page.FindAll("[data-testid=code-grid] tbody tr").Should().HaveCount(rows);
+        page.FindAll("[data-state=D]").Should().BeEmpty();
+        _api.Saved.Should().BeEmpty();
     }
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");

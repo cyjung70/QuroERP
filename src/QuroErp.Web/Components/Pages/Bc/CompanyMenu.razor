@@ -14,7 +14,7 @@
 @if (_ready)
 {
     <QuroMultiGrid TRow="CompanyMenuRow" Title="@L["Bc.CompanyMenu.Title"]" TestId="company-menu" Path="@L["Menu.G5AD"]" LoadOnStart="true"
-                   Load="LoadAsync" Save="@(_canEdit ? SaveAsync : null)" CreateRow="@(_canEdit ? CompanyMenuRow.New : null)">
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="CompanyMenuRow.New" CanWrite="_canEdit">
         <SearchContent>
             <QuroText Label="@L["Bc.CompanyMenu.MenuCode"]" @bind-Value="_menuCode" TextCase="TextCase.Upper" TestId="company-menu-search-menu-code" />
             <QuroText Label="@L["Bc.CompanyMenu.Name"]" Value="@_menuName" LockMode="LockMode.Always" TestId="company-menu-search-name" />
