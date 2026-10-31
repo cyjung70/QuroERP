@@ -10,27 +10,28 @@ public sealed record PoTotals(decimal Subtotal, decimal Discount, decimal Net);
 
 /// <summary>
 /// Purchase order line amounts and totals (MM-BR-015, MM-BR-025). The server calculates them on save; the screen
-/// only previews. Amounts round to the document currency decimals with HALF_UP (BC-BR-421, BC-BR-424); quantity and
-/// unit price are entered values and are not rounded here (BC-BR-423).
+/// only previews. Amounts round to the document currency decimals with the MM module rounding mode (BC-BR-421,
+/// BC-BR-424); quantity and unit price are entered values and are not rounded here (BC-BR-423).
 /// Tax and the header total (tot_po_amt, MM-BR-032) come from the tax calculator (BC-BR-541~545).
 /// </summary>
 public static class PoCalculator
 {
     /// <param name="amountDecimals">Decimals of the document currency (IAmountRounder.DecimalsOf).</param>
-    public static PoLineAmounts CalcLine(PoLine line, int amountDecimals)
+    /// <param name="mode">Rounding mode of the MM module (sys_decimal_setting, BC-BR-424).</param>
+    public static PoLineAmounts CalcLine(PoLine line, int amountDecimals, RoundingMode mode = RoundingMode.HalfUp)
     {
-        var gross = Rounding.Round(line.Qty * line.UnitPrice, amountDecimals, RoundingMode.HalfUp);
-        var discount = Rounding.Round(gross * line.DiscountRate / 100m, amountDecimals, RoundingMode.HalfUp);
+        var gross = Rounding.Round(line.Qty * line.UnitPrice, amountDecimals, mode);
+        var discount = Rounding.Round(gross * line.DiscountRate / 100m, amountDecimals, mode);
         return new PoLineAmounts(gross, discount, gross - discount);
     }
 
     /// <summary>Sums the rounded line amounts; lines marked for delete are left out.</summary>
-    public static PoTotals CalcTotals(IEnumerable<PoLine> lines, int amountDecimals)
+    public static PoTotals CalcTotals(IEnumerable<PoLine> lines, int amountDecimals, RoundingMode mode = RoundingMode.HalfUp)
     {
         decimal subtotal = 0, discount = 0;
         foreach (var line in lines.Where(l => !l.MarkedForDelete))
         {
-            var amounts = CalcLine(line, amountDecimals);
+            var amounts = CalcLine(line, amountDecimals, mode);
             subtotal += amounts.Gross;
             discount += amounts.Discount;
         }

@@ -156,7 +156,10 @@ public sealed class PurchaseOrderService(
         var company = await localization.FindCompanyAsync(transaction, cancellationToken);
         var currencies = (await localization.FindCurrenciesAsync(transaction, cancellationToken)).Where(c => c.UseYn);
         var baseCurrency = company?.BaseCurrencyCode ?? CountryProfiles.Get(CountryProfiles.Us).BaseCurrencyCode;
-        var settings = new PurchaseOrderSettings(baseCurrency, company?.TaxCalcMode ?? TaxCalcMode.Document);
+        // BC-BR-424: amounts and tax use the MM module rounding mode; HALF_UP when the setting row is missing
+        var mm = (await localization.FindDecimalSettingsAsync(transaction, cancellationToken)).FirstOrDefault(d => d.Module == DecimalModule.Mm);
+        var settings = new PurchaseOrderSettings(
+            baseCurrency, company?.TaxCalcMode ?? TaxCalcMode.Document, mm is null ? RoundingMode.HalfUp : Rounding.ParseMode(mm.RoundingMode));
 
         var header = new PurchaseOrderHeader(
             request.VendorId, request.PoDt, Clean(request.CurrencyCode) ?? vendor.CurrencyCode ?? baseCurrency, request.ExchangeRate ?? 1m,

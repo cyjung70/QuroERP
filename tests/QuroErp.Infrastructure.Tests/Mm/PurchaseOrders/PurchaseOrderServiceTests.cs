@@ -147,6 +147,26 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
         (po.CurrencyCode, po.Lines[0].TaxCodeId).Should().Be(("USD", m.Vat10));
     }
 
+    [DatabaseFact, Trait("Rule", "BC-BR-424"), Trait("Rule", "BC-BR-545")]
+    public async Task MmRoundingDown_CutsTheSavedAmountsAndTax()
+    {
+        var m = await MastersAsync();
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        var before = await connection.QuerySingleAsync<string>("SELECT rounding_mode FROM sys_decimal_setting WHERE module = 'MM'");
+        await connection.ExecuteAsync("UPDATE sys_decimal_setting SET rounding_mode = 'DOWN' WHERE module = 'MM'");
+        try
+        {
+            var po = await Service.CreateAsync(Request(m, Line(m.Item, qty: 1m, price: 100.055m)), "kim", None);
+
+            // HALF_UP would give 100.06 and 10.01 (10.006)
+            (po.Lines[0].GrossAmt, po.Lines[0].TaxAmt, po.TotPoAmt).Should().Be((100.05m, 10.00m, 110.05m));
+        }
+        finally
+        {
+            await connection.ExecuteAsync("UPDATE sys_decimal_setting SET rounding_mode = @Before WHERE module = 'MM'", new { Before = before });
+        }
+    }
+
     [DatabaseFact, Trait("Id", "MM-UT-014")]
     public async Task RuleViolation_SavesNothing()
     {

@@ -96,6 +96,19 @@ public class PoEntryRulesTests
         totals.TotBaseAmt.Should().Be(14937m);
     }
 
+    [Theory, Trait("Rule", "BC-BR-424"), Trait("Rule", "BC-BR-545")]
+    [InlineData(RoundingMode.HalfUp, "10.06", "1.01", "11.07", 14951)] // 10.055, 1.006, 14950.5885
+    [InlineData(RoundingMode.Down, "10.05", "1.00", "11.05", 14923)]   // 10.055, 1.005, 14923.5775
+    public void MmRoundingMode_RoundsTheAmounts_TheTax_AndTheBaseTotal(RoundingMode mode, string gross, string tax, string total, decimal baseTotal)
+    {
+        var krwBase = new PurchaseOrderSettings("KRW", TaxCalcMode.Line, mode);
+
+        var (lines, totals) = Calc(Header("USD", D("1350.55")), settings: krwBase, lines: Line(qty: 1m, price: D("10.055")));
+
+        (lines.Single().GrossAmt, lines.Single().TaxAmt).Should().Be((D(gross), D(tax)));
+        (totals.TaxAmt, totals.TotPoAmt, totals.TotBaseAmt).Should().Be((D(tax), D(total), baseTotal));
+    }
+
     [Theory, Trait("Id", "MM-UT-025"), Trait("Id", "MM-UC-003-T08")]
     [InlineData("-1")]
     [InlineData("101")]
