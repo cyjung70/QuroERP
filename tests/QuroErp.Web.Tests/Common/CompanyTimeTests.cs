@@ -20,24 +20,28 @@ public class CompanyTimeTests : BunitContext
     }
 
     [Theory, Trait("Id", "CORE-024-WT-03"), Trait("Rule", "BC-BR-318")]
-    [InlineData("America/New_York", "10/28/2026 5:30 AM")]
-    [InlineData("Asia/Seoul", "10/28/2026 6:30 PM")]
-    public void Format_ShowsAUtcTimeInTheZone(string timeZone, string shown)
+    [InlineData("America/New_York", 5)]
+    [InlineData("Asia/Seoul", 18)]
+    public void Format_ShowsAUtcTimeInTheZone(string timeZone, int hour)
     {
-        CompanyTime.Format(SignedIn, CompanyTime.Find(timeZone)).Should().Be(shown);
+        CompanyTime.Format(SignedIn, CompanyTime.Find(timeZone)).Should().Be(Shown(hour));
     }
 
     [Theory, Trait("Id", "CORE-024-WT-04"), Trait("Rule", "BC-BR-318")]
-    [InlineData("America/New_York", "5:30 AM")]
-    [InlineData("Asia/Seoul", "6:30 PM")]
-    public void AuditFooter_ShowsTimesInTheCompanyTimeZone(string timeZone, string shown)
+    [InlineData("America/New_York", 5)]
+    [InlineData("Asia/Seoul", 18)]
+    public void AuditFooter_ShowsTimesInTheCompanyTimeZone(string timeZone, int hour)
     {
         Services.AddCompanyTime(timeZone);
 
         var footer = Render<QuroAuditFooter>(p => p.Add(x => x.Audit, new QuroAudit("kim", SignedIn, "lee", SignedIn)));
 
-        footer.WaitForAssertion(() => footer.Find("dd").TextContent.Should().Be($"10/28/2026 {shown} kim"));
+        footer.WaitForAssertion(() => footer.Find("dd").TextContent.Should().Be($"{Shown(hour)} kim"));
     }
+
+    // 2026-10-28 hh:30 in the en culture's short date and time. Built from the culture, not hard-coded:
+    // ICU versions differ in the space before AM/PM (U+202F on Linux), and the hour is what the test checks.
+    private static string Shown(int hour) => new DateTime(2026, 10, 28, hour, 30, 0).ToString("g", CultureInfo.CurrentCulture);
 
     [Fact, Trait("Id", "CORE-024-WT-05"), Trait("Rule", "BC-BR-318")]
     public async Task GetZone_ReadsOnce_UntilReset()
