@@ -201,6 +201,16 @@
   <data name="Bc.Item.Memo4" xml:space="preserve"><value>Memo 4</value></data>
   <data name="Bc.Item.Memo5" xml:space="preserve"><value>Memo 5</value></data>
   <data name="Bc.Item.FindItem" xml:space="preserve"><value>Find Item</value></data>
+  <data name="Bc.Item.Image" xml:space="preserve"><value>Image</value></data>
+  <data name="Bc.ItemImageUpload.Title" xml:space="preserve"><value>Item Image Upload</value></data>
+  <data name="Bc.ItemImageUpload.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Bc.ItemImageUpload.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Bc.ItemImageUpload.Image" xml:space="preserve"><value>Item Image</value></data>
+  <data name="Bc.ItemImageUpload.Image.None" xml:space="preserve"><value>No image.</value></data>
+  <data name="Bc.ItemImageUpload.File" xml:space="preserve"><value>Image File</value></data>
+  <data name="Bc.ItemImageUpload.Hint" xml:space="preserve"><value>JPEG, 10 MB or less. Saving replaces the current image. Without an item image, the item group image is shown.</value></data>
+  <data name="Bc.ItemImageUpload.Delete" xml:space="preserve"><value>Delete Image</value></data>
+  <data name="Bc.ItemImageUpload.ConfirmDelete" xml:space="preserve"><value>Delete the item image? The item group image is shown if there is one.</value></data>
   <data name="Bc.ChangePassword.Title" xml:space="preserve"><value>Change Password</value></data>
   <data name="Bc.ChangePassword.CurrentPassword" xml:space="preserve"><value>Current Password</value></data>
   <data name="Bc.ChangePassword.NewPassword" xml:space="preserve"><value>New Password</value></data>

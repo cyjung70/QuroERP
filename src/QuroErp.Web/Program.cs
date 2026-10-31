@@ -1,4 +1,5 @@
 using QuroErp.Web.Auth;
+using QuroErp.Web.Bc.Items;
 using QuroErp.Web.Common;
 using QuroErp.Web.Components;
 using QuroErp.Web.Components.Layout;
@@ -58,6 +59,7 @@ app.MapRazorComponents<App>()
 app.MapLogout();
 app.MapSession();
 app.MapCulture();
+app.MapItemImage();
 
 app.Run();
 
