@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Dapper;
 using FluentAssertions;
 using Npgsql;
+using QuroErp.Application.Bc.BusinessPlaces;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Common;
@@ -35,7 +36,8 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
 
     private PurchaseOrderService Service => new(
         db.Get<IPurchaseOrderRepository>(), db.Get<ITaxRepository>(), new TaxAreaRateProvider(db.Get<ITaxRepository>()),
-        db.Get<ILocalizationRepository>(), new DocumentNumberService(db.Get<IDocumentNumberRepository>()), db.Get<IUnitOfWorkFactory>());
+        db.Get<ILocalizationRepository>(), db.Get<IBusinessPlaceRepository>(), new DocumentNumberService(db.Get<IDocumentNumberRepository>()),
+        db.Get<IUnitOfWorkFactory>());
 
     [DatabaseFact, Trait("Id", "MM-UC-003-T01"), Trait("Id", "MM-UC-003-T07")]
     public async Task Create_SavesADraftWithANumber_AndServerAmounts()
@@ -147,6 +149,38 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
         (po.CurrencyCode, po.Lines[0].TaxCodeId).Should().Be(("USD", m.Vat10));
     }
 
+    [DatabaseFact, Trait("Id", "CORE-046-IT-05"), Trait("Rule", "BC-BR-321")]
+    public async Task Create_GivesTheNewOrderTheDefaultBusinessPlace()
+    {
+        var m = await MastersAsync();
+
+        var po = await Service.CreateAsync(Request(m), "kim", None);
+
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        (await connection.QuerySingleAsync<bool>(
+                "SELECT business_place_id = (SELECT id FROM bc_business_place WHERE is_default) FROM mm_purchase_order WHERE id = @Id",
+                new { po.Id }))
+            .Should().BeTrue();
+    }
+
+    [DatabaseFact, Trait("Id", "CORE-046-IT-06"), Trait("Rule", "BC-BR-321")]
+    public async Task Create_WithoutADefaultBusinessPlace_Is400BcE321()
+    {
+        var m = await MastersAsync();
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        var place = await connection.QuerySingleAsync<long>("UPDATE bc_business_place SET is_default = false WHERE is_default RETURNING id");
+        try
+        {
+            var act = () => Service.CreateAsync(Request(m), "kim", None);
+
+            (await act.Should().ThrowAsync<BadRequestException>()).Which.Code.Should().Be("BC-E-321");
+        }
+        finally
+        {
+            await connection.ExecuteAsync("UPDATE bc_business_place SET is_default = true WHERE id = @Place", new { Place = place });
+        }
+    }
+
     [DatabaseFact, Trait("Rule", "BC-BR-424"), Trait("Rule", "BC-BR-545")]
     public async Task MmRoundingDown_CutsTheSavedAmountsAndTax()
     {
@@ -218,8 +252,8 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
         await using var connection = new NpgsqlConnection(db.ConnectionString);
         await connection.ExecuteAsync(
             """
-            WITH g AS (INSERT INTO mm_goods_receipt (gr_no, warehouse_id, currency_code, exchange_rate, created_by, updated_by)
-                       VALUES ('GR' || @Line, (SELECT min(id) FROM bc_warehouse), 'USD', 1, 't', 't') RETURNING id)
+            WITH g AS (INSERT INTO mm_goods_receipt (gr_no, warehouse_id, currency_code, exchange_rate, business_place_id, created_by, updated_by)
+                       VALUES ('GR' || @Line, (SELECT min(id) FROM bc_warehouse), 'USD', 1, (SELECT id FROM bc_business_place WHERE is_default), 't', 't') RETURNING id)
             INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, purchase_order_line_id, gr_qty, warehouse_id, tax_code_id, created_by, updated_by)
             SELECT id, 1, @Line, @Qty, (SELECT min(id) FROM bc_warehouse), @Tax, 't', 't' FROM g
             """,

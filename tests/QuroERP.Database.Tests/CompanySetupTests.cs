@@ -21,6 +21,8 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
 
         created.Should().BeTrue();
         Company().Should().Be(("Quro Korea", "KR", "KRW", "ko"));
+        // BC-BR-319: the default business place made by the schema script takes the company name
+        BusinessPlaceName().Should().Be("Quro Korea");
         TimeZone().Should().Be("Asia/Seoul");
         Decimals().Should().Equal(("MM", 2, "HALF_UP"), ("SD", 0, "HALF_UP"));
 
@@ -82,6 +84,13 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
         var row = (reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
         reader.Read().Should().BeFalse("there is one company");
         return row;
+    }
+
+    private string BusinessPlaceName()
+    {
+        using var connection = _db.Open();
+        using var command = new NpgsqlCommand("SELECT business_place_name FROM bc_business_place WHERE is_default", connection);
+        return (string)command.ExecuteScalar()!;
     }
 
     private string TimeZone()

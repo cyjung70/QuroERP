@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using System.Globalization
 @using System.Net.Http
+@using QuroErp.Contracts.Bc.BusinessPlaces
 @using QuroErp.Contracts.Bc.Companies
 @using QuroErp.Contracts.Common.Auth
 @using QuroErp.Contracts.Common.Codes
@@ -13,6 +14,7 @@
 @using QuroErp.Web.Components.Pages.Bc.Models
 @using QuroErp.Web.Mm.Inventory
 @inject CompanyApiClient CompanyApi
+@inject BusinessPlaceApiClient BusinessPlaceApi
 @inject AuthSettingApiClient AuthSettingApi
 @inject InventorySettingApiClient InventorySettingApi
 @inject LocalizationApiClient LocalizationApi
@@ -22,8 +24,8 @@
 @inject ProblemMessages Messages
 
 @* BC-UC-007 company, screen type S. There is exactly one company: it loads when the screen opens and is never created or
-   deleted here (BC-BR-301). Rules are checked by the API (BC-BR-302~316). The logo (BC-BR-306), inventory setting (MM-BR-003)
-   and security settings (BC-BR-309, 310) are separate records, so each section below the form saves on its own. Search reads
+   deleted here (BC-BR-301). Rules are checked by the API (BC-BR-302~316). The business place (BC-BR-319, 320), logo (BC-BR-306),
+   inventory setting (MM-BR-003) and security settings (BC-BR-309, 310) are separate records, so each section below the form saves on its own. Search reads
    the sections again, and unsaved section changes are guarded like the form's own (BC-BR-317). *@
 
 <PageTitle>@L["Bc.Company.Title"]</PageTitle>
@@ -46,13 +48,8 @@
             <QuroText Label="@L["Bc.Company.Contact"]" Field="Contact" TestId="company-header-contact" />
             <QuroText Label="@L["Bc.Company.TelNo"]" Field="TelNo" TestId="company-header-tel-no" />
             <QuroText Label="@L["Bc.Company.FaxNo"]" Field="FaxNo" TestId="company-header-fax-no" />
-            @* BC-BR-315: a KR company needs the business registration number, business type and item for tax invoices *@
-            <QuroText Label="@L["Bc.Company.RegisterNo"]" Field="RegisterNo" Required="@(company.CountryCode == KrCountry)"
-                      TestId="company-header-register-no" />
             <QuroText Label="@L["Bc.Company.Represent"]" Field="Represent" TestId="company-header-represent" />
             <QuroText Label="@L["Bc.Company.Email"]" Field="Email" TestId="company-header-email" />
-            <QuroText Label="@L["Bc.Company.BusinessType"]" Field="BusinessType" TestId="company-header-business-type" />
-            <QuroText Label="@L["Bc.Company.BusinessItem"]" Field="BusinessItem" TestId="company-header-business-item" />
             @* BC-BR-312, 313: country and base currency cannot change once transactions exist; the API answers 409 *@
             <QuroSelect Label="@L["Bc.Company.CountryCode"]" Field="CountryCode" Options="_countries" Required
                         TestId="company-header-country-code" />
@@ -76,6 +73,43 @@
     {
         <p class="page-notice" role="status" data-testid="company-settings-message">@_notice</p>
     }
+
+    @* BC-BR-315, 320: the tax invoice supplier is the document's business place; the MVP has the default one only (BC-BR-319) *@
+    <section aria-labelledby="business-place-title">
+        <h2 id="business-place-title">@L["Bc.BusinessPlace.Title"]</h2>
+        @if (_place is not null)
+        {
+            <CascadingValue Value="_placeForm" IsFixed="true">
+                <div class="quro-form" data-testid="company-business-place">
+                    <QuroText Label="@L["Bc.BusinessPlace.BusinessPlaceCode"]" @bind-Value="_place.BusinessPlaceCode" LockMode="LockMode.Always"
+                              TestId="company-business-place-business-place-code" />
+                    <QuroText Label="@L["Bc.BusinessPlace.BusinessPlaceName"]" @bind-Value="_place.BusinessPlaceName" Required
+                              TestId="company-business-place-business-place-name" />
+                    <QuroText Label="@L["Bc.BusinessPlace.BusinessRegNo"]" @bind-Value="_place.BusinessRegNo" Required="@(_country == KrCountry)"
+                              TestId="company-business-place-business-reg-no" />
+                    <QuroText Label="@L["Bc.BusinessPlace.SubBusinessNo"]" @bind-Value="_place.SubBusinessNo"
+                              TestId="company-business-place-sub-business-no" />
+                    <QuroText Label="@L["Bc.BusinessPlace.CeoName"]" @bind-Value="_place.CeoName" TestId="company-business-place-ceo-name" />
+                    <QuroText Label="@L["Bc.BusinessPlace.Addr1"]" @bind-Value="_place.Addr1" TestId="company-business-place-addr1" />
+                    <QuroText Label="@L["Bc.BusinessPlace.Addr2"]" @bind-Value="_place.Addr2" TestId="company-business-place-addr2" />
+                    <QuroText Label="@L["Bc.BusinessPlace.City"]" @bind-Value="_place.City" TestId="company-business-place-city" />
+                    <QuroText Label="@L["Bc.BusinessPlace.State"]" @bind-Value="_place.State" TestId="company-business-place-state" />
+                    <QuroText Label="@L["Bc.BusinessPlace.ZipCode"]" @bind-Value="_place.ZipCode" TestId="company-business-place-zip-code" />
+                    <QuroText Label="@L["Bc.BusinessPlace.TelNo"]" @bind-Value="_place.TelNo" TestId="company-business-place-tel-no" />
+                    <QuroText Label="@L["Bc.BusinessPlace.BusinessType"]" @bind-Value="_place.BusinessType"
+                              TestId="company-business-place-business-type" />
+                    <QuroText Label="@L["Bc.BusinessPlace.BusinessItem"]" @bind-Value="_place.BusinessItem"
+                              TestId="company-business-place-business-item" />
+                </div>
+            </CascadingValue>
+            @if (_canEdit)
+            {
+                <button type="button" disabled="@_busy" data-testid="company-business-place-save" @onclick="SaveBusinessPlaceAsync">
+                    @L["Common.Save"]
+                </button>
+            }
+        }
+    </section>
 
     <section aria-labelledby="logo-title">
         <h2 id="logo-title">@L["Bc.Company.Logo"]</h2>
@@ -179,7 +213,7 @@
     private const string InvalidNameCode = "BC-E-302";
     private const string InvalidFieldCode = "BC-E-303";
     private const string InvalidSecurityValueCode = "BC-E-309";
-    private const string RegisterNoCode = "BC-E-315";
+    private const string InvalidBusinessPlaceCode = "BC-E-320";
 
     // MVP countries (BC-BR-313) and billing modes (BC-BR-316); the API rejects any other value
     private static readonly string[] Countries = ["US", KrCountry];
@@ -187,6 +221,7 @@
     private static readonly string[] ResetModes = ["ADMIN_ONLY", "EMAIL"];
 
     private readonly QuroFormContext _securityForm = new() { IsNew = false };
+    private readonly QuroFormContext _placeForm = new() { IsNew = false };
     private IReadOnlyList<CodeItemDto> _countries = [];
     private IReadOnlyList<CodeItemDto> _currencies = [];
     private IReadOnlyList<CodeItemDto> _languages = [];
@@ -198,6 +233,9 @@
     private string _mode = NegativeStockModes.Deny;
     private SecuritySettingModel? _security;
     private string? _securitySnapshot;
+    private BusinessPlaceModel? _place;
+    private string? _placeSnapshot;
+    private string? _country;
     private bool _canEdit;
     private bool _ready;
     private bool _busy;
@@ -213,6 +251,7 @@
         // Full Access is the admin role until the menu policy exists, as in CompanyController (BC-BR-305, BC-BR-214)
         _canEdit = (await AuthenticationState).User.IsInRole("admin");
         _securityForm.ReadOnly = !_canEdit;
+        _placeForm.ReadOnly = !_canEdit;
         _countries = Countries.Select(c => new CodeItemDto(c, L[$"Bc.Company.Country.{c}"])).ToList();
         _billingModes = BillingModes.Select(m => new CodeItemDto(m, L[$"Bc.Company.BillingMode.{m}"])).ToList();
         _resetModes = ResetModes.Select(m => new CodeItemDto(m, L[$"Bc.Company.PasswordResetMode.{m}"])).ToList();
@@ -238,6 +277,9 @@
     private async Task<CompanyModel?> LoadAsync()
     {
         var company = CompanyModel.From(await CompanyApi.GetAsync(CancellationToken.None));
+        // BC-BR-320: the saved country decides whether the registration number is required
+        _country = company.CountryCode;
+        ApplyPlace((await BusinessPlaceApi.ListAsync(CancellationToken.None)).FirstOrDefault(p => p.IsDefault));
         _logo = await CompanyApi.GetLogoAsync(CancellationToken.None);
         _logoFile = null;
         ApplySetting(await InventorySettingApi.GetAsync(CancellationToken.None));
@@ -249,9 +291,10 @@
         return company;
     }
 
-    // BC-BR-317: a picked logo not uploaded yet, a changed inventory mode or changed security values
+    // BC-BR-317: changed business place values, a picked logo not uploaded yet, a changed inventory mode or changed security values
     private bool HasSectionChanges() =>
-        _logoFile is not null
+        (_place is not null && Snapshot.Of(_place) != _placeSnapshot)
+        || _logoFile is not null
         || (_setting is not null && _mode != _setting.NegativeStockMode)
         || (_security is not null && Snapshot.Of(_security) != _securitySnapshot);
 
@@ -350,6 +393,28 @@
         });
     }
 
+    private async Task SaveBusinessPlaceAsync()
+    {
+        if (_placeForm.FirstMissing() is { } missing)
+        {
+            _notice = null;
+            _error = Messages.Get(QuroScreenBase.RequiredCode, missing.Label);
+            return;
+        }
+        var place = _place!;
+        await RunAsync(async () =>
+        {
+            ApplyPlace(await WithFieldLabelsAsync(() => BusinessPlaceApi.UpdateAsync(place.Id, place.ToRequest(), CancellationToken.None)));
+            _notice = L["Common.Saved"];
+        });
+    }
+
+    private void ApplyPlace(BusinessPlaceDto? place)
+    {
+        _place = place is null ? null : BusinessPlaceModel.From(place);
+        _placeSnapshot = _place is null ? null : Snapshot.Of(_place);
+    }
+
     private void ApplySetting(InventorySettingDto setting)
     {
         _setting = setting;
@@ -386,7 +451,7 @@
         }
     }
 
-    // BC-E-302, 303, 309 and 315 name the property; show its label instead
+    // BC-E-302, 303, 309 and 320 name the property; show its label instead
     private async Task<T> WithFieldLabelsAsync<T>(Func<Task<T>> call)
     {
         try
@@ -394,15 +459,20 @@
             return await call();
         }
         catch (ApiProblemException e) when (e.Problem is
-            { Code: InvalidNameCode or InvalidFieldCode or InvalidSecurityValueCode or RegisterNoCode, Args: [var field, ..] })
+            { Code: InvalidNameCode or InvalidFieldCode or InvalidSecurityValueCode, Args: [var field, ..] })
         {
             throw new ApiProblemException(e.Problem with { Args = [FieldLabel(field)] });
+        }
+        catch (ApiProblemException e) when (e.Problem is { Code: InvalidBusinessPlaceCode, Args: [var field, ..] })
+        {
+            throw new ApiProblemException(e.Problem with { Args = [Label($"Bc.BusinessPlace.{field}", field)] });
         }
     }
 
     // Company and security setting properties share the Bc.Company.<property> keys (docs/specifications/BC/company.md)
-    private string FieldLabel(string property) =>
-        L[$"Bc.Company.{property}"] is { ResourceNotFound: false } label ? label.Value : property;
+    private string FieldLabel(string property) => Label($"Bc.Company.{property}", property);
+
+    private string Label(string key, string fallback) => L[key] is { ResourceNotFound: false } label ? label.Value : fallback;
 
     private string LanguageName(string langCode) =>
         L[$"Common.Language.{langCode}"] is { ResourceNotFound: false } name ? name.Value : langCode;

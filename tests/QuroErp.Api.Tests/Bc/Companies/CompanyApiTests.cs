@@ -65,7 +65,7 @@ public class CompanyApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     {
         var client = factory.NonAdmin();
         var request = new UpdateCompanyRequest(
-            "Other", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", Created);
+            "Other", null, null, null, null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", Created);
 
         using var company = await client.PutAsJsonAsync(CompanyRoutes.Base, request);
         using var logo = await client.DeleteAsync(CompanyRoutes.Logo);
@@ -96,8 +96,7 @@ public class CompanyApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 public class CompanySaveApiTests
 {
     private static readonly UpdateCompanyRequest Request = new(
-        "Quro Korea", "Seoul", null, "Lee", "02-000-0000", null, "220-81-62517", "Kim", "info@quro.kr", "Service", "Software",
-        "KR", "KRW", "ko", "Asia/Seoul", "SEPARATE", Created);
+        "Quro Korea", "Seoul", null, "Lee", "02-000-0000", null, "Kim", "info@quro.kr", "KR", "KRW", "ko", "Asia/Seoul", "SEPARATE", Created);
 
     [Fact, Trait("Id", "BC-UC-007-T01")]
     public async Task Update_SavesAndReturnsTheCompany()
@@ -109,7 +108,7 @@ public class CompanySaveApiTests
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var saved = await response.Content.ReadFromJsonAsync<CompanyDto>();
-        (saved!.Name, saved.RegisterNo, saved.BusinessItem, saved.BillingMode).Should().Be(("Quro Korea", "2208162517", "Software", "SEPARATE"));
+        (saved!.Name, saved.Represent, saved.BillingMode).Should().Be(("Quro Korea", "Kim", "SEPARATE"));
         factory.Companies.UpdatedBy.Should().Be(ApiFactory.UserId);
     }
 
@@ -226,7 +225,6 @@ public class CompanySaveApiTests
             Request.CountryCode,
             Request.BaseCurrencyCode,
             Request.DefaultLangCode,
-            Request.RegisterNo,
             Request.UpdatedAt,
             CloseYearMonth = "202610",
         };

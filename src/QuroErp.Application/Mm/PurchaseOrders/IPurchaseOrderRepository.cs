@@ -49,7 +49,9 @@ public interface IPurchaseOrderRepository
         IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <returns>The new id.</returns>
-    Task<long> InsertAsync(string poNo, PurchaseOrderWrite order, string user, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <param name="businessPlaceId">bc_business_place.id of the order (BC-BR-321). It does not change after creation.</param>
+    Task<long> InsertAsync(
+        string poNo, long businessPlaceId, PurchaseOrderWrite order, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Replaces the header and the lines: lines with an Id are updated, others added, missing ones deleted.</summary>
     /// <returns>false when updated_at no longer equals <paramref name="updatedAt"/>.</returns>
