@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<LocalizationSettingService>();
         services.AddScoped<CurrencyService>();
         services.AddScoped<ExchangeRateService>();
+        services.AddScoped<TaxCodeService>();
         services.AddScoped<ITaxRateProvider, TaxAreaRateProvider>();
         services.AddScoped<InventorySettingService>();
         services.AddScoped<ItemService>();
