@@ -126,6 +126,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public InMemoryTaxCodeRepository TaxCodes { get; } = new();
 
+    public InMemoryTaxAreaRepository TaxAreas { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -179,6 +181,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ICurrencyRepository>(Currencies);
             services.AddSingleton<IExchangeRateRepository>(ExchangeRates);
             services.AddSingleton<ITaxCodeRepository>(TaxCodes);
+            services.AddSingleton<ITaxAreaRepository>(TaxAreas);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
@@ -381,6 +384,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2", "ZZAUD1", "ZZAUD2", "ZZBC1", "ZZBC2", "ZZBC3", "ZZBC4", "ZZBC5"],
             ["GRADE"] = ["A01"],
             ["DISPLAY_OPTIONS"] = ["Y", "N", "ALL"],
+            ["STATE"] = ["CA", "NY"],
         };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(

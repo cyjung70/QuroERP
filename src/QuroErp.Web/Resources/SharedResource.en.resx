@@ -165,6 +165,8 @@
   <data name="quro.validation.required" xml:space="preserve"><value>This field is required. Enter a value.</value></data>
   <data name="quro.validation.min" xml:space="preserve"><value>Enter a value at or above the minimum.</value></data>
   <data name="quro.validation.max" xml:space="preserve"><value>Enter a value at or below the maximum.</value></data>
+  <data name="BC-E-511" xml:space="preserve"><value>Tax area '{0}' cannot be saved or deleted. The code must be up to 20 characters and not used by another area, and a name and a state are required. An area that tax codes use cannot be deleted.</value></data>
+  <data name="BC-E-512" xml:space="preserve"><value>The rate line {1} of tax area '{0}' is not valid. It needs a start date and a rate of 0 or more and under 100 with up to 4 decimals, and a start date can have only one line.</value></data>
   <data name="BC-E-513" xml:space="preserve"><value>Tax code '{0}' has no rate valid on {1}. Add a tax area rate starting on or before that date.</value></data>
   <data name="BC-E-521" xml:space="preserve"><value>Business registration number '{0}' is not valid. It must be 10 digits with a correct check digit.</value></data>
   <data name="BC-W-525" xml:space="preserve"><value>The exemption certificate for this state has expired, so the customer's default tax code is used.</value></data>
