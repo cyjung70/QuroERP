@@ -10,24 +10,15 @@
 
 @if (_store is not null)
 {
+    @* Columns and rules come from Definitions/screens/samples/samples.item.multi.screen.toon (TASK-CORE-055) *@
     <QuroMultiGrid TRow="SampleItem" Title="@L["Samples.Multi.Title"]" TestId="multi" Path="@L["Samples.Menu"]" LoadOnStart="true"
-                   Load="() => Task.FromResult(_store.Items())" CreateRow="() => new SampleItem()" Save="SaveAsync" CanWrite="CanWrite">
-        <Columns>
-            <QuroColumn Title="@L["Samples.Code"]" Value="r => r.Code" Context="row">
-                <QuroText Label="@L["Samples.Code"]" HideLabel @bind-Value="row.Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="multi-grid-code" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Samples.Name"]" Value="r => r.Name" Context="row">
-                <QuroText Label="@L["Samples.Name"]" HideLabel @bind-Value="row.Name" Required TestId="multi-grid-name" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Samples.ValidFrom"]" Value="r => r.ValidFrom" />
-            <QuroColumn Title="@L["Samples.Qty"]" Value="r => r.Qty" Format="N2" Context="row">
-                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="row.Qty" TestId="multi-grid-qty" />
-            </QuroColumn>
-        </Columns>
-    </QuroMultiGrid>
+                   Definition="samples.item.multi" UpperCaseFields="UpperCase"
+                   Load="() => Task.FromResult(_store.Items())" CreateRow="() => new SampleItem()" Save="SaveAsync" CanWrite="CanWrite" />
 }
 
 @code {
+    private static readonly string[] UpperCase = ["code"];
+
     private SampleStore? _store;
 
     /// <summary>Full Access of the user; false shows the read-only state (TASK-CORE-051).</summary>

@@ -34,6 +34,9 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+// Screen definitions are checked before the app serves anything; an error stops startup (qurogrid-integration.md 5)
+_ = ScreenDefinitions.Shared;
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

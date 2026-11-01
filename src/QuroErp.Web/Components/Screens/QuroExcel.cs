@@ -11,22 +11,26 @@ public static class QuroExcel
     private const int MaxSheetName = 31;
 
     public static byte[] Create<TRow>(string sheetName, IReadOnlyList<QuroColumn<TRow>> columns, IEnumerable<TRow> rows)
-        where TRow : class
+        where TRow : class =>
+        Create(sheetName, [.. columns.Select(c => c.Title)], rows.Select(row => columns.Select(c => c.Value?.Invoke(row)).ToList()));
+
+    /// <summary>A sheet from column titles and the values of each row in the same order (grids drawn from a definition).</summary>
+    public static byte[] Create(string sheetName, IReadOnlyList<string> titles, IEnumerable<IReadOnlyList<object?>> rows)
     {
         using var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add(Clean(sheetName));
-        for (var c = 0; c < columns.Count; c++)
+        for (var c = 0; c < titles.Count; c++)
         {
-            sheet.Cell(1, c + 1).Value = columns[c].Title;
+            sheet.Cell(1, c + 1).Value = titles[c];
         }
         sheet.Row(1).Style.Font.Bold = true;
 
         var r = 2;
         foreach (var row in rows)
         {
-            for (var c = 0; c < columns.Count; c++)
+            for (var c = 0; c < titles.Count; c++)
             {
-                sheet.Cell(r, c + 1).Value = XLCellValue.FromObject(Excel(columns[c].Value?.Invoke(row)), CultureInfo.InvariantCulture);
+                sheet.Cell(r, c + 1).Value = XLCellValue.FromObject(Excel(row[c]), CultureInfo.InvariantCulture);
             }
             r++;
         }

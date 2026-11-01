@@ -23,6 +23,14 @@
     --quro-label: var(--q-ink-muted);
 }
 .quro-field input:focus-visible, .quro-field select:focus-visible, .quro-field textarea:focus-visible { outline: 2px solid var(--q-brand); outline-offset: -1px; }
+/* QuroGrid package grids take the app tokens (qurogrid-integration.md 10 "테마") */
+.quro-grid-host {
+    --quro-bg: var(--q-surface-0); --quro-head-bg: var(--q-surface-header); --quro-text: var(--q-ink); --quro-label: var(--q-ink-muted);
+    --quro-border: var(--q-line); --quro-active: var(--q-brand); --quro-selected: var(--q-brand-tint); --quro-shadow: var(--q-shadow-dialog);
+    --quro-error: var(--q-danger-tint); --quro-error-line: var(--q-danger); --quro-warning: var(--q-warn-tint); --quro-warning-line: var(--q-warn);
+    --quro-tone-danger: var(--q-danger); --quro-tone-success: var(--q-ok); --quro-tone-muted: var(--q-ink-muted); --quro-tone-highlight: var(--q-warn-tint);
+}
+.quro-grid-commands { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 4px; }
 .quro-span-2 { grid-column: span 2; }
 .quro-span-4 { grid-column: span 4; }
 

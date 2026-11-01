@@ -1,0 +1,28 @@
+# Screen type M sample (TASK-CORE-055): items edited in a grid and saved as a batch. Development only.
+screen:
+  id: samples.item.multi
+  module: SAMPLES
+  title: Samples.Multi.Title
+  version: 1
+  api: /api/samples/items
+  key: id
+  layout: grid
+  perm:
+    read: SAMPLES.Read
+    write: SAMPLES.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: items
+    bind: items
+    rowKey: id
+    deletedRows: strike
+    columns[4]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      code,Samples.Code,text,120,new,true,"","",false,false
+      name,Samples.Name,text,200,true,true,"","",false,false
+      validFrom,Samples.ValidFrom,date,120,false,false,"","",false,false
+      qty,Samples.Qty,number,120,true,false,N2,"",false,false
