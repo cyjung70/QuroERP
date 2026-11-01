@@ -132,7 +132,7 @@
     },
     {
       "path": "docs/architecture/qurogrid-integration.md",
-      "sha256": "26407d64ed3f6c9bab67a21f36a6de41cd31653c5a8ae2bf508eda51279ef4dd"
+      "sha256": "e2ae197fd033a406bbf3920fa2de07bdf8bbdc230b1f607fa348485d691cb685"
     },
     {
       "path": "docs/architecture/reports.md",
@@ -1324,7 +1324,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-054.json",
-      "sha256": "1ea67bcdb536d50bc24de8ac9fe3da746f0ab7f0b51bac19b004cf380a8abb6e"
+      "sha256": "87e1b4ed73620ce5621bee7e799d5bb41c21f6ebd9f221e9e67ad63b840f3d0a"
     },
     {
       "path": "harness/tasks/TASK-CORE-055.json",

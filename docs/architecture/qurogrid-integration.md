@@ -45,7 +45,7 @@ csproj에는 패키지 이름이나 버전을 쓰지 않고 다음 한 줄만 �
 
 | 항목 | QuroERP 위치 |
 | --- | --- |
-| 정적 자산 | `App.razor`에 `_content/Quro.Grid/quro-grid.css`·`quro-grid.js`. QuroGrid는 DI 등록 메서드(`AddQuroGrid`)와 서비스 인터페이스를 두지 않는다 |
+| 정적 자산 | `App.razor`에 `_content/Quro.Grid/quro-grid.css`·`quro-grid.js`, `_content/Quro.UI/quro-ui.css`. `quro-ui.js`는 Quro.UI 컨트롤이 스스로 가져오므로 `<script>`로 넣지 않는다. QuroGrid는 DI 등록 메서드(`AddQuroGrid`)와 서비스 인터페이스를 두지 않는다 |
 | 공통코드 목록 | 그리드 파라미터 `OptionsFor` (`Func<string, IReadOnlyList<ComboOption>?>`: `code:<Major>` → 사용자 언어 목록). QuroERP 공통코드 서비스 → Contracts API 클라이언트 → `sys_code_minor` |
 | 코드도움 | 그리드 파라미터 `LookupFor` (`Func<string, string, Task<IReadOnlyList<string>>>`: lookup id, 입력 → 일치 코드). 팝업 목록은 `OnPopupRequested`에서 화면이 연다. 각 lookup은 기능별 Contracts API 클라이언트를 부른다. 범용 SQL·queryId 엔드포인트는 만들지 않는다 |
 | 서버 페이징 조회 | 그리드 파라미터 `ItemsProvider` (`GridItemsRequest` → 행·`TotalCount`·`Totals`). 기능별 조회 API를 부른다 |
