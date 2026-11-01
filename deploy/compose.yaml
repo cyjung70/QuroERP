@@ -6,7 +6,7 @@ services:
   migrate:
     image: ${IMAGE_PREFIX:?IMAGE_PREFIX is required}-migrate:${IMAGE_TAG:?IMAGE_TAG is required}
     environment:
-      # GitHub dev Secret DEV_DB_CONNECTION 또는 서버 deploy.env에서 주입합니다.
+      # 고정 경로 /opt/quroerp/dev/deploy.env에서만 주입합니다.
       ConnectionStrings__QuroErp: ${DB_CONNECTION:?DB_CONNECTION is required}
     # 애플리케이션 시작과 분리해 한 번 실행합니다. 실패하면 API/Web을 교체하지 않습니다.
     profiles: [tools]

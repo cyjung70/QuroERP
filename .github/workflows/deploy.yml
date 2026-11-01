@@ -37,9 +37,8 @@ jobs:
       IMAGE_PREFIX: quroerp-dev
       RELEASE_SHA: ${{ github.sha }}
       IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      # dev 환경 Variables: 개발 웹 HTTPS 주소, 서버 설정 디렉터리입니다.
+      # dev 환경 Variable에는 개발 웹 HTTPS 주소만 등록합니다.
       DEPLOY_URL: ${{ vars.DEV_URL }}
-      DEPLOY_DIRECTORY: ${{ vars.DEV_DEPLOY_DIRECTORY || '/opt/quroerp/dev' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -56,7 +55,7 @@ jobs:
           docker compose version
           command -v flock
           command -v curl
-          test -r "$DEPLOY_DIRECTORY/deploy.env" || { echo '서버 deploy.env 파일을 준비하세요.' >&2; exit 1; }
+          test -r /opt/quroerp/dev/deploy.env || { echo '/opt/quroerp/dev/deploy.env 파일을 러너 계정이 읽을 수 있도록 준비하세요.' >&2; exit 1; }
           test -n "$DEPLOY_URL" || { echo 'GitHub dev 환경 Variable DEV_URL을 설정하세요.' >&2; exit 1; }
       - name: 배포 실패 처리 검증
         run: bash deploy/tests/deploy-test.sh
@@ -70,11 +69,6 @@ jobs:
               -t "$IMAGE_PREFIX-$target:$IMAGE_TAG" .
           done
       - name: 외부 개발 DB 마이그레이션 및 배포
-        # dev 환경 Secrets에 등록합니다. Variables에는 비밀번호를 넣지 않습니다.
-        # Secret이 비어 있으면 deploy.sh가 서버 deploy.env의 같은 설정을 사용합니다.
-        # 비밀 값은 이 단계의 환경변수로만 전달합니다. 명령줄/빌드 인수로 넣지 않습니다.
-        env:
-          DB_CONNECTION: ${{ secrets.DEV_DB_CONNECTION }}
-          JWT_SIGNING_KEY: ${{ secrets.DEV_JWT_SIGNING_KEY }}
-          TLS_PASSWORD: ${{ secrets.DEV_TLS_PASSWORD }}
+        # 인증정보는 고정된 서버 파일 /opt/quroerp/dev/deploy.env에서만 읽습니다.
+        # GitHub Secrets와 빌드 인수로 인증정보를 전달하지 않습니다.
         run: bash deploy/deploy.sh

@@ -39,31 +39,9 @@ sudo -u "$runner_user" -H docker info
 
 저장소 **Settings → Environments → New environment → dev**에서 설정합니다. Deployment branches는 `dev`만 허용하세요. Required reviewers를 추가하면 승인을 기다리고, 없으면 검증 성공 후 자동 배포합니다.
 
-비밀번호는 **Variables가 아니라 Secrets**에 넣습니다. GitHub Secret을 읽어 코드 파일을 생성하지 않으며, 배포 단계의 환경변수로만 Compose에 전달합니다.
+GitHub에는 비밀 값 대신 **Variable `DEV_URL`만** 설정합니다. 값은 실제 개발 웹 HTTPS 주소입니다. 예: `https://erp-dev.example.com:8443`. DB 주소가 아닙니다.
 
-| 종류 | 이름 | 값과 용도 |
-| --- | --- | --- |
-| Secret | `DEV_DB_CONNECTION` | 외부 개발 DB의 전체 Npgsql 연결 문자열. 호스트·포트·DB 이름·계정·비밀번호를 포함합니다. |
-| Secret | `DEV_JWT_SIGNING_KEY` | `openssl rand -hex 32`로 만든 독립적인 서명 키. DB 비밀번호를 재사용하지 않습니다. |
-| Secret | `DEV_TLS_PASSWORD` | 개발 웹 서버의 `tls.pfx` 내보내기 비밀번호. |
-| Variable | `DEV_URL` | 실제 개발 웹 HTTPS 주소. 예: `https://erp-dev.example.com:8443`. DB 주소가 아닙니다. |
-| Variable | `DEV_DEPLOY_DIRECTORY` | 선택 사항. 기본 `/opt/quroerp/dev`. 러너가 읽고 쓸 수 있는 서버 디렉터리입니다. |
-
-연결 문자열은 GitHub Secret 입력란에 아래 형식으로 작성합니다. 실제 값은 이 문서나 YAML에 넣지 않습니다. DB 이름은 계정명과 별개이며, 이미 생성된 개발 전용 DB를 지정해야 합니다.
-
-```text
-Host=<DB_HOST>;Port=<DB_PORT>;Database=<DB_NAME>;Username=<DB_USER>;Password=<DB_PASSWORD>
-```
-
-DB의 TLS 정책에 맞춰 필요하면 `SSL Mode=VerifyFull`과 신뢰할 CA 구성을 추가하세요. 인증서 검증을 무조건 끄는 설정은 넣지 않습니다. 세미콜론 등 특수문자가 있는 값은 Npgsql 연결 문자열의 인용 규칙을 따라야 합니다.
-
-GitHub CLI를 사용하는 경우 아래 명령은 값을 대화형으로 받습니다. `--body 실제비밀번호`처럼 명령줄이나 셸 이력에 비밀 값을 남기지 마세요.
-
-```bash
-gh secret set DEV_DB_CONNECTION --env dev --repo cyjung70/QuroERP
-gh secret set DEV_JWT_SIGNING_KEY --env dev --repo cyjung70/QuroERP
-gh secret set DEV_TLS_PASSWORD --env dev --repo cyjung70/QuroERP
-```
+DB·JWT·TLS 인증정보는 고정 파일 `/opt/quroerp/dev/deploy.env`에서만 읽습니다. `DEV_DB_CONNECTION`, `DEV_JWT_SIGNING_KEY`, `DEV_TLS_PASSWORD` Secrets와 `DEV_DEPLOY_DIRECTORY` Variable은 더 이상 사용하지 않습니다. 기존 항목이 있어도 이 워크플로에 전달되지 않으며 삭제해도 됩니다.
 
 ## 3. 개발 호스트 설정 파일
 
@@ -78,16 +56,16 @@ install -m 600 deploy/deploy.env.example /opt/quroerp/dev/deploy.env
 
 | 서버 파일 항목 | 설정 방법 |
 | --- | --- |
-| `DB_CONNECTION` | GitHub `DEV_DB_CONNECTION`을 쓰면 비워 둡니다. 서버 파일 방식이면 전체 연결 문자열을 이곳에 저장합니다. |
-| `JWT_SIGNING_KEY` | GitHub `DEV_JWT_SIGNING_KEY`를 쓰면 비워 둡니다. 서버 파일 방식이면 독립적인 서명 키를 넣습니다. |
-| `TLS_PASSWORD` | GitHub `DEV_TLS_PASSWORD`를 쓰면 비워 둡니다. 서버 파일 방식이면 인증서 비밀번호를 넣습니다. |
+| `DB_CONNECTION` | 필수. `Host=<DB_HOST>;Port=<DB_PORT>;Database=<DB_NAME>;Username=<DB_USER>;Password=<DB_PASSWORD>` 형식의 전체 연결 문자열. DB 이름은 계정명과 별개입니다. |
+| `JWT_SIGNING_KEY` | 필수. `openssl rand -hex 32`로 생성한 독립적인 서명 키. DB 비밀번호를 재사용하지 않습니다. |
+| `TLS_PASSWORD` | 필수. `tls.pfx`를 내보낼 때 지정한 비밀번호. |
 | `TLS_DIRECTORY` | `tls.pfx`를 보관할 절대 경로. 기본 `/opt/quroerp/dev/tls`. |
 | `WEB_HOST` | 실제 개발 웹 도메인. 인증서 이름과 일치해야 합니다. 프로토콜·포트·경로를 붙이지 않습니다. |
 | `HTTPS_PORT` | 호스트에서 공개할 웹 포트. 기본 `8443`. `DEV_URL`에도 동일한 포트를 사용합니다. |
 
-**비밀 값의 우선순위는 값이 있는 GitHub Secret → 서버 파일입니다.** 빈 GitHub Secret은 환경변수에서 제거하여 서버 파일 값을 가리지 않도록 했습니다. 둘 다 없으면 Compose 검증에서 배포를 중단합니다. 서버 파일을 `source`하거나 `eval`하지 않습니다.
+**배포 스크립트는 설정 경로를 변경할 수 없으며, 위 여섯 항목의 상속 환경변수를 제거한 후 서버 파일을 읽습니다.** 파일을 `source`하거나 `eval`하지 않고 Compose의 dotenv 형식으로 읽습니다. 필수 값이 없으면 배포를 중단합니다.
 
-서버 파일 방식에서는 값에 `$` 등 Compose 확장 문자가 있으면 dotenv의 작은따옴표 인용을 사용하세요. 완성된 연결 문자열 전체를 작은따옴표로 감쌀 수 있습니다. 인증정보 파일은 러너 소유 및 권한 `0600`을 유지합니다. GitHub Secret 방식도 Docker 접근 권한이 있는 호스트 관리자는 컨테이너 환경변수를 볼 수 있으므로 러너/호스트 관리자 권한을 제한해야 합니다.
+값에 `$` 등 Compose 확장 문자가 있으면 dotenv의 작은따옴표 인용을 사용하세요. 완성된 연결 문자열 전체를 작은따옴표로 감쌀 수 있습니다. 파일은 러너 소유 및 권한 `0600`으로 유지합니다. Docker 관리 권한이 있는 사용자는 컨테이너 환경변수를 볼 수 있으므로 호스트 권한을 제한합니다. DB의 TLS 정책에 맞춰 필요한 경우 `SSL Mode=VerifyFull`과 신뢰할 CA 구성을 추가합니다.
 
 유효한 인증서와 개인 키를 `TLS_DIRECTORY/tls.pfx`에 넣고 컨테이너 사용자 UID 1654에 필요한 읽기/경로 접근 권한을 부여합니다. 상위 디렉터리의 `0700` 권한까지 고려해 필요한 ACL/소유권을 설정하세요. 개발 웹 DNS와 방화벽에서 `HTTPS_PORT`를 열고 러너에서도 `DEV_URL`에 접속할 수 있게 합니다. 사설 CA면 러너에 CA 신뢰를 설정합니다.
 
@@ -97,12 +75,10 @@ install -m 600 deploy/deploy.env.example /opt/quroerp/dev/deploy.env
 
 배포는 Schema → Seed만 적용하며 Demo 데이터, DB/사용자 생성, 회사 국가 설정, 관리자 생성/비밀번호 초기화는 자동 실행하지 않습니다. 최초 회사·관리자 설정은 기존 Database 콘솔의 `--set-country`, `--create-admin`으로 수행합니다. 업무 데이터가 있는 DB는 마이그레이션 전에 백업을 확보하세요.
 
-회사·관리자 설정을 서버 터미널에서 실행할 때 GitHub Secret 방식은 자동으로 터미널에 전달되지 않습니다. 다음처럼 연결 문자열을 표시 없이 읽어 환경변수로 전달한 뒤 초기 설정을 수행할 수 있습니다. 다른 비밀/웹 설정은 서버 파일 또는 해당 환경변수에도 있어야 합니다.
+최초 회사·관리자 설정도 같은 서버 파일을 사용합니다. 실제 비밀번호를 명령줄에 넣지 않습니다. 먼저 상속된 설정을 제거하고 배포한 이미지 태그를 지정합니다.
 
 ```bash
-read -rsp '개발 DB 연결 문자열: ' DB_CONNECTION
-printf '\n'
-export DB_CONNECTION
+unset DB_CONNECTION JWT_SIGNING_KEY TLS_PASSWORD TLS_DIRECTORY WEB_HOST HTTPS_PORT
 export IMAGE_PREFIX=quroerp-dev
 export IMAGE_TAG='<commit-sha>-<run-id>-<attempt>'
 docker compose --project-name quroerp-dev --env-file /opt/quroerp/dev/deploy.env -f deploy/compose.yaml run --rm migrate --set-country KR --company-name '회사명'
@@ -122,6 +98,6 @@ unset DB_CONNECTION
 - 성공한 매니페스트와 이미지 태그만 `releases/<tag>`와 `current-release`에 기록합니다. 비밀 값은 기록하지 않습니다.
 - Web 교체 시 Blazor 연결 및 메모리 로그인 세션은 끊어집니다. 단일 서버 배포이며 무중단 배포는 아닙니다.
 - `set -x`, `printenv`, 비밀 값 `echo`, `--quiet` 없는 `docker compose config`를 사용하지 않습니다. 볼륨 삭제나 전역 Docker 정리도 자동 실행하지 않습니다.
-- `bash deploy/tests/deploy-test.sh`는 비밀 값 우선순위, 외부 DB 흐름, 실패 시 교체 중단, 성공 기록을 검증합니다. 실제 외부 DB 접속과 컨테이너 실행은 설정을 완료한 개발 러너에서 확인해야 합니다.
+- `bash deploy/tests/deploy-test.sh`는 고정 경로, 상속 환경변수 차단, 외부 DB 흐름, 실패 시 교체 중단, 성공 기록을 검증합니다. 실제 외부 DB 접속과 컨테이너 실행은 설정을 완료한 개발 러너에서 확인해야 합니다.
 
 참고: [GitHub 재사용 워크플로](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows), [GitHub Secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets).

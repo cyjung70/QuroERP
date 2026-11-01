@@ -9,19 +9,16 @@ umask 077
 [[ "$IMAGE_TAG" =~ ^[a-f0-9]{40}-[0-9]+-[0-9]+$ ]] || exit 2
 [[ "$DEPLOY_URL" == https://* ]] || exit 2
 
-deploy_dir="${DEPLOY_DIRECTORY:-/opt/quroerp/dev}"
+# 설정/잠금/릴리스 기록 경로는 고정합니다. 외부 환경변수로 변경할 수 없습니다.
+readonly deploy_dir=/opt/quroerp/dev
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 test -r "$deploy_dir/deploy.env"
 exec 9>"$deploy_dir/deploy.lock"
 flock -w 300 9
 
-# 미등록 GitHub Secret의 빈 환경변수를 제거해야 Compose가 서버 파일 값을 사용합니다.
-# 서버 파일은 source/eval하지 않고 Compose의 dotenv 형식으로만 읽습니다.
-for secret_name in DB_CONNECTION JWT_SIGNING_KEY TLS_PASSWORD; do
-  if [[ -z "${!secret_name:-}" ]]; then
-    unset "$secret_name"
-  fi
-done
+# 호스트/러너에 남은 환경변수가 서버 파일 값을 덮어쓰지 못하도록 제거합니다.
+# 파일은 source/eval하지 않고 Compose의 dotenv 형식으로만 읽습니다.
+unset DB_CONNECTION JWT_SIGNING_KEY TLS_PASSWORD TLS_DIRECTORY WEB_HOST HTTPS_PORT
 
 compose=(docker compose --project-name quroerp-dev --env-file "$deploy_dir/deploy.env" -f "$script_dir/compose.yaml")
 # 확장된 설정에 비밀 값이 포함되므로 --quiet를 반드시 사용합니다.

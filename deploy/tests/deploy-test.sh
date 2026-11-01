@@ -5,7 +5,14 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
 mkdir -p "$test_root/bin" "$test_root/server"
 touch "$test_root/server/deploy.env"
-export DEPLOY_DIRECTORY="$test_root/server"
+# 운영 스크립트의 고정 경로 선언만 테스트용 복사본에서 임시 경로로 바꿉니다.
+# 실제 /opt 파일은 읽거나 수정하지 않습니다.
+test_script="$test_root/deploy.sh"
+sed "s#^readonly deploy_dir=/opt/quroerp/dev\$#readonly deploy_dir='$test_root/server'#" "$script_dir/deploy.sh" > "$test_script"
+cp "$script_dir/compose.yaml" "$test_root/compose.yaml"
+grep -q "^readonly deploy_dir='$test_root/server'" "$test_script"
+# 이전 경로 변수와 비밀 환경변수가 남아 있어도 사용되지 않아야 합니다.
+export DEPLOY_DIRECTORY=/ignored-path
 export DEPLOY_URL=https://example.invalid
 export IMAGE_PREFIX=quroerp-dev
 export IMAGE_TAG=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1-1
@@ -15,11 +22,8 @@ export PATH="$test_root/bin:$PATH"
 cat > "$test_root/bin/docker" <<'MOCK'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$TEST_LOG"
-if [[ "${EXPECT_SECRET_MODE:-}" == absent ]]; then
-  [[ ! -v DB_CONNECTION && ! -v JWT_SIGNING_KEY && ! -v TLS_PASSWORD ]] || exit 44
-elif [[ "${EXPECT_SECRET_MODE:-}" == present ]]; then
-  [[ "${DB_CONNECTION:-}" == test-db && "${JWT_SIGNING_KEY:-}" == test-jwt && "${TLS_PASSWORD:-}" == test-tls ]] || exit 45
-fi
+[[ ! -v DB_CONNECTION && ! -v JWT_SIGNING_KEY && ! -v TLS_PASSWORD ]] || exit 44
+[[ ! -v TLS_DIRECTORY && ! -v WEB_HOST && ! -v HTTPS_PORT ]] || exit 45
 if [[ "${FAIL_MIGRATION:-0}" == 1 && " $* " == *' run --rm --no-deps migrate '* ]]; then
   exit 42
 fi
@@ -39,7 +43,7 @@ MOCK
 chmod +x "$test_root/bin/"*
 
 expect_failure() {
-  if bash "$script_dir/deploy.sh"; then
+  if bash "$test_script"; then
     echo 'Expected deployment failure.' >&2
     exit 1
   else
@@ -49,18 +53,17 @@ expect_failure() {
 }
 
 export FAIL_MIGRATION=1
-export EXPECT_SECRET_MODE=absent
-# GitHub 미등록 Secret의 빈 값은 서버 파일을 가리지 않도록 제거해야 합니다.
+# 빈 환경변수도 서버 파일을 가리지 않도록 제거해야 합니다.
 export DB_CONNECTION='' JWT_SIGNING_KEY='' TLS_PASSWORD=''
 expect_failure 42
 ! grep -q '240 api web\|public-https' "$TEST_LOG"
 unset FAIL_MIGRATION
 echo 'PASS: migration failure prevents application replacement'
-echo 'PASS: empty GitHub secrets allow server-file fallback'
+echo 'PASS: fixed server path ignores path overrides and empty environment values'
 
-# 값이 있는 Secret은 변형/출력 없이 Docker에 전달되어야 합니다.
-export EXPECT_SECRET_MODE=present
+# 이전 설정에서 남은 비어 있지 않은 환경변수도 제거해야 합니다.
 export DB_CONNECTION=test-db JWT_SIGNING_KEY=test-jwt TLS_PASSWORD=test-tls
+export TLS_DIRECTORY=/ignored-tls WEB_HOST=ignored.invalid HTTPS_PORT=9999
 
 : > "$TEST_LOG"
 export FAIL_HEALTH=1
@@ -76,7 +79,7 @@ unset HTTP_STATUS
 echo 'PASS: public redirect does not count as healthy HTTPS'
 
 : > "$TEST_LOG"
-bash "$script_dir/deploy.sh"
+bash "$test_script"
 test "$(cat "$test_root/server/current-release")" = "$IMAGE_TAG"
 test -s "$test_root/server/releases/$IMAGE_TAG/compose.yaml"
 test -s "$test_root/server/releases/$IMAGE_TAG/images.env"
@@ -85,9 +88,11 @@ echo 'PASS: success records the deployed manifest and image identity'
 ! grep -q 'pull postgres\|120 postgres' "$TEST_LOG"
 ! grep -R -q 'test-db\|test-jwt\|test-tls' "$test_root/server/releases"
 echo 'PASS: external database only; no secrets in release records'
+echo 'PASS: inherited credentials and web settings cannot override the host file'
 
 # 이 테스트가 만든 파일만 제거하며 계산된 경로를 재귀 삭제하지 않습니다.
 rm -f "$test_root/bin/docker" "$test_root/bin/curl" "$test_root/bin/flock" \
+  "$test_script" "$test_root/compose.yaml" \
   "$test_root/commands" "$test_root/server/deploy.env" "$test_root/server/deploy.lock" \
   "$test_root/server/current-release" \
   "$test_root/server/releases/$IMAGE_TAG/compose.yaml" \
