@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Exercise orchestration failure boundaries without Docker, credentials or a server.
+# Docker/실제 인증정보/서버 없이 배포 실패 경계와 비밀 값 주입 방식을 검증합니다.
 set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
@@ -7,7 +7,7 @@ mkdir -p "$test_root/bin" "$test_root/server"
 touch "$test_root/server/deploy.env"
 export DEPLOY_DIRECTORY="$test_root/server"
 export DEPLOY_URL=https://example.invalid
-export IMAGE_PREFIX=quroerp
+export IMAGE_PREFIX=quroerp-dev
 export IMAGE_TAG=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1-1
 export TEST_LOG="$test_root/commands"
 export PATH="$test_root/bin:$PATH"
@@ -15,6 +15,11 @@ export PATH="$test_root/bin:$PATH"
 cat > "$test_root/bin/docker" <<'MOCK'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$TEST_LOG"
+if [[ "${EXPECT_SECRET_MODE:-}" == absent ]]; then
+  [[ ! -v DB_CONNECTION && ! -v JWT_SIGNING_KEY && ! -v TLS_PASSWORD ]] || exit 44
+elif [[ "${EXPECT_SECRET_MODE:-}" == present ]]; then
+  [[ "${DB_CONNECTION:-}" == test-db && "${JWT_SIGNING_KEY:-}" == test-jwt && "${TLS_PASSWORD:-}" == test-tls ]] || exit 45
+fi
 if [[ "${FAIL_MIGRATION:-0}" == 1 && " $* " == *' run --rm --no-deps migrate '* ]]; then
   exit 42
 fi
@@ -37,26 +42,36 @@ expect_failure() {
   if bash "$script_dir/deploy.sh"; then
     echo 'Expected deployment failure.' >&2
     exit 1
+  else
+    test "$?" -eq "$1"
   fi
   test ! -e "$test_root/server/current-release"
 }
 
 export FAIL_MIGRATION=1
-expect_failure
+export EXPECT_SECRET_MODE=absent
+# GitHub 미등록 Secret의 빈 값은 서버 파일을 가리지 않도록 제거해야 합니다.
+export DB_CONNECTION='' JWT_SIGNING_KEY='' TLS_PASSWORD=''
+expect_failure 42
 ! grep -q '240 api web\|public-https' "$TEST_LOG"
 unset FAIL_MIGRATION
 echo 'PASS: migration failure prevents application replacement'
+echo 'PASS: empty GitHub secrets allow server-file fallback'
+
+# 값이 있는 Secret은 변형/출력 없이 Docker에 전달되어야 합니다.
+export EXPECT_SECRET_MODE=present
+export DB_CONNECTION=test-db JWT_SIGNING_KEY=test-jwt TLS_PASSWORD=test-tls
 
 : > "$TEST_LOG"
 export FAIL_HEALTH=1
-expect_failure
+expect_failure 43
 ! grep -q public-https "$TEST_LOG"
 unset FAIL_HEALTH
 echo 'PASS: health failure prevents successful release recording'
 
 : > "$TEST_LOG"
 export HTTP_STATUS=302
-expect_failure
+expect_failure 1
 unset HTTP_STATUS
 echo 'PASS: public redirect does not count as healthy HTTPS'
 
@@ -67,8 +82,11 @@ test -s "$test_root/server/releases/$IMAGE_TAG/compose.yaml"
 test -s "$test_root/server/releases/$IMAGE_TAG/images.env"
 test "$(tail -n 1 "$TEST_LOG")" = public-https
 echo 'PASS: success records the deployed manifest and image identity'
+! grep -q 'pull postgres\|120 postgres' "$TEST_LOG"
+! grep -R -q 'test-db\|test-jwt\|test-tls' "$test_root/server/releases"
+echo 'PASS: external database only; no secrets in release records'
 
-# Remove only the files this test created; never recursively remove a computed path.
+# 이 테스트가 만든 파일만 제거하며 계산된 경로를 재귀 삭제하지 않습니다.
 rm -f "$test_root/bin/docker" "$test_root/bin/curl" "$test_root/bin/flock" \
   "$test_root/commands" "$test_root/server/deploy.env" "$test_root/server/deploy.lock" \
   "$test_root/server/current-release" \

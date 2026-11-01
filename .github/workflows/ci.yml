@@ -1,12 +1,14 @@
-# Build, test, Harness check and format check for every PR to main and every push to main (TASK-CORE-052).
-# The job name `ci` is fixed so branch protection can require it.
+# main/dev 대상 PR과 main push를 검증합니다. dev push는 배포 워크플로가 호출합니다.
+# 브랜치 보호의 필수 검사 이름 ci를 유지합니다 (TASK-CORE-052).
 name: ci
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   push:
     branches: [main]
+  # dev 배포가 같은 커밋의 검증 성공을 기다릴 수 있도록 재사용합니다.
+  workflow_call:
 
 permissions:
   contents: read
@@ -24,7 +26,7 @@ jobs:
     services:
       postgres:
         image: postgres:16
-        # Test-only credentials for a throwaway container; not used anywhere else.
+        # 일회용 CI 테스트 전용 인증정보입니다. 외부 개발 DB나 운영 DB에는 사용하지 않습니다.
         env:
           POSTGRES_USER: quro_test
           POSTGRES_PASSWORD: quro_test
@@ -58,15 +60,15 @@ jobs:
       - name: Test
         run: dotnet test --no-build --logger trx --results-directory TestResults
 
-      # A skipped test means a DB integration test did not run (no connection string), which counts as a failure.
+      # DB 테스트가 건너뛰어졌다면 검증 누락이므로 CI를 실패 처리합니다.
       - name: Fail on skipped tests
         shell: pwsh
         run: |
           $skipped = 0
           foreach ($file in Get-ChildItem TestResults -Filter *.trx -Recurse) {
-            # -LiteralPath: TRX names can contain [1], which Get-Content would read as a wildcard.
+            # TRX 파일명의 [1] 등을 와일드카드로 해석하지 않도록 LiteralPath를 사용합니다.
             [xml]$trx = Get-Content -LiteralPath $file.FullName -Raw
-            # Skipped xUnit tests are results with outcome NotExecuted; the summary counter stays 0.
+            # xUnit 건너뜀은 결과의 NotExecuted로 판별합니다. 요약 카운터는 0으로 남습니다.
             $skipped += @($trx.TestRun.Results.UnitTestResult | Where-Object outcome -eq 'NotExecuted').Count
           }
           if ($skipped -gt 0) {
@@ -78,7 +80,7 @@ jobs:
         shell: pwsh
         run: ./scripts/validate-harness.ps1
 
-      # Screen definitions (.toon); the folder is kept with .gitkeep so an empty set runs as 0 files, not skipped.
+      # .toon 화면 정의를 검사합니다. 빈 폴더도 .gitkeep으로 유지하여 검사 자체를 건너뛰지 않습니다.
       - name: Restore tools
         run: dotnet tool restore
 

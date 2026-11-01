@@ -1,28 +1,14 @@
-name: quroerp-production
+# 개발 전용 스택입니다. 외부 PostgreSQL을 사용하므로 DB 컨테이너/DB 볼륨은 없습니다.
+# 실제 DB 접속정보는 DB_CONNECTION으로만 받습니다.
+name: quroerp-dev
 
 services:
-  postgres:
-    image: postgres:17
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: quroerp
-      POSTGRES_USER: quroerp
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [CMD-SHELL, "pg_isready -U quroerp -d quroerp"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-
   migrate:
     image: ${IMAGE_PREFIX:?IMAGE_PREFIX is required}-migrate:${IMAGE_TAG:?IMAGE_TAG is required}
     environment:
+      # GitHub dev Secret DEV_DB_CONNECTION 또는 서버 deploy.env에서 주입합니다.
       ConnectionStrings__QuroErp: ${DB_CONNECTION:?DB_CONNECTION is required}
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # 애플리케이션 시작과 분리해 한 번 실행합니다. 실패하면 API/Web을 교체하지 않습니다.
     profiles: [tools]
 
   api:
@@ -32,10 +18,9 @@ services:
       ConnectionStrings__QuroErp: ${DB_CONNECTION:?DB_CONNECTION is required}
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
       Kestrel__Endpoints__Http__Url: http://+:8080
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # API는 Docker 내부 전용이며 호스트 포트를 공개하지 않습니다.
     healthcheck:
+      # DB 설정을 읽는 기존 API로 외부 DB 연결까지 확인합니다.
       test: [CMD-SHELL, "test \"$$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:8080/api/auth/login-options)\" = 200"]
       interval: 30s
       timeout: 10s
@@ -46,13 +31,15 @@ services:
     image: ${IMAGE_PREFIX:?IMAGE_PREFIX is required}-web:${IMAGE_TAG:?IMAGE_TAG is required}
     restart: unless-stopped
     environment:
+      # Compose 서비스 이름 api로 통신합니다.
       QuroApi__BaseUrl: http://api:8080
       Kestrel__Endpoints__Https__Url: https://+:8443
       Kestrel__Certificates__Default__Path: /https/tls.pfx
       Kestrel__Certificates__Default__Password: ${TLS_PASSWORD:?TLS_PASSWORD is required}
       AllowedHosts: ${WEB_HOST:?WEB_HOST is required}
     ports:
-      - "${HTTPS_PORT:-443}:8443"
+      # 운영 443 포트와 분리한 개발 기본 포트입니다. DB 포트와는 별개입니다.
+      - "${HTTPS_PORT:-8443}:8443"
     volumes:
       - type: bind
         source: ${TLS_DIRECTORY:?TLS_DIRECTORY is required}
@@ -60,13 +47,13 @@ services:
         read_only: true
         bind:
           create_host_path: false
+      # 개발 Web의 Data Protection 키를 컨테이너 교체 후에도 보존합니다.
       - web-keys:/home/app/.aspnet/DataProtection-Keys
     depends_on:
       api:
         condition: service_healthy
     healthcheck:
-      # Certificate verification is bypassed only for this loopback probe.
-      # deploy.sh separately validates HTTPS using the public hostname.
+      # 내부 검사만 인증서 검증을 생략합니다. deploy.sh의 외부 HTTPS 검사는 검증합니다.
       test: [CMD-SHELL, "test \"$$(curl -ks -H \"Host: $$AllowedHosts\" -o /dev/null -w '%{http_code}' --max-time 10 https://localhost:8443/bc/login)\" = 200"]
       interval: 30s
       timeout: 15s
@@ -74,5 +61,4 @@ services:
       retries: 5
 
 volumes:
-  postgres-data:
   web-keys:
