@@ -1,10 +1,15 @@
 @* Screen type SM: the entry frame (entry-frame.md) — title bar → command bar (File | Rows | Status | Output) →
    4-column header + totals panel → line grid → audit. Header and lines are saved together (screens.md).
-   There is no search area: Search (F3) opens a document search dialog. *@
+   There is no search area: Search (F3) opens a document search dialog.
+   The header is a one-row data set under the Quro.UI input wrappers and the lines are the QuroGrid package over the
+   screen's .toon grid (TASK-CORE-056, qurogrid-integration.md 10). *@
 @typeparam THeader where THeader : class
 @typeparam TLine where TLine : class
 @inherits QuroScreenBase
 @implements IAsyncDisposable
+@using Quro.Grid.Data
+@using Quro.Grid.Definition
+@using QuroErp.Web.Common
 @inject IJSRuntime Js
 
 <section class="quro-entry" data-testid="@TestId">
@@ -64,7 +69,7 @@
             <button type="button" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+Insert"
                     data-testid="@Id("toolbar-add-row")" @onclick="AddLine">@L["Common.AddRow"]</button>
             <button type="button" disabled="@(Busy || !CanMarkSelected)" aria-keyshortcuts="Control+Delete"
-                    aria-pressed="@(_selected?.IsDeleted == true ? "true" : "false")"
+                    aria-pressed="@(SelectedIsDeleted ? "true" : "false")"
                     data-testid="@Id("toolbar-mark-delete")" @onclick="MarkDelete">@L["Common.MarkDelete"]</button>
             <button type="button" disabled="@(Busy || !CanRestoreSelected)" data-testid="@Id("toolbar-restore-row")" @onclick="RestoreLine">@L["Common.RestoreLine"]</button>
             @RowCommands?.Invoke(_header)
@@ -89,7 +94,7 @@
             }
             @if (OnExport.HasDelegate)
             {
-                <button type="button" disabled="@(Busy || _lines.All.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport">@L["Common.ExportExcel"]</button>
+                <button type="button" disabled="@(Busy || _lines.RowKeys.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport">@L["Common.ExportExcel"]</button>
             }
         </div>
     </div>
@@ -119,8 +124,10 @@
                 <span class="quro-hint">@hint</span>
             }
         </div>
-        <QuroGrid @ref="_grid" TRow="TLine" Rows="_lines" Columns="LineColumns" Editable="CanSaveNow" EntryMode="true" Busy="Busy"
-                  TestId="@Id("line")" @bind-SelectedRow="_selected" IsRowLocked="IsLineLocked" />
+        @* Add row, mark delete and restore act on the current line from the command bar (entry-frame.md 5) *@
+        <QuroLineGrid @ref="_lineGrid" TLine="TLine" Data="_lines" Definition="_definition" CanEdit="@(CanSaveNow && !Busy)"
+                      IsLineLocked="IsLineLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
+                      OnMessage="ShowWarning" OnChanged="StateHasChanged" TestId="@Id("line")" />
     </div>
 
     @* ⑤ Audit: empty for a new document *@
@@ -132,10 +139,10 @@
 
 @code {
     private readonly QuroFormContext _form = new();
-    private readonly GridRows<TLine> _lines = new();
-    private QuroGrid<TLine>? _grid;
-    private GridRow<TLine>? _selected;
-    private THeader _header = default!;
+    private readonly QuroFormData<THeader> _headerData = new();
+    private readonly QuroDataSet<TLine> _lines = new();
+    private QuroLineGrid<TLine>? _lineGrid;
+    private GridDef _definition = default!;
     private string _snapshot = "";
     private string? _warning;
     private bool _findOpen;
@@ -146,9 +153,24 @@
     [Parameter, EditorRequired]
     public RenderFragment<THeader> HeaderFields { get; set; } = default!;
 
-    /// <summary>QuroColumn declarations of the lines (give TRow explicitly).</summary>
+    /// <summary>
+    /// Id of the screen definition (<c>Definitions/screens/**/{id}.screen.toon</c>) whose first grid gives the line columns,
+    /// rules and checks.
+    /// </summary>
     [Parameter, EditorRequired]
-    public RenderFragment LineColumns { get; set; } = default!;
+    public string Definition { get; set; } = default!;
+
+    /// <summary>Reads the lookups of the line code columns (popup cells, pasted codes) from a Contracts API client.</summary>
+    [Parameter]
+    public Func<LookupQuery, Task<IReadOnlyList<LookupRow>>>? Lookup { get; set; }
+
+    /// <summary>Line text fields whose typed value is kept in upper case (a column has no case setting).</summary>
+    [Parameter]
+    public IReadOnlyCollection<string>? UpperCaseFields { get; set; }
+
+    /// <summary>A header field changed (the field name), e.g. to fill the vendor name with <see cref="SetHeaderValue"/>.</summary>
+    [Parameter]
+    public Action<string>? OnHeaderChanged { get; set; }
 
     [Parameter, EditorRequired]
     public Func<THeader> Create { get; set; } = default!;
@@ -237,15 +259,60 @@
     [Parameter]
     public Func<TLine, bool>? IsLineLocked { get; set; }
 
-    public override bool IsDirty => Snapshot.Of(_header) != _snapshot || _lines.IsDirty;
+    // Inputs bound with @bind-Value change the header object without the data set knowing, so the snapshot still counts
+    public override bool IsDirty => _headerData.DataSet.HasChanges || Snapshot.Of(_header) != _snapshot || _lines.HasChanges;
+
+    /// <summary>The lines as a data set, e.g. for a screen that reads a column.</summary>
+    public QuroDataSet<TLine> Lines => _lines;
+
+    /// <summary>The package line grid, e.g. for tests that edit through its entry points.</summary>
+    public QuroLineGrid<TLine>? LineGrid => _lineGrid;
+
+    private THeader _header => _headerData.Item;
 
     private bool CanSaveNow => _form.IsNew || CanSave?.Invoke(_header) != false;
 
-    private bool CanMarkSelected => CanSaveNow && _selected is not null && IsLineLocked?.Invoke(_selected.Item) != true;
+    private int? SelectedKey => _lines.CurrentRowKey;
 
-    private bool CanRestoreSelected => CanSaveNow && _selected is { } row && row.State != RowState.Unchanged;
+    private bool SelectedIsDeleted => SelectedKey is { } key && _lines.GetState(key) == Quro.Grid.Data.RowState.Deleted;
 
-    private IReadOnlyList<TLine> ActiveLines => [.. _lines.All.Where(r => !r.IsDeleted).Select(r => r.Item)];
+    private bool CanMarkSelected =>
+        CanSaveNow && SelectedKey is { } key && IsLineLocked?.Invoke(_lines.GetItem(key)) != true;
+
+    private bool CanRestoreSelected =>
+        CanSaveNow && SelectedKey is { } key && _lines.GetState(key) != Quro.Grid.Data.RowState.Normal;
+
+    private IReadOnlyList<TLine> ActiveLines =>
+        [.. _lines.RowKeys.Where(k => _lines.GetState(k) != Quro.Grid.Data.RowState.Deleted).Select(_lines.GetItem)];
+
+    /// <summary>Sets a header field as typing it would, e.g. the name a picked vendor fills in.</summary>
+    public void SetHeaderValue(string field, object? value) => _headerData.SetValue(field, value);
+
+    /// <summary>Sets a line value as typing it would, then fills its lookup columns and evaluates the rules.</summary>
+    public Task SetLineValueAsync(int rowKey, string field, object? value) =>
+        _lineGrid?.SetValueAsync(rowKey, field, value) ?? Task.CompletedTask;
+
+    /// <summary>A header field value as the header data set holds it.</summary>
+    public object? HeaderValueOf(string field) => _headerData.GetValue(field);
+
+    private void ShowWarning(string? warning)
+    {
+        _warning = warning;
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        _definition = ScreenDefinitions.Shared.Get(Definition).Grids[0];
+        _form.Data = _headerData;
+        _headerData.DataSet.ValueChanged += (_, e) => OnHeaderChanged?.Invoke(e.Field);
+        _headerData.Changed += () =>
+        {
+            _form.NotifyChanged();
+            InvokeAsync(StateHasChanged);
+        };
+        _lines.CurrentRowChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
+    }
 
     /// <summary>
     /// Runs a status command (approve, close, cancel) on the saved document and shows the stored result.
@@ -381,45 +448,91 @@
     private void AddLine()
     {
         _warning = null;
-        _selected = _lines.InsertAfter(_selected, CreateLine(_header));
+        _lines.MoveTo(_lines.AddRow(CreateLine(_header), SelectedKey));
     }
 
-    // Toggle: a saved line is marked (and unmarked), a new line is removed at once
+    // Toggle: a saved line is marked (and unmarked with its loaded values), a new line is removed at once
     private void MarkDelete()
     {
         _warning = null;
-        _lines.ToggleDelete(_selected!);
-        DropSelectionIfRemoved();
+        var key = SelectedKey!.Value;
+        if (_lines.GetState(key) == Quro.Grid.Data.RowState.Deleted)
+        {
+            _lines.RevertRow(key);
+        }
+        else
+        {
+            _lines.DeleteRow(key);
+        }
     }
 
     // Loaded values back; a new line is removed
     private void RestoreLine()
     {
         _warning = null;
-        _lines.Restore(_selected!);
-        DropSelectionIfRemoved();
-    }
-
-    private void DropSelectionIfRemoved()
-    {
-        if (_selected is not null && !_lines.All.Contains(_selected))
+        var key = SelectedKey!.Value;
+        if (_lines.GetState(key) == Quro.Grid.Data.RowState.Inserted)
         {
-            _selected = null;
+            _lines.DeleteRow(key);
+        }
+        else
+        {
+            _lines.RevertRow(key);
         }
     }
 
     private async Task SaveAsync()
     {
         _warning = null;
-        if (!CheckRequired(_form.FirstMissing(), _grid?.FirstMissing()))
+        if (!CheckHeader() || !CheckLines())
         {
             return;
         }
+        var changes = _lines.GetChanges();
         await RunAsync(async () =>
         {
-            SetLoaded(await Save(_header, _form.IsNew, _lines.Changes()));
+            SetLoaded(await Save(_header, _form.IsNew,
+                new([.. changes.Inserted.Select(r => r.Item)], [.. changes.Updated.Select(r => r.Item)], [.. changes.Deleted.Select(r => r.Item)])));
             Notice = L["Common.Saved"];
         });
+    }
+
+    // The header data set's check: the DTO's [Required] and the required columns the bound inputs set
+    private bool CheckHeader()
+    {
+        _form.SyncRequired();
+        if (_headerData.DataSet.Validate() is { IsValid: false } result)
+        {
+            var field = result.Errors[0].Field;
+            return CheckRequired(_form.Find(field) ?? new Missing(field));
+        }
+        return CheckRequired(_form.FirstMissing());
+    }
+
+    // The definition's req columns and value rules; a code the lookup did not find blocks the save (the API checks again)
+    private bool CheckLines()
+    {
+        var result = _lines.Validate();
+        if (!result.IsValid)
+        {
+            var error = result.Errors[0];
+            var label = L[_definition.Columns.FirstOrDefault(c => string.Equals(c.Id, error.Field, StringComparison.OrdinalIgnoreCase))?.Label
+                          ?? error.Field];
+            if (error.MessageKey == ValidationKeys.Required)
+            {
+                return CheckRequired(new Missing(label));
+            }
+            Error = $"{label}: {L[error.MessageKey]}";
+            Notice = null;
+            return false;
+        }
+        if (_lineGrid?.HasCodeErrors == true)
+        {
+            Error = L["Common.CodeNotFound"];
+            Notice = null;
+            return false;
+        }
+        return true;
     }
 
     private async Task DeleteAsync()
@@ -439,21 +552,30 @@
 
     private void StartNew()
     {
-        _header = Create();
+        var created = Create();
         _form.IsNew = true;
         _form.ReadOnly = false;
-        _snapshot = Snapshot.Of(_header);
-        _lines.Clear();
-        _selected = null;
+        _snapshot = Snapshot.Of(created);
+        _headerData.StartNew(created);
+        _lines.Load([]);
+        _form.NotifyChanged();
     }
 
     private void SetLoaded(HeaderLines<THeader, TLine> document)
     {
-        _header = document.Header;
+        _headerData.SetLoaded(document.Header);
         _form.IsNew = false;
         _form.ReadOnly = CanSave?.Invoke(_header) == false;
         _snapshot = Snapshot.Of(_header);
         _lines.Load(document.Lines);
-        _selected = null;
+        _form.NotifyChanged();
+    }
+
+    // A required header column with no input, or a line column, named by its label
+    private sealed record Missing(string Label) : IQuroField
+    {
+        public bool IsRequiredNow => true;
+
+        public bool IsEmpty => true;
     }
 }

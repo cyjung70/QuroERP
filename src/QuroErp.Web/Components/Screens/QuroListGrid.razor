@@ -1,0 +1,113 @@
+@* A read-only list on the QuroGrid package (TASK-CORE-056): the lookup dialog's results and the sub-grids of an S record.
+   The screen keeps declaring app QuroColumns (Title, Value, Format); each becomes a computed package column. *@
+@typeparam TRow where TRow : class
+@using Quro.Grid
+@using Quro.Grid.Data
+@using QuroErp.Web.Common
+@inject IStringLocalizer<SharedResource> L
+
+<CascadingValue Value="_columns" IsFixed="true">@Columns</CascadingValue>
+
+@* The package rows take no test id yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
+<div class="quro-grid-host" data-testid="@TestId" aria-busy="@(Busy ? "true" : null)">
+    @if (_columns.Items.Count > 0)
+    {
+        @* Columns carry translated titles; the localizer returns a title that is not a key as it is (TODO(QuroGrid-request)) *@
+        <Quro.Grid.QuroGrid TItem="TRow" DataSet="_data" Localizer="L" Culture="DisplayCulture.Current" ConfirmLeave="false"
+                            Clipboard="true" ShowFooter="@_columns.Items.Any(c => c.Sum)" OnCellButtonClick="OnCellButtonClick">
+            @for (var i = 0; i < _columns.Items.Count; i++)
+            {
+                var column = _columns.Items[i];
+                @if (column.Sum)
+                {
+                    <Quro.Grid.QuroColumn Field="@($"c{i}")" HeaderKey="@column.Title" Type="CellType.Number" Format="@column.Format"
+                                          Aggregate="Aggregate.Sum" Compute="item => column.Value?.Invoke((TRow)item)" />
+                }
+                else
+                {
+                    <Quro.Grid.QuroColumn Field="@($"c{i}")" HeaderKey="@column.Title" Compute="item => column.Text((TRow)item)" />
+                }
+            }
+            @if (OnSelect.HasDelegate)
+            {
+                <Quro.Grid.QuroColumn Field="@SelectField" HeaderKey="Common.Select" Type="CellType.Button" TextKey="Common.Select" Width="70" />
+            }
+            @if (OnOpen.HasDelegate)
+            {
+                <Quro.Grid.QuroColumn Field="@OpenField" HeaderKey="Common.Open" Type="CellType.Button" TextKey="Common.Open" Width="70" />
+            }
+        </Quro.Grid.QuroGrid>
+    }
+</div>
+
+@code {
+    /// <summary>Field of the select button column, for <c>ClickButton</c> in tests.</summary>
+    public const string SelectField = "select";
+
+    /// <summary>Field of the open button column.</summary>
+    public const string OpenField = "open";
+
+    private readonly QuroColumnSet<TRow> _columns = new();
+    private readonly QuroDataSet<TRow> _data = new();
+    private IReadOnlyList<TRow>? _shown;
+    private int _drawnColumns;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TRow> Items { get; set; } = [];
+
+    /// <summary>QuroColumn declarations, without editors.</summary>
+    [Parameter, EditorRequired]
+    public RenderFragment Columns { get; set; } = default!;
+
+    /// <summary>A select button per row (lookup dialogs).</summary>
+    [Parameter]
+    public EventCallback<TRow> OnSelect { get; set; }
+
+    /// <summary>An open button per row, e.g. the transaction's document. The package grid has no row double-click.</summary>
+    [Parameter]
+    public EventCallback<TRow> OnOpen { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    /// <summary>The rows shown, in order.</summary>
+    public IReadOnlyList<TRow> Rows => [.. _data.RowKeys.Select(_data.GetItem)];
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(Items, _shown))
+        {
+            _shown = Items;
+            _data.Load(Items);
+        }
+    }
+
+    // The columns register while the declarations render, so the grid draws once they are known
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_columns.Items.Count != _drawnColumns)
+        {
+            _drawnColumns = _columns.Items.Count;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnCellButtonClick(CellButtonClickArgs<TRow> args)
+    {
+        if (Busy)
+        {
+            return;
+        }
+        if (args.Field == SelectField)
+        {
+            await OnSelect.InvokeAsync(args.Item);
+        }
+        else if (args.Field == OpenField)
+        {
+            await OnOpen.InvokeAsync(args.Item);
+        }
+    }
+}

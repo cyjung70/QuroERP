@@ -41,10 +41,61 @@ public sealed class DataGridPage<TRow>(
         var cut = Grid;
         cut.InvokeAsync(() => cut.Instance.ClickButton(key, field)).GetAwaiter().GetResult();
     }
+
+    /// <summary>Makes a row the active row, as a click in the browser does.</summary>
+    public void Select(int index)
+    {
+        var key = KeyOf(index);
+        var cut = Grid;
+        cut.InvokeAsync(() => cut.Instance.SelectionChanged(key)).GetAwaiter().GetResult();
+    }
+
+    /// <summary>Pastes Excel-style cells (rows × columns) from a cell, as the browser script does. False when cancelled.</summary>
+    public bool Paste(int index, string field, params string[][] cells)
+    {
+        var key = KeyOf(index);
+        var cut = Grid;
+        return cut.InvokeAsync(() => cut.Instance.Paste(key, field, cells)).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Types text in a popup cell and leaves it without waiting for the grid, which waits while a lookup dialog is open.
+    /// </summary>
+    public Task<bool> EditAsync(int index, string field, string? text)
+    {
+        var key = KeyOf(index);
+        var cut = Grid;
+        return cut.InvokeAsync(() => cut.Instance.CommitEdit(key, field, text));
+    }
+
+    /// <summary>Presses F4 in a popup cell with the typed text; the grid waits while the lookup dialog is open.</summary>
+    public Task<bool> F4Async(int index, string field, string text)
+    {
+        var key = KeyOf(index);
+        var cut = Grid;
+        return cut.InvokeAsync(() => cut.Instance.RequestPopup(key, field, text));
+    }
 }
 
 public static class DataGridPageExtensions
 {
+    /// <summary>The result rows of a lookup dialog (its list is a package grid, TASK-CORE-056).</summary>
+    public static IReadOnlyList<IElement> LookupRows<TPage>(this IRenderedComponent<TPage> page, string dialog)
+        where TPage : class, IComponent =>
+        page.FindAll($"[data-testid={dialog}-grid] .quro-body [role=row][data-row]");
+
+    /// <summary>Clicks the select button of a lookup dialog row.</summary>
+    public static void PickLookupRow<TItem, TPage>(this IRenderedComponent<TPage> page, string dialog, int index)
+        where TItem : class
+        where TPage : class, IComponent =>
+        page.DataGrid<TItem, TPage>($"{dialog}-grid").Click(index, QuroErp.Web.Components.Screens.QuroListGrid<TItem>.SelectField);
+
+    /// <summary>The package grid in the element with the test id; <c>index</c> picks among grids of the same row type.</summary>
+    public static DataGridPage<TRow> DataGrid<TRow, TPage>(this IRenderedComponent<TPage> page, string testId, int index)
+        where TRow : class
+        where TPage : class, IComponent =>
+        new(selector => page.FindAll(selector), () => page.FindComponents<Quro.Grid.QuroGrid<TRow>>()[index], testId);
+
     public static DataGridPage<TRow> DataGrid<TRow, TPage>(this IRenderedComponent<TPage> page, string testId)
         where TRow : class
         where TPage : class, IComponent =>

@@ -1,0 +1,353 @@
+@* The editable lines of an SM document and the target grid of an MM screen on the QuroGrid package (TASK-CORE-056,
+   qurogrid-integration.md 4·10). Columns and rules come from the screen's .toon grid; this component evaluates the rules
+   (display only — the API calculates the stored values again), reads code columns through the screen's lookups and keeps
+   the frame's edit lock. *@
+@typeparam TLine where TLine : class
+@using System.Text.RegularExpressions
+@using Quro.Grid
+@using Quro.Grid.Data
+@using Quro.Grid.Definition
+@using QuroErp.Web.Common
+@inject IStringLocalizer<SharedResource> L
+
+@* The package rows take no test id or row index yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
+<div class="quro-grid-host" data-testid="@TestId">
+    <Quro.Grid.QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
+                        ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor"
+                        OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged" OnRowAdded="OnRowAdded"
+                        OnRowDeleting="OnRowDeleting" OnRowDeleted="OnRowDeleted" OnPasting="OnPasting" OnPasted="OnPasted"
+                        OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick">
+        @ChildContent
+    </Quro.Grid.QuroGrid>
+</div>
+
+@if (_popup is { } popup)
+{
+    <QuroLookupDialog TItem="LookupRow" Title="@L[popup.Lookup.Title]" TestId="@($"{TestId}-lookup")" Visible="true"
+                      VisibleChanged="ClosePopup" InitialKeyword="@popup.Text" Search="k => Lookup!(new LookupQuery(popup.Lookup.Id, k))"
+                      OnSelected="PickPopup">
+        <Columns>
+            @foreach (var column in popup.Lookup.Columns)
+            {
+                <QuroErp.Web.Components.Screens.QuroColumn TRow="LookupRow" Title="@L[column.Label]" Value="r => r[column.Id]" Format="@FormatOf(column)" />
+            }
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private static readonly Regex Call = new(@"^\s*(?<lookup>[A-Za-z][A-Za-z0-9]*)\.(?<query>[A-Za-z][A-Za-z0-9]*)\((?<args>[^)]*)\)\s*$");
+
+    private Quro.Grid.QuroGrid<TLine>? _grid;
+    private GridDef? _prepared;
+    private GridDef? _locked;
+    private List<(RuleDef Rule, RuleExpression Expression)> _calcs = [];
+    private List<RuleDef> _lookups = [];
+    private bool _pasting;
+    private readonly List<(int RowKey, string Field)> _pasted = [];
+    private Popup? _popup;
+
+    [Parameter, EditorRequired]
+    public QuroDataSet<TLine> Data { get; set; } = default!;
+
+    /// <summary>The grid of the screen definition.</summary>
+    [Parameter, EditorRequired]
+    public GridDef Definition { get; set; } = default!;
+
+    /// <summary>The frame lets the user change the lines (status, Full Access). When false every cell is read-only.</summary>
+    [Parameter]
+    public bool CanEdit { get; set; } = true;
+
+    /// <summary>A line that may not be changed or deleted, e.g. one already received.</summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineLocked { get; set; }
+
+    /// <summary>Reads the lookups of the code columns. Without it a code column is plain text.</summary>
+    [Parameter]
+    public Func<LookupQuery, Task<IReadOnlyList<LookupRow>>>? Lookup { get; set; }
+
+    /// <summary>A header field value, for <c>requires</c> checks and lookup query arguments.</summary>
+    [Parameter]
+    public Func<string, object?>? HeaderValue { get; set; }
+
+    /// <summary>Text fields whose typed value is kept in upper case (a column has no case setting).</summary>
+    [Parameter]
+    public IReadOnlyCollection<string>? UpperCaseFields { get; set; }
+
+    /// <summary>Shows a warning of the grid in the frame's message line, or clears it (null).</summary>
+    [Parameter]
+    public Action<string?>? OnMessage { get; set; }
+
+    /// <summary>A value, a line or the marks changed, so the frame draws its totals and commands again.</summary>
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<CellButtonClickArgs<TLine>> OnCellButtonClick { get; set; }
+
+    /// <summary>The frame's own package columns after the definition's (row state, row commands).</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    /// <summary>The package grid, e.g. for tests that edit through its entry points.</summary>
+    public Quro.Grid.QuroGrid<TLine>? Grid => _grid;
+
+    // Without the edit right every cell is read-only; the package has no grid-wide lock yet (TODO(QuroGrid-R4))
+    private GridDef GridDefinition => CanEdit ? Definition : _locked!;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_prepared, Definition))
+        {
+            _prepared = Definition;
+            _locked = Definition with
+            {
+                Columns = [.. Definition.Columns.Select(c => c with { Edit = ColumnEdit.ReadOnly, Req = false })],
+            };
+            // Parsed once per definition (QuroGrid consumer contract 6)
+            _calcs = [.. Definition.Rules.Where(r => r.Action == RuleAction.Calc).Select(r => (r, RuleExpression.Parse(r.Expr)))];
+            _lookups = [.. Definition.Rules.Where(r => r.Action == RuleAction.Lookup)];
+        }
+    }
+
+    /// <summary>Codes in the line's code columns that the lookup did not find: saving waits until they are fixed.</summary>
+    public bool HasCodeErrors => Data.RowKeys.Where(k => Data.GetState(k) != Quro.Grid.Data.RowState.Deleted)
+        .Any(k => Definition.Columns.Any(c => Data.GetCellMark(k, c.Id) is { Level: CellMarkLevel.Error }));
+
+    /// <summary>
+    /// Sets a line value as the screen would by typing it, then fills its lookup columns and evaluates the rules
+    /// (e.g. a code picked in the screen's own dialog).
+    /// </summary>
+    public async Task SetValueAsync(int rowKey, string field, object? value)
+    {
+        Data.SetValue(rowKey, field, value);
+        await AfterChangeAsync([(rowKey, field)]);
+    }
+
+    private static string? FormatOf(LookupColumnDef column) => string.IsNullOrEmpty(column.Fmt) ? null : column.Fmt;
+
+    private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+
+    private ColumnDef? ColumnOf(string field) => Definition.Columns.FirstOrDefault(c => Is(c.Id, field));
+
+    private bool Locked(TLine item) => IsLineLocked?.Invoke(item) == true;
+
+    // validate "requires {field}": the column waits for a header field, e.g. the vendor before item codes (screens.md "SM")
+    private ValidateDef? MissingRequirement(string field) => Definition.Validate.FirstOrDefault(v =>
+        Is(v.Target, field) && v.Rule.StartsWith("requires ", StringComparison.Ordinal)
+        && HeaderValue?.Invoke(v.Rule["requires ".Length..].Trim()) is null or "");
+
+    private void OnCellValueChanging(CellValueChangingArgs<TLine> args)
+    {
+        if (!CanEdit || Locked(args.Item))
+        {
+            args.Cancel = true;
+            return;
+        }
+        if (MissingRequirement(args.Field) is { } requirement)
+        {
+            args.Cancel = true;
+            OnMessage?.Invoke(L[requirement.Msg]);
+        }
+    }
+
+    private async Task OnCellValueChanged(CellValueChangedArgs<TLine> args)
+    {
+        if (args.NewValue is string text && UpperCaseFields?.Contains(args.Field, StringComparer.OrdinalIgnoreCase) == true
+            && text.ToUpperInvariant() is var upper && upper != text)
+        {
+            // Written back as a second value change in the same undo step
+            Data.SetValue(args.RowKey, args.Field, upper);
+        }
+        if (_pasting)
+        {
+            // Pasted codes are read together once the paste ends (screens.md "그리드 붙여 넣기")
+            _pasted.Add((args.RowKey, args.Field));
+            return;
+        }
+        OnMessage?.Invoke(null);
+        await AfterChangeAsync([(args.RowKey, args.Field)]);
+    }
+
+    // Lookup rules first (they fill inputs of the calculations), then the calculations of every changed field
+    private async Task AfterChangeAsync(IReadOnlyList<(int RowKey, string Field)> changes)
+    {
+        var filled = new List<(int RowKey, string Field)>();
+        foreach (var rule in _lookups)
+        {
+            var trigger = rule.On[..^".change".Length];
+            var cells = changes.Where(c => Is(c.Field, trigger)).Select(c => c.RowKey).Distinct().ToList();
+            if (cells.Count > 0 && Lookup is not null)
+            {
+                filled.AddRange(await FillAsync(rule, trigger, cells));
+            }
+        }
+        foreach (var (rowKey, field) in changes.Concat(filled))
+        {
+            Calculate(rowKey, field);
+        }
+        await OnChanged.InvokeAsync();
+    }
+
+    // One call for all codes of the rule; found codes fill the target columns of the same id, others are marked
+    private async Task<List<(int RowKey, string Field)>> FillAsync(RuleDef rule, string codeField, IReadOnlyList<int> rowKeys)
+    {
+        var filled = new List<(int RowKey, string Field)>();
+        var call = Call.Match(rule.Expr);
+        var lookupId = call.Success ? call.Groups["lookup"].Value : ColumnOf(codeField)?.Lookup ?? "";
+        var definition = ScreenDefinitions.Shared.Lookup(lookupId);
+        var codes = rowKeys.Select(k => Data.GetValue(k, codeField) as string).Where(c => !string.IsNullOrEmpty(c))
+            .Distinct(StringComparer.OrdinalIgnoreCase).Cast<string>().ToList();
+        var args = call.Success
+            ? call.Groups["args"].Value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(a => HeaderValue?.Invoke(a)).ToList()
+            : [];
+        var rows = codes.Count == 0
+            ? []
+            : await Lookup!(new LookupQuery(lookupId, null, codes, call.Success ? call.Groups["query"].Value : null, args));
+        var byCode = new Dictionary<string, LookupRow>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in rows)
+        {
+            if (row[definition.Key]?.ToString() is { } code)
+            {
+                byCode.TryAdd(code, row);
+            }
+        }
+        foreach (var rowKey in rowKeys)
+        {
+            var code = Data.GetValue(rowKey, codeField) as string;
+            if (string.IsNullOrEmpty(code))
+            {
+                Data.SetCellMark(rowKey, codeField, null!);
+                continue;
+            }
+            if (!byCode.TryGetValue(code, out var found))
+            {
+                Data.SetCellMark(rowKey, codeField, new CellMark(CellMarkLevel.Error, "Common.CodeNotFound"));
+                continue;
+            }
+            Data.SetCellMark(rowKey, codeField, null!);
+            foreach (var target in rule.Targets.Where(found.Has))
+            {
+                Data.SetValue(rowKey, target, found[target]);
+                filled.Add((rowKey, target));
+            }
+        }
+        return filled;
+    }
+
+    // calc rules: the target column of the same line is the expression's value, for display only. Targets are read-only
+    // columns (V-15), and a target can feed another calculation (no cycles, V-17)
+    private void Calculate(int rowKey, string field)
+    {
+        foreach (var (rule, expression) in _calcs.Where(c => Is(c.Rule.On, field + ".change")))
+        {
+            var value = expression.Evaluate(id => ToDecimal(Data.GetValue(rowKey, id)),
+                id => Data.RowKeys.Where(k => Data.GetState(k) != Quro.Grid.Data.RowState.Deleted).Select(k => ToDecimal(Data.GetValue(k, id))));
+            foreach (var target in rule.Targets)
+            {
+                Data.SetValue(rowKey, target, value);
+                Calculate(rowKey, target);
+            }
+        }
+    }
+
+    private static decimal? ToDecimal(object? value) => value switch
+    {
+        null => null,
+        decimal d => d,
+        IConvertible c => c.ToDecimal(System.Globalization.CultureInfo.InvariantCulture),
+        _ => null,
+    };
+
+    private Task<IReadOnlyList<string>> LookupFor(string lookupId, string text) => LookupCodesAsync(lookupId, text);
+
+    // The popup cell's typed text: one match is taken, several open the dialog, none keeps the cell in edit (A-05)
+    private async Task<IReadOnlyList<string>> LookupCodesAsync(string lookupId, string text)
+    {
+        if (Lookup is null)
+        {
+            return [];
+        }
+        var key = ScreenDefinitions.Shared.Lookup(lookupId).Key;
+        var rows = await Lookup(new LookupQuery(lookupId, text));
+        return [.. rows.Select(r => r[key]?.ToString()).Where(c => c is not null).Cast<string>()];
+    }
+
+    // A frame row added by the grid itself (paste, last Enter) is taken out again while the lines are locked (TODO(QuroGrid-R4))
+    private async Task OnRowAdded(RowAddedArgs<TLine> args)
+    {
+        if (!CanEdit)
+        {
+            Data.DeleteRow(args.RowKey);
+        }
+        await OnChanged.InvokeAsync();
+    }
+
+    private void OnRowDeleting(RowDeletingArgs<TLine> args) => args.Cancel |= !CanEdit || Locked(args.Item);
+
+    private Task OnRowDeleted() => OnChanged.InvokeAsync();
+
+    private void OnPasting(PastingArgs args)
+    {
+        args.Cancel |= !CanEdit;
+        if (!args.Cancel)
+        {
+            _pasting = true;
+            _pasted.Clear();
+        }
+    }
+
+    private async Task OnPasted(PastedArgs args)
+    {
+        _pasting = false;
+        var changes = _pasted.ToList();
+        _pasted.Clear();
+        await AfterChangeAsync(changes);
+        // Cells skipped as read-only, invalid or cancelled are told in the message line (screens.md "그리드 붙여 넣기")
+        if (args.Skipped.Count > 0)
+        {
+            OnMessage?.Invoke(L["Common.PasteSkipped", args.Skipped.Count]);
+        }
+    }
+
+    // Several matches or F4: the lookup's dialog opens and the grid waits for the picked code (null keeps the cell as it is)
+    private async Task OnPopupRequested(PopupRequestedArgs<TLine> args)
+    {
+        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || Locked(args.Item))
+        {
+            return;
+        }
+        if (MissingRequirement(args.Field) is { } requirement)
+        {
+            OnMessage?.Invoke(L[requirement.Msg]);
+            return;
+        }
+        var popup = new Popup(ScreenDefinitions.Shared.Lookup(lookupId), args.Text);
+        _popup = popup;
+        StateHasChanged();
+        if (await popup.Picked.Task is { } row)
+        {
+            args.Value = row[popup.Lookup.Key]?.ToString();
+        }
+    }
+
+    private void PickPopup(LookupRow row) => _popup?.Picked.TrySetResult(row);
+
+    private void ClosePopup(bool visible)
+    {
+        if (!visible && _popup is { } popup)
+        {
+            _popup = null;
+            popup.Picked.TrySetResult(null);
+        }
+    }
+
+    private sealed record Popup(LookupDef Lookup, string? Text)
+    {
+        public TaskCompletionSource<LookupRow?> Picked { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+}

@@ -44,10 +44,10 @@ public sealed class SamplePoLine
     public decimal? Fob { get; set; }
 
     /// <summary>
-    /// Display value only: quantity × F.O.B, shown with the column format. The stored amount is calculated
-    /// and rounded by the API (IAmountRounder); a screen never rounds amounts itself.
+    /// Quantity × F.O.B. The screen calculates it for display from the definition's rule; the stored amount is calculated
+    /// (and rounded by IAmountRounder) by the API again, here by the store. A screen never rounds amounts itself.
     /// </summary>
-    public decimal Amount => (Qty ?? 0) * (Fob ?? 0);
+    public decimal? Amount { get; set; }
 
     public SamplePoLine Copy() => (SamplePoLine)MemberwiseClone();
 }
@@ -85,8 +85,8 @@ public sealed class SamplePoStore
     ];
     private readonly List<SamplePoLine> _lines =
     [
-        new() { Id = 1, PoId = 1, ItemCode = "COMIX010", ItemName = "Computer etc.", Qty = 2, Fob = 850.00m },
-        new() { Id = 2, PoId = 1, ItemCode = "KBD10001", ItemName = "Keyboard USB", Qty = 10, Fob = 12.50m },
+        new() { Id = 1, PoId = 1, ItemCode = "COMIX010", ItemName = "Computer etc.", Qty = 2, Fob = 850.00m, Amount = 1700.00m },
+        new() { Id = 2, PoId = 1, ItemCode = "KBD10001", ItemName = "Keyboard USB", Qty = 10, Fob = 12.50m, Amount = 125.00m },
     ];
     private long _nextId = 100;
     private int _nextPoNo = 1;
@@ -146,6 +146,8 @@ public sealed class SamplePoStore
                 var copy = line.Copy();
                 copy.PoId = saved.Id;
                 copy.ItemName = Item(copy.ItemCode)?.Name;
+                // The amount the screen sent is ignored and calculated again
+                copy.Amount = (copy.Qty ?? 0) * (copy.Fob ?? 0);
                 if (copy.Id == 0)
                 {
                     copy.Id = ++_nextId;

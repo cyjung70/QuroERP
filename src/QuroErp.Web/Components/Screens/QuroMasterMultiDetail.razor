@@ -1,7 +1,13 @@
-@* Screen type MM: pick a row in the source list → edit the target grid for it → save (screens.md). *@
+@* Screen type MM: pick a row in the source list → edit the target grid for it → save (screens.md).
+   Both grids are the QuroGrid package over the screen's .toon (grids[0] source, grids[1] target; TASK-CORE-056). Row state,
+   delete, undo and the permission lock are the frame's, as in the M frame (TASK-CORE-055). *@
 @typeparam TSource where TSource : class
 @typeparam TTarget where TTarget : class
 @inherits QuroScreenBase
+@using Quro.Grid
+@using Quro.Grid.Data
+@using Quro.Grid.Definition
+@using QuroErp.Web.Common
 
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
@@ -12,30 +18,57 @@
     </Toolbar>
     <ChildContent>
         <div class="quro-master-detail">
-            <QuroGrid TRow="TSource" Rows="_sources" Columns="SourceColumns" Busy="Busy" TestId="@Id("grid")"
-                      Selected="_selected" OnSelect="SelectAsync" />
+            @* The package rows take no test id yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
+            <div class="quro-grid-host" data-testid="@Id("grid")">
+                <Quro.Grid.QuroGrid TItem="TSource" DataSet="_sources" Definition="_sourceDefinition" Localizer="L"
+                                    Culture="DisplayCulture.Current" ConfirmLeave="false"
+                                    OnCellValueChanging="CancelSourceEdit" OnRowAdded="TakeOutSource" OnRowDeleting="CancelSourceDelete"
+                                    OnPasting="CancelSourcePaste" OnCellButtonClick="SelectAsync">
+                    <Quro.Grid.QuroColumn Field="@SelectField" HeaderKey="Common.Select" Type="CellType.Button" TextKey="Common.Select" Width="70" />
+                </Quro.Grid.QuroGrid>
+            </div>
             @if (_selected is not null)
             {
-                <QuroGrid @ref="_grid" TRow="TTarget" Rows="_targets" Columns="TargetColumns" Editable="true" CanWrite="CanWrite" Busy="Busy"
-                          TestId="@Id("line")" OnAddRow="AddTarget" OnChanged="StateHasChanged" />
+                <div class="quro-master-detail-target">
+                    <div class="quro-grid-commands">
+                        @* The package ignores button cells of a deleted row, so the current deleted row is restored from here (TODO(QuroGrid-request)) *@
+                        <button type="button" disabled="@(Busy || !CanChange || !CurrentIsDeleted)" data-testid="@Id("line-restore-row")"
+                                @onclick="RestoreCurrent">@L["Common.RestoreRow"]</button>
+                    </div>
+                    <QuroLineGrid @ref="_targetGrid" TLine="TTarget" Data="_targets" Definition="_targetDefinition" CanEdit="CanWrite"
+                                  Lookup="Lookup" UpperCaseFields="UpperCaseFields" OnMessage="ShowMessage" OnChanged="StateHasChanged"
+                                  OnCellButtonClick="OnTargetButton" TestId="@Id("line")">
+                        <Quro.Grid.QuroColumn Field="@StateField" HeaderKey="Common.RowState" Width="60" Compute="StateOf" />
+                        <Quro.Grid.QuroColumn Field="@DeleteField" HeaderKey="Common.Delete" Type="CellType.Button" TextKey="Common.DeleteRow" Width="70" />
+                        <Quro.Grid.QuroColumn Field="@UndoField" HeaderKey="Common.UndoRow" Type="CellType.Button" TextKey="Common.UndoRow" Width="80" />
+                    </QuroLineGrid>
+                </div>
             }
         </div>
     </ChildContent>
 </QuroScreenFrame>
 
 @code {
-    private readonly GridRows<TSource> _sources = new();
-    private readonly GridRows<TTarget> _targets = new();
-    private QuroGrid<TTarget>? _grid;
+    /// <summary>Field of the source grid's select button column, for <c>ClickButton</c> in tests.</summary>
+    public const string SelectField = "select";
+
+    private const string StateField = "rowState";
+    private const string DeleteField = "deleteRow";
+    private const string UndoField = "undoRow";
+
+    private readonly QuroDataSet<TSource> _sources = new();
+    private readonly QuroDataSet<TTarget> _targets = new();
+    private QuroLineGrid<TTarget>? _targetGrid;
+    private GridDef _sourceDefinition = default!;
+    private GridDef _targetDefinition = default!;
     private TSource? _selected;
 
-    /// <summary>QuroColumn declarations of the source list (give TRow explicitly).</summary>
+    /// <summary>
+    /// Id of the screen definition (<c>Definitions/screens/**/{id}.screen.toon</c>): its first grid is the source list (read-only),
+    /// its second the target grid.
+    /// </summary>
     [Parameter, EditorRequired]
-    public RenderFragment SourceColumns { get; set; } = default!;
-
-    /// <summary>QuroColumn declarations of the target grid (give TRow explicitly).</summary>
-    [Parameter, EditorRequired]
-    public RenderFragment TargetColumns { get; set; } = default!;
+    public string Definition { get; set; } = default!;
 
     [Parameter, EditorRequired]
     public Func<Task<IReadOnlyList<TSource>>> LoadSources { get; set; } = default!;
@@ -50,6 +83,14 @@
     [Parameter, EditorRequired]
     public Func<TSource, BatchChanges<TTarget>, Task> SaveTargets { get; set; } = default!;
 
+    /// <summary>Reads the lookups of the target code columns from a Contracts API client.</summary>
+    [Parameter]
+    public Func<LookupQuery, Task<IReadOnlyList<LookupRow>>>? Lookup { get; set; }
+
+    /// <summary>Target text fields whose typed value is kept in upper case (a column has no case setting).</summary>
+    [Parameter]
+    public IReadOnlyCollection<string>? UpperCaseFields { get; set; }
+
     /// <summary>Permission: false for a user without Full Access (BC-BR-214). New, save and the target grid are disabled.</summary>
     [Parameter]
     public bool CanWrite { get; set; } = true;
@@ -61,12 +102,33 @@
     [Parameter]
     public RenderFragment? ExtraCommands { get; set; }
 
-    public override bool IsDirty => _targets.IsDirty;
+    public override bool IsDirty => _targets.HasChanges;
+
+    /// <summary>The source rows as a data set.</summary>
+    public QuroDataSet<TSource> Sources => _sources;
+
+    /// <summary>The target rows as a data set, e.g. for a screen that reads a column.</summary>
+    public QuroDataSet<TTarget> Targets => _targets;
+
+    /// <summary>The package target grid, e.g. for tests that edit through its entry points.</summary>
+    public QuroLineGrid<TTarget>? TargetGrid => _targetGrid;
 
     private bool CanChange => CanWrite && _selected is not null;
 
+    private bool CurrentIsDeleted =>
+        _targets.CurrentRowKey is { } key && _targets.GetState(key) == Quro.Grid.Data.RowState.Deleted;
+
     protected override async Task OnInitializedAsync()
     {
+        var screen = ScreenDefinitions.Shared.Get(Definition);
+        var source = screen.Grids[0];
+        // The source list is for picking only
+        _sourceDefinition = source with
+        {
+            Columns = [.. source.Columns.Select(c => c with { Edit = ColumnEdit.ReadOnly, Req = false })],
+        };
+        _targetDefinition = screen.Grids[1];
+        _targets.CurrentRowChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
         if (LoadOnStart)
         {
             await RunAsync(LoadSourcesAsync);
@@ -81,9 +143,10 @@
         }
     }
 
-    private async Task SelectAsync(TSource source)
+    private async Task SelectAsync(CellButtonClickArgs<TSource> args)
     {
-        if (ReferenceEquals(source, _selected) || !await ConfirmDiscardAsync())
+        var source = args.Item;
+        if (args.Field != SelectField || Busy || ReferenceEquals(source, _selected) || !await ConfirmDiscardAsync())
         {
             return;
         }
@@ -98,7 +161,7 @@
     {
         if (CanChange)
         {
-            _targets.Add(CreateTarget(_selected!));
+            _targets.MoveTo(_targets.AddRow(CreateTarget(_selected!)));
         }
     }
 
@@ -108,33 +171,128 @@
         {
             return;
         }
-        var changes = _targets.Changes();
-        if (changes.IsEmpty)
+        var changes = _targets.GetChanges();
+        if (changes.Inserted.Count + changes.Updated.Count + changes.Deleted.Count == 0)
         {
             Error = null;
             Notice = L["Common.NoChanges"];
             return;
         }
-        if (!CheckRequired(_grid?.FirstMissing()))
+        if (!CheckValid())
         {
             return;
         }
         await RunAsync(async () =>
         {
-            await SaveTargets(_selected!, changes);
+            await SaveTargets(_selected!,
+                new([.. changes.Inserted.Select(r => r.Item)], [.. changes.Updated.Select(r => r.Item)], [.. changes.Deleted.Select(r => r.Item)]));
             _targets.Load(await LoadTargets(_selected!));
             Notice = L["Common.Saved"];
         });
     }
 
+    // The definition's req columns are required columns of the data set; the first error is shown with its column header
+    private bool CheckValid()
+    {
+        var result = _targets.Validate();
+        if (!result.IsValid)
+        {
+            var error = result.Errors[0];
+            var label = L[_targetDefinition.Columns.FirstOrDefault(c => string.Equals(c.Id, error.Field, StringComparison.OrdinalIgnoreCase))?.Label
+                          ?? error.Field];
+            if (error.MessageKey == ValidationKeys.Required)
+            {
+                return CheckRequired(new Missing(label));
+            }
+            Error = $"{label}: {L[error.MessageKey]}";
+            Notice = null;
+            return false;
+        }
+        if (_targetGrid?.HasCodeErrors == true)
+        {
+            Error = L["Common.CodeNotFound"];
+            Notice = null;
+            return false;
+        }
+        return true;
+    }
+
     private async Task LoadSourcesAsync()
     {
         _selected = null;
-        _targets.Clear();
-        _sources.Load(await LoadSources());
-        if (_sources.All.Count == 0)
+        _targets.Load([]);
+        var sources = await LoadSources();
+        _sources.Load(sources);
+        if (sources.Count == 0)
         {
             Notice = L["Common.NoData"];
         }
+    }
+
+    private void ShowMessage(string? message)
+    {
+        if (message is not null)
+        {
+            Error = null;
+        }
+        Notice = message;
+        StateHasChanged();
+    }
+
+    private void RestoreCurrent()
+    {
+        if (CanChange && CurrentIsDeleted)
+        {
+            _targets.RevertRow(_targets.CurrentRowKey!.Value);
+        }
+    }
+
+    private object? StateOf(object item)
+    {
+        // New rows have negative row keys, so a missing row is null rather than -1
+        int? key = _targets.RowKeys.Where(k => ReferenceEquals(_targets.GetItem(k), item)).Select(k => (int?)k).FirstOrDefault();
+        var state = key is { } found ? _targets.GetState(found) : Quro.Grid.Data.RowState.Normal;
+        return state switch
+        {
+            Quro.Grid.Data.RowState.Inserted => L["Common.RowState.Added"].Value,
+            Quro.Grid.Data.RowState.Updated => L["Common.RowState.Modified"].Value,
+            Quro.Grid.Data.RowState.Deleted => L["Common.RowState.Deleted"].Value,
+            _ => null,
+        };
+    }
+
+    // Delete marks a loaded row (a new row goes away); undo restores the row's loaded values
+    private void OnTargetButton(CellButtonClickArgs<TTarget> args)
+    {
+        if (!CanChange || Busy)
+        {
+            return;
+        }
+        var state = _targets.GetState(args.RowKey);
+        if (args.Field == DeleteField && state != Quro.Grid.Data.RowState.Deleted)
+        {
+            _targets.DeleteRow(args.RowKey);
+        }
+        else if (args.Field == UndoField && state is Quro.Grid.Data.RowState.Updated or Quro.Grid.Data.RowState.Deleted)
+        {
+            _targets.RevertRow(args.RowKey);
+        }
+        StateHasChanged();
+    }
+
+    // The source list cannot change: edits, deletes and pastes are cancelled, and a row the grid adds is taken out (TODO(QuroGrid-R4))
+    private static void CancelSourceEdit(CellValueChangingArgs<TSource> args) => args.Cancel = true;
+
+    private static void CancelSourceDelete(RowDeletingArgs<TSource> args) => args.Cancel = true;
+
+    private static void CancelSourcePaste(PastingArgs args) => args.Cancel = true;
+
+    private void TakeOutSource(RowAddedArgs<TSource> args) => _sources.DeleteRow(args.RowKey);
+
+    private sealed record Missing(string Label) : IQuroField
+    {
+        public bool IsRequiredNow => true;
+
+        public bool IsEmpty => true;
     }
 }

@@ -70,6 +70,10 @@
   <data name="Common.AddRow" xml:space="preserve"><value>Add Row</value></data>
   <data name="Common.DeleteRow" xml:space="preserve"><value>Delete Row</value></data>
   <data name="Common.RestoreRow" xml:space="preserve"><value>Restore</value></data>
+  <data name="Common.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Common.CodeNotFound" xml:space="preserve"><value>The code does not exist.</value></data>
+  <data name="Common.SelectPartnerFirst" xml:space="preserve"><value>Select the partner first.</value></data>
+  <data name="Common.PasteSkipped" xml:space="preserve"><value>{0} cell(s) were not pasted (read-only or not a valid value).</value></data>
   <data name="Common.Select" xml:space="preserve"><value>Select</value></data>
   <data name="Common.UndoRow" xml:space="preserve"><value>Undo</value></data>
   <data name="Common.Keyword" xml:space="preserve"><value>Keyword</value></data>

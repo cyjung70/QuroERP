@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Web.Components.Pages.Samples;
+using QuroErp.Web.Components.Screens;
 
 namespace QuroErp.Web.Tests.Screens;
 
@@ -56,12 +57,13 @@ public class SingleTabsTests : ScreenContext
 
         page.Find("[data-testid=single-tab-stock]").Click();
 
-        page.WaitForAssertion(() => page.FindAll("[data-testid=single-grid-stock] tbody tr").Should().HaveCount(2));
+        var stock = page.DataGrid<SampleStock, SampleSingle>("single-grid-stock");
+        page.WaitForAssertion(() => stock.Rows.Should().HaveCount(2));
         var grid = page.Find("[data-testid=single-grid-stock]");
-        grid.QuerySelectorAll("input, select, textarea, button").Should().BeEmpty();
-        grid.QuerySelectorAll("thead th").Should().HaveCount(4, "no row state or delete column");
-        page.FindAll("[data-testid=single-grid-stock-total] td").Select(c => c.TextContent)
-            .Should().Equal("합계", "15.00", "2.00", "13.00");
+        grid.QuerySelectorAll(".quro-head [role=columnheader][data-field]").Should().HaveCount(4, "no row state or delete column");
+        grid.QuerySelectorAll(".quro-body [role=gridcell]").Should().OnlyContain(c => c.GetAttribute("aria-readonly") == "true");
+        grid.QuerySelectorAll("[data-footer-field]").Skip(1).Select(c => c.TextContent.Trim())
+            .Should().Equal("15.00", "2.00", "13.00");
         page.Find("[data-testid=single-grid-stock-note]").TextContent.Should().Be("가용 = 현재고 - 할당.");
 
         page.Find("[data-testid=single-tab-fields]").Click();
@@ -70,7 +72,7 @@ public class SingleTabsTests : ScreenContext
 
         // Another record while the tab is open reads again
         Search(page, "B200");
-        page.WaitForAssertion(() => page.FindAll("[data-testid=single-grid-stock] tbody tr").Should().ContainSingle());
+        page.WaitForAssertion(() => stock.Rows.Should().ContainSingle());
         Store.StockReads.Should().Be(2);
     }
 
@@ -87,14 +89,16 @@ public class SingleTabsTests : ScreenContext
     }
 
     [Fact, Trait("Id", "CORE-041-WT-04")]
-    public void Transactions_DoubleClickARow_OpensItsDocument()
+    public void Transactions_OpenButtonOfARow_OpensItsDocument()
     {
         var page = Render<SampleSingle>();
         Search(page, "A100");
         page.Find("[data-testid=single-tab-transactions]").Click();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=single-grid-transactions] tbody tr").Should().HaveCount(2));
+        var transactions = page.DataGrid<SampleTransaction, SampleSingle>("single-grid-transactions");
+        page.WaitForAssertion(() => transactions.Rows.Should().HaveCount(2));
 
-        page.FindAll("[data-testid=single-grid-transactions] tbody tr")[0].DoubleClick();
+        // The package grid has no row double-click: each row has an open button (TASK-CORE-056)
+        transactions.Click(0, QuroListGrid<SampleTransaction>.OpenField);
 
         Services.GetRequiredService<NavigationManager>().Uri.Should().EndWith("/samples/po-entry/PO261000001");
     }

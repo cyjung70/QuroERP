@@ -1,0 +1,15 @@
+# Lookup of the PO Entry sample items with their default price (TASK-CORE-056). Development only.
+lookup:
+  id: samplePoItem
+  title: Samples.FindItem
+  version: 1
+  api: /api/samples/po-items/lookup
+  key: itemCode
+  text: itemName
+  minChars: 1
+queries[1]{id,params}:
+  all,""
+columns[3]{id,label,type,width,fmt}:
+  itemCode,Samples.Code,text,120,""
+  itemName,Samples.Name,text,220,""
+  fob,Samples.Fob,number,100,N2

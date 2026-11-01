@@ -70,6 +70,10 @@
   <data name="Common.AddRow" xml:space="preserve"><value>행 추가</value></data>
   <data name="Common.DeleteRow" xml:space="preserve"><value>행 삭제</value></data>
   <data name="Common.RestoreRow" xml:space="preserve"><value>되살리기</value></data>
+  <data name="Common.Open" xml:space="preserve"><value>열기</value></data>
+  <data name="Common.CodeNotFound" xml:space="preserve"><value>없는 코드입니다.</value></data>
+  <data name="Common.SelectPartnerFirst" xml:space="preserve"><value>거래처를 먼저 선택하세요.</value></data>
+  <data name="Common.PasteSkipped" xml:space="preserve"><value>붙여 넣지 못한 칸이 {0}개 있습니다 (읽기 전용이거나 값이 맞지 않음).</value></data>
   <data name="Common.Select" xml:space="preserve"><value>선택</value></data>
   <data name="Common.UndoRow" xml:space="preserve"><value>되돌리기</value></data>
   <data name="Common.Keyword" xml:space="preserve"><value>검색어</value></data>

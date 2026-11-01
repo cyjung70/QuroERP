@@ -68,9 +68,8 @@ public class RoleMenuScreenTests : BunitContext
         var page = RenderAs("admin");
 
         page.Find("[data-testid=role-menu-toolbar-new]").Click();
-        page.WaitForElement("[data-testid=role-menu-menu-lookup] tbody tr");
-        page.FindAll("[data-testid=role-menu-menu-lookup] tbody tr").Should().ContainSingle();
-        page.Find("[data-testid=role-menu-menu-lookup] tbody tr button").Click();
+        page.WaitForAssertion(() => page.LookupRows("role-menu-menu-lookup").Should().ContainSingle());
+        page.PickLookupRow<MenuOptionDto, RoleMenu>("role-menu-menu-lookup", 0);
         page.WaitForAssertion(() => MenuCodes(page).Should().Equal("ITEM", "ROLEMENU", "USER"));
         page.FindAll("[data-testid=role-menu-grid-full-access]")[2].Change(true);
         page.FindAll("[data-testid=role-menu-grid-full-access]")[0].Change(false);
@@ -91,12 +90,12 @@ public class RoleMenuScreenTests : BunitContext
     {
         var page = RenderAs("admin");
         page.Find("[data-testid=role-menu-toolbar-new]").Click();
-        page.WaitForElement("[data-testid=role-menu-menu-lookup] tbody tr");
-        page.Find("[data-testid=role-menu-menu-lookup] tbody tr button").Click();
+        page.WaitForAssertion(() => page.LookupRows("role-menu-menu-lookup").Should().NotBeEmpty());
+        page.PickLookupRow<MenuOptionDto, RoleMenu>("role-menu-menu-lookup", 0);
 
         page.Find("[data-testid=role-menu-toolbar-new]").Click();
 
-        page.WaitForAssertion(() => page.FindAll("[data-testid=role-menu-menu-lookup] tbody tr").Should().BeEmpty());
+        page.WaitForAssertion(() => page.LookupRows("role-menu-menu-lookup").Should().BeEmpty());
     }
 
     [Fact, Trait("Id", "BC-UC-005-T02")]
