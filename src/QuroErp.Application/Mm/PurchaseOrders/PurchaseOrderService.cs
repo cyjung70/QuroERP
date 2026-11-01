@@ -1,10 +1,12 @@
 using System.Data;
+using QuroErp.Application.Bc.BusinessPlaces;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Contracts.Mm.PurchaseOrders;
+using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
@@ -21,6 +23,7 @@ public sealed class PurchaseOrderService(
     ITaxRepository taxes,
     ITaxRateProvider taxRates,
     ILocalizationRepository localization,
+    IBusinessPlaceRepository businessPlaces,
     DocumentNumberService numbers,
     IUnitOfWorkFactory unitOfWork)
 {
@@ -47,12 +50,16 @@ public sealed class PurchaseOrderService(
 
     /// <summary>Saves a new draft with the next PO number of the order date's month (MM-BR-017, MM-BR-019).</summary>
     /// <exception cref="DomainException">MM-E-011, 012, 014, 025, 026, 027, 031; Common-E-005, Common-E-006; BC-E-412, BC-E-513.</exception>
+    /// <exception cref="BadRequestException">400 BC-E-321 when there is no default business place.</exception>
     public async Task<PurchaseOrderDto> CreateAsync(SavePurchaseOrderRequest request, string user, CancellationToken cancellationToken)
     {
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
         var write = await PrepareAsync(request, previousCurrencyCode: null, PoStatus.Draft, revisionNo: 0, uow.Transaction, cancellationToken);
+        // BC-BR-321: a new document belongs to the default business place; the screen does not choose it
+        var businessPlaceId = await businessPlaces.FindDefaultIdAsync(uow.Transaction, cancellationToken)
+            ?? throw new BadRequestException(BusinessPlaceRules.NotFoundCode);
         var poNo = await numbers.NextAsync(DocumentNumberFormat.PurchaseOrder, request.PoDt, user, uow.Transaction, cancellationToken);
-        var id = await orders.InsertAsync(poNo, write, user, uow.Transaction, cancellationToken);
+        var id = await orders.InsertAsync(poNo, businessPlaceId, write, user, uow.Transaction, cancellationToken);
         var dto = await ReadAsync(id, uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return dto;

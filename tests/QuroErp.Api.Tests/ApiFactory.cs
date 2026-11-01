@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using QuroErp.Application.Bc.BusinessPlaces;
 using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
+using QuroErp.Contracts.Bc.BusinessPlaces;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Api.Tests.Bc.Localization;
@@ -27,6 +29,7 @@ using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Domain.Bc.Companies;
 using QuroErp.Domain.Bc.Items;
@@ -78,6 +81,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     /// <summary>Company logo state; there is one company and no logo at start.</summary>
     public InMemoryCompanyRepository Companies { get; } = new();
+
+    /// <summary>The default business place MAIN (BC-BR-319) with a valid KR registration number.</summary>
+    public InMemoryBusinessPlaceRepository BusinessPlaces { get; } = new();
 
     /// <summary>Localization state: a KR company (default language ko), languages en/ko (sw off), KRW and USD.</summary>
     public InMemoryLocalizationRepository Localization { get; } = new();
@@ -147,6 +153,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
             services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors, Currencies));
             services.AddSingleton<ICompanyRepository>(Companies);
+            services.AddSingleton<IBusinessPlaceRepository>(BusinessPlaces);
             services.AddSingleton<ILocalizationRepository>(Localization);
             services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
@@ -401,7 +408,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public static readonly DateTimeOffset Created = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
         public CompanyDto? Company { get; set; } = new(
-            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Created, "setup", Created, "setup");
+            "Quro", null, null, null, null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Created, "setup", Created, "setup");
 
         public CompanyLogoRow? Logo { get; set; }
 
@@ -422,8 +429,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 return Task.FromResult(false);
             }
             Company = new CompanyDto(
-                fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.RegisterNo, fields.Represent,
-                fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!, fields.TimeZone!,
+                fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.Represent, fields.Email,
+                fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!, fields.TimeZone!,
                 fields.BillingMode!, false, Company.CreatedAt, Company.CreatedBy, Company.UpdatedAt.AddMinutes(1), updatedBy);
             UpdatedBy = updatedBy;
             return Task.FromResult(true);
@@ -450,6 +457,57 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             UpdatedBy = updatedBy;
             return Task.FromResult(Company is not null);
         }
+    }
+
+    public sealed class InMemoryBusinessPlaceRepository : IBusinessPlaceRepository
+    {
+        public static readonly DateTimeOffset Created = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
+
+        public List<BusinessPlaceDto> Places { get; } =
+        [
+            new(1, "MAIN", "Quro", true, "2208162517", null, null, null, null, null, null, null, null, null, null, true,
+                Created, "system", Created, "system"),
+        ];
+
+        public Task<IReadOnlyList<BusinessPlaceDto>> ListAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<BusinessPlaceDto>>(Places.ToList());
+
+        public Task<BusinessPlaceDto?> FindAsync(long id, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Places.SingleOrDefault(p => p.Id == id));
+
+        public Task<bool> UpdateAsync(
+            long id, BusinessPlaceFields fields, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction,
+            CancellationToken cancellationToken)
+        {
+            var index = Places.FindIndex(p => p.Id == id && p.UpdatedAt == expectedUpdatedAt);
+            if (index < 0)
+            {
+                return Task.FromResult(false);
+            }
+            var place = Places[index];
+            Places[index] = place with
+            {
+                BusinessPlaceName = fields.BusinessPlaceName!,
+                BusinessRegNo = fields.BusinessRegNo,
+                SubBusinessNo = fields.SubBusinessNo,
+                CeoName = fields.CeoName,
+                BusinessType = fields.BusinessType,
+                BusinessItem = fields.BusinessItem,
+                Addr1 = fields.Addr1,
+                Addr2 = fields.Addr2,
+                City = fields.City,
+                State = fields.State,
+                ZipCode = fields.ZipCode,
+                TelNo = fields.TelNo,
+                UseYn = fields.UseYn,
+                UpdatedAt = place.UpdatedAt.AddMinutes(1),
+                UpdatedBy = updatedBy,
+            };
+            return Task.FromResult(true);
+        }
+
+        public Task<long?> FindDefaultIdAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Places.FirstOrDefault(p => p.IsDefault)?.Id);
     }
 
     public sealed class InMemoryLocalizationRepository : ILocalizationRepository

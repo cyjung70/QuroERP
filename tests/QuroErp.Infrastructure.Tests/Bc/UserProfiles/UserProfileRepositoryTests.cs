@@ -34,7 +34,8 @@ public class UserProfileRepositoryTests(AuthSchemaFixture db)
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         var repository = db.Get<IUserProfileRepository>();
         var warehouseId = await uow.Transaction.Connection!.ExecuteScalarAsync<long>(
-            "INSERT INTO bc_warehouse (warehouse_code, warehouse_name, created_by, updated_by) VALUES ('PROF2', 'Second', 't', 't') RETURNING id",
+            "INSERT INTO bc_warehouse (warehouse_code, warehouse_name, business_place_id, created_by, updated_by) " +
+            "VALUES ('PROF2', 'Second', (SELECT id FROM bc_business_place WHERE is_default), 't', 't') RETURNING id",
             transaction: uow.Transaction);
         var before = (await repository.FindAsync(id, forUpdate: true, uow.Transaction, None))!;
         var roleBefore = (await db.Get<IAppUserRepository>().FindByIdAsync(id, uow.Transaction, None))!.RoleCode;
@@ -67,7 +68,8 @@ public class UserProfileRepositoryTests(AuthSchemaFixture db)
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         var repository = db.Get<IUserProfileRepository>();
         var unused = await uow.Transaction.Connection!.ExecuteScalarAsync<long>(
-            "INSERT INTO bc_warehouse (warehouse_code, warehouse_name, use_yn, created_by, updated_by) VALUES ('PROF3', 'Old', false, 't', 't') RETURNING id",
+            "INSERT INTO bc_warehouse (warehouse_code, warehouse_name, use_yn, business_place_id, created_by, updated_by) " +
+            "VALUES ('PROF3', 'Old', false, (SELECT id FROM bc_business_place WHERE is_default), 't', 't') RETURNING id",
             transaction: uow.Transaction);
         var main = await uow.Transaction.Connection!.ExecuteScalarAsync<long>(
             "SELECT id FROM bc_warehouse WHERE warehouse_code = 'MAIN'", transaction: uow.Transaction);

@@ -59,9 +59,9 @@ internal sealed class PurchaseOrderRepository : IPurchaseOrderRepository
     private const string InsertHeader = """
         INSERT INTO mm_purchase_order (po_no, status, vendor_id, po_dt, currency_code, exchange_rate, incoterms, due_dt, warehouse_id,
                                        payment_terms, buyer, remarks, supply_amt, tax_amt, tot_po_amt, tot_base_amt, revision_no,
-                                       created_by, updated_by)
+                                       business_place_id, created_by, updated_by)
         VALUES (@PoNo, @Status, @VendorId, @PoDt, @CurrencyCode, @ExchangeRate, @Incoterms, @DueDt, @WarehouseId, @PaymentTerms, @Buyer,
-                @Remarks, @SupplyAmt, @TaxAmt, @TotPoAmt, @TotBaseAmt, @RevisionNo, @User, @User)
+                @Remarks, @SupplyAmt, @TaxAmt, @TotPoAmt, @TotBaseAmt, @RevisionNo, @BusinessPlaceId, @User, @User)
         RETURNING id
         """;
 
@@ -159,10 +159,11 @@ internal sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         .ToHashSet();
 
     public async Task<long> InsertAsync(
-        string poNo, PurchaseOrderWrite order, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+        string poNo, long businessPlaceId, PurchaseOrderWrite order, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var id = await transaction.Connection!.ExecuteScalarAsync<long>(new CommandDefinition(
-            InsertHeader, HeaderParameters(order, user, new { PoNo = poNo }), transaction, cancellationToken: cancellationToken));
+            InsertHeader, HeaderParameters(order, user, new { PoNo = poNo, BusinessPlaceId = businessPlaceId }), transaction,
+            cancellationToken: cancellationToken));
         await InsertLinesAsync(id, order.Lines, user, transaction, cancellationToken);
         return id;
     }

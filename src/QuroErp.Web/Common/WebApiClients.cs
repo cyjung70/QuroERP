@@ -21,6 +21,7 @@ public static class WebApiClients
             ?? throw new InvalidOperationException($"Setting {WebAuthentication.ApiBaseUrlKey} is missing."));
 
         services.AddHttpClient<CompanyApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<BusinessPlaceApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<AuthSettingApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<InventorySettingApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CodeApiClient>(http => http.BaseAddress = apiBaseUrl);

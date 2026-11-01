@@ -18,11 +18,10 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
     private static readonly CancellationToken None = CancellationToken.None;
 
     private static readonly CompanyFields Fields = new(
-        "Quro Korea", "Seoul", "Busan", "Lee", "02-000-0000", null, "2208162517", "Kim", "info@quro.kr", "Service", "Software",
-        "KR", "KRW", "ko", "Asia/Seoul", "SEPARATE");
+        "Quro Korea", "Seoul", "Busan", "Lee", "02-000-0000", null, "Kim", "info@quro.kr", "KR", "KRW", "ko", "Asia/Seoul", "SEPARATE");
 
     [DatabaseFact, Trait("Id", "BC-UC-007-IT-01")]
-    public async Task Update_ChecksUpdatedAt_AndStoresBusinessTypeAndItem()
+    public async Task Update_ChecksUpdatedAt_AndStoresTheValues()
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         var companies = db.Get<ICompanyRepository>();
@@ -37,8 +36,8 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
         loaded.BillingMode.Should().Be("WITH_SHIPMENT");
         stale.Should().BeFalse();
         saved.Should().BeTrue();
-        (after.Name, after.Shipto, after.BusinessType, after.BusinessItem, after.BillingMode, after.HasLogo)
-            .Should().Be(("Quro Korea", "Busan", "Service", "Software", "SEPARATE", false));
+        (after.Name, after.Shipto, after.Represent, after.Email, after.BillingMode, after.HasLogo)
+            .Should().Be(("Quro Korea", "Busan", "Kim", "info@quro.kr", "SEPARATE", false));
     }
 
     [DatabaseFact, Trait("Id", "CORE-050-IT-13")]
@@ -96,9 +95,10 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
         var shipment = await connection.ExecuteScalarAsync<long>(
             """
             WITH c AS (INSERT INTO bc_customer (c_name, created_by, updated_by) VALUES ('Customer', 't', 't') RETURNING id),
-                 w AS (INSERT INTO bc_warehouse (warehouse_code, warehouse_name, created_by, updated_by) VALUES ('ZW1', 'W', 't', 't') RETURNING id)
-            INSERT INTO sd_shipment (ship_no, customer_id, ship_dt, warehouse_id, currency_code, exchange_rate, created_by, updated_by)
-            SELECT 'ZS1', c.id, '2026-10-29', w.id, 'USD', 1, 't', 't' FROM c, w
+                 w AS (INSERT INTO bc_warehouse (warehouse_code, warehouse_name, business_place_id, created_by, updated_by)
+                       VALUES ('ZW1', 'W', (SELECT id FROM bc_business_place WHERE is_default), 't', 't') RETURNING id)
+            INSERT INTO sd_shipment (ship_no, customer_id, ship_dt, warehouse_id, currency_code, exchange_rate, business_place_id, created_by, updated_by)
+            SELECT 'ZS1', c.id, '2026-10-29', w.id, 'USD', 1, (SELECT id FROM bc_business_place WHERE is_default), 't', 't' FROM c, w
             RETURNING id
             """,
             transaction: uow.Transaction);
