@@ -80,7 +80,7 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
         var before = await companies.HasTransactionsAsync(uow.Transaction, None);
 
         await uow.Transaction.Connection!.ExecuteAsync(
-            "INSERT INTO bc_exchange_rate (cur_dt, cur_rp, created_by, updated_by) VALUES ('2026-10-29', 1300, 't', 't')", transaction: uow.Transaction);
+            "INSERT INTO bc_exchange_rate (rate_dt, currency_code, rate, created_by, updated_by) VALUES ('2026-10-29', 'KRW', 0.00075, 't', 't')", transaction: uow.Transaction);
 
         before.Should().BeFalse();
         (await companies.HasTransactionsAsync(uow.Transaction, None)).Should().BeTrue();

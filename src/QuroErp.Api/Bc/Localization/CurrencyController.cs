@@ -25,7 +25,7 @@ public sealed class CurrencyController(CurrencyService service) : ControllerBase
     /// 200 with every currency after the save. Nothing is saved when a row fails: 422 BC-E-411 (code, decimals), BC-E-428 (country),
     /// BC-E-404 (en name), BC-E-312 (base currency set not in use) with the currency code or BC-E-405 with the language;
     /// 409 BC-E-411 or BC-E-428 when documents use the currency whose decimals or country change, BC-E-416 when a deleted currency is
-    /// the base currency or documents or partners use it, Common-E-004 when a row changed after it was read.
+    /// the base currency or documents, partners or exchange rates use it, Common-E-004 when a row changed after it was read.
     /// </summary>
     [HttpPost(CurrencyRoutes.Batch), Authorize(Roles = "admin")]
     public Task<IReadOnlyList<CurrencyMasterDto>> Save(

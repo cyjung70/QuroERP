@@ -120,6 +120,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Currencies of currency management (BC-UC-026). Their names come through the translation fake.</summary>
     public InMemoryCurrencyRepository Currencies { get; } = new();
 
+    public InMemoryExchangeRateRepository ExchangeRates { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -171,6 +173,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ICodeMinorRepository>(CodeMinors);
             services.AddSingleton<ICodeMajorRepository>(CodeMajors);
             services.AddSingleton<ICurrencyRepository>(Currencies);
+            services.AddSingleton<IExchangeRateRepository>(ExchangeRates);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);

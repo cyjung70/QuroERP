@@ -167,6 +167,18 @@ public class CurrencyServiceTests
     }
 
     [Fact, Trait("Id", "BC-UC-026-T05"), Trait("Id", "BC-UT-416"), Trait("Rule", "BC-BR-416")]
+    public async Task Delete_ACurrencyWithAnExchangeRate_Is409BcE416()
+    {
+        _currencies.Add(4, "IDR", 0, "ID", new() { ["en"] = "Rupiah" });
+        _currencies.UsedByRates.Add("IDR");
+
+        var act = () => _service.SaveAsync(Batch(deleted: [new CurrencyKey(4, Read)]), "en", "kim", None);
+
+        (await act.Should().ThrowAsync<ConflictException>()).Which.Should().BeEquivalentTo(
+            new { Code = CurrencyRules.InUseCode, Args = new object[] { "IDR" } });
+    }
+
+    [Fact, Trait("Id", "BC-UC-026-T05"), Trait("Id", "BC-UT-416"), Trait("Rule", "BC-BR-416")]
     public async Task Delete_ABlockedRowWithAFreeOne_DeletesNeither_AndAnUnusedCurrencyAloneIsDeleted()
     {
         var mixed = () => _service.SaveAsync(Batch(deleted: [new CurrencyKey(3, Read), new CurrencyKey(2, Read)]), "en", "kim", None);
@@ -199,6 +211,8 @@ public class CurrencyServiceTests
 
         public HashSet<string> UsedByPartners { get; } = [];
 
+        public HashSet<string> UsedByRates { get; } = [];
+
         public int Writes { get; private set; }
 
         public void Add(long id, string code, int decimals, string? country, Dictionary<string, string> names, bool useYn = true)
@@ -217,6 +231,10 @@ public class CurrencyServiceTests
         public Task<IReadOnlySet<string>> FindUsedByPartnersAsync(
             IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlySet<string>>(currencyCodes.Where(UsedByPartners.Contains).ToHashSet());
+
+        public Task<IReadOnlySet<string>> FindUsedByExchangeRatesAsync(
+            IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlySet<string>>(currencyCodes.Where(UsedByRates.Contains).ToHashSet());
 
         public Task<long> InsertAsync(string currencyCode, CurrencyFields fields, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken)
         {

@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddSingleton<ITaxRepository, TaxRepository>();
         services.AddSingleton<ILocalizationSettingRepository, LocalizationSettingRepository>();
         services.AddSingleton<ICurrencyRepository, CurrencyRepository>();
+        services.AddSingleton<IExchangeRateRepository, ExchangeRateRepository>();
         services.AddSingleton<IInventorySettingRepository, InventorySettingRepository>();
         services.AddSingleton<IItemRepository, ItemRepository>();
         services.AddSingleton<IUserProfileRepository, UserProfileRepository>();
