@@ -14,6 +14,7 @@ using QuroErp.Web.Bc.Codes;
 using QuroErp.Web.Bc.Localization;
 using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Bc;
+using QuroErp.Web.Components.Pages.Bc.Models;
 using QuroErp.Web.Components.Screens;
 using QuroErp.Web.Tests.Screens;
 
@@ -48,10 +49,10 @@ public class CodeMajorScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        page.FindAll("th").Select(h => h.TextContent.Trim()).Should().ContainInOrder("Major 코드", "이름 (English)", "이름 (한국어)", "사용", "Minor 수");
-        Values(page, "code-major-grid-major-code").Should().Equal("TEMP", "TERMS", "UNIT");
-        Values(page, "code-major-grid-name-ko").Should().Equal("", "결제 조건", "단위");
-        page.FindAll("tbody tr").Select(r => r.Children[^2].TextContent.Trim()).Should().Contain(["0", "1", "2"]);
+        Grid(page).Headers.Select(h => h.Title).Should().ContainInOrder("Major 코드", "이름 (English)", "이름 (한국어)", "사용", "Minor 수");
+        Grid(page).Column("majorCode").Should().Equal("TEMP", "TERMS", "UNIT");
+        Grid(page).Column("nameKo").Should().Equal("", "결제 조건", "단위");
+        Grid(page).Column("minorCount").Should().Equal("0", "1", "2");
         _api.Searches.Should().Equal((string?)null);
     }
 
@@ -63,7 +64,7 @@ public class CodeMajorScreenTests : BunitContext
         page.Find("[data-testid=code-major-search-major-code]").Change("terms");
         page.Find("[data-testid=code-major-toolbar-search]").Click();
 
-        page.WaitForAssertion(() => Values(page, "code-major-grid-major-code").Should().Equal("TERMS"));
+        page.WaitForAssertion(() => Grid(page).Column("majorCode").Should().Equal("TERMS"));
         _api.Searches.Last().Should().Be("TERMS");
         page.Find("[data-testid=code-major-search-name]").GetAttribute("value").Should().Be("결제 조건");
     }
@@ -75,12 +76,13 @@ public class CodeMajorScreenTests : BunitContext
 
         page.Find("[data-testid=code-major-toolbar-new]").Click();
 
-        var codes = page.FindAll("[data-testid=code-major-grid-major-code]");
-        codes.Take(3).Should().OnlyContain(c => c.HasAttribute("readonly"));
-        codes[3].HasAttribute("readonly").Should().BeFalse();
-        page.FindAll("[data-testid=code-major-grid-name-en]")[3].GetAttribute("aria-required").Should().Be("true");
-        page.FindAll("[data-testid=code-major-grid-name-ko]")[3].HasAttribute("aria-required").Should().BeFalse();
-        page.FindAll("[data-testid=code-major-grid-use-yn]")[3].HasAttribute("checked").Should().BeTrue();
+        Enumerable.Range(0, 3).Should().OnlyContain(i => Grid(page).IsReadOnly(i, "majorCode"));
+        Grid(page).IsReadOnly(3, "majorCode").Should().BeFalse();
+        // The grid draws no required mark yet; the definition's req columns are required columns of the data set
+        var data = page.FindComponent<QuroMultiGrid<CodeMajorRow>>().Instance.Data;
+        data.GetColumn("nameEn").Required.Should().BeTrue();
+        data.GetColumn("nameKo").Required.Should().BeFalse();
+        Grid(page).IsChecked(3, "useYn").Should().BeTrue();
     }
 
     [Fact, Trait("Id", "BC-UC-023-T07")]
@@ -88,12 +90,12 @@ public class CodeMajorScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        page.FindAll("[data-testid=code-major-grid-name-ko]")[0].Change("임시");
-        page.FindAll("[data-testid=code-major-grid-use-yn]")[0].Change(false);
-        page.FindAll("[data-testid=code-major-grid-delete-row]")[1].Click();
+        Grid(page).Edit(0, "nameKo", "임시");
+        Grid(page).Toggle(0, "useYn");
+        Grid(page).Click(1, "deleteRow");
         page.Find("[data-testid=code-major-toolbar-new]").Click();
-        page.FindAll("[data-testid=code-major-grid-major-code]")[3].Change("ship_via");
-        page.FindAll("[data-testid=code-major-grid-name-en]")[3].Change("Ship Via");
+        Grid(page).Edit(3, "majorCode", "ship_via");
+        Grid(page).Edit(3, "nameEn", "Ship Via");
 
         page.Find("[data-testid=code-major-toolbar-save]").Click();
 
@@ -137,12 +139,12 @@ public class CodeMajorScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.UnprocessableEntity, $$"""{"status":422,"code":"{{code}}","args":["TERMS"]}""");
         var page = RenderAs("admin");
-        page.FindAll("[data-testid=code-major-grid-name-en]")[1].Change("Payment Terms");
+        Grid(page).Edit(1, "nameEn", "Payment Terms");
 
         page.Find("[data-testid=code-major-toolbar-save]").Click();
 
         page.WaitForAssertion(() => page.Find("[data-testid=code-major-message]").TextContent.Should().Be(message));
-        Values(page, "code-major-grid-name-en")[1].Should().Be("Payment Terms");
+        Grid(page).Column("nameEn")[1].Should().Be("Payment Terms");
     }
 
     [Fact, Trait("Id", "SD-UT-905")]
@@ -150,7 +152,7 @@ public class CodeMajorScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.Conflict, """{"status":409,"code":"Common-E-004"}""");
         var page = RenderAs("admin");
-        page.FindAll("[data-testid=code-major-grid-name-en]")[0].Change("Temp");
+        Grid(page).Edit(0, "nameEn", "Temp");
 
         page.Find("[data-testid=code-major-toolbar-save]").Click();
 
@@ -162,21 +164,21 @@ public class CodeMajorScreenTests : BunitContext
     public void UserWithoutFullAccess_CanOnlyRead_NewSaveAndRowButtonsAreDisabledNotHidden()
     {
         var page = RenderAs("user");
-        var rows = page.FindAll("[data-testid=code-major-grid] tbody tr").Count;
+        var rows = Grid(page).Rows.Count;
 
         page.Find("[data-testid=code-major-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=code-major-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=code-major-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
         page.Find("[data-testid=code-major-toolbar-export]").HasAttribute("disabled").Should().BeFalse();
-        page.FindAll("[data-testid=code-major-grid-delete-row]").Should().NotBeEmpty().And.OnlyContain(b => b.HasAttribute("disabled"));
-        page.FindAll("[data-testid=code-major-grid-name-en]").Should().OnlyContain(c => c.HasAttribute("readonly"));
+        Grid(page).IsReadOnly(0, "nameEn").Should().BeTrue();
 
         // The handlers do nothing either
+        Grid(page).Edit(0, "nameEn", "X").Should().BeFalse();
         page.Find("[data-testid=code-major-toolbar-new]").Click();
-        page.FindAll("[data-testid=code-major-grid-delete-row]")[0].Click();
+        Grid(page).Click(0, "deleteRow");
         page.Find("[data-testid=code-major-toolbar-save]").Click();
-        page.FindAll("[data-testid=code-major-grid] tbody tr").Should().HaveCount(rows);
-        page.FindAll("[data-state=D]").Should().BeEmpty();
+        Grid(page).Rows.Should().HaveCount(rows);
+        Grid(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);
         _api.Saved.Should().BeEmpty();
     }
 
@@ -190,12 +192,11 @@ public class CodeMajorScreenTests : BunitContext
         _auth.SetRoles(role);
         _auth.SetClaims(new Claim(WebAuthClaims.SessionId, sessionId));
         var page = Render<CodeMajor>();
-        page.WaitForAssertion(() => Values(page, "code-major-grid-major-code").Should().NotBeEmpty());
+        page.WaitForAssertion(() => Grid(page).Column("majorCode").Should().NotBeEmpty());
         return page;
     }
 
-    private static List<string> Values(IRenderedComponent<CodeMajor> page, string testId) =>
-        page.FindAll($"[data-testid={testId}]").Select(e => e.GetAttribute("value") ?? "").ToList();
+    private static DataGridPage<CodeMajorRow> Grid(IRenderedComponent<CodeMajor> page) => page.DataGrid<CodeMajorRow, CodeMajor>("code-major-grid");
 
     /// <summary>Languages ko then en; TEMP (no Minor codes), TERMS (1, with a name in ja, which is not in use) and UNIT (2).</summary>
     private sealed class FakeCodeMajorApi : HttpMessageHandler

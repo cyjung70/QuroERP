@@ -129,6 +129,31 @@ public partial class ScreenDefinitionTests
             .Which.Columns.Select(c => c.Id).Should().Equal("code", "name", "validFrom", "qty");
     }
 
+    [Theory]
+    [InlineData("bc.currency.list", new[] { "currencyCode", "nameEn", "nameKo", "decimals", "countryCode", "useYn" })]
+    [InlineData("bc.code.minor", new[] { "minorCode", "nameEn", "nameKo", "sortOrder", "useYn", "attr1", "attr2" })]
+    [InlineData("bc.code.major", new[] { "majorCode", "nameEn", "nameKo", "useYn", "minorCount" })]
+    [InlineData("bc.menu.company", new[] { "menuCode", "name", "programId", "parentMenuCode", "validFlag" })]
+    [InlineData("bc.menu.role", new[] { "menuCode", "displayName", "typeName", "fullAccess" })]
+    [InlineData("bc.item.barcode", new[] { "itemCd", "itemName", "soUsdPrc", "upcCode" })]
+    public void BcMultiScreens_HaveTheGridColumns(string id, string[] columns)
+    {
+        ScreenDefinitions.Shared.Get(id).Grids.Should().ContainSingle()
+            .Which.Columns.Select(c => c.Id).Should().Equal(columns);
+    }
+
+    [Theory]
+    [InlineData("bc.currency.list")]
+    [InlineData("bc.code.minor")]
+    [InlineData("bc.code.major")]
+    public void BcNameColumns_EnIsRequired_KoIsNot(string id)
+    {
+        var columns = ScreenDefinitions.Shared.Get(id).Grids[0].Columns;
+
+        columns.Single(c => c.Id == "nameEn").Req.Should().BeTrue();
+        columns.Single(c => c.Id == "nameKo").Req.Should().BeFalse();
+    }
+
     [Fact]
     public void CodeMajors_OfTheDefinitions_AreInTheCodeSeed()
     {

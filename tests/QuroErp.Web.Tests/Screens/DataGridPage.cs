@@ -1,6 +1,7 @@
 using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components;
+using Quro.Grid;
 
 namespace QuroErp.Web.Tests.Screens;
 
@@ -10,10 +11,10 @@ namespace QuroErp.Web.Tests.Screens;
 /// <c>data-row</c> (the row key) in display order: the package has no row test ids yet (TODO(QuroGrid-R3)).
 /// </summary>
 public sealed class DataGridPage<TRow>(
-    Func<string, IReadOnlyList<IElement>> findAll, Func<IRenderedComponent<Quro.Grid.QuroGrid<TRow>>> grid, string testId)
+    Func<string, IReadOnlyList<IElement>> findAll, Func<IRenderedComponent<QuroGrid<TRow>>> grid, string testId)
     where TRow : class
 {
-    private IRenderedComponent<Quro.Grid.QuroGrid<TRow>> Grid => grid();
+    private IRenderedComponent<QuroGrid<TRow>> Grid => grid();
 
     public IReadOnlyList<IElement> Rows => findAll($"[data-testid={testId}] .quro-body [role=row][data-row]");
 
@@ -22,6 +23,23 @@ public sealed class DataGridPage<TRow>(
     public string Text(int index, string field) => Rows[index].QuerySelector($"[data-field={field}]")!.TextContent.Trim();
 
     public IReadOnlyList<string> Column(string field) => [.. Rows.Select(r => r.QuerySelector($"[data-field={field}]")!.TextContent.Trim())];
+
+    /// <summary>The shown column headers in order, as field and title.</summary>
+    public IReadOnlyList<(string Field, string Title)> Headers =>
+        [.. findAll($"[data-testid={testId}] .quro-head [role=columnheader][data-field]")
+            .Select(h => (h.GetAttribute("data-field")!, h.TextContent.Trim()))];
+
+    /// <summary>Whether the check cell of a row is checked.</summary>
+    public bool IsChecked(int index, string field) =>
+        Rows[index].QuerySelector($"[data-field={field}] .quro-check")!.GetAttribute("aria-checked") == "true";
+
+    /// <summary>Clicks a check cell, as the browser script does. False when the grid did not take it.</summary>
+    public bool Toggle(int index, string field)
+    {
+        var key = KeyOf(index);
+        var cut = Grid;
+        return cut.InvokeAsync(() => cut.Instance.ToggleCheck(key, field)).GetAwaiter().GetResult();
+    }
 
     public bool IsReadOnly(int index, string field) =>
         Rows[index].QuerySelector($"[data-field={field}]")!.GetAttribute("aria-readonly") == "true";
@@ -79,6 +97,16 @@ public sealed class DataGridPage<TRow>(
 
 public static class DataGridPageExtensions
 {
+    /// <summary>
+    /// The test id of an input, button or grid. Quro.UI inputs and package grids take none yet; their field or host element has
+    /// it (TODO(QuroGrid-R3)).
+    /// </summary>
+    public static string? TestIdOf(IElement element) =>
+        element.GetAttribute("data-testid")
+        ?? (element.ClassList.Contains("quro-ui-input") || element.GetAttribute("role") == "grid"
+            ? element.Closest("[data-testid]")?.GetAttribute("data-testid")
+            : null);
+
     /// <summary>The result rows of a lookup dialog (its list is a package grid, TASK-CORE-056).</summary>
     public static IReadOnlyList<IElement> LookupRows<TPage>(this IRenderedComponent<TPage> page, string dialog)
         where TPage : class, IComponent =>
@@ -94,10 +122,10 @@ public static class DataGridPageExtensions
     public static DataGridPage<TRow> DataGrid<TRow, TPage>(this IRenderedComponent<TPage> page, string testId, int index)
         where TRow : class
         where TPage : class, IComponent =>
-        new(selector => page.FindAll(selector), () => page.FindComponents<Quro.Grid.QuroGrid<TRow>>()[index], testId);
+        new(selector => page.FindAll(selector), () => page.FindComponents<QuroGrid<TRow>>()[index], testId);
 
     public static DataGridPage<TRow> DataGrid<TRow, TPage>(this IRenderedComponent<TPage> page, string testId)
         where TRow : class
         where TPage : class, IComponent =>
-        new(selector => page.FindAll(selector), () => page.FindComponent<Quro.Grid.QuroGrid<TRow>>(), testId);
+        new(selector => page.FindAll(selector), () => page.FindComponent<QuroGrid<TRow>>(), testId);
 }

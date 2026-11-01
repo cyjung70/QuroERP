@@ -20,12 +20,12 @@
         <div class="quro-master-detail">
             @* The package rows take no test id yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
             <div class="quro-grid-host" data-testid="@Id("grid")">
-                <Quro.Grid.QuroGrid TItem="TSource" DataSet="_sources" Definition="_sourceDefinition" Localizer="L"
+                <QuroGrid TItem="TSource" DataSet="_sources" Definition="_sourceDefinition" Localizer="L"
                                     Culture="DisplayCulture.Current" ConfirmLeave="false"
                                     OnCellValueChanging="CancelSourceEdit" OnRowAdded="TakeOutSource" OnRowDeleting="CancelSourceDelete"
                                     OnPasting="CancelSourcePaste" OnCellButtonClick="SelectAsync">
                     <Quro.Grid.QuroColumn Field="@SelectField" HeaderKey="Common.Select" Type="CellType.Button" TextKey="Common.Select" Width="70" />
-                </Quro.Grid.QuroGrid>
+                </QuroGrid>
             </div>
             @if (_selected is not null)
             {

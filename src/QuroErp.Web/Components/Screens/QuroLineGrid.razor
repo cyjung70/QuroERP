@@ -12,13 +12,13 @@
 
 @* The package rows take no test id or row index yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
 <div class="quro-grid-host" data-testid="@TestId">
-    <Quro.Grid.QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
+    <QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
                         ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor"
                         OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged" OnRowAdded="OnRowAdded"
                         OnRowDeleting="OnRowDeleting" OnRowDeleted="OnRowDeleted" OnPasting="OnPasting" OnPasted="OnPasted"
                         OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick">
         @ChildContent
-    </Quro.Grid.QuroGrid>
+    </QuroGrid>
 </div>
 
 @if (_popup is { } popup)
@@ -38,7 +38,7 @@
 @code {
     private static readonly Regex Call = new(@"^\s*(?<lookup>[A-Za-z][A-Za-z0-9]*)\.(?<query>[A-Za-z][A-Za-z0-9]*)\((?<args>[^)]*)\)\s*$");
 
-    private Quro.Grid.QuroGrid<TLine>? _grid;
+    private QuroGrid<TLine>? _grid;
     private GridDef? _prepared;
     private GridDef? _locked;
     private List<(RuleDef Rule, RuleExpression Expression)> _calcs = [];
@@ -93,7 +93,7 @@
     public string? TestId { get; set; }
 
     /// <summary>The package grid, e.g. for tests that edit through its entry points.</summary>
-    public Quro.Grid.QuroGrid<TLine>? Grid => _grid;
+    public QuroGrid<TLine>? Grid => _grid;
 
     // Without the edit right every cell is read-only; the package has no grid-wide lock yet (TODO(QuroGrid-R4))
     private GridDef GridDefinition => CanEdit ? Definition : _locked!;

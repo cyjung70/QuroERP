@@ -1,0 +1,28 @@
+# BC-UC-005 menus of a role (TASK-CORE-057). Only Full Access is edited; menus come from the add dialog.
+screen:
+  id: bc.menu.role
+  module: BC
+  title: Bc.RoleMenu.Title
+  version: 1
+  api: /api/sys/roles
+  key: menuId
+  layout: grid
+  perm:
+    read: BC.Read
+    write: BC.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    menuId,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: roleMenus
+    bind: roleMenus
+    rowKey: menuId
+    deletedRows: strike
+    columns[4]{id,label,type,width,edit,req,fmt,source,hidden}:
+      menuCode,Bc.RoleMenu.MenuCode,text,110,false,false,"","",false
+      displayName,Bc.RoleMenu.Name,text,200,false,false,"","",false
+      typeName,Bc.RoleMenu.Type,text,100,false,false,"","",false
+      fullAccess,Bc.RoleMenu.FullAccess,checkbox,100,true,false,"","",false

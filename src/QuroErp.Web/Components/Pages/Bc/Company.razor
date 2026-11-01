@@ -40,30 +40,30 @@
                     Load="LoadAsync" Create="() => new CompanyModel()" Save="SaveAsync" HasSectionChanges="HasSectionChanges">
         <Fields Context="company">
             @* BC-BR-302: the name is not a key, so it stays editable after loading *@
-            <QuroText Label="@L["Bc.Company.Name"]" @bind-Value="company.Name" Required TestId="company-header-name" />
-            <QuroText Label="@L["Bc.Company.Billto"]" @bind-Value="company.Billto" Rows="3" TestId="company-header-billto" />
-            <QuroText Label="@L["Bc.Company.Shipto"]" @bind-Value="company.Shipto" Rows="3" TestId="company-header-shipto" />
-            <QuroText Label="@L["Bc.Company.Contact"]" @bind-Value="company.Contact" TestId="company-header-contact" />
-            <QuroText Label="@L["Bc.Company.TelNo"]" @bind-Value="company.TelNo" TestId="company-header-tel-no" />
-            <QuroText Label="@L["Bc.Company.FaxNo"]" @bind-Value="company.FaxNo" TestId="company-header-fax-no" />
+            <QuroText Label="@L["Bc.Company.Name"]" Field="Name" Required TestId="company-header-name" />
+            <QuroText Label="@L["Bc.Company.Billto"]" Field="Billto" Rows="3" TestId="company-header-billto" />
+            <QuroText Label="@L["Bc.Company.Shipto"]" Field="Shipto" Rows="3" TestId="company-header-shipto" />
+            <QuroText Label="@L["Bc.Company.Contact"]" Field="Contact" TestId="company-header-contact" />
+            <QuroText Label="@L["Bc.Company.TelNo"]" Field="TelNo" TestId="company-header-tel-no" />
+            <QuroText Label="@L["Bc.Company.FaxNo"]" Field="FaxNo" TestId="company-header-fax-no" />
             @* BC-BR-315: a KR company needs the business registration number, business type and item for tax invoices *@
-            <QuroText Label="@L["Bc.Company.RegisterNo"]" @bind-Value="company.RegisterNo" Required="@(company.CountryCode == KrCountry)"
+            <QuroText Label="@L["Bc.Company.RegisterNo"]" Field="RegisterNo" Required="@(company.CountryCode == KrCountry)"
                       TestId="company-header-register-no" />
-            <QuroText Label="@L["Bc.Company.Represent"]" @bind-Value="company.Represent" TestId="company-header-represent" />
-            <QuroText Label="@L["Bc.Company.Email"]" @bind-Value="company.Email" TestId="company-header-email" />
-            <QuroText Label="@L["Bc.Company.BusinessType"]" @bind-Value="company.BusinessType" TestId="company-header-business-type" />
-            <QuroText Label="@L["Bc.Company.BusinessItem"]" @bind-Value="company.BusinessItem" TestId="company-header-business-item" />
+            <QuroText Label="@L["Bc.Company.Represent"]" Field="Represent" TestId="company-header-represent" />
+            <QuroText Label="@L["Bc.Company.Email"]" Field="Email" TestId="company-header-email" />
+            <QuroText Label="@L["Bc.Company.BusinessType"]" Field="BusinessType" TestId="company-header-business-type" />
+            <QuroText Label="@L["Bc.Company.BusinessItem"]" Field="BusinessItem" TestId="company-header-business-item" />
             @* BC-BR-312, 313: country and base currency cannot change once transactions exist; the API answers 409 *@
-            <QuroSelect Label="@L["Bc.Company.CountryCode"]" @bind-Value="company.CountryCode" Options="_countries" Required
+            <QuroSelect Label="@L["Bc.Company.CountryCode"]" Field="CountryCode" Options="_countries" Required
                         TestId="company-header-country-code" />
-            <QuroSelect Label="@L["Bc.Company.BaseCurrencyCode"]" @bind-Value="company.BaseCurrencyCode" Options="_currencies" Required
+            <QuroSelect Label="@L["Bc.Company.BaseCurrencyCode"]" Field="BaseCurrencyCode" Options="_currencies" Required
                         TestId="company-header-base-currency-code" />
-            <QuroSelect Label="@L["Bc.Company.DefaultLangCode"]" @bind-Value="company.DefaultLangCode" Options="_languages" Required
+            <QuroSelect Label="@L["Bc.Company.DefaultLangCode"]" Field="DefaultLangCode" Options="_languages" Required
                         TestId="company-header-default-lang-code" />
             @* BC-BR-318: the business date and every shown time follow it; stored dates do not change *@
-            <QuroSelect Label="@L["Bc.Company.TimeZone"]" @bind-Value="company.TimeZone" Options="TimeZones(company.TimeZone)" Required
+            <QuroSelect Label="@L["Bc.Company.TimeZone"]" Field="TimeZone" Options="TimeZones(company.TimeZone)" Required
                         TestId="company-header-time-zone" />
-            <QuroSelect Label="@L["Bc.Company.BillingMode"]" @bind-Value="company.BillingMode" Options="_billingModes" Radio Required
+            <QuroSelect Label="@L["Bc.Company.BillingMode"]" Field="BillingMode" Options="_billingModes" Radio Required
                         TestId="company-header-billing-mode" />
         </Fields>
     </QuroSingleForm>

@@ -24,28 +24,12 @@
 @if (_ready)
 {
     <QuroMultiGrid TRow="CodeMajorRow" Title="@L["Bc.CodeMajor.Title"]" TestId="code-major" Path="@L["Menu.G1BA"]" LoadOnStart="true"
+                   Definition="bc.code.major" Adjust="g => LanguageNames.InUse(g, _languages)" UpperCaseFields="UpperCaseFields"
                    Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit">
         <SearchContent>
             <QuroText Label="@L["Bc.CodeMajor.MajorCode"]" @bind-Value="_majorCode" TextCase="TextCase.Upper" TestId="code-major-search-major-code" />
             <QuroText Label="@L["Bc.CodeMajor.Name"]" Value="@_majorName" LockMode="LockMode.Always" TestId="code-major-search-name" />
         </SearchContent>
-        <Columns>
-            <QuroColumn Title="@L["Bc.CodeMajor.MajorCode"]" Value="r => r.MajorCode" Context="row">
-                <QuroText Label="@L["Bc.CodeMajor.MajorCode"]" HideLabel @bind-Value="row.MajorCode" Required LockMode="LockMode.NewOnly"
-                          TextCase="TextCase.Upper" TestId="code-major-grid-major-code" />
-            </QuroColumn>
-            @foreach (var lang in _languages)
-            {
-                <QuroColumn Title="@NameTitle(lang)" Value="r => r.Names.GetValueOrDefault(lang)" Context="row">
-                    <QuroText Label="@NameTitle(lang)" HideLabel @bind-Value="row.Names[lang]" Required="@(lang == FallbackLang)"
-                              TestId="@($"code-major-grid-name-{lang}")" />
-                </QuroColumn>
-            }
-            <QuroColumn Title="@L["Bc.CodeMajor.UseYn"]" Value="r => r.UseYn" Context="row">
-                <QuroCheckbox Label="@L["Bc.CodeMajor.UseYn"]" HideLabel @bind-Value="row.UseYn" TestId="code-major-grid-use-yn" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.CodeMajor.MinorCount"]" Value="r => r.MinorCount" Format="N0" />
-        </Columns>
     </QuroMultiGrid>
 }
 
@@ -53,6 +37,7 @@
     // The en name is required (SD-BR-901); its column comes first
     private const string FallbackLang = "en";
     private const string UnavailableCode = "BC-E-003";
+    private static readonly string[] UpperCaseFields = ["majorCode"];
 
     private IReadOnlyList<string> _languages = [FallbackLang];
     private string? _majorCode;
@@ -99,7 +84,4 @@
         Api.SaveAsync(CodeMajorRow.ToRequest(changes.Added, changes.Updated, changes.Deleted), Lang, CancellationToken.None);
 
     private CodeMajorRow NewRow() => CodeMajorRow.New(_languages);
-
-    private string NameTitle(string lang) =>
-        string.Format(CultureInfo.CurrentCulture, L["Bc.CodeMajor.NameIn"], L[$"Common.Language.{lang}"] is { ResourceNotFound: false } name ? name.Value : lang);
 }

@@ -56,8 +56,8 @@ public class CompanyScreenTests : BunitContext
         var page = RenderAs("admin");
 
         Value(page, "company-header-name").Should().Be("Quro");
-        Selected(page, "company-header-country-code").Should().Be("US");
-        Selected(page, "company-header-base-currency-code").Should().Be("USD");
+        Selected(page, "company-header-country-code").Should().BeEquivalentTo("US");
+        Selected(page, "company-header-base-currency-code").Should().BeEquivalentTo("USD");
         page.Find("[data-testid=company-header-billing-mode-with_shipment]").HasAttribute("checked").Should().BeTrue();
         page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
             .Should().Equal("company-toolbar-search", "company-toolbar-save");
@@ -76,9 +76,9 @@ public class CompanyScreenTests : BunitContext
     public void Save_PutsTheChangesWithUpdatedAt_AndKeepsTheNameEditable()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=company-header-name]").Change("Quro Inc");
-        page.Find("[data-testid=company-header-business-type]").Change("제조");
-        page.Find("[data-testid=company-header-billing-mode-separate]").Change("SEPARATE");
+        page.Field("company-header-name").Change("Quro Inc");
+        page.Field("company-header-business-type").Change("제조");
+        page.Field("company-header-billing-mode-separate").Change("SEPARATE");
 
         page.Find("[data-testid=company-toolbar-save]").Click();
 
@@ -93,18 +93,19 @@ public class CompanyScreenTests : BunitContext
             UpdatedAt = AuditTimes.Updated,
         });
         // BC-BR-302: the name is not a key
-        page.Find("[data-testid=company-header-name]").HasAttribute("readonly").Should().BeFalse();
+        page.Field("company-header-name").IsReadOnly.Should().BeFalse();
     }
 
     [Fact, Trait("Id", "CORE-024-WT-02"), Trait("Rule", "BC-BR-318")]
     public void TimeZone_IsADropdownOfIanaNames_AndIsSaved()
     {
         var page = RenderAs("admin");
-        Selected(page, "company-header-time-zone").Should().Be("America/New_York");
-        var options = page.FindAll("[data-testid=company-header-time-zone] option").Select(o => o.GetAttribute("value")).ToList();
-        options.Should().Contain(["America/New_York", "Asia/Seoul"]).And.NotContain("Korea Standard Time");
+        Selected(page, "company-header-time-zone").Should().BeEquivalentTo("America/New_York");
+        // Combo codes come back in lower case (FormFieldPage)
+        var options = page.Field("company-header-time-zone").Options.Select(o => o.Code).ToList();
+        options.Should().Contain(["america/new_york", "asia/seoul"]).And.NotContain("korea standard time");
 
-        page.Find("[data-testid=company-header-time-zone]").Change("Asia/Seoul");
+        page.Field("company-header-time-zone").Change("Asia/Seoul");
         page.Find("[data-testid=company-toolbar-save]").Click();
 
         page.WaitForAssertion(() => page.Find("[data-testid=company-message]").TextContent.Should().Be("저장했습니다."));
@@ -115,7 +116,7 @@ public class CompanyScreenTests : BunitContext
     public void SaveWithoutName_ShowsRequiredMessage_AndDoesNotPut()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=company-header-name]").Change("");
+        page.Field("company-header-name").Change("");
 
         page.Find("[data-testid=company-toolbar-save]").Click();
 
@@ -162,7 +163,7 @@ public class CompanyScreenTests : BunitContext
     public void KrCompany_NeedsTheRegisterNo()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=company-header-country-code]").Change("KR");
+        page.Field("company-header-country-code").Change("KR");
 
         page.Find("[data-testid=company-toolbar-save]").Click();
 
@@ -179,8 +180,8 @@ public class CompanyScreenTests : BunitContext
         // Blocked buttons stay on the bar, disabled (screen-templates.md 0)
         page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")).Should().Equal("company-toolbar-search");
         page.Find("[data-testid=company-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
-        page.Find("[data-testid=company-header-name]").HasAttribute("readonly").Should().BeTrue();
-        page.Find("[data-testid=company-header-country-code]").HasAttribute("disabled").Should().BeTrue();
+        page.Field("company-header-name").IsReadOnly.Should().BeTrue();
+        page.Field("company-header-country-code").IsReadOnly.Should().BeTrue();
         page.Find("[data-testid=company-security-lockout-minutes]").HasAttribute("readonly").Should().BeTrue();
         page.Find("[data-testid=company-security-auto-login-enabled]").HasAttribute("disabled").Should().BeTrue();
         page.FindAll("[data-testid=company-logo-delete], [data-testid=company-logo-upload], [data-testid=company-security-save], [data-testid=company-inventory-save]")
@@ -333,11 +334,9 @@ public class CompanyScreenTests : BunitContext
     private static QuroSingleForm<CompanyModel> Form(IRenderedComponent<Company> page) =>
         page.FindComponent<QuroSingleForm<CompanyModel>>().Instance;
 
-    private static string? Value(IRenderedComponent<Company> page, string testId) =>
-        page.Find($"[data-testid={testId}]").GetAttribute("value");
+    private static string? Value(IRenderedComponent<Company> page, string testId) => page.Field(testId).Value;
 
-    private static string? Selected(IRenderedComponent<Company> page, string testId) =>
-        page.Find($"[data-testid={testId}] option[selected]").GetAttribute("value");
+    private static string? Selected(IRenderedComponent<Company> page, string testId) => page.Field(testId).Selected;
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
 

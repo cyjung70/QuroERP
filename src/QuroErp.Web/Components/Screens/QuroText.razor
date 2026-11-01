@@ -4,14 +4,14 @@
 {
     @* Quro.UI text box on the data set column; the test id is on the field until the package takes one (TODO(QuroGrid-R3)) *@
     <div class="@FieldClass()" data-testid="@TestId">
-        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @FieldLabel(IsRequiredNow)
         @Form!.Data!.TextBox(Field!, CharType, MaxLength, Password, IsLocked)
     </div>
 }
 else
 {
     <div class="@FieldClass()">
-        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @FieldLabel(IsRequiredNow)
         @if (Rows > 1)
         {
             @* Quro.UI has no multi-line text box yet: a bound memo keeps the text area (TODO(QuroGrid-request)) *@

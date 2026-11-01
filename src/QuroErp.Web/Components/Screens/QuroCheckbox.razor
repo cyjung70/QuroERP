@@ -5,7 +5,7 @@
 <div class="@FieldClass("quro-checkbox")">
     <input id="@InputId" type="checkbox" checked="@Current" disabled="@IsLocked" data-testid="@TestId"
            @onchange="e => SetValueAsync(e.Value is true)" />
-    <QuroLabel For="@InputId" Text="@Label" Hidden="HideLabel" />
+    @FieldLabel(false)
 </div>
 
 @code {

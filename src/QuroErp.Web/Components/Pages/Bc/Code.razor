@@ -26,6 +26,7 @@
 @if (_ready)
 {
     <QuroMultiGrid @ref="_grid" TRow="CodeMinorRow" Title="@L["Bc.Code.Title"]" TestId="code" Path="@L["Menu.G1BA"]"
+                   Definition="bc.code.minor" Adjust="g => LanguageNames.InUse(g, _languages)" UpperCaseFields="UpperCaseFields"
                    Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit">
         <SearchContent>
             <div class="quro-lookup-field">
@@ -35,31 +36,6 @@
             </div>
             <QuroText Label="@L["Bc.Code.MajorName"]" Value="@_majorName" LockMode="LockMode.Always" TestId="code-search-major-name" />
         </SearchContent>
-        <Columns>
-            <QuroColumn Title="@L["Bc.Code.MinorCode"]" Value="r => r.MinorCode" Context="row">
-                <QuroText Label="@L["Bc.Code.MinorCode"]" HideLabel @bind-Value="row.MinorCode" Required LockMode="LockMode.NewOnly"
-                          TextCase="TextCase.Upper" TestId="code-grid-minor-code" />
-            </QuroColumn>
-            @foreach (var lang in _languages)
-            {
-                <QuroColumn Title="@NameTitle(lang)" Value="r => r.Names.GetValueOrDefault(lang)" Context="row">
-                    <QuroText Label="@NameTitle(lang)" HideLabel @bind-Value="row.Names[lang]" Required="@(lang == FallbackLang)"
-                              TestId="@($"code-grid-name-{lang}")" />
-                </QuroColumn>
-            }
-            <QuroColumn Title="@L["Bc.Code.SortOrder"]" Value="r => r.SortOrder" Context="row">
-                <QuroNumber Label="@L["Bc.Code.SortOrder"]" HideLabel @bind-Value="row.SortOrder" Decimals="0" Required TestId="code-grid-sort-order" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.Code.UseYn"]" Value="r => r.UseYn" Context="row">
-                <QuroCheckbox Label="@L["Bc.Code.UseYn"]" HideLabel @bind-Value="row.UseYn" TestId="code-grid-use-yn" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.Code.Attr1"]" Value="r => r.Attr1" Context="row">
-                <QuroText Label="@L["Bc.Code.Attr1"]" HideLabel @bind-Value="row.Attr1" TestId="code-grid-attr1" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.Code.Attr2"]" Value="r => r.Attr2" Context="row">
-                <QuroText Label="@L["Bc.Code.Attr2"]" HideLabel @bind-Value="row.Attr2" TestId="code-grid-attr2" />
-            </QuroColumn>
-        </Columns>
     </QuroMultiGrid>
 
     <QuroLookupDialog TItem="CodeMajorDto" Title="@L["Bc.Code.FindMajor"]" TestId="code-major-lookup"
@@ -76,6 +52,7 @@
     private const string FallbackLang = "en";
     private const string RequiredCode = "Common-E-005";
     private const string UnavailableCode = "BC-E-003";
+    private static readonly string[] UpperCaseFields = ["minorCode"];
 
     private QuroMultiGrid<CodeMinorRow>? _grid;
     private IReadOnlyList<string> _languages = [FallbackLang];
@@ -146,7 +123,4 @@
         _majorName = major.Name;
         await _grid!.SearchAsync();
     }
-
-    private string NameTitle(string lang) =>
-        string.Format(CultureInfo.CurrentCulture, L["Bc.Code.Name"], L[$"Common.Language.{lang}"] is { ResourceNotFound: false } name ? name.Value : lang);
 }
