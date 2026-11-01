@@ -53,7 +53,6 @@ jobs:
             exit 1
           fi
           docker compose version
-          command -v flock
           command -v curl
           command -v openssl
       - name: DB Secret 확인

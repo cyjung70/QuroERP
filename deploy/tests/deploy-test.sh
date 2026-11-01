@@ -5,9 +5,10 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
 mkdir -p "$test_root/bin" "$test_root/server"
 test_script="$test_root/deploy.sh"
-sed "s#^readonly deploy_dir=/opt/quroerp/dev\$#readonly deploy_dir='$test_root/server'#" "$script_dir/deploy.sh" > "$test_script"
+cp "$script_dir/deploy.sh" "$test_script"
 cp "$script_dir/compose.yaml" "$test_root/compose.yaml"
-grep -q "^readonly deploy_dir='$test_root/server'" "$test_script"
+export HOME="$test_root/server"
+state_dir="$HOME/.local/state/quroerp/dev"
 
 export IMAGE_PREFIX=quroerp-dev
 export IMAGE_TAG=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1-1
@@ -51,7 +52,7 @@ expect_failure() {
   else
     test "$?" -eq "$1"
   fi
-  test ! -e "$test_root/server/current-release"
+  test ! -e "$state_dir/current-release"
 }
 
 : > "$TEST_LOG"
@@ -74,32 +75,32 @@ expect_failure 43
 unset FAIL_HEALTH
 echo 'PASS: health failure prevents successful release recording'
 
-printf 'invalid-key\n' > "$test_root/server/jwt-signing.key"
+printf 'invalid-key\n' > "$state_dir/jwt-signing.key"
 : > "$TEST_LOG"
 expect_failure 2
 test ! -s "$TEST_LOG"
-printf '%064d\n' 0 > "$test_root/server/jwt-signing.key"
+printf '%064d\n' 0 > "$state_dir/jwt-signing.key"
 echo 'PASS: malformed existing key stops deployment without rotating it'
 
 : > "$TEST_LOG"
 bash "$test_script"
-test "$(cat "$test_root/server/current-release")" = "$IMAGE_TAG"
-test -s "$test_root/server/releases/$IMAGE_TAG/compose.yaml"
-test -s "$test_root/server/releases/$IMAGE_TAG/images.env"
-test ! -e "$test_root/server/deploy.env"
+test "$(cat "$state_dir/current-release")" = "$IMAGE_TAG"
+test -s "$state_dir/releases/$IMAGE_TAG/compose.yaml"
+test -s "$state_dir/releases/$IMAGE_TAG/images.env"
+test ! -e "$state_dir/deploy.env"
 grep -q -- '--env-file /dev/null' "$TEST_LOG"
 ! grep -q 'pull postgres\|120 postgres\|key-generation' "$TEST_LOG"
-! grep -R -q 'test-db\|test-tls' "$test_root/server/releases"
-! grep -R -q "$(printf '%064d' 0)" "$test_root/server/releases"
+! grep -R -q 'test-db\|test-tls' "$state_dir/releases"
+! grep -R -q "$(printf '%064d' 0)" "$state_dir/releases"
 echo 'PASS: DB secret reaches Docker without TLS settings, DEV_URL or deploy.env'
 echo 'PASS: generated JWT key is reused and secrets stay out of release records'
 
 # 테스트가 만든 파일만 제거합니다.
 rm -f "$test_root/bin/docker" "$test_root/bin/flock" "$test_root/bin/openssl" \
   "$test_script" "$test_root/compose.yaml" "$test_root/commands" \
-  "$test_root/server/jwt-signing.key" "$test_root/server/deploy.lock" \
-  "$test_root/server/current-release" \
-  "$test_root/server/releases/$IMAGE_TAG/compose.yaml" \
-  "$test_root/server/releases/$IMAGE_TAG/images.env"
-rmdir "$test_root/server/releases/$IMAGE_TAG" "$test_root/server/releases" \
-  "$test_root/server" "$test_root/bin" "$test_root"
+  "$state_dir/jwt-signing.key" "$state_dir/current-release" \
+  "$state_dir/releases/$IMAGE_TAG/compose.yaml" \
+  "$state_dir/releases/$IMAGE_TAG/images.env"
+rmdir "$state_dir/releases/$IMAGE_TAG" "$state_dir/releases" \
+  "$state_dir" "$HOME/.local/state/quroerp" "$HOME/.local/state" \
+  "$HOME/.local" "$test_root/server" "$test_root/bin" "$test_root"

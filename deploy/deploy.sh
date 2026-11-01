@@ -8,12 +8,10 @@ umask 077
 [[ "$IMAGE_PREFIX" == quroerp-dev ]] || exit 2
 [[ "$IMAGE_TAG" =~ ^[a-f0-9]{40}-[0-9]+-[0-9]+$ ]] || exit 2
 
-# 설정/잠금/릴리스 기록 경로는 고정합니다. 외부 환경변수로 변경할 수 없습니다.
-readonly deploy_dir=/opt/quroerp/dev
+# JWT 키와 배포 기록은 러너 계정 홈 아래에 보관합니다. /opt 경로 권한이 필요하지 않습니다.
+readonly deploy_dir="${HOME:?GitHub runner HOME is required}/.local/state/quroerp/dev"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$deploy_dir"
-exec 9>"$deploy_dir/deploy.lock"
-flock -w 300 9
 
 # DB 설정은 Actions 환경변수를 그대로 사용합니다. 호스트 deploy.env는 읽지 않습니다.
 unset JWT_SIGNING_KEY

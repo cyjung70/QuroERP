@@ -33,11 +33,11 @@ HTTP 트래픽은 암호화되지 않으므로 이 구성은 신뢰할 수 있�
 ## 3. 러너와 자동 관리 파일
 
 - 러너 라벨: `self-hosted`, `linux`, `quroerp-deploy`. 같은 라벨이 여러 서버에 있으면 어느 서버로든 배정될 수 있으므로 개발 호스트의 러너를 지정하세요.
-- 필요한 도구: Docker Engine, Compose v2(`up --wait` 지원), Bash, curl, flock, openssl. .NET SDK는 Docker 빌드 이미지에 있습니다.
-- 러너 서비스 계정은 GitHub Actions 명령을 실행하는 Linux 사용자입니다. Docker 접근 권한과 `/opt/quroerp/dev` 쓰기 권한이 필요합니다.
-- JWT 서명 키는 DB 비밀번호 해시가 아닙니다. 로그인 토큰 서명에 필요하며 최초 배포 때 `/opt/quroerp/dev/jwt-signing.key`에 자동 생성하고 권한 `600`으로 보관합니다. 직접 입력할 필요가 없습니다.
+- 필요한 도구: Docker Engine, Compose v2(`up --wait` 지원), Bash, curl, openssl. .NET SDK는 Docker 빌드 이미지에 있습니다.
+- 러너 서비스 계정은 GitHub Actions 명령을 실행하는 Linux 사용자입니다. Docker 접근 권한과 해당 계정 홈 디렉터리의 쓰기 권한이 필요합니다. `/opt/quroerp/dev`를 만들거나 권한을 바꿀 필요는 없습니다.
+- JWT 서명 키는 DB 비밀번호 해시가 아닙니다. 로그인 토큰 서명에 필요하며 최초 배포 때 러너 홈의 `.local/state/quroerp/dev/jwt-signing.key`에 자동 생성하고 권한 `600`으로 보관합니다. 직접 입력할 필요가 없습니다.
 - 이후 배포에서도 같은 키를 사용합니다. 키 파일 손상 시 자동 재발급하지 않고 중단합니다. 기존 수동 키에서 전환하면 기존 로그인 토큰이 무효화될 수 있습니다.
-- 설정 파일 대신 호스트에 남는 것은 JWT 키, 배포 잠금, 성공한 릴리스의 매니페스트/이미지 태그입니다. 릴리스 기록에는 DB 비밀 값을 넣지 않습니다.
+- 성공한 릴리스의 매니페스트와 이미지 태그도 같은 러너 홈 아래 기록합니다. DB 비밀 값은 기록하지 않습니다. Actions가 배포 job을 직렬 실행하므로 별도의 호스트 잠금 파일은 필요하지 않습니다.
 
 Docker 소켓 권한 오류는 GitHub 토큰 권한과 별개입니다. 호스트의 실제 러너 설치 디렉터리에서 확인합니다.
 
