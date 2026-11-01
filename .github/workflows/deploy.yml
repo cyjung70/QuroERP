@@ -1,0 +1,60 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Do not interrupt a migration or application replacement.
+concurrency:
+  group: quroerp-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: [self-hosted, linux, quroerp-deploy]
+    timeout-minutes: 45
+    environment: production
+    env:
+      IMAGE_PREFIX: quroerp
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+      IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      DEPLOY_URL: ${{ vars.DEPLOY_URL }}
+      DEPLOY_DIRECTORY: ${{ vars.DEPLOY_DIRECTORY || '/opt/quroerp/production' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Check prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker info > /dev/null
+          docker compose version
+          command -v flock
+          command -v curl
+          test -r "$DEPLOY_DIRECTORY/deploy.env"
+          test -n "$DEPLOY_URL"
+      - name: Verify deployment failure handling
+        run: bash deploy/tests/deploy-test.sh
+      - name: Build tested revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          for target in api web migrate; do
+            docker build --target "$target" \
+              --label "org.opencontainers.image.revision=$RELEASE_SHA" \
+              -t "$IMAGE_PREFIX-$target:$IMAGE_TAG" .
+          done
+      - name: Migrate, deploy and verify
+        run: bash deploy/deploy.sh
