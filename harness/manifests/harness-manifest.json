@@ -12,7 +12,7 @@
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
-      "sha256": "de135fc5f581cb4cd45847f32a4fceb70edc6abbf90b77c97ffeb2bfcddc2e0e"
+      "sha256": "e4429263830926cc9802785c1cee121283dd6cbbf652bd295aba0a65b824d430"
     },
     {
       "path": ".agents/skills/quro-dapper/SKILL.md",
@@ -44,7 +44,7 @@
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
-      "sha256": "de135fc5f581cb4cd45847f32a4fceb70edc6abbf90b77c97ffeb2bfcddc2e0e"
+      "sha256": "e4429263830926cc9802785c1cee121283dd6cbbf652bd295aba0a65b824d430"
     },
     {
       "path": ".claude/skills/quro-dapper/SKILL.md",
@@ -72,7 +72,7 @@
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "682f4d0fb7704cfc533f8649d85d75f32c6e5362360963e01192ee3df91b4f2c"
+      "sha256": "3fcf44be8a2d9c907a20bb9466f524da828454b8443add69bae2b44f2930e982"
     },
     {
       "path": "docs/architecture/api.md",
