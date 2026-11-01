@@ -32,5 +32,5 @@
     "샘플 `/samples/single`에 정책 예(US·KR 국가팩으로 숨김·필수 전환) + bUnit: 숨김, 필수 마커, 읽기 전용, 관리자 토글, DataSet 묶인 래퍼의 정책 필수 → `Validate` 오류·정책 숨김 → 검사 제외"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

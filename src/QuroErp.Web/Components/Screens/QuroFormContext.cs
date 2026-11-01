@@ -35,6 +35,9 @@ public interface IQuroField
 
     bool IsRequiredNow { get; }
 
+    /// <summary>The field policy hides the input, so its column leaves the data set's required check (field-policy.md 3).</summary>
+    bool IsExcluded => false;
+
     bool IsEmpty { get; }
 }
 
@@ -79,7 +82,7 @@ public sealed class QuroFormContext
         {
             if (Data is not null && field.Field is { } column)
             {
-                Data.Require(column, field.IsRequiredNow);
+                Data.Require(column, field.IsRequiredNow, field.IsExcluded);
             }
         }
     }

@@ -502,6 +502,9 @@
   <data name="Common.CopyAsNew" xml:space="preserve"><value>복사해서 신규</value></data>
   <data name="Common.Total" xml:space="preserve"><value>합계</value></data>
   <data name="Samples.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Common.ShowAllFields" xml:space="preserve"><value>전체 필드 보기</value></data>
+  <data name="Common.HiddenByPolicy" xml:space="preserve"><value>숨김</value></data>
+  <data name="Samples.Country" xml:space="preserve"><value>국가팩</value></data>
   <data name="Samples.Supply" xml:space="preserve"><value>조달 구분</value></data>
   <data name="Samples.Supply.P" xml:space="preserve"><value>구매</value></data>
   <data name="Samples.Supply.M" xml:space="preserve"><value>생산</value></data>

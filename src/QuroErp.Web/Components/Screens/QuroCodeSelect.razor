@@ -7,7 +7,7 @@
 @inject CodeApiClient Codes
 @inject IServiceProvider Services
 
-<QuroSelect Label="@Label" Value="@Value" ValueChanged="ValueChanged" Options="_options" OptionsSource="_optionSet" Radio="Radio"
+<QuroSelect Label="@Label" Policy="@Policy" Value="@Value" ValueChanged="ValueChanged" Options="_options" OptionsSource="_optionSet" Radio="Radio"
             Required="Required" LockMode="LockMode" HideLabel="HideLabel" Span="Span" TestId="@TestId" Field="@Field" />
 
 @code {
@@ -21,8 +21,13 @@
     [Parameter, EditorRequired]
     public string Major { get; set; } = "";
 
-    [Parameter, EditorRequired]
+    /// <summary>Translated label. Without it the label is the policy's label key (<see cref="Policy"/>).</summary>
+    [Parameter]
     public string Label { get; set; } = "";
+
+    /// <summary>The field key for the field policy (field-policy.md 3), passed to the inner select.</summary>
+    [Parameter]
+    public string? Policy { get; set; }
 
     [Parameter]
     public string? Value { get; set; }

@@ -2,21 +2,25 @@
 @using QuroErp.Web.Common
 @inherits QuroInputBase<DateOnly?>
 
-@if (Bound)
+@* The field policy may hide the field (field-policy.md 3) *@
+@if (Drawn)
 {
-    @* Quro.UI date picker in the user language's date pattern (i18n.md "숫자·날짜"); test id on the field (TODO(QuroGrid-R3)) *@
-    <div class="@FieldClass()" data-testid="@TestId">
-        @FieldLabel(IsRequiredNow)
-        @Form!.Data!.DatePicker(Field!, DisplayCulture.Current, IsLocked)
-    </div>
-}
-else
-{
-    <div class="@FieldClass()">
-        @FieldLabel(IsRequiredNow)
-        <input id="@InputId" type="date" value="@Value?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" readonly="@IsLocked"
-               aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
-    </div>
+    @if (Bound)
+    {
+        @* Quro.UI date picker in the user language's date pattern (i18n.md "숫자·날짜"); test id on the field (TODO(QuroGrid-R3)) *@
+        <div class="@FieldClass()" data-testid="@TestId">
+            @FieldLabel(IsRequiredNow)
+            @Form!.Data!.DatePicker(Field!, DisplayCulture.Current, IsLocked)
+        </div>
+    }
+    else
+    {
+        <div class="@FieldClass()">
+            @FieldLabel(IsRequiredNow)
+            <input id="@InputId" type="date" value="@Value?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" readonly="@IsLocked"
+                   aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+        </div>
+    }
 }
 
 @code {

@@ -15,6 +15,9 @@
     box-shadow: inset 3px 0 0 var(--q-field-required);
 }
 .quro-required { color: var(--q-field-required); margin-left: 2px; }
+/* A field the policy hides, shown read-only by the admin "show all fields" toggle (field-policy.md 3, BC-BR-435) */
+.quro-field-policy-hidden { outline: 1px dashed var(--q-line); outline-offset: 2px; }
+.quro-policy-hidden-mark { margin-left: 6px; padding: 0 4px; border-radius: var(--q-radius-input); background: var(--q-surface-2); color: var(--q-ink-muted); font-size: 11px; }
 /* Quro.UI controls in the input wrappers take the same colors through the --quro-* tokens (qurogrid-integration.md 10 "테마").
    Required stays the editable yellow: the wrapper draws the amber marker and "*" */
 .quro-field {

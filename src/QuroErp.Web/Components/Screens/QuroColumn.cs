@@ -14,6 +14,14 @@ public sealed class QuroColumn<TRow> : ComponentBase
     [CascadingParameter]
     public QuroColumnSet<TRow>? Columns { get; set; }
 
+    /// <summary>The screen's field policies, cascaded by the screen type component.</summary>
+    [CascadingParameter]
+    public QuroFieldPolicy? Policies { get; set; }
+
+    /// <summary>The column's field key (field-policy.md "필드 키"); a HIDDEN column is left out unless "show all fields" is on.</summary>
+    [Parameter]
+    public string? Policy { get; set; }
+
     /// <summary>Translated column title.</summary>
     [Parameter, EditorRequired]
     public string Title { get; set; } = "";
@@ -36,6 +44,8 @@ public sealed class QuroColumn<TRow> : ComponentBase
 
     protected override void OnInitialized() => Columns?.Add(this);
 
+    internal bool Hidden => Policy is not null && Policies?.Hides(Policy) == true;
+
     internal string Text(TRow row) => Value?.Invoke(row) switch
     {
         null => "",
@@ -55,7 +65,8 @@ public sealed class QuroColumnSet<TRow>
 {
     private readonly List<QuroColumn<TRow>> _columns = [];
 
-    public IReadOnlyList<QuroColumn<TRow>> Items => _columns;
+    /// <summary>The columns to draw: those the field policy hides are left out.</summary>
+    public IReadOnlyList<QuroColumn<TRow>> Items => [.. _columns.Where(c => !c.Hidden)];
 
     internal void Add(QuroColumn<TRow> column)
     {
