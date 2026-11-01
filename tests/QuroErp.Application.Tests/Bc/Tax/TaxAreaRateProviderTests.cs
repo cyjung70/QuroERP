@@ -28,7 +28,7 @@ public class TaxAreaRateProviderTests
         rate.Should().Be(new TaxCodeRate(5, decimal.Parse(expected, System.Globalization.CultureInfo.InvariantCulture), true));
     }
 
-    [Theory, Trait("Id", "BC-UT-513")]
+    [Theory, Trait("Id", "BC-UT-513"), Trait("Id", "BC-UC-029-T03")]
     [InlineData(8L)]
     [InlineData(null)]
     public async Task SalesTax_WithoutARateOnTheDate_IsBcE513(long? areaId)
