@@ -24,7 +24,7 @@ Host=<DB_HOST>;Port=<DB_PORT>;Database=<DB_NAME>;Username=<DB_USER>;Password=<DB
 
 **필수 Secret은 `DEV_DB_CONNECTION` 하나입니다.** 인증서와 `DEV_TLS_PASSWORD`는 사용하지 않습니다. `DEV_TLS_DIRECTORY`, `DEV_HTTPS_PORT`, `DEV_WEB_HOST`, `DEV_URL`도 필요 없습니다.
 
-기본 접속 주소는 `http://<개발서버주소>`입니다. 호스트 포트 80을 컨테이너 내부 8080에 연결합니다. 포트를 바꾸려면 선택적 Variable `DEV_HTTP_PORT`만 등록하세요. DB 포트와는 별개이며, 개발 호스트 방화벽에서 TCP 80 접근을 허용해야 합니다. 호스트의 다른 서비스가 이미 80을 사용한다면 포트 충돌을 먼저 해결해야 합니다.
+기본 접속 주소는 `http://<개발서버주소>:8080`입니다. 호스트 포트 8080을 컨테이너 내부 8080에 연결합니다. nginx가 사용하는 호스트 포트 80과 충돌하지 않습니다. 포트를 바꾸려면 선택적 Variable `DEV_HTTP_PORT`만 등록하세요. DB 포트와는 별개이며, 개발 호스트 방화벽에서 TCP 8080 접근을 허용해야 합니다.
 
 Web 컨테이너는 명시적인 `DevelopmentHttp` 환경으로 실행합니다. 이 환경에서만 HTTPS 리디렉션/HSTS를 끄고, HTTP 요청의 세션·자동 로그인 쿠키를 HTTP에서도 전달할 수 있게 합니다. HttpOnly, SameSite, 인증/권한, 위조 방지 검사는 유지합니다. 일반 `Production`과 `Development` 환경의 기존 HTTPS 기본 동작은 바꾸지 않습니다. `DevelopmentHttp`에서는 상세 개발 오류나 샘플 서비스를 켜지 않습니다.
 

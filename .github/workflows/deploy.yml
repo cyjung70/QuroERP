@@ -37,8 +37,8 @@ jobs:
       IMAGE_PREFIX: quroerp-dev
       RELEASE_SHA: ${{ github.sha }}
       IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      # 개발 웹은 인증서 없이 HTTP로 실행합니다. 기본 접속 포트는 80입니다.
-      HTTP_PORT: ${{ vars.DEV_HTTP_PORT || '80' }}
+      # Publish development HTTP on port 8080; port 80 is used by nginx.
+      HTTP_PORT: ${{ vars.DEV_HTTP_PORT || '8080' }}
     steps:
       - uses: actions/checkout@v4
         with:
