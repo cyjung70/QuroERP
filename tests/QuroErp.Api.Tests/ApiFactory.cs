@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 using QuroErp.Application.Bc.BusinessPlaces;
 using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
+using QuroErp.Application.Bc.FieldPolicies;
+using QuroErp.Contracts.Bc.FieldPolicies;
+using QuroErp.Domain.Bc.FieldPolicies;
 using QuroErp.Contracts.Bc.BusinessPlaces;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Application.Bc.Items;
@@ -85,6 +88,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>The default business place MAIN (BC-BR-319) with a valid KR registration number.</summary>
     public InMemoryBusinessPlaceRepository BusinessPlaces { get; } = new();
 
+    /// <summary>Field policy company overrides (bc_field_policy); none at start. The country packs are the built-in ones.</summary>
+    public InMemoryFieldPolicyRepository FieldPolicies { get; } = new();
+
     /// <summary>Localization state: a KR company (default language ko), languages en/ko (sw off), KRW and USD.</summary>
     public InMemoryLocalizationRepository Localization { get; } = new();
 
@@ -154,6 +160,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors, Currencies));
             services.AddSingleton<ICompanyRepository>(Companies);
             services.AddSingleton<IBusinessPlaceRepository>(BusinessPlaces);
+            services.AddSingleton<IFieldPolicyRepository>(FieldPolicies);
             services.AddSingleton<ILocalizationRepository>(Localization);
             services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
@@ -456,6 +463,29 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             Logo = null;
             UpdatedBy = updatedBy;
             return Task.FromResult(Company is not null);
+        }
+    }
+
+    public sealed class InMemoryFieldPolicyRepository : IFieldPolicyRepository
+    {
+        public static readonly DateTimeOffset Saved = new(2026, 11, 1, 0, 0, 0, TimeSpan.Zero);
+
+        public List<FieldPolicyOverrideDto> Rows { get; } = [];
+
+        public Task<IReadOnlyList<FieldPolicyOverrideDto>> FindAllAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<FieldPolicyOverrideDto>>([.. Rows.OrderBy(r => r.FieldKey, StringComparer.Ordinal)]);
+
+        public Task UpsertAsync(string fieldKey, FieldPolicyEntry entry, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            Rows.RemoveAll(r => r.FieldKey == fieldKey);
+            Rows.Add(new(Rows.Count + 1, fieldKey, entry.State, entry.DefaultValue, entry.LabelKey, Saved, updatedBy));
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(IReadOnlyCollection<string> fieldKeys, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            Rows.RemoveAll(r => fieldKeys.Contains(r.FieldKey));
+            return Task.CompletedTask;
         }
     }
 

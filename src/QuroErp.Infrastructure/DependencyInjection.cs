@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Bc.BusinessPlaces;
 using QuroErp.Application.Bc.Codes;
+using QuroErp.Application.Bc.FieldPolicies;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Bc.PurchasePrices;
@@ -22,6 +23,7 @@ using QuroErp.Application.Mm.PurchaseOrders;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Infrastructure.Bc.BusinessPlaces;
 using QuroErp.Infrastructure.Bc.Codes;
+using QuroErp.Infrastructure.Bc.FieldPolicies;
 using QuroErp.Infrastructure.Bc.Companies;
 using QuroErp.Infrastructure.Bc.Items;
 using QuroErp.Infrastructure.Bc.PurchasePrices;
@@ -92,6 +94,8 @@ public static class DependencyInjection
         services.AddSingleton<ICodeMajorRepository, CodeMajorRepository>();
         services.AddSingleton<ICodeMinorRepository, CodeMinorRepository>();
         services.AddSingleton<IPurchasePriceRepository, PurchasePriceRepository>();
+        services.AddSingleton<IFieldPolicyRepository, FieldPolicyRepository>();
+        services.AddSingleton<ICountryPackProvider, EmbeddedCountryPackProvider>();
         return services;
     }
 }
