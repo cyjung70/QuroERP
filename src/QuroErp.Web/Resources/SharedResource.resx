@@ -153,6 +153,9 @@
   <data name="BC-E-423" xml:space="preserve"><value>{0}은(는) 소수 {1}자리까지 입력할 수 있습니다.</value></data>
   <data name="BC-E-424" xml:space="preserve"><value>반올림 방식 '{0}'이(가) 올바르지 않습니다. HALF_UP 또는 DOWN을 고르세요.</value></data>
   <data name="BC-E-425" xml:space="preserve"><value>{0} 자릿수를 쓰는 문서가 있어 자릿수를 줄일 수 없습니다.</value></data>
+  <data name="BC-E-432" xml:space="preserve"><value>{0}을(를) 입력하세요.</value></data>
+  <data name="BC-E-433" xml:space="preserve"><value>{0} 필드 정책은 쓸 수 없습니다. 화면의 필드, HIDDEN·OPTIONAL·REQUIRED·READONLY 중 하나의 상태, 올바른 기본값을 쓰세요. 필수 업무 필드는 숨길 수 없습니다.</value></data>
+  <data name="BC-E-436" xml:space="preserve"><value>{0}은(는) 국가팩이 선언한 필드가 아니어서 저장할 수 없습니다.</value></data>
   <data name="quro.validation.required" xml:space="preserve"><value>필수 항목입니다. 값을 입력하세요.</value></data>
   <data name="quro.validation.min" xml:space="preserve"><value>최솟값 이상의 값을 입력하세요.</value></data>
   <data name="quro.validation.max" xml:space="preserve"><value>최댓값 이하의 값을 입력하세요.</value></data>
@@ -526,4 +529,20 @@
   <data name="Samples.FreeForm.Step.Invoice" xml:space="preserve"><value>공급자 송장</value></data>
   <data name="Samples.FreeForm.ShowNotice" xml:space="preserve"><value>안내 보기</value></data>
   <data name="Samples.FreeForm.Notice" xml:space="preserve"><value>F 화면은 메시지 한 줄을 보입니다.</value></data>
+  <data name="Sd.Customer.State" xml:space="preserve"><value>주</value></data>
+  <data name="Sd.Customer.ZipCode" xml:space="preserve"><value>우편번호</value></data>
+  <data name="Sd.Customer.ShipState" xml:space="preserve"><value>배송지 주</value></data>
+  <data name="Sd.Customer.Country" xml:space="preserve"><value>국가</value></data>
+  <data name="Sd.Customer.ShipCountry" xml:space="preserve"><value>배송지 국가</value></data>
+  <data name="Sd.Customer.BusinessRegNo" xml:space="preserve"><value>사업자등록번호</value></data>
+  <data name="Sd.Customer.CeoName" xml:space="preserve"><value>대표자</value></data>
+  <data name="Sd.Customer.BusinessType" xml:space="preserve"><value>업태</value></data>
+  <data name="Sd.Customer.BusinessItem" xml:space="preserve"><value>종목</value></data>
+  <data name="Sd.Customer.TaxExemptions" xml:space="preserve"><value>면세 증명서</value></data>
+  <data name="Mm.Vendor.State" xml:space="preserve"><value>주</value></data>
+  <data name="Mm.Vendor.ZipCode" xml:space="preserve"><value>우편번호</value></data>
+  <data name="Mm.Vendor.BusinessRegNo" xml:space="preserve"><value>사업자등록번호</value></data>
+  <data name="Mm.Vendor.CeoName" xml:space="preserve"><value>대표자</value></data>
+  <data name="Mm.Vendor.BusinessType" xml:space="preserve"><value>업태</value></data>
+  <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>종목</value></data>
 </root>

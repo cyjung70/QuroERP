@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Application.Bc.BusinessPlaces;
 using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
+using QuroErp.Application.Bc.FieldPolicies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Common;
 using QuroErp.Application.Bc.PurchasePrices;
@@ -38,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<CompanyLogoService>();
         services.AddScoped<CompanyService>();
         services.AddScoped<BusinessPlaceService>();
+        services.AddScoped<FieldPolicyService>();
         services.AddScoped<AuthSettingService>();
         services.AddScoped<LocalizationService>();
         services.AddScoped<LocalizationSettingService>();
