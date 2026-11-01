@@ -37,8 +37,8 @@ jobs:
       IMAGE_PREFIX: quroerp-dev
       RELEASE_SHA: ${{ github.sha }}
       IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      # Publish development HTTP on port 8080; port 80 is used by nginx.
-      HTTP_PORT: ${{ vars.DEV_HTTP_PORT || '8080' }}
+      # Publish host port 804 to Web container port 80.
+      HTTP_PORT: ${{ vars.DEV_HTTP_PORT || '804' }}
     steps:
       - uses: actions/checkout@v4
         with:

@@ -36,10 +36,10 @@ ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "QuroErp.Api.dll"]
 
-# 개발 Web은 Compose에서 DevelopmentHttp 환경과 HTTP 8080을 지정합니다.
+# Development Compose configures DevelopmentHttp and HTTP port 80.
 FROM web-runtime AS web
 COPY --from=publish /out/web .
-EXPOSE 8080
+EXPOSE 80
 ENTRYPOINT ["dotnet", "QuroErp.Web.dll"]
 
 # 마이그레이션은 일회성 콘솔이며 ASP.NET 런타임이 필요하지 않습니다.

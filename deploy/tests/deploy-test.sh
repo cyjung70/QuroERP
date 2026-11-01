@@ -18,7 +18,7 @@ export PATH="$test_root/bin:$PATH"
 unset DEPLOY_URL
 export DB_CONNECTION='test-db;Password=test-$-value'
 export EXPECTED_DB_CONNECTION="$DB_CONNECTION"
-export HTTP_PORT=8080
+export HTTP_PORT=804
 unset TLS_PASSWORD TLS_DIRECTORY WEB_HOST HTTPS_PORT
 
 cat > "$test_root/bin/docker" <<'MOCK'

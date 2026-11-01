@@ -36,10 +36,13 @@ services:
       QuroApi__BaseUrl: http://api:8080
       # HTTP 예외는 개발 전용 환경에서만 적용합니다. 일반 Production 기본값은 유지합니다.
       ASPNETCORE_ENVIRONMENT: DevelopmentHttp
-      Kestrel__Endpoints__Http__Url: http://+:8080
+      Kestrel__Endpoints__Http__Url: http://+:80
+    sysctls:
+      # Allow the non-root Web process to bind port 80 inside its network namespace.
+      net.ipv4.ip_unprivileged_port_start: "80"
     ports:
       # DB 포트와 별개인 개발 웹 접속 포트입니다.
-      - "${HTTP_PORT:-8080}:8080"
+      - "${HTTP_PORT:-804}:80"
     volumes:
       # 개발 Web의 Data Protection 키를 컨테이너 교체 후에도 보존합니다.
       - web-keys:/home/app/.aspnet/DataProtection-Keys
@@ -48,7 +51,7 @@ services:
         condition: service_healthy
     healthcheck:
       # 컨테이너 내부 HTTP 로그인 페이지를 확인합니다. 외부 DNS 검사는 아닙니다.
-      test: [CMD-SHELL, "test \"$$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://localhost:8080/bc/login)\" = 200"]
+      test: [CMD-SHELL, "test \"$$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://localhost:80/bc/login)\" = 200"]
       interval: 30s
       timeout: 15s
       start_period: 30s
