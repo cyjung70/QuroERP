@@ -14,4 +14,7 @@ public enum TranslationTarget
 
     /// <summary>bc_currency_translation.name</summary>
     CurrencyName,
+
+    /// <summary>bc_tax_code_translation.name</summary>
+    TaxCodeName,
 }

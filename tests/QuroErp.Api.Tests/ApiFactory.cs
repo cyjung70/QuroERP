@@ -16,6 +16,7 @@ using QuroErp.Contracts.Bc.BusinessPlaces;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Api.Tests.Bc.Localization;
+using QuroErp.Api.Tests.Bc.Tax;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Api.Tests.Bc.Codes;
 using QuroErp.Api.Tests.Bc.Menus;
@@ -30,6 +31,7 @@ using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
+using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Bc.BusinessPlaces;
@@ -122,6 +124,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public InMemoryExchangeRateRepository ExchangeRates { get; } = new();
 
+    public InMemoryTaxCodeRepository TaxCodes { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -159,7 +163,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IPasswordHistoryRepository>(PasswordHistory);
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
-            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors, Currencies));
+            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors, Currencies, TaxCodes));
             services.AddSingleton<ICompanyRepository>(Companies);
             services.AddSingleton<IBusinessPlaceRepository>(BusinessPlaces);
             services.AddSingleton<IFieldPolicyRepository>(FieldPolicies);
@@ -174,6 +178,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ICodeMajorRepository>(CodeMajors);
             services.AddSingleton<ICurrencyRepository>(Currencies);
             services.AddSingleton<IExchangeRateRepository>(ExchangeRates);
+            services.AddSingleton<ITaxCodeRepository>(TaxCodes);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
@@ -389,7 +394,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     }
 
     private sealed class FakeTranslationRepository(
-        InMemoryCodeMinorRepository codeMinors, InMemoryCodeMajorRepository codeMajors, InMemoryCurrencyRepository currencies) : ITranslationRepository
+        InMemoryCodeMinorRepository codeMinors, InMemoryCodeMajorRepository codeMajors, InMemoryCurrencyRepository currencies,
+        InMemoryTaxCodeRepository taxCodes) : ITranslationRepository
     {
         private static readonly List<TranslationRow> Rows =
         [
@@ -403,6 +409,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 .Concat(target == TranslationTarget.CodeMinor ? codeMinors.NamesOf(ownerIds) : [])
                 .Concat(target == TranslationTarget.CodeMajor ? codeMajors.NamesOf(ownerIds) : [])
                 .Concat(target == TranslationTarget.CurrencyName ? currencies.NamesOf(ownerIds) : [])
+                .Concat(target == TranslationTarget.TaxCodeName ? taxCodes.NamesOf(ownerIds) : [])
                 .ToList());
     }
 
