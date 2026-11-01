@@ -2,6 +2,8 @@ using System.Globalization;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using QuroErp.Web.Components.Pages.Samples;
 using QuroErp.Web.Components.Screens;
 
@@ -115,12 +117,20 @@ public class SampleScreenTests : ScreenContext
 
     // M
 
+    // The sample M grid is the QuroGrid package over its .toon definition (TASK-CORE-055)
+    private static DataGridPage<SampleItem> Loaded(IRenderedComponent<SampleMulti> page)
+    {
+        var grid = page.DataGrid<SampleItem, SampleMulti>("multi-grid");
+        page.WaitForAssertion(() => grid.Rows.Should().HaveCount(2));
+        return grid;
+    }
+
     [Fact]
     public void Multi_LoadsRows_WithToolbarInFixedOrder()
     {
         var page = Render<SampleMulti>();
 
-        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        Loaded(page).Column("code").Should().Equal("A100", "B200");
         page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
             .Should().Equal("multi-toolbar-search", "multi-toolbar-new", "multi-toolbar-save", "multi-toolbar-export");
     }
@@ -134,50 +144,51 @@ public class SampleScreenTests : ScreenContext
 
         var page = Render<SampleMulti>();
 
-        page.WaitForAssertion(() => page.FindAll("td").Select(c => c.TextContent.Trim()).Should().Contain(shown));
+        Loaded(page).Text(0, "validFrom").Should().Be(shown);
     }
 
     [Fact]
     public void Multi_RowStates_AreShownAsIUD()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        var grid = Loaded(page);
 
-        page.FindAll("[data-testid=multi-grid-name]")[0].Change("Apricot");
-        page.FindAll("[data-testid=multi-grid-delete-row]")[1].Click();
+        grid.Edit(0, "name", "Apricot").Should().BeTrue();
+        grid.Click(1, "deleteRow");
         page.Find("[data-testid=multi-toolbar-new]").Click();
 
-        page.FindAll("[data-state]").Select(s => s.GetAttribute("data-state")).Should().Equal("U", "D", "I");
+        grid.Column("rowState").Should().Equal(State("Modified"), State("Deleted"), State("Added"));
     }
 
     [Fact]
     public void Multi_Save_SendsBatch_AndReloads()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
-        page.FindAll("[data-testid=multi-grid-name]")[0].Change("Apricot");
-        page.FindAll("[data-testid=multi-grid-delete-row]")[1].Click();
+        var grid = Loaded(page);
+        grid.Edit(0, "name", "Apricot");
+        grid.Click(1, "deleteRow");
         page.Find("[data-testid=multi-toolbar-new]").Click();
-        page.FindAll("[data-testid=multi-grid-code]")[2].Change("c300");
-        page.FindAll("[data-testid=multi-grid-name]")[2].Change("Cherry");
+        grid.Edit(2, "code", "c300").Should().BeTrue();
+        grid.Edit(2, "name", "Cherry");
 
         page.Find("[data-testid=multi-toolbar-save]").Click();
 
         Store.Items().Select(i => (i.Code, i.Name)).Should().Equal(("A100", "Apricot"), ("C300", "Cherry"));
-        page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2);
-        page.FindAll("[data-state]").Should().BeEmpty();
+        grid.Rows.Should().HaveCount(2);
+        grid.Column("rowState").Should().OnlyContain(s => s.Length == 0);
     }
 
     [Fact]
     public void Multi_SaveWithEmptyRequiredCell_ShowsRequiredMessage()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        var grid = Loaded(page);
         page.Find("[data-testid=multi-toolbar-new]").Click();
+        grid.Edit(2, "qty", "5");
 
         page.Find("[data-testid=multi-toolbar-save]").Click();
 
-        page.Find("[data-testid=multi-message]").TextContent.Should().Contain("을(를) 입력하세요.");
+        page.Find("[data-testid=multi-message]").TextContent.Should().Contain("코드을(를) 입력하세요.");
         Store.Items().Should().HaveCount(2);
     }
 
@@ -185,7 +196,7 @@ public class SampleScreenTests : ScreenContext
     public void Multi_SaveWithoutChanges_SaysNoChanges()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        Loaded(page);
 
         page.Find("[data-testid=multi-toolbar-save]").Click();
 
@@ -196,15 +207,17 @@ public class SampleScreenTests : ScreenContext
     public void Multi_SearchWithUnsavedChanges_Asks()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
-        page.FindAll("[data-testid=multi-grid-name]")[0].Change("Apricot");
+        var grid = Loaded(page);
+        grid.Edit(0, "name", "Apricot");
         Confirm.Answer = false;
 
         page.Find("[data-testid=multi-toolbar-search]").Click();
 
         Confirm.Questions.Should().Equal(Unsaved);
-        page.Find("[data-state=U]").Should().NotBeNull();
+        grid.Text(0, "rowState").Should().Be(State("Modified"));
     }
+
+    private string State(string state) => Services.GetRequiredService<IStringLocalizer<SharedResource>>()[$"Common.RowState.{state}"];
 
     // SM (entry frame: the toolbar search opens the document search dialog)
 
@@ -385,17 +398,19 @@ public class SampleScreenTests : ScreenContext
     public void Multi_WithoutCanWrite_DisablesNewSaveAndRows_SearchStillWorks()
     {
         var page = Render<SampleMulti>(p => p.Add(x => x.CanWrite, false));
-        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        var grid = Loaded(page);
 
         page.Find("[data-testid=multi-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=multi-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
-        page.FindAll("[data-testid=multi-grid-delete-row]").Should().OnlyContain(b => b.HasAttribute("disabled"));
-        page.FindAll("[data-testid=multi-grid-name]").Should().OnlyContain(c => c.HasAttribute("readonly"));
+        grid.IsReadOnly(0, "name").Should().BeTrue();
+        grid.Edit(0, "name", "Apricot").Should().BeFalse();
+        grid.Click(1, "deleteRow");
         page.Find("[data-testid=multi-toolbar-new]").Click();
-        page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2);
+        grid.Column("name").Should().Equal("Apple", "Banana");
+        grid.Column("rowState").Should().OnlyContain(s => s.Length == 0);
 
         page.Find("[data-testid=multi-toolbar-search]").Click();
-        page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2);
+        grid.Rows.Should().HaveCount(2);
     }
 
     [Fact, Trait("Id", "CORE-051-WT-07")]
