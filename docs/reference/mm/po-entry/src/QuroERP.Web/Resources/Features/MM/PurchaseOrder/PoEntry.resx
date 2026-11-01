@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Crumb" xml:space="preserve"><value>MM › Purchasing</value></data>
+  <data name="Title" xml:space="preserve"><value>Purchase Order</value></data>
+  <data name="Status.Draft" xml:space="preserve"><value>Draft</value></data>
+  <data name="Status.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Status.PartiallyReceived" xml:space="preserve"><value>Partially Received</value></data>
+  <data name="Status.Received" xml:space="preserve"><value>Received</value></data>
+  <data name="Status.Closed" xml:space="preserve"><value>Closed</value></data>
+  <data name="Status.Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Cmd.Query" xml:space="preserve"><value>Query</value></data>
+  <data name="Cmd.New" xml:space="preserve"><value>New</value></data>
+  <data name="Cmd.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Cmd.AddRow" xml:space="preserve"><value>Add Row</value></data>
+  <data name="Cmd.MarkDelete" xml:space="preserve"><value>Mark Delete</value></data>
+  <data name="Cmd.UndoRow" xml:space="preserve"><value>Undo Row</value></data>
+  <data name="Cmd.Approve" xml:space="preserve"><value>Approve</value></data>
+  <data name="Cmd.Close" xml:space="preserve"><value>Close PO</value></data>
+  <data name="Cmd.Cancel" xml:space="preserve"><value>Cancel PO</value></data>
+  <data name="Cmd.Delete" xml:space="preserve"><value>Delete PO</value></data>
+  <data name="PoNo" xml:space="preserve"><value>PO No</value></data>
+  <data name="AutoNumber" xml:space="preserve"><value>(assigned on save)</value></data>
+  <data name="PoDate" xml:space="preserve"><value>PO Date</value></data>
+  <data name="Vendor" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="ExchangeRate" xml:space="preserve"><value>Exchange Rate</value></data>
+  <data name="DueDate" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Warehouse" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="PaymentTerms" xml:space="preserve"><value>Payment Terms</value></data>
+  <data name="Incoterms" xml:space="preserve"><value>Incoterms</value></data>
+  <data name="TaxCode" xml:space="preserve"><value>Tax Code</value></data>
+  <data name="Buyer" xml:space="preserve"><value>Buyer</value></data>
+  <data name="VendorMessage" xml:space="preserve"><value>Vendor Message</value></data>
+  <data name="Totals" xml:space="preserve"><value>Totals</value></data>
+  <data name="Subtotal" xml:space="preserve"><value>Subtotal</value></data>
+  <data name="Discount" xml:space="preserve"><value>Discount</value></data>
+  <data name="NetAmount" xml:space="preserve"><value>Net Amount</value></data>
+  <data name="Tax" xml:space="preserve"><value>Tax</value></data>
+  <data name="Total" xml:space="preserve"><value>Total</value></data>
+  <data name="TotalLocal" xml:space="preserve"><value>Total (local)</value></data>
+  <data name="Lines" xml:space="preserve"><value>Lines</value></data>
+  <data name="LinesHint" xml:space="preserve"><value>Yellow cells are editable. F2 opens item search.</value></data>
+  <data name="ItemCode" xml:space="preserve"><value>Item Code</value></data>
+  <data name="ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="ItemClass" xml:space="preserve"><value>Class</value></data>
+  <data name="Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="UnitPrice" xml:space="preserve"><value>Unit Price</value></data>
+  <data name="DiscountRate" xml:space="preserve"><value>Disc %</value></data>
+  <data name="Received" xml:space="preserve"><value>Received</value></data>
+  <data name="LastPrice" xml:space="preserve"><value>Last Price</value></data>
+  <data name="OnHand" xml:space="preserve"><value>On Hand</value></data>
+  <data name="Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Changed" xml:space="preserve"><value>Changed</value></data>
+  <data name="ItemSearch" xml:space="preserve"><value>Item Search</value></data>
+  <data name="VendorSearch" xml:space="preserve"><value>Vendor Search</value></data>
+  <data name="Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Select" xml:space="preserve"><value>Select</value></data>
+  <data name="Search.Hint" xml:space="preserve"><value>{0} items · ↑↓ to move, Enter or double-click to select</value></data>
+  <data name="Confirm.Title" xml:space="preserve"><value>Please confirm</value></data>
+  <data name="Confirm.Discard" xml:space="preserve"><value>You have unsaved changes. Discard them?</value></data>
+  <data name="Confirm.Discard.Yes" xml:space="preserve"><value>Discard</value></data>
+  <data name="Confirm.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Confirm.Delete" xml:space="preserve"><value>Delete PO {0}? This cannot be undone.</value></data>
+  <data name="ConfirmStatus.Approve" xml:space="preserve"><value>Approve PO {0}?</value></data>
+  <data name="ConfirmStatus.Close" xml:space="preserve"><value>Close PO {0}? No further receipts will be possible.</value></data>
+  <data name="ConfirmStatus.Cancel" xml:space="preserve"><value>Cancel PO {0}? It cannot be received or edited afterwards.</value></data>
+  <data name="Msg.Saved" xml:space="preserve"><value>PO {0} saved.</value></data>
+  <data name="Msg.Deleted" xml:space="preserve"><value>PO {0} deleted.</value></data>
+  <data name="Msg.Approve.Done" xml:space="preserve"><value>PO {0} approved.</value></data>
+  <data name="Msg.Close.Done" xml:space="preserve"><value>PO {0} closed.</value></data>
+  <data name="Msg.Cancel.Done" xml:space="preserve"><value>PO {0} cancelled.</value></data>
+  <data name="Msg.NotFound" xml:space="preserve"><value>PO {0} was not found.</value></data>
+  <data name="Msg.Finished" xml:space="preserve"><value>This PO is finished. Only Query, New and PDF are available.</value></data>
+  <data name="Msg.ReceivedLocked" xml:space="preserve"><value>Goods have been received for this PO. It can no longer be edited or deleted.</value></data>
+  <data name="Msg.Conflict" xml:space="preserve"><value>Someone else changed this PO. Query it again and redo your change.</value></data>
+  <data name="Msg.RuleViolation" xml:space="preserve"><value>Not saved: {0}</value></data>
+  <data name="Val.VendorRequired" xml:space="preserve"><value>Select a vendor.</value></data>
+  <data name="Val.DueDateRequired" xml:space="preserve"><value>Enter a due date.</value></data>
+  <data name="Val.DueDateBeforePoDate" xml:space="preserve"><value>Due date must be on or after the PO date.</value></data>
+  <data name="Val.NoLines" xml:space="preserve"><value>Add at least one line.</value></data>
+  <data name="Val.ItemRequired" xml:space="preserve"><value>Line {0}: enter an item code.</value></data>
+  <data name="Val.QtyPositive" xml:space="preserve"><value>Line {0}: quantity must be greater than 0.</value></data>
+  <data name="Val.PriceNotNegative" xml:space="preserve"><value>Line {0}: unit price cannot be negative.</value></data>
+  <data name="Val.DiscountRange" xml:space="preserve"><value>Line {0}: discount must be between 0 and 100%.</value></data>
+</root>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Crumb" xml:space="preserve"><value>MM › 구매</value></data>
+  <data name="Title" xml:space="preserve"><value>구매오더</value></data>
+  <data name="Status.Draft" xml:space="preserve"><value>작성중</value></data>
+  <data name="Status.Approved" xml:space="preserve"><value>승인</value></data>
+  <data name="Status.PartiallyReceived" xml:space="preserve"><value>부분입고</value></data>
+  <data name="Status.Received" xml:space="preserve"><value>입고완료</value></data>
+  <data name="Status.Closed" xml:space="preserve"><value>마감</value></data>
+  <data name="Status.Cancelled" xml:space="preserve"><value>취소</value></data>
+  <data name="Cmd.Query" xml:space="preserve"><value>조회</value></data>
+  <data name="Cmd.New" xml:space="preserve"><value>신규</value></data>
+  <data name="Cmd.Save" xml:space="preserve"><value>저장</value></data>
+  <data name="Cmd.AddRow" xml:space="preserve"><value>행 추가</value></data>
+  <data name="Cmd.MarkDelete" xml:space="preserve"><value>삭제 표시</value></data>
+  <data name="Cmd.UndoRow" xml:space="preserve"><value>행 복원</value></data>
+  <data name="Cmd.Approve" xml:space="preserve"><value>승인</value></data>
+  <data name="Cmd.Close" xml:space="preserve"><value>구매오더 마감</value></data>
+  <data name="Cmd.Cancel" xml:space="preserve"><value>구매오더 취소</value></data>
+  <data name="Cmd.Delete" xml:space="preserve"><value>구매오더 삭제</value></data>
+  <data name="PoNo" xml:space="preserve"><value>구매오더 번호</value></data>
+  <data name="AutoNumber" xml:space="preserve"><value>(저장 시 자동 채번)</value></data>
+  <data name="PoDate" xml:space="preserve"><value>발주일</value></data>
+  <data name="Vendor" xml:space="preserve"><value>공급업체</value></data>
+  <data name="Currency" xml:space="preserve"><value>통화</value></data>
+  <data name="ExchangeRate" xml:space="preserve"><value>환율</value></data>
+  <data name="DueDate" xml:space="preserve"><value>납기일</value></data>
+  <data name="Warehouse" xml:space="preserve"><value>창고</value></data>
+  <data name="PaymentTerms" xml:space="preserve"><value>결제조건</value></data>
+  <data name="Incoterms" xml:space="preserve"><value>인코텀즈</value></data>
+  <data name="TaxCode" xml:space="preserve"><value>세금코드</value></data>
+  <data name="Buyer" xml:space="preserve"><value>구매담당</value></data>
+  <data name="VendorMessage" xml:space="preserve"><value>공급업체 메시지</value></data>
+  <data name="Totals" xml:space="preserve"><value>합계</value></data>
+  <data name="Subtotal" xml:space="preserve"><value>공급가 합계</value></data>
+  <data name="Discount" xml:space="preserve"><value>할인</value></data>
+  <data name="NetAmount" xml:space="preserve"><value>금액</value></data>
+  <data name="Tax" xml:space="preserve"><value>세액</value></data>
+  <data name="Total" xml:space="preserve"><value>총액</value></data>
+  <data name="TotalLocal" xml:space="preserve"><value>총액 (원화)</value></data>
+  <data name="Lines" xml:space="preserve"><value>품목</value></data>
+  <data name="LinesHint" xml:space="preserve"><value>노란 칸은 입력할 수 있습니다. F2로 품목 검색을 엽니다.</value></data>
+  <data name="ItemCode" xml:space="preserve"><value>품목코드</value></data>
+  <data name="ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="ItemClass" xml:space="preserve"><value>분류</value></data>
+  <data name="Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="UnitPrice" xml:space="preserve"><value>단가</value></data>
+  <data name="DiscountRate" xml:space="preserve"><value>할인율 %</value></data>
+  <data name="Received" xml:space="preserve"><value>입고수량</value></data>
+  <data name="LastPrice" xml:space="preserve"><value>최근 단가</value></data>
+  <data name="OnHand" xml:space="preserve"><value>현재고</value></data>
+  <data name="Created" xml:space="preserve"><value>등록</value></data>
+  <data name="Changed" xml:space="preserve"><value>수정</value></data>
+  <data name="ItemSearch" xml:space="preserve"><value>품목 검색</value></data>
+  <data name="VendorSearch" xml:space="preserve"><value>공급업체 검색</value></data>
+  <data name="Reset" xml:space="preserve"><value>초기화</value></data>
+  <data name="Search" xml:space="preserve"><value>검색</value></data>
+  <data name="Select" xml:space="preserve"><value>선택</value></data>
+  <data name="Search.Hint" xml:space="preserve"><value>{0}건 · ↑↓ 이동, Enter 또는 더블클릭으로 선택</value></data>
+  <data name="Confirm.Title" xml:space="preserve"><value>확인</value></data>
+  <data name="Confirm.Discard" xml:space="preserve"><value>저장하지 않은 변경 내용이 있습니다. 버리시겠습니까?</value></data>
+  <data name="Confirm.Discard.Yes" xml:space="preserve"><value>버리기</value></data>
+  <data name="Confirm.Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Confirm.Delete" xml:space="preserve"><value>구매오더 {0}을(를) 삭제할까요? 되돌릴 수 없습니다.</value></data>
+  <data name="ConfirmStatus.Approve" xml:space="preserve"><value>구매오더 {0}을(를) 승인할까요?</value></data>
+  <data name="ConfirmStatus.Close" xml:space="preserve"><value>구매오더 {0}을(를) 마감할까요? 이후 입고할 수 없습니다.</value></data>
+  <data name="ConfirmStatus.Cancel" xml:space="preserve"><value>구매오더 {0}을(를) 취소할까요? 이후 입고나 수정을 할 수 없습니다.</value></data>
+  <data name="Msg.Saved" xml:space="preserve"><value>구매오더 {0}이(가) 저장되었습니다.</value></data>
+  <data name="Msg.Deleted" xml:space="preserve"><value>구매오더 {0}이(가) 삭제되었습니다.</value></data>
+  <data name="Msg.Approve.Done" xml:space="preserve"><value>구매오더 {0}이(가) 승인되었습니다.</value></data>
+  <data name="Msg.Close.Done" xml:space="preserve"><value>구매오더 {0}이(가) 마감되었습니다.</value></data>
+  <data name="Msg.Cancel.Done" xml:space="preserve"><value>구매오더 {0}이(가) 취소되었습니다.</value></data>
+  <data name="Msg.NotFound" xml:space="preserve"><value>구매오더 {0}을(를) 찾을 수 없습니다.</value></data>
+  <data name="Msg.Finished" xml:space="preserve"><value>종료된 구매오더입니다. 조회, 신규, PDF만 사용할 수 있습니다.</value></data>
+  <data name="Msg.ReceivedLocked" xml:space="preserve"><value>입고된 수량이 있어 이 구매오더는 수정하거나 삭제할 수 없습니다.</value></data>
+  <data name="Msg.Conflict" xml:space="preserve"><value>다른 사용자가 이 구매오더를 변경했습니다. 다시 조회한 뒤 변경해 주세요.</value></data>
+  <data name="Msg.RuleViolation" xml:space="preserve"><value>저장되지 않았습니다: {0}</value></data>
+  <data name="Val.VendorRequired" xml:space="preserve"><value>공급업체를 선택하세요.</value></data>
+  <data name="Val.DueDateRequired" xml:space="preserve"><value>납기일을 입력하세요.</value></data>
+  <data name="Val.DueDateBeforePoDate" xml:space="preserve"><value>납기일은 발주일 이후여야 합니다.</value></data>
+  <data name="Val.NoLines" xml:space="preserve"><value>품목을 한 줄 이상 입력하세요.</value></data>
+  <data name="Val.ItemRequired" xml:space="preserve"><value>{0}행: 품목코드를 입력하세요.</value></data>
+  <data name="Val.QtyPositive" xml:space="preserve"><value>{0}행: 수량은 0보다 커야 합니다.</value></data>
+  <data name="Val.PriceNotNegative" xml:space="preserve"><value>{0}행: 단가는 음수일 수 없습니다.</value></data>
+  <data name="Val.DiscountRange" xml:space="preserve"><value>{0}행: 할인율은 0~100% 사이여야 합니다.</value></data>
+</root>

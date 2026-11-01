@@ -1,0 +1,67 @@
+/* QuroERP entry-screen frame — tokens mirror the QuroERP design system (tokens.json). */
+:root {
+  --q-surface-0:#f3f5f8; --q-surface-1:#ffffff; --q-surface-2:#eceff4; --q-surface-header:#e6eaf0;
+  --q-line:#d3d9e2; --q-ink:#18202b; --q-ink-muted:#566174;
+  --q-brand:#1d4e89; --q-brand-strong:#14396a; --q-brand-tint:#e2ebf7; --q-on-brand:#ffffff;
+  --q-field-editable:#fff8dc; --q-field-required:#b07800;
+  --q-ok:#1c6e46; --q-ok-tint:#e2f3ea; --q-warn:#9a5200; --q-warn-tint:#fcefdc;
+  --q-danger:#b42318; --q-danger-tint:#fbe5e3; --q-neutral-tint:#eceff4;
+  --q-font-sans:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --q-font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --q-control-h:32px; --q-row-h:32px;
+}
+.mud-theme-dark, [data-theme="dark"] {
+  --q-surface-0:#11151b; --q-surface-1:#1a2029; --q-surface-2:#232a35; --q-surface-header:#262e3a;
+  --q-line:#343d4b; --q-ink:#e8edf4; --q-ink-muted:#9ba7b9;
+  --q-brand:#78aaea; --q-brand-strong:#a5c7f3; --q-brand-tint:#1b2c44; --q-on-brand:#0f1620;
+  --q-field-editable:#2d2a19; --q-field-required:#d8a838;
+  --q-ok:#58c793; --q-ok-tint:#173024; --q-warn:#eba65a; --q-warn-tint:#33261a;
+  --q-danger:#f2766b; --q-danger-tint:#3a1c1b; --q-neutral-tint:#2a313c;
+}
+
+.qe { min-width:1280px; padding:0 24px 24px; display:flex; flex-direction:column; gap:16px; background:var(--q-surface-0); color:var(--q-ink); font-family:var(--q-font-sans); }
+.qe h1 { margin:0; font:600 20px/28px var(--q-font-sans); }
+.qe h2 { margin:0; font:600 14px/20px var(--q-font-sans); }
+.qe-title { padding-top:14px; }
+.qe-crumb { font:500 12px/16px var(--q-font-sans); color:var(--q-ink-muted); }
+.qe-title-row { display:flex; align-items:center; gap:12px; }
+.qe-docno { font:600 15px/28px var(--q-font-mono); }
+.qe-commands { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 16px; background:var(--q-surface-1); border:1px solid var(--q-line); border-radius:10px; }
+.qe-commands .mud-button-root { height:var(--q-control-h); text-transform:none; }
+.qe-sep { width:1px; align-self:stretch; background:var(--q-line); margin:2px 4px; }
+.qe-panel { background:var(--q-surface-1); border:1px solid var(--q-line); border-radius:10px; padding:16px; }
+.qe-top { display:flex; gap:16px; align-items:stretch; }
+.qe-header { flex:1 1 0; min-width:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px 16px; }
+.qe-span2 { grid-column:span 2; } .qe-span4 { grid-column:span 4; }
+.qe-totals { flex:0 0 320px; display:flex; flex-direction:column; gap:8px; }
+.qe-tr { display:flex; justify-content:space-between; font:13px/20px var(--q-font-sans); color:var(--q-ink-muted); }
+.qe-tr b, .qe-total b { font-family:var(--q-font-mono); color:var(--q-ink); font-variant-numeric:tabular-nums; }
+.qe-tr b { font-weight:400; } .qe-minus b { color:var(--q-danger); }
+.qe-total { display:flex; justify-content:space-between; align-items:baseline; }
+.qe-total b { font-size:22px; line-height:28px; font-weight:600; }
+.qe-total small { font-size:12px; color:var(--q-ink-muted); margin-left:6px; }
+.qe-lines-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.qe-lines-head span, .qe-caption { font:400 12px/16px var(--q-font-sans); color:var(--q-ink-muted); }
+.qe-audit { display:flex; gap:24px; font:400 11px/16px var(--q-font-sans); color:var(--q-ink-muted); }
+.qe-search-cond { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; align-items:end; margin-bottom:12px; }
+.qe-search-actions { grid-column:span 4; display:flex; justify-content:flex-end; gap:8px; }
+
+/* Field rule: editable = yellow, read-only = gray, required = amber marker */
+.qf.qf-editable .mud-input-outlined, .qf.qf-editable .mud-input { background:var(--q-field-editable); }
+.qf.qf-required .mud-input-outlined { box-shadow:inset 3px 0 0 var(--q-field-required); }
+.qf.qf-readonly .mud-input, .qf .mud-input.mud-input-readonly, .qe-locked .qf .mud-input { background:var(--q-surface-2); box-shadow:none; }
+.qf-mono input, td.qf-mono { font-family:var(--q-font-mono); }
+.qf-num input, td.qf-num { text-align:right; font-family:var(--q-font-mono); font-variant-numeric:tabular-nums; }
+.qf-neg { color:var(--q-danger); }
+
+/* Status chips */
+.qs { font-weight:600; }
+.qs-draft, .qs-closed { background:var(--q-neutral-tint)!important; color:var(--q-ink-muted)!important; }
+.qs-approved { background:var(--q-brand-tint)!important; color:var(--q-brand)!important; }
+.qs-partiallyreceived { background:var(--q-warn-tint)!important; color:var(--q-warn)!important; }
+.qs-received { background:var(--q-ok-tint)!important; color:var(--q-ok)!important; }
+.qs-cancelled { background:var(--q-danger-tint)!important; color:var(--q-danger)!important; }
+
+/* QuroGrid row states */
+.qg-row-sel td { background:var(--q-brand-tint)!important; }
+.qg-row-del td { background:var(--q-danger-tint)!important; color:var(--q-danger); text-decoration:line-through; }

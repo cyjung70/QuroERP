@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using QuroErp.Contracts.Common.Auth;
@@ -30,6 +31,22 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
             .And.Contain("autocomplete=\"current-password\"").And.Contain("aria-label=\"비밀번호 보기\"")
             .And.Contain("관리자에게 문의하세요").And.Contain("LGPL-3.0")
             .And.NotContain("지우기");
+    }
+
+    [Fact, Trait("Id", "CORE-036-WT-01")]
+    public async Task Page_IsSplit_BrandPanelWithoutInputsBeforeTheFormPanel()
+    {
+        factory.LoginOptions = new LoginOptionsResponse(true, "ADMIN_ONLY", 30);
+
+        var html = WebUtility.HtmlDecode(await factory.CreateClient().GetStringAsync(WebAuthentication.LoginPath));
+
+        var brand = Regex.Match(html, "<aside class=\"login-brand\"[^>]*data-testid=\"login-brand\"[^>]*>(.*?)</aside>", RegexOptions.Singleline);
+        brand.Success.Should().BeTrue();
+        brand.Groups[1].Value.Should().Contain(">QuroERP<").And.Contain("구매·판매·재고를 한 곳에서")
+            .And.NotContainAny("<input", "<select", "<button", "<form");
+        var panel = html.IndexOf("class=\"login-panel\"", StringComparison.Ordinal);
+        panel.Should().BeGreaterThan(brand.Index);
+        TabOrder.Should().OnlyContain(id => html.IndexOf($"data-testid=\"{id}\"", StringComparison.Ordinal) > panel);
     }
 
     [Fact, Trait("Id", "BC-UC-001-T13")]

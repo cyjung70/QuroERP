@@ -1,0 +1,122 @@
+@page "/mm/purchase-orders/entry"
+@page "/mm/purchase-orders/entry/{PoNo}"
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<PoEntry> L
+
+@* QuroERP standard entry-screen frame: Title bar → Command bar → Header + Totals → Lines (QuroGrid) → Audit *@
+<div class="qe @(PoStatusRules.IsEditable(Doc) ? "" : "qe-locked")">
+
+    @* 1. Title bar *@
+    <div class="qe-title">
+        <div>
+            <div class="qe-crumb">@L["Crumb"]</div>
+            <div class="qe-title-row">
+                <h1>@L["Title"]</h1>
+                @if (Doc.Header.PoNo is not null)
+                {
+                    <span class="qe-docno">@Doc.Header.PoNo</span>
+                }
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Class="@($"qs qs-{Doc.Header.Status.ToString().ToLowerInvariant()}")">
+                    @L[$"Status.{Doc.Header.Status}"]
+                </MudChip>
+            </div>
+        </div>
+    </div>
+
+    @* 2. Command bar — disabled, never hidden, when status forbids *@
+    <div class="qe-commands">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Search" OnClick="OpenQueryAsync">@L["Cmd.Query"]</MudButton>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Add" OnClick="NewAsync">@L["Cmd.New"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Check" Disabled="@(!PoStatusRules.CanSave(Doc) || Busy)" OnClick="SaveAsync">@L["Cmd.Save"]</MudButton>
+        <span class="qe-sep"></span>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.PlaylistAdd" Disabled="@(!PoStatusRules.CanEditRows(Doc))" OnClick="AddRow">@L["Cmd.AddRow"]</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.PlaylistRemove" Disabled="@(!PoStatusRules.CanEditRows(Doc) || SelectedLine is null)" OnClick="ToggleMarkDelete">@L["Cmd.MarkDelete"]</MudButton>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Undo" Disabled="@(!PoStatusRules.CanEditRows(Doc) || SelectedLine is null)" OnClick="UndoRow">@L["Cmd.UndoRow"]</MudButton>
+        <span class="qe-sep"></span>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.VerifiedUser" Disabled="@(!PoStatusRules.CanApprove(Doc) || IsDirty)" OnClick="@(() => ChangeStatusAsync(PoStatusCommand.Approve))">@L["Cmd.Approve"]</MudButton>
+        <MudButton Variant="Variant.Outlined" Disabled="@(!PoStatusRules.CanClose(Doc))" OnClick="@(() => ChangeStatusAsync(PoStatusCommand.Close))">@L["Cmd.Close"]</MudButton>
+        <MudButton Variant="Variant.Outlined" Disabled="@(!PoStatusRules.CanCancel(Doc))" OnClick="@(() => ChangeStatusAsync(PoStatusCommand.Cancel))">@L["Cmd.Cancel"]</MudButton>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete" Disabled="@(!PoStatusRules.CanDelete(Doc))" OnClick="DeleteAsync">@L["Cmd.Delete"]</MudButton>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.PictureAsPdf" Disabled="@(!PoStatusRules.CanPrint(Doc))" OnClick="DownloadPdfAsync">PDF</MudButton>
+    </div>
+
+    @if (LockMessage is not null)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">@LockMessage</MudAlert>
+    }
+
+    @* 3. Header + Totals *@
+    <div class="qe-top">
+        <div class="qe-panel qe-header">
+            <MudTextField T="string" Label="@L["PoNo"]" Value="@(Doc.Header.PoNo ?? L["AutoNumber"])" ReadOnly="true" Class="qf qf-readonly qf-mono" />
+            <MudDatePicker Label="@L["PoDate"]" Date="@ToDateTime(Doc.Header.PoDate)" DateChanged="@(d => { Doc.Header.PoDate = DateOnly.FromDateTime(d!.Value); MarkDirty(); })"
+                           Required="true" ReadOnly="@ReadOnly" Class="qf qf-editable qf-required" />
+            <QuroLookupField Class="qe-span2" Label="@L["Vendor"]" Required="true" ReadOnly="@ReadOnly"
+                             Code="@Doc.Header.VendorCode" Name="@Doc.Header.VendorName"
+                             CodeChanged="OnVendorCodeChangedAsync" OnSearch="OpenVendorSearchAsync" />
+            <MudSelect T="string" Label="@L["Currency"]" Value="@Doc.Header.Currency" ValueChanged="OnCurrencyChangedAsync" Required="true" ReadOnly="@ReadOnly" Class="qf qf-editable qf-required">
+                @foreach (var c in Currencies) { <MudSelectItem Value="@c">@c</MudSelectItem> }
+            </MudSelect>
+            <MudNumericField T="decimal" Label="@L["ExchangeRate"]" Value="@Doc.Header.ExchangeRate" ValueChanged="@(v => { Doc.Header.ExchangeRate = v; Recalc(); })"
+                             Format="N4" HideSpinButtons="true" ReadOnly="@(ReadOnly || Doc.Header.Currency == LocalCurrency)" Class="qf qf-editable qf-num" />
+            <MudDatePicker Label="@L["DueDate"]" Date="@ToDateTime(Doc.Header.DueDate)" DateChanged="@(d => { Doc.Header.DueDate = d is null ? null : DateOnly.FromDateTime(d.Value); MarkDirty(); })"
+                           Required="true" ReadOnly="@ReadOnly" Class="qf qf-editable qf-required" />
+            <QuroLookupField Label="@L["Warehouse"]" ReadOnly="@ReadOnly" Code="@Doc.Header.WarehouseCode" Name="@Doc.Header.WarehouseName"
+                             CodeChanged="OnWarehouseCodeChangedAsync" OnSearch="OpenWarehouseSearchAsync" />
+            <MudTextField T="string" Label="@L["PaymentTerms"]" @bind-Value="Doc.Header.PaymentTerms" ReadOnly="@ReadOnly" Class="qf qf-editable" />
+            <MudTextField T="string" Label="@L["Incoterms"]" @bind-Value="Doc.Header.Incoterms" ReadOnly="@ReadOnly" Class="qf qf-editable" />
+            <MudTextField T="string" Label="@L["TaxCode"]" @bind-Value="Doc.Header.TaxCode" ReadOnly="@ReadOnly" Class="qf qf-editable" />
+            <MudTextField T="string" Label="@L["Buyer"]" @bind-Value="Doc.Header.Buyer" ReadOnly="@ReadOnly" Class="qf qf-editable" />
+            <MudTextField T="string" Label="@L["VendorMessage"]" @bind-Value="Doc.Header.VendorMessage" MaxLength="200" ReadOnly="@ReadOnly" Class="qf qf-editable qe-span4" />
+        </div>
+
+        <div class="qe-panel qe-totals">
+            <h2>@L["Totals"]</h2>
+            <div class="qe-tr">@L["Subtotal"]<b>@FmtAmt(Totals.Subtotal)</b></div>
+            <div class="qe-tr qe-minus">@L["Discount"]<b>−@FmtAmt(Totals.Discount)</b></div>
+            <div class="qe-tr">@L["NetAmount"]<b>@FmtAmt(Totals.Net)</b></div>
+            <div class="qe-tr">@L["Tax"]<b>@FmtAmt(Totals.Tax)</b></div>
+            <hr />
+            <div class="qe-total"><span>@L["Total"]</span><b>@FmtAmt(Totals.Total)<small>@Doc.Header.Currency</small></b></div>
+            @if (Doc.Header.Currency != LocalCurrency)
+            {
+                <div class="qe-tr">@L["TotalLocal"]<b>@Totals.TotalLocal.ToString("N0")</b></div>
+            }
+        </div>
+    </div>
+
+    @* 4. Lines — QuroGrid (API assumed; see README §QuroGrid contract) *@
+    <div class="qe-panel">
+        <div class="qe-lines-head">
+            <h2>@L["Lines"]</h2>
+            <span>@L["LinesHint"]</span>
+        </div>
+        <QuroGrid TItem="PoLine" Items="Doc.Lines" @bind-SelectedItem="SelectedLine"
+                  RowClass="RowClass" CellEditable="@((l, _) => PoStatusRules.IsLineEditable(Doc, l) && l.State != RowState.MarkedForDelete)"
+                  OnCellCommitted="OnCellCommittedAsync" OnLookup="OpenItemSearchAsync">
+            <QuroColumn TItem="PoLine" Kind="ColumnKind.Index" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.ItemCode)" Title="@L["ItemCode"]" Kind="ColumnKind.Lookup" Width="130" Mono="true" Required="true" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.ItemName)" Title="@L["ItemName"]" Kind="ColumnKind.Calculated" Width="220" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.Unit)" Title="@L["Unit"]" Kind="ColumnKind.Calculated" Width="60" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.WarehouseCode)" Title="@L["Warehouse"]" Kind="ColumnKind.Lookup" Width="100" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.Qty)" Title="@L["Qty"]" Kind="ColumnKind.Editable" Numeric="true" Decimals="@Precision.Qty" Required="true" Width="90" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.UnitPrice)" Title="@L["UnitPrice"]" Kind="ColumnKind.Editable" Numeric="true" Decimals="@Precision.Price" Width="120" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.DiscountRate)" Title="@L["DiscountRate"]" Kind="ColumnKind.Editable" Numeric="true" Decimals="2" Width="80" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.NetAmount)" Title="@L["NetAmount"]" Kind="ColumnKind.Calculated" Numeric="true" Decimals="@Precision.Amount" Width="120" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.TaxCode)" Title="@L["TaxCode"]" Kind="ColumnKind.Editable" Width="80" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.TaxAmount)" Title="@L["Tax"]" Kind="ColumnKind.Calculated" Numeric="true" Decimals="@Precision.Amount" Width="100" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.DueDate)" Title="@L["DueDate"]" Kind="ColumnKind.Editable" Date="true" Width="110" />
+            <QuroColumn TItem="PoLine" Field="@nameof(PoLine.ReceivedQty)" Title="@L["Received"]" Kind="ColumnKind.Calculated" Numeric="true" Decimals="@Precision.Qty" Width="90" />
+        </QuroGrid>
+    </div>
+
+    @* 5. Audit *@
+    @if (Doc.Header.CreatedAt is not null)
+    {
+        <div class="qe-audit">
+            <span>@L["Created"]: @Doc.Header.CreatedAt?.ToString("g") · @Doc.Header.CreatedBy</span>
+            <span>@L["Changed"]: @Doc.Header.ChangedAt?.ToString("g") · @Doc.Header.ChangedBy</span>
+        </div>
+    }
+</div>

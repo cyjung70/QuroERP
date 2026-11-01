@@ -1,0 +1,69 @@
+@using Microsoft.Extensions.Localization
+@inject IPurchaseOrderApi Api
+@inject IStringLocalizer<PoEntry> L
+
+<MudDialog>
+    <DialogContent>
+        <div class="qe-search-cond">
+            <MudTextField T="string" Label="@L["ItemCode"]" @bind-Value="Code" Class="qf qf-editable qf-mono" OnKeyUp="OnKeyUpAsync" Immediate="true" />
+            <MudTextField T="string" Label="@L["ItemName"]" @bind-Value="Name" Class="qf qf-editable qe-span2" OnKeyUp="OnKeyUpAsync" Immediate="true" />
+            <MudSelect T="string" Label="@L["ItemClass"]" @bind-Value="ItemClass" Clearable="true" Class="qf qf-editable">
+                @* TODO: item classes from master (AS IS b_minor B100) *@
+            </MudSelect>
+            <div class="qe-search-actions">
+                <MudButton Variant="Variant.Outlined" OnClick="Reset">@L["Reset"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync">@L["Search"]</MudButton>
+            </div>
+        </div>
+        <MudTable T="ItemLookup" Items="Results" Dense="true" Hover="true" FixedHeader="true" Height="320px"
+                  @bind-SelectedItem="Selected" OnRowClick="@(e => Selected = e.Item)" RowClassFunc="@((i, _) => i == Selected ? "qg-row-sel" : "")">
+            <HeaderContent>
+                <MudTh>@L["ItemCode"]</MudTh><MudTh>@L["ItemName"]</MudTh><MudTh>@L["ItemClass"]</MudTh><MudTh>@L["Unit"]</MudTh>
+                <MudTh Style="text-align:right">@L["LastPrice"]</MudTh><MudTh Style="text-align:right">@L["OnHand"]</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd Class="qf-mono" @ondblclick="() => Pick(context)">@context.Code</MudTd>
+                <MudTd @ondblclick="() => Pick(context)">@context.Name</MudTd>
+                <MudTd>@context.ItemClass</MudTd>
+                <MudTd>@context.Unit</MudTd>
+                <MudTd Class="qf-num">@context.LastPrice.ToString("N4")</MudTd>
+                @* On hand may be negative when minus stock is allowed (MM option) *@
+                <MudTd Class="@(context.OnHand < 0 ? "qf-num qf-neg" : "qf-num")">@context.OnHand.ToString("N2")</MudTd>
+            </RowTemplate>
+        </MudTable>
+        <div class="qe-caption">@L["Search.Hint", Results.Count]</div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => Dialog.Cancel())">@L["Confirm.Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(Selected is null)" OnClick="@(() => Pick(Selected!))">@L["Select"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance Dialog { get; set; } = default!;
+    [Parameter] public string? InitialCode { get; set; }
+
+    private string? Code, Name, ItemClass;
+    private List<ItemLookup> Results = new();
+    private ItemLookup? Selected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Code = InitialCode;
+        if (!string.IsNullOrWhiteSpace(Code)) await SearchAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        Results = (await Api.SearchItemsAsync(Code, Name, ItemClass)).ToList();
+        Selected = Results.FirstOrDefault();
+    }
+
+    private async Task OnKeyUpAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SearchAsync();
+    }
+
+    private void Reset() { Code = Name = ItemClass = null; Results.Clear(); Selected = null; }
+    private void Pick(ItemLookup item) => Dialog.Close(DialogResult.Ok(item));
+}

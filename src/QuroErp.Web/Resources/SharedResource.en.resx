@@ -9,6 +9,8 @@
   <data name="Bc.Login.Password" xml:space="preserve"><value>Password</value></data>
   <data name="Bc.Login.Submit" xml:space="preserve"><value>Sign in</value></data>
   <data name="Bc.Login.Copyright" xml:space="preserve"><value>© 2026 QuroSYS Co., Ltd. All Rights Reserved.</value></data>
+  <data name="Bc.Login.Product" xml:space="preserve"><value>QuroERP</value></data>
+  <data name="Bc.Login.Tagline" xml:space="preserve"><value>Purchasing, sales and inventory in one place</value></data>
   <data name="Common.Logout" xml:space="preserve"><value>Sign out</value></data>
   <data name="Common.Language" xml:space="preserve"><value>Language</value></data>
   <data name="Common.Language.ko" xml:space="preserve"><value>한국어</value></data>
