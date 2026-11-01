@@ -450,6 +450,8 @@
   <data name="SD-E-902" xml:space="preserve"><value>Major 코드 {0}의 값은 바꿀 수 없습니다.</value></data>
   <data name="SD-E-903" xml:space="preserve"><value>Major 코드 {0}에 Minor 코드가 있어 삭제할 수 없습니다. 먼저 Minor 코드를 지우거나 사용 안 함으로 바꾸세요.</value></data>
   <data name="SD-E-904" xml:space="preserve"><value>Major 코드 {0}은(는) 시스템이 쓰는 코드라 삭제하거나 사용 안 함으로 바꿀 수 없습니다.</value></data>
+  <data name="SD-E-906" xml:space="preserve"><value>{0} {1} 환율이 이미 있습니다. 일자·통화마다 환율은 하나입니다.</value></data>
+  <data name="SD-E-907" xml:space="preserve"><value>{0} {1} 환율을 저장할 수 없습니다. 일자가 있고, 통화는 사용 중이며 기준 통화가 아니고, 환율은 0보다 크고 소수 10자리 이하여야 합니다.</value></data>
   <data name="MM-E-816" xml:space="preserve"><value>시작 번호는 숫자여야 하고, 만들어지는 바코드는 {0}자리 이하여야 합니다.</value></data>
   <data name="MM-E-817" xml:space="preserve"><value>바코드가 다른 품목({0})과 겹칩니다. 아무것도 저장하지 않았습니다.</value></data>
   <data name="MM-E-821" xml:space="preserve"><value>10MB 이하의 JPEG 파일 1개를 고르세요. 품목이 있어야 합니다.</value></data>

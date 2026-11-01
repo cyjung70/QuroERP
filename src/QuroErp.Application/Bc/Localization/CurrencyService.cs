@@ -33,7 +33,7 @@ public sealed class CurrencyService(
     /// <exception cref="DomainException">422 BC-E-411, BC-E-428, BC-E-404, BC-E-405 or BC-E-312.</exception>
     /// <exception cref="ConflictException">
     /// 409 BC-E-411 or BC-E-428 when documents use a currency whose decimals or country change; 409 BC-E-416 when a deleted currency is
-    /// the base currency or documents or partners use it.
+    /// the base currency or documents, partners or exchange rates use it.
     /// </exception>
     /// <exception cref="ConcurrencyException">409 Common-E-004 when a row changed after it was read.</exception>
     public async Task<IReadOnlyList<CurrencyMasterDto>> SaveAsync(
@@ -105,6 +105,7 @@ public sealed class CurrencyService(
         {
             var used = (await currencies.FindUsedByDocumentsAsync(deletedCodes, uow.Transaction, cancellationToken))
                 .Union(await currencies.FindUsedByPartnersAsync(deletedCodes, uow.Transaction, cancellationToken))
+                .Union(await currencies.FindUsedByExchangeRatesAsync(deletedCodes, uow.Transaction, cancellationToken))
                 .ToHashSet(StringComparer.Ordinal);
             if (CurrencyRules.FirstUndeletable(deletedCodes, company?.BaseCurrencyCode, used) is { } undeletable)
             {

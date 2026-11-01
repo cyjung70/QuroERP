@@ -69,7 +69,6 @@ public static partial class CurrencyRules
     /// <summary>
     /// Document columns that store a currency code (BC-BR-412). A currency stored in any of them is used by documents: its decimals
     /// and country cannot change and it cannot be deleted. Add a column here when a document table gets currency_code.
-    /// bc_exchange_rate has no currency column yet; the task that adds one adds it to the delete check (BC-BR-416).
     /// </summary>
     public static readonly IReadOnlyList<CurrencyColumn> DocumentColumns =
     [
@@ -84,6 +83,9 @@ public static partial class CurrencyRules
 
     /// <summary>Partner trade currencies (BC-BR-415). A currency stored here cannot be deleted; its decimals and country may change.</summary>
     public static readonly IReadOnlyList<CurrencyColumn> PartnerColumns = [new("bc_customer", "currency_code"), new("bc_vendor", "currency_code")];
+
+    /// <summary>Exchange rates (SD-BR-907). A currency with a rate cannot be deleted (BC-BR-416); its decimals and country may change.</summary>
+    public static readonly IReadOnlyList<CurrencyColumn> ExchangeRateColumns = [new("bc_exchange_rate", "currency_code")];
 
     /// <summary>BC-BR-411: trimmed upper-case ISO 4217 code.</summary>
     /// <exception cref="DomainException">BC-E-411 when it is not 3 letters.</exception>

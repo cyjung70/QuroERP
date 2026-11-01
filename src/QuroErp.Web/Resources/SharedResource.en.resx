@@ -450,6 +450,8 @@
   <data name="SD-E-902" xml:space="preserve"><value>The value of Major code {0} cannot be changed.</value></data>
   <data name="SD-E-903" xml:space="preserve"><value>Major code {0} has Minor codes and cannot be deleted. Delete its Minor codes first, or set it not in use.</value></data>
   <data name="SD-E-904" xml:space="preserve"><value>Major code {0} is used by the system and cannot be deleted or set not in use.</value></data>
+  <data name="SD-E-906" xml:space="preserve"><value>An exchange rate for {1} on {0} already exists. Each date and currency has one rate.</value></data>
+  <data name="SD-E-907" xml:space="preserve"><value>The exchange rate for {1} on {0} cannot be saved. It needs a date, a currency in use that is not the base currency, and a rate above 0 with up to 10 decimals.</value></data>
   <data name="MM-E-816" xml:space="preserve"><value>The start number must be digits, and the barcodes made from it must be {0} digits or fewer.</value></data>
   <data name="MM-E-817" xml:space="preserve"><value>The barcode is already used by another item ({0}). Nothing was saved.</value></data>
   <data name="MM-E-821" xml:space="preserve"><value>Choose one JPEG file of 10 MB or less for an existing item.</value></data>
