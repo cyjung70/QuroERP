@@ -20,6 +20,25 @@ flock -w 300 9
 # 파일은 source/eval하지 않고 Compose의 dotenv 형식으로만 읽습니다.
 unset DB_CONNECTION JWT_SIGNING_KEY TLS_PASSWORD TLS_DIRECTORY WEB_HOST HTTPS_PORT
 
+# 로그인 토큰 서명 키는 개발 서버에서 한 번 생성하고 이후 배포에도 재사용합니다.
+# DB 비밀번호의 해시가 아니며 로그/이미지/릴리스 매니페스트에는 기록하지 않습니다.
+readonly jwt_key_file="$deploy_dir/jwt-signing.key"
+if [[ ! -e "$jwt_key_file" ]]; then
+  generated_key="$(openssl rand -hex 32)"
+  [[ "$generated_key" =~ ^[a-f0-9]{64}$ ]] || exit 2
+  key_tmp="$(mktemp "$deploy_dir/.jwt-signing.XXXXXX")"
+  printf '%s\n' "$generated_key" > "$key_tmp"
+  mv -- "$key_tmp" "$jwt_key_file"
+  unset generated_key
+fi
+chmod 600 "$jwt_key_file"
+JWT_SIGNING_KEY="$(cat "$jwt_key_file")"
+if [[ ! "$JWT_SIGNING_KEY" =~ ^[a-f0-9]{64}$ ]]; then
+  echo '서버 jwt-signing.key 형식이 올바르지 않습니다. 기존 키를 확인하세요.' >&2
+  exit 2
+fi
+export JWT_SIGNING_KEY
+
 compose=(docker compose --project-name quroerp-dev --env-file "$deploy_dir/deploy.env" -f "$script_dir/compose.yaml")
 # 확장된 설정에 비밀 값이 포함되므로 --quiet를 반드시 사용합니다.
 "${compose[@]}" config --quiet

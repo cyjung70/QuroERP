@@ -22,7 +22,8 @@ export PATH="$test_root/bin:$PATH"
 cat > "$test_root/bin/docker" <<'MOCK'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$TEST_LOG"
-[[ ! -v DB_CONNECTION && ! -v JWT_SIGNING_KEY && ! -v TLS_PASSWORD ]] || exit 44
+[[ ! -v DB_CONNECTION && ! -v TLS_PASSWORD ]] || exit 44
+[[ "${JWT_SIGNING_KEY:-}" == "$(printf '%064d' 0)" ]] || exit 46
 [[ ! -v TLS_DIRECTORY && ! -v WEB_HOST && ! -v HTTPS_PORT ]] || exit 45
 if [[ "${FAIL_MIGRATION:-0}" == 1 && " $* " == *' run --rm --no-deps migrate '* ]]; then
   exit 42
@@ -39,6 +40,11 @@ MOCK
 cat > "$test_root/bin/flock" <<'MOCK'
 #!/usr/bin/env bash
 exit 0
+MOCK
+cat > "$test_root/bin/openssl" <<'MOCK'
+#!/usr/bin/env bash
+printf 'key-generation\n' >> "$TEST_LOG"
+printf '%064d\n' 0
 MOCK
 chmod +x "$test_root/bin/"*
 
@@ -60,6 +66,7 @@ expect_failure 42
 unset FAIL_MIGRATION
 echo 'PASS: migration failure prevents application replacement'
 echo 'PASS: fixed server path ignores path overrides and empty environment values'
+test "$(grep -c '^key-generation$' "$TEST_LOG")" = 1
 
 # 이전 설정에서 남은 비어 있지 않은 환경변수도 제거해야 합니다.
 export DB_CONNECTION=test-db JWT_SIGNING_KEY=test-jwt TLS_PASSWORD=test-tls
@@ -78,6 +85,14 @@ expect_failure 1
 unset HTTP_STATUS
 echo 'PASS: public redirect does not count as healthy HTTPS'
 
+# 기존 키가 손상되었으면 조용히 재발급하지 않고 배포를 중단합니다.
+printf 'invalid-key\n' > "$test_root/server/jwt-signing.key"
+: > "$TEST_LOG"
+expect_failure 2
+test ! -s "$TEST_LOG"
+printf '%064d\n' 0 > "$test_root/server/jwt-signing.key"
+echo 'PASS: malformed existing key stops deployment without rotating it'
+
 : > "$TEST_LOG"
 bash "$test_script"
 test "$(cat "$test_root/server/current-release")" = "$IMAGE_TAG"
@@ -89,9 +104,13 @@ echo 'PASS: success records the deployed manifest and image identity'
 ! grep -R -q 'test-db\|test-jwt\|test-tls' "$test_root/server/releases"
 echo 'PASS: external database only; no secrets in release records'
 echo 'PASS: inherited credentials and web settings cannot override the host file'
+! grep -q '^key-generation$' "$TEST_LOG"
+! grep -R -q "$(printf '%064d' 0)" "$test_root/server/releases"
+echo 'PASS: generated JWT key is reused and excluded from release records'
 
 # 이 테스트가 만든 파일만 제거하며 계산된 경로를 재귀 삭제하지 않습니다.
 rm -f "$test_root/bin/docker" "$test_root/bin/curl" "$test_root/bin/flock" \
+  "$test_root/bin/openssl" "$test_root/server/jwt-signing.key" \
   "$test_script" "$test_root/compose.yaml" \
   "$test_root/commands" "$test_root/server/deploy.env" "$test_root/server/deploy.lock" \
   "$test_root/server/current-release" \

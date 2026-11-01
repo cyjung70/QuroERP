@@ -7,7 +7,7 @@
 ## 1. 러너 설정
 
 - 라벨: `self-hosted`, `linux`, `quroerp-deploy`를 모두 가진 러너를 선택합니다.
-- 러너 서비스 계정에 Docker Engine, Compose v2(`up --wait` 지원), Bash, curl, flock 실행 권한이 필요합니다.
+- 러너 서비스 계정에 Docker Engine, Compose v2(`up --wait` 지원), Bash, curl, flock, openssl 실행 권한이 필요합니다.
 - .NET SDK는 Docker 빌드 이미지 안에서 사용하므로 호스트에 별도 설치하지 않습니다. QuroGrid는 nuget.org 패키지로 복원합니다.
 - GitHub/컨테이너 이미지 저장소/NuGet로 나가는 연결, 컨테이너에서 외부 DB로 나가는 연결이 가능해야 합니다. DB 방화벽/접근 정책도 개발 호스트를 허용해야 합니다.
 - 동일 라벨의 러너가 여러 호스트에 있으면 어느 호스트에서든 배포될 수 있습니다. 개발 서버에 붙은 러너에 이 라벨을 지정하세요.
@@ -41,11 +41,13 @@ sudo -u "$runner_user" -H docker info
 
 GitHub에는 비밀 값 대신 **Variable `DEV_URL`만** 설정합니다. 값은 실제 개발 웹 HTTPS 주소입니다. 예: `https://erp-dev.example.com:8443`. DB 주소가 아닙니다.
 
-DB·JWT·TLS 인증정보는 고정 파일 `/opt/quroerp/dev/deploy.env`에서만 읽습니다. `DEV_DB_CONNECTION`, `DEV_JWT_SIGNING_KEY`, `DEV_TLS_PASSWORD` Secrets와 `DEV_DEPLOY_DIRECTORY` Variable은 더 이상 사용하지 않습니다. 기존 항목이 있어도 이 워크플로에 전달되지 않으며 삭제해도 됩니다.
+DB·TLS 설정은 고정 파일 `/opt/quroerp/dev/deploy.env`에서 읽습니다. JWT 서명 키는 `/opt/quroerp/dev/jwt-signing.key`에 자동 생성합니다. `DEV_DB_CONNECTION`, `DEV_JWT_SIGNING_KEY`, `DEV_TLS_PASSWORD` Secrets와 `DEV_DEPLOY_DIRECTORY` Variable은 사용하지 않습니다. 기존 항목이 있어도 이 워크플로에 전달되지 않으며 삭제해도 됩니다.
 
 ## 3. 개발 호스트 설정 파일
 
 러너 계정으로 다음을 실행합니다. `deploy.env`와 인증서는 checkout 외부에 보관합니다. Actions checkout 정리 대상이 아니어야 합니다.
+
+**러너 서비스 계정**은 GitHub Actions 명령을 실행하는 Linux 사용자입니다. 파일 소유자가 이 사용자이고 권한이 `600`이면 러너가 파일을 읽고 쓸 수 있습니다. `ls -l /opt/quroerp/dev/deploy.env`로 소유자를 확인합니다. `systemctl show "$(cat /path/to/actions-runner/.service)" -p User --value`로 실제 서비스 계정을 확인할 수 있습니다. 접속한 계정과 다르면 확인한 계정으로 `sudo chown <러너계정> /opt/quroerp/dev /opt/quroerp/dev/deploy.env`를 실행합니다. 디렉터리에도 쓰기 권한이 있어야 자동 키·잠금·릴리스 기록을 만들 수 있습니다.
 
 ```bash
 install -d -m 700 /opt/quroerp/dev
@@ -57,13 +59,14 @@ install -m 600 deploy/deploy.env.example /opt/quroerp/dev/deploy.env
 | 서버 파일 항목 | 설정 방법 |
 | --- | --- |
 | `DB_CONNECTION` | 필수. `Host=<DB_HOST>;Port=<DB_PORT>;Database=<DB_NAME>;Username=<DB_USER>;Password=<DB_PASSWORD>` 형식의 전체 연결 문자열. DB 이름은 계정명과 별개입니다. |
-| `JWT_SIGNING_KEY` | 필수. `openssl rand -hex 32`로 생성한 독립적인 서명 키. DB 비밀번호를 재사용하지 않습니다. |
 | `TLS_PASSWORD` | 필수. `tls.pfx`를 내보낼 때 지정한 비밀번호. |
 | `TLS_DIRECTORY` | `tls.pfx`를 보관할 절대 경로. 기본 `/opt/quroerp/dev/tls`. |
 | `WEB_HOST` | 실제 개발 웹 도메인. 인증서 이름과 일치해야 합니다. 프로토콜·포트·경로를 붙이지 않습니다. |
 | `HTTPS_PORT` | 호스트에서 공개할 웹 포트. 기본 `8443`. `DEV_URL`에도 동일한 포트를 사용합니다. |
 
-**배포 스크립트는 설정 경로를 변경할 수 없으며, 위 여섯 항목의 상속 환경변수를 제거한 후 서버 파일을 읽습니다.** 파일을 `source`하거나 `eval`하지 않고 Compose의 dotenv 형식으로 읽습니다. 필수 값이 없으면 배포를 중단합니다.
+**배포 스크립트는 설정 경로를 변경할 수 없으며, 위 다섯 항목과 JWT의 상속 환경변수를 제거한 후 서버 설정을 읽습니다.** 파일을 `source`하거나 `eval`하지 않고 Compose의 dotenv 형식으로 읽습니다. 필수 값이 없으면 배포를 중단합니다.
+
+`JWT_SIGNING_KEY`는 직접 입력하지 않습니다. DB 비밀번호 해시가 아니라 로그인 토큰 서명 키이며, 현재 API 시작에 필요합니다. 최초 배포 때 OpenSSL로 생성하여 `/opt/quroerp/dev/jwt-signing.key`에 권한 `600`으로 보관하고 이후 그대로 재사용합니다. 이 파일은 삭제하거나 Git에 커밋하지 않습니다. 파일이 손상되면 자동 재발급하지 않고 배포를 중단합니다. 기존에 수동 JWT 키로 실행한 서버는 자동 키로 전환할 때 기존 로그인 토큰이 무효화될 수 있습니다.
 
 값에 `$` 등 Compose 확장 문자가 있으면 dotenv의 작은따옴표 인용을 사용하세요. 완성된 연결 문자열 전체를 작은따옴표로 감쌀 수 있습니다. 파일은 러너 소유 및 권한 `0600`으로 유지합니다. Docker 관리 권한이 있는 사용자는 컨테이너 환경변수를 볼 수 있으므로 호스트 권한을 제한합니다. DB의 TLS 정책에 맞춰 필요한 경우 `SSL Mode=VerifyFull`과 신뢰할 CA 구성을 추가합니다.
 
@@ -79,11 +82,12 @@ install -m 600 deploy/deploy.env.example /opt/quroerp/dev/deploy.env
 
 ```bash
 unset DB_CONNECTION JWT_SIGNING_KEY TLS_PASSWORD TLS_DIRECTORY WEB_HOST HTTPS_PORT
+export JWT_SIGNING_KEY="$(cat /opt/quroerp/dev/jwt-signing.key)"
 export IMAGE_PREFIX=quroerp-dev
 export IMAGE_TAG='<commit-sha>-<run-id>-<attempt>'
 docker compose --project-name quroerp-dev --env-file /opt/quroerp/dev/deploy.env -f deploy/compose.yaml run --rm migrate --set-country KR --company-name '회사명'
 docker compose --project-name quroerp-dev --env-file /opt/quroerp/dev/deploy.env -f deploy/compose.yaml run --rm migrate --create-admin admin
-unset DB_CONNECTION
+unset JWT_SIGNING_KEY
 ```
 
 회사 국가는 실제 업무에 맞게 KR/US를 선택합니다. 관리자 명령은 비밀번호를 대화형으로 받고 기존 계정이면 비밀번호를 초기화하므로 일반 배포에서 반복하지 않습니다.

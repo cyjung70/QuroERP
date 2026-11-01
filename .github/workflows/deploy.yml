@@ -55,6 +55,7 @@ jobs:
           docker compose version
           command -v flock
           command -v curl
+          command -v openssl
           test -r /opt/quroerp/dev/deploy.env || { echo '/opt/quroerp/dev/deploy.env 파일을 러너 계정이 읽을 수 있도록 준비하세요.' >&2; exit 1; }
           test -n "$DEPLOY_URL" || { echo 'GitHub dev 환경 Variable DEV_URL을 설정하세요.' >&2; exit 1; }
       - name: 배포 실패 처리 검증
@@ -69,6 +70,6 @@ jobs:
               -t "$IMAGE_PREFIX-$target:$IMAGE_TAG" .
           done
       - name: 외부 개발 DB 마이그레이션 및 배포
-        # 인증정보는 고정된 서버 파일 /opt/quroerp/dev/deploy.env에서만 읽습니다.
+        # DB/TLS 설정은 서버 deploy.env에서 읽고 JWT 키는 서버에서 자동 생성·보관합니다.
         # GitHub Secrets와 빌드 인수로 인증정보를 전달하지 않습니다.
         run: bash deploy/deploy.sh

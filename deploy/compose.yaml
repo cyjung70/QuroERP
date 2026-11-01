@@ -16,7 +16,8 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__QuroErp: ${DB_CONNECTION:?DB_CONNECTION is required}
-      Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
+      # deploy.sh가 호스트의 jwt-signing.key를 읽어 주입합니다.
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Run deploy.sh or load the host jwt-signing.key}
       Kestrel__Endpoints__Http__Url: http://+:8080
     # API는 Docker 내부 전용이며 호스트 포트를 공개하지 않습니다.
     healthcheck:
