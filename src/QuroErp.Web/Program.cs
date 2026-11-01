@@ -13,7 +13,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddWebAuthentication(builder.Configuration);
+var allowDevelopmentHttp = WebTransport.AllowsHttp(builder.Environment);
+builder.Services.AddWebAuthentication(builder.Configuration, allowDevelopmentHttp);
 builder.Services.AddWebApiClients(builder.Configuration);
 
 // i18n.md: 리소스는 Resources/, 언어는 ko(기본)·en
@@ -42,10 +43,16 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    if (!allowDevelopmentHttp)
+    {
+        app.UseHsts();
+    }
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-app.UseHttpsRedirection();
+if (!allowDevelopmentHttp)
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseWebLocalization();
 

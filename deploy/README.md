@@ -20,20 +20,15 @@ Host=<DB_HOST>;Port=<DB_PORT>;Database=<DB_NAME>;Username=<DB_USER>;Password=<DB
 
 **`DEV_URL`과 호스트 `deploy.env`는 더 이상 사용하지 않습니다.** `/opt/quroerp/dev/deploy.env`를 만들 필요가 없으며, 기존 파일이 있어도 읽지 않습니다. `DEV_DEPLOY_DIRECTORY`도 사용하지 않습니다.
 
-## 2. 기존 Web HTTPS 설정
+## 2. 개발 웹 접속
 
-DB 연결과 웹 HTTPS는 별개입니다. 기존 Web은 HTTPS 로그인 쿠키를 사용하므로 인증서 설정은 유지합니다. 이번 변경은 HTTP로 전환하거나 인증을 해제하지 않습니다.
+**필수 Secret은 `DEV_DB_CONNECTION` 하나입니다.** 인증서와 `DEV_TLS_PASSWORD`는 사용하지 않습니다. `DEV_TLS_DIRECTORY`, `DEV_HTTPS_PORT`, `DEV_WEB_HOST`, `DEV_URL`도 필요 없습니다.
 
-| 종류 | 이름 | 값과 기본값 |
-| --- | --- | --- |
-| Secret | `DEV_TLS_PASSWORD` | 서버 `tls.pfx`의 내보내기 비밀번호. 필수입니다. |
-| Variable | `DEV_TLS_DIRECTORY` | 인증서 디렉터리. 생략하면 `/opt/quroerp/dev/tls`. |
-| Variable | `DEV_HTTPS_PORT` | 개발 웹의 호스트 포트. 생략하면 `8443`. DB 포트가 아닙니다. |
-| Variable | `DEV_WEB_HOST` | 선택 사항. 지정 시 인증서와 일치하는 웹 호스트 이름. 생략 시 개발 Web은 모든 Host 헤더를 허용합니다. |
+기본 접속 주소는 `http://<개발서버주소>`입니다. 호스트 포트 80을 컨테이너 내부 8080에 연결합니다. 포트를 바꾸려면 선택적 Variable `DEV_HTTP_PORT`만 등록하세요. DB 포트와는 별개이며, 개발 호스트 방화벽에서 TCP 80 접근을 허용해야 합니다. 호스트의 다른 서비스가 이미 80을 사용한다면 포트 충돌을 먼저 해결해야 합니다.
 
-위 항목은 `dev` 환경 또는 저장소의 Secrets/Variables에 등록합니다. 유효한 인증서와 개인 키를 `DEV_TLS_DIRECTORY/tls.pfx`에 준비하고, 컨테이너 UID 1654에 필요한 읽기 및 경로 접근 권한을 부여합니다. 인증서는 이미지나 저장소에 넣지 않습니다. 외부 접속을 위해 개발 웹 포트의 방화벽 설정은 필요합니다.
+Web 컨테이너는 명시적인 `DevelopmentHttp` 환경으로 실행합니다. 이 환경에서만 HTTPS 리디렉션/HSTS를 끄고, HTTP 요청의 세션·자동 로그인 쿠키를 HTTP에서도 전달할 수 있게 합니다. HttpOnly, SameSite, 인증/권한, 위조 방지 검사는 유지합니다. 일반 `Production`과 `Development` 환경의 기존 HTTPS 기본 동작은 바꾸지 않습니다. `DevelopmentHttp`에서는 상세 개발 오류나 샘플 서비스를 켜지 않습니다.
 
-상태 검사는 컨테이너 내부의 API DB 연결과 Web HTTPS 로그인 페이지를 확인합니다. 공개 URL, DNS, 외부 인증서 신뢰 상태는 검사하지 않으므로 외부 접속까지 검증했다고 간주하지 않습니다.
+HTTP 트래픽은 암호화되지 않으므로 이 구성은 신뢰할 수 있는 개발 네트워크에서 사용합니다. 운영 배포에는 기존 HTTPS 구성을 사용해야 합니다. 상태 검사는 컨테이너 내부의 API DB 연결과 Web HTTP 로그인 페이지를 확인하며 외부 접속/DNS까지 검증하지는 않습니다.
 
 ## 3. 러너와 자동 관리 파일
 
@@ -42,7 +37,7 @@ DB 연결과 웹 HTTPS는 별개입니다. 기존 Web은 HTTPS 로그인 쿠키�
 - 러너 서비스 계정은 GitHub Actions 명령을 실행하는 Linux 사용자입니다. Docker 접근 권한과 `/opt/quroerp/dev` 쓰기 권한이 필요합니다.
 - JWT 서명 키는 DB 비밀번호 해시가 아닙니다. 로그인 토큰 서명에 필요하며 최초 배포 때 `/opt/quroerp/dev/jwt-signing.key`에 자동 생성하고 권한 `600`으로 보관합니다. 직접 입력할 필요가 없습니다.
 - 이후 배포에서도 같은 키를 사용합니다. 키 파일 손상 시 자동 재발급하지 않고 중단합니다. 기존 수동 키에서 전환하면 기존 로그인 토큰이 무효화될 수 있습니다.
-- 설정 파일 대신 호스트에 남는 것은 JWT 키, 배포 잠금, 성공한 릴리스의 매니페스트/이미지 태그입니다. 릴리스 기록에는 DB/TLS 비밀 값을 넣지 않습니다.
+- 설정 파일 대신 호스트에 남는 것은 JWT 키, 배포 잠금, 성공한 릴리스의 매니페스트/이미지 태그입니다. 릴리스 기록에는 DB 비밀 값을 넣지 않습니다.
 
 Docker 소켓 권한 오류는 GitHub 토큰 권한과 별개입니다. 호스트의 실제 러너 설치 디렉터리에서 확인합니다.
 
@@ -70,7 +65,7 @@ sudo -u "$runner_user" -H docker info
 - 실제 DB 컨테이너를 만들지 않습니다. 외부 개발 DB에 Schema/Seed만 적용합니다. DB·계정 생성, Demo 데이터, 회사 국가 및 관리자 초기 설정은 자동 실행하지 않습니다.
 - 최초 회사 설정과 관리자 생성은 Database 콘솔의 `--set-country`, `--create-admin`으로 별도 실행합니다. 수동 Compose 실행 시 GitHub Secrets가 터미널에 자동 주입되지 않으므로 필요한 환경변수를 별도로 안전하게 설정해야 합니다.
 - 마이그레이션 실패 시 API/Web 교체 전에 중단합니다. `up --wait` 상태 검사 실패 시 배포는 실패하지만 새 컨테이너가 실행 중일 수 있습니다. DB 자동 롤백은 없습니다.
-- 개발 서버에서도 ASP.NET 환경은 `Production`입니다. 상세 오류와 샘플 화면을 공개하지 않으며 Git 브랜치 이름과는 별개입니다.
+- 개발 Web의 ASP.NET 환경은 `DevelopmentHttp`, API는 `Production`입니다. 기본 HTTPS 정책의 예외는 개발 Web 컨테이너에만 적용합니다.
 - Web 교체 시 Blazor 연결과 메모리 로그인 세션이 끊어집니다. 무중단 배포는 아닙니다.
 - `set -x`, `printenv`, 비밀 값 출력, `--quiet` 없는 `docker compose config`를 사용하지 않습니다. Docker 관리자는 컨테이너 환경변수를 볼 수 있으므로 호스트 접근을 제한합니다.
 - `bash deploy/tests/deploy-test.sh`로 Secret 누락 차단, 값 전달, 키 재사용, 실패 처리, 비밀 값 기록 방지를 검증합니다. 실제 접속은 설정된 개발 서버에서 확인합니다.

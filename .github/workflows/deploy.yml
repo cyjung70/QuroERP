@@ -37,10 +37,8 @@ jobs:
       IMAGE_PREFIX: quroerp-dev
       RELEASE_SHA: ${{ github.sha }}
       IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      # 웹 인증서는 기존 호스트 파일을 연결합니다. 공개 URL 등록은 필요하지 않습니다.
-      TLS_DIRECTORY: ${{ vars.DEV_TLS_DIRECTORY || '/opt/quroerp/dev/tls' }}
-      WEB_HOST: ${{ vars.DEV_WEB_HOST }}
-      HTTPS_PORT: ${{ vars.DEV_HTTPS_PORT || '8443' }}
+      # 개발 웹은 인증서 없이 HTTP로 실행합니다. 기본 접속 포트는 80입니다.
+      HTTP_PORT: ${{ vars.DEV_HTTP_PORT || '80' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,18 +56,16 @@ jobs:
           command -v flock
           command -v curl
           command -v openssl
-      - name: DB 및 웹 인증서 Secret 확인
+      - name: DB Secret 확인
         # 값은 출력하지 않고 등록 여부만 확인합니다. 빌드에는 비밀 값을 전달하지 않습니다.
         env:
           DB_CONNECTION: ${{ secrets.DEV_DB_CONNECTION }}
-          TLS_PASSWORD: ${{ secrets.DEV_TLS_PASSWORD }}
         run: |
           test -n "$DB_CONNECTION" || { echo 'GitHub Actions Secret DEV_DB_CONNECTION에 DB 연결 문자열을 등록하세요.' >&2; exit 1; }
-          test -n "$TLS_PASSWORD" || { echo '기존 웹 인증서 비밀번호를 Secret DEV_TLS_PASSWORD에 등록하세요.' >&2; exit 1; }
       - name: 배포 실패 처리 검증
         run: bash deploy/tests/deploy-test.sh
       - name: 검증된 커밋의 Docker 이미지 빌드
-        # SDK는 Docker 안에 있습니다. 빌드 단계에는 개발 DB/JWT/TLS Secret을 주지 않습니다.
+        # SDK는 Docker 안에 있습니다. 빌드 단계에는 개발 DB/JWT 비밀 값을 주지 않습니다.
         run: |
           set -euo pipefail
           for target in api web migrate; do
@@ -82,5 +78,4 @@ jobs:
         # 비밀 값은 이미지/명령줄/설정 파일에 기록하지 않습니다. JWT 키는 자동 관리합니다.
         env:
           DB_CONNECTION: ${{ secrets.DEV_DB_CONNECTION }}
-          TLS_PASSWORD: ${{ secrets.DEV_TLS_PASSWORD }}
         run: bash deploy/deploy.sh

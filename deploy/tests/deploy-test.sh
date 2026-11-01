@@ -17,14 +17,14 @@ export PATH="$test_root/bin:$PATH"
 unset DEPLOY_URL
 export DB_CONNECTION='test-db;Password=test-$-value'
 export EXPECTED_DB_CONNECTION="$DB_CONNECTION"
-export TLS_PASSWORD=test-tls TLS_DIRECTORY=/test-tls HTTPS_PORT=8443
-unset WEB_HOST
+export HTTP_PORT=80
+unset TLS_PASSWORD TLS_DIRECTORY WEB_HOST HTTPS_PORT
 
 cat > "$test_root/bin/docker" <<'MOCK'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$TEST_LOG"
 [[ "${DB_CONNECTION:-}" == "$EXPECTED_DB_CONNECTION" ]] || exit 44
-[[ "${TLS_PASSWORD:-}" == test-tls ]] || exit 45
+[[ ! -v TLS_PASSWORD && ! -v TLS_DIRECTORY ]] || exit 45
 [[ "${JWT_SIGNING_KEY:-}" == "$(printf '%064d' 0)" ]] || exit 46
 if [[ "${FAIL_MIGRATION:-0}" == 1 && " $* " == *' run --rm --no-deps migrate '* ]]; then
   exit 42
@@ -91,7 +91,7 @@ grep -q -- '--env-file /dev/null' "$TEST_LOG"
 ! grep -q 'pull postgres\|120 postgres\|key-generation' "$TEST_LOG"
 ! grep -R -q 'test-db\|test-tls' "$test_root/server/releases"
 ! grep -R -q "$(printf '%064d' 0)" "$test_root/server/releases"
-echo 'PASS: GitHub secrets reach Docker unchanged without DEV_URL or deploy.env'
+echo 'PASS: DB secret reaches Docker without TLS settings, DEV_URL or deploy.env'
 echo 'PASS: generated JWT key is reused and secrets stay out of release records'
 
 # 테스트가 만든 파일만 제거합니다.

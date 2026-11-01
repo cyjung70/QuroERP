@@ -36,10 +36,10 @@ ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "QuroErp.Api.dll"]
 
-# Web HTTPS 인증서는 이미지에 넣지 않고 서버 파일을 읽기 전용으로 연결합니다.
+# 개발 Web은 Compose에서 DevelopmentHttp 환경과 HTTP 8080을 지정합니다.
 FROM web-runtime AS web
 COPY --from=publish /out/web .
-EXPOSE 8443
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "QuroErp.Web.dll"]
 
 # 마이그레이션은 일회성 콘솔이며 ASP.NET 런타임이 필요하지 않습니다.

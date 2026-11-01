@@ -5,7 +5,6 @@ umask 077
 : "${IMAGE_PREFIX:?IMAGE_PREFIX is required}"
 : "${IMAGE_TAG:?IMAGE_TAG is required}"
 : "${DB_CONNECTION:?GitHub Secret DEV_DB_CONNECTION is required}"
-: "${TLS_PASSWORD:?GitHub Secret DEV_TLS_PASSWORD is required}"
 [[ "$IMAGE_PREFIX" == quroerp-dev ]] || exit 2
 [[ "$IMAGE_TAG" =~ ^[a-f0-9]{40}-[0-9]+-[0-9]+$ ]] || exit 2
 
@@ -16,7 +15,7 @@ mkdir -p "$deploy_dir"
 exec 9>"$deploy_dir/deploy.lock"
 flock -w 300 9
 
-# DB/TLS 설정은 Actions 환경변수를 그대로 사용합니다. 호스트 deploy.env는 읽지 않습니다.
+# DB 설정은 Actions 환경변수를 그대로 사용합니다. 호스트 deploy.env는 읽지 않습니다.
 unset JWT_SIGNING_KEY
 
 # 로그인 토큰 서명 키는 개발 서버에서 한 번 생성하고 이후 배포에도 재사용합니다.
@@ -50,7 +49,7 @@ done
 "${compose[@]}" run --rm --no-deps migrate
 "${compose[@]}" up -d --wait --wait-timeout 240 api web
 
-# up --wait가 API의 DB 연결 검사와 Web의 HTTPS 로그인 페이지 검사를 기다립니다.
+# up --wait가 API의 DB 연결 검사와 Web의 HTTP 로그인 페이지 검사를 기다립니다.
 # 외부 DNS/공개 URL 검사는 수행하지 않으므로 DEV_URL은 필요하지 않습니다.
 
 # 성공 기록에는 이미지 식별자와 비밀 값이 없는 매니페스트만 남깁니다.
