@@ -502,6 +502,9 @@
   <data name="Common.CopyAsNew" xml:space="preserve"><value>Copy as New</value></data>
   <data name="Common.Total" xml:space="preserve"><value>Total</value></data>
   <data name="Samples.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Common.ShowAllFields" xml:space="preserve"><value>Show all fields</value></data>
+  <data name="Common.HiddenByPolicy" xml:space="preserve"><value>Hidden</value></data>
+  <data name="Samples.Country" xml:space="preserve"><value>Country pack</value></data>
   <data name="Samples.Supply" xml:space="preserve"><value>Supply Type</value></data>
   <data name="Samples.Supply.P" xml:space="preserve"><value>Purchased</value></data>
   <data name="Samples.Supply.M" xml:space="preserve"><value>Made</value></data>

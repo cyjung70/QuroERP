@@ -5,53 +5,57 @@
 @inherits QuroInputBase<string>
 @inject IStringLocalizer<SharedResource> L
 
-@if (Radio)
+@* The field policy may hide the field (field-policy.md 3) *@
+@if (Drawn)
 {
-    @* Quro.UI has no radio buttons yet: a bound field keeps these on the data set column (TODO(QuroGrid-R2)) *@
-    <fieldset class="@FieldClass("quro-radio")" data-testid="@TestId" aria-required="@(IsRequiredNow ? "true" : null)">
-        <legend class="@(HideLabel ? "quro-visually-hidden" : null)">
-            @Label@if (IsRequiredNow)
-            {
-                <span class="quro-required" aria-hidden="true">*</span>
-            }
-        </legend>
-        @foreach (var option in Options)
-        {
-            <label class="@(option.Code == Current ? "quro-radio-card quro-radio-card-selected" : "quro-radio-card")">
-                <input type="radio" name="@InputId" value="@option.Code" checked="@(option.Code == Current)" disabled="@IsLocked"
-                       data-testid="@(TestId is null ? null : $"{TestId}-{option.Code.ToLowerInvariant()}")"
-                       @onchange="() => SetValueAsync(option.Code)" />
-                @option.Name
-            </label>
-        }
-    </fieldset>
-}
-else if (Bound)
-{
-    @* Quro.UI combo box over a code data set; test id on the field (TODO(QuroGrid-R3)) *@
-    <div class="@FieldClass()" data-testid="@TestId">
-        @FieldLabel(IsRequiredNow)
-        @Form!.Data!.ComboBox(Field!, Codes, IsLocked, L)
-    </div>
-}
-else
-{
-    <div class="@FieldClass()">
-        @FieldLabel(IsRequiredNow)
-        @* A select has no readonly attribute; disabled keeps a locked value from changing *@
-        <select id="@InputId" disabled="@IsLocked" aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync">
-            <option value="" selected="@(Value is null)"></option>
+    @if (Radio)
+    {
+        @* Quro.UI has no radio buttons yet: a bound field keeps these on the data set column (TODO(QuroGrid-R2)) *@
+        <fieldset class="@FieldClass("quro-radio")" data-testid="@TestId" aria-required="@(IsRequiredNow ? "true" : null)">
+            <legend class="@(HideLabel ? "quro-visually-hidden" : null)">
+                @ShownLabel@if (IsRequiredNow)
+                {
+                    <span class="quro-required" aria-hidden="true">*</span>
+                }
+            </legend>
             @foreach (var option in Options)
             {
-                <option value="@option.Code" selected="@(option.Code == Value)">@option.Name</option>
+                <label class="@(option.Code == Current ? "quro-radio-card quro-radio-card-selected" : "quro-radio-card")">
+                    <input type="radio" name="@InputId" value="@option.Code" checked="@(option.Code == Current)" disabled="@IsLocked"
+                           data-testid="@(TestId is null ? null : $"{TestId}-{option.Code.ToLowerInvariant()}")"
+                           @onchange="() => SetValueAsync(option.Code)" />
+                    @option.Name
+                </label>
             }
-            @if (Value is not null && Options.All(o => o.Code != Value))
-            {
-                @* A stored code that is no longer active still shows *@
-                <option value="@Value" selected>@Value</option>
-            }
-        </select>
-    </div>
+        </fieldset>
+    }
+    else if (Bound)
+    {
+        @* Quro.UI combo box over a code data set; test id on the field (TODO(QuroGrid-R3)) *@
+        <div class="@FieldClass()" data-testid="@TestId">
+            @FieldLabel(IsRequiredNow)
+            @Form!.Data!.ComboBox(Field!, Codes, IsLocked, L)
+        </div>
+    }
+    else
+    {
+        <div class="@FieldClass()">
+            @FieldLabel(IsRequiredNow)
+            @* A select has no readonly attribute; disabled keeps a locked value from changing *@
+            <select id="@InputId" disabled="@IsLocked" aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync">
+                <option value="" selected="@(Value is null)"></option>
+                @foreach (var option in Options)
+                {
+                    <option value="@option.Code" selected="@(option.Code == Value)">@option.Name</option>
+                }
+                @if (Value is not null && Options.All(o => o.Code != Value))
+                {
+                    @* A stored code that is no longer active still shows *@
+                    <option value="@Value" selected>@Value</option>
+                }
+            </select>
+        </div>
+    }
 }
 
 @code {

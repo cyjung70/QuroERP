@@ -5,7 +5,7 @@
 @inherits QuroScreenBase
 
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
-                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice" Policies="Policies">
     <TitleContent>
         @if (_form.IsNew)
         {
@@ -22,7 +22,7 @@
     </TitleContent>
     <Toolbar>
         @* Read-only users see new, save and delete disabled (BC-BR-214, screen-templates.md 0) *@
-        <QuroToolbar TestId="@TestId" Busy="Busy" CanMove="!_form.IsNew" CanNew="!ReadOnly" CanSave="!ReadOnly"
+        <QuroToolbar TestId="@TestId" Busy="Busy" CanMove="!_form.IsNew" CanShowAllFields="CanShowAllFields" ShowAllFields="Policies.ShowAllFields" OnToggleShowAllFields="ToggleShowAllFields" CanNew="!ReadOnly" CanSave="!ReadOnly"
                      CanDelete="!_form.IsNew && !ReadOnly"
                      OnSearch="SearchAsync"
                      OnPrevious="@(LoadPrevious is null ? default : EventCallback.Factory.Create(this, () => MoveAsync(LoadPrevious, "Common.FirstRecord")))"
@@ -189,6 +189,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadPoliciesAsync();
         if (LoadOnStart)
         {
             await SearchAsync();

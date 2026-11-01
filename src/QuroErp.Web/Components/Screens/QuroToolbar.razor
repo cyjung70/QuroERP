@@ -15,6 +15,17 @@
         @Button(OnPrint, "Common.Print", "print")
         @Button(OnExport, "Common.ExportExcel", "export")
     </div>
+    @if (CanShowAllFields)
+    {
+        @* Admin "show all fields" (BC-BR-435): hidden fields read-only with a marker; nothing saved changes *@
+        <span class="quro-commandbar-sep" aria-hidden="true"></span>
+        <div class="quro-commandbar-group" data-group="view">
+            <button type="button" aria-pressed="@(ShowAllFields ? "true" : "false")" disabled="@Busy"
+                    data-testid="@(TestId is null ? null : $"{TestId}-toolbar-show-all-fields")" @onclick="OnToggleShowAllFields">
+                @L["Common.ShowAllFields"]
+            </button>
+        </div>
+    }
     @if (ExtraCommands is not null)
     {
         <span class="quro-commandbar-sep" aria-hidden="true"></span>
@@ -25,6 +36,16 @@
 </div>
 
 @code {
+    /// <summary>Shows the "show all fields" toggle (the screen has field policies and the user may see them all).</summary>
+    [Parameter]
+    public bool CanShowAllFields { get; set; }
+
+    [Parameter]
+    public bool ShowAllFields { get; set; }
+
+    [Parameter]
+    public EventCallback OnToggleShowAllFields { get; set; }
+
     [Parameter]
     public EventCallback OnSearch { get; set; }
 

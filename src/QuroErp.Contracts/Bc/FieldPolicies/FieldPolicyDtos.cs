@@ -11,6 +11,15 @@ public static class FieldPolicyRoutes
     public static string ForScreen(string screenCode) => $"{Base}?screen={Uri.EscapeDataString(screenCode)}";
 }
 
+/// <summary>Field policy states as the API sends them (field-policy.md "상태").</summary>
+public static class FieldPolicyStates
+{
+    public const string Hidden = "HIDDEN";
+    public const string Optional = "OPTIONAL";
+    public const string Required = "REQUIRED";
+    public const string ReadOnly = "READONLY";
+}
+
 /// <summary>A field's merged policy: system default, then the company country's pack, then the company override (BC-BR-431).</summary>
 /// <param name="FieldKey">The label resource key, {Module}.{Screen}.{Property}; country-only fields are {Module}.{Screen}.ext.{Name}.</param>
 /// <param name="State">HIDDEN, OPTIONAL, REQUIRED or READONLY.</param>

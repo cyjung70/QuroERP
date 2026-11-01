@@ -21,9 +21,10 @@ public abstract class QuroFormData
 
     /// <summary>
     /// Marks the column required for <c>Validate</c>, on top of the DTO's <c>[Required]</c>, so the required marker and
-    /// the save check agree (qurogrid-integration.md 10 "필수").
+    /// the save check agree (qurogrid-integration.md 10 "필수"). <paramref name="excluded"/> takes a field the policy hides out
+    /// of the check, <c>[Required]</c> or not (field-policy.md 3); the server still checks it.
     /// </summary>
-    public abstract void Require(string field, bool required);
+    public abstract void Require(string field, bool required, bool excluded = false);
 
     /// <summary>Changes every value set on the field before it is kept, e.g. letter case and empty text as null.</summary>
     public abstract void Normalize(string field, Func<object?, object?> normalize);
@@ -71,7 +72,7 @@ public sealed class QuroFormData<TModel> : QuroFormData
 
     public override void SetValue(string field, object? value) => DataSet.SetValue(RowKey, field, value);
 
-    public override void Require(string field, bool required)
+    public override void Require(string field, bool required, bool excluded = false)
     {
         var column = DataSet.GetColumn(field);
         if (!_modelRequired.TryGetValue(column.Name, out var modelRequired))
@@ -79,9 +80,10 @@ public sealed class QuroFormData<TModel> : QuroFormData
             modelRequired = column.Required;
             _modelRequired[column.Name] = modelRequired;
         }
-        if (column.Required != (modelRequired || required))
+        var now = !excluded && (modelRequired || required);
+        if (column.Required != now)
         {
-            DataSet.SetColumn(column with { Required = modelRequired || required });
+            DataSet.SetColumn(column with { Required = now });
         }
     }
 

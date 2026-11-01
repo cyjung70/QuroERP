@@ -12,9 +12,9 @@
 @inject IServiceProvider Services
 
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
-                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice" Policies="Policies">
     <Toolbar>
-        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanNew="CanWrite" CanSave="CanWrite"
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanShowAllFields="CanShowAllFields" ShowAllFields="Policies.ShowAllFields" OnToggleShowAllFields="ToggleShowAllFields" CanNew="CanWrite" CanSave="CanWrite"
                      OnNew="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)"
                      OnSave="@(Editable ? EventCallback.Factory.Create(this, SaveAsync) : default)"
                      OnPrint="OnPrint" OnExport="ExportAsync" ExtraCommands="ExtraCommands" />
@@ -61,7 +61,9 @@
     private QuroDataSet<TRow> _data = new();
     private QuroGrid<TRow>? _dataGrid;
     private GridDef? _definition;
+    private GridDef? _applied;
     private GridDef? _locked;
+    private int _policyVersion = -1;
 
     /// <summary>
     /// Id of the screen definition (<c>Definitions/screens/**/{id}.screen.toon</c>) whose first grid gives the columns and
@@ -148,7 +150,26 @@
     private bool CanEdit => Editable && CanWrite;
 
     // A view-only list or a user without Full Access gets every cell read-only; the package has no grid-wide lock yet (TODO(QuroGrid-R4))
-    private GridDef? GridDefinition => CanEdit ? _definition : _locked;
+    private GridDef? GridDefinition => CanEdit ? _applied : _locked;
+
+    // The screen's field policies apply to the columns by their label key (field-policy.md 3). The definitions change only
+    // with the definition or the policies, so the grid is not set up again on every render
+    private void ApplyPolicies()
+    {
+        var version = Policies.Version;
+        if (_definition is null || _policyVersion == version)
+        {
+            return;
+        }
+        _policyVersion = version;
+        _applied = Policies.Apply(_definition);
+        _locked = _applied with
+        {
+            Columns = [.. _applied.Columns.Select(c => c with { Edit = ColumnEdit.ReadOnly, Req = false })],
+        };
+    }
+
+    protected override void OnPoliciesChanged() => ApplyPolicies();
 
     // The first search runs in OnInitializedAsync, before OnParametersSet, so the definition is resolved there too
     protected override void OnParametersSet() => ResolveDefinition();
@@ -159,10 +180,6 @@
         {
             var grid = ScreenDefinitions.Shared.Get(Definition).Grids[0];
             _definition = Adjust is null ? grid : Adjust(grid);
-            _locked = _definition with
-            {
-                Columns = [.. _definition.Columns.Select(c => c with { Edit = ColumnEdit.ReadOnly, Req = false })],
-            };
             // Server paging keeps rows by the grid's row key (the definition's rowKey property)
             var key = typeof(TRow).GetProperty(_definition.RowKey,
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
@@ -172,6 +189,7 @@
             }
             _data.CurrentRowChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
         }
+        ApplyPolicies();
     }
 
     private bool CurrentIsDeleted =>
@@ -187,6 +205,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadPoliciesAsync();
         ResolveDefinition();
         await LoadOptionsAsync();
         if (LoadOnStart)

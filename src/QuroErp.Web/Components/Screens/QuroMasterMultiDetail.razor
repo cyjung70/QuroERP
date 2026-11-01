@@ -10,10 +10,10 @@
 @using QuroErp.Web.Common
 
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
-                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice" Policies="Policies">
     <Toolbar>
         @* New and save need a selected source row and Full Access; until then they are disabled (screen-templates.md 0, 2) *@
-        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanNew="CanChange" CanSave="CanChange"
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanShowAllFields="CanShowAllFields" ShowAllFields="Policies.ShowAllFields" OnToggleShowAllFields="ToggleShowAllFields" CanNew="CanChange" CanSave="CanChange"
                      OnNew="AddTarget" OnSave="SaveAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
@@ -120,6 +120,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadPoliciesAsync();
         var screen = ScreenDefinitions.Shared.Get(Definition);
         var source = screen.Grids[0];
         // The source list is for picking only
