@@ -4,7 +4,8 @@
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 
-@* Screen type MM sample (TASK-CORE-006, frame TASK-CORE-040). Development only, in-memory data. *@
+@* Screen type MM sample (TASK-CORE-006, frame TASK-CORE-040); both grids on the package over
+   samples.group.members.screen.toon (TASK-CORE-056). Development only, in-memory data. *@
 
 <PageTitle>@L["Samples.MasterDetail.Title"]</PageTitle>
 
@@ -15,23 +16,13 @@
                            LoadOnStart="true" LoadSources="() => Task.FromResult(_store.Groups())"
                            LoadTargets="group => Task.FromResult(_store.Members(group.Id))"
                            CreateTarget="group => new SampleLine { OwnerId = group.Id, Qty = 1 }"
-                           SaveTargets="SaveAsync" CanWrite="CanWrite">
-        <SourceColumns>
-            <QuroColumn TRow="SampleGroup" Title="@L["Samples.Group"]" Value="g => g.Code" />
-            <QuroColumn TRow="SampleGroup" Title="@L["Samples.Name"]" Value="g => g.Name" />
-        </SourceColumns>
-        <TargetColumns>
-            <QuroColumn TRow="SampleLine" Title="@L["Samples.Item"]" Value="l => l.ItemCode" Context="line">
-                <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" Required TextCase="TextCase.Upper" TestId="master-detail-line-item-code" />
-            </QuroColumn>
-            <QuroColumn TRow="SampleLine" Title="@L["Samples.Qty"]" Value="l => l.Qty" Format="N2" Context="line">
-                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" TestId="master-detail-line-qty" />
-            </QuroColumn>
-        </TargetColumns>
-    </QuroMasterMultiDetail>
+                           SaveTargets="SaveAsync" CanWrite="CanWrite"
+                           Definition="samples.group.members" Lookup="LookupItems" UpperCaseFields="UpperCase" />
 }
 
 @code {
+    private static readonly string[] UpperCase = ["itemCode"];
+
     private SampleStore? _store;
 
     /// <summary>Full Access of the user; false shows the read-only state (TASK-CORE-051).</summary>
@@ -52,4 +43,6 @@
         _store!.SaveMembers(group.Id, changes.Added, changes.Updated, changes.Deleted);
         return Task.CompletedTask;
     }
+    // The sampleItem lookup of the item code cells. A real screen calls the item API
+    private Task<IReadOnlyList<LookupRow>> LookupItems(LookupQuery query) => Task.FromResult(SampleLookups.Items(_store!, query));
 }

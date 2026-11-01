@@ -233,8 +233,8 @@ public class ItemScreenTests : BunitContext
         var page = RenderAs("admin");
 
         page.Find("[data-testid=item-search-item-lookup]").Click();
-        page.WaitForElement("[data-testid=item-item-lookup] tbody tr");
-        page.Find("[data-testid=item-item-lookup] tbody tr button").Click();
+        page.WaitForAssertion(() => page.LookupRows("item-item-lookup").Should().NotBeEmpty());
+        page.PickLookupRow<ItemDto, Item>("item-item-lookup", 0);
 
         page.WaitForAssertion(() => Value(page, "item-header-item-cd").Should().Be("A100"));
         _api.Requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/api/bc/items/1");

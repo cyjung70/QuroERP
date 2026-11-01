@@ -2,6 +2,7 @@ using System.Globalization;
 using Bunit;
 using FluentAssertions;
 using QuroErp.Web.Components.Pages.Samples;
+using QuroErp.Web.Components.Screens;
 
 namespace QuroErp.Web.Tests.Screens;
 
@@ -66,7 +67,9 @@ public class ScreenFrameTests : ScreenContext
         masterDetail.Find("[data-testid=master-detail-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
         masterDetail.Find("[data-testid=master-detail-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
 
-        masterDetail.FindAll("[data-testid=master-detail-grid-select]")[0].Click();
+        var groups = masterDetail.DataGrid<SampleGroup, SampleMasterDetail>("master-detail-grid");
+        masterDetail.WaitForAssertion(() => groups.Rows.Should().NotBeEmpty());
+        groups.Click(0, QuroMasterMultiDetail<SampleGroup, SampleLine>.SelectField);
 
         masterDetail.Find("[data-testid=master-detail-toolbar-new]").HasAttribute("disabled").Should().BeFalse();
         masterDetail.Find("[data-testid=master-detail-toolbar-save]").HasAttribute("disabled").Should().BeFalse();

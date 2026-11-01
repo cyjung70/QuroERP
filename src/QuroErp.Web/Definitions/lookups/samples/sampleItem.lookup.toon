@@ -1,0 +1,14 @@
+# Lookup of the sample items (TASK-CORE-056): code columns of the SM and MM samples. Development only.
+lookup:
+  id: sampleItem
+  title: Samples.FindItem
+  version: 1
+  api: /api/samples/items/lookup
+  key: code
+  text: name
+  minChars: 1
+queries[1]{id,params}:
+  all,""
+columns[2]{id,label,type,width,fmt}:
+  code,Samples.Code,text,120,""
+  name,Samples.Name,text,220,""

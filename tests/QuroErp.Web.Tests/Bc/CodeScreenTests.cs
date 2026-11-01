@@ -84,8 +84,8 @@ public class CodeScreenTests : BunitContext
         var page = RenderAs("admin");
 
         page.Find("[data-testid=code-search-find-major]").Click();
-        page.WaitForElement("[data-testid=code-major-lookup] tbody tr");
-        page.FindAll("[data-testid=code-major-lookup] tbody tr")[1].QuerySelector("button")!.Click();
+        page.WaitForAssertion(() => page.LookupRows("code-major-lookup").Should().NotBeEmpty());
+        page.PickLookupRow<CodeMajorDto, Code>("code-major-lookup", 1);
 
         page.Find("[data-testid=code-search-major-code]").GetAttribute("value").Should().Be("UNIT");
         page.Find("[data-testid=code-search-major-name]").GetAttribute("value").Should().Be("단위");

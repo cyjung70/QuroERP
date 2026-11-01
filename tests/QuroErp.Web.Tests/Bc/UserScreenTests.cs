@@ -294,8 +294,8 @@ public class UserScreenTests : BunitContext
         var page = RenderAs("admin");
 
         page.Find("[data-testid=user-search-user-lookup]").Click();
-        page.WaitForElement("[data-testid=user-user-lookup] tbody tr");
-        page.Find("[data-testid=user-user-lookup] tbody tr button").Click();
+        page.WaitForAssertion(() => page.LookupRows("user-user-lookup").Should().NotBeEmpty());
+        page.PickLookupRow<UserDto, User>("user-user-lookup", 0);
 
         page.WaitForAssertion(() => Value(page, "user-header-userid").Should().Be("kim"));
         _api.Requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/api/bc/users/7");

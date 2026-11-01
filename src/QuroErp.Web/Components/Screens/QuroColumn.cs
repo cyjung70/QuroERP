@@ -26,6 +26,10 @@ public sealed class QuroColumn<TRow> : ComponentBase
     [Parameter]
     public string? Format { get; set; }
 
+    /// <summary>A numeric column totalled in the footer row of a read-only list (lookup dialog, sub-grid).</summary>
+    [Parameter]
+    public bool Sum { get; set; }
+
     /// <summary>Cell editor, e.g. a QuroText with HideLabel.</summary>
     [Parameter]
     public RenderFragment<TRow>? ChildContent { get; set; }

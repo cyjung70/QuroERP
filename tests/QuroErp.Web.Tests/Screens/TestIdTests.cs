@@ -97,12 +97,16 @@ public class TestIdTests : ScreenContext
             cut.Find("[data-testid=header-detail-toolbar-search]").Click();
             cut.Find("[data-testid=header-detail-find-keyword]").Change("SO261000001");
             cut.Find("[data-testid=header-detail-find] form").Submit();
-            cut.Find("[data-testid=header-detail-find-grid-select]").Click();
+            cut.WaitForAssertion(() => cut.LookupRows("header-detail-find").Should().ContainSingle());
+            cut.PickLookupRow<SampleOrder, ContainerFragment>("header-detail-find", 0);
+            cut.WaitForAssertion(() => cut.FindAll("[data-testid=header-detail-line] [data-row]").Should().NotBeEmpty());
         }
         if (screen == "master-detail")
         {
-            cut.WaitForAssertion(() => cut.FindAll("[data-testid=master-detail-grid-select]").Should().NotBeEmpty());
-            cut.FindAll("[data-testid=master-detail-grid-select]")[0].Click();
+            var groups = cut.DataGrid<SampleGroup, ContainerFragment>("master-detail-grid");
+            cut.WaitForAssertion(() => groups.Rows.Should().NotBeEmpty());
+            groups.Click(0, QuroErp.Web.Components.Screens.QuroMasterMultiDetail<SampleGroup, SampleLine>.SelectField);
+            cut.WaitForAssertion(() => cut.FindAll("[data-testid=master-detail-line] [data-row]").Should().NotBeEmpty());
         }
         if (screen == "multi")
         {

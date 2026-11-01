@@ -47,16 +47,10 @@
                 <QuroSubGrid TRow="SampleStock" Items="_stock" Note="@L["Samples.StockNote"]" TestId="single-grid-stock">
                     <Columns>
                         <QuroColumn TRow="SampleStock" Title="@L["Samples.Warehouse"]" Value="s => s.Warehouse" />
-                        <QuroColumn TRow="SampleStock" Title="@L["Samples.OnHand"]" Value="s => s.OnHand" Format="N2" />
-                        <QuroColumn TRow="SampleStock" Title="@L["Samples.Allocated"]" Value="s => s.Allocated" Format="N2" />
-                        <QuroColumn TRow="SampleStock" Title="@L["Samples.Available"]" Value="s => s.Available" Format="N2" />
+                        <QuroColumn TRow="SampleStock" Title="@L["Samples.OnHand"]" Value="s => s.OnHand" Format="N2" Sum="true" />
+                        <QuroColumn TRow="SampleStock" Title="@L["Samples.Allocated"]" Value="s => s.Allocated" Format="N2" Sum="true" />
+                        <QuroColumn TRow="SampleStock" Title="@L["Samples.Available"]" Value="s => s.Available" Format="N2" Sum="true" />
                     </Columns>
-                    <FooterRow>
-                        <td>@L["Common.Total"]</td>
-                        <td>@_stock.Sum(s => s.OnHand).ToString("N2")</td>
-                        <td>@_stock.Sum(s => s.Allocated).ToString("N2")</td>
-                        <td>@_stock.Sum(s => s.Available).ToString("N2")</td>
-                    </FooterRow>
                 </QuroSubGrid>
             </QuroTab>
             <QuroTab Id="transactions" Title="@L["Samples.TransactionsTab"]" LoadTab="() => LoadTransactions(item)">

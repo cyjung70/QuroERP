@@ -12,7 +12,7 @@
                 <QuroText Label="@L["Common.Keyword"]" @bind-Value="_keyword" TestId="@Id("keyword")" />
                 <button type="submit" disabled="@_busy" data-testid="@Id("search")">@L["Common.Search"]</button>
             </form>
-            <QuroGrid TRow="TItem" Rows="_rows" Columns="Columns" Busy="_busy" TestId="@Id("grid")" OnSelect="SelectAsync" />
+            <QuroListGrid TRow="TItem" Items="_rows" Columns="Columns" Busy="_busy" TestId="@Id("grid")" OnSelect="SelectAsync" />
             <div class="quro-dialog-actions">
                 <button type="button" data-testid="@Id("close")" @onclick="CloseAsync">@L["Common.Close"]</button>
             </div>
@@ -21,7 +21,7 @@
 }
 
 @code {
-    private readonly GridRows<TItem> _rows = new();
+    private IReadOnlyList<TItem> _rows = [];
     private string? _keyword;
     private bool _busy;
     private bool _wasVisible;
@@ -49,12 +49,16 @@
     [Parameter]
     public string? TestId { get; set; }
 
-    // Each opening starts with an empty keyword and the full list
+    /// <summary>The keyword an opening starts with, e.g. the text typed in a grid code cell (null = all).</summary>
+    [Parameter]
+    public string? InitialKeyword { get; set; }
+
+    // Each opening starts with the initial keyword (usually empty) and its list
     protected override async Task OnParametersSetAsync()
     {
         if (Visible && !_wasVisible)
         {
-            _keyword = null;
+            _keyword = InitialKeyword;
             await SearchAsync();
         }
         _wasVisible = Visible;
@@ -65,7 +69,7 @@
         _busy = true;
         try
         {
-            _rows.Load(await Search(_keyword));
+            _rows = await Search(_keyword);
         }
         finally
         {

@@ -1,0 +1,32 @@
+# Screen type MM sample (TASK-CORE-056): pick a group, then edit its member items. Development only.
+screen:
+  id: samples.group.members
+  module: SAMPLES
+  title: Samples.MasterDetail.Title
+  version: 1
+  api: /api/samples/groups
+  key: id
+  layout: grid
+  perm:
+    read: SAMPLES.Read
+    write: SAMPLES.Write
+toolbar[3]: query,new,save
+# A grid screen still names its key as a form field; the MM frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[2]:
+  - id: groups
+    bind: groups
+    rowKey: id
+    columns[2]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      code,Samples.Group,text,100,false,false,"","",false,false
+      name,Samples.Name,text,200,false,false,"","",false,false
+  - id: members
+    bind: members
+    rowKey: id
+    deletedRows: strike
+    columns[2]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      itemCode,Samples.Item,text,140,true,true,"",sampleItem,false,false
+      qty,Samples.Qty,number,110,true,false,N2,"",false,false
