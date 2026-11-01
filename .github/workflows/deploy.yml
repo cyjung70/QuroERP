@@ -37,8 +37,10 @@ jobs:
       IMAGE_PREFIX: quroerp-dev
       RELEASE_SHA: ${{ github.sha }}
       IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      # dev 환경 Variable에는 개발 웹 HTTPS 주소만 등록합니다.
-      DEPLOY_URL: ${{ vars.DEV_URL }}
+      # 웹 인증서는 기존 호스트 파일을 연결합니다. 공개 URL 등록은 필요하지 않습니다.
+      TLS_DIRECTORY: ${{ vars.DEV_TLS_DIRECTORY || '/opt/quroerp/dev/tls' }}
+      WEB_HOST: ${{ vars.DEV_WEB_HOST }}
+      HTTPS_PORT: ${{ vars.DEV_HTTPS_PORT || '8443' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -56,8 +58,14 @@ jobs:
           command -v flock
           command -v curl
           command -v openssl
-          test -r /opt/quroerp/dev/deploy.env || { echo '/opt/quroerp/dev/deploy.env 파일을 러너 계정이 읽을 수 있도록 준비하세요.' >&2; exit 1; }
-          test -n "$DEPLOY_URL" || { echo 'GitHub dev 환경 Variable DEV_URL을 설정하세요.' >&2; exit 1; }
+      - name: DB 및 웹 인증서 Secret 확인
+        # 값은 출력하지 않고 등록 여부만 확인합니다. 빌드에는 비밀 값을 전달하지 않습니다.
+        env:
+          DB_CONNECTION: ${{ secrets.DEV_DB_CONNECTION }}
+          TLS_PASSWORD: ${{ secrets.DEV_TLS_PASSWORD }}
+        run: |
+          test -n "$DB_CONNECTION" || { echo 'GitHub Actions Secret DEV_DB_CONNECTION에 DB 연결 문자열을 등록하세요.' >&2; exit 1; }
+          test -n "$TLS_PASSWORD" || { echo '기존 웹 인증서 비밀번호를 Secret DEV_TLS_PASSWORD에 등록하세요.' >&2; exit 1; }
       - name: 배포 실패 처리 검증
         run: bash deploy/tests/deploy-test.sh
       - name: 검증된 커밋의 Docker 이미지 빌드
@@ -70,6 +78,9 @@ jobs:
               -t "$IMAGE_PREFIX-$target:$IMAGE_TAG" .
           done
       - name: 외부 개발 DB 마이그레이션 및 배포
-        # DB/TLS 설정은 서버 deploy.env에서 읽고 JWT 키는 서버에서 자동 생성·보관합니다.
-        # GitHub Secrets와 빌드 인수로 인증정보를 전달하지 않습니다.
+        # GitHub Secrets → 단계 환경변수 → Compose → .NET 설정 순서로 주입합니다.
+        # 비밀 값은 이미지/명령줄/설정 파일에 기록하지 않습니다. JWT 키는 자동 관리합니다.
+        env:
+          DB_CONNECTION: ${{ secrets.DEV_DB_CONNECTION }}
+          TLS_PASSWORD: ${{ secrets.DEV_TLS_PASSWORD }}
         run: bash deploy/deploy.sh

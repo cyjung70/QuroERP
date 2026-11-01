@@ -4,21 +4,20 @@ umask 077
 
 : "${IMAGE_PREFIX:?IMAGE_PREFIX is required}"
 : "${IMAGE_TAG:?IMAGE_TAG is required}"
-: "${DEPLOY_URL:?DEPLOY_URL is required}"
+: "${DB_CONNECTION:?GitHub Secret DEV_DB_CONNECTION is required}"
+: "${TLS_PASSWORD:?GitHub Secret DEV_TLS_PASSWORD is required}"
 [[ "$IMAGE_PREFIX" == quroerp-dev ]] || exit 2
 [[ "$IMAGE_TAG" =~ ^[a-f0-9]{40}-[0-9]+-[0-9]+$ ]] || exit 2
-[[ "$DEPLOY_URL" == https://* ]] || exit 2
 
 # 설정/잠금/릴리스 기록 경로는 고정합니다. 외부 환경변수로 변경할 수 없습니다.
 readonly deploy_dir=/opt/quroerp/dev
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-test -r "$deploy_dir/deploy.env"
+mkdir -p "$deploy_dir"
 exec 9>"$deploy_dir/deploy.lock"
 flock -w 300 9
 
-# 호스트/러너에 남은 환경변수가 서버 파일 값을 덮어쓰지 못하도록 제거합니다.
-# 파일은 source/eval하지 않고 Compose의 dotenv 형식으로만 읽습니다.
-unset DB_CONNECTION JWT_SIGNING_KEY TLS_PASSWORD TLS_DIRECTORY WEB_HOST HTTPS_PORT
+# DB/TLS 설정은 Actions 환경변수를 그대로 사용합니다. 호스트 deploy.env는 읽지 않습니다.
+unset JWT_SIGNING_KEY
 
 # 로그인 토큰 서명 키는 개발 서버에서 한 번 생성하고 이후 배포에도 재사용합니다.
 # DB 비밀번호의 해시가 아니며 로그/이미지/릴리스 매니페스트에는 기록하지 않습니다.
@@ -39,7 +38,8 @@ if [[ ! "$JWT_SIGNING_KEY" =~ ^[a-f0-9]{64}$ ]]; then
 fi
 export JWT_SIGNING_KEY
 
-compose=(docker compose --project-name quroerp-dev --env-file "$deploy_dir/deploy.env" -f "$script_dir/compose.yaml")
+# /dev/null을 지정하여 checkout/호스트의 .env를 자동으로 읽지 않도록 합니다.
+compose=(docker compose --project-name quroerp-dev --env-file /dev/null -f "$script_dir/compose.yaml")
 # 확장된 설정에 비밀 값이 포함되므로 --quiet를 반드시 사용합니다.
 "${compose[@]}" config --quiet
 for target in api web migrate; do
@@ -50,10 +50,8 @@ done
 "${compose[@]}" run --rm --no-deps migrate
 "${compose[@]}" up -d --wait --wait-timeout 240 api web
 
-status="$(curl --silent --show-error --retry 5 --retry-all-errors --retry-delay 3 \
-  --connect-timeout 10 --max-time 30 --fail --output /dev/null \
-  --write-out '%{http_code}' "${DEPLOY_URL%/}/bc/login")"
-test "$status" = 200
+# up --wait가 API의 DB 연결 검사와 Web의 HTTPS 로그인 페이지 검사를 기다립니다.
+# 외부 DNS/공개 URL 검사는 수행하지 않으므로 DEV_URL은 필요하지 않습니다.
 
 # 성공 기록에는 이미지 식별자와 비밀 값이 없는 매니페스트만 남깁니다.
 release_dir="$deploy_dir/releases/$IMAGE_TAG"
