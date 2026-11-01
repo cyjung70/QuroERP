@@ -47,46 +47,57 @@ public class CurrencyScreenTests : BunitContext
     public void Open_ListsEveryCurrency_WithNamesPerLanguageInUse_EnFirst()
     {
         var page = RenderAs("admin");
+        var grid = Grid(page);
 
-        page.FindAll("th").Select(h => h.TextContent.Trim()).Should()
+        grid.Headers.Select(h => h.Title).Should()
             .ContainInOrder("통화 코드", "이름 (English)", "이름 (한국어)", "금액 자릿수", "국가", "사용");
-        Values(page, "currency-grid-currency-code").Should().Equal("JPY", "USD");
-        Values(page, "currency-grid-name-en").Should().Equal("Yen", "US Dollar");
-        Values(page, "currency-grid-name-ko").Should().Equal("", "미국 달러");
-        Values(page, "currency-grid-decimals").Should().Equal("0", "2");
-        Values(page, "currency-grid-country-code").Should().Equal("JP", "US");
-        page.FindAll("[data-testid=currency-grid-use-yn]").Select(c => c.HasAttribute("checked")).Should().Equal(false, true);
+        grid.Column("currencyCode").Should().Equal("JPY", "USD");
+        grid.Column("nameEn").Should().Equal("Yen", "US Dollar");
+        grid.Column("nameKo").Should().Equal("", "미국 달러");
+        grid.Column("decimals").Should().Equal("0", "2");
+        grid.Column("countryCode").Should().Equal("JP", "US");
+        new[] { grid.IsChecked(0, "useYn"), grid.IsChecked(1, "useYn") }.Should().Equal(false, true);
         _api.Searches.Should().Be(1);
     }
 
+    [Fact]
+    public void LanguageNotInUse_HasNoNameColumn()
+    {
+        _api.Languages = [new("en", 1)];
+
+        var grid = Grid(RenderAs("admin"));
+
+        grid.Headers.Select(h => h.Field).Should().Contain("nameEn").And.NotContain("nameKo");
+    }
+
     [Fact, Trait("Id", "BC-UT-411")]
-    public void CurrencyCode_IsLockedOnLoadedRows_AndOpenOnNewOnes_EnNameRequired()
+    public void CurrencyCode_IsLockedOnLoadedRows_AndOpenOnNewOnes()
     {
         var page = RenderAs("admin");
+        var grid = Grid(page);
 
         page.Find("[data-testid=currency-toolbar-new]").Click();
 
-        var codes = page.FindAll("[data-testid=currency-grid-currency-code]");
-        codes.Take(2).Should().OnlyContain(c => c.HasAttribute("readonly"));
-        codes[2].HasAttribute("readonly").Should().BeFalse();
-        page.FindAll("[data-testid=currency-grid-name-en]")[2].GetAttribute("aria-required").Should().Be("true");
-        page.FindAll("[data-testid=currency-grid-name-ko]")[2].HasAttribute("aria-required").Should().BeFalse();
-        Values(page, "currency-grid-decimals")[2].Should().BeEmpty();
-        page.FindAll("[data-testid=currency-grid-use-yn]")[2].HasAttribute("checked").Should().BeTrue();
+        grid.IsReadOnly(0, "currencyCode").Should().BeTrue();
+        grid.IsReadOnly(1, "currencyCode").Should().BeTrue();
+        grid.IsReadOnly(2, "currencyCode").Should().BeFalse();
+        grid.Text(2, "decimals").Should().BeEmpty();
+        grid.IsChecked(2, "useYn").Should().BeTrue();
     }
 
     [Fact, Trait("Id", "BC-UT-428")]
     public void AddChangeAndDelete_AreSavedTogether_WithNamesInLanguagesInUseOnly()
     {
         var page = RenderAs("admin");
+        var grid = Grid(page);
 
-        page.FindAll("[data-testid=currency-grid-name-ko]")[0].Change("엔");
-        page.FindAll("[data-testid=currency-grid-use-yn]")[0].Change(true);
-        page.FindAll("[data-testid=currency-grid-delete-row]")[1].Click();
+        grid.Edit(0, "nameKo", "엔").Should().BeTrue();
+        grid.Toggle(0, "useYn").Should().BeTrue();
+        grid.Click(1, "deleteRow");
         page.Find("[data-testid=currency-toolbar-new]").Click();
-        page.FindAll("[data-testid=currency-grid-currency-code]")[2].Change("eur");
-        page.FindAll("[data-testid=currency-grid-name-en]")[2].Change("Euro");
-        page.FindAll("[data-testid=currency-grid-country-code]")[2].Change("de");
+        grid.Edit(2, "currencyCode", "eur").Should().BeTrue();
+        grid.Edit(2, "nameEn", "Euro").Should().BeTrue();
+        grid.Edit(2, "countryCode", "de").Should().BeTrue();
 
         page.Find("[data-testid=currency-toolbar-save]").Click();
 
@@ -119,8 +130,9 @@ public class CurrencyScreenTests : BunitContext
     public void NewRow_WithoutTheEnName_IsNotSent()
     {
         var page = RenderAs("admin");
+        var grid = Grid(page);
         page.Find("[data-testid=currency-toolbar-new]").Click();
-        page.FindAll("[data-testid=currency-grid-currency-code]")[2].Change("EUR");
+        grid.Edit(2, "currencyCode", "EUR");
 
         page.Find("[data-testid=currency-toolbar-save]").Click();
 
@@ -140,33 +152,34 @@ public class CurrencyScreenTests : BunitContext
     {
         _api.SaveProblem = (status, $$"""{"status":{{(int)status}},"code":"{{code}}","args":["USD"]}""");
         var page = RenderAs("admin");
-        page.FindAll("[data-testid=currency-grid-decimals]")[1].Change("3");
+        var grid = Grid(page);
+        grid.Edit(1, "decimals", "3");
 
         page.Find("[data-testid=currency-toolbar-save]").Click();
 
         page.WaitForAssertion(() => page.Find("[data-testid=currency-message]").TextContent.Should().Be(message));
-        Values(page, "currency-grid-decimals")[1].Should().Be("3");
+        grid.Text(1, "decimals").Should().Be("3");
     }
 
     [Fact, Trait("Id", "BC-UT-214"), Trait("Id", "CORE-051-WT-03")]
-    public void UserWithoutFullAccess_CanOnlyRead_NewSaveAndRowButtonsAreDisabledNotHidden()
+    public void UserWithoutFullAccess_CanOnlyRead_NewAndSaveAreDisabledNotHidden()
     {
         var page = RenderAs("user");
-        var rows = page.FindAll("[data-testid=currency-grid] tbody tr").Count;
+        var grid = Grid(page);
 
         page.Find("[data-testid=currency-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=currency-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=currency-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
         page.Find("[data-testid=currency-toolbar-export]").HasAttribute("disabled").Should().BeFalse();
-        page.FindAll("[data-testid=currency-grid-delete-row]").Should().NotBeEmpty().And.OnlyContain(b => b.HasAttribute("disabled"));
-        page.FindAll("[data-testid=currency-grid-name-en]").Should().OnlyContain(c => c.HasAttribute("readonly"));
+        grid.IsReadOnly(0, "nameEn").Should().BeTrue();
 
         // The handlers do nothing either
+        grid.Edit(0, "nameEn", "Y").Should().BeFalse();
         page.Find("[data-testid=currency-toolbar-new]").Click();
-        page.FindAll("[data-testid=currency-grid-delete-row]")[0].Click();
+        grid.Click(0, "deleteRow");
         page.Find("[data-testid=currency-toolbar-save]").Click();
-        page.FindAll("[data-testid=currency-grid] tbody tr").Should().HaveCount(rows);
-        page.FindAll("[data-state=D]").Should().BeEmpty();
+        grid.Rows.Should().HaveCount(2);
+        grid.Column("rowState").Should().OnlyContain(s => s.Length == 0);
         _api.Saved.Should().BeEmpty();
     }
 
@@ -177,7 +190,7 @@ public class CurrencyScreenTests : BunitContext
 
         var elements = page.FindAll("input, select, textarea, button:not([hidden]), .quro-grid");
         elements.Should().NotBeEmpty();
-        elements.Select(e => e.GetAttribute("data-testid")).Should()
+        elements.Select(DataGridPageExtensions.TestIdOf).Should()
             .OnlyContain(id => id != null && System.Text.RegularExpressions.Regex.IsMatch(id, "^currency(-(search|grid|toolbar|message)(-[a-z0-9]+)*)?$"));
     }
 
@@ -206,12 +219,11 @@ public class CurrencyScreenTests : BunitContext
         _auth.SetRoles(role);
         _auth.SetClaims(new Claim(WebAuthClaims.SessionId, sessionId));
         var page = Render<Currency>();
-        page.WaitForAssertion(() => Values(page, "currency-grid-currency-code").Should().NotBeEmpty());
+        page.WaitForAssertion(() => Grid(page).Rows.Should().NotBeEmpty());
         return page;
     }
 
-    private static List<string> Values(IRenderedComponent<Currency> page, string testId) =>
-        page.FindAll($"[data-testid={testId}]").Select(e => e.GetAttribute("value") ?? "").ToList();
+    private static DataGridPage<CurrencyRow> Grid(IRenderedComponent<Currency> page) => page.DataGrid<CurrencyRow, Currency>("currency-grid");
 
     /// <summary>Languages ko then en; JPY (Yen, not in use, with a name in ja, which is not in use) and USD (US Dollar/미국 달러, used by documents).</summary>
     private sealed class FakeCurrencyApi : HttpMessageHandler
@@ -224,6 +236,8 @@ public class CurrencyScreenTests : BunitContext
 
         public int Searches { get; private set; }
 
+        public IReadOnlyList<LanguageDto> Languages { get; set; } = [new("ko", 1), new("en", 2)];
+
         public List<BatchRequest<CurrencySaveRow, CurrencyKey>> Saved { get; } = [];
 
         public (HttpStatusCode Status, string Body)? SaveProblem { get; set; }
@@ -233,7 +247,7 @@ public class CurrencyScreenTests : BunitContext
             var path = request.RequestUri!.AbsolutePath;
             if (path == "/" + LocalizationRoutes.Base)
             {
-                return Json(new LocalizationDto("US", "USD", "en", "America/New_York", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT", [new("ko", 1), new("en", 2)], [], [], []));
+                return Json(new LocalizationDto("US", "USD", "en", "America/New_York", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT", Languages, [], [], []));
             }
             if (path == "/" + CurrencyRoutes.Batch && request.Method == HttpMethod.Post)
             {

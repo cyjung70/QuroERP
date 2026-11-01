@@ -133,6 +133,7 @@ public class ItemBarcodeScreenTests : BunitContext
         Search(page);
 
         Rows(page).Should().HaveCount(2);
+        Grid(page).IsReadOnly(0, "upcCode").Should().BeTrue();
         page.FindAll("[data-testid=item-barcode-search-generate]").Should().BeEmpty();
         page.Find("[data-testid=item-barcode-search-start-no]").HasAttribute("readonly").Should().BeTrue();
     }
@@ -153,11 +154,19 @@ public class ItemBarcodeScreenTests : BunitContext
     {
         page.Find("[data-testid=item-barcode-search-item-class]").Change("FR");
         page.Find("[data-testid=item-barcode-toolbar-search]").Click();
-        page.WaitForAssertion(() => page.FindAll("tr[data-row-index]").Should().HaveCount(2));
+        page.WaitForAssertion(() => Grid(page).Rows.Should().HaveCount(2));
     }
 
-    private static List<string[]> Rows(IRenderedComponent<ItemBarcode> page) =>
-        page.FindAll("tr[data-row-index]").Select(r => r.QuerySelectorAll("td").Select(c => c.TextContent.Trim()).ToArray()).ToList();
+    private static DataGridPage<ItemBarcodeDto> Grid(IRenderedComponent<ItemBarcode> page) =>
+        page.DataGrid<ItemBarcodeDto, ItemBarcode>("item-barcode-grid");
+
+    // The view-only grid's columns: item code, name, price and barcode
+    private static List<string[]> Rows(IRenderedComponent<ItemBarcode> page)
+    {
+        var grid = Grid(page);
+        return [.. Enumerable.Range(0, grid.Rows.Count)
+            .Select(i => new[] { grid.Text(i, "itemCd"), grid.Text(i, "itemName"), grid.Text(i, "soUsdPrc"), grid.Text(i, "upcCode") })];
+    }
 
     private static string? Value(IRenderedComponent<ItemBarcode> page, string testId) =>
         page.Find($"[data-testid={testId}]").GetAttribute("value");

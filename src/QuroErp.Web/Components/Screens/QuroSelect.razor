@@ -30,14 +30,14 @@ else if (Bound)
 {
     @* Quro.UI combo box over a code data set; test id on the field (TODO(QuroGrid-R3)) *@
     <div class="@FieldClass()" data-testid="@TestId">
-        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @FieldLabel(IsRequiredNow)
         @Form!.Data!.ComboBox(Field!, Codes, IsLocked, L)
     </div>
 }
 else
 {
     <div class="@FieldClass()">
-        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
+        @FieldLabel(IsRequiredNow)
         @* A select has no readonly attribute; disabled keeps a locked value from changing *@
         <select id="@InputId" disabled="@IsLocked" aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync">
             <option value="" selected="@(Value is null)"></option>

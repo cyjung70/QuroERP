@@ -13,6 +13,7 @@ using QuroErp.Web.Auth;
 using QuroErp.Web.Bc.Menus;
 using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Bc;
+using QuroErp.Web.Components.Pages.Bc.Models;
 using QuroErp.Web.Components.Screens;
 using QuroErp.Web.Tests.Screens;
 
@@ -48,10 +49,22 @@ public class CompanyMenuScreenTests : BunitContext
         var page = RenderAs("admin");
 
         MenuCodes(page).Should().Equal("BASE", "ITEM", "USER");
-        Values(page, "company-menu-grid-parent-menu-code").Should().Equal("", "BASE", "BASE");
-        page.Find("[data-testid=company-menu-grid-type] option[selected]").TextContent.Should().Be("메뉴 그룹");
-        page.FindAll("[data-testid=company-menu-grid-module] option").Select(o => o.GetAttribute("value")).Should().Contain(["bc", "mm", "sd", "fi", "rpt"]);
+        Grid(page).Column("parentMenuCode").Should().Equal("", "BASE", "BASE");
+        Grid(page).Column("type").Should().Equal("메뉴 그룹", "프로그램", "프로그램");
+        Grid(page).Column("module").Should().Equal("bc", "bc", "bc");
+        Grid(page).Column("validFlag").Should().Equal("사용", "사용", "사용");
         _api.Searches.Should().Equal((string?)null);
+    }
+
+    [Fact]
+    public void Name_IsEditedAsStored_BesideTheTranslatedName()
+    {
+        var page = RenderAs("admin");
+
+        Grid(page).Headers.Select(h => h.Field).Should().ContainInOrder("menuCode", "name", "displayName", "type", "module");
+        Grid(page).Column("name").Should().Equal("Base", "Items", "Users");
+        Grid(page).IsReadOnly(0, "displayName").Should().BeTrue();
+        Grid(page).IsReadOnly(0, "name").Should().BeFalse();
     }
 
     [Fact, Trait("Id", "BC-UC-006-T03")]
@@ -74,10 +87,9 @@ public class CompanyMenuScreenTests : BunitContext
 
         page.Find("[data-testid=company-menu-toolbar-new]").Click();
 
-        var codes = page.FindAll("[data-testid=company-menu-grid-menu-code]");
-        codes.Take(3).Should().OnlyContain(c => c.HasAttribute("readonly") || c.HasAttribute("disabled"));
-        codes[3].HasAttribute("readonly").Should().BeFalse();
-        Values(page, "company-menu-grid-valid-flag")[3].Should().Be("Y");
+        Enumerable.Range(0, 3).Should().OnlyContain(i => Grid(page).IsReadOnly(i, "menuCode"));
+        Grid(page).IsReadOnly(3, "menuCode").Should().BeFalse();
+        Grid(page).Column("validFlag")[3].Should().Be("사용");
     }
 
     [Fact, Trait("Id", "BC-UC-006-T01")]
@@ -85,14 +97,14 @@ public class CompanyMenuScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        page.FindAll("[data-testid=company-menu-grid-name]")[1].Change("Item master");
-        page.FindAll("[data-testid=company-menu-grid-delete-row]")[2].Click();
+        Grid(page).Edit(1, "name", "Item master");
+        Grid(page).Click(2, "deleteRow");
         page.Find("[data-testid=company-menu-toolbar-new]").Click();
-        page.FindAll("[data-testid=company-menu-grid-menu-code]")[3].Change("whs");
-        page.FindAll("[data-testid=company-menu-grid-name]")[3].Change("Warehouses");
-        page.FindAll("[data-testid=company-menu-grid-program-id]")[3].Change("/mm/warehouse");
-        page.FindAll("[data-testid=company-menu-grid-module]")[3].Change("mm");
-        page.FindAll("[data-testid=company-menu-grid-parent-menu-code]")[3].Change("base");
+        Grid(page).Edit(3, "menuCode", "whs");
+        Grid(page).Edit(3, "name", "Warehouses");
+        Grid(page).Edit(3, "programId", "/mm/warehouse");
+        Grid(page).Edit(3, "module", "mm");
+        Grid(page).Edit(3, "parentMenuCode", "base");
 
         page.Find("[data-testid=company-menu-toolbar-save]").Click();
 
@@ -123,12 +135,12 @@ public class CompanyMenuScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.UnprocessableEntity, $$"""{"status":422,"code":"{{code}}","args":["ITEM"]}""");
         var page = RenderAs("admin");
-        page.FindAll("[data-testid=company-menu-grid-name]")[1].Change("Changed");
+        Grid(page).Edit(1, "name", "Changed");
 
         page.Find("[data-testid=company-menu-toolbar-save]").Click();
 
         page.WaitForAssertion(() => page.Find("[data-testid=company-menu-message]").TextContent.Should().Be(message));
-        Values(page, "company-menu-grid-name")[1].Should().Be("Changed");
+        Grid(page).Column("name")[1].Should().Be("Changed");
     }
 
     [Fact, Trait("Id", "BC-UC-006-T02")]
@@ -136,7 +148,7 @@ public class CompanyMenuScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.Conflict, """{"status":409,"code":"Common-E-004"}""");
         var page = RenderAs("admin");
-        page.FindAll("[data-testid=company-menu-grid-name]")[0].Change("Changed");
+        Grid(page).Edit(0, "name", "Changed");
 
         page.Find("[data-testid=company-menu-toolbar-save]").Click();
 
@@ -148,21 +160,21 @@ public class CompanyMenuScreenTests : BunitContext
     public void UserWithoutFullAccess_CanOnlyRead_NewSaveAndRowButtonsAreDisabledNotHidden()
     {
         var page = RenderAs("user");
-        var rows = page.FindAll("[data-testid=company-menu-grid] tbody tr").Count;
+        var rows = Grid(page).Rows.Count;
 
         page.Find("[data-testid=company-menu-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=company-menu-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=company-menu-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
         page.Find("[data-testid=company-menu-toolbar-export]").HasAttribute("disabled").Should().BeFalse();
-        page.FindAll("[data-testid=company-menu-grid-delete-row]").Should().NotBeEmpty().And.OnlyContain(b => b.HasAttribute("disabled"));
-        page.FindAll("[data-testid=company-menu-grid-name]").Should().OnlyContain(c => c.HasAttribute("readonly") || c.HasAttribute("disabled"));
+        Grid(page).IsReadOnly(0, "name").Should().BeTrue();
 
         // The handlers do nothing either
+        Grid(page).Edit(0, "name", "Changed").Should().BeFalse();
         page.Find("[data-testid=company-menu-toolbar-new]").Click();
-        page.FindAll("[data-testid=company-menu-grid-delete-row]")[0].Click();
+        Grid(page).Click(0, "deleteRow");
         page.Find("[data-testid=company-menu-toolbar-save]").Click();
-        page.FindAll("[data-testid=company-menu-grid] tbody tr").Should().HaveCount(rows);
-        page.FindAll("[data-state=D]").Should().BeEmpty();
+        Grid(page).Rows.Should().HaveCount(rows);
+        Grid(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);
         _api.Saved.Should().BeEmpty();
     }
 
@@ -180,12 +192,10 @@ public class CompanyMenuScreenTests : BunitContext
         return page;
     }
 
-    private static List<string> MenuCodes(IRenderedComponent<CompanyMenu> page) => Values(page, "company-menu-grid-menu-code");
+    private static IReadOnlyList<string> MenuCodes(IRenderedComponent<CompanyMenu> page) => Grid(page).Column("menuCode");
 
-    private static List<string> Values(IRenderedComponent<CompanyMenu> page, string testId) =>
-        page.FindAll($"[data-testid={testId}]").Select(e => e.TagName == "SELECT"
-            ? e.QuerySelector("option[selected]")?.GetAttribute("value") ?? ""
-            : e.GetAttribute("value") ?? "").ToList();
+    private static DataGridPage<CompanyMenuRow> Grid(IRenderedComponent<CompanyMenu> page) =>
+        page.DataGrid<CompanyMenuRow, CompanyMenu>("company-menu-grid");
 
     /// <summary>BASE (group) holding ITEM and USER.</summary>
     private sealed class FakeMenuApi : HttpMessageHandler

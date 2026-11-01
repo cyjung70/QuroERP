@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 
 namespace QuroErp.Web.Components.Screens;
 
@@ -72,6 +73,26 @@ public abstract class QuroInputBase<TValue> : ComponentBase, IQuroField, IDispos
         Span is 2 or 4 ? $"quro-span-{Span}" : null,
     }.Where(c => c is not null));
 
+    /// <summary>The field's label for its input; required fields get a "*" (screens.md "필수 입력").</summary>
+    protected RenderFragment FieldLabel(bool required) => builder => BuildLabel(builder, required);
+
+    private void BuildLabel(RenderTreeBuilder builder, bool required)
+    {
+        builder.OpenElement(0, "label");
+        builder.AddAttribute(1, "for", InputId);
+        builder.AddAttribute(2, "class", HideLabel ? "quro-visually-hidden" : null);
+        builder.AddContent(3, Label);
+        if (required)
+        {
+            builder.OpenElement(4, "span");
+            builder.AddAttribute(5, "class", "quro-required");
+            builder.AddAttribute(6, "aria-hidden", "true");
+            builder.AddContent(7, "*");
+            builder.CloseElement();
+        }
+        builder.CloseElement();
+    }
+
     public abstract bool IsEmpty { get; }
 
     /// <summary>The input is bound to a column of the form's data set.</summary>
@@ -121,6 +142,11 @@ public abstract class QuroInputBase<TValue> : ComponentBase, IQuroField, IDispos
         if (Form is not null)
         {
             Form.Changed -= OnFormChanged;
+        }
+        // A field the form no longer shows (e.g. the password of a loaded user) no longer makes its column required
+        if (Bound)
+        {
+            Form!.Data!.Require(Field!, false);
         }
         Form?.Unregister(this);
         GC.SuppressFinalize(this);

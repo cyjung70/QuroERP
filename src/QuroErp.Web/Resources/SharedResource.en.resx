@@ -335,6 +335,7 @@
   <data name="Bc.CompanyMenu.Title" xml:space="preserve"><value>Company Menus</value></data>
   <data name="Bc.CompanyMenu.MenuCode" xml:space="preserve"><value>Menu ID</value></data>
   <data name="Bc.CompanyMenu.Name" xml:space="preserve"><value>Menu Name</value></data>
+  <data name="Bc.CompanyMenu.DisplayName" xml:space="preserve"><value>Display Name</value></data>
   <data name="Bc.CompanyMenu.Type" xml:space="preserve"><value>Type</value></data>
   <data name="Bc.CompanyMenu.ProgramId" xml:space="preserve"><value>Program ID</value></data>
   <data name="Bc.CompanyMenu.Module" xml:space="preserve"><value>Module</value></data>
@@ -400,6 +401,8 @@
   <data name="Bc.Code.FindMajor" xml:space="preserve"><value>Find Major code</value></data>
   <data name="Bc.Code.MinorCode" xml:space="preserve"><value>Code</value></data>
   <data name="Bc.Code.Name" xml:space="preserve"><value>Name ({0})</value></data>
+  <data name="Bc.Code.NameEn" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="Bc.Code.NameKo" xml:space="preserve"><value>Name (한국어)</value></data>
   <data name="Bc.Code.SortOrder" xml:space="preserve"><value>Sort Order</value></data>
   <data name="Bc.Code.UseYn" xml:space="preserve"><value>In Use</value></data>
   <data name="Bc.Code.Attr1" xml:space="preserve"><value>Attribute 1</value></data>
@@ -413,11 +416,15 @@
   <data name="Bc.CodeMajor.MajorCode" xml:space="preserve"><value>Major Code</value></data>
   <data name="Bc.CodeMajor.Name" xml:space="preserve"><value>Major Name</value></data>
   <data name="Bc.CodeMajor.NameIn" xml:space="preserve"><value>Name ({0})</value></data>
+  <data name="Bc.CodeMajor.NameEn" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="Bc.CodeMajor.NameKo" xml:space="preserve"><value>Name (한국어)</value></data>
   <data name="Bc.CodeMajor.UseYn" xml:space="preserve"><value>In Use</value></data>
   <data name="Bc.CodeMajor.MinorCount" xml:space="preserve"><value>Minor Codes</value></data>
   <data name="Bc.Currency.Title" xml:space="preserve"><value>Currencies</value></data>
   <data name="Bc.Currency.CurrencyCode" xml:space="preserve"><value>Currency Code</value></data>
   <data name="Bc.Currency.Name" xml:space="preserve"><value>Name ({0})</value></data>
+  <data name="Bc.Currency.NameEn" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="Bc.Currency.NameKo" xml:space="preserve"><value>Name (한국어)</value></data>
   <data name="Bc.Currency.Decimals" xml:space="preserve"><value>Amount Decimals</value></data>
   <data name="Bc.Currency.CountryCode" xml:space="preserve"><value>Country</value></data>
   <data name="Bc.Currency.UseYn" xml:space="preserve"><value>In Use</value></data>

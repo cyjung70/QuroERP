@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Bunit;
 using Bunit.Rendering;
@@ -33,11 +32,7 @@ public class TestIdTests : ScreenContext
         elements.Should().NotBeEmpty();
         foreach (var element in elements)
         {
-            // Quro.UI inputs and package grids take no test id yet; their field or host element has it (TODO(QuroGrid-R3))
-            var id = element.GetAttribute("data-testid")
-                ?? (element.ClassList.Contains("quro-ui-input") || element.GetAttribute("role") == "grid"
-                    ? element.Closest("[data-testid]")?.GetAttribute("data-testid")
-                    : null);
+            var id = DataGridPageExtensions.TestIdOf(element);
             id.Should().NotBeNull($"{element.OuterHtml} needs a data-testid");
             id.Should().MatchRegex(Rule(screen));
         }
@@ -56,13 +51,7 @@ public class TestIdTests : ScreenContext
         {
             grid.QuerySelectorAll(".quro-body [role=row]").Should().NotBeEmpty().And.OnlyContain(r => r.HasAttribute("data-row"));
         }
-        foreach (var grid in cut.FindAll(".quro-grid:not([role=grid])"))
-        {
-            var rows = grid.QuerySelectorAll("tbody tr");
-            rows.Select(r => r.GetAttribute("data-row-index"))
-                .Should().Equal(Enumerable.Range(0, rows.Length).Select(i => i.ToString(CultureInfo.InvariantCulture)));
-        }
-        cut.FindAll("tbody tr, .quro-body [role=row]").Should().NotBeEmpty();
+        cut.FindAll(".quro-body [role=row]").Should().NotBeEmpty();
     }
 
     [Fact]

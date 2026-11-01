@@ -49,15 +49,15 @@ public class ItemScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        Selected(page, "item-header-item-type").Should().Be("INVENTORY");
-        Selected(page, "item-header-unit").Should().Be("EA");
-        page.Find("[data-testid=item-header-item-type] option[value=INVENTORY]").TextContent.Should().Be("재고 품목");
+        Selected(page, "item-header-item-type").Should().BeEquivalentTo("INVENTORY");
+        Selected(page, "item-header-unit").Should().BeEquivalentTo("EA");
+        page.Field("item-header-item-type").Options.Should().Contain(("inventory", "재고 품목"));
         page.Find("[data-testid=item-header-valid-flag-y]").HasAttribute("checked").Should().BeTrue();
         Value(page, "item-header-usd-prc").Should().Be("0.01");
         page.Find("[data-testid=item-header-usd-prc]").GetAttribute("step").Should().Be("0.01");
         Value(page, "item-header-reorder-point").Should().Be("0.000");
         Value(page, "item-header-stk-val").Should().Be("0.00");
-        page.Find("[data-testid=item-header-mvg-cost]").HasAttribute("readonly").Should().BeTrue();
+        page.Field("item-header-mvg-cost").IsReadOnly.Should().BeTrue();
         _api.Requests.Should().OnlyContain(r => r.Headers.Authorization!.Parameter == "token-admin");
     }
 
@@ -115,7 +115,7 @@ public class ItemScreenTests : BunitContext
     {
         var page = RenderAs("admin");
         Search(page, "A100");
-        page.Find("[data-testid=item-header-item-name]").Change("PEAR");
+        page.Field("item-header-item-name").Change("PEAR");
         _confirm.Answer = false;
 
         page.Find("[data-testid=item-toolbar-next]").Click();
@@ -130,9 +130,9 @@ public class ItemScreenTests : BunitContext
     public void SaveNew_PostsItem_AndLocksCode()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=item-header-item-cd]").Change("b200");
-        page.Find("[data-testid=item-header-item-name]").Change("bolt");
-        page.Find("[data-testid=item-header-item-class]").Change("HW");
+        page.Field("item-header-item-cd").Change("b200");
+        page.Field("item-header-item-name").Change("bolt");
+        page.Field("item-header-item-class").Change("HW");
 
         page.Find("[data-testid=item-toolbar-save]").Click();
 
@@ -142,7 +142,7 @@ public class ItemScreenTests : BunitContext
         created.ItemName.Should().Be("BOLT");
         created.ItemType.Should().Be("INVENTORY");
         created.UsdPrc.Should().Be(0.01m);
-        page.Find("[data-testid=item-header-item-cd]").HasAttribute("readonly").Should().BeTrue();
+        page.Field("item-header-item-cd").IsReadOnly.Should().BeTrue();
         Value(page, "item-search-item-cd").Should().Be("B200");
     }
 
@@ -150,8 +150,8 @@ public class ItemScreenTests : BunitContext
     public void SaveWithoutItemClass_ShowsRequiredMessage_AndDoesNotPost()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=item-header-item-cd]").Change("B200");
-        page.Find("[data-testid=item-header-item-name]").Change("BOLT");
+        page.Field("item-header-item-cd").Change("B200");
+        page.Field("item-header-item-name").Change("BOLT");
 
         page.Find("[data-testid=item-toolbar-save]").Click();
 
@@ -165,7 +165,7 @@ public class ItemScreenTests : BunitContext
         var page = RenderAs("admin");
         Search(page, "A100");
         _api.UpdateConflict = true;
-        page.Find("[data-testid=item-header-item-name]").Change("APPLE 2");
+        page.Field("item-header-item-name").Change("APPLE 2");
 
         page.Find("[data-testid=item-toolbar-save]").Click();
 
@@ -224,7 +224,7 @@ public class ItemScreenTests : BunitContext
         Value(page, "item-header-item-name").Should().Be("APPLE");
         Value(page, "item-search-item-name").Should().Be("APPLE");
         Value(page, "item-header-onhand-qty").Should().Be("5.000");
-        page.Find("[data-testid=item-header-item-cd]").HasAttribute("readonly").Should().BeTrue();
+        page.Field("item-header-item-cd").IsReadOnly.Should().BeTrue();
     }
 
     [Fact, Trait("Id", "BC-UC-009-T11")]
@@ -251,9 +251,9 @@ public class ItemScreenTests : BunitContext
             .Should().Equal("item-toolbar-search", "item-toolbar-previous", "item-toolbar-next");
         page.FindAll("[role=toolbar] button[disabled]").Select(b => b.GetAttribute("data-testid"))
             .Should().Equal("item-toolbar-new", "item-toolbar-save", "item-toolbar-delete");
-        page.Find("[data-testid=item-header-item-name]").HasAttribute("readonly").Should().BeTrue();
-        page.Find("[data-testid=item-header-unit]").HasAttribute("disabled").Should().BeTrue();
-        page.Find("[data-testid=item-header-valid-flag-n]").HasAttribute("disabled").Should().BeTrue();
+        page.Field("item-header-item-name").IsReadOnly.Should().BeTrue();
+        page.Field("item-header-unit").IsReadOnly.Should().BeTrue();
+        page.Field("item-header-valid-flag-n").IsReadOnly.Should().BeTrue();
     }
 
     [Fact, Trait("Id", "BC-UC-010-T04")]
@@ -289,7 +289,7 @@ public class ItemScreenTests : BunitContext
         _auth.SetClaims(new Claim(WebAuthClaims.SessionId, sessionId));
         var page = Render<Item>();
         page.WaitForElement("[data-testid=item-header-item-cd]");
-        page.WaitForAssertion(() => page.FindAll("[data-testid=item-header-unit] option").Should().HaveCountGreaterThan(1));
+        page.WaitForAssertion(() => page.Field("item-header-unit").Options.Should().HaveCountGreaterThan(1));
         return page;
     }
 
@@ -297,14 +297,12 @@ public class ItemScreenTests : BunitContext
     {
         page.Find("[data-testid=item-search-item-cd]").Change(code);
         page.Find("[data-testid=item-toolbar-search]").Click();
-        page.WaitForAssertion(() => page.Find("[data-testid=item-header-item-cd]").HasAttribute("readonly").Should().BeTrue());
+        page.WaitForAssertion(() => page.Field("item-header-item-cd").IsReadOnly.Should().BeTrue());
     }
 
-    private static string? Value(IRenderedComponent<Item> page, string testId) =>
-        page.Find($"[data-testid={testId}]").GetAttribute("value");
+    private static string? Value(IRenderedComponent<Item> page, string testId) => page.Field(testId).Value;
 
-    private static string? Selected(IRenderedComponent<Item> page, string testId) =>
-        page.Find($"[data-testid={testId}] option[selected]").GetAttribute("value");
+    private static string? Selected(IRenderedComponent<Item> page, string testId) => page.Field(testId).Selected;
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
 

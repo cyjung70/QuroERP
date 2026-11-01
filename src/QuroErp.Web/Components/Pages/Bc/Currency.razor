@@ -23,30 +23,8 @@
 @if (_ready)
 {
     <QuroMultiGrid TRow="CurrencyRow" Title="@L["Bc.Currency.Title"]" TestId="currency" Path="@L["Menu.G5AD"]" LoadOnStart="true"
+                   Definition="bc.currency.list" Adjust="g => LanguageNames.InUse(g, _languages)" UpperCaseFields="UpperCaseFields"
                    Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit">
-        <Columns>
-            <QuroColumn Title="@L["Bc.Currency.CurrencyCode"]" Value="r => r.CurrencyCode" Context="row">
-                <QuroText Label="@L["Bc.Currency.CurrencyCode"]" HideLabel @bind-Value="row.CurrencyCode" Required LockMode="LockMode.NewOnly"
-                          TextCase="TextCase.Upper" TestId="currency-grid-currency-code" />
-            </QuroColumn>
-            @foreach (var lang in _languages)
-            {
-                <QuroColumn Title="@NameTitle(lang)" Value="r => r.Names.GetValueOrDefault(lang)" Context="row">
-                    <QuroText Label="@NameTitle(lang)" HideLabel @bind-Value="row.Names[lang]" Required="@(lang == FallbackLang)"
-                              TestId="@($"currency-grid-name-{lang}")" />
-                </QuroColumn>
-            }
-            <QuroColumn Title="@L["Bc.Currency.Decimals"]" Value="r => r.Decimals" Context="row">
-                <QuroNumber Label="@L["Bc.Currency.Decimals"]" HideLabel @bind-Value="row.Decimals" Decimals="0" TestId="currency-grid-decimals" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.Currency.CountryCode"]" Value="r => r.CountryCode" Context="row">
-                <QuroText Label="@L["Bc.Currency.CountryCode"]" HideLabel @bind-Value="row.CountryCode" TextCase="TextCase.Upper"
-                          TestId="currency-grid-country-code" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.Currency.UseYn"]" Value="r => r.UseYn" Context="row">
-                <QuroCheckbox Label="@L["Bc.Currency.UseYn"]" HideLabel @bind-Value="row.UseYn" TestId="currency-grid-use-yn" />
-            </QuroColumn>
-        </Columns>
     </QuroMultiGrid>
 }
 
@@ -54,6 +32,7 @@
     // The en name is required (BC-BR-404); its column comes first
     private const string FallbackLang = "en";
     private const string UnavailableCode = "BC-E-003";
+    private static readonly string[] UpperCaseFields = ["currencyCode", "countryCode"];
 
     private IReadOnlyList<string> _languages = [FallbackLang];
     private bool _canEdit;
@@ -91,7 +70,4 @@
     private Task SaveAsync(BatchChanges<CurrencyRow> changes) => Api.SaveAsync(CurrencyRow.ToRequest(changes), Lang, CancellationToken.None);
 
     private CurrencyRow NewRow() => CurrencyRow.New(_languages);
-
-    private string NameTitle(string lang) =>
-        string.Format(CultureInfo.CurrentCulture, L["Bc.Currency.Name"], L[$"Common.Language.{lang}"] is { ResourceNotFound: false } name ? name.Value : lang);
 }

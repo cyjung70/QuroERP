@@ -56,8 +56,8 @@ public class UserScreenTests : BunitContext
         page.FindAll("[data-testid=user-header-confirm-password]").Should().ContainSingle();
         page.Find("[data-testid=user-header-valid-flag-y]").HasAttribute("checked").Should().BeTrue();
         Value(page, "user-header-user-valid-dt").Should().BeNullOrEmpty();
-        page.Find("[data-testid=user-header-role-id] option[value='2']").TextContent.Should().Be("user");
-        page.FindAll("[data-testid=user-header-lang-code] option").Select(o => o.GetAttribute("value")).Should().Contain(["ko", "en"]);
+        page.Field("user-header-role-id").Options.Should().Contain(("2", "user"));
+        page.Field("user-header-lang-code").Options.Select(o => o.Code).Should().Contain(["ko", "en"]);
         page.FindAll("[data-testid=user-actions]").Should().BeEmpty();
     }
 
@@ -77,18 +77,18 @@ public class UserScreenTests : BunitContext
     public void SaveNew_PostsALowerCaseUserIdWithThePassword_AndLocksTheUserId()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=user-header-userid]").Change("New.User");
-        page.Find("[data-testid=user-header-username]").Change("New User");
-        page.Find("[data-testid=user-header-password]").Change("Initial-Pass-1");
-        page.Find("[data-testid=user-header-confirm-password]").Change("Initial-Pass-1");
-        page.Find("[data-testid=user-header-role-id]").Change("2");
+        page.Field("user-header-userid").Change("New.User");
+        page.Field("user-header-username").Change("New User");
+        page.Field("user-header-password").Change("Initial-Pass-1");
+        page.Field("user-header-confirm-password").Change("Initial-Pass-1");
+        page.Field("user-header-role-id").Change("2");
 
         page.Find("[data-testid=user-toolbar-save]").Click();
 
         page.WaitForAssertion(() => page.Find("[data-testid=user-message]").TextContent.Should().Be("저장했습니다."));
         var created = _api.Created.Should().ContainSingle().Subject;
         created.Should().BeEquivalentTo(new { UserId = "new.user", Password = "Initial-Pass-1", RoleId = 2L, ValidFlag = "Y", UserValidDt = (DateOnly?)null });
-        page.Find("[data-testid=user-header-userid]").HasAttribute("readonly").Should().BeTrue();
+        page.Field("user-header-userid").IsReadOnly.Should().BeTrue();
         page.FindAll("[data-testid=user-header-password]").Should().BeEmpty();
         Value(page, "user-search-userid").Should().Be("new.user");
     }
@@ -97,10 +97,10 @@ public class UserScreenTests : BunitContext
     public void SaveWithoutRole_ShowsRequiredMessage_AndDoesNotPost()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=user-header-userid]").Change("new.user");
-        page.Find("[data-testid=user-header-username]").Change("New User");
-        page.Find("[data-testid=user-header-password]").Change("Initial-Pass-1");
-        page.Find("[data-testid=user-header-confirm-password]").Change("Initial-Pass-1");
+        page.Field("user-header-userid").Change("new.user");
+        page.Field("user-header-username").Change("New User");
+        page.Field("user-header-password").Change("Initial-Pass-1");
+        page.Field("user-header-confirm-password").Change("Initial-Pass-1");
 
         page.Find("[data-testid=user-toolbar-save]").Click();
 
@@ -112,11 +112,11 @@ public class UserScreenTests : BunitContext
     public void SaveNew_WithDifferentPasswords_SaysSo_AndDoesNotPost()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=user-header-userid]").Change("new.user");
-        page.Find("[data-testid=user-header-username]").Change("New User");
-        page.Find("[data-testid=user-header-password]").Change("Initial-Pass-1");
-        page.Find("[data-testid=user-header-confirm-password]").Change("Initial-Pass-2");
-        page.Find("[data-testid=user-header-role-id]").Change("2");
+        page.Field("user-header-userid").Change("new.user");
+        page.Field("user-header-username").Change("New User");
+        page.Field("user-header-password").Change("Initial-Pass-1");
+        page.Field("user-header-confirm-password").Change("Initial-Pass-2");
+        page.Field("user-header-role-id").Change("2");
 
         page.Find("[data-testid=user-toolbar-save]").Click();
 
@@ -130,7 +130,7 @@ public class UserScreenTests : BunitContext
         var page = RenderAs("admin");
         Search(page, "lee");
         _api.UpdateProblem = (HttpStatusCode.Conflict, """{"status":409,"code":"Common-E-004"}""");
-        page.Find("[data-testid=user-header-username]").Change("Lee 2");
+        page.Field("user-header-username").Change("Lee 2");
 
         page.Find("[data-testid=user-toolbar-save]").Click();
 
@@ -171,10 +171,10 @@ public class UserScreenTests : BunitContext
 
         Value(page, "user-header-username").Should().Be("Lee");
         Value(page, "user-search-username").Should().Be("Lee");
-        Selected(page, "user-header-role-id").Should().Be("2");
+        Selected(page, "user-header-role-id").Should().BeEquivalentTo("2");
         page.FindAll("[data-testid=user-header-password]").Should().BeEmpty();
         Value(page, "user-header-failed-count").Should().Be("0");
-        page.Find("[data-testid=user-header-failed-count]").HasAttribute("readonly").Should().BeTrue();
+        page.Field("user-header-failed-count").IsReadOnly.Should().BeTrue();
     }
 
     [Fact, Trait("Id", "BC-UT-125")]
@@ -268,9 +268,9 @@ public class UserScreenTests : BunitContext
 
         Search(page, "kim");
 
-        page.Find("[data-testid=user-header-role-id]").HasAttribute("disabled").Should().BeTrue();
-        page.Find("[data-testid=user-header-valid-flag-n]").HasAttribute("disabled").Should().BeTrue();
-        page.Find("[data-testid=user-header-username]").HasAttribute("readonly").Should().BeFalse();
+        page.Field("user-header-role-id").IsReadOnly.Should().BeTrue();
+        page.Field("user-header-valid-flag-n").IsReadOnly.Should().BeTrue();
+        page.Field("user-header-username").IsReadOnly.Should().BeFalse();
     }
 
     [Fact, Trait("Id", "BC-UT-132")]
@@ -285,7 +285,7 @@ public class UserScreenTests : BunitContext
         page.FindAll("[role=toolbar] button[disabled]").Select(b => b.GetAttribute("data-testid"))
             .Should().Equal("user-toolbar-new", "user-toolbar-save");
         page.FindAll("[data-testid=user-actions]").Should().BeEmpty();
-        page.Find("[data-testid=user-header-username]").HasAttribute("readonly").Should().BeTrue();
+        page.Field("user-header-username").IsReadOnly.Should().BeTrue();
     }
 
     [Fact, Trait("Id", "BC-008-WT-02")]
@@ -325,7 +325,7 @@ public class UserScreenTests : BunitContext
         _auth.SetClaims(new Claim(WebAuthClaims.SessionId, sessionId));
         var page = Render<User>();
         page.WaitForElement("[data-testid=user-header-userid]");
-        page.WaitForAssertion(() => page.FindAll("[data-testid=user-header-role-id] option").Should().HaveCountGreaterThan(1));
+        page.WaitForAssertion(() => page.Field("user-header-role-id").Options.Should().HaveCountGreaterThan(1));
         return page;
     }
 
@@ -333,14 +333,12 @@ public class UserScreenTests : BunitContext
     {
         page.Find("[data-testid=user-search-userid]").Change(userId);
         page.Find("[data-testid=user-toolbar-search]").Click();
-        page.WaitForAssertion(() => page.Find("[data-testid=user-header-userid]").HasAttribute("readonly").Should().BeTrue());
+        page.WaitForAssertion(() => page.Field("user-header-userid").IsReadOnly.Should().BeTrue());
     }
 
-    private static string? Value(IRenderedComponent<User> page, string testId) =>
-        page.Find($"[data-testid={testId}]").GetAttribute("value");
+    private static string? Value(IRenderedComponent<User> page, string testId) => page.Field(testId).Value;
 
-    private static string? Selected(IRenderedComponent<User> page, string testId) =>
-        page.Find($"[data-testid={testId}] option[selected]").GetAttribute("value");
+    private static string? Selected(IRenderedComponent<User> page, string testId) => page.Field(testId).Selected;
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
 

@@ -1,5 +1,6 @@
 @page "/bc/company-menu"
 @rendermode InteractiveServer
+@using Quro.Grid
 @using QuroErp.Contracts.Common.Codes
 @using QuroErp.Web.Bc.Menus
 @using QuroErp.Web.Components.Pages.Bc.Models
@@ -14,45 +15,26 @@
 @if (_ready)
 {
     <QuroMultiGrid TRow="CompanyMenuRow" Title="@L["Bc.CompanyMenu.Title"]" TestId="company-menu" Path="@L["Menu.G5AD"]" LoadOnStart="true"
+                   Definition="bc.menu.company" UpperCaseFields="UpperCaseFields"
                    Load="LoadAsync" Save="SaveAsync" CreateRow="CompanyMenuRow.New" CanWrite="_canEdit">
         <SearchContent>
             <QuroText Label="@L["Bc.CompanyMenu.MenuCode"]" @bind-Value="_menuCode" TextCase="TextCase.Upper" TestId="company-menu-search-menu-code" />
             <QuroText Label="@L["Bc.CompanyMenu.Name"]" Value="@_menuName" LockMode="LockMode.Always" TestId="company-menu-search-name" />
         </SearchContent>
         <Columns>
-            <QuroColumn Title="@L["Bc.CompanyMenu.MenuCode"]" Value="r => r.MenuCode" Context="row">
-                <QuroText Label="@L["Bc.CompanyMenu.MenuCode"]" HideLabel @bind-Value="row.MenuCode" Required LockMode="LockMode.NewOnly"
-                          TextCase="TextCase.Upper" TestId="company-menu-grid-menu-code" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.CompanyMenu.Name"]" Value="r => MenuName(r)" Context="row">
-                <QuroText Label="@L["Bc.CompanyMenu.Name"]" HideLabel @bind-Value="row.Name" Required TestId="company-menu-grid-name" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.CompanyMenu.Type"]" Value="r => TypeName(r.Type)" Context="row">
-                <QuroSelect Label="@L["Bc.CompanyMenu.Type"]" HideLabel @bind-Value="row.Type" Options="_types" Required TestId="company-menu-grid-type" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.CompanyMenu.ProgramId"]" Value="r => r.ProgramId" Context="row">
-                <QuroText Label="@L["Bc.CompanyMenu.ProgramId"]" HideLabel @bind-Value="row.ProgramId" TestId="company-menu-grid-program-id" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.CompanyMenu.Module"]" Value="r => r.Module" Context="row">
-                <QuroSelect Label="@L["Bc.CompanyMenu.Module"]" HideLabel @bind-Value="row.Module" Options="Modules" Required TestId="company-menu-grid-module" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.CompanyMenu.ParentMenuCode"]" Value="r => r.ParentMenuCode" Context="row">
-                <QuroText Label="@L["Bc.CompanyMenu.ParentMenuCode"]" HideLabel @bind-Value="row.ParentMenuCode" TextCase="TextCase.Upper"
-                          TestId="company-menu-grid-parent-menu-code" />
-            </QuroColumn>
-            <QuroColumn Title="@L["Bc.CompanyMenu.ValidFlag"]" Value="r => r.ValidFlag" Context="row">
-                <QuroCodeSelect Major="VALID_FLAG" Label="@L["Bc.CompanyMenu.ValidFlag"]" HideLabel @bind-Value="row.ValidFlag" Required
-                                TestId="company-menu-grid-valid-flag" />
-            </QuroColumn>
+            <Quro.Grid.QuroColumn Field="displayName" HeaderKey="Bc.CompanyMenu.DisplayName" Width="180" Compute="r => MenuName((CompanyMenuRow)r)" />
+            <Quro.Grid.QuroColumn Field="type" HeaderKey="Bc.CompanyMenu.Type" Type="CellType.Combo" Options="_types" Required="true" Width="110" />
+            <Quro.Grid.QuroColumn Field="module" HeaderKey="Bc.CompanyMenu.Module" Type="CellType.Combo" Options="Modules" Required="true" Width="90" />
         </Columns>
     </QuroMultiGrid>
 }
 
 @code {
     // BC-BR-204: module codes; they have no code table, so the code is its own name
-    private static readonly IReadOnlyList<CodeItemDto> Modules = new[] { "bc", "mm", "sd", "fi", "rpt" }.Select(m => new CodeItemDto(m, m)).ToList();
+    private static readonly IReadOnlyList<ComboOption> Modules = new[] { "bc", "mm", "sd", "fi", "rpt" }.Select(m => new ComboOption(m, m)).ToList();
+    private static readonly string[] UpperCaseFields = ["menuCode", "parentMenuCode"];
 
-    private IReadOnlyList<CodeItemDto> _types = [];
+    private IReadOnlyList<ComboOption> _types = [];
     private string? _menuCode;
     private string? _menuName;
     private bool _canEdit;
@@ -66,7 +48,7 @@
         // Full Access is the admin role until the menu policy is applied, as in MenuController (BC-BR-214)
         _canEdit = (await AuthenticationState).User.IsInRole("admin");
         // BC-BR-203: P program, U popup, M menu group
-        _types = new[] { "P", "U", "M" }.Select(t => new CodeItemDto(t, TypeName(t)!)).ToList();
+        _types = new[] { "P", "U", "M" }.Select(t => new ComboOption(t, TypeName(t)!)).ToList();
         _ready = true;
     }
 

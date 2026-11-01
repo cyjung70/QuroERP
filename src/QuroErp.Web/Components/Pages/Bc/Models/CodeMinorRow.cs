@@ -11,6 +11,12 @@ public sealed class CodeMinorRow
     /// <summary>Name by language code, with a key for every language in use. A blank name means no translation in that language.</summary>
     public Dictionary<string, string?> Names { get; set; } = [];
 
+    /// <summary>The en name, as a grid column (<see cref="LanguageNames"/>).</summary>
+    public string? NameEn { get => Names.GetValueOrDefault("en"); set => LanguageNames.Set(Names, "en", value); }
+
+    /// <summary>The ko name, as a grid column (<see cref="LanguageNames"/>).</summary>
+    public string? NameKo { get => Names.GetValueOrDefault("ko"); set => LanguageNames.Set(Names, "ko", value); }
+
     public decimal? SortOrder { get; set; }
     public bool UseYn { get; set; } = true;
     public string? Attr1 { get; set; }

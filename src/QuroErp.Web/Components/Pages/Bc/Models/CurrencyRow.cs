@@ -13,6 +13,12 @@ public sealed class CurrencyRow
     /// <summary>Name by language code, with a key for every language in use. A blank name means no translation in that language.</summary>
     public Dictionary<string, string?> Names { get; set; } = [];
 
+    /// <summary>The en name, as a grid column (<see cref="LanguageNames"/>).</summary>
+    public string? NameEn { get => Names.GetValueOrDefault("en"); set => LanguageNames.Set(Names, "en", value); }
+
+    /// <summary>The ko name, as a grid column (<see cref="LanguageNames"/>).</summary>
+    public string? NameKo { get => Names.GetValueOrDefault("ko"); set => LanguageNames.Set(Names, "ko", value); }
+
     /// <summary>Amount decimals; blank on a new row means the ISO 4217 value (BC-BR-411).</summary>
     public decimal? Decimals { get; set; }
 

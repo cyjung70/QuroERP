@@ -1,6 +1,6 @@
 @* Screen type M: search conditions → grid (view or row edit) → batch save of changed rows (screens.md).
-   With a Definition the grid is the QuroGrid package over a data set, its columns and rules from the screen's .toon
-   (TASK-CORE-055, qurogrid-integration.md 10); without one it is the app's table grid until TASK-CORE-057. *@
+   The grid is the QuroGrid package over a data set, its columns and rules from the screen's .toon
+   (TASK-CORE-055, qurogrid-integration.md 10). *@
 @typeparam TRow where TRow : class
 @attribute [CascadingTypeParameter(nameof(TRow))]
 @inherits QuroScreenBase
@@ -9,6 +9,7 @@
 @using Quro.Grid.Definition
 @using QuroErp.Web.Common
 @inject IJSRuntime JS
+@inject IServiceProvider Services
 
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
@@ -19,13 +20,7 @@
                      OnPrint="OnPrint" OnExport="ExportAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
-        @if (_definition is null)
-        {
-            <QuroErp.Web.Components.Screens.QuroGrid @ref="_grid" TRow="TRow" Rows="_rows" Columns="Columns" Editable="Editable" CanWrite="CanWrite"
-                                                     Busy="Busy" TestId="@Id("grid")"
-                                                     OnAddRow="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)" OnChanged="StateHasChanged" />
-        }
-        else
+        @if (_definition is not null)
         {
             @* The package ignores button cells of a deleted row, so the selected deleted row is restored from here (TODO(QuroGrid-request)) *@
             @if (Editable)
@@ -37,20 +32,21 @@
             }
             @* The package rows take no test id or row index yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
             <div class="quro-grid-host" data-testid="@Id("grid")">
-                <Quro.Grid.QuroGrid @ref="_dataGrid" TItem="TRow" DataSet="_data" Definition="GridDefinition" Localizer="L"
-                                    Culture="DisplayCulture.Current" ConfirmLeave="false" AddRowsOnPaste="CanWrite"
-                                    ItemsProvider="LoadPage" PageSize="@(_definition.PageSize > 0 ? _definition.PageSize : 100)"
-                                    OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged"
-                                    OnRowAdded="OnRowAdded" OnRowDeleting="OnRowDeleting" OnPasting="OnPasting"
-                                    OnCellButtonClick="OnCellButtonClick">
-                    @* Row state, delete and undo are the frame's; the package puts declared columns after the definition's *@
+                <QuroGrid @ref="_dataGrid" TItem="TRow" DataSet="_data" Definition="GridDefinition" Localizer="L" OptionsFor="OptionsFor"
+                          Culture="DisplayCulture.Current" ConfirmLeave="false" AddRowsOnPaste="CanEdit"
+                          ItemsProvider="LoadPage" PageSize="@(_definition.PageSize > 0 ? _definition.PageSize : 100)"
+                          OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged"
+                          OnRowAdded="OnRowAdded" OnRowDeleting="OnRowDeleting" OnPasting="OnPasting"
+                          OnCellButtonClick="OnCellButtonClick">
+                    @* The package puts declared columns after the definition's: the screen's own, then row state, delete and undo *@
+                    @Columns
                     @if (Editable)
                     {
                         <Quro.Grid.QuroColumn Field="@StateField" HeaderKey="Common.RowState" Width="60" Compute="StateOf" />
                         <Quro.Grid.QuroColumn Field="@DeleteField" HeaderKey="Common.Delete" Type="CellType.Button" TextKey="Common.DeleteRow" Width="70" />
                         <Quro.Grid.QuroColumn Field="@UndoField" HeaderKey="Common.UndoRow" Type="CellType.Button" TextKey="Common.UndoRow" Width="80" />
                     }
-                </Quro.Grid.QuroGrid>
+                </QuroGrid>
             </div>
         }
     </ChildContent>
@@ -61,23 +57,32 @@
     private const string DeleteField = "deleteRow";
     private const string UndoField = "undoRow";
 
-    private readonly GridRows<TRow> _rows = new();
+    private readonly Dictionary<string, IReadOnlyList<ComboOption>> _options = [];
     private QuroDataSet<TRow> _data = new();
-    private QuroErp.Web.Components.Screens.QuroGrid<TRow>? _grid;
-    private Quro.Grid.QuroGrid<TRow>? _dataGrid;
+    private QuroGrid<TRow>? _dataGrid;
     private GridDef? _definition;
     private GridDef? _locked;
 
-    /// <summary>QuroColumn declarations of the app grid. Not used with <see cref="Definition"/>.</summary>
-    [Parameter]
-    public RenderFragment? Columns { get; set; }
-
     /// <summary>
     /// Id of the screen definition (<c>Definitions/screens/**/{id}.screen.toon</c>) whose first grid gives the columns and
-    /// validation rules. Without it the app grid draws <see cref="Columns"/>.
+    /// validation rules.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Definition { get; set; } = default!;
+
+    /// <summary>
+    /// Changes the definition grid once when the screen opens, for what is known only at run time: languages in use,
+    /// a format from the localization settings.
     /// </summary>
     [Parameter]
-    public string? Definition { get; set; }
+    public Func<GridDef, GridDef>? Adjust { get; set; }
+
+    /// <summary>
+    /// The screen's own package columns after the definition's, for a list the definition cannot name as a source
+    /// (no common code) or a value shown from a resource.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? Columns { get; set; }
 
     /// <summary>Text fields of a definition grid whose typed value is kept in upper case (a column has no case setting).</summary>
     [Parameter]
@@ -111,7 +116,7 @@
 
     /// <summary>
     /// Permission: false for a user without Full Access (BC-BR-214). New, save and the grid are disabled, not hidden.
-    /// <see cref="QuroErp.Web.Components.Screens.QuroGrid{TRow}.Editable"/> stays the screen's function (a list without save has no new or save at all).
+    /// Whether the grid edits at all stays the screen's function (a list without save has no new or save at all).
     /// </summary>
     [Parameter]
     public bool CanWrite { get; set; } = true;
@@ -127,26 +132,33 @@
     [Parameter]
     public RenderFragment? ExtraCommands { get; set; }
 
-    public override bool IsDirty => _definition is null ? _rows.IsDirty : _data.HasChanges;
+    public override bool IsDirty => _data.HasChanges;
 
     /// <summary>Rows on the grid that are not marked deleted, including new ones.</summary>
-    public IEnumerable<TRow> Items => _definition is null
-        ? _rows.All.Where(r => !r.IsDeleted).Select(r => r.Item)
-        : _data.RowKeys.Where(k => _data.GetState(k) != Quro.Grid.Data.RowState.Deleted).Select(_data.GetItem);
+    public IEnumerable<TRow> Items => _data.RowKeys.Where(k => _data.GetState(k) != Quro.Grid.Data.RowState.Deleted).Select(_data.GetItem);
+
+    /// <summary>The rows as a data set, e.g. for a screen that reads a column.</summary>
+    public QuroDataSet<TRow> Data => _data;
+
+    /// <summary>The package grid, e.g. for tests that edit through its entry points.</summary>
+    public QuroGrid<TRow>? Grid => _dataGrid;
 
     private bool Editable => Save is not null && (CreateRow is not null || OnAddRequested.HasDelegate);
 
-    // Without Full Access every cell is read-only; the package has no grid-wide lock yet (TODO(QuroGrid-R4))
-    private GridDef? GridDefinition => CanWrite ? _definition : _locked;
+    private bool CanEdit => Editable && CanWrite;
+
+    // A view-only list or a user without Full Access gets every cell read-only; the package has no grid-wide lock yet (TODO(QuroGrid-R4))
+    private GridDef? GridDefinition => CanEdit ? _definition : _locked;
 
     // The first search runs in OnInitializedAsync, before OnParametersSet, so the definition is resolved there too
     protected override void OnParametersSet() => ResolveDefinition();
 
     private void ResolveDefinition()
     {
-        if (Definition is not null && _definition is null)
+        if (_definition is null)
         {
-            _definition = ScreenDefinitions.Shared.Get(Definition).Grids[0];
+            var grid = ScreenDefinitions.Shared.Get(Definition).Grids[0];
+            _definition = Adjust is null ? grid : Adjust(grid);
             _locked = _definition with
             {
                 Columns = [.. _definition.Columns.Select(c => c with { Edit = ColumnEdit.ReadOnly, Req = false })],
@@ -176,6 +188,7 @@
     protected override async Task OnInitializedAsync()
     {
         ResolveDefinition();
+        await LoadOptionsAsync();
         if (LoadOnStart)
         {
             await RunAsync(LoadRowsAsync);
@@ -221,15 +234,33 @@
         StateHasChanged();
     }
 
-    private void Add(TRow item)
+    private void Add(TRow item) => _data.MoveTo(_data.AddRow(item));
+
+    // Combo columns name a common code (source code:{Major}); the grid asks for the options while drawing, so they are read first
+    private async Task LoadOptionsAsync()
     {
-        if (_definition is null)
+        var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        CodeDataSets? codes = null;
+        foreach (var source in _definition!.Columns.Where(c => c.Type == ColumnType.Select).Select(c => c.DataSource).OfType<string>().Distinct())
         {
-            _rows.Add(item);
-            return;
+            if (source.Split(':', 2) is ["code", var major])
+            {
+                try
+                {
+                    codes ??= ActivatorUtilities.GetServiceOrCreateInstance<CodeDataSets>(Services);
+                    var set = await codes.GetAsync(major, lang);
+                    _options[source] = [.. set.RowKeys.Select(set.GetItem).Select(c => new ComboOption(c.Code, c.Name))];
+                }
+                catch (Exception e) when (e is ApiProblemException or HttpRequestException)
+                {
+                    // Without options the stored code still shows; the API rejects a value that is not a code
+                    _options[source] = [];
+                }
+            }
         }
-        _data.MoveTo(_data.AddRow(item));
     }
+
+    private IReadOnlyList<ComboOption>? OptionsFor(string source) => _options.GetValueOrDefault(source);
 
     private async Task AddRow()
     {
@@ -258,7 +289,7 @@
             Notice = L["Common.NoChanges"];
             return;
         }
-        if (!(_definition is null ? CheckRequired(_grid?.FirstMissing()) : CheckValid()))
+        if (!CheckValid())
         {
             return;
         }
@@ -272,10 +303,6 @@
 
     private BatchChanges<TRow> Changes()
     {
-        if (_definition is null)
-        {
-            return _rows.Changes();
-        }
         var changes = _data.GetChanges();
         return new([.. changes.Inserted.Select(r => r.Item)], [.. changes.Updated.Select(r => r.Item)], [.. changes.Deleted.Select(r => r.Item)]);
     }
@@ -304,17 +331,11 @@
 
     private async Task ExportAsync()
     {
-        if (_definition is null && _grid is null)
+        if (_definition is null)
         {
             return;
         }
-        await RunAsync(async () =>
-        {
-            var content = _definition is null
-                ? QuroExcel.Create(Title, _grid!.ColumnList, _rows.All.Where(r => !r.IsDeleted).Select(r => r.Item))
-                : ExportDefinitionGrid();
-            await QuroExcel.DownloadAsync(JS, $"{Title}.xlsx", content);
-        });
+        await RunAsync(() => QuroExcel.DownloadAsync(JS, $"{Title}.xlsx", ExportDefinitionGrid()));
     }
 
     private byte[] ExportDefinitionGrid()
@@ -327,7 +348,7 @@
 
     private async Task LoadRowsAsync()
     {
-        if (_definition is not null && LoadPage is not null)
+        if (LoadPage is not null)
         {
             if (_dataGrid is not null)
             {
@@ -336,14 +357,10 @@
             return;
         }
         var rows = await Load();
-        if (_definition is null)
-        {
-            _rows.Load(rows);
-        }
-        else
-        {
-            _data.Load(rows);
-        }
+        _data.Load(rows);
+        // Load numbers the rows from 1 again and the package grid redraws a row only when its key, revision or place changes;
+        // applying its own layout again makes it redraw every row (TODO(QuroGrid-request))
+        _dataGrid?.ApplyLayout(_dataGrid.GetLayout());
         if (rows.Count == 0)
         {
             Notice = L["Common.NoData"];
@@ -374,7 +391,7 @@
         return null;
     }
 
-    private void OnCellValueChanging(CellValueChangingArgs<TRow> args) => args.Cancel |= !CanWrite;
+    private void OnCellValueChanging(CellValueChangingArgs<TRow> args) => args.Cancel |= !CanEdit;
 
     // Upper case is written back as a second value change in the same undo step
     private void OnCellValueChanged(CellValueChangedArgs<TRow> args)
@@ -389,23 +406,23 @@
         }
     }
 
-    // The package cannot cancel adding a row, so a row added without Full Access is taken out again (TODO(QuroGrid-R4))
+    // The package cannot cancel adding a row, so a row added to a locked grid is taken out again (TODO(QuroGrid-R4))
     private void OnRowAdded(RowAddedArgs<TRow> args)
     {
-        if (!CanWrite)
+        if (!CanEdit)
         {
             _data.DeleteRow(args.RowKey);
         }
     }
 
-    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanWrite;
+    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanEdit;
 
-    private void OnPasting(PastingArgs args) => args.Cancel |= !CanWrite;
+    private void OnPasting(PastingArgs args) => args.Cancel |= !CanEdit;
 
     // Delete marks a loaded row (a new row goes away); undo restores the row's loaded values, also of a deleted row
     private void OnCellButtonClick(CellButtonClickArgs<TRow> args)
     {
-        if (!CanWrite || Busy)
+        if (!CanEdit || Busy)
         {
             return;
         }
