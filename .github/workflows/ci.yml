@@ -4,9 +4,9 @@ name: ci
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [dev]
   push:
-    branches: [main]
+    branches: [dev]
   # dev 배포가 같은 커밋의 검증 성공을 기다릴 수 있도록 재사용합니다.
   workflow_call:
 
