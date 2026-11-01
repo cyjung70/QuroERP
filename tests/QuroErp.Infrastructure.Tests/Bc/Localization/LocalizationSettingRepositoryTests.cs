@@ -28,28 +28,31 @@ public class LocalizationSettingRepositoryTests(AuthSchemaFixture db)
         locked.Should().Be(version);
     }
 
-    [DatabaseFact, Trait("Id", "BC-UC-027-IT-02")]
-    public async Task HasDocuments_TrueOnlyForModuleWithDocumentLines()
+    [DatabaseFact, Trait("Id", "BC-UC-027-IT-02"), Trait("Rule", "BC-BR-425")]
+    public async Task FindDocumentCurrencies_ReturnsTheCurrenciesOfDocumentsWithLines_PerModule()
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         var repository = db.Get<ILocalizationSettingRepository>();
-        var before = await repository.HasDocumentsAsync("MM", uow.Transaction, None);
+        var before = await repository.FindDocumentCurrenciesAsync("MM", uow.Transaction, None);
+        // The KRW order has no lines, so it does not count
         await uow.Transaction.Connection!.ExecuteAsync(
             """
             WITH po AS (
                 INSERT INTO mm_purchase_order (po_no, currency_code, exchange_rate, business_place_id, created_by, updated_by)
                 VALUES ('PO-IT', 'USD', 1, (SELECT id FROM bc_business_place WHERE is_default), 's', 's') RETURNING id)
             INSERT INTO mm_purchase_order_line (purchase_order_id, seq, tax_code_id, created_by, updated_by)
-            SELECT id, 1, (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 's', 's' FROM po
+            SELECT id, 1, (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 's', 's' FROM po;
+            INSERT INTO mm_purchase_order (po_no, currency_code, exchange_rate, business_place_id, created_by, updated_by)
+            VALUES ('PO-IT2', 'KRW', 1, (SELECT id FROM bc_business_place WHERE is_default), 's', 's');
             """,
             transaction: uow.Transaction);
 
-        var mm = await repository.HasDocumentsAsync("MM", uow.Transaction, None);
-        var sd = await repository.HasDocumentsAsync("SD", uow.Transaction, None);
+        var mm = await repository.FindDocumentCurrenciesAsync("MM", uow.Transaction, None);
+        var sd = await repository.FindDocumentCurrenciesAsync("SD", uow.Transaction, None);
 
-        before.Should().BeFalse();
-        mm.Should().BeTrue();
-        sd.Should().BeFalse();
+        before.Should().BeEmpty();
+        mm.Should().Equal("USD");
+        sd.Should().BeEmpty();
     }
 
     [DatabaseFact, Trait("Id", "BC-UC-027-IT-03")]
