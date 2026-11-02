@@ -200,7 +200,9 @@
   <data name="MM-E-806" xml:space="preserve"><value>The type of item {0} cannot change because it has stock, stock movements or set structure.</value></data>
   <data name="MM-E-807" xml:space="preserve"><value>Item {0} is in use and cannot be deleted. Set it to not in use instead.</value></data>
   <data name="MM-E-809" xml:space="preserve"><value>Item {0} is not in use and cannot be selected.</value></data>
+  <data name="MM-E-810" xml:space="preserve"><value>Alternate item group '{0}' can't be saved. Enter an upper-case code of up to 18 characters that no other group uses, and a name.</value></data>
   <data name="MM-E-812" xml:space="preserve"><value>Item {0} can't be put in this alternate item group. Add each Inventory item in use only once, and confirm moving an item that is in another group.</value></data>
+  <data name="MM-E-814" xml:space="preserve"><value>Alternate item group {0} has items, so it can't be deleted. Take its items out on the alternate item screen first.</value></data>
   <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
   <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
   <data name="MM-E-901" xml:space="preserve"><value>Price group {0} / item {1}: a price group is up to 5 uppercase characters, and each item appears once in it.</value></data>
