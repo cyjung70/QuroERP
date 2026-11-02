@@ -86,6 +86,7 @@ public static class DependencyInjection
         services.AddSingleton<IInventorySettingRepository, InventorySettingRepository>();
         services.AddSingleton<IItemRepository, ItemRepository>();
         services.AddSingleton<IAlternateItemRepository, AlternateItemRepository>();
+        services.AddSingleton<IAlternateItemGroupRepository, AlternateItemGroupRepository>();
         services.AddSingleton<IUserProfileRepository, UserProfileRepository>();
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IDocumentNumberRepository, DocumentNumberRepository>();
