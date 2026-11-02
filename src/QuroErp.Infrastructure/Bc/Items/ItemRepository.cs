@@ -10,7 +10,7 @@ internal sealed class ItemRepository : IItemRepository
     private const string Columns = """
         id, item_cd, item_name, item_name2, item_desc, type AS item_type, unit, class AS item_class, valid_flag, usd_prc, so_usd_prc,
         upc_code, location, reorder_point, memo1, memo2, memo3, memo4, memo5, item_grade, taxable, vat_kind, plating, item_group_cd,
-        mvg_cost, onhand_qty, stk_val, created_at, created_by, updated_at, updated_by
+        mvg_cost, onhand_qty, stk_val, created_at, created_by, updated_at, updated_by, lot_managed, lot_managed_from
         """;
 
     private const string SelectById = "SELECT " + Columns + " FROM bc_item WHERE id = @Id";
@@ -56,10 +56,10 @@ internal sealed class ItemRepository : IItemRepository
     private const string Insert = """
         INSERT INTO bc_item (item_cd, item_name, item_name2, item_desc, type, unit, class, valid_flag, usd_prc, so_usd_prc, upc_code,
                              location, reorder_point, memo1, memo2, memo3, memo4, memo5, item_grade, taxable, vat_kind, plating,
-                             item_group_cd, mvg_cost, onhand_qty, stk_val, created_by, updated_by)
+                             item_group_cd, mvg_cost, onhand_qty, stk_val, lot_managed, lot_managed_from, created_by, updated_by)
         VALUES (@ItemCd, @ItemName, @ItemName2, @ItemDesc, @ItemType, @Unit, @ItemClass, @ValidFlag, @UsdPrc, @SoUsdPrc, @UpcCode,
                 @Location, @ReorderPoint, @Memo1, @Memo2, @Memo3, @Memo4, @Memo5, @ItemGrade, @Taxable, @VatKind, @Plating,
-                @ItemGroupCd, @MvgCost, @OnhandQty, @StkVal, @UserId, @UserId)
+                @ItemGroupCd, @MvgCost, @OnhandQty, @StkVal, @LotManaged, @LotManagedFrom, @UserId, @UserId)
         RETURNING id
         """;
 
@@ -70,7 +70,7 @@ internal sealed class ItemRepository : IItemRepository
             valid_flag = @ValidFlag, usd_prc = @UsdPrc, so_usd_prc = @SoUsdPrc, upc_code = @UpcCode, location = @Location,
             reorder_point = @ReorderPoint, memo1 = @Memo1, memo2 = @Memo2, memo3 = @Memo3, memo4 = @Memo4, memo5 = @Memo5,
             item_grade = @ItemGrade, taxable = @Taxable, vat_kind = @VatKind, item_group_cd = @ItemGroupCd,
-            updated_at = now(), updated_by = @UserId
+            lot_managed = @LotManaged, lot_managed_from = @LotManagedFrom, updated_at = now(), updated_by = @UserId
         WHERE id = @Id AND updated_at = @ExpectedUpdatedAt
         """;
 
@@ -104,6 +104,7 @@ internal sealed class ItemRepository : IItemRepository
             OR EXISTS (SELECT 1 FROM sd_shipment_line WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_sales_invoice_line WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_bom WHERE parent_item_id = @Id OR child_item_id = @Id)
+            OR EXISTS (SELECT 1 FROM mm_lot WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_mrp_part WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_mrp_product WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_production_result_line WHERE item_id = @Id)
@@ -282,6 +283,8 @@ internal sealed class ItemRepository : IItemRepository
             item.MvgCost,
             item.OnhandQty,
             item.StkVal,
+            item.LotManaged,
+            item.LotManagedFrom,
             UserId = userId,
         });
         if (expectedUpdatedAt is { } expected)
@@ -323,12 +326,14 @@ internal sealed class ItemRepository : IItemRepository
         DateTime CreatedAt,
         string CreatedBy,
         DateTime UpdatedAt,
-        string UpdatedBy)
+        string UpdatedBy,
+        bool LotManaged,
+        DateOnly? LotManagedFrom)
     {
         public ItemRow ToItemRow() => new(
             Id, ItemCd, ItemName, ItemName2, ItemDesc, ItemType, Unit, ItemClass, ValidFlag, UsdPrc, SoUsdPrc, UpcCode, Location,
             ReorderPoint, Memo1, Memo2, Memo3, Memo4, Memo5, ItemGrade, Taxable, VatKind, Plating, ItemGroupCd, MvgCost, OnhandQty, StkVal,
-            Utc(CreatedAt), CreatedBy, Utc(UpdatedAt), UpdatedBy);
+            Utc(CreatedAt), CreatedBy, Utc(UpdatedAt), UpdatedBy, LotManaged, LotManagedFrom);
 
         private static DateTimeOffset Utc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
     }

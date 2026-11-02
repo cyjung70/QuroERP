@@ -4,7 +4,9 @@ namespace QuroErp.Domain.Mm.Inventory;
 /// Item-level stock in bc_item: quantity (sum of all warehouses), stock value and moving average cost.
 /// Value and cost are per item, not per warehouse (inventory.md).
 /// </summary>
-public sealed class ItemStock(long itemId, string itemCd, string? type, decimal onHandQty, decimal stockValue, decimal movingAverageCost)
+public sealed class ItemStock(
+    long itemId, string itemCd, string? type, decimal onHandQty, decimal stockValue, decimal movingAverageCost,
+    bool lotManaged = false, DateOnly? lotManagedFrom = null)
 {
     /// <summary>ITEM_TYPE codes.</summary>
     public const string Inventory = "INVENTORY";
@@ -30,6 +32,12 @@ public sealed class ItemStock(long itemId, string itemCd, string? type, decimal 
     public bool IsStockManaged => Type != Service;
 
     public bool IsSet => Type == Set;
+
+    /// <summary>bc_item.lot_managed: stock is kept per lot as well (MM-BR-351).</summary>
+    public bool LotManaged { get; } = lotManaged;
+
+    /// <summary>bc_item.lot_managed_from: movements dated before it are blocked (MM-BR-356).</summary>
+    public DateOnly? LotManagedFrom { get; } = lotManagedFrom;
 
     /// <summary>
     /// Applies one movement. A receipt or receipt reversal recalculates the moving average cost (MM-BR-005):

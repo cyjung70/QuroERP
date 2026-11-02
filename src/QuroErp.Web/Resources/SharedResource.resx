@@ -59,6 +59,11 @@
   <data name="MM-E-027" xml:space="preserve"><value>인코텀즈 '{0}'이(가) 올바르지 않습니다. Incoterms 2020 코드(EXW, FCA, FAS, FOB, CFR, CIF, CPT, CIP, DAP, DPU, DDP) 중 하나를 고르세요.</value></data>
   <data name="MM-E-031" xml:space="preserve"><value>통화 {0}·환율 {1}을(를) 쓸 수 없습니다. 환율은 0보다 커야 하고 기준 통화면 1이며, 줄이 있는 발주는 통화를 바꿀 수 없습니다.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>품목 {0}의 창고 {1} 재고가 {2} 월말에 {3}(으)로 음수가 되어 저장할 수 없습니다.</value></data>
+  <data name="MM-E-351" xml:space="preserve"><value>품목 {0}의 로트 관리를 바꿀 수 없습니다. 로트 관리는 재고(Inventory) 품목만 켤 수 있고, 현재고가 음수인 창고가 있으면 켤 수 없으며, 로트 잔고가 모두 0일 때만 끌 수 있습니다.</value></data>
+  <data name="MM-E-352" xml:space="preserve"><value>품목 {0}의 로트 번호 '{1}'을(를) 쓸 수 없습니다. 대문자·숫자·-·_로 30자 이하로 넣고, MIGRATED·UNKNOWN은 쓸 수 없습니다.</value></data>
+  <data name="MM-E-355" xml:space="preserve"><value>품목 {0}은(는) 로트 관리 품목이라 재고를 줄이는 줄에 그 품목의 로트를 골라야 합니다.</value></data>
+  <data name="MM-E-356" xml:space="preserve"><value>품목 {0}의 창고 {1} 로트 {2} 잔고가 {3}에 {4}입니다. 로트 잔고는 음수가 될 수 없고, 로트 관리를 시작한 날 앞 일자로는 재고 이동을 넣을 수 없습니다.</value></data>
+  <data name="MM-E-361" xml:space="preserve"><value>품목 {0}: 로트 관리 품목은 세트 구성품이 될 수 없고, 세트 구성품은 로트 관리를 켤 수 없습니다.</value></data>
   <data name="SD-E-006" xml:space="preserve"><value>{0} 문서 번호를 모두 사용해 더 이상 저장할 수 없습니다.</value></data>
   <data name="Common.Search" xml:space="preserve"><value>조회</value></data>
   <data name="Common.New" xml:space="preserve"><value>신규</value></data>
@@ -226,6 +231,8 @@
   <data name="Bc.Item.MvgCost" xml:space="preserve"><value>이동평균원가</value></data>
   <data name="Bc.Item.OnhandQty" xml:space="preserve"><value>재고 수량</value></data>
   <data name="Bc.Item.StkVal" xml:space="preserve"><value>재고 금액</value></data>
+  <data name="Bc.Item.LotManaged" xml:space="preserve"><value>로트 관리</value></data>
+  <data name="Bc.Item.LotManagedFrom" xml:space="preserve"><value>로트 관리 시작일</value></data>
   <data name="Bc.Item.Memo1" xml:space="preserve"><value>메모 1</value></data>
   <data name="Bc.Item.Memo2" xml:space="preserve"><value>메모 2</value></data>
   <data name="Bc.Item.Memo3" xml:space="preserve"><value>메모 3</value></data>

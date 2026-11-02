@@ -3,16 +3,18 @@ using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Domain.Mm.Lots;
 
 namespace QuroErp.Application.Mm.Inventory;
 
 /// <summary>
 /// One stock change asked by a document line. Qty is signed (+ in, − out). Price null means the item's moving
-/// average cost at that moment (issues); receipts pass their price.
+/// average cost at that moment (issues); receipts pass their price. LotId or LotNo names the lot of a lot-managed item and is
+/// ignored for other items: an increase with neither gets an automatic number, a decrease must name one (MM-BR-353, MM-BR-355).
 /// </summary>
 public sealed record StockMovementRequest(
     string MovType, DateOnly DocumentDt, long ItemId, long WarehouseId, decimal Qty,
-    decimal? Price = null, string? RefKey = null, int? RefSeq = null);
+    decimal? Price = null, string? RefKey = null, int? RefSeq = null, long? LotId = null, string? LotNo = null);
 
 /// <summary>
 /// Posts stock movements for every stock document (inventory.md, AS IS receipt_inv, issue_inv, insert_inv, update_inv).
@@ -32,7 +34,8 @@ public sealed class InventoryService(
     /// <exception cref="QuroErp.Domain.Common.DomainException">
     /// MM-E-002 closed month, MM-E-606 wrong sign or zero qty, MM-E-001 not enough stock in DENY mode,
     /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end (a set component error ends with the
-    /// set item code), SD-E-509 a set with no components.
+    /// set item code), SD-E-509 a set with no components; for lot-managed items MM-E-352 a bad lot number, MM-E-355 a
+    /// decrease without a lot, MM-E-356 a negative lot balance or a date before lot management started.
     /// </exception>
     /// <exception cref="ConcurrencyException">A set's components changed between reading and locking.</exception>
     public async Task<IReadOnlyList<GoodsMovement>> PostAsync(
@@ -64,7 +67,7 @@ public sealed class InventoryService(
             var item = items[request.ItemId];
             if (!item.IsSet)
             {
-                lines.Add(new Line(request.ItemId, request.WarehouseId, request.DocumentDt, "", stock => GoodsMovement.Create(
+                lines.Add(new Line(request.ItemId, request.WarehouseId, request.DocumentDt, "", request.Qty, request.LotId, request.LotNo, false, stock => GoodsMovement.Create(
                     request.MovType, request.DocumentDt, request.ItemId, request.WarehouseId, request.Qty,
                     request.Price ?? stock.MovingAverageCost, request.RefKey, request.RefSeq)));
                 continue;
@@ -72,7 +75,7 @@ public sealed class InventoryService(
             // Components move at their own moving average cost and remember the set (MM-BR-007)
             foreach (var (componentId, qty) in SetComponent.Expand(item.ItemCd, request.Qty, components.Where(c => c.SetItemId == item.ItemId)))
             {
-                lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, item.ItemCd, stock => GoodsMovement.Create(
+                lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, item.ItemCd, qty, null, null, false, stock => GoodsMovement.Create(
                     request.MovType, request.DocumentDt, componentId, request.WarehouseId, qty,
                     stock.MovingAverageCost, request.RefKey, request.RefSeq, item.ItemId)));
             }
@@ -84,12 +87,13 @@ public sealed class InventoryService(
 
     /// <summary>
     /// Cancels movements: each gets a reversal dated reversalDt with the same type and price and the opposite sign
-    /// (MM-BR-601). A reversal that decreases stock (e.g. a receipt reversal) is checked like an issue (MM-BR-602).
+    /// (MM-BR-601). A reversal that decreases stock (e.g. a receipt reversal) is checked like an issue (MM-BR-602). A lot-managed
+    /// item's reversal uses the original lot, or MIGRATED when the original is from before lot management (MM-BR-355).
     /// </summary>
     /// <exception cref="QuroErp.Domain.Common.DomainException">
     /// MM-E-002 closed month, MM-E-606 already reversed or a reversal, MM-E-001 not enough stock in DENY mode,
     /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end (a set component error ends with the
-    /// set item code).
+    /// set item code), MM-E-356 a negative lot balance.
     /// </exception>
     public async Task<IReadOnlyList<GoodsMovement>> ReverseAsync(
         IReadOnlyList<long> movementIds, DateOnly reversalDt, string user, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -112,7 +116,7 @@ public sealed class InventoryService(
             reversals.Select(r => r.ItemId).Concat(reversals.Where(r => r.SetItemId is not null).Select(r => r.SetItemId!.Value)),
             transaction, cancellationToken);
         var lines = reversals.Select(r => new Line(
-            r.ItemId, r.WarehouseId, r.DocumentDt, r.SetItemId is { } setId ? items[setId].ItemCd : "", _ => r)).ToList();
+            r.ItemId, r.WarehouseId, r.DocumentDt, r.SetItemId is { } setId ? items[setId].ItemCd : "", r.Qty, r.LotId, null, true, _ => r)).ToList();
         return await ApplyAsync(lines, items, closeYearMonth, user, transaction, cancellationToken);
     }
 
@@ -131,11 +135,23 @@ public sealed class InventoryService(
         }
         var qty = onHand.ToDictionary(e => e.Key, e => e.Value.OnHandQty);
 
+        // Lots of lot-managed items, then their balances locked after the on-hand rows in the same fixed order (MM-BR-354)
+        var lots = new List<LotRef?>(lines.Count);
+        foreach (var line in lines)
+        {
+            lots.Add(items[line.ItemId].LotManaged ? await ResolveLotAsync(line, items[line.ItemId], user, transaction, cancellationToken) : null);
+        }
+        var lotQty = new Dictionary<(long ItemId, long WarehouseId, long LotId), decimal>();
+        foreach (var key in lines.Zip(lots).Where(p => p.Second is not null).Select(p => (p.First.ItemId, p.First.WarehouseId, p.Second!.Id)).Distinct().Order())
+        {
+            lotQty[key] = await inventory.LockLotOnHandAsync(key.ItemId, key.WarehouseId, key.Id, user, transaction, cancellationToken);
+        }
+
         var lastClosedMonthEnd = InventoryClosing.LastClosedMonthEnd(closeYearMonth);
         var documentNos = await numbers.NextAsync(
             DocumentNumberFormat.GoodsMovement, lines.Select(l => l.DocumentDt).ToList(), user, transaction, cancellationToken);
         var posted = new List<GoodsMovement>(lines.Count);
-        foreach (var (line, documentNo) in lines.Zip(documentNos))
+        foreach (var ((line, documentNo), lot) in lines.Zip(documentNos).Zip(lots))
         {
             var key = (line.ItemId, line.WarehouseId);
             var item = items[line.ItemId];
@@ -150,6 +166,20 @@ public sealed class InventoryService(
                 movement.NegativeStock |= PointInTimeStock.Check(
                     mode, movement.DocumentDt, movement.Qty, opening, balances, item.ItemCd, warehouseCode, line.SetItemCd);
             }
+            if (lot is not null)
+            {
+                // MM-BR-356: whatever the negative stock mode is
+                var lotKey = (line.ItemId, line.WarehouseId, lot.Id);
+                LotRules.EnsureManagedFrom(movement.DocumentDt, item.LotManagedFrom, item.ItemCd, warehouseCode, lot.LotNo, lotQty[lotKey]);
+                if (movement.Qty < 0)
+                {
+                    var daily = await inventory.GetLotDailyQtyAsync(
+                        line.ItemId, line.WarehouseId, lot.Id, movement.DocumentDt, transaction, cancellationToken);
+                    LotRules.EnsureBalance(movement.DocumentDt, movement.Qty, lotQty[lotKey], daily, item.ItemCd, warehouseCode, lot.LotNo);
+                }
+                lotQty[lotKey] += movement.Qty;
+                movement.LotId = lot.Id;
+            }
             qty[key] += movement.Qty;
             item.Apply(movement.Qty, movement.Amount, movement.Prc, MovementType.RecalculatesCost(movement.MovType, movement.Qty));
             movement.DocumentNo = documentNo;
@@ -161,11 +191,46 @@ public sealed class InventoryService(
         {
             await inventory.UpdateOnHandAsync(itemId, warehouseId, onHandQty, user, transaction, cancellationToken);
         }
+        foreach (var ((itemId, warehouseId, lotId), lotOnHandQty) in lotQty)
+        {
+            await inventory.UpdateLotOnHandAsync(itemId, warehouseId, lotId, lotOnHandQty, user, transaction, cancellationToken);
+        }
         foreach (var itemId in lines.Select(l => l.ItemId).Distinct())
         {
             await inventory.UpdateItemStockAsync(items[itemId], user, transaction, cancellationToken);
         }
         return posted;
+    }
+
+    // MM-BR-353, MM-BR-355: the lot of one line of a lot-managed item. The item row is locked, so numbering cannot race
+    private async Task<LotRef> ResolveLotAsync(Line line, ItemStock item, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (line.Reversal)
+        {
+            // A movement from before lot management has no lot; its stock went to MIGRATED when it was turned on (MM-BR-351)
+            return line.LotId is { } originalId
+                ? await inventory.FindLotAsync(item.ItemId, originalId, null, transaction, cancellationToken)
+                  ?? throw new InvalidOperationException($"Lot {originalId} of item {item.ItemId} does not exist.")
+                : await inventory.EnsureLotAsync(item.ItemId, LotRules.Migrated, user, transaction, cancellationToken);
+        }
+        if (line.Qty < 0)
+        {
+            // A decrease takes one existing lot of the item, system lots included
+            var number = line.LotNo?.Trim().ToUpperInvariant();
+            return (line.LotId is null && string.IsNullOrEmpty(number)
+                    ? null
+                    : await inventory.FindLotAsync(item.ItemId, line.LotId, number, transaction, cancellationToken))
+                ?? throw new DomainException(LotRules.RequiredCode, item.ItemCd);
+        }
+        if (line.LotId is { } lotId)
+        {
+            return await inventory.FindLotAsync(item.ItemId, lotId, null, transaction, cancellationToken)
+                ?? throw new DomainException(LotRules.InvalidNumberCode, item.ItemCd, lotId);
+        }
+        var lotNo = LotRules.NormalizeNumber(item.ItemCd, line.LotNo)
+            ?? LotRules.AutoNumber(line.DocumentDt, await inventory.GetLastAutoLotSeqAsync(
+                item.ItemId, LotRules.AutoNumberPrefix(line.DocumentDt), transaction, cancellationToken));
+        return await inventory.EnsureLotAsync(item.ItemId, lotNo, user, transaction, cancellationToken);
     }
 
     private async Task<Dictionary<long, ItemStock>> LockItemsAsync(IEnumerable<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -189,6 +254,9 @@ public sealed class InventoryService(
             .SequenceEqual(locked.OrderBy(c => c.SetItemId).ThenBy(c => c.ComponentItemId));
 
     // Build runs at posting time so an issue takes the moving average cost after the lines before it.
-    // SetItemCd is the set a component line came from, empty otherwise (last arg of stock errors)
-    private sealed record Line(long ItemId, long WarehouseId, DateOnly DocumentDt, string SetItemCd, Func<ItemStock, GoodsMovement> Build);
+    // SetItemCd is the set a component line came from, empty otherwise (last arg of stock errors). Qty is the signed change;
+    // LotId and LotNo are what the caller asked for, or the original lot of a reversal
+    private sealed record Line(
+        long ItemId, long WarehouseId, DateOnly DocumentDt, string SetItemCd, decimal Qty, long? LotId, string? LotNo, bool Reversal,
+        Func<ItemStock, GoodsMovement> Build);
 }

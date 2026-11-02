@@ -59,6 +59,12 @@ public sealed class GoodsMovement
     /// <summary>The set item whose line was expanded into this component movement; null otherwise (MM-BR-007).</summary>
     public long? SetItemId { get; }
 
+    /// <summary>
+    /// The lot of a lot-managed item, set when the movement is posted; null for other items (MM-BR-354). A reversal keeps the
+    /// original lot (MM-BR-355).
+    /// </summary>
+    public long? LotId { get; set; }
+
     /// <summary>This movement left the item + warehouse stock below zero (MM-BR-002).</summary>
     public bool NegativeStock { get; set; }
 
@@ -83,17 +89,18 @@ public sealed class GoodsMovement
     /// <summary>Rebuilds a saved row.</summary>
     public static GoodsMovement Restore(
         long id, string documentNo, string movType, DateOnly documentDt, long itemId, long warehouseId, decimal qty, decimal prc,
-        string? refKey, int? refSeq, long? parentMovementId, bool negativeStock, long? setItemId = null) =>
+        string? refKey, int? refSeq, long? parentMovementId, bool negativeStock, long? setItemId = null, long? lotId = null) =>
         new(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, parentMovementId, setItemId)
         {
             Id = id,
             DocumentNo = documentNo,
             NegativeStock = negativeStock,
+            LotId = lotId,
         };
 
     /// <summary>
-    /// The reversal of this movement on reversalDt: same item, warehouse, type, price, reference and set, opposite sign
-    /// (MM-BR-601).
+    /// The reversal of this movement on reversalDt: same item, warehouse, type, price, reference, set and lot, opposite sign
+    /// (MM-BR-601, MM-BR-355).
     /// </summary>
     /// <param name="alreadyReversed">Another movement already points to this one.</param>
     /// <exception cref="DomainException">MM-E-606 when this movement is itself a reversal or is already reversed.</exception>
@@ -103,6 +110,6 @@ public sealed class GoodsMovement
         {
             throw new DomainException(InvalidMovement, MovType, -Qty);
         }
-        return new GoodsMovement(MovType, reversalDt, ItemId, WarehouseId, -Qty, Prc, RefKey, RefSeq, Id, SetItemId);
+        return new GoodsMovement(MovType, reversalDt, ItemId, WarehouseId, -Qty, Prc, RefKey, RefSeq, Id, SetItemId) { LotId = LotId };
     }
 }

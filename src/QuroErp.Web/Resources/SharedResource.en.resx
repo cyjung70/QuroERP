@@ -59,6 +59,11 @@
   <data name="MM-E-027" xml:space="preserve"><value>Incoterms '{0}' is not valid. Choose an Incoterms 2020 code (EXW, FCA, FAS, FOB, CFR, CIF, CPT, CIP, DAP, DPU, DDP).</value></data>
   <data name="MM-E-031" xml:space="preserve"><value>Currency {0} with rate {1} cannot be used. The rate must be above 0 and 1 for the base currency, and the currency cannot change once the order has lines.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>Item {0} in warehouse {1} would end month {2} at {3}, below zero, so the movement cannot be saved.</value></data>
+  <data name="MM-E-351" xml:space="preserve"><value>Lot management of item {0} cannot change. Only an inventory item can turn it on, not while a warehouse has stock below zero, and it can be turned off only when every lot balance is 0.</value></data>
+  <data name="MM-E-352" xml:space="preserve"><value>Lot number '{1}' of item {0} cannot be used. Use up to 30 upper case letters, digits, - or _; MIGRATED and UNKNOWN are reserved.</value></data>
+  <data name="MM-E-355" xml:space="preserve"><value>Item {0} is lot managed: a line that decreases its stock needs one of its lots.</value></data>
+  <data name="MM-E-356" xml:space="preserve"><value>Lot {2} of item {0} in warehouse {1} would be {4} on {3}. A lot balance cannot go below zero, and no stock movement can be dated before lot management started.</value></data>
+  <data name="MM-E-361" xml:space="preserve"><value>Item {0}: a lot-managed item cannot be a set component, and a set component cannot turn lot management on.</value></data>
   <data name="SD-E-006" xml:space="preserve"><value>All document numbers for {0} are used, so no more documents can be saved.</value></data>
   <data name="Common.Search" xml:space="preserve"><value>Search</value></data>
   <data name="Common.New" xml:space="preserve"><value>New</value></data>
@@ -226,6 +231,8 @@
   <data name="Bc.Item.MvgCost" xml:space="preserve"><value>Moving Average Cost</value></data>
   <data name="Bc.Item.OnhandQty" xml:space="preserve"><value>On-hand Qty</value></data>
   <data name="Bc.Item.StkVal" xml:space="preserve"><value>Stock Value</value></data>
+  <data name="Bc.Item.LotManaged" xml:space="preserve"><value>Lot Managed</value></data>
+  <data name="Bc.Item.LotManagedFrom" xml:space="preserve"><value>Lot Managed From</value></data>
   <data name="Bc.Item.Memo1" xml:space="preserve"><value>Memo 1</value></data>
   <data name="Bc.Item.Memo2" xml:space="preserve"><value>Memo 2</value></data>
   <data name="Bc.Item.Memo3" xml:space="preserve"><value>Memo 3</value></data>

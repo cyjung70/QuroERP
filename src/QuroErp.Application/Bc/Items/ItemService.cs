@@ -2,6 +2,7 @@ using System.Data;
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.Persistence;
+using QuroErp.Application.Mm.Lots;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Common;
@@ -10,7 +11,8 @@ using QuroErp.Domain.Common.Codes;
 namespace QuroErp.Application.Bc.Items;
 
 /// <summary>The item master screen (BC-UC-009).</summary>
-public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUnitOfWorkFactory unitOfWork)
+public sealed class ItemService(
+    IItemRepository items, ILotRepository lots, ICodeValidator codes, IUnitOfWorkFactory unitOfWork, IBusinessClock clock)
 {
     /// <summary>The item does not exist. Arg: id.</summary>
     public const string NotFoundCode = "Common-E-006";
@@ -45,10 +47,17 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
         return row is null ? null : ToDto(row);
     }
 
-    /// <exception cref="DomainException">MM-E-801 (also for a used code), 802, 803, 817, 825, 831; Common-E-002 for an unknown code value.</exception>
+    /// <exception cref="DomainException">
+    /// MM-E-801 (also for a used code), 802, 803, 817, 825, 831, 351; Common-E-002 for an unknown code value.
+    /// </exception>
     public async Task<ItemDto> CreateAsync(CreateItemRequest request, string createdBy, CancellationToken cancellationToken)
     {
         var item = Item.Create(request.ItemCd, ToFields(request));
+        if (item.LotManaged)
+        {
+            // A new item has no stock and is in no set yet
+            item.StartLotManagement(clock.Today(), negativeWarehouse: false, setComponent: false);
+        }
         await EnsureCodesAsync(item.Fields, cancellationToken);
 
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
@@ -63,7 +72,10 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
         return ToDto(saved!);
     }
 
-    /// <exception cref="DomainException">MM-E-802, 803, 806, 817, 825, 831; Common-E-002 for an unknown code value.</exception>
+    /// <exception cref="DomainException">
+    /// MM-E-802, 803, 806, 817, 825, 831; MM-E-351 / 361 when lot management cannot be turned on or off; Common-E-002 for an
+    /// unknown code value.
+    /// </exception>
     /// <exception cref="ConcurrencyException">updatedAt differs from the stored row.</exception>
     /// <exception cref="NotFoundException">Common-E-006.</exception>
     public async Task<ItemDto> UpdateAsync(long id, UpdateItemRequest request, string updatedBy, CancellationToken cancellationToken)
@@ -79,12 +91,30 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
         }
         var item = ToItem(row);
         var typeLocked = fields.ItemType != item.Fields.ItemType && await items.IsTypeLockedAsync(id, uow.Transaction, cancellationToken);
+        var wasLotManaged = item.LotManaged;
         item.Change(fields, typeLocked);
+        // MM-BR-351, MM-BR-361. The item row is locked, so no stock movement of the item runs until this save ends
+        var lotTurnedOn = !wasLotManaged && item.LotManaged;
+        if (lotTurnedOn)
+        {
+            item.StartLotManagement(
+                clock.Today(),
+                await lots.HasNegativeOnHandAsync(id, uow.Transaction, cancellationToken),
+                await lots.IsSetComponentAsync(id, uow.Transaction, cancellationToken));
+        }
+        else if (wasLotManaged && !item.LotManaged)
+        {
+            item.StopLotManagement(await lots.HasLotStockAsync(id, uow.Transaction, cancellationToken));
+        }
         await EnsureBarcodeUnusedAsync(item.Fields.UpcCode, [id], uow.Transaction, cancellationToken);
 
         if (!await items.UpdateAsync(item, request.UpdatedAt, updatedBy, uow.Transaction, cancellationToken))
         {
             throw new ConcurrencyException();
+        }
+        if (lotTurnedOn)
+        {
+            await lots.MigrateStockAsync(id, updatedBy, uow.Transaction, cancellationToken);
         }
         var saved = await items.FindAsync(id, forUpdate: false, uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
@@ -136,21 +166,23 @@ public sealed class ItemService(IItemRepository items, ICodeValidator codes, IUn
 
     private static ItemFields ToFields(ItemFieldsRequest r) => new(
         r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc, r.SoUsdPrc, r.UpcCode, r.Location,
-        r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind);
+        r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind, r.LotManaged);
 
     private static Item ToItem(ItemRow r) => Item.Restore(
         r.Id,
         r.ItemCd,
         new ItemFields(
             r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc, r.SoUsdPrc, r.UpcCode, r.Location,
-            r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind),
+            r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind, r.LotManaged),
         r.Plating,
         r.MvgCost ?? 0,
         r.OnhandQty ?? 0,
-        r.StkVal ?? 0);
+        r.StkVal ?? 0,
+        r.LotManagedFrom);
 
     private static ItemDto ToDto(ItemRow r) => new(
         r.Id, r.ItemCd, r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc ?? 0, r.SoUsdPrc ?? 0,
         r.UpcCode, r.Location, r.ReorderPoint ?? 0, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind,
-        r.ItemGroupCd ?? r.ItemCd, r.MvgCost ?? 0, r.OnhandQty ?? 0, r.StkVal ?? 0, r.CreatedAt, r.CreatedBy, r.UpdatedAt, r.UpdatedBy);
+        r.ItemGroupCd ?? r.ItemCd, r.MvgCost ?? 0, r.OnhandQty ?? 0, r.StkVal ?? 0, r.CreatedAt, r.CreatedBy, r.UpdatedAt, r.UpdatedBy,
+        r.LotManaged, r.LotManagedFrom);
 }
