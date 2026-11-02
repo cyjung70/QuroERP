@@ -3,6 +3,7 @@
 @inject IStringLocalizer<SharedResource> L
 
 <section class="quro-entry quro-screen" data-testid="@TestId">
+<CascadingValue Value="Policies" IsFixed="true">
     <NavigationLock ConfirmExternalNavigation="IsDirty" OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
     <header class="quro-entry-title" data-testid="@Id("title")">
@@ -38,6 +39,7 @@
     }
     @ChildContent
     @Footer
+</CascadingValue>
 </section>
 
 @code {
@@ -77,6 +79,10 @@
     /// <summary>Below the body: the audit line (S).</summary>
     [Parameter]
     public RenderFragment? Footer { get; set; }
+
+    /// <summary>The screen's field policies for its inputs and grid columns (field-policy.md 3).</summary>
+    [Parameter]
+    public QuroFieldPolicy? Policies { get; set; }
 
     [Parameter]
     public string? Error { get; set; }

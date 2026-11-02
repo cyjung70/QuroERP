@@ -13,7 +13,7 @@
     @if (_columns.Items.Count > 0)
     {
         @* Columns carry translated titles; the localizer returns a title that is not a key as it is (TODO(QuroGrid-request)) *@
-        <Quro.Grid.QuroGrid TItem="TRow" DataSet="_data" Localizer="L" Culture="DisplayCulture.Current" ConfirmLeave="false"
+        <QuroGrid TItem="TRow" DataSet="_data" Localizer="L" Culture="DisplayCulture.Current" ConfirmLeave="false"
                             Clipboard="true" ShowFooter="@_columns.Items.Any(c => c.Sum)" OnCellButtonClick="OnCellButtonClick">
             @for (var i = 0; i < _columns.Items.Count; i++)
             {
@@ -36,7 +36,7 @@
             {
                 <Quro.Grid.QuroColumn Field="@OpenField" HeaderKey="Common.Open" Type="CellType.Button" TextKey="Common.Open" Width="70" />
             }
-        </Quro.Grid.QuroGrid>
+        </QuroGrid>
     }
 </div>
 

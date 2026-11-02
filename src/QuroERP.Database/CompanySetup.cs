@@ -7,7 +7,7 @@ namespace QuroERP.Database;
 /// (BC-BR-318) and the module quantity decimals and rounding mode all come from the country profile
 /// (US = USD/en/America/New_York, KR = KRW/ko/Asia/Seoul). The time zone can be given instead of the default.
 /// Unit price decimals (bc_country_decimal) are rows for every country and do not change with the company country.
-/// Blocked once any document, stock movement or exchange rate exists.
+/// Blocked once any document, stock movement or exchange rate exists. A new company also names the default business place.
 /// </summary>
 public static class CompanySetup
 {
@@ -51,6 +51,13 @@ public static class CompanySetup
         SET name = coalesce(@name, name), country_code = @country_code, base_currency_code = @currency_code,
             default_lang_code = @lang_code, time_zone = @time_zone, updated_at = now(), updated_by = @audit_user
         WHERE id = @id
+        """;
+
+    // A new installation has the default business place from the schema script with its code as the name (BC-BR-319)
+    private const string NameDefaultBusinessPlace = """
+        UPDATE bc_business_place
+        SET business_place_name = @name, updated_at = now(), updated_by = @audit_user
+        WHERE is_default
         """;
 
     private const string UpsertDecimalSetting = """
@@ -106,6 +113,10 @@ public static class CompanySetup
             ("lang_code", profile.DefaultLangCode), ("time_zone", zone), ("audit_user", AuditUser), ("id", companyId),
         ];
         await ExecuteAsync(connection, transaction, companyId is null ? InsertCompany : UpdateCompany, cancellationToken, company);
+        if (companyId is null)
+        {
+            await ExecuteAsync(connection, transaction, NameDefaultBusinessPlace, cancellationToken, ("name", name), ("audit_user", AuditUser));
+        }
 
         foreach (var setting in profile.DecimalSettings)
         {

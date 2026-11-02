@@ -11,6 +11,12 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.13" />
     <PackageReference Include="Npgsql.DependencyInjection" Version="10.0.3" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+  <!-- Country packs (field-policy.md "국가팩"): built in, read by EmbeddedCountryPackProvider -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\countrypacks\**\*.yaml" LogicalName="countrypacks/%(RecursiveDir)%(Filename)%(Extension)" WithCulture="false" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,6 +1,7 @@
 @page "/bc/item-barcode"
 @rendermode InteractiveServer
 @using System.Globalization
+@using Quro.Grid.Definition
 @using QuroErp.Contracts.Bc.Items
 @using QuroErp.Contracts.Common
 @using QuroErp.Web.Bc.Items
@@ -24,7 +25,8 @@
 
 @if (_ready)
 {
-    <QuroMultiGrid @ref="_grid" TRow="ItemBarcodeDto" Title="@L["Bc.ItemBarcode.Title"]" TestId="item-barcode" Load="LoadAsync">
+    <QuroMultiGrid @ref="_grid" TRow="ItemBarcodeDto" Title="@L["Bc.ItemBarcode.Title"]" TestId="item-barcode" Load="LoadAsync"
+                   Definition="bc.item.barcode" Adjust="WithPriceFormat">
         <SearchContent>
             <QuroCodeSelect Major="ITEM_CLASS" Label="@L["Bc.ItemBarcode.ItemClass"]" @bind-Value="_itemClass" Required TestId="item-barcode-search-item-class" />
             <QuroCodeSelect Major="DISPLAY_OPTIONS" Label="@L["Bc.ItemBarcode.ValidFlag"]" @bind-Value="_validFlag" Radio TestId="item-barcode-search-valid-flag" />
@@ -35,12 +37,6 @@
                 <button type="button" data-testid="item-barcode-search-generate" @onclick="GenerateAsync">@L["Bc.ItemBarcode.Generate"]</button>
             }
         </SearchContent>
-        <Columns>
-            <QuroColumn Title="@L["Bc.ItemBarcode.ItemCd"]" Value="r => r.ItemCd" />
-            <QuroColumn Title="@L["Bc.ItemBarcode.ItemName"]" Value="r => r.ItemName" />
-            <QuroColumn Title="@L["Bc.ItemBarcode.SoUsdPrc"]" Value="r => r.SoUsdPrc" Format="@_priceFormat" />
-            <QuroColumn Title="@L["Bc.ItemBarcode.UpcCode"]" Value="r => r.UpcCode" />
-        </Columns>
     </QuroMultiGrid>
 }
 
@@ -111,6 +107,11 @@
         var result = await Api.GenerateAsync(new GenerateItemBarcodesRequest(_itemClass, _validFlag, _startNo), CancellationToken.None);
         return string.Format(CultureInfo.CurrentCulture, L["Bc.ItemBarcode.Generated"], result.UpdatedCount);
     });
+
+    private GridDef WithPriceFormat(GridDef grid) => _priceFormat is null ? grid : grid with
+    {
+        Columns = [.. grid.Columns.Select(c => c.Id == "soUsdPrc" ? c with { Fmt = _priceFormat } : c)],
+    };
 
     private void EnsureItemClass()
     {

@@ -1,5 +1,6 @@
 @page "/samples/single"
 @rendermode InteractiveServer
+@using QuroErp.Contracts.Bc.FieldPolicies
 @using QuroErp.Contracts.Common.Codes
 @inject IServiceProvider Services
 @inject NavigationManager Navigation
@@ -7,7 +8,8 @@
 @inject IQuroConfirm Confirm
 
 @* Screen type S sample in the item layout (TASK-CORE-006, frame TASK-CORE-040, tabs TASK-CORE-041): basic info,
-   stock by warehouse and transactions tabs, copy as new and deactivate. Development only, in-memory data. *@
+   stock by warehouse and transactions tabs, copy as new and deactivate. Development only, in-memory data.
+   Field policies (TASK-CORE-048): the country pack switch gives the sample's own US or KR policies. *@
 
 <PageTitle>@L["Samples.Single.Title"]</PageTitle>
 
@@ -16,7 +18,7 @@
     <QuroSingleForm @ref="_form" TModel="SampleItem" Title="@L["Samples.Single.Title"]" TestId="single" Path="@L["Samples.Menu"]"
                     RecordCode="item => item.Code" Audit="item => new QuroAudit(null, null, item.UpdatedBy, item.UpdatedAt)"
                     Load="() => Task.FromResult(_store.FindItem(_code))" Create="NewItem"
-                    Save="(item, _) => Task.FromResult(_store.SaveItem(item))"
+                    Save="(item, _) => Task.FromResult(_store.SaveItem(item))" LoadPolicies="LoadPolicies"
                     Delete="item => { _store.DeleteItem(item.Id); return Task.CompletedTask; }">
         <StatusChip Context="item">
             <QuroStatusChip Code="@(item.Active ? "Y" : "N")" Kind="@(item.Active ? ChipKind.Ok : ChipKind.Neutral)"
@@ -32,15 +34,18 @@
         </ExtraCommands>
         <SearchContent>
             <QuroText Label="@L["Samples.Code"]" @bind-Value="_code" TextCase="TextCase.Upper" TestId="single-search-code" />
+            <QuroSelect Label="@L["Samples.Country"]" Value="@_country" ValueChanged="SwitchCountryAsync" Options="Countries"
+                        TestId="single-search-country" />
         </SearchContent>
-        @* The fields bind to the form's data set columns (TASK-CORE-054, qurogrid-integration.md 10) *@
+        @* The fields bind to the form's data set columns (TASK-CORE-054, qurogrid-integration.md 10). Valid from, quantity and
+           remarks take their label and state from the field policy (the field key is the label key) *@
         <Fields>
             <QuroText Label="@L["Samples.Code"]" Field="Code" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="single-header-code" />
             <QuroText Label="@L["Samples.Name"]" Field="Name" Required Span="2" TestId="single-header-name" />
-            <QuroDate Label="@L["Samples.ValidFrom"]" Field="ValidFrom" TestId="single-header-valid-from" />
-            <QuroNumber Label="@L["Samples.Qty"]" Field="Qty" TestId="single-header-qty" />
+            <QuroDate Policy="Samples.ValidFrom" Field="ValidFrom" TestId="single-header-valid-from" />
+            <QuroNumber Policy="Samples.Qty" Field="Qty" TestId="single-header-qty" />
             <QuroSelect Label="@L["Samples.Supply"]" Field="Supply" Options="Supplies" Radio Span="2" TestId="single-header-supply" />
-            <QuroText Label="@L["Samples.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="single-header-remarks" />
+            <QuroText Policy="Samples.Remarks" Field="Remarks" Rows="3" Span="4" TestId="single-header-remarks" />
         </Fields>
         <Tabs Context="item">
             <QuroTab Id="stock" Title="@L["Samples.StockTab"]" LoadTab="() => LoadStock(item)">
@@ -75,6 +80,30 @@
     private IReadOnlyList<SampleTransaction> _transactions = [];
 
     private IReadOnlyList<CodeItemDto> Supplies => [new("P", L["Samples.Supply.P"]), new("M", L["Samples.Supply.M"])];
+
+    // The sample's country packs: US hides the remarks and requires the valid-from date, KR makes the quantity read-only
+    private static readonly Dictionary<string, FieldPolicyDto[]> SamplePolicies = new()
+    {
+        ["US"] =
+        [
+            new("Samples.Remarks", FieldPolicyStates.Hidden, null, "Samples.Remarks", "CountryPack"),
+            new("Samples.ValidFrom", FieldPolicyStates.Required, null, "Samples.ValidFrom", "CountryPack"),
+        ],
+        ["KR"] = [new("Samples.Qty", FieldPolicyStates.ReadOnly, null, "Samples.Qty", "CountryPack")],
+    };
+
+    private string? _country;
+
+    private IReadOnlyList<CodeItemDto> Countries => [new("US", "US"), new("KR", "KR")];
+
+    private Task<IReadOnlyList<FieldPolicyDto>> LoadPolicies() =>
+        Task.FromResult<IReadOnlyList<FieldPolicyDto>>(_country is not null && SamplePolicies.TryGetValue(_country, out var fields) ? fields : []);
+
+    private async Task SwitchCountryAsync(string? country)
+    {
+        _country = country;
+        await _form!.ReloadPoliciesAsync();
+    }
 
     protected override void OnInitialized()
     {

@@ -1,12 +1,16 @@
 @using System.Globalization
 @inherits QuroInputBase<decimal?>
 
-@* Quro.UI has no number box yet: a bound field keeps this input on the data set column (TODO(QuroGrid-R1)) *@
-<div class="@FieldClass()">
-    <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
-    <input id="@InputId" type="number" step="@Step" value="@Text" readonly="@IsLocked"
-           aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
-</div>
+@* The field policy may hide the field (field-policy.md 3) *@
+@if (Drawn)
+{
+    @* Quro.UI has no number box yet: a bound field keeps this input on the data set column (TODO(QuroGrid-R1)) *@
+    <div class="@FieldClass()">
+        @FieldLabel(IsRequiredNow)
+        <input id="@InputId" type="number" step="@Step" value="@Text" readonly="@IsLocked"
+               aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+    </div>
+}
 
 @code {
     /// <summary>Decimal places from GET api/bc/localization (amount, unit price or quantity). Null: any.</summary>

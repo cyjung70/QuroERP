@@ -32,7 +32,7 @@ public class MultiGridDefinitionTests : ScreenContext
         page.Find("[data-testid=multi-grid-restore-row]").HasAttribute("disabled").Should().BeTrue();
 
         grid.Click(0, "undoRow");
-        var cut = page.FindComponent<Quro.Grid.QuroGrid<SampleItem>>();
+        var cut = page.FindComponent<QuroGrid<SampleItem>>();
         await cut.InvokeAsync(() => cut.Instance.SelectionChanged(grid.KeyOf(1)));
         page.Find("[data-testid=multi-grid-restore-row]").Click();
 
@@ -71,7 +71,7 @@ public class MultiGridDefinitionTests : ScreenContext
     {
         var page = Render<SampleMulti>(p => p.Add(x => x.CanWrite, false));
         var grid = Loaded(page);
-        var cut = page.FindComponent<Quro.Grid.QuroGrid<SampleItem>>();
+        var cut = page.FindComponent<QuroGrid<SampleItem>>();
 
         await cut.InvokeAsync(() => cut.Instance.AddRow());
 
@@ -117,7 +117,7 @@ public class MultiGridDefinitionTests : ScreenContext
                 return Task.FromResult(new GridItemsResult<SampleItem>([new SampleItem { Id = 1, Code = "A100", Name = "Apple" }], 1));
             }));
         page.WaitForAssertion(() => requests.Should().NotBeEmpty());
-        var cut = page.FindComponent<Quro.Grid.QuroGrid<SampleItem>>();
+        var cut = page.FindComponent<QuroGrid<SampleItem>>();
 
         await cut.InvokeAsync(async () =>
         {

@@ -24,18 +24,11 @@
 @if (_ready)
 {
     <QuroMultiGrid @ref="_grid" TRow="RoleMenuRow" Title="@L["Bc.RoleMenu.Title"]" TestId="role-menu" Path="@L["Menu.G5AD"]" LoadOnStart="_roleId is not null"
+                   Definition="bc.menu.role"
                    Load="LoadAsync" Save="SaveAsync" OnAddRequested="OpenAddDialog" CanWrite="_canEdit">
         <SearchContent>
             <QuroSelect Label="@L["Bc.RoleMenu.Role"]" @bind-Value="_roleId" Options="_roles" Required TestId="role-menu-search-role" />
         </SearchContent>
-        <Columns>
-            <QuroColumn Title="@L["Bc.RoleMenu.MenuCode"]" Value="r => r.MenuCode" />
-            <QuroColumn Title="@L["Bc.RoleMenu.Name"]" Value="r => MenuName(r.MenuCode, r.Name)" />
-            <QuroColumn Title="@L["Bc.RoleMenu.Type"]" Value="r => TypeName(r.Type)" />
-            <QuroColumn Title="@L["Bc.RoleMenu.FullAccess"]" Value="r => r.FullAccess" Context="row">
-                <QuroCheckbox Label="@L["Bc.RoleMenu.FullAccess"]" HideLabel @bind-Value="row.FullAccess" TestId="role-menu-grid-full-access" />
-            </QuroColumn>
-        </Columns>
     </QuroMultiGrid>
 
     <QuroLookupDialog TItem="MenuOptionDto" Title="@L["Bc.RoleMenu.AddMenu"]" TestId="role-menu-menu-lookup"
@@ -96,7 +89,7 @@
         }
         var menus = await Api.GetMenusAsync(roleId, CancellationToken.None);
         _loadedRoleId = roleId;
-        return menus.Select(RoleMenuRow.From).ToList();
+        return menus.Select(m => Named(RoleMenuRow.From(m))).ToList();
     }
 
     // Saves for the role the rows were read for, even if the role select changed since
@@ -130,7 +123,14 @@
         return menus.Where(m => !onGrid.Contains(m.MenuId)).ToList();
     }
 
-    private void AddMenu(MenuOptionDto menu) => _grid!.AddRows([RoleMenuRow.From(menu)]);
+    private void AddMenu(MenuOptionDto menu) => _grid!.AddRows([Named(RoleMenuRow.From(menu))]);
+
+    private RoleMenuRow Named(RoleMenuRow row)
+    {
+        row.DisplayName = MenuName(row.MenuCode, row.Name);
+        row.TypeName = TypeName(row.Type);
+        return row;
+    }
 
     // BC-BR-202: the translated menu name when there is one, else the stored name
     private string? MenuName(string menuCode, string? name) =>

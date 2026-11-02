@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
+using QuroErp.Contracts.Bc.FieldPolicies;
 using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Components.Screens;
@@ -37,6 +39,34 @@ public abstract class QuroScreenBase : ComponentBase
 
     [Inject]
     protected IStringLocalizer<SharedResource> L { get; set; } = default!;
+
+    [Inject]
+    private IServiceProvider ScreenServices { get; set; } = default!;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? ScreenAuthentication { get; set; }
+
+    /// <summary>
+    /// The screen code of the field policies (field-policy.md 3), e.g. <c>Sd.Customer</c>. The screen reads them once when it
+    /// opens and its inputs and grid columns with a field key follow them. Without it the screen has no field policies.
+    /// </summary>
+    [Parameter]
+    public string? PolicyScreen { get; set; }
+
+    /// <summary>Reads the policies instead of the API, e.g. a sample's own data. It takes the place of <see cref="PolicyScreen"/>.</summary>
+    [Parameter]
+    public Func<Task<IReadOnlyList<FieldPolicyDto>>>? LoadPolicies { get; set; }
+
+    /// <summary>The screen's field policies, cascaded to its inputs and grids. Empty until they are read.</summary>
+    protected QuroFieldPolicy Policies { get; } = new();
+
+    /// <summary>
+    /// The command bar shows "show all fields": the screen has field policies and the user has Full Access on the localization
+    /// menu (BC-BR-435), the admin role until the menu policy is applied.
+    /// </summary>
+    protected bool CanShowAllFields { get; private set; }
+
+    private bool _policiesWatched;
 
     /// <summary>Translated screen title.</summary>
     [Parameter, EditorRequired]
@@ -77,6 +107,57 @@ public abstract class QuroScreenBase : ComponentBase
             context.PreventNavigation();
         }
     }
+
+    /// <summary>
+    /// Reads the field policies once (the circuit caches them by screen). When they cannot be read the message says so and the
+    /// fields stay as the specification draws them; the server still checks the policies on save.
+    /// </summary>
+    protected async Task LoadPoliciesAsync()
+    {
+        if (PolicyScreen is null && LoadPolicies is null)
+        {
+            return;
+        }
+        if (!_policiesWatched)
+        {
+            _policiesWatched = true;
+            Policies.Changed += () => _ = InvokeAsync(() =>
+            {
+                OnPoliciesChanged();
+                StateHasChanged();
+            });
+        }
+        CanShowAllFields = ScreenAuthentication is not null && (await ScreenAuthentication).User.IsInRole("admin");
+        try
+        {
+            Policies.Load(LoadPolicies is not null
+                ? await LoadPolicies()
+                : await ScreenServices.GetRequiredService<FieldPolicyCache>().GetAsync(PolicyScreen!, CancellationToken.None));
+        }
+        catch (ApiProblemException e)
+        {
+            Error = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            Error = Messages.Get(UnavailableCode);
+        }
+    }
+
+    /// <summary>Reads the field policies again, e.g. after a sample switched its country pack. The open record stays.</summary>
+    public async Task ReloadPoliciesAsync()
+    {
+        await LoadPoliciesAsync();
+        StateHasChanged();
+    }
+
+    /// <summary>The policies arrived or "show all fields" changed; a screen type applies them to its own grids here.</summary>
+    protected virtual void OnPoliciesChanged()
+    {
+    }
+
+    /// <summary>The command bar's "show all fields" toggle. It changes nothing that is saved (BC-BR-435).</summary>
+    protected void ToggleShowAllFields() => Policies.SetShowAllFields(CanShowAllFields && !Policies.ShowAllFields);
 
     /// <summary>Shows the first empty required input as Common-E-005.</summary>
     protected bool CheckRequired(params IQuroField?[] missing)

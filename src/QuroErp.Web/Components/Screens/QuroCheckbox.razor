@@ -2,11 +2,15 @@
    Quro.UI has no checkbox yet: a bound field keeps this input on the data set column (TODO(QuroGrid-R2)). *@
 @inherits QuroInputBase<bool>
 
-<div class="@FieldClass("quro-checkbox")">
-    <input id="@InputId" type="checkbox" checked="@Current" disabled="@IsLocked" data-testid="@TestId"
-           @onchange="e => SetValueAsync(e.Value is true)" />
-    <QuroLabel For="@InputId" Text="@Label" Hidden="HideLabel" />
-</div>
+@* The field policy may hide the field (field-policy.md 3) *@
+@if (Drawn)
+{
+    <div class="@FieldClass("quro-checkbox")">
+        <input id="@InputId" type="checkbox" checked="@Current" disabled="@IsLocked" data-testid="@TestId"
+               @onchange="e => SetValueAsync(e.Value is true)" />
+        @FieldLabel(false)
+    </div>
+}
 
 @code {
     public override bool IsEmpty => false;

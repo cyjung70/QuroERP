@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
+using QuroErp.Contracts.Bc.BusinessPlaces;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Contracts.Bc.Localization;
 using QuroErp.Contracts.Common;
@@ -100,13 +101,21 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
         {
             Content = new StringContent("""{"status":404,"code":"BC-E-007"}""", null, "application/problem+json"),
         },
+        "/" + BusinessPlaceRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new[]
+            {
+                new BusinessPlaceDto(1, "MAIN", "Quro", true, null, null, null, null, null, null, null, null, null, null, null, true,
+                    DateTimeOffset.UnixEpoch, "system", DateTimeOffset.UnixEpoch, "system"),
+            }),
+        },
         "/" + InventorySettingRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = JsonContent.Create(new InventorySettingDto(NegativeStockModes.Deny, DateTimeOffset.UnixEpoch, "system")),
         },
         "/" + CompanyRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = JsonContent.Create(new CompanyDto("Quro", null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York",
+            Content = JsonContent.Create(new CompanyDto("Quro", null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York",
                 "WITH_SHIPMENT", withLogo, DateTimeOffset.UnixEpoch, "setup", DateTimeOffset.UnixEpoch, "setup")),
         },
         "/" + LocalizationRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)

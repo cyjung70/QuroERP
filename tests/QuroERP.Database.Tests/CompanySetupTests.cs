@@ -21,6 +21,8 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
 
         created.Should().BeTrue();
         Company().Should().Be(("Quro Korea", "KR", "KRW", "ko"));
+        // BC-BR-319: the default business place made by the schema script takes the company name
+        BusinessPlaceName().Should().Be("Quro Korea");
         TimeZone().Should().Be("Asia/Seoul");
         Decimals().Should().Equal(("MM", 2, "HALF_UP"), ("SD", 0, "HALF_UP"));
 
@@ -84,6 +86,13 @@ public class CompanySetupTests : IClassFixture<MigratedSchemaFixture>
         return row;
     }
 
+    private string BusinessPlaceName()
+    {
+        using var connection = _db.Open();
+        using var command = new NpgsqlCommand("SELECT business_place_name FROM bc_business_place WHERE is_default", connection);
+        return (string)command.ExecuteScalar()!;
+    }
+
     private string TimeZone()
     {
         using var connection = _db.Open();
@@ -121,7 +130,7 @@ public class CompanySetupWithTransactionsTests : IClassFixture<MigratedSchemaFix
             """
             INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
             VALUES ('Quro', 'US', 'USD', 'en', 'America/New_York', 's', 's');
-            INSERT INTO bc_exchange_rate (cur_dt, created_by, updated_by) VALUES (DATE '2026-10-01', 's', 's');
+            INSERT INTO bc_exchange_rate (rate_dt, currency_code, rate, created_by, updated_by) VALUES (DATE '2026-10-01', 'KRW', 0.00075, 's', 's');
             """, connection))
         {
             command.ExecuteNonQuery();

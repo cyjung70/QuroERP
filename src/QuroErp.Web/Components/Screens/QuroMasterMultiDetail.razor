@@ -10,22 +10,22 @@
 @using QuroErp.Web.Common
 
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
-                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice" Policies="Policies">
     <Toolbar>
         @* New and save need a selected source row and Full Access; until then they are disabled (screen-templates.md 0, 2) *@
-        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanNew="CanChange" CanSave="CanChange"
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanShowAllFields="CanShowAllFields" ShowAllFields="Policies.ShowAllFields" OnToggleShowAllFields="ToggleShowAllFields" CanNew="CanChange" CanSave="CanChange"
                      OnNew="AddTarget" OnSave="SaveAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
         <div class="quro-master-detail">
             @* The package rows take no test id yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
             <div class="quro-grid-host" data-testid="@Id("grid")">
-                <Quro.Grid.QuroGrid TItem="TSource" DataSet="_sources" Definition="_sourceDefinition" Localizer="L"
+                <QuroGrid TItem="TSource" DataSet="_sources" Definition="_sourceDefinition" Localizer="L"
                                     Culture="DisplayCulture.Current" ConfirmLeave="false"
                                     OnCellValueChanging="CancelSourceEdit" OnRowAdded="TakeOutSource" OnRowDeleting="CancelSourceDelete"
                                     OnPasting="CancelSourcePaste" OnCellButtonClick="SelectAsync">
                     <Quro.Grid.QuroColumn Field="@SelectField" HeaderKey="Common.Select" Type="CellType.Button" TextKey="Common.Select" Width="70" />
-                </Quro.Grid.QuroGrid>
+                </QuroGrid>
             </div>
             @if (_selected is not null)
             {
@@ -120,6 +120,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadPoliciesAsync();
         var screen = ScreenDefinitions.Shared.Get(Definition);
         var source = screen.Grids[0];
         // The source list is for picking only

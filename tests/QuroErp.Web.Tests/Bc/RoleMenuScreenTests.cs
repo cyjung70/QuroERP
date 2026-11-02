@@ -12,6 +12,7 @@ using QuroErp.Web.Auth;
 using QuroErp.Web.Bc.Roles;
 using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Bc;
+using QuroErp.Web.Components.Pages.Bc.Models;
 using QuroErp.Web.Components.Screens;
 using QuroErp.Web.Tests.Screens;
 
@@ -47,7 +48,9 @@ public class RoleMenuScreenTests : BunitContext
 
         page.Find("[data-testid=role-menu-search-role] option[selected]").GetAttribute("value").Should().Be("1");
         MenuCodes(page).Should().Equal("ITEM", "ROLEMENU");
-        page.Find("[data-testid=role-menu-grid] tbody tr").TextContent.Should().Contain("프로그램");
+        Grid(page).Text(0, "typeName").Should().Be("프로그램");
+        Grid(page).IsReadOnly(0, "displayName").Should().BeTrue();
+        Grid(page).IsReadOnly(0, "fullAccess").Should().BeFalse();
     }
 
     [Fact, Trait("Id", "BC-UC-005-T03")]
@@ -59,7 +62,7 @@ public class RoleMenuScreenTests : BunitContext
         page.Find("[data-testid=role-menu-toolbar-search]").Click();
 
         page.WaitForAssertion(() => MenuCodes(page).Should().Equal("ITEM"));
-        page.Find("[data-testid=role-menu-grid-full-access]").HasAttribute("checked").Should().BeFalse();
+        Grid(page).IsChecked(0, "fullAccess").Should().BeFalse();
     }
 
     [Fact, Trait("Id", "BC-UC-005-T01")]
@@ -71,9 +74,9 @@ public class RoleMenuScreenTests : BunitContext
         page.WaitForAssertion(() => page.LookupRows("role-menu-menu-lookup").Should().ContainSingle());
         page.PickLookupRow<MenuOptionDto, RoleMenu>("role-menu-menu-lookup", 0);
         page.WaitForAssertion(() => MenuCodes(page).Should().Equal("ITEM", "ROLEMENU", "USER"));
-        page.FindAll("[data-testid=role-menu-grid-full-access]")[2].Change(true);
-        page.FindAll("[data-testid=role-menu-grid-full-access]")[0].Change(false);
-        page.FindAll("[data-testid=role-menu-grid-delete-row]")[1].Click();
+        Grid(page).Toggle(2, "fullAccess");
+        Grid(page).Toggle(0, "fullAccess");
+        Grid(page).Click(1, "deleteRow");
 
         page.Find("[data-testid=role-menu-toolbar-save]").Click();
 
@@ -103,7 +106,7 @@ public class RoleMenuScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.UnprocessableEntity, """{"status":422,"code":"BC-E-212","args":["101"]}""");
         var page = RenderAs("admin");
-        page.FindAll("[data-testid=role-menu-grid-full-access]")[0].Change(false);
+        Grid(page).Toggle(0, "fullAccess");
 
         page.Find("[data-testid=role-menu-toolbar-save]").Click();
 
@@ -115,7 +118,7 @@ public class RoleMenuScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.UnprocessableEntity, """{"status":422,"code":"BC-E-216"}""");
         var page = RenderAs("admin");
-        page.FindAll("[data-testid=role-menu-grid-full-access]")[1].Change(false);
+        Grid(page).Toggle(1, "fullAccess");
 
         page.Find("[data-testid=role-menu-toolbar-save]").Click();
 
@@ -127,7 +130,7 @@ public class RoleMenuScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.Conflict, """{"status":409,"code":"Common-E-004"}""");
         var page = RenderAs("admin");
-        page.FindAll("[data-testid=role-menu-grid-full-access]")[0].Change(false);
+        Grid(page).Toggle(0, "fullAccess");
 
         page.Find("[data-testid=role-menu-toolbar-save]").Click();
 
@@ -139,21 +142,21 @@ public class RoleMenuScreenTests : BunitContext
     public void UserWithoutFullAccess_CanOnlyRead_NewSaveAndRowButtonsAreDisabledNotHidden()
     {
         var page = RenderAs("user");
-        var rows = page.FindAll("[data-testid=role-menu-grid] tbody tr").Count;
+        var rows = Grid(page).Rows.Count;
 
         page.Find("[data-testid=role-menu-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=role-menu-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=role-menu-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
         page.Find("[data-testid=role-menu-toolbar-export]").HasAttribute("disabled").Should().BeFalse();
-        page.FindAll("[data-testid=role-menu-grid-delete-row]").Should().NotBeEmpty().And.OnlyContain(b => b.HasAttribute("disabled"));
-        page.FindAll("[data-testid=role-menu-grid-full-access]").Should().OnlyContain(c => c.HasAttribute("disabled"));
+        Grid(page).IsReadOnly(0, "fullAccess").Should().BeTrue();
 
         // The handlers do nothing either
+        Grid(page).Toggle(0, "fullAccess").Should().BeFalse();
         page.Find("[data-testid=role-menu-toolbar-new]").Click();
-        page.FindAll("[data-testid=role-menu-grid-delete-row]")[0].Click();
+        Grid(page).Click(0, "deleteRow");
         page.Find("[data-testid=role-menu-toolbar-save]").Click();
-        page.FindAll("[data-testid=role-menu-grid] tbody tr").Should().HaveCount(rows);
-        page.FindAll("[data-state=D]").Should().BeEmpty();
+        Grid(page).Rows.Should().HaveCount(rows);
+        Grid(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);
         _api.Saved.Should().BeEmpty();
     }
 
@@ -169,9 +172,9 @@ public class RoleMenuScreenTests : BunitContext
         return page;
     }
 
-    private static List<string> MenuCodes(IRenderedComponent<RoleMenu> page) =>
-        page.FindAll("[data-testid=role-menu-grid] tbody tr").Select(r => r.QuerySelectorAll("td")
-            .Select(c => c.TextContent.Trim()).First(t => t is "ITEM" or "ROLEMENU" or "USER")).ToList();
+    private static IReadOnlyList<string> MenuCodes(IRenderedComponent<RoleMenu> page) => Grid(page).Column("menuCode");
+
+    private static DataGridPage<RoleMenuRow> Grid(IRenderedComponent<RoleMenu> page) => page.DataGrid<RoleMenuRow, RoleMenu>("role-menu-grid");
 
     /// <summary>Roles admin (1) with ITEM and ROLEMENU at Full Access, user (2) reading ITEM. USER (102) is not assigned to admin.</summary>
     private sealed class FakeRoleApi : HttpMessageHandler

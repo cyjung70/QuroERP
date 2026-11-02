@@ -15,7 +15,7 @@ public class TaxRuleTests
         new("NY-1", "NY", null),
     ];
 
-    [Theory, Trait("Id", "BC-UT-513")]
+    [Theory, Trait("Id", "BC-UT-513"), Trait("Id", "BC-UC-029-T02")]
     [InlineData("2026-06-30", "7.25")]
     [InlineData("2026-07-01", "7.5")]
     [InlineData("2027-03-01", "7.5")]
@@ -25,7 +25,7 @@ public class TaxRuleTests
             .Should().Be(decimal.Parse(rate, System.Globalization.CultureInfo.InvariantCulture));
     }
 
-    [Fact, Trait("Id", "BC-UT-513")]
+    [Fact, Trait("Id", "BC-UT-513"), Trait("Id", "BC-UC-029-T03")]
     public void TaxAreaRate_NoRowYet_IsBcE513()
     {
         var act = () => TaxAreaRate.EffectiveOn(AreaRates, new DateOnly(2025, 12, 31), "CA-LA");

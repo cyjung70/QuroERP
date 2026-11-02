@@ -28,8 +28,8 @@
             <QuroText Label="@L["Bc.ItemImageUpload.ItemName"]" Value="@_searchName" LockMode="LockMode.Always" TestId="item-image-upload-search-item-name" />
         </SearchContent>
         <Fields Context="item">
-            <QuroText Label="@L["Bc.ItemImageUpload.ItemCd"]" @bind-Value="item.ItemCd" Required LockMode="LockMode.Always" TestId="item-image-upload-header-item-cd" />
-            <QuroText Label="@L["Bc.ItemImageUpload.ItemName"]" @bind-Value="item.ItemName" LockMode="LockMode.Always" TestId="item-image-upload-header-item-name" />
+            <QuroText Label="@L["Bc.ItemImageUpload.ItemCd"]" Field="ItemCd" Required LockMode="LockMode.Always" TestId="item-image-upload-header-item-cd" />
+            <QuroText Label="@L["Bc.ItemImageUpload.ItemName"]" Field="ItemName" LockMode="LockMode.Always" TestId="item-image-upload-header-item-name" />
             @* Shown at its own size within the frame; the server never shrinks it (MM-BR-820, MM-BR-822) *@
             <figure class="item-image" data-testid="item-image-upload-header-image">
                 @if (item.ItemCd is not null && item.Id != 0 && !_imageMissing)

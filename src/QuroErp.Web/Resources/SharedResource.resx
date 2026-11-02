@@ -148,14 +148,25 @@
   <data name="BC-E-412" xml:space="preserve"><value>통화 '{0}'은(는) 사용 중인 통화가 아닙니다.</value></data>
   <data name="BC-E-416" xml:space="preserve"><value>통화 '{0}'은(는) 기준 통화이거나 문서·거래처가 쓰고 있어 삭제할 수 없습니다. 사용 안 함으로 바꾸세요.</value></data>
   <data name="BC-E-404" xml:space="preserve"><value>'{0}'의 영어(en) 이름을 입력하세요.</value></data>
+  <data name="BC-E-501" xml:space="preserve"><value>세금 코드 '{0}'은(는) 비었거나, 영문 대문자·숫자 10자 이하가 아니거나, 이미 있습니다.</value></data>
+  <data name="BC-E-502" xml:space="preserve"><value>세금 코드 '{0}'의 세금 종류는 회사 국가에서 쓸 수 없습니다.</value></data>
+  <data name="BC-E-503" xml:space="preserve"><value>세금 코드 '{0}'의 세율이 맞지 않습니다. 세율은 0 이상 100 미만, 소수 4자리 이하이고, Sales Tax는 세율 지역이 필요합니다.</value></data>
+  <data name="BC-E-504" xml:space="preserve"><value>세금 코드 '{0}': 가격 포함은 부가세 과세(VAT_STANDARD)만 고를 수 있습니다.</value></data>
+  <data name="BC-E-505" xml:space="preserve"><value>세금 코드 '{0}'은(는) 지우거나 사용 안 함으로 바꾸거나 코드·종류를 바꿀 수 없습니다.</value></data>
+  <data name="BC-E-506" xml:space="preserve"><value>세금 코드 '{0}'은(는) 문서나 거래처가 쓰고 있어 삭제하거나 세율·종류를 바꿀 수 없습니다. 사용 안 함으로 바꾸거나 새 코드를 만드세요.</value></data>
   <data name="BC-E-428" xml:space="preserve"><value>통화 '{0}'의 국가가 올바르지 않습니다. 국가 코드는 영문 대문자 2자이거나 비워 둡니다. 문서가 있는 통화의 국가는 바꿀 수 없습니다.</value></data>
   <data name="BC-E-422" xml:space="preserve"><value>{0} 자릿수가 범위를 벗어났습니다. 단가는 0~6, 수량은 0~4입니다.</value></data>
   <data name="BC-E-423" xml:space="preserve"><value>{0}은(는) 소수 {1}자리까지 입력할 수 있습니다.</value></data>
   <data name="BC-E-424" xml:space="preserve"><value>반올림 방식 '{0}'이(가) 올바르지 않습니다. HALF_UP 또는 DOWN을 고르세요.</value></data>
   <data name="BC-E-425" xml:space="preserve"><value>{0} 자릿수를 쓰는 문서가 있어 자릿수를 줄일 수 없습니다.</value></data>
+  <data name="BC-E-432" xml:space="preserve"><value>{0}을(를) 입력하세요.</value></data>
+  <data name="BC-E-433" xml:space="preserve"><value>{0} 필드 정책은 쓸 수 없습니다. 화면의 필드, HIDDEN·OPTIONAL·REQUIRED·READONLY 중 하나의 상태, 올바른 기본값을 쓰세요. 필수 업무 필드는 숨길 수 없습니다.</value></data>
+  <data name="BC-E-436" xml:space="preserve"><value>{0}은(는) 국가팩이 선언한 필드가 아니어서 저장할 수 없습니다.</value></data>
   <data name="quro.validation.required" xml:space="preserve"><value>필수 항목입니다. 값을 입력하세요.</value></data>
   <data name="quro.validation.min" xml:space="preserve"><value>최솟값 이상의 값을 입력하세요.</value></data>
   <data name="quro.validation.max" xml:space="preserve"><value>최댓값 이하의 값을 입력하세요.</value></data>
+  <data name="BC-E-511" xml:space="preserve"><value>세율 지역 '{0}'을(를) 저장하거나 삭제할 수 없습니다. 코드는 20자 이하로 다른 지역과 겹치지 않아야 하고, 이름과 주가 있어야 합니다. 세금 코드가 쓰는 지역은 삭제할 수 없습니다.</value></data>
+  <data name="BC-E-512" xml:space="preserve"><value>세율 지역 '{0}'의 {1} 세율 줄이 올바르지 않습니다. 시작일이 있어야 하고, 세율은 0 이상 100 미만에 소수 4자리 이하이며, 같은 시작일은 한 줄만 둘 수 있습니다.</value></data>
   <data name="BC-E-513" xml:space="preserve"><value>세금 코드 '{0}'에는 {1}에 유효한 세율이 없습니다. 세율 지역에 그 날짜 이전에 시작하는 세율을 넣으세요.</value></data>
   <data name="BC-E-521" xml:space="preserve"><value>사업자등록번호 '{0}'이(가) 올바르지 않습니다. 숫자 10자리이고 검증 숫자가 맞아야 합니다.</value></data>
   <data name="BC-W-525" xml:space="preserve"><value>이 주의 면세 증명서가 만료되어 고객 기본 세금 코드로 과세합니다.</value></data>
@@ -335,6 +346,7 @@
   <data name="Bc.CompanyMenu.Title" xml:space="preserve"><value>회사 메뉴</value></data>
   <data name="Bc.CompanyMenu.MenuCode" xml:space="preserve"><value>메뉴 ID</value></data>
   <data name="Bc.CompanyMenu.Name" xml:space="preserve"><value>메뉴 이름</value></data>
+  <data name="Bc.CompanyMenu.DisplayName" xml:space="preserve"><value>표시 이름</value></data>
   <data name="Bc.CompanyMenu.Type" xml:space="preserve"><value>유형</value></data>
   <data name="Bc.CompanyMenu.ProgramId" xml:space="preserve"><value>프로그램 ID</value></data>
   <data name="Bc.CompanyMenu.Module" xml:space="preserve"><value>모듈</value></data>
@@ -360,11 +372,8 @@
   <data name="Bc.Company.Contact" xml:space="preserve"><value>담당자</value></data>
   <data name="Bc.Company.TelNo" xml:space="preserve"><value>전화</value></data>
   <data name="Bc.Company.FaxNo" xml:space="preserve"><value>팩스</value></data>
-  <data name="Bc.Company.RegisterNo" xml:space="preserve"><value>사업자등록번호</value></data>
   <data name="Bc.Company.Represent" xml:space="preserve"><value>대표자</value></data>
   <data name="Bc.Company.Email" xml:space="preserve"><value>이메일</value></data>
-  <data name="Bc.Company.BusinessType" xml:space="preserve"><value>업태</value></data>
-  <data name="Bc.Company.BusinessItem" xml:space="preserve"><value>종목</value></data>
   <data name="Bc.Company.CountryCode" xml:space="preserve"><value>국가</value></data>
   <data name="Bc.Company.Country.US" xml:space="preserve"><value>미국</value></data>
   <data name="Bc.Company.Country.KR" xml:space="preserve"><value>대한민국</value></data>
@@ -376,6 +385,24 @@
   <data name="Bc.Company.BillingMode.SEPARATE" xml:space="preserve"><value>출하 뒤 따로 청구</value></data>
   <data name="Bc.Company.Logo.Delete" xml:space="preserve"><value>로고 지우기</value></data>
   <data name="Bc.Company.Logo.ConfirmDelete" xml:space="preserve"><value>로고를 지울까요? 출력 문서에는 회사 이름만 나옵니다.</value></data>
+  <data name="Bc.BusinessPlace.Title" xml:space="preserve"><value>사업장</value></data>
+  <data name="Bc.BusinessPlace.BusinessPlaceCode" xml:space="preserve"><value>사업장 코드</value></data>
+  <data name="Bc.BusinessPlace.BusinessPlaceName" xml:space="preserve"><value>사업장 이름</value></data>
+  <data name="Bc.BusinessPlace.BusinessRegNo" xml:space="preserve"><value>사업자등록번호</value></data>
+  <data name="Bc.BusinessPlace.SubBusinessNo" xml:space="preserve"><value>종사업장번호</value></data>
+  <data name="Bc.BusinessPlace.CeoName" xml:space="preserve"><value>대표자</value></data>
+  <data name="Bc.BusinessPlace.BusinessType" xml:space="preserve"><value>업태</value></data>
+  <data name="Bc.BusinessPlace.BusinessItem" xml:space="preserve"><value>종목</value></data>
+  <data name="Bc.BusinessPlace.Addr1" xml:space="preserve"><value>주소 1</value></data>
+  <data name="Bc.BusinessPlace.Addr2" xml:space="preserve"><value>주소 2</value></data>
+  <data name="Bc.BusinessPlace.City" xml:space="preserve"><value>시</value></data>
+  <data name="Bc.BusinessPlace.State" xml:space="preserve"><value>주</value></data>
+  <data name="Bc.BusinessPlace.ZipCode" xml:space="preserve"><value>우편번호</value></data>
+  <data name="Bc.BusinessPlace.TelNo" xml:space="preserve"><value>전화</value></data>
+  <data name="Bc.BusinessPlace.UseYn" xml:space="preserve"><value>사용</value></data>
+  <data name="BC-E-319" xml:space="preserve"><value>사업장은 기본 사업장 1개만 씁니다. 사업장을 더하거나 기본 사업장을 사용 안 함으로 바꿀 수 없습니다.</value></data>
+  <data name="BC-E-320" xml:space="preserve"><value>{0} 값을 확인하세요. 사업자등록번호는 KR이면 필수이고 숫자 10자리, 종사업장번호는 숫자 4자리입니다.</value></data>
+  <data name="BC-E-321" xml:space="preserve"><value>사업장이 없습니다. 기본 사업장을 먼저 만드세요.</value></data>
   <data name="Bc.Company.Security" xml:space="preserve"><value>보안 설정</value></data>
   <data name="Bc.Company.Security.Hint" xml:space="preserve"><value>비밀번호 정책은 사용자가 다음에 비밀번호를 바꿀 때부터 적용됩니다.</value></data>
   <data name="Bc.Company.Security.ConfirmRevoke" xml:space="preserve"><value>자동 로그인을 끄면 모든 사용자의 자동 로그인이 끊깁니다. 계속할까요?</value></data>
@@ -400,6 +427,8 @@
   <data name="Bc.Code.FindMajor" xml:space="preserve"><value>Major 코드 찾기</value></data>
   <data name="Bc.Code.MinorCode" xml:space="preserve"><value>코드</value></data>
   <data name="Bc.Code.Name" xml:space="preserve"><value>이름 ({0})</value></data>
+  <data name="Bc.Code.NameEn" xml:space="preserve"><value>이름 (English)</value></data>
+  <data name="Bc.Code.NameKo" xml:space="preserve"><value>이름 (한국어)</value></data>
   <data name="Bc.Code.SortOrder" xml:space="preserve"><value>정렬 순서</value></data>
   <data name="Bc.Code.UseYn" xml:space="preserve"><value>사용</value></data>
   <data name="Bc.Code.Attr1" xml:space="preserve"><value>속성 1</value></data>
@@ -413,11 +442,15 @@
   <data name="Bc.CodeMajor.MajorCode" xml:space="preserve"><value>Major 코드</value></data>
   <data name="Bc.CodeMajor.Name" xml:space="preserve"><value>Major 이름</value></data>
   <data name="Bc.CodeMajor.NameIn" xml:space="preserve"><value>이름 ({0})</value></data>
+  <data name="Bc.CodeMajor.NameEn" xml:space="preserve"><value>이름 (English)</value></data>
+  <data name="Bc.CodeMajor.NameKo" xml:space="preserve"><value>이름 (한국어)</value></data>
   <data name="Bc.CodeMajor.UseYn" xml:space="preserve"><value>사용</value></data>
   <data name="Bc.CodeMajor.MinorCount" xml:space="preserve"><value>Minor 수</value></data>
   <data name="Bc.Currency.Title" xml:space="preserve"><value>통화</value></data>
   <data name="Bc.Currency.CurrencyCode" xml:space="preserve"><value>통화 코드</value></data>
   <data name="Bc.Currency.Name" xml:space="preserve"><value>이름 ({0})</value></data>
+  <data name="Bc.Currency.NameEn" xml:space="preserve"><value>이름 (English)</value></data>
+  <data name="Bc.Currency.NameKo" xml:space="preserve"><value>이름 (한국어)</value></data>
   <data name="Bc.Currency.Decimals" xml:space="preserve"><value>금액 자릿수</value></data>
   <data name="Bc.Currency.CountryCode" xml:space="preserve"><value>국가</value></data>
   <data name="Bc.Currency.UseYn" xml:space="preserve"><value>사용</value></data>
@@ -425,6 +458,8 @@
   <data name="SD-E-902" xml:space="preserve"><value>Major 코드 {0}의 값은 바꿀 수 없습니다.</value></data>
   <data name="SD-E-903" xml:space="preserve"><value>Major 코드 {0}에 Minor 코드가 있어 삭제할 수 없습니다. 먼저 Minor 코드를 지우거나 사용 안 함으로 바꾸세요.</value></data>
   <data name="SD-E-904" xml:space="preserve"><value>Major 코드 {0}은(는) 시스템이 쓰는 코드라 삭제하거나 사용 안 함으로 바꿀 수 없습니다.</value></data>
+  <data name="SD-E-906" xml:space="preserve"><value>{0} {1} 환율이 이미 있습니다. 일자·통화마다 환율은 하나입니다.</value></data>
+  <data name="SD-E-907" xml:space="preserve"><value>{0} {1} 환율을 저장할 수 없습니다. 일자가 있고, 통화는 사용 중이며 기준 통화가 아니고, 환율은 0보다 크고 소수 10자리 이하여야 합니다.</value></data>
   <data name="MM-E-816" xml:space="preserve"><value>시작 번호는 숫자여야 하고, 만들어지는 바코드는 {0}자리 이하여야 합니다.</value></data>
   <data name="MM-E-817" xml:space="preserve"><value>바코드가 다른 품목({0})과 겹칩니다. 아무것도 저장하지 않았습니다.</value></data>
   <data name="MM-E-821" xml:space="preserve"><value>10MB 이하의 JPEG 파일 1개를 고르세요. 품목이 있어야 합니다.</value></data>
@@ -477,6 +512,9 @@
   <data name="Common.CopyAsNew" xml:space="preserve"><value>복사해서 신규</value></data>
   <data name="Common.Total" xml:space="preserve"><value>합계</value></data>
   <data name="Samples.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Common.ShowAllFields" xml:space="preserve"><value>전체 필드 보기</value></data>
+  <data name="Common.HiddenByPolicy" xml:space="preserve"><value>숨김</value></data>
+  <data name="Samples.Country" xml:space="preserve"><value>국가팩</value></data>
   <data name="Samples.Supply" xml:space="preserve"><value>조달 구분</value></data>
   <data name="Samples.Supply.P" xml:space="preserve"><value>구매</value></data>
   <data name="Samples.Supply.M" xml:space="preserve"><value>생산</value></data>
@@ -504,4 +542,20 @@
   <data name="Samples.FreeForm.Step.Invoice" xml:space="preserve"><value>공급자 송장</value></data>
   <data name="Samples.FreeForm.ShowNotice" xml:space="preserve"><value>안내 보기</value></data>
   <data name="Samples.FreeForm.Notice" xml:space="preserve"><value>F 화면은 메시지 한 줄을 보입니다.</value></data>
+  <data name="Sd.Customer.State" xml:space="preserve"><value>주</value></data>
+  <data name="Sd.Customer.ZipCode" xml:space="preserve"><value>우편번호</value></data>
+  <data name="Sd.Customer.ShipState" xml:space="preserve"><value>배송지 주</value></data>
+  <data name="Sd.Customer.Country" xml:space="preserve"><value>국가</value></data>
+  <data name="Sd.Customer.ShipCountry" xml:space="preserve"><value>배송지 국가</value></data>
+  <data name="Sd.Customer.BusinessRegNo" xml:space="preserve"><value>사업자등록번호</value></data>
+  <data name="Sd.Customer.CeoName" xml:space="preserve"><value>대표자</value></data>
+  <data name="Sd.Customer.BusinessType" xml:space="preserve"><value>업태</value></data>
+  <data name="Sd.Customer.BusinessItem" xml:space="preserve"><value>종목</value></data>
+  <data name="Sd.Customer.TaxExemptions" xml:space="preserve"><value>면세 증명서</value></data>
+  <data name="Mm.Vendor.State" xml:space="preserve"><value>주</value></data>
+  <data name="Mm.Vendor.ZipCode" xml:space="preserve"><value>우편번호</value></data>
+  <data name="Mm.Vendor.BusinessRegNo" xml:space="preserve"><value>사업자등록번호</value></data>
+  <data name="Mm.Vendor.CeoName" xml:space="preserve"><value>대표자</value></data>
+  <data name="Mm.Vendor.BusinessType" xml:space="preserve"><value>업태</value></data>
+  <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>종목</value></data>
 </root>

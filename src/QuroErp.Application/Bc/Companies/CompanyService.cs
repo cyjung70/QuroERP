@@ -23,15 +23,14 @@ public sealed class CompanyService(
 
     /// <summary>Saves the company and returns it as stored.</summary>
     /// <exception cref="BadRequestException">400 BC-E-313 for a country other than US or KR, BC-E-318 for an unknown time zone.</exception>
-    /// <exception cref="DomainException">422 BC-E-302, 303, 312, 314, 315, 316.</exception>
+    /// <exception cref="DomainException">422 BC-E-302, 303, 312, 314, 316.</exception>
     /// <exception cref="ConflictException">409 BC-E-312 or 313 once trading started, BC-E-316 with unbilled shipments.</exception>
     /// <exception cref="ConcurrencyException">409 when the company changed after it was read (BC-BR-304).</exception>
     public async Task<CompanyDto> UpdateAsync(UpdateCompanyRequest request, string updatedBy, CancellationToken cancellationToken)
     {
         var fields = CompanyRules.Normalize(new CompanyFields(
-            request.Name, request.Billto, request.Shipto, request.Contact, request.TelNo, request.FaxNo, request.RegisterNo, request.Represent,
-            request.Email, request.BusinessType, request.BusinessItem, request.CountryCode, request.BaseCurrencyCode, request.DefaultLangCode,
-            request.TimeZone, request.BillingMode));
+            request.Name, request.Billto, request.Shipto, request.Contact, request.TelNo, request.FaxNo, request.Represent, request.Email,
+            request.CountryCode, request.BaseCurrencyCode, request.DefaultLangCode, request.TimeZone, request.BillingMode));
         if (fields.CountryCode is not { } country || !CompanyRules.Countries.Contains(country))
         {
             throw new BadRequestException(CompanyRules.CountryCode, fields.CountryCode ?? "");

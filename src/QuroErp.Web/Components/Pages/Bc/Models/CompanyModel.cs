@@ -1,3 +1,4 @@
+using QuroErp.Contracts.Bc.BusinessPlaces;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Contracts.Common;
 using QuroErp.Contracts.Common.Auth;
@@ -13,11 +14,8 @@ public sealed class CompanyModel
     public string? Contact { get; set; }
     public string? TelNo { get; set; }
     public string? FaxNo { get; set; }
-    public string? RegisterNo { get; set; }
     public string? Represent { get; set; }
     public string? Email { get; set; }
-    public string? BusinessType { get; set; }
-    public string? BusinessItem { get; set; }
     public string? CountryCode { get; set; }
     public string? BaseCurrencyCode { get; set; }
     public string? DefaultLangCode { get; set; }
@@ -37,11 +35,8 @@ public sealed class CompanyModel
         Contact = dto.Contact,
         TelNo = dto.TelNo,
         FaxNo = dto.FaxNo,
-        RegisterNo = dto.RegisterNo,
         Represent = dto.Represent,
         Email = dto.Email,
-        BusinessType = dto.BusinessType,
-        BusinessItem = dto.BusinessItem,
         CountryCode = dto.CountryCode,
         BaseCurrencyCode = dto.BaseCurrencyCode,
         DefaultLangCode = dto.DefaultLangCode,
@@ -53,8 +48,8 @@ public sealed class CompanyModel
     };
 
     public UpdateCompanyRequest ToRequest() => new(
-        Name, Billto, Shipto, Contact, TelNo, FaxNo, RegisterNo, Represent, Email, BusinessType, BusinessItem, CountryCode, BaseCurrencyCode,
-        DefaultLangCode, TimeZone, BillingMode, UpdatedAt);
+        Name, Billto, Shipto, Contact, TelNo, FaxNo, Represent, Email, CountryCode, BaseCurrencyCode, DefaultLangCode, TimeZone, BillingMode,
+        UpdatedAt);
 }
 
 /// <summary>The security settings form (BC-BR-309). Numbers are decimal? for QuroNumber; the API checks the ranges.</summary>
@@ -102,4 +97,49 @@ public sealed class SecuritySettingModel
         Whole(PasswordHistoryCount), PasswordResetMode ?? "", UpdatedAt);
 
     private static int Whole(decimal? value) => value is { } v && v >= int.MinValue && v <= int.MaxValue ? (int)v : -1;
+}
+
+/// <summary>The business place area (BC-BR-319, BC-BR-320): the default place's tax invoice supplier values. The API checks them.</summary>
+public sealed class BusinessPlaceModel
+{
+    public long Id { get; set; }
+    public string BusinessPlaceCode { get; set; } = "";
+    public string? BusinessPlaceName { get; set; }
+    public string? BusinessRegNo { get; set; }
+    public string? SubBusinessNo { get; set; }
+    public string? CeoName { get; set; }
+    public string? BusinessType { get; set; }
+    public string? BusinessItem { get; set; }
+    public string? Addr1 { get; set; }
+    public string? Addr2 { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? ZipCode { get; set; }
+    public string? TelNo { get; set; }
+    public bool UseYn { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    public static BusinessPlaceModel From(BusinessPlaceDto dto) => new()
+    {
+        Id = dto.Id,
+        BusinessPlaceCode = dto.BusinessPlaceCode,
+        BusinessPlaceName = dto.BusinessPlaceName,
+        BusinessRegNo = dto.BusinessRegNo,
+        SubBusinessNo = dto.SubBusinessNo,
+        CeoName = dto.CeoName,
+        BusinessType = dto.BusinessType,
+        BusinessItem = dto.BusinessItem,
+        Addr1 = dto.Addr1,
+        Addr2 = dto.Addr2,
+        City = dto.City,
+        State = dto.State,
+        ZipCode = dto.ZipCode,
+        TelNo = dto.TelNo,
+        UseYn = dto.UseYn,
+        UpdatedAt = dto.UpdatedAt,
+    };
+
+    public UpdateBusinessPlaceRequest ToRequest() => new(
+        BusinessPlaceName, BusinessRegNo, SubBusinessNo, CeoName, BusinessType, BusinessItem, Addr1, Addr2, City, State, ZipCode, TelNo,
+        UseYn, UpdatedAt);
 }

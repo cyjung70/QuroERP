@@ -13,6 +13,7 @@
 @inject IJSRuntime Js
 
 <section class="quro-entry" data-testid="@TestId">
+<CascadingValue Value="Policies" IsFixed="true">
     <NavigationLock ConfirmExternalNavigation="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync" />
 
     @* ① Title bar *@
@@ -97,6 +98,15 @@
                 <button type="button" disabled="@(Busy || _lines.RowKeys.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport">@L["Common.ExportExcel"]</button>
             }
         </div>
+        @if (CanShowAllFields)
+        {
+            @* Admin "show all fields" (BC-BR-435): hidden fields read-only with a marker; nothing saved changes *@
+            <span class="quro-commandbar-sep" aria-hidden="true"></span>
+            <div class="quro-commandbar-group" data-group="view">
+                <button type="button" aria-pressed="@(Policies.ShowAllFields ? "true" : "false")" disabled="@Busy"
+                        data-testid="@Id("toolbar-show-all-fields")" @onclick="ToggleShowAllFields">@L["Common.ShowAllFields"]</button>
+            </div>
+        }
     </div>
 
     @* ③ Header panel (4 columns, Span 1·2·4) + totals panel (320px) *@
@@ -132,6 +142,7 @@
 
     @* ⑤ Audit: empty for a new document *@
     <QuroAuditFooter Audit="@(_form.IsNew ? null : Audit?.Invoke(_header))" TestId="@Id("audit")" />
+</CascadingValue>
 </section>
 
 <QuroLookupDialog TItem="THeader" Title="@L["Common.FindDocument"]" TestId="@Id("find")" @bind-Visible="_findOpen"
@@ -365,6 +376,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadPoliciesAsync();
         StartNew();
         if (Initial is not null)
         {

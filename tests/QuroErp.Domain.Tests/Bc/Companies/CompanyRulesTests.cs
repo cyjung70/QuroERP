@@ -9,7 +9,7 @@ namespace QuroErp.Domain.Tests.Bc.Companies;
 public class CompanyRulesTests
 {
     private static readonly CompanyFields Us = new(
-        "Quro", null, null, null, null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York", null);
+        "Quro", null, null, null, null, null, null, null, "US", "USD", "en", "America/New_York", null);
 
     [Fact, Trait("Id", "BC-UT-302")]
     public void Text_IsTrimmed_CodesAreCased_AndBillingModeDefaultsToWithShipment()
@@ -38,10 +38,7 @@ public class CompanyRulesTests
     [InlineData("Contact", 41)]
     [InlineData("TelNo", 21)]
     [InlineData("FaxNo", 21)]
-    [InlineData("RegisterNo", 31)]
     [InlineData("Represent", 31)]
-    [InlineData("BusinessType", 51)]
-    [InlineData("BusinessItem", 51)]
     public void LongText_IsBcE303WithTheField(string field, int length)
     {
         var value = new string('x', length);
@@ -52,10 +49,7 @@ public class CompanyRulesTests
             "Contact" => Us with { Contact = value },
             "TelNo" => Us with { TelNo = value },
             "FaxNo" => Us with { FaxNo = value },
-            "RegisterNo" => Us with { RegisterNo = value },
-            "Represent" => Us with { Represent = value },
-            "BusinessType" => Us with { BusinessType = value },
-            _ => Us with { BusinessItem = value },
+            _ => Us with { Represent = value },
         };
 
         var act = () => CompanyRules.Normalize(fields);
@@ -67,7 +61,7 @@ public class CompanyRulesTests
 
     [Fact, Trait("Id", "BC-UT-303")]
     public void TextAtTheLimits_IsAllowed() =>
-        CompanyRules.Normalize(Us with { Billto = new string('x', 200), TelNo = new string('1', 20), Email = "abcdefghij@abcdefghijklmn.com", BusinessType = new string('x', 50) });
+        CompanyRules.Normalize(Us with { Billto = new string('x', 200), TelNo = new string('1', 20), Email = "abcdefghij@abcdefghijklmn.com" });
 
     [Theory, Trait("Id", "BC-UT-303")]
     [InlineData("not-an-email")]
@@ -83,27 +77,10 @@ public class CompanyRulesTests
     [Fact, Trait("Id", "BC-UT-313")]
     public void MvpCountries_AreUsAndKr() => CompanyRules.Countries.Should().BeEquivalentTo(["US", "KR"]);
 
-    [Theory, Trait("Id", "BC-UT-315")]
-    [InlineData(null)]
-    [InlineData("220-81-62518")]
-    [InlineData("22081625")]
-    [InlineData("22081625AB")]
-    public void KrCompany_WithoutAValidRegisterNo_IsBcE315(string? registerNo)
-    {
-        var act = () => CompanyRules.Normalize(Us with { CountryCode = "KR", RegisterNo = registerNo });
-
-        var error = act.Should().Throw<DomainException>().Which;
-        error.Code.Should().Be(CompanyRules.RegisterNoCode);
-        error.Args.Should().Equal("RegisterNo");
-    }
-
-    [Fact, Trait("Id", "BC-UT-315")]
-    public void KrRegisterNo_IsStoredWithoutHyphens() =>
-        CompanyRules.Normalize(Us with { CountryCode = "KR", RegisterNo = "220-81-62517" }).RegisterNo.Should().Be("2208162517");
-
-    [Fact, Trait("Id", "BC-UT-315")]
-    public void UsRegisterNo_IsFreeText() =>
-        CompanyRules.Normalize(Us with { RegisterNo = "12-3456789" }).RegisterNo.Should().Be("12-3456789");
+    // BC-BR-315: the registration number is the business place's, so a KR company saves without one
+    [Fact, Trait("Id", "BC-UT-315"), Trait("Rule", "BC-BR-315")]
+    public void KrCompany_NeedsNoRegisterNo() =>
+        CompanyRules.Normalize(Us with { CountryCode = "KR" }).CountryCode.Should().Be("KR");
 
     [Theory, Trait("Id", "BC-UT-521")]
     [InlineData("2208162517", "2208162517")]

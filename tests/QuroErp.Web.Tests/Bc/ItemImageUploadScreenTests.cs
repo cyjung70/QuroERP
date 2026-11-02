@@ -176,8 +176,7 @@ public class ItemImageUploadScreenTests : BunitContext
     private static void Pick(IRenderedComponent<ItemImageUpload> page, byte[] content, string fileName) =>
         page.FindComponent<InputFile>().UploadFiles(InputFileContent.CreateFromBinary(content, fileName, contentType: "image/jpeg"));
 
-    private static string? Value(IRenderedComponent<ItemImageUpload> page, string testId) =>
-        page.Find($"[data-testid={testId}]").GetAttribute("value");
+    private static string? Value(IRenderedComponent<ItemImageUpload> page, string testId) => page.Field(testId).Value;
 
     private static string? ImageSrc(IRenderedComponent<ItemImageUpload> page) =>
         page.FindAll("[data-testid=item-image-upload-header-image] img").SingleOrDefault()?.GetAttribute("src");

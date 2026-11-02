@@ -1,29 +1,33 @@
 @inherits QuroInputBase<string>
 
-@if (Bound && Rows <= 1)
+@* The field policy may hide the field (field-policy.md 3) *@
+@if (Drawn)
 {
-    @* Quro.UI text box on the data set column; the test id is on the field until the package takes one (TODO(QuroGrid-R3)) *@
-    <div class="@FieldClass()" data-testid="@TestId">
-        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
-        @Form!.Data!.TextBox(Field!, CharType, MaxLength, Password, IsLocked)
-    </div>
-}
-else
-{
-    <div class="@FieldClass()">
-        <QuroLabel For="@InputId" Text="@Label" Required="IsRequiredNow" Hidden="HideLabel" />
-        @if (Rows > 1)
-        {
-            @* Quro.UI has no multi-line text box yet: a bound memo keeps the text area (TODO(QuroGrid-request)) *@
-            <textarea id="@InputId" rows="@Rows" value="@Current" readonly="@IsLocked"
-                      aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync"></textarea>
-        }
-        else
-        {
-            <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked"
-                   aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
-        }
-    </div>
+    @if (Bound && Rows <= 1)
+    {
+        @* Quro.UI text box on the data set column; the test id is on the field until the package takes one (TODO(QuroGrid-R3)) *@
+        <div class="@FieldClass()" data-testid="@TestId">
+            @FieldLabel(IsRequiredNow)
+            @Form!.Data!.TextBox(Field!, CharType, MaxLength, Password, IsLocked)
+        </div>
+    }
+    else
+    {
+        <div class="@FieldClass()">
+            @FieldLabel(IsRequiredNow)
+            @if (Rows > 1)
+            {
+                @* Quro.UI has no multi-line text box yet: a bound memo keeps the text area (TODO(QuroGrid-request)) *@
+                <textarea id="@InputId" rows="@Rows" value="@Current" readonly="@IsLocked"
+                          aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync"></textarea>
+            }
+            else
+            {
+                <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked"
+                       aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
+            }
+        </div>
+    }
 }
 
 @code {

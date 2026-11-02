@@ -1,8 +1,8 @@
 using Bunit;
 using FluentAssertions;
-using Microsoft.AspNetCore.Components;
 using QuroErp.Contracts.Common;
 using QuroErp.Web.Common;
+using QuroErp.Web.Components.Pages.Samples;
 using QuroErp.Web.Components.Screens;
 
 namespace QuroErp.Web.Tests.Screens;
@@ -10,7 +10,7 @@ namespace QuroErp.Web.Tests.Screens;
 /// <summary>QuroMultiGrid.RunActionAsync: a screen action with the grid's busy state and messages (TASK-BC-022).</summary>
 public class QuroMultiGridActionTests : ScreenContext
 {
-    private readonly List<Row> _stored = [new("A")];
+    private readonly List<SampleItem> _stored = [new() { Id = 1, Code = "A" }];
     private int _loads;
 
     [Fact, Trait("Id", "BC-022-WT-01")]
@@ -20,7 +20,7 @@ public class QuroMultiGridActionTests : ScreenContext
 
         await grid.InvokeAsync(() => grid.Instance.RunActionAsync(() =>
         {
-            _stored.Add(new Row("B"));
+            _stored.Add(new SampleItem { Id = 2, Code = "B" });
             return Task.FromResult<string?>("done");
         }));
 
@@ -42,27 +42,19 @@ public class QuroMultiGridActionTests : ScreenContext
         _loads.Should().Be(1);
     }
 
-    private IRenderedComponent<QuroMultiGrid<Row>> RenderGrid()
+    private IRenderedComponent<QuroMultiGrid<SampleItem>> RenderGrid()
     {
-        var grid = Render<QuroMultiGrid<Row>>(p => p
+        var grid = Render<QuroMultiGrid<SampleItem>>(p => p
             .Add(g => g.Title, "T")
             .Add(g => g.TestId, "t")
+            .Add(g => g.Definition, "samples.item.multi")
             .Add(g => g.LoadOnStart, true)
             .Add(g => g.Load, () =>
             {
                 _loads++;
-                return Task.FromResult<IReadOnlyList<Row>>(_stored.ToList());
-            })
-            .Add(g => g.Columns, (RenderFragment)(b =>
-            {
-                b.OpenComponent<QuroColumn<Row>>(0);
-                b.AddAttribute(1, nameof(QuroColumn<Row>.Title), "Code");
-                b.AddAttribute(2, nameof(QuroColumn<Row>.Value), (Func<Row, object?>)(r => r.Code));
-                b.CloseComponent();
-            })));
+                return Task.FromResult<IReadOnlyList<SampleItem>>(_stored.ToList());
+            }));
         grid.WaitForAssertion(() => _loads.Should().Be(1));
         return grid;
     }
-
-    public sealed record Row(string Code);
 }

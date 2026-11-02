@@ -54,6 +54,10 @@ internal sealed partial class CurrencyRepository : ICurrencyRepository
         IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
         FindUsedAsync(currencyCodes, CurrencyRules.PartnerColumns, transaction, cancellationToken);
 
+    public Task<IReadOnlySet<string>> FindUsedByExchangeRatesAsync(
+        IReadOnlyCollection<string> currencyCodes, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        FindUsedAsync(currencyCodes, CurrencyRules.ExchangeRateColumns, transaction, cancellationToken);
+
     public Task<long> InsertAsync(
         string currencyCode, CurrencyFields fields, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteScalarAsync<long>(new CommandDefinition(

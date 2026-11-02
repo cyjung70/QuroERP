@@ -36,37 +36,37 @@
             <QuroText Label="@L["Bc.Item.ItemName"]" Value="@_searchName" LockMode="LockMode.Always" TestId="item-search-item-name" />
         </SearchContent>
         <Fields Context="item">
-            <QuroText Label="@L["Bc.Item.ItemCd"]" @bind-Value="item.ItemCd" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="item-header-item-cd" />
-            <QuroText Label="@L["Bc.Item.ItemName"]" @bind-Value="item.ItemName" Required TextCase="TextCase.Upper" TestId="item-header-item-name" />
-            <QuroText Label="@L["Bc.Item.ItemName2"]" @bind-Value="item.ItemName2" TextCase="TextCase.Upper" TestId="item-header-item-name2" />
-            <QuroCodeSelect Major="ITEM_TYPE" Label="@L["Bc.Item.ItemType"]" @bind-Value="item.ItemType" Required TestId="item-header-item-type" />
-            <QuroCodeSelect Major="UNIT" Label="@L["Bc.Item.Unit"]" @bind-Value="item.Unit" Required TestId="item-header-unit" />
-            <QuroCodeSelect Major="ITEM_CLASS" Label="@L["Bc.Item.ItemClass"]" @bind-Value="item.ItemClass" Required TestId="item-header-item-class" />
-            <QuroCodeSelect Major="VALID_FLAG" Label="@L["Bc.Item.ValidFlag"]" @bind-Value="item.ValidFlag" Radio TestId="item-header-valid-flag" />
-            <QuroCodeSelect Major="GRADE" Label="@L["Bc.Item.ItemGrade"]" @bind-Value="item.ItemGrade" TestId="item-header-item-grade" />
-            <QuroNumber Label="@L["Bc.Item.UsdPrc"]" @bind-Value="item.UsdPrc" Decimals="_mmPriceDecimals" TestId="item-header-usd-prc" />
-            <QuroNumber Label="@L["Bc.Item.SoUsdPrc"]" @bind-Value="item.SoUsdPrc" Decimals="_sdPriceDecimals" TestId="item-header-so-usd-prc" />
-            <QuroNumber Label="@L["Bc.Item.ReorderPoint"]" @bind-Value="item.ReorderPoint" Decimals="_qtyDecimals" TestId="item-header-reorder-point" />
+            <QuroText Label="@L["Bc.Item.ItemCd"]" Field="ItemCd" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="item-header-item-cd" />
+            <QuroText Label="@L["Bc.Item.ItemName"]" Field="ItemName" Required TextCase="TextCase.Upper" TestId="item-header-item-name" />
+            <QuroText Label="@L["Bc.Item.ItemName2"]" Field="ItemName2" TextCase="TextCase.Upper" TestId="item-header-item-name2" />
+            <QuroCodeSelect Major="ITEM_TYPE" Label="@L["Bc.Item.ItemType"]" Field="ItemType" Required TestId="item-header-item-type" />
+            <QuroCodeSelect Major="UNIT" Label="@L["Bc.Item.Unit"]" Field="Unit" Required TestId="item-header-unit" />
+            <QuroCodeSelect Major="ITEM_CLASS" Label="@L["Bc.Item.ItemClass"]" Field="ItemClass" Required TestId="item-header-item-class" />
+            <QuroCodeSelect Major="VALID_FLAG" Label="@L["Bc.Item.ValidFlag"]" Field="ValidFlag" Radio TestId="item-header-valid-flag" />
+            <QuroCodeSelect Major="GRADE" Label="@L["Bc.Item.ItemGrade"]" Field="ItemGrade" TestId="item-header-item-grade" />
+            <QuroNumber Label="@L["Bc.Item.UsdPrc"]" Field="UsdPrc" Decimals="_mmPriceDecimals" TestId="item-header-usd-prc" />
+            <QuroNumber Label="@L["Bc.Item.SoUsdPrc"]" Field="SoUsdPrc" Decimals="_sdPriceDecimals" TestId="item-header-so-usd-prc" />
+            <QuroNumber Label="@L["Bc.Item.ReorderPoint"]" Field="ReorderPoint" Decimals="_qtyDecimals" TestId="item-header-reorder-point" />
             @* The tax field follows the company tax method (MM-BR-831), not the country code (localization.md) *@
             @if (_localization?.TaxMethod == SalesTaxMethod)
             {
-                <QuroCheckbox Label="@L["Bc.Item.Taxable"]" @bind-Value="item.Taxable" TestId="item-header-taxable" />
+                <QuroCheckbox Label="@L["Bc.Item.Taxable"]" Field="Taxable" TestId="item-header-taxable" />
             }
             else if (_localization?.TaxMethod == VatMethod)
             {
-                <QuroSelect Label="@L["Bc.Item.VatKind"]" @bind-Value="item.VatKind" Options="_vatKinds" Required TestId="item-header-vat-kind" />
+                <QuroSelect Label="@L["Bc.Item.VatKind"]" Field="VatKind" Options="_vatKinds" Required TestId="item-header-vat-kind" />
             }
-            <QuroText Label="@L["Bc.Item.UpcCode"]" @bind-Value="item.UpcCode" TextCase="TextCase.Upper" TestId="item-header-upc-code" />
-            <QuroText Label="@L["Bc.Item.Location"]" @bind-Value="item.Location" TextCase="TextCase.Upper" TestId="item-header-location" />
+            <QuroText Label="@L["Bc.Item.UpcCode"]" Field="UpcCode" TextCase="TextCase.Upper" TestId="item-header-upc-code" />
+            <QuroText Label="@L["Bc.Item.Location"]" Field="Location" TextCase="TextCase.Upper" TestId="item-header-location" />
             @* Changed only by stock movements (MM-BR-804); stock per warehouse is in the stock reports *@
-            <QuroNumber Label="@L["Bc.Item.MvgCost"]" @bind-Value="item.MvgCost" Decimals="_mmPriceDecimals" LockMode="LockMode.Always" TestId="item-header-mvg-cost" />
-            <QuroNumber Label="@L["Bc.Item.OnhandQty"]" @bind-Value="item.OnhandQty" Decimals="_qtyDecimals" LockMode="LockMode.Always" TestId="item-header-onhand-qty" />
-            <QuroNumber Label="@L["Bc.Item.StkVal"]" @bind-Value="item.StkVal" Decimals="_amountDecimals" LockMode="LockMode.Always" TestId="item-header-stk-val" />
-            <QuroText Label="@L["Bc.Item.Memo1"]" @bind-Value="item.Memo1" TextCase="TextCase.Upper" TestId="item-header-memo1" />
-            <QuroText Label="@L["Bc.Item.Memo2"]" @bind-Value="item.Memo2" TextCase="TextCase.Upper" TestId="item-header-memo2" />
-            <QuroText Label="@L["Bc.Item.Memo3"]" @bind-Value="item.Memo3" TextCase="TextCase.Upper" TestId="item-header-memo3" />
-            <QuroText Label="@L["Bc.Item.Memo4"]" @bind-Value="item.Memo4" TextCase="TextCase.Upper" TestId="item-header-memo4" />
-            <QuroText Label="@L["Bc.Item.Memo5"]" @bind-Value="item.Memo5" TextCase="TextCase.Upper" TestId="item-header-memo5" />
+            <QuroNumber Label="@L["Bc.Item.MvgCost"]" Field="MvgCost" Decimals="_mmPriceDecimals" LockMode="LockMode.Always" TestId="item-header-mvg-cost" />
+            <QuroNumber Label="@L["Bc.Item.OnhandQty"]" Field="OnhandQty" Decimals="_qtyDecimals" LockMode="LockMode.Always" TestId="item-header-onhand-qty" />
+            <QuroNumber Label="@L["Bc.Item.StkVal"]" Field="StkVal" Decimals="_amountDecimals" LockMode="LockMode.Always" TestId="item-header-stk-val" />
+            <QuroText Label="@L["Bc.Item.Memo1"]" Field="Memo1" TextCase="TextCase.Upper" TestId="item-header-memo1" />
+            <QuroText Label="@L["Bc.Item.Memo2"]" Field="Memo2" TextCase="TextCase.Upper" TestId="item-header-memo2" />
+            <QuroText Label="@L["Bc.Item.Memo3"]" Field="Memo3" TextCase="TextCase.Upper" TestId="item-header-memo3" />
+            <QuroText Label="@L["Bc.Item.Memo4"]" Field="Memo4" TextCase="TextCase.Upper" TestId="item-header-memo4" />
+            <QuroText Label="@L["Bc.Item.Memo5"]" Field="Memo5" TextCase="TextCase.Upper" TestId="item-header-memo5" />
             @* The image is viewed and uploaded on its own screen (item spec step 6, BC-UC-010) *@
             @if (item.Id != 0)
             {

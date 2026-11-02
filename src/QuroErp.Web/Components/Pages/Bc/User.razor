@@ -41,21 +41,21 @@
             <QuroText Label="@L["Bc.User.Username"]" Value="@_searchName" LockMode="LockMode.Always" TestId="user-search-username" />
         </SearchContent>
         <Fields Context="user">
-            <QuroText Label="@L["Bc.User.Userid"]" @bind-Value="user.UserId" LockMode="LockMode.NewOnly" TextCase="TextCase.Lower" TestId="user-header-userid" />
-            <QuroText Label="@L["Bc.User.Username"]" @bind-Value="user.UserName" Required TestId="user-header-username" />
+            <QuroText Label="@L["Bc.User.Userid"]" Field="UserId" LockMode="LockMode.NewOnly" TextCase="TextCase.Lower" TestId="user-header-userid" />
+            <QuroText Label="@L["Bc.User.Username"]" Field="UserName" Required TestId="user-header-username" />
             @if (user.Id == 0)
             {
-                <QuroText Label="@L["Bc.User.Password"]" @bind-Value="user.Password" Password Required TestId="user-header-password" />
-                <QuroText Label="@L["Bc.User.ConfirmPassword"]" @bind-Value="user.ConfirmPassword" Password Required TestId="user-header-confirm-password" />
+                <QuroText Label="@L["Bc.User.Password"]" Field="Password" Password Required TestId="user-header-password" />
+                <QuroText Label="@L["Bc.User.ConfirmPassword"]" Field="ConfirmPassword" Password Required TestId="user-header-confirm-password" />
             }
             @* BC-BR-131: my own role and in-use flag are locked; the API checks it too *@
-            <QuroSelect Label="@L["Bc.User.Role"]" @bind-Value="user.RoleId" Options="_roles" Required LockMode="SelfLock(user)" TestId="user-header-role-id" />
-            <QuroText Label="@L["Bc.User.Email"]" @bind-Value="user.Email" TestId="user-header-email" />
-            <QuroText Label="@L["Bc.User.Phone"]" @bind-Value="user.Phone" TestId="user-header-phone" />
-            <QuroSelect Label="@L["Bc.User.LangCode"]" @bind-Value="user.LangCode" Options="_languages" TestId="user-header-lang-code" />
-            <QuroDate Label="@L["Bc.User.UserValidDt"]" @bind-Value="user.UserValidDt" TestId="user-header-user-valid-dt" />
+            <QuroSelect Label="@L["Bc.User.Role"]" Field="RoleId" Options="_roles" Required LockMode="SelfLock(user)" TestId="user-header-role-id" />
+            <QuroText Label="@L["Bc.User.Email"]" Field="Email" TestId="user-header-email" />
+            <QuroText Label="@L["Bc.User.Phone"]" Field="Phone" TestId="user-header-phone" />
+            <QuroSelect Label="@L["Bc.User.LangCode"]" Field="LangCode" Options="_languages" TestId="user-header-lang-code" />
+            <QuroDate Label="@L["Bc.User.UserValidDt"]" Field="UserValidDt" TestId="user-header-user-valid-dt" />
             <p class="quro-hint" data-testid="user-header-user-valid-dt-hint">@L["Bc.User.NoEndDate"]</p>
-            <QuroCodeSelect Major="VALID_FLAG" Label="@L["Bc.User.ValidFlag"]" @bind-Value="user.ValidFlag" Radio LockMode="SelfLock(user)"
+            <QuroCodeSelect Major="VALID_FLAG" Label="@L["Bc.User.ValidFlag"]" Field="ValidFlag" Radio LockMode="SelfLock(user)"
                             TestId="user-header-valid-flag" />
             @if (user.Id != 0)
             {

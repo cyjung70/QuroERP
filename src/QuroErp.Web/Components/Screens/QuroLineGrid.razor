@@ -3,6 +3,7 @@
    (display only — the API calculates the stored values again), reads code columns through the screen's lookups and keeps
    the frame's edit lock. *@
 @typeparam TLine where TLine : class
+@implements IDisposable
 @using System.Text.RegularExpressions
 @using Quro.Grid
 @using Quro.Grid.Data
@@ -12,13 +13,13 @@
 
 @* The package rows take no test id or row index yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
 <div class="quro-grid-host" data-testid="@TestId">
-    <Quro.Grid.QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
+    <QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
                         ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor"
                         OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged" OnRowAdded="OnRowAdded"
                         OnRowDeleting="OnRowDeleting" OnRowDeleted="OnRowDeleted" OnPasting="OnPasting" OnPasted="OnPasted"
                         OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick">
         @ChildContent
-    </Quro.Grid.QuroGrid>
+    </QuroGrid>
 </div>
 
 @if (_popup is { } popup)
@@ -38,9 +39,11 @@
 @code {
     private static readonly Regex Call = new(@"^\s*(?<lookup>[A-Za-z][A-Za-z0-9]*)\.(?<query>[A-Za-z][A-Za-z0-9]*)\((?<args>[^)]*)\)\s*$");
 
-    private Quro.Grid.QuroGrid<TLine>? _grid;
+    private QuroGrid<TLine>? _grid;
     private GridDef? _prepared;
+    private GridDef? _applied;
     private GridDef? _locked;
+    private int _policyVersion = -1;
     private List<(RuleDef Rule, RuleExpression Expression)> _calcs = [];
     private List<RuleDef> _lookups = [];
     private bool _pasting;
@@ -93,23 +96,63 @@
     public string? TestId { get; set; }
 
     /// <summary>The package grid, e.g. for tests that edit through its entry points.</summary>
-    public Quro.Grid.QuroGrid<TLine>? Grid => _grid;
+    public QuroGrid<TLine>? Grid => _grid;
+
+    /// <summary>The screen's field policies, cascaded by the screen type component; applied to the columns by their label key.</summary>
+    [CascadingParameter]
+    public QuroFieldPolicy? Policies { get; set; }
 
     // Without the edit right every cell is read-only; the package has no grid-wide lock yet (TODO(QuroGrid-R4))
-    private GridDef GridDefinition => CanEdit ? Definition : _locked!;
+    private GridDef GridDefinition => CanEdit ? _applied! : _locked!;
+
+    protected override void OnInitialized()
+    {
+        if (Policies is not null)
+        {
+            Policies.Changed += OnPolicyChanged;
+        }
+    }
 
     protected override void OnParametersSet()
     {
         if (!ReferenceEquals(_prepared, Definition))
         {
             _prepared = Definition;
-            _locked = Definition with
-            {
-                Columns = [.. Definition.Columns.Select(c => c with { Edit = ColumnEdit.ReadOnly, Req = false })],
-            };
+            _policyVersion = -1;
             // Parsed once per definition (QuroGrid consumer contract 6)
             _calcs = [.. Definition.Rules.Where(r => r.Action == RuleAction.Calc).Select(r => (r, RuleExpression.Parse(r.Expr)))];
             _lookups = [.. Definition.Rules.Where(r => r.Action == RuleAction.Lookup)];
+        }
+        ApplyPolicies();
+    }
+
+    // The definitions change only with the definition or the policies, so the grid is not set up again on every render
+    private void ApplyPolicies()
+    {
+        var version = Policies?.Version ?? 0;
+        if (_policyVersion == version)
+        {
+            return;
+        }
+        _policyVersion = version;
+        _applied = Policies?.Apply(Definition) ?? Definition;
+        _locked = _applied with
+        {
+            Columns = [.. _applied.Columns.Select(c => c with { Edit = ColumnEdit.ReadOnly, Req = false })],
+        };
+    }
+
+    private void OnPolicyChanged() => _ = InvokeAsync(() =>
+    {
+        ApplyPolicies();
+        StateHasChanged();
+    });
+
+    public void Dispose()
+    {
+        if (Policies is not null)
+        {
+            Policies.Changed -= OnPolicyChanged;
         }
     }
 

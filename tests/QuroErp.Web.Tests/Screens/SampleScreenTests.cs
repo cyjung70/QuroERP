@@ -500,14 +500,8 @@ public class SampleScreenTests : ScreenContext
                 .Add(x => x.Title, "List")
                 .Add(x => x.TestId, "list")
                 .Add(x => x.CanWrite, canWrite)
-                .Add(x => x.Load, () => Task.FromResult<IReadOnlyList<SampleItem>>([new SampleItem { Code = "A100" }]))
-                .Add(x => x.Columns, b =>
-                {
-                    b.OpenComponent<QuroColumn<SampleItem>>(0);
-                    b.AddAttribute(1, nameof(QuroColumn<SampleItem>.Title), "Code");
-                    b.AddAttribute(2, nameof(QuroColumn<SampleItem>.Value), (Func<SampleItem, object?>)(i => i.Code));
-                    b.CloseComponent();
-                }));
+                .Add(x => x.Definition, "samples.item.multi")
+                .Add(x => x.Load, () => Task.FromResult<IReadOnlyList<SampleItem>>([new SampleItem { Id = 1, Code = "A100" }])));
 
             page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
                 .Should().Equal("list-toolbar-search", "list-toolbar-export");

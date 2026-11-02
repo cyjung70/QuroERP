@@ -12,6 +12,12 @@ public sealed class RoleMenuRow
     public string MenuCode { get; set; } = "";
     public string? Name { get; set; }
     public string? Type { get; set; }
+    /// <summary>The translated menu name when there is one, else the stored name (BC-BR-202); the screen sets it.</summary>
+    public string? DisplayName { get; set; }
+
+    /// <summary>The menu type's name; the screen sets it.</summary>
+    public string? TypeName { get; set; }
+
     public bool FullAccess { get; set; }
 
     /// <summary>The row's updatedAt when it was read; null for a new row.</summary>
