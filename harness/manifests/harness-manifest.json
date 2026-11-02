@@ -19,10 +19,6 @@
       "sha256": "b644117c600e7bf228e4625e2bde8ed113d5339237a65b7e316f3113e94bd142"
     },
     {
-      "path": ".agents/skills/quro-game/SKILL.md",
-      "sha256": "41bbd96e415149ca6ea309e7920291f6e4db7ccd46f4b9242ab57588743c26bb"
-    },
-    {
       "path": ".agents/skills/quro-grid/SKILL.md",
       "sha256": "ce862982f2e593223bfbf1e16e52778689dc7268801ddeb0f9a0e5896e109732"
     },
@@ -51,10 +47,6 @@
       "sha256": "b644117c600e7bf228e4625e2bde8ed113d5339237a65b7e316f3113e94bd142"
     },
     {
-      "path": ".claude/skills/quro-game/SKILL.md",
-      "sha256": "41bbd96e415149ca6ea309e7920291f6e4db7ccd46f4b9242ab57588743c26bb"
-    },
-    {
       "path": ".claude/skills/quro-grid/SKILL.md",
       "sha256": "ce862982f2e593223bfbf1e16e52778689dc7268801ddeb0f9a0e5896e109732"
     },
@@ -68,11 +60,11 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "ea68fd5ffc36fa9b427b62eef1e9d29bef27a4a62708ad128782bf90498a9707"
+      "sha256": "75572621e8e99b3968c803dab43f68be1fb5b12ad8d821c5cfa1a89e48139f20"
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "3fcf44be8a2d9c907a20bb9466f524da828454b8443add69bae2b44f2930e982"
+      "sha256": "0560d60b332b78d00c987276517e859b77e2fc2ee0e20b780d06efc71a35b93a"
     },
     {
       "path": "docs/architecture/api.md",
@@ -152,7 +144,7 @@
     },
     {
       "path": "docs/architecture/subprojects.md",
-      "sha256": "f40908d3b0adbc3f3983950a31303034be12fae287f0abb63b814e96a6e3f107"
+      "sha256": "ed80451029209737e023727169fc547376fad297775ab195d13e3b59b5931742"
     },
     {
       "path": "docs/architecture/tax.md",
@@ -352,7 +344,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "9e810c5610dba3e671e971025a164012e0e95542df09a5a0e60724fe1d438955"
+      "sha256": "b2505bf225c0b242f08bf5b15252d01e9009e92db3c27e0c445253ec1e67b261"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -813,58 +805,6 @@
     {
       "path": "docs/specifications/SD/shipment.md",
       "sha256": "97914ff98b01fb927b837bb44b1e7ce554de6c449ac9754c07f522fbb46d79b1"
-    },
-    {
-      "path": "game-academy/AGENTS.md",
-      "sha256": "edf98d1bfe3cb84355a8cdbf194a733fa0b2b192735da88e4917a58e22fa580a"
-    },
-    {
-      "path": "game-academy/CLAUDE.md",
-      "sha256": "83fad2efefab66cecdc4ba4569fca5e312384ebc4e7fb0359edb81425337713b"
-    },
-    {
-      "path": "game-academy/docs/architecture.md",
-      "sha256": "c3f70e79f38795292b9097490b402e588e11b160aed24b7871787fd6ba3bd58a"
-    },
-    {
-      "path": "game-academy/docs/assets-guide.md",
-      "sha256": "4ff6d34653936bb9474513e14a06b5a4b90fb680cc61e2741df398bb7912699a"
-    },
-    {
-      "path": "game-academy/docs/i18n.md",
-      "sha256": "b6612230441ba781ac997ad27806f2743f01d1cb44f9697d776ff66132c0019c"
-    },
-    {
-      "path": "game-academy/docs/INDEX.md",
-      "sha256": "50fe6d5f5cfb381c8f63ba2995a75324766710928e868f2d1a2fa158f9b94bf3"
-    },
-    {
-      "path": "game-academy/docs/missions/MM/.gitkeep",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "game-academy/docs/missions/SD/.gitkeep",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "game-academy/harness/tasks/TASK-GAME-001.json",
-      "sha256": "e078f226b4b23ad8102d30ff27e5c26c9f8aa0b0bfe4e30aee2f869ea8361441"
-    },
-    {
-      "path": "game-academy/harness/tasks/TASK-GAME-002.json",
-      "sha256": "ee76bc3a18bfe19a1ab249c9b3543254ccfe3799870bb1c8a0e8a250c9c5aa2e"
-    },
-    {
-      "path": "game-academy/harness/tasks/TASK-GAME-003.json",
-      "sha256": "fc3fdcf4ab7a1934ebb259855f56bf5dcabe5a0415dac601e15455e2929e6eba"
-    },
-    {
-      "path": "game-academy/src/.gitkeep",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "game-academy/tests/.gitkeep",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "path": "GEMINI.md",
@@ -1820,7 +1760,7 @@
     },
     {
       "path": "scripts/validate-harness.ps1",
-      "sha256": "cd4d20951e22f51924438268c48b4f14aa0e3c54c02f536b0ab1e85d2e5d19e6"
+      "sha256": "f66fbf231f3bf5d99764aee819a07ac85f68d5e1f6e10cdcdacaa523bc92820c"
     },
     {
       "path": "src/.gitkeep",
