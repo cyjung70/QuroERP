@@ -4,7 +4,7 @@
   "files": [
     {
       "path": ".agents/skills/quro-api/SKILL.md",
-      "sha256": "12f14c869fd810aa902606a2633f4f911cfb64d9b8a7367e10f980bab1e87d12"
+      "sha256": "995bddc66ac87c0035656b53e0d9190e1085d51c6310758371345bdceb0d2d8b"
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
@@ -32,7 +32,7 @@
     },
     {
       "path": ".claude/skills/quro-api/SKILL.md",
-      "sha256": "12f14c869fd810aa902606a2633f4f911cfb64d9b8a7367e10f980bab1e87d12"
+      "sha256": "995bddc66ac87c0035656b53e0d9190e1085d51c6310758371345bdceb0d2d8b"
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
@@ -72,7 +72,7 @@
     },
     {
       "path": "docs/architecture/app-shell.md",
-      "sha256": "add08149d78ba51c86ac482ece61186e7bb132f213d3edf52a4fec06800a569b"
+      "sha256": "7f1059b4a218a9211334d8fe0c82e3614a2f7873986f8536550bc26868288039"
     },
     {
       "path": "docs/architecture/codes.md",
@@ -140,7 +140,7 @@
     },
     {
       "path": "docs/architecture/security.md",
-      "sha256": "43a4a3252fa03272d31fc806a17aa69e948022839ec00cd22f61a2c2ffef0faa"
+      "sha256": "35fb62ce4da65405da9bc570dfe09bb1a519224a9949b13e2c8129d5cb9c5d63"
     },
     {
       "path": "docs/architecture/subprojects.md",
@@ -164,7 +164,7 @@
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
-      "sha256": "f4126ce934a492505da09936d0d998692cca745999611fc638696c91a10bd718"
+      "sha256": "f7fec97795e298771f036db950267080b3b14db62bac2e72d88fe1ae1c8f089e"
     },
     {
       "path": "docs/business-rules/BC/password.md",
@@ -1281,6 +1281,10 @@
     {
       "path": "harness/tasks/TASK-CORE-058.json",
       "sha256": "38a9efff19c3c0f5ac15e6732a38eeb171b72868d94e517072269994c3240e9f"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-059.json",
+      "sha256": "fdb99977f38b94908c75525ab3c72752cc50f900b7d24081e85e6c230820db6f"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
