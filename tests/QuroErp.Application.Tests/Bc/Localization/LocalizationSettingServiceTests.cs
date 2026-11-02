@@ -97,7 +97,7 @@ public class LocalizationSettingServiceTests
     [InlineData("US", 4, 1, "MM")]
     public async Task UpdateAsync_ReduceDecimalsDocumentsUse_Throws409BcE425(string countryCode, int unitPriceDecimals, int qtyDecimals, string row)
     {
-        _settings.ModulesWithDocuments.Add(DecimalModule.Mm);
+        _settings.DocumentCurrencies[DecimalModule.Mm] = [null];
 
         var act = () => Service.UpdateAsync(
             Request(countryDecimals: [new(countryCode, "MM", unitPriceDecimals)], decimalSettings: [new("MM", qtyDecimals, "HALF_UP")]),
@@ -113,11 +113,30 @@ public class LocalizationSettingServiceTests
     [Fact, Trait("Id", "BC-UC-027-T03")]
     public async Task UpdateAsync_ReduceOtherCountryRowWithDocuments_Saves()
     {
-        _settings.ModulesWithDocuments.Add(DecimalModule.Sd);
+        _settings.DocumentCurrencies[DecimalModule.Sd] = [null];
 
         await Service.UpdateAsync(Request(countryDecimals: [new("US", "SD", 1)]), "admin", CancellationToken.None);
 
         _settings.CountryDecimals.Should().Equal(new CountryDecimalRow("US", "SD", 1));
+    }
+
+    [Theory, Trait("Id", "BC-UC-027-T03"), Trait("Rule", "BC-BR-425"), Trait("Rule", "BC-BR-429")]
+    [InlineData("USD", true)]
+    [InlineData("KRW", false)]
+    public async Task UpdateAsync_ReduceTheRowOfTheDocumentCurrencyCountry_Throws409BcE425(string currencyCode, bool blocked)
+    {
+        _settings.DocumentCurrencies[DecimalModule.Sd] = [currencyCode];
+
+        var act = () => Service.UpdateAsync(Request(countryDecimals: [new("US", "SD", 1)]), "admin", CancellationToken.None);
+
+        if (blocked)
+        {
+            (await act.Should().ThrowAsync<ConflictException>()).Which.Args.Should().Equal("US SD");
+        }
+        else
+        {
+            await act.Should().NotThrowAsync();
+        }
     }
 
     [Fact, Trait("Id", "BC-UC-027-T05")]

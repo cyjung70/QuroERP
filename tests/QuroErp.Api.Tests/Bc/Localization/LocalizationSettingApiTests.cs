@@ -55,7 +55,7 @@ public class LocalizationSettingApiTests(ApiFactory factory) : IClassFixture<Api
     [Fact, Trait("Id", "BC-UC-027-IT-13")]
     public async Task Put_ReduceDecimalsDocumentsUse_Returns409BcE425()
     {
-        factory.LocalizationSettings.ModulesWithDocuments.Add("MM");
+        factory.LocalizationSettings.DocumentCurrencies["MM"] = [null];
         var client = await factory.AdminAsync();
         var current = await client.GetFromJsonAsync<LocalizationSettingDto>(LocalizationRoutes.Setting);
 

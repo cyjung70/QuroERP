@@ -587,13 +587,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         public DateTimeOffset Version { get; private set; } = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
-        public HashSet<string> ModulesWithDocuments { get; } = [];
+        public Dictionary<string, IReadOnlyList<string?>> DocumentCurrencies { get; } = [];
 
         public Task<DateTimeOffset> GetVersionAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(Version);
 
-        public Task<bool> HasDocumentsAsync(string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(ModulesWithDocuments.Contains(moduleCode));
+        public Task<IReadOnlyList<string?>> FindDocumentCurrenciesAsync(
+            string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(DocumentCurrencies.GetValueOrDefault(moduleCode) ?? []);
 
         public Task UpdateLanguagesAsync(IReadOnlyList<LanguageUseRow> languages, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
         {

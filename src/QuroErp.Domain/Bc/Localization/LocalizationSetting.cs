@@ -47,11 +47,14 @@ public static class LocalizationSettingRules
 
     /// <summary>
     /// The first row whose decimals the change reduces while documents use it (BC-BR-425), or null. Increasing is always allowed.
-    /// Unit price: document lines use the row of their currency country, else the company country row (BC-BR-429).
-    /// Document lines have no currency yet (BC-BR-412), so only the company country row is in use [추정].
-    /// Quantity: any document of the module.
+    /// Unit price: document lines use the row of their currency country, else the company country row (BC-BR-429), so a row is in
+    /// use when a line of its module maps to its country. Quantity: any document line of the module.
     /// </summary>
-    /// <param name="moduleHasDocuments">Whether documents of the module (MM, SD) exist.</param>
+    /// <param name="currencyCountries">bc_currency.currency_code → country_code (null when the currency has no country).</param>
+    /// <param name="documentCurrencies">
+    /// The distinct currencies of the module's document lines (MM, SD); null stands for lines whose document has no currency.
+    /// Empty when the module has no document lines.
+    /// </param>
     /// <exception cref="DomainException">BC-E-422 for a row that does not exist or is repeated.</exception>
     public static string? FindReducedInUse(
         IReadOnlyList<CountryDecimal> currentCountryDecimals,
@@ -59,8 +62,12 @@ public static class LocalizationSettingRules
         IReadOnlyList<DecimalSetting> currentSettings,
         IReadOnlyList<DecimalSetting> requestedSettings,
         string companyCountryCode,
-        Func<string, bool> moduleHasDocuments)
+        IReadOnlyDictionary<string, string?> currencyCountries,
+        Func<string, IReadOnlyCollection<string?>> documentCurrencies)
     {
+        bool PriceRowInUse(CountryDecimal row) => documentCurrencies(row.Module)
+            .Any(c => PriceRowCountry(row.Module, c, companyCountryCode, currencyCountries, currentCountryDecimals) == row.CountryCode);
+
         string? inUse = null;
         var seenRows = new HashSet<(string, string)>();
         foreach (var requested in requestedCountryDecimals)
@@ -71,8 +78,7 @@ public static class LocalizationSettingRules
             {
                 throw new DomainException(DecimalSetting.InvalidCode, row);
             }
-            if (requested.UnitPriceDecimals < current.UnitPriceDecimals
-                && requested.CountryCode == companyCountryCode && moduleHasDocuments(requested.Module))
+            if (requested.UnitPriceDecimals < current.UnitPriceDecimals && PriceRowInUse(current))
             {
                 inUse ??= row;
             }
@@ -86,11 +92,23 @@ public static class LocalizationSettingRules
             {
                 throw new DomainException(DecimalSetting.InvalidCode, requested.Module);
             }
-            if (requested.QtyDecimals < current.QtyDecimals && moduleHasDocuments(requested.Module))
+            if (requested.QtyDecimals < current.QtyDecimals && documentCurrencies(requested.Module).Count > 0)
             {
                 inUse ??= requested.Module;
             }
         }
         return inUse;
+    }
+
+    /// <summary>
+    /// The country whose unit price row a document line of the module uses (BC-BR-429): the currency's country when it has a row for
+    /// the module, else the company country. A null currency (no document currency) uses the company country.
+    /// </summary>
+    public static string PriceRowCountry(
+        string moduleCode, string? currencyCode, string companyCountryCode, IReadOnlyDictionary<string, string?> currencyCountries,
+        IReadOnlyList<CountryDecimal> countryDecimals)
+    {
+        var country = currencyCode is null ? null : currencyCountries.GetValueOrDefault(currencyCode);
+        return country is not null && countryDecimals.Any(d => d.CountryCode == country && d.Module == moduleCode) ? country : companyCountryCode;
     }
 }
