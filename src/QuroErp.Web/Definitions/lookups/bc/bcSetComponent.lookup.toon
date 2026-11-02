@@ -1,0 +1,16 @@
+# Lookup of the items a set can hold (TASK-BC-026): Inventory items in use (SD-BR-502). The set item screen answers it from the
+# item lookup API and keeps only those items; the API checks the rule again when the set is saved.
+lookup:
+  id: bcSetComponent
+  title: Bc.SetItem.FindItem
+  version: 1
+  api: /api/bc/items
+  key: itemCd
+  text: itemName
+  minChars: 1
+queries[1]{id,params}:
+  all,""
+columns[3]{id,label,type,width,fmt}:
+  itemCd,Bc.SetItem.Item,text,140,""
+  itemName,Bc.SetItem.ItemName,text,240,""
+  unit,Bc.SetItem.Unit,text,70,""
