@@ -24,15 +24,15 @@ public static class AutoLoginCookie
             Delete(response);
             return;
         }
-        response.Cookies.Append(Name, login.AutoLoginToken, Options(login.AutoLoginExpiresAt));
+        response.Cookies.Append(Name, login.AutoLoginToken, Options(response, login.AutoLoginExpiresAt));
     }
 
-    public static void Delete(HttpResponse response) => response.Cookies.Delete(Name, Options(null));
+    public static void Delete(HttpResponse response) => response.Cookies.Delete(Name, Options(response, null));
 
-    private static CookieOptions Options(DateTimeOffset? expires) => new()
+    private static CookieOptions Options(HttpResponse response, DateTimeOffset? expires) => new()
     {
         HttpOnly = true,
-        Secure = true,
+        Secure = WebTransport.RequiresSecureCookie(response.HttpContext),
         SameSite = SameSiteMode.Strict,
         Path = "/",
         Expires = expires,

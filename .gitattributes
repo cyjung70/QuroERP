@@ -1,3 +1,4 @@
+# Linux 러너의 Bash/Docker에서 줄바꿈 문제가 없도록 LF를 고정합니다.
 /Dockerfile text eol=lf
 /.dockerignore text eol=lf
 /.github/workflows/*.yml text eol=lf

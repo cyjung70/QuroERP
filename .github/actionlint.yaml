@@ -1,3 +1,4 @@
+# 워크플로 검증기가 사용자 정의 러너 라벨을 인식하도록 등록합니다.
 self-hosted-runner:
   labels:
     - quroerp-deploy
