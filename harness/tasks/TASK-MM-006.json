@@ -50,6 +50,7 @@
   "dependsOn": [
     "TASK-CORE-006",
     "TASK-CORE-031",
+    "TASK-CORE-033",
     "TASK-MM-005"
   ],
   "acceptance": [
@@ -62,7 +63,8 @@
     "승인·마감·취소 확인 대화상자, 변경이 있으면 먼저 저장 안내",
     "입고된 줄은 모든 셀 잠김",
     "행 추가 때 헤더 납기일·창고·세금 코드 복사",
-    "en·ko 전환 때 날짜·숫자 형식과 라벨 길이 (줄바꿈 없음)"
+    "en·ko 전환 때 날짜·숫자 형식과 라벨 길이 (줄바꿈 없음)",
+    "발주서 인쇄 `GET .../print/purchase-order.pdf`·엑셀 `.xlsx` (같은 내용, 머리에 `Rev. n` — MM-BR-021, TASK-CORE-033 출력 기반). TASK-MM-005에서 넘어옴"
   ],
   "estimateHours": 3,
   "status": "todo"

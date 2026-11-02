@@ -76,7 +76,8 @@
     "상태 전이 MM-BR-019~023: `POST .../approve`·`close`·`cancel` (updatedAt 필수, 409/422). 입고가 있으면 수정·삭제 422 MM-E-013",
     "승인 뒤 저장 `revision_no + 1`, 발주서 PDF 머리에 `Rev. n` (MM-BR-021)",
     "할인 계산 MM-BR-015·025: 줄 반올림 후 합산, 세액은 BC-BR-543 `tax_calc_mode`와 MM 모듈 반올림 방식(BC-BR-424·545, `HALF_UP`·`DOWN`)으로 계산한다. 반올림 방식을 고정하지 않는다. `DOWN`이면 세액 1단위 미만을 버리는 테스트",
-    "입고 발주 가져오기·입고 저장은 `PO`·`RE` 발주만 (MM-BR-024 — 입고 API 태스크와 함께 확인)"
+    "입고 발주 가져오기·입고 저장은 `PO`·`RE` 발주만 (MM-BR-024 — 입고 API 태스크와 함께 확인)",
+    "남은 항목 분담 (QuroERP dev 대조): 발주 번호 6자리 → TASK-CORE-032, 발주서 PDF·엑셀(`print/*`, 머리 `Rev. n`) → TASK-MM-006, 요청 가져오기 `open-request-lines` → TASK-MM-045, 화면 경로 권한 → TASK-CORE-059, MM-BR-024 → TASK-MM-007. 위 항목을 뺀 나머지가 통과하면 `done`"
   ],
   "estimateHours": 3,
   "status": "todo"

@@ -1,0 +1,38 @@
+{
+  "id": "TASK-CORE-059",
+  "project": "core",
+  "title": "API 권한을 화면 경로 정책으로 전환: 화면 메뉴 시드, 관리자 역할 검사 제거",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/security.md",
+    "docs/architecture/app-shell.md",
+    "docs/business-rules/BC/menu-role.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-003",
+    "TASK-BC-009"
+  ],
+  "acceptance": [
+    "정책 이름 `Screen:<화면 경로>`(예: `Screen:/bc/tax-code`): 지금 `Menu:<menu_code>` 정책 제공자·처리기를 화면 경로 기준으로 바꾼다. 사용 중 역할에 배정된 사용 중 메뉴 가운데 `program_id`가 그 경로인 메뉴가 있으면 GET·HEAD, 그중 Full Access가 있으면 그 밖의 메서드 (security.md \"권한\", BC-BR-206·214). 권한 캐시와 저장 때 캐시 비우기는 그대로 (BC-BR-215)",
+    "`[Authorize(Roles = \"admin\")]`를 쓰는 컨트롤러를 모두 화면 경로 정책으로 바꾼다. 남은 `Roles = \"admin\"` 0건. 각 API의 경로는 명세의 \"화면 경로\"다. 여러 화면이 쓰는 조회 `GET`(선택 목록·찾기·코드·통화·세금 코드 목록)은 기본 정책만 남긴다",
+    "시드: 새 번호의 `Scripts/Seed/` 스크립트로 정책을 단 화면 경로마다 화면 메뉴 1행(3.1 그룹 아래, 코드 `<그룹 코드><2자리 순번>`)과 `admin` 역할 Full Access 배정 (app-shell.md 3.2). 시연용 `0900_demo_sys_menu_screens.sql`의 메뉴 코드와 겹치면 그대로 둔다. 적용된 스크립트는 고치지 않는다. 메뉴 이름 리소스 `Menu.<menu_code>` en·ko",
+    "BC-BR-216(역할별 메뉴 권한 화면을 Full Access로 쓸 수 있는 역할이 남아야 함)은 메뉴 코드 대신 `program_id = /bc/role-menu`인 메뉴로 판정한다",
+    "테스트: 처리기 단위 테스트(배정 없음 403, 배정만 GET 200·POST 403, Full Access POST 통과, 사용 안 함 메뉴·역할 403, 같은 경로 메뉴 2개면 합침). API 테스트의 관리자·비관리자 클라이언트가 메뉴 배정으로 동작한다. 새 DB에 시드만 적용한 뒤 `admin`으로 모든 변경 API가 403이 아님을 확인하는 통합 테스트",
+    "주석 \"Controllers still use the admin role until the menu data is loaded\"를 지운다. 이 태스크 뒤의 API 태스크는 처음부터 화면 경로 정책과 시드를 쓴다 (quro-api 스킬)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

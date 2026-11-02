@@ -1,0 +1,44 @@
+{
+  "id": "TASK-SD-069",
+  "project": "core",
+  "title": "수주 장바구니 줄 가져오기 (API·화면)",
+  "module": "SD",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/SD/sales-order.md",
+    "docs/specifications/BC/cart.md"
+  ],
+  "rules": [
+    "SD-BR-011",
+    "SD-BR-601",
+    "SD-BR-602",
+    "SD-BR-603",
+    "SD-BR-604"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-SD-003",
+    "TASK-SD-004",
+    "TASK-BC-033"
+  ],
+  "acceptance": [
+    "수주 화면 '장바구니에서 가져오기': 내 장바구니 줄을 수주 줄로 넣는다 (명세 기본 흐름 4)",
+    "수주 저장 때 가져온 줄의 장바구니 항목을 같은 트랜잭션에서 지운다 (SD-BR-011)",
+    "관련 BR마다 테스트, ko·en 리소스"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
