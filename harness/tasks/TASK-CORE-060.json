@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-060",
+  "project": "core",
+  "title": "입력 칸 바탕색: 필수 연노란색·일반 입력 흰색·읽기 전용 회색",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/entry-frame.md",
+    "docs/architecture/screens.md",
+    "docs/architecture/qurogrid-integration.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-054"
+  ],
+  "acceptance": [
+    "디자인 토큰: `--q-field-editable`을 지우고 `--q-field-required-bg`(라이트 `#fff8dc`, 다크 `#2d2a19`)와 `--q-field-input`(라이트 `#ffffff`, 다크 `#1a2029`)을 둔다 (entry-frame.md 7장). `--q-field-editable` 참조 0건",
+    "입력 칸 래퍼: 필수(`Required`, `LockMode`·필드 정책으로 필수가 된 칸 포함) = `field-required-bg`, 필수 아님 = `field-input`, 읽기 전용·잠김·계산 = `surface-2`. 호박색 왼쪽 마커와 `*`는 그대로. Quro.UI 컨트롤은 `--quro-bg` = `field-input`, `--quro-required-bg` = `field-required-bg`, `--quro-readonly-bg` = `surface-2` (qurogrid-integration.md 10장)",
+    "그리드: 편집 열 흰색, 필수 열 연노란색, 읽기 전용·계산 열 회색 (entry-frame.md 5장). 패키지 QuroGrid가 필수 열 바탕을 지원하지 않으면 quro-grid 스킬 절차로 요청하고 `TODO(QuroGrid-<요청ID>)`를 남긴다",
+    "상태·필드 정책으로 필수·잠김이 바뀌면 색도 바뀐다. 화면 코드에서 색을 직접 쓰지 않는다",
+    "bUnit: 필수 칸·일반 칸·읽기 전용 칸의 클래스(또는 토큰)가 다르다, 정책으로 필수가 되면 연노란색. 기존 bUnit이 통과한다",
+    "PR 설명에 샘플 S·M·SM 화면 라이트·다크 캡처"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

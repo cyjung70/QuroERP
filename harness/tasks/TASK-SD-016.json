@@ -1,7 +1,7 @@
 {
   "id": "TASK-SD-016",
   "project": "core",
-  "title": "고객별 매출 리포트 조회·PDF·화면",
+  "title": "매출 분석 (고객별 매출 외) 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [
     "Api",
@@ -38,7 +38,9 @@
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
-    "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)"
+    "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)",
+    "화면 이름 '매출 분석'. 보기 선택: 집계 기준(고객·품목·품목 2·품목×고객·담당자·품목군) × 요약/상세. 보기마다 AS IS 리포트(고객별·품목별·품목별 2·품목·고객별·담당자별·품목군별 매출과 각 상세)의 열·합계·정렬·PDF와 같다",
+    "보기마다 단위 테스트 1개 이상 (합쳐진 태스크의 명세 테스트 시나리오 포함)"
   ],
   "estimateHours": 2,
   "status": "todo"
