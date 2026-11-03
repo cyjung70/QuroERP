@@ -515,6 +515,7 @@
   <data name="Menu.G1BA06" xml:space="preserve"><value>세트 품목 구성</value></data>
   <data name="Menu.G1BA07" xml:space="preserve"><value>판매 단가</value></data>
   <data name="Menu.G1BA08" xml:space="preserve"><value>대체 품목</value></data>
+  <data name="Menu.G1BA09" xml:space="preserve"><value>대체 품목 그룹</value></data>
   <data name="Menu.G2MM01" xml:space="preserve"><value>발주</value></data>
   <data name="Menu.G5AD06" xml:space="preserve"><value>환율</value></data>
   <data name="Menu.G5AD07" xml:space="preserve"><value>세금 코드</value></data>

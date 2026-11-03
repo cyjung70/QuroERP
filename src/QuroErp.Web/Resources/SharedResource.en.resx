@@ -515,6 +515,7 @@
   <data name="Menu.G1BA06" xml:space="preserve"><value>Set Item Composition</value></data>
   <data name="Menu.G1BA07" xml:space="preserve"><value>Sales Prices</value></data>
   <data name="Menu.G1BA08" xml:space="preserve"><value>Alternate Items</value></data>
+  <data name="Menu.G1BA09" xml:space="preserve"><value>Alternate Item Groups</value></data>
   <data name="Menu.G2MM01" xml:space="preserve"><value>Purchase Orders</value></data>
   <data name="Menu.G5AD06" xml:space="preserve"><value>Exchange Rates</value></data>
   <data name="Menu.G5AD07" xml:space="preserve"><value>Tax Codes</value></data>
