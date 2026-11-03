@@ -19,7 +19,7 @@ public static partial class CodeMajorRules
     public static readonly IReadOnlySet<string> ProtectedMajors = new HashSet<string>(StringComparer.Ordinal)
     {
         CodeMajors.DisplayOptions, CodeMajors.Grade, CodeMajors.ItemClass, CodeMajors.ItemType, CodeMajors.MovementType, CodeMajors.Plating,
-        CodeMajors.Unit, CodeMajors.ValidFlag,
+        CodeMajors.State, CodeMajors.Terms, CodeMajors.Unit, CodeMajors.ValidFlag,
     };
 
     /// <summary>SD-BR-901: required; upper case letters, digits and _; at most 30 characters.</summary>

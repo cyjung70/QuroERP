@@ -33,7 +33,9 @@ using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Bc.Tax;
+using QuroErp.Application.Mm.Vendors;
 using QuroErp.Application.Mm.Warehouses;
+using QuroErp.Api.Tests.Mm.Vendors;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Contracts.Mm.Warehouses;
@@ -133,6 +135,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public InMemoryAlternateItemGroupRepository AlternateItemGroups { get; } = new();
 
+    /// <summary>Vendors ACME (in use) and BETA (KR business number) (MM-UC-001).</summary>
+    public InMemoryVendorRepository Vendors { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -189,6 +194,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ITaxAreaRepository>(TaxAreas);
             services.AddSingleton<IAlternateItemRepository>(AlternateItems);
             services.AddSingleton<IAlternateItemGroupRepository>(AlternateItemGroups);
+            services.AddSingleton<IVendorRepository>(Vendors);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
@@ -379,7 +385,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
     }
 
-    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE, DISPLAY_OPTIONS.</summary>
+    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE, DISPLAY_OPTIONS; STATE, TERMS.</summary>
     private sealed class FakeCodeRepository : ICodeRepository
     {
         private static readonly List<CodeMinorRow> ValidFlag = [new(1, "Y", 10), new(2, "N", 20), new(3, "S", 30)];
@@ -392,6 +398,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             ["GRADE"] = ["A01"],
             ["DISPLAY_OPTIONS"] = ["Y", "N", "ALL"],
             ["STATE"] = ["CA", "NY"],
+            ["TERMS"] = ["NET 30", "NET 60"],
         };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(

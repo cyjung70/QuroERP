@@ -6,12 +6,12 @@ using QuroErp.Domain.Common.Codes;
 namespace QuroErp.Api.Tests.Bc.Codes;
 
 /// <summary>
-/// UNIT (a constant Major with 2 Minor codes), TERMS (1 Minor code) and TEMP (none). Names are served through the factory's translation fake.
+/// UNIT (a constant Major with 2 Minor codes), TERRITORY (1 Minor code) and TEMP (none). Names are served through the factory's translation fake.
 /// </summary>
 public sealed class InMemoryCodeMajorRepository : ICodeMajorRepository
 {
     public const long UnitId = 301;
-    public const long TermsId = 302;
+    public const long TerritoryId = 302;
     public const long TempId = 303;
 
     /// <summary>Text of the database error that an insert of <see cref="FailingCode"/> throws. No response may show it (SD-BR-905).</summary>
@@ -23,13 +23,13 @@ public sealed class InMemoryCodeMajorRepository : ICodeMajorRepository
     private readonly Dictionary<long, CodeMajorRecord> _rows = new()
     {
         [UnitId] = new CodeMajorRecord(UnitId, CodeMajors.Unit, true, 2, Created),
-        [TermsId] = new CodeMajorRecord(TermsId, "TERMS", true, 1, Created),
+        [TerritoryId] = new CodeMajorRecord(TerritoryId, "TERRITORY", true, 1, Created),
         [TempId] = new CodeMajorRecord(TempId, "TEMP", true, 0, Created),
     };
     private readonly Dictionary<long, Dictionary<string, string>> _names = new()
     {
         [UnitId] = new() { ["en"] = "Unit", ["ko"] = "단위" },
-        [TermsId] = new() { ["en"] = "Terms" },
+        [TerritoryId] = new() { ["en"] = "Territory" },
         [TempId] = new() { ["en"] = "Temporary" },
     };
     private long _nextId = 400;

@@ -16,9 +16,9 @@ public class CodeMajorApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var te = await factory.NonAdmin().GetFromJsonAsync<List<CodeMajorDto>>(CodeMajorRoutes.Base + "?majorCode=te");
 
         majors.Should().NotBeNull();
-        majors!.Select(m => (m.MajorCode, m.Name, m.MinorCount)).Should().Equal(("TEMP", "Temporary", 0), ("TERMS", "Terms", 1), ("UNIT", "단위", 2));
+        majors!.Select(m => (m.MajorCode, m.Name, m.MinorCount)).Should().Equal(("TEMP", "Temporary", 0), ("TERRITORY", "Territory", 1), ("UNIT", "단위", 2));
         majors![2].Names.Should().Equal(new Dictionary<string, string> { ["en"] = "Unit", ["ko"] = "단위" });
-        te!.Select(m => m.MajorCode).Should().Equal("TEMP", "TERMS");
+        te!.Select(m => m.MajorCode).Should().Equal("TEMP", "TERRITORY");
     }
 
     [Fact, Trait("Id", "BC-UT-214")]
@@ -48,17 +48,17 @@ public class CodeMajorSaveApiTests
 
         using var response = await client.PutAsJsonAsync(CodeMajorRoutes.Base + "?lang=ko", new SaveCodeMajorsRequest(
             [new CodeMajorInsert("ship_via", new Dictionary<string, string?> { ["en"] = "Ship Via", ["ko"] = "운송 방법" }, null)],
-            [new CodeMajorUpdate(TermsId, "TERMS", new Dictionary<string, string?> { ["en"] = "Terms", ["ko"] = "결제 조건" }, false, Created)],
+            [new CodeMajorUpdate(TerritoryId, "TERRITORY", new Dictionary<string, string?> { ["en"] = "Territory", ["ko"] = "영업 지역" }, false, Created)],
             [new CodeMajorDelete(TempId, Created)]));
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var majors = await response.Content.ReadFromJsonAsync<List<CodeMajorDto>>();
-        majors!.Select(m => (m.MajorCode, m.Name, m.UseYn)).Should().Equal(("SHIP_VIA", "운송 방법", true), ("TERMS", "결제 조건", false), ("UNIT", "단위", true));
+        majors!.Select(m => (m.MajorCode, m.Name, m.UseYn)).Should().Equal(("SHIP_VIA", "운송 방법", true), ("TERRITORY", "영업 지역", false), ("UNIT", "단위", true));
     }
 
     [Theory, Trait("Id", "BC-UC-023-T01")]
     [InlineData("bad-code", "SD-E-901", "bad-code")]
-    [InlineData("terms", "SD-E-901", "TERMS")]
+    [InlineData("territory", "SD-E-901", "TERRITORY")]
     public async Task Save_ABadOrDuplicateCode_Returns422WithTheCode(string majorCode, string code, string arg)
     {
         await using var factory = new ApiFactory();
@@ -80,14 +80,14 @@ public class CodeMajorSaveApiTests
         var client = await factory.AdminAsync();
 
         using var response = await client.PutAsJsonAsync(CodeMajorRoutes.Base, new SaveCodeMajorsRequest(
-            null, [new CodeMajorUpdate(TermsId, "PAY_TERMS", new Dictionary<string, string?> { ["en"] = "Terms" }, true, Created)], null));
+            null, [new CodeMajorUpdate(TerritoryId, "PAY_TERMS", new Dictionary<string, string?> { ["en"] = "Territory" }, true, Created)], null));
 
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("SD-E-902");
     }
 
     [Theory, Trait("Id", "BC-UC-023-T03")]
-    [InlineData(TermsId, "SD-E-903", "TERMS")]
+    [InlineData(TerritoryId, "SD-E-903", "TERRITORY")]
     [InlineData(UnitId, "SD-E-904", "UNIT")]
     public async Task Save_DeletingAMajorWithMinorsOrAConstantMajor_Returns422(long id, string code, string majorCode)
     {
@@ -124,11 +124,11 @@ public class CodeMajorSaveApiTests
         using var response = await client.PutAsJsonAsync(CodeMajorRoutes.Base, new SaveCodeMajorsRequest(
             [new CodeMajorInsert("SHIP_VIA", new Dictionary<string, string?> { ["en"] = "Ship Via" }, null)],
             [new CodeMajorUpdate(TempId, null, new Dictionary<string, string?> { ["en"] = "Temp" }, true, Created)],
-            [new CodeMajorDelete(TermsId, Created)]));
+            [new CodeMajorDelete(TerritoryId, Created)]));
 
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         var majors = await client.GetFromJsonAsync<List<CodeMajorDto>>(CodeMajorRoutes.Base + "?lang=en");
-        majors!.Select(m => (m.MajorCode, m.Name)).Should().Equal(("TEMP", "Temporary"), ("TERMS", "Terms"), ("UNIT", "Unit"));
+        majors!.Select(m => (m.MajorCode, m.Name)).Should().Equal(("TEMP", "Temporary"), ("TERRITORY", "Territory"), ("UNIT", "Unit"));
     }
 
     [Fact, Trait("Id", "BC-UC-023-T06")]
