@@ -483,6 +483,13 @@
   <data name="Menu.G5AD03" xml:space="preserve"><value>사용자</value></data>
   <data name="Menu.G5AD04" xml:space="preserve"><value>메뉴</value></data>
   <data name="Menu.G5AD05" xml:space="preserve"><value>역할 메뉴</value></data>
+  <data name="Menu.G1BA04" xml:space="preserve"><value>품목 바코드</value></data>
+  <data name="Menu.G1BA05" xml:space="preserve"><value>매입 단가</value></data>
+  <data name="Menu.G2MM01" xml:space="preserve"><value>발주</value></data>
+  <data name="Menu.G5AD06" xml:space="preserve"><value>환율</value></data>
+  <data name="Menu.G5AD07" xml:space="preserve"><value>세금 코드</value></data>
+  <data name="Menu.G5AD08" xml:space="preserve"><value>세금 지역</value></data>
+  <data name="Menu.G5AD09" xml:space="preserve"><value>지역화 설정</value></data>
   <data name="Role.poweruser" xml:space="preserve"><value>파워 유저</value></data>
   <data name="Role.salesman" xml:space="preserve"><value>영업 사원</value></data>
   <data name="Role.admin" xml:space="preserve"><value>관리자</value></data>

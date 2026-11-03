@@ -63,11 +63,11 @@ internal sealed class RoleRepository : IRoleRepository
 
     // BC-BR-206: menus not in use give no permission; a role not in use gives none either
     private const string SelectPermissions = """
-        SELECT m.menu_code, rm.full_access
+        SELECT m.program_id, rm.full_access
         FROM sys_role r
         JOIN sys_role_menu rm ON rm.role_id = r.id
         JOIN sys_menu m ON m.id = rm.menu_id
-        WHERE r.role_code = @RoleCode AND r.use_yn AND m.valid_flag = @Yes
+        WHERE r.role_code = @RoleCode AND r.use_yn AND m.valid_flag = @Yes AND m.program_id IS NOT NULL
         """;
 
     public async Task<IReadOnlyList<RoleDto>> FindInUseAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -145,9 +145,9 @@ internal sealed class RoleRepository : IRoleRepository
 
     public async Task<IReadOnlyList<RoleMenuGrant>> FindPermissionsAsync(
         string roleCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        (await transaction.Connection!.QueryAsync<(string MenuCode, string? FullAccess)>(new CommandDefinition(
+        (await transaction.Connection!.QueryAsync<(string ProgramId, string? FullAccess)>(new CommandDefinition(
             SelectPermissions, new { RoleCode = roleCode, Yes = AppMenuValidFlag }, transaction, cancellationToken: cancellationToken)))
-        .Select(r => new RoleMenuGrant(r.MenuCode, RoleMenuRules.IsFullAccess(r.FullAccess))).ToList();
+        .Select(r => new RoleMenuGrant(r.ProgramId, RoleMenuRules.IsFullAccess(r.FullAccess))).ToList();
 
     private const string AppMenuValidFlag = "Y";
 

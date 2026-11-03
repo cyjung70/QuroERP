@@ -1,4 +1,5 @@
 using QuroErp.Domain.Common;
+using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Domain.Bc.Roles;
 
@@ -18,7 +19,7 @@ public static class RoleMenuRules
     /// The role menu screen, found by its program id because menu codes come from the loaded menu data
     /// (BC-BR-216; decided for TASK-BC-009).
     /// </summary>
-    public const string RoleMenuProgramId = "/bc/role-menu";
+    public const string RoleMenuProgramId = ScreenPaths.RoleMenu;
 
     public const string FullAccessYes = "Y";
     public const string FullAccessNo = "N";

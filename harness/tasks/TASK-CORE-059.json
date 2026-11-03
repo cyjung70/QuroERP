@@ -34,5 +34,5 @@
     "주석 \"Controllers still use the admin role until the menu data is loaded\"를 지운다. 이 태스크 뒤의 API 태스크는 처음부터 화면 경로 정책과 시드를 쓴다 (quro-api 스킬)"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

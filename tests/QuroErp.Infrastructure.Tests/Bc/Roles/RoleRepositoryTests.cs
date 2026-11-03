@@ -59,19 +59,20 @@ public class RoleRepositoryTests(AuthSchemaFixture db)
     }
 
     [DatabaseFact, Trait("Id", "BC-UT-214")]
-    public async Task Permissions_LeaveOutMenusAndRolesNotInUse()
+    public async Task Permissions_AreByProgramId_LeavingOutMenusWithoutOne_AndMenusAndRolesNotInUse()
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         var (role, retired) = await AddRolesAsync(uow.Transaction, "zz_perm", "zz_perm_off");
-        var on = await AddMenuAsync(uow.Transaction, "ZP_ON", null);
-        var off = await AddMenuAsync(uow.Transaction, "ZP_OFF", null, validFlag: "N");
+        var on = await AddMenuAsync(uow.Transaction, "ZP_ON", "/zz/perm-on");
+        var off = await AddMenuAsync(uow.Transaction, "ZP_OFF", "/zz/perm-off", validFlag: "N");
+        var group = await AddMenuAsync(uow.Transaction, "ZP_NONE", null);
         var repository = db.Get<IRoleRepository>();
-        foreach (var (roleId, menuId) in new[] { (role, on), (role, off), (retired, on) })
+        foreach (var (roleId, menuId) in new[] { (role, on), (role, off), (role, group), (retired, on) })
         {
             await repository.InsertMenuAsync(roleId, menuId, true, "t", uow.Transaction, None);
         }
 
-        (await repository.FindPermissionsAsync("zz_perm", uow.Transaction, None)).Should().Equal(new RoleMenuGrant("ZP_ON", true));
+        (await repository.FindPermissionsAsync("zz_perm", uow.Transaction, None)).Should().Equal(new RoleMenuGrant("/zz/perm-on", true));
         (await repository.FindPermissionsAsync("zz_perm_off", uow.Transaction, None)).Should().BeEmpty();
         (await repository.FindFullAccessRoleIdsAsync(on, uow.Transaction, None)).Should().BeEquivalentTo([role]);
     }
