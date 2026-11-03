@@ -23,11 +23,12 @@ public static class ScreenPaths
     public const string LocalizationSetting = "/bc/localization-setting";
     public const string SetItem = "/bc/set-item";
     public const string SalesPrice = "/bc/sales-price";
+    public const string AlternateItem = "/bc/alternate-item";
 
     /// <summary>Every path above. A test checks the seed gives the admin role Full Access to each.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
         Item, Code, CodeMajor, ItemBarcode, PurchasePrice, PurchaseOrder, Company, Currency, User, CompanyMenu, RoleMenu,
-        ExchangeRate, TaxCode, TaxArea, LocalizationSetting, SetItem, SalesPrice,
+        ExchangeRate, TaxCode, TaxArea, LocalizationSetting, SetItem, SalesPrice, AlternateItem,
     ];
 }
