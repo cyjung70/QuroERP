@@ -31,6 +31,43 @@ public class ShellMenuTreeTests
         groups[0].Entries[0].Link!.Path.Should().Be("/bc/item");
     }
 
+    [Fact, Trait("Id", "CORE-061-UT-01")]
+    public void Blocks_ModuleLinksFirst_ThenOneBlockPerSubheading()
+    {
+        var menus = new[]
+        {
+            Group("G2MM"),
+            Group("G2MM10", "G2MM"),
+            Program("G2MM11", "G2MM10", "/mm/goods-receipt"),
+            Program("G2MM20", "G2MM", "/mm/vendor"),
+            Program("G2MM01", "G2MM", "/mm/purchase-order"),
+        };
+
+        var blocks = ShellMenuTree.Build(menus, "/mm/goods-receipt/3").Single().Blocks();
+
+        blocks.Select(b => (b.MenuCode, b.IsModule, b.Current)).Should().Equal(("G2MM", true, false), ("G2MM10", false, true));
+        blocks[0].Links.Select(l => l.MenuCode).Should().Equal("G2MM01", "G2MM20");
+        blocks[1].Links.Select(l => l.MenuCode).Should().Equal("G2MM11");
+    }
+
+    [Theory, Trait("Id", "CORE-061-UT-02")]
+    [InlineData("/", "G1BA")]
+    [InlineData("/mm/purchase-order", "G2MM")]
+    [InlineData("/no/menu", "G1BA")]
+    public void CurrentModule_IsTheCurrentScreensModule_ElseTheFirst(string path, string module)
+    {
+        var menus = new[]
+        {
+            Group("G2MM"),
+            Program("G2MM01", "G2MM", "/mm/purchase-order"),
+            Group("G1BA"),
+            Program("G1BA01", "G1BA", "/bc/item"),
+        };
+
+        ShellMenuTree.CurrentModule(ShellMenuTree.Build(menus, path)).Should().Be(module);
+        ShellMenuTree.CurrentModule([]).Should().BeNull();
+    }
+
     [Fact, Trait("Id", "CORE-037-UT-02")]
     public void Build_SubheadingInGroup_KeepsItsLinksUnderIt()
     {

@@ -8,8 +8,31 @@ public sealed record ShellNavLink(string MenuCode, string? Name, string Path, bo
 /// <summary>An entry in a group, in menu code order: a link, or a subheading (an M menu inside the group) with its links.</summary>
 public sealed record ShellNavEntry(ShellNavLink? Link, string? HeadingCode, string? HeadingName, IReadOnlyList<ShellNavLink> HeadingLinks);
 
-/// <summary>A side menu group: a top-level M menu. Current when it holds the current link.</summary>
-public sealed record ShellNavGroup(string MenuCode, string? Name, IReadOnlyList<ShellNavEntry> Entries, bool Current);
+/// <summary>A module: a top-level M menu (app-shell.md 2 item 3). Current when it holds the current link.</summary>
+public sealed record ShellNavGroup(string MenuCode, string? Name, IReadOnlyList<ShellNavEntry> Entries, bool Current)
+{
+    /// <summary>
+    /// The folding blocks of the module's side menu (app-shell.md 3): its own links first under the module's name, then one
+    /// block per subheading. A block is current when it holds the current link.
+    /// </summary>
+    public IReadOnlyList<ShellNavBlock> Blocks()
+    {
+        var blocks = new List<ShellNavBlock>();
+        var links = Entries.Select(e => e.Link).OfType<ShellNavLink>().ToList();
+        if (links.Count > 0)
+        {
+            blocks.Add(new ShellNavBlock(MenuCode, Name, true, links));
+        }
+        blocks.AddRange(Entries.Where(e => e.Link is null).Select(e => new ShellNavBlock(e.HeadingCode!, e.HeadingName, false, e.HeadingLinks)));
+        return blocks;
+    }
+}
+
+/// <summary>A folding block of the side menu: the module's own links (<paramref name="IsModule"/>) or a subheading with its links.</summary>
+public sealed record ShellNavBlock(string MenuCode, string? Name, bool IsModule, IReadOnlyList<ShellNavLink> Links)
+{
+    public bool Current => Links.Any(l => l.Current);
+}
 
 /// <summary>
 /// Builds the side menu from the /me menus (app-shell.md 3): top-level M menus are groups, P menus under them are links,
@@ -62,6 +85,10 @@ public static class ShellMenuTree
         }
         return groups;
     }
+
+    /// <summary>The module drawn first: the one of the current screen, else the first by code (app-shell.md 3 "모듈 선택").</summary>
+    public static string? CurrentModule(IReadOnlyList<ShellNavGroup> modules) =>
+        (modules.FirstOrDefault(m => m.Current) ?? (modules.Count > 0 ? modules[0] : null))?.MenuCode;
 
     // The program path that is the current path or its longest parent (/mm/purchase-order for /mm/purchase-order/12)
     private static string? CurrentPath(IEnumerable<AuthMenu> menus, string currentPath)

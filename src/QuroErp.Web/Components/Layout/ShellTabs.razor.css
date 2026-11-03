@@ -1,0 +1,156 @@
+/* Screen tabs (app-shell.md 1, 3.3): a 36px strip over the screen; it scrolls sideways when full, with the list button at the end */
+.shell-tabs {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    height: 36px;
+    margin: calc(-1 * var(--q-panel-gap)) calc(-1 * var(--q-panel-gap)) var(--q-panel-gap);
+    background: var(--q-surface-0);
+    border-bottom: 1px solid var(--q-line);
+}
+
+.shell-tabs-strip {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.shell-tab {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: 14rem;
+    padding: 0 0.5rem 0 0.875rem;
+    border-right: 1px solid var(--q-line);
+    border-bottom: 2px solid transparent;
+    color: var(--q-ink-muted);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+    .shell-tab:hover {
+        background: var(--q-surface-2);
+    }
+
+    .shell-tab[data-active] {
+        border-bottom-color: var(--q-brand);
+        background: var(--q-surface-1);
+        color: var(--q-ink);
+        font-weight: 600;
+    }
+
+    .shell-tab:focus-visible {
+        outline: 2px solid var(--q-brand);
+        outline-offset: -2px;
+    }
+
+.shell-tab-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.shell-tab-dirty {
+    color: var(--q-brand);
+    font-size: 0.625rem;
+}
+
+.shell-tab-close,
+.shell-tabs-list-button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--q-radius-button);
+    background: none;
+    color: var(--q-ink-muted);
+    cursor: pointer;
+}
+
+.shell-tab-close {
+    width: 20px;
+    height: 20px;
+}
+
+.shell-tabs-list-button {
+    width: 36px;
+    border-left: 1px solid var(--q-line);
+    border-radius: 0;
+}
+
+    .shell-tab-close:hover,
+    .shell-tabs-list-button:hover {
+        background: var(--q-surface-2);
+        color: var(--q-ink);
+    }
+
+    .shell-tab-close svg,
+    .shell-tabs-list-button svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+.shell-tabs-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 150;
+    min-width: 12rem;
+    max-height: 60vh;
+    margin: 0;
+    padding: 0.25rem 0;
+    overflow-y: auto;
+    list-style: none;
+    background: var(--q-surface-0);
+    border: 1px solid var(--q-line);
+    border-radius: var(--q-radius-button);
+    box-shadow: var(--q-shadow-dialog);
+}
+
+    .shell-tabs-menu button {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.875rem;
+        border: 0;
+        background: none;
+        color: var(--q-ink);
+        font: inherit;
+        text-align: left;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+        .shell-tabs-menu button:hover {
+            background: var(--q-surface-2);
+        }
+
+        .shell-tabs-menu button[aria-current="true"] {
+            font-weight: 600;
+        }
+
+.shell-tab-menu {
+    left: 0;
+    right: auto;
+}
+
+.shell-tabs-message {
+    margin: 0 0 var(--q-panel-gap);
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--q-brand);
+    background: var(--q-brand-tint);
+    color: var(--q-ink);
+}
+
+.shell-tab-pane[hidden] {
+    display: none;
+}

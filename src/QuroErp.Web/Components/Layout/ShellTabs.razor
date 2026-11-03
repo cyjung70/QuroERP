@@ -1,0 +1,417 @@
+@using QuroErp.Contracts.Common.Auth
+@using QuroErp.Web.Components.Pages
+@implements IDisposable
+@inject NavigationManager Navigation
+@inject IQuroConfirm Confirm
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+
+@* Screen tabs (app-shell.md 3.3). The layout is static and redraws on every page change; this host is interactive and keyed, so it
+   stays and only takes the new path. Each screen is drawn once in its own pane; hidden panes keep their component and state. The
+   address is the active tab's path: picking a tab navigates there, and the new path activates the tab. *@
+<div class="shell-tabs" data-testid="shell-tabs">
+    <div class="shell-tabs-strip" role="tablist" aria-label="@L["Shell.Tabs.Label"]" data-shell-tabs-strip>
+        @foreach (var tab in AllTabs)
+        {
+            var active = tab.Key == _active;
+            <div class="shell-tab" role="tab" aria-selected="@(active ? "true" : "false")" tabindex="@(active ? 0 : -1)"
+                 data-shell-tab data-active="@(active ? "true" : null)" data-dirty="@(tab.State.IsDirty ? "true" : null)"
+                 data-testid="shell-tab-@tab.TestId" @onclick="() => Go(tab)" @onmouseup="e => OnMouseUp(e, tab)"
+                 @oncontextmenu="() => OpenMenu(tab)" @oncontextmenu:preventDefault>
+                <span class="shell-tab-name">@NameOf(tab)</span>
+                @if (tab.State.IsDirty)
+                {
+                    <span class="shell-tab-dirty" aria-hidden="true">●</span>
+                }
+                @if (!tab.IsHome)
+                {
+                    <button type="button" class="shell-tab-close" aria-label="@L["Shell.Tabs.Close"]" title="@L["Shell.Tabs.Close"]"
+                            data-testid="shell-tab-close-@tab.TestId" @onclick="() => CloseAsync(tab)" @onclick:stopPropagation>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" /></svg>
+                    </button>
+                }
+            </div>
+        }
+    </div>
+    <button type="button" class="shell-tabs-list-button" aria-label="@L["Shell.Tabs.List"]" title="@L["Shell.Tabs.List"]"
+            aria-haspopup="menu" aria-expanded="@(_listOpen ? "true" : "false")" data-testid="shell-tabs-list" @onclick="ToggleList">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+    </button>
+    @if (_listOpen)
+    {
+        <ul class="shell-tabs-menu shell-tabs-list" role="menu" data-testid="shell-tabs-list-menu">
+            @foreach (var tab in AllTabs)
+            {
+                <li role="none">
+                    <button type="button" role="menuitem" aria-current="@(tab.Key == _active ? "true" : null)" @onclick="() => Go(tab)">
+                        @NameOf(tab)@(tab.State.IsDirty ? " ●" : "")
+                    </button>
+                </li>
+            }
+        </ul>
+    }
+    @if (_menuFor is { } menuTab)
+    {
+        <ul class="shell-tabs-menu shell-tab-menu" role="menu" data-testid="shell-tab-menu">
+            <li role="none">
+                <button type="button" role="menuitem" data-testid="shell-tab-menu-close-others" @onclick="() => CloseOthersAsync(menuTab)">
+                    @L["Shell.Tabs.CloseOthers"]
+                </button>
+            </li>
+            <li role="none">
+                <button type="button" role="menuitem" data-testid="shell-tab-menu-close-all" @onclick="CloseAllAsync">@L["Shell.Tabs.CloseAll"]</button>
+            </li>
+        </ul>
+    }
+</div>
+@if (_message is { } message)
+{
+    <p class="shell-tabs-message" role="status" data-testid="shell-tabs-message">@message</p>
+}
+<div class="shell-tab-panes">
+    <div class="shell-tab-pane" role="tabpanel" hidden="@(_active != HomeKey)" data-testid="shell-pane-home">
+        <QuroFreeForm TestId="home">
+            <HomeBoard UserName="@HomeUserName" LastLogin="@HomeLastLogin" Menus="@Menus" />
+        </QuroFreeForm>
+    </div>
+    @foreach (var tab in _tabs.Where(t => t.Rendered))
+    {
+        <div class="shell-tab-pane" role="tabpanel" hidden="@(_active != tab.Key)" data-testid="shell-pane-@tab.TestId" @key="tab">
+            <ShellTabPane Page="tab.Route.Page" Values="tab.Route.Values" State="tab.State" Version="tab.Version" />
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Most screen tabs open at once, the home tab not counted (app-shell.md 3.3 "개수").</summary>
+    public const int MaxTabs = 10;
+
+    private const string HomeKey = "/";
+    private const string ProgramType = "P";
+
+    private readonly ShellTab _home = new(HomeKey, HomeKey, null, null, null);
+    private readonly List<ShellTab> _tabs = [];
+    private string? _active = HomeKey;
+    private string? _lastPath;
+    private string? _message;
+    private bool _listOpen;
+    private ShellTab? _menuFor;
+    private bool _restored;
+    private bool _save;
+
+    /// <summary>The browser path, from the layout on every page load (enhanced navigation keeps this component).</summary>
+    [Parameter]
+    public string CurrentPath { get; set; } = HomeKey;
+
+    /// <summary>The user's menus from /me: tab names and the screen path that keys a tab.</summary>
+    [Parameter]
+    public IReadOnlyList<AuthMenu> Menus { get; set; } = [];
+
+    [Parameter]
+    public string? HomeUserName { get; set; }
+
+    [Parameter]
+    public string? HomeLastLogin { get; set; }
+
+    private IEnumerable<ShellTab> AllTabs => _tabs.Prepend(_home);
+
+    private string ActivePath => AllTabs.FirstOrDefault(t => t.Key == _active)?.Path ?? HomeKey;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CurrentPath == _lastPath)
+        {
+            return;
+        }
+        _lastPath = CurrentPath;
+        await OpenAsync(CurrentPath);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_restored)
+        {
+            _restored = true;
+            await RestoreAsync();
+        }
+        if (_save)
+        {
+            _save = false;
+            try
+            {
+                // One argument: a string[] alone would be taken as the argument list
+                await JS.InvokeVoidAsync("quroShellTabs.save", [_tabs.Select(t => t.Path).ToArray()]);
+                await JS.InvokeVoidAsync("quroShellTabs.reveal");
+            }
+            catch (JSException)
+            {
+                // The tab list is a convenience; the tabs work without it
+            }
+        }
+    }
+
+    // A path opens its tab, or goes to the tab of the same screen; a new document in that tab asks first when it has changes
+    private async Task OpenAsync(string fullPath)
+    {
+        var path = ShellRoutes.PathOnly(fullPath);
+        if (path == HomeKey)
+        {
+            Activate(_home);
+            return;
+        }
+        if (ShellRoutes.Resolve(fullPath) is not { } route)
+        {
+            // Not a tab screen (e.g. an unknown path): the layout draws the page itself
+            _active = null;
+            return;
+        }
+        var key = MenuKey(path) ?? route.Key;
+        if (_tabs.FirstOrDefault(t => t.Key == key) is { } open)
+        {
+            if (!string.Equals(open.Path, fullPath, StringComparison.OrdinalIgnoreCase))
+            {
+                if (open.Rendered && open.State.IsDirty && !await Confirm.ConfirmAsync(L["Common.ConfirmUnsaved"]))
+                {
+                    Activate(open);
+                    Navigation.NavigateTo(open.Path, replace: true);
+                    return;
+                }
+                Reopen(open, fullPath, route);
+            }
+            Activate(open);
+            return;
+        }
+        if (_tabs.Count >= MaxTabs)
+        {
+            _message = L["Shell.Tabs.Max", MaxTabs].Value;
+            Navigation.NavigateTo(ActivePath, replace: true);
+            return;
+        }
+        var tab = NewTab(key, fullPath, route);
+        _tabs.Add(tab);
+        Activate(tab);
+    }
+
+    private void Activate(ShellTab tab)
+    {
+        if (_active != tab.Key)
+        {
+            _message = null;
+        }
+        _active = tab.Key;
+        tab.Rendered = true;
+        _listOpen = false;
+        _menuFor = null;
+        _save = true;
+    }
+
+    private void Go(ShellTab tab)
+    {
+        _listOpen = false;
+        _menuFor = null;
+        if (tab.Key == _active)
+        {
+            return;
+        }
+        Navigation.NavigateTo(tab.Path);
+    }
+
+    private async Task OnMouseUp(MouseEventArgs e, ShellTab tab)
+    {
+        // The middle button closes a tab (app-shell.md 3.3 "닫기")
+        if (e.Button == 1 && !tab.IsHome)
+        {
+            await CloseAsync(tab);
+        }
+    }
+
+    private async Task CloseAsync(ShellTab tab)
+    {
+        if (tab.IsHome || (tab.State.IsDirty && !await Confirm.ConfirmAsync(L["Common.ConfirmUnsaved"])))
+        {
+            return;
+        }
+        var index = _tabs.IndexOf(tab);
+        Remove(tab);
+        if (tab.Key == _active)
+        {
+            // The tab on the right, else on the left (the home tab is the leftmost)
+            var next = index < _tabs.Count ? _tabs[index] : index > 0 ? _tabs[index - 1] : _home;
+            Navigation.NavigateTo(next.Path);
+        }
+        _save = true;
+    }
+
+    private async Task CloseOthersAsync(ShellTab keep)
+    {
+        _menuFor = null;
+        var closing = _tabs.Where(t => t != keep).ToList();
+        if (!await ConfirmClosingAsync(closing))
+        {
+            return;
+        }
+        closing.ForEach(Remove);
+        _save = true;
+        if (keep.Key != _active)
+        {
+            Navigation.NavigateTo(keep.Path);
+        }
+    }
+
+    private async Task CloseAllAsync()
+    {
+        _menuFor = null;
+        var closing = _tabs.ToList();
+        if (!await ConfirmClosingAsync(closing))
+        {
+            return;
+        }
+        closing.ForEach(Remove);
+        _save = true;
+        if (_active != HomeKey)
+        {
+            Navigation.NavigateTo(HomeKey);
+        }
+    }
+
+    private async Task<bool> ConfirmClosingAsync(IEnumerable<ShellTab> closing) =>
+        !closing.Any(t => t.State.IsDirty) || await Confirm.ConfirmAsync(L["Common.ConfirmUnsaved"]);
+
+    private void ToggleList()
+    {
+        _menuFor = null;
+        _listOpen = !_listOpen;
+    }
+
+    private void OpenMenu(ShellTab tab)
+    {
+        _listOpen = false;
+        _menuFor = _menuFor == tab ? null : tab;
+    }
+
+    // After a reload only the paths come back (app-shell.md 3.3 "새로고침"); each screen is drawn when its tab is first opened
+    private async Task RestoreAsync()
+    {
+        string[] paths;
+        try
+        {
+            paths = await JS.InvokeAsync<string[]>("quroShellTabs.load");
+        }
+        catch (JSException)
+        {
+            return;
+        }
+        var added = false;
+        foreach (var path in paths ?? [])
+        {
+            if (_tabs.Count >= MaxTabs || ShellRoutes.Resolve(path) is not { } route)
+            {
+                continue;
+            }
+            var key = MenuKey(ShellRoutes.PathOnly(path)) ?? route.Key;
+            if (_tabs.Any(t => t.Key == key))
+            {
+                continue;
+            }
+            _tabs.Add(NewTab(key, path, route));
+            added = true;
+        }
+        if (added)
+        {
+            // The open screen's tab stays where it was opened: after the restored ones
+            if (_tabs.FirstOrDefault(t => t.Key == _active) is { } current)
+            {
+                _tabs.Remove(current);
+                _tabs.Add(current);
+            }
+            _save = true;
+            StateHasChanged();
+        }
+    }
+
+    private ShellTab NewTab(string key, string path, ShellRoute route)
+    {
+        var menu = MenuOf(key);
+        var tab = new ShellTab(key, path, route, menu?.MenuCode, menu?.Name);
+        tab.State.Changed += OnTabChanged;
+        return tab;
+    }
+
+    // A new document in the tab: the screen is drawn again for it, with a new state
+    private void Reopen(ShellTab tab, string path, ShellRoute route)
+    {
+        tab.State.Changed -= OnTabChanged;
+        tab.Reset(path, route);
+        tab.State.Changed += OnTabChanged;
+    }
+
+    private void Remove(ShellTab tab)
+    {
+        tab.State.Changed -= OnTabChanged;
+        _tabs.Remove(tab);
+    }
+
+    private void OnTabChanged() => _ = InvokeAsync(StateHasChanged);
+
+    // The program path that is the path or its longest parent (/mm/purchase-order for /mm/purchase-order/12), as the side menu
+    private string? MenuKey(string path) => MenuOf(path, prefix: true)?.ProgramId!.TrimEnd('/');
+
+    private AuthMenu? MenuOf(string key) => MenuOf(key, prefix: false);
+
+    private AuthMenu? MenuOf(string path, bool prefix) => Menus
+        .Where(m => m.Type == ProgramType && !string.IsNullOrWhiteSpace(m.ProgramId) && m.ProgramId!.TrimEnd('/').Length > 0)
+        .Where(m =>
+        {
+            var program = m.ProgramId!.TrimEnd('/');
+            return path.Equals(program, StringComparison.OrdinalIgnoreCase)
+                || (prefix && path.StartsWith(program + "/", StringComparison.OrdinalIgnoreCase));
+        })
+        .OrderByDescending(m => m.ProgramId!.Length)
+        .ThenBy(m => m.MenuCode, StringComparer.Ordinal)
+        .FirstOrDefault();
+
+    // Menu.<menu_code> as the side menu, else the stored name; a screen without a menu shows its title, else its path
+    private string NameOf(ShellTab tab)
+    {
+        if (tab.IsHome)
+        {
+            return L["Shell.Tabs.Home"];
+        }
+        if (tab.MenuCode is { } code)
+        {
+            return L[$"Menu.{code}"] is { ResourceNotFound: false } name ? name.Value : tab.MenuName ?? code;
+        }
+        return tab.State.Title ?? tab.Key;
+    }
+
+    public void Dispose()
+    {
+        foreach (var tab in _tabs)
+        {
+            tab.State.Changed -= OnTabChanged;
+        }
+    }
+
+    private sealed class ShellTab(string key, string path, ShellRoute? route, string? menuCode, string? menuName)
+    {
+        public string Key { get; } = key;
+        public string Path { get; private set; } = path;
+        public ShellRoute Route { get; private set; } = route!;
+        public string? MenuCode { get; } = menuCode;
+        public string? MenuName { get; } = menuName;
+        public ShellTabState State { get; private set; } = new(key);
+        public int Version { get; private set; }
+        public bool Rendered { get; set; }
+        public bool IsHome => Key == HomeKey;
+
+        public string TestId => MenuCode?.ToLowerInvariant() ?? (IsHome ? "home" : Key.Trim('/').Replace('/', '-').ToLowerInvariant());
+
+        public void Reset(string path, ShellRoute route)
+        {
+            Path = path;
+            Route = route;
+            State = new ShellTabState(Key);
+            Version++;
+        }
+    }
+}

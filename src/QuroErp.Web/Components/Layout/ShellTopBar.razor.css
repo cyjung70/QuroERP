@@ -56,6 +56,44 @@
     flex: 1;
 }
 
+/* Module menu (app-shell.md 2 item 3): the picked module is bold with a white underline; below 768px it is in the overlay */
+.shell-modules {
+    display: flex;
+    align-self: stretch;
+    gap: 0.25rem;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.shell-module {
+    flex: none;
+    padding: 0 0.625rem;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: none;
+    color: inherit;
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+    .shell-module:hover,
+    .shell-module:focus-visible {
+        background: var(--q-brand-strong);
+    }
+
+    .shell-module[aria-current="true"] {
+        border-bottom-color: var(--q-on-brand);
+        font-weight: 700;
+    }
+
+@media (max-width: 767.98px) {
+    .shell-modules {
+        display: none;
+    }
+}
+
 .shell-company,
 .shell-role {
     white-space: nowrap;
