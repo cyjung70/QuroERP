@@ -254,6 +254,16 @@
   <data name="Bc.ItemImageUpload.Delete" xml:space="preserve"><value>이미지 지우기</value></data>
   <data name="Bc.ItemImageUpload.ConfirmDelete" xml:space="preserve"><value>품목 이미지를 지울까요? 품목 그룹 이미지가 있으면 그 이미지를 보입니다.</value></data>
   <data name="Bc.ItemBarcode.Title" xml:space="preserve"><value>품목 바코드</value></data>
+  <data name="Bc.SetItem.Title" xml:space="preserve"><value>세트 품목 구성</value></data>
+  <data name="Bc.SetItem.ItemCd" xml:space="preserve"><value>세트 품목</value></data>
+  <data name="Bc.SetItem.ItemNm" xml:space="preserve"><value>세트 품목명</value></data>
+  <data name="Bc.SetItem.Item" xml:space="preserve"><value>구성품</value></data>
+  <data name="Bc.SetItem.ItemName" xml:space="preserve"><value>구성품명</value></data>
+  <data name="Bc.SetItem.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Bc.SetItem.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Bc.SetItem.FindSet" xml:space="preserve"><value>세트 품목 찾기</value></data>
+  <data name="Bc.SetItem.FindItem" xml:space="preserve"><value>구성품 찾기</value></data>
+  <data name="Bc.SetItem.CopySet" xml:space="preserve"><value>세트 구성 복사</value></data>
   <data name="Bc.ItemBarcode.ItemClass" xml:space="preserve"><value>품목군</value></data>
   <data name="Bc.ItemBarcode.ValidFlag" xml:space="preserve"><value>사용 여부</value></data>
   <data name="Bc.ItemBarcode.StartNo" xml:space="preserve"><value>시작 번호</value></data>

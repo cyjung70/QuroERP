@@ -1,0 +1,30 @@
+# BC-UC-013 set item composition (TASK-BC-026). Item codes fill the name from the bcSetComponent lookup; the qty format comes
+# from the SD quantity decimals of the localization settings.
+screen:
+  id: bc.set-item
+  module: BC
+  title: Bc.SetItem.Title
+  version: 1
+  api: /api/bc/set-items
+  key: id
+  layout: grid
+  perm:
+    read: BC.Read
+    write: BC.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: components
+    bind: components
+    rowKey: id
+    deletedRows: strike
+    columns[3]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      itemCd,Bc.SetItem.Item,text,140,true,true,"",bcSetComponent,false,false
+      itemName,Bc.SetItem.ItemName,text,320,false,false,"","",false,false
+      qty,Bc.SetItem.Qty,number,120,true,true,N0,"",false,false
+    rules[1]{on,action,target,expr}:
+      itemCd.change,lookup,itemName,"bcSetComponent.all()"

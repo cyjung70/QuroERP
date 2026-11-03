@@ -5,6 +5,7 @@ using QuroErp.Web.Bc.Items;
 using QuroErp.Web.Bc.Localization;
 using QuroErp.Web.Bc.Menus;
 using QuroErp.Web.Bc.Roles;
+using QuroErp.Web.Bc.SetItems;
 using QuroErp.Web.Bc.UserProfiles;
 using QuroErp.Web.Bc.Users;
 using QuroErp.Web.Components.Screens;
@@ -29,6 +30,7 @@ public static class WebApiClients
         services.AddHttpClient<LocalizationApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<ItemApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<ItemBarcodeApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<SetItemApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<WarehouseApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserProfileApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserApiClient>(http => http.BaseAddress = apiBaseUrl);

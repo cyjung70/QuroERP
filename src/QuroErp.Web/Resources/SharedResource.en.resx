@@ -254,6 +254,16 @@
   <data name="Bc.ItemImageUpload.Delete" xml:space="preserve"><value>Delete Image</value></data>
   <data name="Bc.ItemImageUpload.ConfirmDelete" xml:space="preserve"><value>Delete the item image? The item group image is shown if there is one.</value></data>
   <data name="Bc.ItemBarcode.Title" xml:space="preserve"><value>Item Barcode</value></data>
+  <data name="Bc.SetItem.Title" xml:space="preserve"><value>Set Item Composition</value></data>
+  <data name="Bc.SetItem.ItemCd" xml:space="preserve"><value>Set Item</value></data>
+  <data name="Bc.SetItem.ItemNm" xml:space="preserve"><value>Set Item Name</value></data>
+  <data name="Bc.SetItem.Item" xml:space="preserve"><value>Component</value></data>
+  <data name="Bc.SetItem.ItemName" xml:space="preserve"><value>Component Name</value></data>
+  <data name="Bc.SetItem.Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Bc.SetItem.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Bc.SetItem.FindSet" xml:space="preserve"><value>Find Set Item</value></data>
+  <data name="Bc.SetItem.FindItem" xml:space="preserve"><value>Find Component</value></data>
+  <data name="Bc.SetItem.CopySet" xml:space="preserve"><value>Copy Set</value></data>
   <data name="Bc.ItemBarcode.ItemClass" xml:space="preserve"><value>Item Class</value></data>
   <data name="Bc.ItemBarcode.ValidFlag" xml:space="preserve"><value>Valid Flag</value></data>
   <data name="Bc.ItemBarcode.StartNo" xml:space="preserve"><value>Start No.</value></data>
