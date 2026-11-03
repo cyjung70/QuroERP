@@ -15,7 +15,7 @@ public class VendorRepositoryTests(AuthSchemaFixture db)
     private static readonly CancellationToken None = CancellationToken.None;
 
     private static readonly VendorFields Fields = new(
-        Phone1: "555", ZipCode: "1", ShipZipCode: "1", Terms: "NET 30", ValidFlag: "Y", BusinessRegNo: "2208162517");
+        Phone1: "555", ZipCode: "1", ShipZipCode: "1", Terms: "NET_30", ValidFlag: "Y", BusinessRegNo: "2208162517");
 
     [DatabaseFact, Trait("Id", "MM-UC-001-IT-01")]
     public async Task InsertFindSearchAdjacentUpdateAndDelete_RoundTrip()
@@ -57,6 +57,22 @@ public class VendorRepositoryTests(AuthSchemaFixture db)
         staleDelete.Should().BeFalse();
         deleted.Should().BeTrue();
         (await repository.FindAsync(b, false, uow.Transaction, None)).Should().BeNull();
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-851"), Trait("Rule", "MM-BR-851")]
+    public async Task DefaultTerms_IsASeededTermsCode()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+
+        var exists = await uow.Transaction.Connection!.ExecuteScalarAsync<bool>(
+            """
+            SELECT EXISTS (SELECT 1 FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
+                           WHERE m.major_code = 'TERMS' AND n.minor_code = @Code)
+            """,
+            new { Code = Vendor.DefaultTerms },
+            uow.Transaction);
+
+        exists.Should().BeTrue();
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-858"), Trait("Rule", "MM-BR-858")]

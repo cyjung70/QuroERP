@@ -30,7 +30,7 @@ public sealed class InMemoryVendorRepository : IVendorRepository
 
     private readonly Dictionary<long, VendorRow> _rows = new()
     {
-        [AcmeId] = Row(AcmeId, "ACME", new(Phone1: "555", ZipCode: "1", ShipZipCode: "1", Terms: "NET 30", ValidFlag: "Y"), 70.5m),
+        [AcmeId] = Row(AcmeId, "ACME", new(Phone1: "555", ZipCode: "1", ShipZipCode: "1", Terms: "NET_30", ValidFlag: "Y"), 70.5m),
         [BetaId] = Row(BetaId, "BETA", new(Phone1: "556", ZipCode: "2", ShipZipCode: "2", ValidFlag: "Y", BusinessRegNo: BusinessRegNo), 0),
     };
 

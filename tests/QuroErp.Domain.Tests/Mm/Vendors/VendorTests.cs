@@ -19,14 +19,14 @@ public class VendorTests
 
     private static DomainException Error(Action act) => act.Should().Throw<DomainException>().Which;
 
-    private static Vendor Stored() => Vendor.Restore(5, "ACME", Valid with { Terms = "NET 30", ValidFlag = "Y", ShipZipCode = "90001" });
+    private static Vendor Stored() => Vendor.Restore(5, "ACME", Valid with { Terms = "NET_30", ValidFlag = "Y", ShipZipCode = "90001" });
 
     [Fact, Trait("Id", "MM-UT-851")]
     public void Create_FillsDefaults_AndBlankTextIsNull()
     {
         var vendor = Vendor.Create("Acme", Valid with { Contact = "  " }, krCompany: false);
 
-        vendor.Fields.Terms.Should().Be("NET 30");
+        vendor.Fields.Terms.Should().Be("NET_30");
         vendor.Fields.ValidFlag.Should().Be("Y");
         vendor.Fields.Country.Should().Be("USA");
         vendor.Fields.Contact.Should().BeNull();
