@@ -1,49 +1,55 @@
 @inject IStringLocalizer<SharedResource> L
 
-@* Side menu (app-shell.md 3). Groups fold and the menu collapses to icons in js/quro.js (quroShell), which keeps both in
-   localStorage; the group of the current screen always opens. *@
+@* Side menu (app-shell.md 3): the screens of the module picked in the top bar. Every module is drawn and only the picked one
+   is shown; js/quro.js (quroShell) picks the module, folds the blocks and collapses the menu to icons, keeping all three in
+   localStorage. The module of the current screen is picked, and the block of the current screen always opens.
+   Below 768px the menu is an overlay with the module list at the top (app-shell.md 1). *@
 <nav id="shell-nav" class="shell-nav" aria-label="@L["Shell.Menu.Label"]" data-shell-nav data-testid="shell-nav">
-    @if (_groups.Count == 0)
+    @if (_modules.Count == 0)
     {
         <p class="shell-nav-empty" data-testid="shell-nav-empty">@L["Shell.Menu.Empty"]</p>
     }
     else
     {
-        <ul class="shell-nav-groups">
-            @foreach (var group in _groups)
+        <div class="shell-nav-modules" role="group" aria-label="@L["Shell.Modules"]" data-testid="shell-nav-modules">
+            @foreach (var module in _modules)
             {
-                var id = Id(group.MenuCode);
-                <li class="shell-nav-group" data-shell-group="@group.MenuCode" data-current="@(group.Current ? "true" : null)"
-                    data-testid="shell-nav-group-@id">
-                    <button type="button" class="shell-nav-group-title" aria-expanded="true" aria-controls="shell-nav-links-@id" data-shell-group-toggle>
-                        <svg class="shell-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="@Icon(group.MenuCode)" /></svg>
-                        <span class="shell-nav-label">@Name(group.MenuCode, group.Name)</span>
-                        <svg class="shell-nav-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
-                    </button>
-                    <ul id="shell-nav-links-@id" class="shell-nav-links">
-                        @foreach (var entry in group.Entries)
-                        {
-                            if (entry.Link is { } link)
+                <button type="button" class="shell-nav-module-pick" data-shell-module-pick="@module.MenuCode"
+                        aria-current="@(module.MenuCode == _current ? "true" : null)" data-testid="shell-nav-module-@Id(module.MenuCode)">
+                    @Name(module.MenuCode, module.Name)
+                </button>
+            }
+        </div>
+        @foreach (var module in _modules)
+        {
+            <ul class="shell-nav-groups" data-shell-module="@module.MenuCode" data-current="@(module.Current ? "true" : null)"
+                hidden="@(module.MenuCode != _current)" data-testid="shell-nav-module-links-@Id(module.MenuCode)">
+                @foreach (var block in module.Blocks())
+                {
+                    var id = Id(block.MenuCode);
+                    <li class="shell-nav-group" data-shell-group="@block.MenuCode" data-current="@(block.Current ? "true" : null)"
+                        data-testid="shell-nav-group-@id">
+                        <button type="button" class="shell-nav-group-title" aria-expanded="true" aria-controls="shell-nav-links-@id"
+                                title="@Name(block.MenuCode, block.Name)" data-shell-group-toggle>
+                            <svg class="shell-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="@(block.IsModule ? Icon(module.MenuCode) : FolderIcon)" />
+                            </svg>
+                            <span class="shell-nav-label">@Name(block.MenuCode, block.Name)</span>
+                            <svg class="shell-nav-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                        </button>
+                        <ul id="shell-nav-links-@id" class="shell-nav-links">
+                            @foreach (var link in block.Links)
                             {
-                                <li>@LinkTo(link)</li>
-                            }
-                            else
-                            {
-                                <li class="shell-nav-heading">
-                                    <span class="shell-nav-heading-title">@Name(entry.HeadingCode!, entry.HeadingName)</span>
-                                    <ul>
-                                        @foreach (var headingLink in entry.HeadingLinks)
-                                        {
-                                            <li>@LinkTo(headingLink)</li>
-                                        }
-                                    </ul>
+                                <li>
+                                    <a class="shell-nav-link" href="@link.Path" aria-current="@(link.Current ? "page" : null)"
+                                       data-testid="shell-nav-item-@Id(link.MenuCode)">@Name(link.MenuCode, link.Name)</a>
                                 </li>
                             }
-                        }
-                    </ul>
-                </li>
-            }
-        </ul>
+                        </ul>
+                    </li>
+                }
+            </ul>
+        }
     }
     <button type="button" class="shell-nav-collapse" aria-pressed="false" aria-label="@L["Shell.Menu.Collapse"]"
             data-collapse-label="@L["Shell.Menu.Collapse"]" data-expand-label="@L["Shell.Menu.Expand"]" data-shell-collapse
@@ -54,8 +60,8 @@
 <div class="shell-nav-backdrop" data-shell-backdrop hidden></div>
 
 @code {
-    // Icons of the default groups (app-shell.md 3.1); other groups get a folder
-    private static readonly Dictionary<string, string> GroupIcons = new(StringComparer.Ordinal)
+    // Icons of the default modules (app-shell.md 3.1); other modules and the subheadings get a folder
+    private static readonly Dictionary<string, string> ModuleIcons = new(StringComparer.Ordinal)
     {
         ["G1BA"] = "M4 7l8-4 8 4-8 4-8-4zM4 7v10l8 4 8-4V7M12 11v10",
         ["G2MM"] = "M6 6h15l-2 8H8L6 3H3M9 20a1 1 0 100-2 1 1 0 000 2M18 20a1 1 0 100-2 1 1 0 000 2",
@@ -66,7 +72,8 @@
 
     private const string FolderIcon = "M3 6h6l2 2h10v11H3z";
 
-    private IReadOnlyList<ShellNavGroup> _groups = [];
+    private IReadOnlyList<ShellNavGroup> _modules = [];
+    private string? _current;
 
     /// <summary>The signed-in user's shell data; null when the Api could not be reached (an empty menu).</summary>
     [Parameter]
@@ -76,12 +83,11 @@
     [Parameter]
     public string CurrentPath { get; set; } = "/";
 
-    protected override void OnParametersSet() =>
-        _groups = Profile is null ? [] : ShellMenuTree.Build(Profile.Me.Menus, CurrentPath);
-
-    private RenderFragment LinkTo(ShellNavLink link) =>
-        @<a class="shell-nav-link" href="@link.Path" aria-current="@(link.Current ? "page" : null)"
-            data-testid="shell-nav-item-@Id(link.MenuCode)">@Name(link.MenuCode, link.Name)</a>;
+    protected override void OnParametersSet()
+    {
+        _modules = Profile is null ? [] : ShellMenuTree.Build(Profile.Me.Menus, CurrentPath);
+        _current = ShellMenuTree.CurrentModule(_modules);
+    }
 
     // Menu.<menu_code> resource, else the stored name (menu name rule)
     private string Name(string menuCode, string? stored) =>
@@ -89,5 +95,5 @@
 
     private static string Id(string menuCode) => menuCode.ToLowerInvariant();
 
-    private static string Icon(string menuCode) => GroupIcons.GetValueOrDefault(menuCode, FolderIcon);
+    private static string Icon(string menuCode) => ModuleIcons.GetValueOrDefault(menuCode, FolderIcon);
 }

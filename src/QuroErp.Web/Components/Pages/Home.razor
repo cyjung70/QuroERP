@@ -8,7 +8,8 @@
 @inject IStringLocalizer<SharedResource> L
 
 @* Home phase 1 (app-shell.md 6), screen type F: welcome with the previous sign-in time and IP (login.md "로그인 처리" 11), the
-   purchase and sales flows and the shortcuts. Rendered on the server; the menus come from /me, read once with the shell. *@
+   purchase and sales flows and the shortcuts. Rendered on the server; the menus come from /me, read once with the shell.
+   With the shell the home tab draws the same board (ShellTabs); this page is drawn without it (a forced password change). *@
 
 <PageTitle>QuroERP</PageTitle>
 
@@ -37,8 +38,5 @@
     }
 
     // In the company time zone (app-shell.md 6, BC-BR-318); UTC when the profile could not be read
-    private string? LastLogin(ClaimsPrincipal user) =>
-        DateTimeOffset.TryParse(user.FindFirst(WebAuthClaims.LastLoginAt)?.Value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var at)
-            ? L["Common.LastLogin", CompanyTime.Format(at, CompanyTime.Find(_profile?.TimeZone)), user.FindFirst(WebAuthClaims.LastLoginIp)?.Value ?? "-"].Value
-            : null;
+    private string? LastLogin(ClaimsPrincipal user) => ShellHome.LastLogin(user, _profile?.TimeZone, L);
 }

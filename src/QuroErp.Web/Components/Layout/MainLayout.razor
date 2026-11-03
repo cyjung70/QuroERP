@@ -2,20 +2,31 @@
 @using System.Globalization
 @inject ShellProfileLoader Profiles
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
 
-@* App shell (app-shell.md 1): top bar, side menu and the one open screen. The layout renders on the server for every page,
-   so the menu toggle, group folding and the narrow-screen overlay run in js/quro.js (quroShell).
+@* App shell (app-shell.md 1): top bar with the modules, side menu, screen tabs. The layout renders on the server for every page,
+   so the module pick, menu toggle, group folding and the narrow-screen overlay run in js/quro.js (quroShell). The screen tabs
+   are one interactive host with a fixed key, so enhanced navigation keeps it and only passes the new path (app-shell.md 3.3);
+   it draws the screens itself, and the router's page is drawn here only for a path that is not a tab screen.
    Pages before sign-in have no shell; a forced password change keeps only the user menu so the user can still sign out. *@
 
 <AuthorizeView>
     <Authorized>
         @if (_shell)
         {
-            <div class="shell" data-shell>
-                <ShellTopBar Profile="_profile" />
+            <div class="shell" data-shell data-confirm-unsaved="@L["Common.ConfirmUnsaved"]">
+                <ShellTopBar Profile="_profile" CurrentPath="@CurrentPath" />
                 <div class="shell-body">
                     <ShellNav Profile="_profile" CurrentPath="@CurrentPath" />
-                    <main class="shell-main">@Body</main>
+                    <main class="shell-main">
+                        <ShellTabs @key="TabsKey" @rendermode="InteractiveServer" CurrentPath="@CurrentPath" Menus="@(_profile?.Me.Menus ?? [])"
+                                   HomeUserName="@(_profile?.Me.UserName ?? context.User.Identity?.Name)"
+                                   HomeLastLogin="@ShellHome.LastLogin(context.User, _profile?.TimeZone, L)" />
+                        @if (!IsTabPath)
+                        {
+                            @Body
+                        }
+                    </main>
                 </div>
             </div>
         }
@@ -44,7 +55,13 @@
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
+    // The tab host keeps this key on every page, so enhanced navigation updates it instead of creating it again
+    private const string TabsKey = "shell-tabs";
+
     private string CurrentPath => "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+
+    // The home and the interactive pages open in a tab; any other path (e.g. not found) is drawn by the router as before
+    private bool IsTabPath => ShellRoutes.PathOnly(CurrentPath) == "/" || ShellRoutes.Resolve(CurrentPath) is not null;
 
     protected override async Task OnInitializedAsync()
     {

@@ -4,7 +4,8 @@
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 
-@* Top bar (app-shell.md 2), items 1-7 in order. Language and logout are plain forms, as the layout is not interactive. *@
+@* Top bar (app-shell.md 2), items 1-8 in order. Language and logout are plain forms, as the layout is not interactive; the
+   module menu only switches the side menu, in js/quro.js (quroShell). *@
 <header class="shell-top" data-testid="shell-top">
     <button type="button" class="shell-top-icon shell-menu-toggle" aria-label="@L["Shell.Menu.Open"]" aria-controls="shell-nav"
             aria-expanded="false" data-shell-toggle data-testid="shell-menu-toggle">
@@ -13,6 +14,17 @@
     <a class="shell-logo" href="/" data-testid="shell-logo">
         <img src="@Assets["img/quro-logo-white.png"]" alt="@L["Shell.ProductName"]" width="118" height="24" />
     </a>
+    @if (_modules.Count > 0)
+    {
+        <nav class="shell-modules" aria-label="@L["Shell.Modules"]" data-testid="shell-modules">
+            @foreach (var module in _modules)
+            {
+                <button type="button" class="shell-module" data-shell-module-pick="@module.MenuCode"
+                        aria-current="@(module.MenuCode == _current ? "true" : null)"
+                        data-testid="shell-module-@module.MenuCode.ToLowerInvariant()">@ModuleName(module)</button>
+            }
+        </nav>
+    }
     <span class="shell-spacer"></span>
     @if (Profile?.Me.CompanyName is { } company)
     {
@@ -37,7 +49,7 @@
         <span class="shell-role shell-wide" data-testid="shell-role">@role</span>
     }
     <UserMenu Company="@Profile?.Me.CompanyName" Role="@Role" />
-    <form class="shell-logout" method="post" action="@WebAuthentication.LogoutPath">
+    <form class="shell-logout" method="post" action="@WebAuthentication.LogoutPath" data-shell-logout>
         <AntiforgeryToken />
         <button type="submit" class="shell-top-icon" aria-label="@L["Shell.Logout"]" title="@L["Shell.Logout"]" data-testid="shell-logout">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10" /></svg>
@@ -46,9 +58,26 @@
 </header>
 
 @code {
+    private IReadOnlyList<ShellNavGroup> _modules = [];
+    private string? _current;
+
     /// <summary>The signed-in user's shell data; null when the Api could not be reached.</summary>
     [Parameter]
     public ShellProfile? Profile { get; set; }
+
+    /// <summary>Path of the open screen; its module is picked first.</summary>
+    [Parameter]
+    public string CurrentPath { get; set; } = "/";
+
+    // Modules with a visible screen (app-shell.md 2 item 3), the same as the side menu's
+    protected override void OnParametersSet()
+    {
+        _modules = Profile is null ? [] : ShellMenuTree.Build(Profile.Me.Menus, CurrentPath);
+        _current = ShellMenuTree.CurrentModule(_modules);
+    }
+
+    private string ModuleName(ShellNavGroup module) =>
+        L[$"Menu.{module.MenuCode}"] is { ResourceNotFound: false } name ? name.Value : module.Name ?? module.MenuCode;
 
     // Role.<role_code> resource, else the role code (app-shell.md 2 item 5, 5)
     private string? Role => Profile?.Me.RoleCode is { } code

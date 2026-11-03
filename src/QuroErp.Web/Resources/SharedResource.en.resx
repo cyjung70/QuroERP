@@ -494,6 +494,14 @@
   <data name="Shell.Menu.Label" xml:space="preserve"><value>Menu</value></data>
   <data name="Shell.Menu.Open" xml:space="preserve"><value>Open menu</value></data>
   <data name="Shell.Menu.Empty" xml:space="preserve"><value>No menus are available.</value></data>
+  <data name="Shell.Modules" xml:space="preserve"><value>Modules</value></data>
+  <data name="Shell.Tabs.Label" xml:space="preserve"><value>Open screens</value></data>
+  <data name="Shell.Tabs.Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Shell.Tabs.Max" xml:space="preserve"><value>Up to {0} tabs can be open. Close a tab first.</value></data>
+  <data name="Shell.Tabs.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Shell.Tabs.CloseOthers" xml:space="preserve"><value>Close other tabs</value></data>
+  <data name="Shell.Tabs.CloseAll" xml:space="preserve"><value>Close all</value></data>
+  <data name="Shell.Tabs.List" xml:space="preserve"><value>Open tabs</value></data>
   <data name="Shell.Menu.Collapse" xml:space="preserve"><value>Collapse menu</value></data>
   <data name="Shell.Menu.Expand" xml:space="preserve"><value>Expand menu</value></data>
   <data name="Shell.Logout" xml:space="preserve"><value>Sign out</value></data>
