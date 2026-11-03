@@ -150,14 +150,14 @@ public class MenuServiceTests
     [Fact, Trait("Id", "BC-UT-206")]
     public async Task Save_ClearsCachedPermissions_SoAMenuSetNotInUseIsDeniedNextRequest()
     {
-        _grants.Grants.Add(new RoleMenuGrant("ITEM", true));
-        (await _permissions.GetAccessAsync("user", "ITEM", None)).Should().Be(MenuAccess.Full);
+        _grants.Grants.Add(new RoleMenuGrant("/bc/item", true));
+        (await _permissions.GetAccessAsync("user", "/bc/item", None)).Should().Be(MenuAccess.Full);
 
         await _service.SaveAsync(new SaveMenusRequest(null, [new MenuUpdate(2, "Item", "P", "/bc/item", "bc", "BASE", "N", Read)], null), "kim", None);
         // Storage leaves menus not in use out of the permissions (BC-BR-206)
         _grants.Grants.Clear();
 
-        (await _permissions.GetAccessAsync("user", "ITEM", None)).Should().Be(MenuAccess.None);
+        (await _permissions.GetAccessAsync("user", "/bc/item", None)).Should().Be(MenuAccess.None);
     }
 
     [Theory, Trait("Id", "BC-UC-006-T03")]

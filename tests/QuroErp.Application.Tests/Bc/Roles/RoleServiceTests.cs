@@ -131,11 +131,11 @@ public class RoleServiceTests
     public async Task Saving_ClearsTheCachedPermissionsOfThatRole()
     {
         _roles.Rows[(2, 101)] = (false, Read);
-        (await _permissions.GetAccessAsync("user", "ITEM", None)).Should().Be(MenuAccess.Read);
+        (await _permissions.GetAccessAsync("user", "/bc/item", None)).Should().Be(MenuAccess.Read);
 
         await _service.SaveMenusAsync(2, new SaveRoleMenusRequest(null, [new RoleMenuUpdate(101, true, Read)], null), "admin", "kim", None);
 
-        (await _permissions.GetAccessAsync("user", "ITEM", None)).Should().Be(MenuAccess.Full);
+        (await _permissions.GetAccessAsync("user", "/bc/item", None)).Should().Be(MenuAccess.Full);
     }
 
     [Fact, Trait("Id", "BC-UT-215")]
@@ -143,18 +143,31 @@ public class RoleServiceTests
     {
         _roles.Rows[(2, 101)] = (true, Read);
 
-        (await _permissions.GetAccessAsync("user", "ITEM", None)).Should().Be(MenuAccess.Full);
-        (await _permissions.GetAccessAsync("user", "USER", None)).Should().Be(MenuAccess.None);
+        (await _permissions.GetAccessAsync("user", "/bc/item", None)).Should().Be(MenuAccess.Full);
+        (await _permissions.GetAccessAsync("user", "/bc/user", None)).Should().Be(MenuAccess.None);
         _roles.PermissionReads.Should().Be(1);
         _permissions.Invalidate("user");
-        await _permissions.GetAccessAsync("user", "ITEM", None);
+        await _permissions.GetAccessAsync("user", "/bc/item", None);
         _roles.PermissionReads.Should().Be(2);
     }
 
-    /// <summary>Roles admin (1), user (2), retired (3, not in use); menus 100 (role menu screen), 101 ITEM, 102 USER.</summary>
+    [Fact, Trait("Id", "BC-UT-214")]
+    public async Task TwoMenusOnOneScreenPath_AddUp_AndThePathIgnoresCase()
+    {
+        _roles.Rows[(2, 101)] = (false, Read);
+        _roles.Rows[(2, 103)] = (true, Read);
+
+        (await _permissions.GetAccessAsync("user", "/bc/item", None)).Should().Be(MenuAccess.Full);
+        (await _permissions.GetAccessAsync("user", "/BC/Item", None)).Should().Be(MenuAccess.Full);
+    }
+
+    /// <summary>
+    /// Roles admin (1), user (2), retired (3, not in use); menus 100 (role menu screen), 101 ITEM and 103 ITEM2 (both /bc/item), 102 USER.
+    /// </summary>
     private sealed class FakeRoleRepository : IRoleRepository
     {
-        private static readonly Dictionary<long, string> Codes = new() { [100] = "ROLEMENU", [101] = "ITEM", [102] = "USER" };
+        private static readonly Dictionary<long, string> Codes = new() { [100] = "ROLEMENU", [101] = "ITEM", [102] = "USER", [103] = "ITEM2" };
+        private static readonly Dictionary<long, string> Paths = new() { [100] = "/bc/role-menu", [101] = "/bc/item", [102] = "/bc/user", [103] = "/bc/item" };
         private static readonly Dictionary<long, string> RoleCodes = new() { [1] = "admin", [2] = "user", [3] = "retired" };
 
         public Dictionary<(long RoleId, long MenuId), (bool FullAccess, DateTimeOffset UpdatedAt)> Rows { get; } = [];
@@ -237,7 +250,7 @@ public class RoleServiceTests
             PermissionReads++;
             var roleId = RoleCodes.Single(r => r.Value == roleCode).Key;
             return Task.FromResult<IReadOnlyList<RoleMenuGrant>>(Rows.Where(r => r.Key.RoleId == roleId)
-                .Select(r => new RoleMenuGrant(Codes[r.Key.MenuId], r.Value.FullAccess)).ToList());
+                .Select(r => new RoleMenuGrant(Paths[r.Key.MenuId], r.Value.FullAccess)).ToList());
         }
     }
 }

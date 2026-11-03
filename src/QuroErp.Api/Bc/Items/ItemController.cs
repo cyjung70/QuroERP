@@ -1,17 +1,21 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuroErp.Api.Common.Auth;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Contracts.Bc.Items;
+using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Bc.Items;
 
 /// <summary>
-/// The item master screen (BC-UC-009). Any signed-in user can read; changes need Full Access (BC-BR-214),
-/// checked by the admin role until the menu policy (security.md "권한") exists, as on the company screen.
+/// The item master screen (BC-UC-009). Any signed-in user can read; changes need Full Access on the screen,
+/// checked by the screen path policy (BC-BR-214).
 /// </summary>
 [ApiController, Route(ItemRoutes.Base)]
 public sealed class ItemController(ItemService service, ItemImageService images) : ControllerBase
 {
+    private const string Screen = ScreenPolicy.Prefix + ScreenPaths.Item;
+
     /// <summary>200 with the item image, else its item group's (MM-BR-820). 404 Common-E-006 when there is none.</summary>
     [HttpGet("{itemCd}/" + ItemRoutes.Image)]
     public async Task<IActionResult> GetImage(string itemCd, CancellationToken cancellationToken)
@@ -24,7 +28,7 @@ public sealed class ItemController(ItemService service, ItemImageService images)
     /// 204. multipart/form-data with field "file": one JPEG up to 10 MB, replacing the whole image (MM-BR-821, MM-BR-822).
     /// 400 MM-E-821. Larger requests are cut off by the size limit.
     /// </summary>
-    [HttpPut("{itemCd}/" + ItemRoutes.Image), Authorize(Roles = "admin")]
+    [HttpPut("{itemCd}/" + ItemRoutes.Image), Authorize(Policy = Screen)]
     [RequestSizeLimit(ItemRoutes.ImageMaxBytes + 64 * 1024)]
     public async Task<IActionResult> UploadImage(
         string itemCd, [FromForm(Name = ItemRoutes.ImageFormField)] IFormFile? file, CancellationToken cancellationToken)
@@ -35,7 +39,7 @@ public sealed class ItemController(ItemService service, ItemImageService images)
     }
 
     /// <summary>204. The screen asks for confirmation first (MM-BR-823). 404 Common-E-006 when the item does not exist.</summary>
-    [HttpDelete("{itemCd}/" + ItemRoutes.Image), Authorize(Roles = "admin")]
+    [HttpDelete("{itemCd}/" + ItemRoutes.Image), Authorize(Policy = Screen)]
     public async Task<IActionResult> DeleteImage(string itemCd, CancellationToken cancellationToken)
     {
         await images.DeleteAsync(itemCd, cancellationToken);
@@ -60,7 +64,7 @@ public sealed class ItemController(ItemService service, ItemImageService images)
         await service.GetAdjacentAsync(id, forward: true, cancellationToken) is { } item ? item : NoContent();
 
     /// <summary>201 with the saved item. 422 MM-E-801~831 or Common-E-002.</summary>
-    [HttpPost, Authorize(Roles = "admin")]
+    [HttpPost, Authorize(Policy = Screen)]
     public async Task<ActionResult<ItemDto>> Create(CreateItemRequest request, CancellationToken cancellationToken)
     {
         var dto = await service.CreateAsync(request, User.Identity!.Name!, cancellationToken);
@@ -68,12 +72,12 @@ public sealed class ItemController(ItemService service, ItemImageService images)
     }
 
     /// <summary>200 with the saved item. 409 Common-E-004 when updatedAt is stale.</summary>
-    [HttpPut("{id:long}"), Authorize(Roles = "admin")]
+    [HttpPut("{id:long}"), Authorize(Policy = Screen)]
     public Task<ItemDto> Update(long id, UpdateItemRequest request, CancellationToken cancellationToken) =>
         service.UpdateAsync(id, request, User.Identity!.Name!, cancellationToken);
 
     /// <summary>204. 422 MM-E-807 when the item is used; 409 Common-E-004 when updatedAt is stale.</summary>
-    [HttpDelete("{id:long}"), Authorize(Roles = "admin")]
+    [HttpDelete("{id:long}"), Authorize(Policy = Screen)]
     public async Task<IActionResult> Delete(long id, [FromQuery] DateTimeOffset updatedAt, CancellationToken cancellationToken)
     {
         await service.DeleteAsync(id, updatedAt, cancellationToken);

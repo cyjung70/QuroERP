@@ -1,12 +1,14 @@
 using System.Data;
 using QuroErp.Application.Bc.Roles;
 using QuroErp.Contracts.Bc.Roles;
+using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Tests.Bc.Roles;
 
 /// <summary>
 /// sys_role, sys_menu and sys_role_menu in memory. Roles: admin (1, the signed-in kim), user (2), retired (3, not in use).
-/// Menus: ROLEMENU (100, the role menu screen), ITEM (101), USER (102). admin has ROLEMENU and ITEM with Full Access, user reads ITEM.
+/// Menus: ROLEMENU (100, /bc/role-menu), ITEM (101, /bc/item), USER (102, /bc/user). admin has ROLEMENU and ITEM with Full Access,
+/// user reads ITEM. As after the seed, admin also has Full Access to every screen path that guards an API (ScreenPaths.All).
 /// </summary>
 public sealed class InMemoryRoleRepository : IRoleRepository
 {
@@ -16,6 +18,8 @@ public sealed class InMemoryRoleRepository : IRoleRepository
     public const long RoleMenuId = 100;
     public const long ItemMenuId = 101;
     public const long UserMenuId = 102;
+
+    private static readonly Dictionary<long, string> Paths = new() { [RoleMenuId] = "/bc/role-menu", [ItemMenuId] = "/bc/item", [UserMenuId] = "/bc/user" };
 
     private static readonly DateTimeOffset Start = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
@@ -141,10 +145,11 @@ public sealed class InMemoryRoleRepository : IRoleRepository
         lock (_gate)
         {
             var role = _roles.FirstOrDefault(r => r.Code == roleCode && r.InUse);
-            return Task.FromResult<IReadOnlyList<RoleMenuGrant>>(_menus
+            var grants = _menus
                 .Where(m => Assignments.ContainsKey((role.Id, m.MenuId)))
-                .Select(m => new RoleMenuGrant(m.MenuCode, Assignments[(role.Id, m.MenuId)].FullAccess))
-                .ToList());
+                .Select(m => new RoleMenuGrant(Paths[m.MenuId], Assignments[(role.Id, m.MenuId)].FullAccess));
+            var seeded = role.Id == AdminRoleId ? ScreenPaths.All.Select(p => new RoleMenuGrant(p, true)) : [];
+            return Task.FromResult<IReadOnlyList<RoleMenuGrant>>([.. grants, .. seeded]);
         }
     }
 }

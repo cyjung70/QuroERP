@@ -1,19 +1,23 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuroErp.Api.Common.Auth;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Contracts.Bc.Localization;
 using QuroErp.Contracts.Common;
+using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Bc.Localization;
 
 /// <summary>
-/// Currency management (BC-UC-026). Any signed-in user or API client can read (FallbackPolicy); changes need Full Access (BC-BR-214),
-/// checked by the admin role until the menu policy is applied, as on the other screens.
+/// Currency management (BC-UC-026). Any signed-in user or API client can read (FallbackPolicy); changes need Full Access on the screen,
+/// checked by the screen path policy (BC-BR-214).
 /// </summary>
 [ApiController]
 public sealed class CurrencyController(CurrencyService service) : ControllerBase
 {
+    private const string Screen = ScreenPolicy.Prefix + ScreenPaths.Currency;
+
     /// <summary>Every currency in code order, with names in lang.</summary>
     /// <param name="lang">Language of Name. When omitted, the request language (Accept-Language) is used.</param>
     /// <param name="useYn">Only currencies in use (true) or not in use (false). When omitted, all.</param>
@@ -27,7 +31,7 @@ public sealed class CurrencyController(CurrencyService service) : ControllerBase
     /// 409 BC-E-411 or BC-E-428 when documents use the currency whose decimals or country change, BC-E-416 when a deleted currency is
     /// the base currency or documents, partners or exchange rates use it, Common-E-004 when a row changed after it was read.
     /// </summary>
-    [HttpPost(CurrencyRoutes.Batch), Authorize(Roles = "admin")]
+    [HttpPost(CurrencyRoutes.Batch), Authorize(Policy = Screen)]
     public Task<IReadOnlyList<CurrencyMasterDto>> Save(
         BatchRequest<CurrencySaveRow, CurrencyKey> request, [FromQuery] string? lang, CancellationToken cancellationToken) =>
         service.SaveAsync(request, lang ?? CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, User.Identity!.Name!, cancellationToken);
