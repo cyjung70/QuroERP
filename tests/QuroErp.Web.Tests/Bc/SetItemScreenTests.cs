@@ -69,6 +69,29 @@ public class SetItemScreenTests : BunitContext
         _api.SetReads.Should().BeEmpty();
     }
 
+    [Theory, Trait("Id", "CORE-060-WT-03")]
+    [InlineData("admin", true)]
+    [InlineData("user", false)]
+    public void Grid_ColorsItsCells_AndNamesItsRequiredColumns_OnlyWhenTheUserCanEdit(string role, bool canEdit)
+    {
+        var page = SearchKit(RenderAs(role));
+
+        var host = page.Find("[data-testid=set-item-grid]");
+        host.ClassList.Contains("quro-grid-entry").Should().Be(canEdit);
+        var style = host.QuerySelector("style")?.TextContent;
+        if (canEdit)
+        {
+            // Component and quantity are required; the name is a read-only lookup column (gray from aria-readonly)
+            style.Should().Contain($"#{host.Id} .quro-body-cell[data-field=\"itemCd\"]").And.Contain("[data-field=\"qty\"]")
+                .And.NotContain("itemName");
+            Grid(page).IsReadOnly(0, "itemName").Should().BeTrue();
+        }
+        else
+        {
+            style.Should().BeNull();
+        }
+    }
+
     [Fact, Trait("Id", "BC-UC-013-T03")]
     public void Search_InLowerCase_ShowsTheComponentsInSequenceOrder_TheSetName_AndTheSdQtyDecimals()
     {

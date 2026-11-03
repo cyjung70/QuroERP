@@ -31,7 +31,12 @@
                 </div>
             }
             @* The package rows take no test id or row index yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
-            <div class="quro-grid-host" data-testid="@Id("grid")">
+            @* Cell colors of an editable grid; the required columns get their color from this grid's style (TODO(QuroGrid-R5)) *@
+            <div class="@(CanEdit ? "quro-grid-host quro-grid-entry" : "quro-grid-host")" id="@_hostId" data-testid="@Id("grid")">
+                @if (CanEdit && GridColors.RequiredStyle(_hostId, _applied) is { } requiredStyle)
+                {
+                    <style>@requiredStyle</style>
+                }
                 <QuroGrid @ref="_dataGrid" TItem="TRow" DataSet="_data" Definition="GridDefinition" Localizer="L" OptionsFor="OptionsFor"
                           Culture="DisplayCulture.Current" ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor"
                           ItemsProvider="LoadPage" PageSize="@(_definition.PageSize > 0 ? _definition.PageSize : 100)"
@@ -73,6 +78,7 @@
     private readonly Dictionary<string, IReadOnlyList<ComboOption>> _options = [];
     private QuroDataSet<TRow> _data = new();
     private QuroGrid<TRow>? _dataGrid;
+    private readonly string _hostId = GridColors.NewHostId();
     private GridDef? _definition;
     private GridDef? _applied;
     private GridDef? _locked;
