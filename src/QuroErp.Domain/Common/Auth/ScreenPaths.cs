@@ -26,11 +26,13 @@ public static class ScreenPaths
     public const string AlternateItem = "/bc/alternate-item";
     public const string AlternateItemGroup = "/bc/alternate-item-group";
     public const string Vendor = "/mm/vendor";
+    public const string Warehouse = "/mm/warehouse";
 
     /// <summary>Every path above. A test checks the seed gives the admin role Full Access to each.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
         Item, Code, CodeMajor, ItemBarcode, PurchasePrice, PurchaseOrder, Company, Currency, User, CompanyMenu, RoleMenu,
         ExchangeRate, TaxCode, TaxArea, LocalizationSetting, SetItem, SalesPrice, AlternateItem, AlternateItemGroup, Vendor,
+        Warehouse,
     ];
 }

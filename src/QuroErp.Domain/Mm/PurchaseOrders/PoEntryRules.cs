@@ -21,9 +21,16 @@ public sealed record PurchaseOrderLine(
 /// <summary>Header totals: gross and discount for the totals panel (MM-BR-025), supply, tax and total (BC-BR-541).</summary>
 public sealed record PurchaseOrderTotals(decimal GrossAmt, decimal DcAmt, decimal SupplyAmt, decimal TaxAmt, decimal TotPoAmt, decimal TotBaseAmt);
 
-/// <summary>What the entry rules need from masters: item types, usable warehouses and tax code rates.</summary>
+/// <summary>
+/// What the entry rules need from masters: item types, usable warehouses and tax code rates. Stored holds the warehouses of
+/// the saved order, which the header and its lines may keep after the warehouse is set not in use (MM-BR-704).
+/// </summary>
 public sealed record PurchaseOrderMasters(
-    IReadOnlyDictionary<long, string> ItemTypes, IReadOnlySet<long> UsableWarehouses, IReadOnlyDictionary<long, TaxCodeRate> TaxRates);
+    IReadOnlyDictionary<long, string> ItemTypes, IReadOnlySet<long> UsableWarehouses, IReadOnlyDictionary<long, TaxCodeRate> TaxRates,
+    StoredWarehouses? Stored = null);
+
+/// <summary>Warehouses of a saved order: the header's and each line's by line id.</summary>
+public sealed record StoredWarehouses(long? Header, IReadOnlyDictionary<long, long?> Lines);
 
 /// <summary>
 /// Company settings for amounts: base currency, tax unit (BC-BR-543) and the MM module rounding mode, which rounds every
@@ -121,7 +128,7 @@ public static class PoEntryRules
         {
             throw new DomainException(DueDateCode, 0, header.DueDt!.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
         }
-        CheckWarehouse(header.WarehouseId, masters);
+        CheckWarehouse(header.WarehouseId, masters.Stored?.Header, masters);
     }
 
     private static void CheckLine(PurchaseOrderLineInput line, int seq, PurchaseOrderHeader header, PurchaseOrderMasters masters)
@@ -146,17 +153,17 @@ public static class PoEntryRules
         {
             throw new DomainException(DueDateCode, seq, line.DueDt!.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
         }
-        CheckWarehouse(line.WarehouseId, masters);
+        CheckWarehouse(line.WarehouseId, line.Id is { } lineId ? masters.Stored?.Lines.GetValueOrDefault(lineId) : null, masters);
         if (!masters.TaxRates.ContainsKey(line.TaxCodeId))
         {
             throw new DomainException(RequiredCode, nameof(PurchaseOrderLineInput.TaxCodeId));
         }
     }
 
-    // MM-BR-026: a warehouse in use
-    private static void CheckWarehouse(long? warehouseId, PurchaseOrderMasters masters)
+    // MM-BR-026: a warehouse in use. MM-BR-704: a saved header or line may keep its warehouse after it is set not in use
+    private static void CheckWarehouse(long? warehouseId, long? storedWarehouseId, PurchaseOrderMasters masters)
     {
-        if (warehouseId is { } id && !masters.UsableWarehouses.Contains(id))
+        if (warehouseId is { } id && id != storedWarehouseId && !masters.UsableWarehouses.Contains(id))
         {
             throw new DomainException(NotFoundCode, id);
         }

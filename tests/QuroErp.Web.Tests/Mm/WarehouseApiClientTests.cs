@@ -37,7 +37,7 @@ public class WarehouseApiClientTests : BunitContext
     {
         var options = await Services.GetRequiredService<WarehouseApiClient>().GetOptionsAsync(CancellationToken.None);
 
-        options.Should().Equal(new WarehouseOptionDto(1, "MAIN", "Main", "NORMAL"));
+        options.Should().Equal(new WarehouseOptionDto(1, "MAIN", "Main", "NORMAL", true));
         _api.Request!.RequestUri!.AbsolutePath.Should().Be("/" + WarehouseRoutes.Options);
         _api.Request.Headers.Authorization!.Parameter.Should().Be("token-kim");
     }
@@ -51,7 +51,7 @@ public class WarehouseApiClientTests : BunitContext
             Request = request;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new[] { new WarehouseOptionDto(1, "MAIN", "Main", "NORMAL") }),
+                Content = JsonContent.Create(new[] { new WarehouseOptionDto(1, "MAIN", "Main", "NORMAL", true) }),
             });
         }
     }

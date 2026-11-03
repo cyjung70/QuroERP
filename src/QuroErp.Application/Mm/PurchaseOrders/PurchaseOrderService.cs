@@ -57,7 +57,8 @@ public sealed class PurchaseOrderService(
     public async Task<PurchaseOrderDto> CreateAsync(SavePurchaseOrderRequest request, string user, CancellationToken cancellationToken)
     {
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
-        var write = await PrepareAsync(request, previousCurrencyCode: null, PoStatus.Draft, revisionNo: 0, uow.Transaction, cancellationToken);
+        var write = await PrepareAsync(
+            request, previousCurrencyCode: null, PoStatus.Draft, revisionNo: 0, stored: null, uow.Transaction, cancellationToken);
         // BC-BR-321: a new document belongs to the default business place; the screen does not choose it
         var businessPlaceId = await businessPlaces.FindDefaultIdAsync(uow.Transaction, cancellationToken)
             ?? throw new BadRequestException(BusinessPlaceRules.NotFoundCode);
@@ -81,7 +82,7 @@ public sealed class PurchaseOrderService(
         PoStatusRules.EnsureEditable(po);
         var write = await PrepareAsync(
             request, lines.Count > 0 ? row.CurrencyCode : null, po.Status, PoEntryRules.RevisionAfterSave(po.Status, row.RevisionNo),
-            uow.Transaction, cancellationToken);
+            new StoredWarehouses(row.WarehouseId, lines.ToDictionary(l => l.Id, l => l.WarehouseId)), uow.Transaction, cancellationToken);
         if (!await orders.UpdateAsync(id, write, row.UpdatedAt, user, uow.Transaction, cancellationToken))
         {
             throw new ConcurrencyException();
@@ -158,8 +159,8 @@ public sealed class PurchaseOrderService(
 
     // Applies the defaults (MM-BR-026, MM-BR-031, BC-BR-542), reads the masters and lets the Domain check and compute
     private async Task<PurchaseOrderWrite> PrepareAsync(
-        SavePurchaseOrderRequest request, string? previousCurrencyCode, PoStatus status, int revisionNo, IDbTransaction transaction,
-        CancellationToken cancellationToken)
+        SavePurchaseOrderRequest request, string? previousCurrencyCode, PoStatus status, int revisionNo, StoredWarehouses? stored,
+        IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var vendor = await orders.FindVendorAsync(request.VendorId, transaction, cancellationToken)
             ?? throw new DomainException(PoEntryRules.NotFoundCode, request.VendorId);
@@ -194,7 +195,7 @@ public sealed class PurchaseOrderService(
 
         var rounder = new AmountRounder(currencies.Select(c => new Currency(c.CurrencyCode, c.Decimals)));
         var (computed, totals) = PoEntryRules.Calculate(
-            header, lines, previousCurrencyCode, new PurchaseOrderMasters(itemTypes, warehouses, rates), settings, rounder);
+            header, lines, previousCurrencyCode, new PurchaseOrderMasters(itemTypes, warehouses, rates, stored), settings, rounder);
         return new PurchaseOrderWrite(header, totals, computed, status, revisionNo);
     }
 

@@ -128,6 +128,22 @@ public class PoEntryRulesTests
         Calc(Header(dueDt: PoDt), lines: Line(dueDt: PoDt.AddDays(7), warehouse: null)).Lines.Single().DueDt.Should().Be(PoDt.AddDays(7));
     }
 
+    [Fact, Trait("Id", "MM-UC-017-T08"), Trait("Rule", "MM-BR-704")]
+    public void AWarehouseNotInUse_StaysOnTheSavedHeaderAndLines_ButANewLineCannotPickIt()
+    {
+        const long closed = 8;
+        var masters = Masters with { Stored = new StoredWarehouses(closed, new Dictionary<long, long?> { [5] = closed }) };
+        var header = Header() with { WarehouseId = closed };
+        var saved = Line() with { Id = 5, WarehouseId = closed };
+
+        PoEntryRules.Calculate(header, [saved, Line()], null, masters, UsdBase, Rounder).Lines.Should().HaveCount(2);
+
+        var newLine = () => PoEntryRules.Calculate(header, [saved, Line(warehouse: closed)], null, masters, UsdBase, Rounder);
+        var otherLine = () => PoEntryRules.Calculate(header, [Line() with { Id = 6, WarehouseId = closed }], null, masters, UsdBase, Rounder);
+        CodeOf(() => newLine()).Should().Be(PoEntryRules.NotFoundCode);
+        CodeOf(() => otherLine()).Should().Be(PoEntryRules.NotFoundCode);
+    }
+
     [Theory, Trait("Id", "MM-UT-027")]
     [InlineData("FOB", true)]
     [InlineData("DDP", true)]
