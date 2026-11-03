@@ -1,0 +1,57 @@
+@page "/mm/warehouse"
+@rendermode InteractiveServer
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.Warehouses
+@inject WarehouseApiClient Api
+@inject IStringLocalizer<SharedResource> L
+
+@* MM-UC-017 warehouses, screen type M. Warehouses in use are listed on open; the condition adds those not in use. Add, change
+   or delete warehouses and save them together. Checking one row as the default unchecks the others (MM-BR-702); the API
+   checks every rule (MM-BR-701, 702, 704, 709). *@
+
+<PageTitle>@L["Mm.Warehouse.Title"]</PageTitle>
+
+<QuroMultiGrid @ref="_grid" TRow="WarehouseRow" Title="@L["Mm.Warehouse.Title"]" TestId="warehouse" Path="@L["Menu.G1BA"]" LoadOnStart="true"
+               Definition="mm.warehouse.list" UpperCaseFields="UpperCaseFields" Load="LoadAsync" Save="SaveAsync" CreateRow="() => new WarehouseRow()"
+               CanWrite="_canEdit" OnCellChanged="OnCellChanged">
+    <SearchContent>
+        <QuroCheckbox Label="@L["Mm.Warehouse.IncludeInactive"]" @bind-Value="_includeInactive" TestId="warehouse-search-include-inactive" />
+    </SearchContent>
+</QuroMultiGrid>
+
+@code {
+    private static readonly string[] UpperCaseFields = ["warehouseCode"];
+
+    private QuroMultiGrid<WarehouseRow>? _grid;
+    private bool _includeInactive;
+    private bool _canEdit;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync() =>
+        // Full Access is the admin role until the menu policy reaches the screens, as on the other master screens (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+
+    private async Task<IReadOnlyList<WarehouseRow>> LoadAsync() =>
+        (await Api.SearchAsync(_includeInactive, CancellationToken.None)).Select(WarehouseRow.From).ToList();
+
+    private Task SaveAsync(BatchChanges<WarehouseRow> changes) => Api.SaveAsync(WarehouseRow.ToRequest(changes), CancellationToken.None);
+
+    // MM-BR-702: one default warehouse, so checking a row unchecks the others still on the grid
+    private void OnCellChanged(GridCellChange change)
+    {
+        if (_grid is null || !string.Equals(change.Field, WarehouseRow.IsDefaultField, StringComparison.OrdinalIgnoreCase) || change.Value is not true)
+        {
+            return;
+        }
+        var data = _grid.Data;
+        foreach (var key in data.RowKeys.Where(k => k != change.RowKey && data.GetState(k) != Quro.Grid.Data.RowState.Deleted).ToList())
+        {
+            if (data.GetItem(key).IsDefault)
+            {
+                data.SetValue(key, WarehouseRow.IsDefaultField, false);
+            }
+        }
+    }
+}

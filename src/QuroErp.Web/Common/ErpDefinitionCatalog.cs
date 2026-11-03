@@ -26,6 +26,8 @@ public sealed class ErpDefinitionCatalog(
         "SAMPLES.Write",
         "BC.Read",
         "BC.Write",
+        "MM.Read",
+        "MM.Write",
     };
 
     public IReadOnlySet<string> ResourceKeys { get; } = resourceKeys;

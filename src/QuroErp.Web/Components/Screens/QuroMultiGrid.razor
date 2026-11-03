@@ -164,6 +164,13 @@
     [Parameter]
     public RenderFragment? ExtraCommands { get; set; }
 
+    /// <summary>
+    /// After a user changed a cell (upper case applied), for a screen rule across rows, e.g. one default row. The screen changes
+    /// other cells through <see cref="Data"/>.
+    /// </summary>
+    [Parameter]
+    public EventCallback<GridCellChange> OnCellChanged { get; set; }
+
     public override bool IsDirty => _data.HasChanges;
 
     /// <summary>Rows on the grid that are not marked deleted, including new ones.</summary>
@@ -472,6 +479,10 @@
             {
                 _data.SetValue(args.RowKey, args.Field, upper);
             }
+        }
+        if (OnCellChanged.HasDelegate)
+        {
+            await OnCellChanged.InvokeAsync(new GridCellChange(args.RowKey, args.Field, _data.GetValue(args.RowKey, args.Field)));
         }
         if (_pasting)
         {
