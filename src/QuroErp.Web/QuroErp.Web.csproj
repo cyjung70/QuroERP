@@ -8,6 +8,11 @@
     <PackageReference Include="ClosedXML" Version="0.105.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Screen definitions, read by ScreenDefinitions with the path under Definitions/ as the resource name -->
+    <EmbeddedResource Include="Definitions\**\*.toon" LogicalName="Definitions/$([System.String]::Copy('%(RecursiveDir)').Replace('\','/'))%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>

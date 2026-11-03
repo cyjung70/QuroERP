@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
+using QuroErp.Api.Common;
 using QuroErp.Api.Common.Auth;
 using QuroErp.Api.Common.Errors;
 using QuroErp.Application;
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddApplication();
+builder.Services.AddHostedService<BusinessClockWarmUp>();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddQuroAuthentication(builder.Configuration);
 

@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Domain.Bc.Menus;
 using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Infrastructure.Common.Auth;
@@ -39,15 +40,46 @@ internal sealed class AppUserRepository : IAppUserRepository
         WHERE id = @Id
         """;
 
+    // Assigned menus in use and their ancestors; an assigned menu with an ancestor not in use is dropped.
+    // The M ancestors of the rest come back without full_access (app-shell.md 5). Depth is capped against a parent loop.
     private const string SelectMenus = """
-        SELECT m.menu_code, m.name, m.program_id, m.module, p.menu_code AS parent_menu_code, rm.full_access
-        FROM sys_app_user u
-        JOIN sys_role_menu rm ON rm.role_id = u.role_id
-        JOIN sys_menu m ON m.id = rm.menu_id
+        WITH RECURSIVE assigned AS (
+            SELECT m.id, rm.full_access
+            FROM sys_app_user u
+            JOIN sys_role_menu rm ON rm.role_id = u.role_id
+            JOIN sys_menu m ON m.id = rm.menu_id
+            WHERE u.id = @Id AND m.valid_flag = @ValidFlag
+        ), ancestors AS (
+            SELECT a.id AS menu_id, m.parent_menu_id AS ancestor_id, 1 AS depth
+            FROM assigned a
+            JOIN sys_menu m ON m.id = a.id
+            WHERE m.parent_menu_id IS NOT NULL
+            UNION ALL
+            SELECT x.menu_id, p.parent_menu_id, x.depth + 1
+            FROM ancestors x
+            JOIN sys_menu p ON p.id = x.ancestor_id
+            WHERE p.parent_menu_id IS NOT NULL AND x.depth < 10
+        ), visible AS (
+            SELECT a.id, a.full_access
+            FROM assigned a
+            WHERE NOT EXISTS (
+                SELECT 1 FROM ancestors x JOIN sys_menu p ON p.id = x.ancestor_id
+                WHERE x.menu_id = a.id AND p.valid_flag IS DISTINCT FROM @ValidFlag)
+        ), groups AS (
+            SELECT DISTINCT x.ancestor_id AS id
+            FROM ancestors x
+            JOIN visible v ON v.id = x.menu_id
+            JOIN sys_menu p ON p.id = x.ancestor_id
+            WHERE p.type = @GroupType AND NOT EXISTS (SELECT 1 FROM visible w WHERE w.id = x.ancestor_id)
+        )
+        SELECT m.menu_code, m.name, m.program_id, m.module, p.menu_code AS parent_menu_code, s.full_access, m.type
+        FROM (SELECT id, full_access FROM visible UNION ALL SELECT id, NULL FROM groups) s
+        JOIN sys_menu m ON m.id = s.id
         LEFT JOIN sys_menu p ON p.id = m.parent_menu_id
-        WHERE u.id = @Id AND m.valid_flag = @ValidFlag
         ORDER BY m.menu_code
         """;
+
+    private const string SelectCompanyName = "SELECT name FROM bc_company ORDER BY id LIMIT 1";
 
     private const string SelectDefaultWarehouse = """
         SELECT w.id, w.warehouse_code, w.warehouse_name
@@ -91,7 +123,12 @@ internal sealed class AppUserRepository : IAppUserRepository
 
     public async Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         (await transaction.Connection!.QueryAsync<AuthMenu>(new CommandDefinition(
-            SelectMenus, new { Id = appUserId, ValidFlag = AppUser.ValidFlagUsed }, transaction, cancellationToken: cancellationToken))).AsList();
+            SelectMenus, new { Id = appUserId, ValidFlag = AppUser.ValidFlagUsed, MenuRules.GroupType }, transaction,
+            cancellationToken: cancellationToken))).AsList();
+
+    public Task<string?> FindCompanyNameAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.QuerySingleOrDefaultAsync<string?>(
+            new CommandDefinition(SelectCompanyName, transaction: transaction, cancellationToken: cancellationToken));
 
     public Task<AuthWarehouse?> FindDefaultWarehouseAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.QuerySingleOrDefaultAsync<AuthWarehouse>(

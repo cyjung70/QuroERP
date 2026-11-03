@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
+using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Components.Screens;
 
@@ -13,6 +14,14 @@ public sealed class QuroColumn<TRow> : ComponentBase
     [CascadingParameter]
     public QuroColumnSet<TRow>? Columns { get; set; }
 
+    /// <summary>The screen's field policies, cascaded by the screen type component.</summary>
+    [CascadingParameter]
+    public QuroFieldPolicy? Policies { get; set; }
+
+    /// <summary>The column's field key (field-policy.md "필드 키"); a HIDDEN column is left out unless "show all fields" is on.</summary>
+    [Parameter]
+    public string? Policy { get; set; }
+
     /// <summary>Translated column title.</summary>
     [Parameter, EditorRequired]
     public string Title { get; set; } = "";
@@ -21,9 +30,13 @@ public sealed class QuroColumn<TRow> : ComponentBase
     [Parameter]
     public Func<TRow, object?>? Value { get; set; }
 
-    /// <summary>Format of an IFormattable value, e.g. N2 or yyyy-MM-dd.</summary>
+    /// <summary>Format of an IFormattable value, e.g. N2. Without it a date shows in the user language's date pattern.</summary>
     [Parameter]
     public string? Format { get; set; }
+
+    /// <summary>A numeric column totalled in the footer row of a read-only list (lookup dialog, sub-grid).</summary>
+    [Parameter]
+    public bool Sum { get; set; }
 
     /// <summary>Cell editor, e.g. a QuroText with HideLabel.</summary>
     [Parameter]
@@ -31,9 +44,14 @@ public sealed class QuroColumn<TRow> : ComponentBase
 
     protected override void OnInitialized() => Columns?.Add(this);
 
+    internal bool Hidden => Policy is not null && Policies?.Hides(Policy) == true;
+
     internal string Text(TRow row) => Value?.Invoke(row) switch
     {
         null => "",
+        DateOnly date when Format is null => DisplayCulture.FormatDate(date),
+        DateTime at when Format is null => DisplayCulture.FormatDate(at),
+        DateTimeOffset at when Format is null => DisplayCulture.FormatDate(at.DateTime),
         IFormattable formattable => formattable.ToString(Format, CultureInfo.CurrentCulture),
         var value => value.ToString() ?? "",
     };
@@ -47,7 +65,8 @@ public sealed class QuroColumnSet<TRow>
 {
     private readonly List<QuroColumn<TRow>> _columns = [];
 
-    public IReadOnlyList<QuroColumn<TRow>> Items => _columns;
+    /// <summary>The columns to draw: those the field policy hides are left out.</summary>
+    public IReadOnlyList<QuroColumn<TRow>> Items => [.. _columns.Where(c => !c.Hidden)];
 
     internal void Add(QuroColumn<TRow> column)
     {

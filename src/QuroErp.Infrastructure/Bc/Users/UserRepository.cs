@@ -10,7 +10,8 @@ internal sealed class UserRepository : IUserRepository
     // No password_hash: the list and the screen never carry it (BC-BR-132)
     private const string Columns = """
         u.id, u.userid AS user_id, u.username AS user_name, u.role_id, r.role_code, u.email, u.phone, u.lang_code, u.user_valid_dt,
-        u.valid_flag, u.must_change_password, u.failed_count, u.locked_until, u.last_login_at, u.last_login_ip, u.updated_at
+        u.valid_flag, u.must_change_password, u.failed_count, u.locked_until, u.last_login_at, u.last_login_ip,
+        u.created_at, u.created_by, u.updated_at, u.updated_by
         """;
 
     private const string From = " FROM sys_app_user u LEFT JOIN sys_role r ON r.id = u.role_id";
@@ -204,11 +205,14 @@ internal sealed class UserRepository : IUserRepository
         DateTime? LockedUntil,
         DateTime? LastLoginAt,
         string? LastLoginIp,
-        DateTime UpdatedAt)
+        DateTime CreatedAt,
+        string CreatedBy,
+        DateTime UpdatedAt,
+        string UpdatedBy)
     {
         public UserRow ToUserRow() => new(
             Id, UserId, UserName, RoleId, RoleCode, Email, Phone, LangCode, UserValidDt, ValidFlag, MustChangePassword, FailedCount,
-            Utc(LockedUntil), Utc(LastLoginAt), LastLoginIp, Utc(UpdatedAt)!.Value);
+            Utc(LockedUntil), Utc(LastLoginAt), LastLoginIp, Utc(CreatedAt)!.Value, CreatedBy, Utc(UpdatedAt)!.Value, UpdatedBy);
 
         private static DateTimeOffset? Utc(DateTime? value) =>
             value is { } v ? new DateTimeOffset(DateTime.SpecifyKind(v, DateTimeKind.Utc)) : null;

@@ -14,8 +14,9 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
 {
     private static readonly CancellationToken None = CancellationToken.None;
 
+    // No barcode: tests insert several items and barcodes are unique (MM-BR-817)
     private static readonly ItemFields Fields = new(
-        "HEX BOLT", "M8", null, "INVENTORY", "EA", "PART", "Y", 2.5m, 4m, "0123456789", "A-1", 10, "m1", null, null, null, "m5", null, false, "EXEMPT");
+        "HEX BOLT", "M8", null, "INVENTORY", "EA", "PART", "Y", 2.5m, 4m, null, "A-1", 10, "m1", null, null, null, "m5", null, false, "EXEMPT");
 
     [DatabaseFact, Trait("Id", "BC-UC-009-IT-01")]
     public async Task Insert_ThenFind_StoresValuesCostAndGroup()
@@ -67,6 +68,24 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
         after!.ItemName.Should().Be("NUT");
         after.UsdPrc.Should().Be(9m);
         after.MvgCost.Should().Be(2.5m);
+    }
+
+    [DatabaseFact, Trait("Id", "CORE-050-IT-11")]
+    public async Task Find_ReturnsTheFourAuditColumns_UpdateChangesOnlyTheUpdatedPair()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IItemRepository>();
+        var id = await repository.InsertAsync(Item.Create("IT-AUD1", Fields), "kim", uow.Transaction, None);
+        var row = (await repository.FindAsync(id, forUpdate: false, uow.Transaction, None))!;
+        var item = Item.Restore(id, row.ItemCd, Fields, row.Plating, row.MvgCost!.Value, 0, 0);
+        item.Change(Fields with { ItemName = "NUT" }, typeLocked: false);
+
+        await repository.UpdateAsync(item, row.UpdatedAt, "lee", uow.Transaction, None);
+        var after = (await repository.FindAsync(id, forUpdate: false, uow.Transaction, None))!;
+
+        (row.CreatedBy, row.UpdatedBy).Should().Be(("kim", "kim"));
+        row.CreatedAt.Should().NotBe(default).And.Be(row.UpdatedAt);
+        (after.CreatedAt, after.CreatedBy, after.UpdatedBy).Should().Be((row.CreatedAt, "kim", "lee"));
     }
 
     [DatabaseFact, Trait("Id", "CORE-020-IT-01")]
@@ -137,8 +156,10 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
         await uow.Transaction.Connection!.ExecuteAsync(
             """
             WITH po AS (
-                INSERT INTO mm_purchase_order (po_no, created_by, updated_by) VALUES ('PO-IT', 's', 's') RETURNING id)
-            INSERT INTO mm_purchase_order_line (purchase_order_id, seq, item_id, created_by, updated_by) SELECT id, 1, @Item, 's', 's' FROM po
+                INSERT INTO mm_purchase_order (po_no, currency_code, exchange_rate, business_place_id, created_by, updated_by)
+                VALUES ('PO-IT', 'USD', 1, (SELECT id FROM bc_business_place WHERE is_default), 's', 's') RETURNING id)
+            INSERT INTO mm_purchase_order_line (purchase_order_id, seq, item_id, tax_code_id, created_by, updated_by)
+            SELECT id, 1, @Item, (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 's', 's' FROM po
             """,
             new { Item = used }, uow.Transaction);
         var row = (await repository.FindAsync(unused, forUpdate: false, uow.Transaction, None))!;
@@ -185,5 +206,60 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
         after.UpdatedAt.Should().Be(before.UpdatedAt);
         (await repository.SaveImageAsync("IMG-NONE", small, uow.Transaction, None)).Should().BeFalse();
         (await repository.FindImageAsync("IMG-NONE", uow.Transaction, None)).Should().BeNull();
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UC-011-T01"), Trait("Id", "MM-UT-815")]
+    public async Task ListForBarcode_ItemClassAndValidFlag_InOrdinalItemCodeOrder()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IItemRepository>();
+        var barcodeFields = Fields with { ItemClass = "ZZBC1" };
+        await repository.InsertAsync(Item.Create("ZBC2", barcodeFields), "kim", uow.Transaction, None);
+        await repository.InsertAsync(Item.Create("ZBC10", barcodeFields with { UpcCode = "9100000001" }), "kim", uow.Transaction, None);
+        await repository.InsertAsync(Item.Create("ZBC-1", barcodeFields), "kim", uow.Transaction, None);
+        await repository.InsertAsync(Item.Create("ZBC3", barcodeFields with { ValidFlag = "N" }), "kim", uow.Transaction, None);
+        await repository.InsertAsync(Item.Create("ZBC4", Fields with { ItemClass = "ZZBC2" }), "kim", uow.Transaction, None);
+
+        var inUse = await repository.ListForBarcodeAsync("ZZBC1", "Y", forUpdate: true, uow.Transaction, None);
+        var all = await repository.ListForBarcodeAsync("ZZBC1", null, forUpdate: false, uow.Transaction, None);
+
+        inUse.Select(r => r.ItemCd).Should().Equal("ZBC-1", "ZBC10", "ZBC2");
+        inUse[1].Should().BeEquivalentTo(new { ItemName = "HEX BOLT", SoUsdPrc = 4m, UpcCode = "9100000001" });
+        all.Select(r => r.ItemCd).Should().Equal("ZBC-1", "ZBC10", "ZBC2", "ZBC3");
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UC-011-T02"), Trait("Id", "MM-UT-817")]
+    public async Task SaveBarcodes_MovesBarcodesBetweenTheGivenItems_AndOwnersSkipTheExceptedItems()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IItemRepository>();
+        var a = await repository.InsertAsync(Item.Create("ZBCA", Fields with { UpcCode = "9200000001" }), "kim", uow.Transaction, None);
+        var b = await repository.InsertAsync(Item.Create("ZBCB", Fields with { UpcCode = "9200000002" }), "kim", uow.Transaction, None);
+
+        await repository.SaveBarcodesAsync([(a, "9200000002"), (b, "9200000001")], "lee", uow.Transaction, None);
+
+        (await repository.FindAsync(a, forUpdate: false, uow.Transaction, None))!.UpcCode.Should().Be("9200000002");
+        (await repository.FindAsync(b, forUpdate: false, uow.Transaction, None))!.UpcCode.Should().Be("9200000001");
+        (await repository.FindBarcodeOwnersAsync(["9200000001", "9200000002", "9200000003"], [a], uow.Transaction, None))
+            .Should().Equal(new ItemBarcodeOwner("9200000001", "ZBCB"));
+        (await repository.FindBarcodeOwnersAsync(["9200000001"], [a, b], uow.Transaction, None)).Should().BeEmpty();
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UC-011-T05"), Trait("Id", "MM-UT-818")]
+    public async Task SaveBarcodes_OneBarcodeTakenByAnotherItem_ChangesNothing()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IItemRepository>();
+        var a = await repository.InsertAsync(Item.Create("ZBCC", Fields with { UpcCode = "9300000001" }), "kim", uow.Transaction, None);
+        var b = await repository.InsertAsync(Item.Create("ZBCD", Fields), "kim", uow.Transaction, None);
+        await repository.InsertAsync(Item.Create("ZBCE", Fields with { UpcCode = "9300000003" }), "kim", uow.Transaction, None);
+        await uow.Transaction.Connection!.ExecuteAsync("SAVEPOINT barcodes", transaction: uow.Transaction);
+
+        var save = () => repository.SaveBarcodesAsync([(a, "9300000002"), (b, "9300000003")], "lee", uow.Transaction, None);
+
+        (await save.Should().ThrowAsync<Npgsql.PostgresException>()).Which.ConstraintName.Should().Be("uq_bc_item_upc_code");
+        await uow.Transaction.Connection!.ExecuteAsync("ROLLBACK TO SAVEPOINT barcodes", transaction: uow.Transaction);
+        (await repository.FindAsync(a, forUpdate: false, uow.Transaction, None))!.UpcCode.Should().Be("9300000001");
+        (await repository.FindAsync(b, forUpdate: false, uow.Transaction, None))!.UpcCode.Should().BeNull();
     }
 }

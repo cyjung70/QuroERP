@@ -1,0 +1,44 @@
+@* One tab of an S screen after the saved fields, e.g. stock by warehouse (screen-templates.md 1). Declared inside the
+   form's Tabs; the form draws the tab bar. Every tab stays rendered and only the inactive ones are hidden, so the
+   inputs keep their values and the change check across tab switches. A sub-query belongs to a loaded record:
+   a new record shows no data, and LoadTab runs when the tab opens for a record it has not read yet. *@
+@inject IStringLocalizer<SharedResource> L
+
+<div class="quro-panel quro-tab-panel" role="tabpanel" hidden="@(Tabs?.Active != Id)" data-testid="@TestId">
+    @if (Form?.IsNew == true)
+    {
+        <p class="quro-no-data">@L["Common.NoData"]</p>
+    }
+    else
+    {
+        @ChildContent
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    public QuroTabSet? Tabs { get; set; }
+
+    [CascadingParameter]
+    public QuroFormContext? Form { get; set; }
+
+    /// <summary>Kebab-case id of the tab; its button is <c>{screen}-tab-{id}</c>.</summary>
+    [Parameter, EditorRequired]
+    public string Id { get; set; } = "";
+
+    /// <summary>Translated tab title.</summary>
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    /// <summary>Reads the tab's data for the loaded record the first time the tab opens for it.</summary>
+    [Parameter]
+    public Func<Task>? LoadTab { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    protected override void OnInitialized() => Tabs?.Add(this);
+}

@@ -2,12 +2,21 @@
 @inject IStringLocalizer<SharedResource> L
 
 @* Header user menu for every signed-in user, whatever their menu rights: own screens only (BC-BR-101, BC-BR-051).
-   A details element opens it without interactivity, so it also works on static pages like the login flow. *@
+   A details element opens it without interactivity, so it also works on static pages like the login flow.
+   Below 768px the top bar hides company and role, so they are shown here (app-shell.md 2). *@
 <AuthorizeView>
     <Authorized>
         <details class="user-menu" data-testid="user-menu">
             <summary aria-label="@L["Common.UserMenu"]">@context.User.Identity?.Name</summary>
             <ul>
+                @if (Company is not null)
+                {
+                    <li class="user-menu-info user-menu-narrow" data-testid="user-menu-company">@Company</li>
+                }
+                @if (Role is not null)
+                {
+                    <li class="user-menu-info user-menu-narrow" data-testid="user-menu-role">@Role</li>
+                }
                 <li><a href="@ProfilePath" data-testid="user-menu-profile">@L["Common.MyInfo"]</a></li>
                 <li><a href="@WebAuthentication.ChangePasswordPath" data-testid="user-menu-change-password">@L["Bc.ChangePassword.Title"]</a></li>
                 <li>
@@ -24,4 +33,12 @@
 @code {
     /// <summary>My info screen (BC-UC-003).</summary>
     public const string ProfilePath = "/bc/user-profile";
+
+    /// <summary>Company name, shown in the menu on narrow screens.</summary>
+    [Parameter]
+    public string? Company { get; set; }
+
+    /// <summary>Role name or code, shown in the menu on narrow screens.</summary>
+    [Parameter]
+    public string? Role { get; set; }
 }

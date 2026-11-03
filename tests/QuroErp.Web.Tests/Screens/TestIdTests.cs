@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Bunit;
 using Bunit.Rendering;
@@ -33,7 +32,7 @@ public class TestIdTests : ScreenContext
         elements.Should().NotBeEmpty();
         foreach (var element in elements)
         {
-            var id = element.GetAttribute("data-testid");
+            var id = DataGridPageExtensions.TestIdOf(element);
             id.Should().NotBeNull($"{element.OuterHtml} needs a data-testid");
             id.Should().MatchRegex(Rule(screen));
         }
@@ -47,20 +46,19 @@ public class TestIdTests : ScreenContext
     {
         var cut = RenderSample(page, screen);
 
-        foreach (var grid in cut.FindAll(".quro-grid"))
+        // A package grid has its rows by row key in data-row, not by index (TODO(QuroGrid-R3))
+        foreach (var grid in cut.FindAll(".quro-grid[role=grid]"))
         {
-            var rows = grid.QuerySelectorAll("tbody tr");
-            rows.Select(r => r.GetAttribute("data-row-index"))
-                .Should().Equal(Enumerable.Range(0, rows.Length).Select(i => i.ToString(CultureInfo.InvariantCulture)));
+            grid.QuerySelectorAll(".quro-body [role=row]").Should().NotBeEmpty().And.OnlyContain(r => r.HasAttribute("data-row"));
         }
-        cut.FindAll("tbody tr").Should().NotBeEmpty();
+        cut.FindAll(".quro-body [role=row]").Should().NotBeEmpty();
     }
 
     [Fact]
     public void Message_ErrorAndNotice_ShareOneTestId()
     {
         var page = Render<SampleMulti>();
-        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid-name]").Should().HaveCount(2));
+        page.WaitForAssertion(() => page.FindAll("[data-testid=multi-grid] [data-row]").Should().HaveCount(2));
 
         page.Find("[data-testid=multi-toolbar-save]").Click();
         page.Find("[data-testid=multi-message]").GetAttribute("data-level").Should().Be("info");
@@ -71,9 +69,9 @@ public class TestIdTests : ScreenContext
             .Which.GetAttribute("data-level").Should().Be("error");
     }
 
-    // {screen} alone (the screen root) or {screen}-{area}[-{field}] in kebab-case (SM areas: entry-frame.md 8)
+    // {screen} alone (the screen root) or {screen}-{area}[-{field}] in kebab-case (SM areas: entry-frame.md 8, S tabs: TASK-CORE-041)
     private static string Rule(string screen) =>
-        $"^{Regex.Escape(screen)}(-(header|line|search|grid|toolbar|message|title|doc-no|status-chip|revision|totals|audit|find)(-[a-z0-9]+)*)?$";
+        $"^{Regex.Escape(screen)}(-(header|line|search|grid|toolbar|message|title|doc-no|status-chip|revision|totals|audit|find|tab)(-[a-z0-9]+)*)?$";
 
     /// <summary>Renders the sample with rows in every grid (SM loads an order, MM selects a source).</summary>
     private IRenderedComponent<ContainerFragment> RenderSample(Type page, string screen)
@@ -88,12 +86,20 @@ public class TestIdTests : ScreenContext
             cut.Find("[data-testid=header-detail-toolbar-search]").Click();
             cut.Find("[data-testid=header-detail-find-keyword]").Change("SO261000001");
             cut.Find("[data-testid=header-detail-find] form").Submit();
-            cut.Find("[data-testid=header-detail-find-grid-select]").Click();
+            cut.WaitForAssertion(() => cut.LookupRows("header-detail-find").Should().ContainSingle());
+            cut.PickLookupRow<SampleOrder, ContainerFragment>("header-detail-find", 0);
+            cut.WaitForAssertion(() => cut.FindAll("[data-testid=header-detail-line] [data-row]").Should().NotBeEmpty());
         }
         if (screen == "master-detail")
         {
-            cut.WaitForAssertion(() => cut.FindAll("[data-testid=master-detail-grid-select]").Should().NotBeEmpty());
-            cut.FindAll("[data-testid=master-detail-grid-select]")[0].Click();
+            var groups = cut.DataGrid<SampleGroup, ContainerFragment>("master-detail-grid");
+            cut.WaitForAssertion(() => groups.Rows.Should().NotBeEmpty());
+            groups.Click(0, QuroErp.Web.Components.Screens.QuroMasterMultiDetail<SampleGroup, SampleLine>.SelectField);
+            cut.WaitForAssertion(() => cut.FindAll("[data-testid=master-detail-line] [data-row]").Should().NotBeEmpty());
+        }
+        if (screen == "multi")
+        {
+            cut.WaitForAssertion(() => cut.FindAll("[data-testid=multi-grid] [data-row]").Should().NotBeEmpty());
         }
         if (screen == "single")
         {

@@ -14,20 +14,24 @@
 @inject ProblemMessages Messages
 
 @* BC-UC-001 로그인. 쿠키를 써야 해서 정적 SSR로 렌더링한다 (rendermode 없음).
-   Remember ID, Caps Lock, show password and the busy button run in js/quro.js (quroLogin). *@
+   Remember ID, Caps Lock, show password and the busy button run in js/quro.js (quroLogin).
+   Split layout (TASK-CORE-036): brand panel on the left, form panel on the right. *@
 
 <PageTitle>@L["Bc.Login.Title"]</PageTitle>
 
 <main class="login-page">
-    @* Brand panel: product wordmark and one-line intro only, no inputs. Hidden below 768px *@
-    <aside class="login-brand" data-testid="login-brand">
-        <p class="login-brand-name">@L["Bc.Login.Product"]</p>
-        <p class="login-brand-tagline">@L["Bc.Login.Tagline"]</p>
-    </aside>
+    @* Product logo, name and one-line intro only; hidden below 768px *@
+    <section class="login-brand" data-testid="login-brand">
+        <img class="login-brand-logo" src="@Assets["img/quro-logo-white.png"]" alt="@L["Bc.Login.ProductName"]" width="320" height="65" />
+        <p class="login-tagline">@L["Bc.Login.Tagline"]</p>
+        <span class="login-edition">@L["Bc.Login.Edition"]</span>
+    </section>
 
-    @* Form panel. The language form stays last in the DOM for the tab order and is placed top right by CSS *@
-    <section class="login-panel" aria-labelledby="login-title">
-        <div class="login-card">
+    <div class="login-panel" data-testid="login-panel">
+        <section class="login-card" aria-labelledby="login-title">
+            @* The blue logo on light surfaces, the white one in dark mode (login.md, entry-frame.md 7) *@
+            <img class="login-logo login-logo-light" src="@Assets["img/quro-logo.png"]" alt="@L["Bc.Login.ProductName"]" width="168" height="34" />
+            <img class="login-logo login-logo-dark" src="@Assets["img/quro-logo-white.png"]" alt="" width="168" height="34" />
             <h1 id="login-title" class="login-title">@L["Bc.Login.Title"]</h1>
 
             @* 9: one line above the form, cleared when the user types again *@
@@ -74,12 +78,9 @@
             {
                 <p class="login-forgot" data-testid="login-forgot-password">@L["Bc.Login.ForgotPassword"]</p>
             }
+        </section>
 
-            <footer class="login-footer">
-                <p class="login-version" data-testid="login-version">@L["Bc.Login.Version", Version]</p>
-                <p class="login-copyright">@L["Bc.Login.Copyright"]</p>
-            </footer>
-        </div>
+        @* 1: shown at the top right of the panel but last in the markup, so it stays last in tab order *@
         <form class="login-language" method="post" action="@WebLocalization.CulturePath">
             <AntiforgeryToken />
             <input type="hidden" name="returnUrl" value="@CurrentUrl" />
@@ -94,7 +95,12 @@
             </select>
             <noscript><button type="submit">@L["Common.Language"]</button></noscript>
         </form>
-    </section>
+
+        <footer class="login-footer">
+            <p class="login-version" data-testid="login-version">@L["Bc.Login.Version", Version]</p>
+            <p class="login-copyright">@L["Bc.Login.Copyright"]</p>
+        </footer>
+    </div>
 </main>
 
 @code {

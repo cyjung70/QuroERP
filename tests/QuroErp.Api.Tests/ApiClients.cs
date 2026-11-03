@@ -33,4 +33,14 @@ public static class ApiClients
 
     public static async Task<JsonElement> ReadProblemAsync(this HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<JsonElement>()).Clone();
+
+    private static readonly string[] AuditFields = ["createdAt", "createdBy", "updatedAt", "updatedBy"];
+
+    /// <summary>The audit field names an S screen reads from a one-record response (api.md, TASK-CORE-050).</summary>
+    public static async Task<IEnumerable<string>> ReadAuditFieldsAsync(this HttpResponseMessage response)
+    {
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return AuditFields.Where(name => body.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String && value.GetString() != "")
+            .ToList();
+    }
 }

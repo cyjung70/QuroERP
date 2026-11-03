@@ -159,11 +159,60 @@ public class LoginRepositoryTests(AuthSchemaFixture db)
         var warehouse = await users.FindDefaultWarehouseAsync(id, uow.Transaction, CancellationToken.None);
 
         menus.Where(m => m.MenuCode.StartsWith("T-", StringComparison.Ordinal)).Should().Equal(
-            new AuthMenu("T-CHILD", "Child", "bc-child", "BC", "T-ROOT", "Y"),
-            new AuthMenu("T-ROOT", "Root", null, "BC", null, "Y"));
+            new AuthMenu("T-CHILD", "Child", "bc-child", "BC", "T-ROOT", "Y", null),
+            new AuthMenu("T-ROOT", "Root", null, "BC", null, "Y", null));
         var isDefault = await uow.Transaction.Connection!.QuerySingleAsync<long>(
             "SELECT id FROM bc_warehouse WHERE is_default", transaction: uow.Transaction);
         warehouse!.Id.Should().Be(isDefault);
+    }
+
+    [DatabaseFact, Trait("Id", "CORE-037-IT-01")]
+    public async Task FindMenus_AddsUnassignedParentGroups_AndDropsMenusUnderAGroupNotInUse()
+    {
+        var id = await CreateUserAsync("shell1");
+        await using (var connection = await db.Get<IDbConnectionFactory>().OpenAsync(CancellationToken.None))
+        {
+            // Group T2-G holds subheading T2-S; group T2-X is not in use. Only P, U menus are assigned, plus nothing above them
+            await connection.ExecuteAsync(
+                """
+                INSERT INTO sys_menu (menu_code, name, type, module, valid_flag, created_by, updated_by) VALUES
+                    ('T2-G', 'Group', 'M', 'bc', 'Y', 'test', 'test'),
+                    ('T2-X', 'Off group', 'M', 'bc', 'N', 'test', 'test');
+                INSERT INTO sys_menu (menu_code, name, type, module, parent_menu_id, valid_flag, created_by, updated_by)
+                SELECT 'T2-S', 'Sub', 'M', 'bc', id, 'Y', 'test', 'test' FROM sys_menu WHERE menu_code = 'T2-G';
+                INSERT INTO sys_menu (menu_code, name, type, program_id, module, parent_menu_id, valid_flag, created_by, updated_by)
+                SELECT v.code, v.code, v.type, v.path, 'bc', p.id, 'Y', 'test', 'test'
+                FROM (VALUES ('T2-P1', 'P', '/bc/p1', 'T2-S'), ('T2-P2', 'P', '/bc/p2', 'T2-G'), ('T2-U', 'U', '/bc/u', 'T2-G'),
+                             ('T2-P3', 'P', '/bc/p3', 'T2-X')) AS v (code, type, path, parent)
+                JOIN sys_menu p ON p.menu_code = v.parent;
+                INSERT INTO sys_role_menu (role_id, menu_id, full_access, created_by, updated_by)
+                SELECT u.role_id, m.id, 'Y', 'test', 'test' FROM sys_app_user u, sys_menu m
+                WHERE u.id = @Id AND m.menu_code IN ('T2-P1', 'T2-P2', 'T2-U', 'T2-P3');
+                """,
+                new { Id = id });
+        }
+
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+        var menus = await db.Get<IAppUserRepository>().FindMenusAsync(id, uow.Transaction, CancellationToken.None);
+
+        menus.Where(m => m.MenuCode.StartsWith("T2-", StringComparison.Ordinal)).Should().Equal(
+            new AuthMenu("T2-G", "Group", null, "bc", null, null, "M"),
+            new AuthMenu("T2-P1", "T2-P1", "/bc/p1", "bc", "T2-S", "Y", "P"),
+            new AuthMenu("T2-P2", "T2-P2", "/bc/p2", "bc", "T2-G", "Y", "P"),
+            new AuthMenu("T2-S", "Sub", null, "bc", "T2-G", null, "M"),
+            new AuthMenu("T2-U", "T2-U", "/bc/u", "bc", "T2-G", "Y", "U"));
+    }
+
+    [DatabaseFact, Trait("Id", "CORE-037-IT-02")]
+    public async Task FindCompanyName_ReturnsTheCompanyRow()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
+        var expected = await uow.Transaction.Connection!.QuerySingleOrDefaultAsync<string?>(
+            "SELECT name FROM bc_company ORDER BY id LIMIT 1", transaction: uow.Transaction);
+
+        var name = await db.Get<IAppUserRepository>().FindCompanyNameAsync(uow.Transaction, CancellationToken.None);
+
+        name.Should().Be(expected);
     }
 
     private async Task<long> CreateUserAsync(string userId)

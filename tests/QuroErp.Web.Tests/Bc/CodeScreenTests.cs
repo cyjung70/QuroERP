@@ -14,6 +14,7 @@ using QuroErp.Web.Bc.Codes;
 using QuroErp.Web.Bc.Localization;
 using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Bc;
+using QuroErp.Web.Components.Pages.Bc.Models;
 using QuroErp.Web.Components.Screens;
 using QuroErp.Web.Tests.Screens;
 
@@ -32,6 +33,7 @@ public class CodeScreenTests : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         Services.AddSingleton<IQuroConfirm>(new FakeConfirm());
         Services.AddSingleton(TimeProvider.System);
         Services.AddSingleton<AccessTokenStore>();
@@ -48,7 +50,7 @@ public class CodeScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        page.FindAll("th").Select(h => h.TextContent.Trim()).Should().ContainInOrder("코드", "이름 (English)", "이름 (한국어)", "정렬 순서", "사용");
+        Grid(page).Headers.Select(h => h.Title).Should().ContainInOrder("코드", "이름 (English)", "이름 (한국어)", "정렬 순서", "사용");
         page.Find("[data-testid=code-search-major-code]").GetAttribute("aria-required").Should().Be("true");
         _api.MinorSearches.Should().BeEmpty();
     }
@@ -69,10 +71,10 @@ public class CodeScreenTests : BunitContext
     {
         var page = SearchUnit(RenderAs("admin"));
 
-        Values(page, "code-grid-minor-code").Should().Equal("EA", "BOX");
-        Values(page, "code-grid-name-en").Should().Equal("Each", "Box");
-        Values(page, "code-grid-name-ko").Should().Equal("개", "");
-        page.FindAll("[data-testid=code-grid-use-yn]").Select(c => c.HasAttribute("checked")).Should().Equal(true, false);
+        Grid(page).Column("minorCode").Should().Equal("EA", "BOX");
+        Grid(page).Column("nameEn").Should().Equal("Each", "Box");
+        Grid(page).Column("nameKo").Should().Equal("개", "");
+        new[] { Grid(page).IsChecked(0, "useYn"), Grid(page).IsChecked(1, "useYn") }.Should().Equal(true, false);
         page.Find("[data-testid=code-search-major-name]").GetAttribute("value").Should().Be("단위");
         _api.MinorSearches.Should().Equal("UNIT");
     }
@@ -83,13 +85,13 @@ public class CodeScreenTests : BunitContext
         var page = RenderAs("admin");
 
         page.Find("[data-testid=code-search-find-major]").Click();
-        page.WaitForElement("[data-testid=code-major-lookup] tbody tr");
-        page.FindAll("[data-testid=code-major-lookup] tbody tr")[1].QuerySelector("button")!.Click();
+        page.WaitForAssertion(() => page.LookupRows("code-major-lookup").Should().NotBeEmpty());
+        page.PickLookupRow<CodeMajorDto, Code>("code-major-lookup", 1);
 
         page.Find("[data-testid=code-search-major-code]").GetAttribute("value").Should().Be("UNIT");
         page.Find("[data-testid=code-search-major-name]").GetAttribute("value").Should().Be("단위");
         page.FindAll("[data-testid=code-major-lookup]").Should().BeEmpty();
-        page.WaitForAssertion(() => Values(page, "code-grid-minor-code").Should().Equal("EA", "BOX"));
+        page.WaitForAssertion(() => Grid(page).Column("minorCode").Should().Equal("EA", "BOX"));
         _api.MinorSearches.Should().Equal("UNIT");
     }
 
@@ -100,12 +102,13 @@ public class CodeScreenTests : BunitContext
 
         page.Find("[data-testid=code-toolbar-new]").Click();
 
-        var codes = page.FindAll("[data-testid=code-grid-minor-code]");
-        codes.Take(2).Should().OnlyContain(c => c.HasAttribute("readonly"));
-        codes[2].HasAttribute("readonly").Should().BeFalse();
-        page.FindAll("[data-testid=code-grid-name-en]")[2].GetAttribute("aria-required").Should().Be("true");
-        page.FindAll("[data-testid=code-grid-name-ko]")[2].HasAttribute("aria-required").Should().BeFalse();
-        page.FindAll("[data-testid=code-grid-use-yn]")[2].HasAttribute("checked").Should().BeTrue();
+        Enumerable.Range(0, 2).Should().OnlyContain(i => Grid(page).IsReadOnly(i, "minorCode"));
+        Grid(page).IsReadOnly(2, "minorCode").Should().BeFalse();
+        // The grid draws no required mark yet; the definition's req columns are required columns of the data set
+        var data = page.FindComponent<QuroMultiGrid<CodeMinorRow>>().Instance.Data;
+        data.GetColumn("nameEn").Required.Should().BeTrue();
+        data.GetColumn("nameKo").Required.Should().BeFalse();
+        Grid(page).IsChecked(2, "useYn").Should().BeTrue();
     }
 
     [Fact, Trait("Id", "BC-UC-008-T01")]
@@ -113,14 +116,14 @@ public class CodeScreenTests : BunitContext
     {
         var page = SearchUnit(RenderAs("admin"));
 
-        page.FindAll("[data-testid=code-grid-name-ko]")[1].Change("상자");
-        page.FindAll("[data-testid=code-grid-sort-order]")[1].Change("30");
-        page.FindAll("[data-testid=code-grid-delete-row]")[0].Click();
+        Grid(page).Edit(1, "nameKo", "상자");
+        Grid(page).Edit(1, "sortOrder", "30");
+        Grid(page).Click(0, "deleteRow");
         page.Find("[data-testid=code-toolbar-new]").Click();
-        page.FindAll("[data-testid=code-grid-minor-code]")[2].Change("pc");
-        page.FindAll("[data-testid=code-grid-name-en]")[2].Change("Piece");
-        page.FindAll("[data-testid=code-grid-sort-order]")[2].Change("5");
-        page.FindAll("[data-testid=code-grid-attr1]")[2].Change("P");
+        Grid(page).Edit(2, "minorCode", "pc");
+        Grid(page).Edit(2, "nameEn", "Piece");
+        Grid(page).Edit(2, "sortOrder", "5");
+        Grid(page).Edit(2, "attr1", "P");
         page.Find("[data-testid=code-search-major-code]").Change("TERMS");
 
         page.Find("[data-testid=code-toolbar-save]").Click();
@@ -153,8 +156,8 @@ public class CodeScreenTests : BunitContext
     {
         var page = SearchUnit(RenderAs("admin"));
         page.Find("[data-testid=code-toolbar-new]").Click();
-        page.FindAll("[data-testid=code-grid-minor-code]")[2].Change("PC");
-        page.FindAll("[data-testid=code-grid-sort-order]")[2].Change("5");
+        Grid(page).Edit(2, "minorCode", "PC");
+        Grid(page).Edit(2, "sortOrder", "5");
 
         page.Find("[data-testid=code-toolbar-save]").Click();
 
@@ -172,12 +175,12 @@ public class CodeScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.UnprocessableEntity, $$"""{"status":422,"code":"{{code}}","args":["PC"]}""");
         var page = SearchUnit(RenderAs("admin"));
-        page.FindAll("[data-testid=code-grid-name-en]")[0].Change("Each one");
+        Grid(page).Edit(0, "nameEn", "Each one");
 
         page.Find("[data-testid=code-toolbar-save]").Click();
 
         page.WaitForAssertion(() => page.Find("[data-testid=code-message]").TextContent.Should().Be(message));
-        Values(page, "code-grid-name-en")[0].Should().Be("Each one");
+        Grid(page).Column("nameEn")[0].Should().Be("Each one");
     }
 
     [Fact, Trait("Id", "SD-UT-905")]
@@ -185,7 +188,7 @@ public class CodeScreenTests : BunitContext
     {
         _api.SaveProblem = (HttpStatusCode.Conflict, """{"status":409,"code":"Common-E-004"}""");
         var page = SearchUnit(RenderAs("admin"));
-        page.FindAll("[data-testid=code-grid-name-en]")[0].Change("Each one");
+        Grid(page).Edit(0, "nameEn", "Each one");
 
         page.Find("[data-testid=code-toolbar-save]").Click();
 
@@ -193,14 +196,26 @@ public class CodeScreenTests : BunitContext
             .Should().Be("다른 사용자가 먼저 수정했습니다. 다시 조회한 뒤 저장하세요."));
     }
 
-    [Fact, Trait("Id", "BC-UT-214")]
-    public void UserWithoutFullAccess_CanOnlyRead()
+    [Fact, Trait("Id", "BC-UT-214"), Trait("Id", "CORE-051-WT-01")]
+    public void UserWithoutFullAccess_CanOnlyRead_NewSaveAndRowButtonsAreDisabledNotHidden()
     {
         var page = SearchUnit(RenderAs("user"));
+        var rows = Grid(page).Rows.Count;
 
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().NotContain(["code-toolbar-new", "code-toolbar-save"]);
-        page.FindAll("[data-testid=code-grid-name-en]").Should().OnlyContain(c => c.HasAttribute("readonly"));
-        page.FindAll("[data-testid=code-grid-delete-row]").Should().BeEmpty();
+        page.Find("[data-testid=code-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=code-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=code-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
+        page.Find("[data-testid=code-toolbar-export]").HasAttribute("disabled").Should().BeFalse();
+        Grid(page).IsReadOnly(0, "nameEn").Should().BeTrue();
+
+        // The handlers do nothing either
+        Grid(page).Edit(0, "nameEn", "X").Should().BeFalse();
+        page.Find("[data-testid=code-toolbar-new]").Click();
+        Grid(page).Click(0, "deleteRow");
+        page.Find("[data-testid=code-toolbar-save]").Click();
+        Grid(page).Rows.Should().HaveCount(rows);
+        Grid(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);
+        _api.Saved.Should().BeEmpty();
     }
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
@@ -221,12 +236,11 @@ public class CodeScreenTests : BunitContext
     {
         page.Find("[data-testid=code-search-major-code]").Change("unit");
         page.Find("[data-testid=code-toolbar-search]").Click();
-        page.WaitForAssertion(() => Values(page, "code-grid-minor-code").Should().NotBeEmpty());
+        page.WaitForAssertion(() => Grid(page).Column("minorCode").Should().NotBeEmpty());
         return page;
     }
 
-    private static List<string> Values(IRenderedComponent<Code> page, string testId) =>
-        page.FindAll($"[data-testid={testId}]").Select(e => e.GetAttribute("value") ?? "").ToList();
+    private static DataGridPage<CodeMinorRow> Grid(IRenderedComponent<Code> page) => page.DataGrid<CodeMinorRow, Code>("code-grid");
 
     /// <summary>Languages ko then en; Majors TERMS and UNIT; UNIT holds EA (Each/개) and BOX (Box, not in use, with a name in ja, which is not in use).</summary>
     private sealed class FakeCodeApi : HttpMessageHandler
@@ -255,7 +269,7 @@ public class CodeScreenTests : BunitContext
             var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri.Query);
             if (path == "/" + LocalizationRoutes.Base)
             {
-                return Json(new LocalizationDto("US", "USD", "en", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT", [new("ko", 1), new("en", 2)], [], [], []));
+                return Json(new LocalizationDto("US", "USD", "en", "America/New_York", "SALES_TAX", "MM/dd/yyyy", "DOCUMENT", [new("ko", 1), new("en", 2)], [], [], []));
             }
             if (path == "/" + CodeMajorRoutes.Base)
             {

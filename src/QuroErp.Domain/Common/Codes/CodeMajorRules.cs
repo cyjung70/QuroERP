@@ -18,8 +18,8 @@ public static partial class CodeMajorRules
     /// <summary>SD-BR-904: the Majors that code refers to as constants (Domain CodeMajors). They cannot be deleted or set not in use.</summary>
     public static readonly IReadOnlySet<string> ProtectedMajors = new HashSet<string>(StringComparer.Ordinal)
     {
-        CodeMajors.Grade, CodeMajors.ItemClass, CodeMajors.ItemType, CodeMajors.MovementType, CodeMajors.Plating, CodeMajors.Unit,
-        CodeMajors.ValidFlag,
+        CodeMajors.DisplayOptions, CodeMajors.Grade, CodeMajors.ItemClass, CodeMajors.ItemType, CodeMajors.MovementType, CodeMajors.Plating,
+        CodeMajors.Unit, CodeMajors.ValidFlag,
     };
 
     /// <summary>SD-BR-901: required; upper case letters, digits and _; at most 30 characters.</summary>

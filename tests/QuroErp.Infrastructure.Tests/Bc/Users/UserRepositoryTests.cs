@@ -93,6 +93,23 @@ public class UserRepositoryTests(AuthSchemaFixture db)
         (await TokenVersionAsync(uow.Transaction, id)).Should().Be(version + 1);
     }
 
+    [DatabaseFact, Trait("Id", "CORE-050-IT-12")]
+    public async Task Find_ReturnsTheFourAuditColumns_UpdateChangesOnlyTheUpdatedPair()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IUserRepository>();
+        var roleId = await RoleIdAsync(uow.Transaction, "admin");
+        var id = await repository.InsertAsync("usr.aud", "h", Fields(roleId), "kim", uow.Transaction, None);
+        var before = (await repository.FindAsync(id, forUpdate: true, uow.Transaction, None))!;
+
+        await repository.UpdateAsync(id, Fields(roleId, "N"), false, before.UpdatedAt, "lee", uow.Transaction, None);
+        var after = (await repository.FindAsync(id, forUpdate: false, uow.Transaction, None))!;
+
+        (before.CreatedBy, before.UpdatedBy).Should().Be(("kim", "kim"));
+        before.CreatedAt.Should().NotBe(default);
+        (after.CreatedAt, after.CreatedBy, after.UpdatedBy).Should().Be((before.CreatedAt, "kim", "lee"));
+    }
+
     [DatabaseFact, Trait("Id", "BC-UC-004-IT-05")]
     public async Task UnlockResetAndRevoke_WriteTheirColumns()
     {

@@ -1,0 +1,30 @@
+# BC-UC-026 currencies (TASK-CORE-057). Names per language in use; languages not in use are hidden by the screen.
+screen:
+  id: bc.currency.list
+  module: BC
+  title: Bc.Currency.Title
+  version: 1
+  api: /api/bc/currencies
+  key: id
+  layout: grid
+  perm:
+    read: BC.Read
+    write: BC.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: currencies
+    bind: currencies
+    rowKey: id
+    deletedRows: strike
+    columns[6]{id,label,type,width,edit,req,fmt,source,hidden}:
+      currencyCode,Bc.Currency.CurrencyCode,text,100,new,true,"","",false
+      nameEn,Bc.Currency.NameEn,text,180,true,true,"","",false
+      nameKo,Bc.Currency.NameKo,text,180,true,false,"","",false
+      decimals,Bc.Currency.Decimals,number,90,true,false,N0,"",false
+      countryCode,Bc.Currency.CountryCode,text,90,true,false,"","",false
+      useYn,Bc.Currency.UseYn,checkbox,80,true,false,"","",false

@@ -17,8 +17,11 @@ public interface ILocalizationSettingRepository
     /// <param name="forUpdate">Lock those rows until the transaction ends.</param>
     Task<DateTimeOffset> GetVersionAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Whether a document line of the module (MM, SD) exists.</summary>
-    Task<bool> HasDocumentsAsync(string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>
+    /// The distinct document currencies of the module's (MM, SD) document lines; null for lines of documents without a currency.
+    /// Empty when the module has no document lines.
+    /// </summary>
+    Task<IReadOnlyList<string?>> FindDocumentCurrenciesAsync(string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken);
 
     Task UpdateLanguagesAsync(IReadOnlyList<LanguageUseRow> languages, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken);
 

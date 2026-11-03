@@ -27,12 +27,13 @@ public class LocalizationServiceTests
         dto.TaxMethod.Should().Be("SALES_TAX");
         dto.DateFormat.Should().Be("MM/dd/yyyy");
         dto.TaxCalcMode.Should().Be("DOCUMENT");
+        dto.TimeZone.Should().Be("America/New_York");
     }
 
     [Fact, Trait("Id", "CORE-014-T02")]
     public async Task GetAsync_KrCompany_ReturnsCompanyValuesAndOnlyItemsInUse()
     {
-        _localization.Company = new CompanyLocalizationRow("KR", "KRW", "ko", "LINE");
+        _localization.Company = new CompanyLocalizationRow("KR", "KRW", "ko", "LINE", "Asia/Seoul");
         _localization.Languages[2] = new LanguageRow("sw", 3, false);
         _localization.Currencies[1] = new CurrencyRow(2, "USD", 2, false, "US");
 
@@ -43,6 +44,7 @@ public class LocalizationServiceTests
         dto.DefaultLangCode.Should().Be("ko");
         dto.TaxMethod.Should().Be("VAT");
         dto.DateFormat.Should().Be("yyyy-MM-dd");
+        dto.TimeZone.Should().Be("Asia/Seoul");
         dto.TaxCalcMode.Should().Be("LINE");
         dto.Languages.Should().Equal(new LanguageDto("en", 1), new LanguageDto("ko", 2));
         dto.Currencies.Should().Equal(new CurrencyDto("KRW", "Korean Won", 0, "KR"));

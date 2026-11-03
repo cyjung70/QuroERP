@@ -49,6 +49,7 @@ public sealed partial class WebFactory : WebApplicationFactory<Program>
         {
             services.AddHttpClient<AuthApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeApiHandler(this));
             services.AddHttpClient<CompanyApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
+            services.AddHttpClient<BusinessPlaceApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
             services.AddHttpClient<InventorySettingApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
             services.AddHttpClient<AuthSettingApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));
             services.AddHttpClient<CodeApiClient>().ConfigurePrimaryHttpMessageHandler(() => new FakeBusinessApiHandler(this));

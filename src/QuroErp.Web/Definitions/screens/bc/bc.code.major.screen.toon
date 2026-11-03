@@ -1,0 +1,29 @@
+# BC-UC-023 Major codes (TASK-CORE-057). Names per language in use.
+screen:
+  id: bc.code.major
+  module: BC
+  title: Bc.CodeMajor.Title
+  version: 1
+  api: /api/sys/code-majors
+  key: id
+  layout: grid
+  perm:
+    read: BC.Read
+    write: BC.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: majorCodes
+    bind: majorCodes
+    rowKey: id
+    deletedRows: strike
+    columns[5]{id,label,type,width,edit,req,fmt,source,hidden}:
+      majorCode,Bc.CodeMajor.MajorCode,text,140,new,true,"","",false
+      nameEn,Bc.CodeMajor.NameEn,text,180,true,true,"","",false
+      nameKo,Bc.CodeMajor.NameKo,text,180,true,false,"","",false
+      useYn,Bc.CodeMajor.UseYn,checkbox,80,true,false,"","",false
+      minorCount,Bc.CodeMajor.MinorCount,number,90,false,false,N0,"",false

@@ -71,7 +71,8 @@ public static class WebAuthentication
     /// <summary>Api 주소 설정 키.</summary>
     public const string ApiBaseUrlKey = "QuroApi:BaseUrl";
 
-    public static IServiceCollection AddWebAuthentication(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddWebAuthentication(this IServiceCollection services, IConfiguration configuration,
+        bool allowDevelopmentHttp = false)
     {
         var apiBaseUrl = configuration[ApiBaseUrlKey]
             ?? throw new InvalidOperationException($"설정 {ApiBaseUrlKey}가 없다. appsettings나 환경변수 QuroApi__BaseUrl로 설정한다.");
@@ -87,7 +88,7 @@ public static class WebAuthentication
                 o.LoginPath = LoginPath;
                 o.Cookie.Name = "QuroErp.Session";
                 o.Cookie.HttpOnly = true;
-                o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                o.Cookie.SecurePolicy = allowDevelopmentHttp ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
                 o.Cookie.SameSite = SameSiteMode.Lax;
                 o.ExpireTimeSpan = TimeSpan.FromHours(8); // [추정] 사용하지 않으면 8시간 뒤 세션 종료
                 o.SlidingExpiration = true;

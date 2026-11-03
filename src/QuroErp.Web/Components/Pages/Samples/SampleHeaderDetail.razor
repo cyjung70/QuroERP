@@ -4,7 +4,8 @@
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 
-@* Screen type SM sample (TASK-CORE-006). Development only, in-memory data. *@
+@* Screen type SM sample (TASK-CORE-006); lines on the package grid over samples.order.entry.screen.toon (TASK-CORE-056).
+   Development only, in-memory data. *@
 
 <PageTitle>@L["Samples.HeaderDetail.Title"]</PageTitle>
 
@@ -13,27 +14,22 @@
     <QuroHeaderDetail THeader="SampleOrder" TLine="SampleLine" Title="@L["Samples.HeaderDetail.Title"]" TestId="header-detail"
                       Find="k => Task.FromResult(_store.FindOrders(k))" Load="LoadAsync" DocumentNo="o => o.OrderNo"
                       Create="() => new SampleOrder()" CreateLine="_ => new SampleLine { Qty = 1 }"
-                      Save="SaveAsync" Delete="order => { _store.DeleteOrder(order.Id); return Task.CompletedTask; }">
+                      Save="SaveAsync" Delete="order => { _store.DeleteOrder(order.Id); return Task.CompletedTask; }"
+                      Definition="samples.order.entry" Lookup="LookupItems" UpperCaseFields="UpperCase">
         <FindColumns>
             <QuroColumn TRow="SampleOrder" Title="@L["Samples.OrderNo"]" Value="o => o.OrderNo" />
             <QuroColumn TRow="SampleOrder" Title="@L["Samples.OrderDt"]" Value="o => o.OrderDt" />
         </FindColumns>
         <HeaderFields Context="order">
-            <QuroText Label="@L["Samples.OrderNo"]" @bind-Value="order.OrderNo" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="header-detail-header-order-no" />
-            <QuroDate Label="@L["Samples.OrderDt"]" @bind-Value="order.OrderDt" Required TestId="header-detail-header-order-dt" />
+            <QuroText Label="@L["Samples.OrderNo"]" Field="OrderNo" LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="header-detail-header-order-no" />
+            <QuroDate Label="@L["Samples.OrderDt"]" Field="OrderDt" Required TestId="header-detail-header-order-dt" />
         </HeaderFields>
-        <LineColumns>
-            <QuroColumn TRow="SampleLine" Title="@L["Samples.Item"]" Value="l => l.ItemCode" Context="line">
-                <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" Required TextCase="TextCase.Upper" TestId="header-detail-line-item-code" />
-            </QuroColumn>
-            <QuroColumn TRow="SampleLine" Title="@L["Samples.Qty"]" Value="l => l.Qty" Format="N2" Context="line">
-                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" Required TestId="header-detail-line-qty" />
-            </QuroColumn>
-        </LineColumns>
     </QuroHeaderDetail>
 }
 
 @code {
+    private static readonly string[] UpperCase = ["itemCode"];
+
     private SampleStore? _store;
 
     protected override void OnInitialized()
@@ -54,4 +50,6 @@
         var saved = _store!.SaveOrder(order, lines.Added, lines.Updated, lines.Deleted);
         return Task.FromResult(new HeaderLines<SampleOrder, SampleLine>(saved.Order, saved.Lines));
     }
+    // The sampleItem lookup of the item code cells. A real screen calls the item API
+    private Task<IReadOnlyList<LookupRow>> LookupItems(LookupQuery query) => Task.FromResult(SampleLookups.Items(_store!, query));
 }

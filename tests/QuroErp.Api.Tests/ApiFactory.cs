@@ -6,11 +6,17 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using QuroErp.Application.Bc.BusinessPlaces;
 using QuroErp.Application.Bc.Codes;
 using QuroErp.Application.Bc.Companies;
+using QuroErp.Application.Bc.FieldPolicies;
+using QuroErp.Contracts.Bc.FieldPolicies;
+using QuroErp.Domain.Bc.FieldPolicies;
+using QuroErp.Contracts.Bc.BusinessPlaces;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Api.Tests.Bc.Localization;
+using QuroErp.Api.Tests.Bc.Tax;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Api.Tests.Bc.Codes;
 using QuroErp.Api.Tests.Bc.Menus;
@@ -25,8 +31,10 @@ using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
+using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Domain.Bc.Companies;
 using QuroErp.Domain.Bc.Items;
@@ -79,6 +87,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Company logo state; there is one company and no logo at start.</summary>
     public InMemoryCompanyRepository Companies { get; } = new();
 
+    /// <summary>The default business place MAIN (BC-BR-319) with a valid KR registration number.</summary>
+    public InMemoryBusinessPlaceRepository BusinessPlaces { get; } = new();
+
+    /// <summary>Field policy company overrides (bc_field_policy); none at start. The country packs are the built-in ones.</summary>
+    public InMemoryFieldPolicyRepository FieldPolicies { get; } = new();
+
     /// <summary>Localization state: a KR company (default language ko), languages en/ko (sw off), KRW and USD.</summary>
     public InMemoryLocalizationRepository Localization { get; } = new();
 
@@ -107,6 +121,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     /// <summary>Currencies of currency management (BC-UC-026). Their names come through the translation fake.</summary>
     public InMemoryCurrencyRepository Currencies { get; } = new();
+
+    public InMemoryExchangeRateRepository ExchangeRates { get; } = new();
+
+    public InMemoryTaxCodeRepository TaxCodes { get; } = new();
+
+    public InMemoryTaxAreaRepository TaxAreas { get; } = new();
 
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
@@ -145,8 +165,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IPasswordHistoryRepository>(PasswordHistory);
             services.AddSingleton<IUserLoginLogRepository>(new FakeUserLoginLogRepository(LoginLogs));
             services.AddSingleton<ICodeRepository, FakeCodeRepository>();
-            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors, Currencies));
+            services.AddSingleton<ITranslationRepository>(new FakeTranslationRepository(CodeMinors, CodeMajors, Currencies, TaxCodes));
             services.AddSingleton<ICompanyRepository>(Companies);
+            services.AddSingleton<IBusinessPlaceRepository>(BusinessPlaces);
+            services.AddSingleton<IFieldPolicyRepository>(FieldPolicies);
             services.AddSingleton<ILocalizationRepository>(Localization);
             services.AddSingleton<ILocalizationSettingRepository>(LocalizationSettings);
             services.AddSingleton<IInventorySettingRepository>(InventorySettings);
@@ -157,6 +179,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ICodeMinorRepository>(CodeMinors);
             services.AddSingleton<ICodeMajorRepository>(CodeMajors);
             services.AddSingleton<ICurrencyRepository>(Currencies);
+            services.AddSingleton<IExchangeRateRepository>(ExchangeRates);
+            services.AddSingleton<ITaxCodeRepository>(TaxCodes);
+            services.AddSingleton<ITaxAreaRepository>(TaxAreas);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
@@ -223,7 +248,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
 
         public Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<AuthMenu>>([new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y")]);
+            Task.FromResult<IReadOnlyList<AuthMenu>>([new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y", "P")]);
+
+        public Task<string?> FindCompanyNameAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>("Quro Test Co.");
 
         public Task<AuthWarehouse?> FindDefaultWarehouseAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<AuthWarehouse?>(new AuthWarehouse(1, "W01", "Main"));
@@ -344,7 +372,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
     }
 
-    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE.</summary>
+    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE, DISPLAY_OPTIONS.</summary>
     private sealed class FakeCodeRepository : ICodeRepository
     {
         private static readonly List<CodeMinorRow> ValidFlag = [new(1, "Y", 10), new(2, "N", 20), new(3, "S", 30)];
@@ -353,8 +381,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         {
             ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"],
             ["UNIT"] = ["EA", "PCS"],
-            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2"],
+            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2", "ZZAUD1", "ZZAUD2", "ZZBC1", "ZZBC2", "ZZBC3", "ZZBC4", "ZZBC5"],
             ["GRADE"] = ["A01"],
+            ["DISPLAY_OPTIONS"] = ["Y", "N", "ALL"],
+            ["STATE"] = ["CA", "NY"],
         };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(
@@ -368,7 +398,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     }
 
     private sealed class FakeTranslationRepository(
-        InMemoryCodeMinorRepository codeMinors, InMemoryCodeMajorRepository codeMajors, InMemoryCurrencyRepository currencies) : ITranslationRepository
+        InMemoryCodeMinorRepository codeMinors, InMemoryCodeMajorRepository codeMajors, InMemoryCurrencyRepository currencies,
+        InMemoryTaxCodeRepository taxCodes) : ITranslationRepository
     {
         private static readonly List<TranslationRow> Rows =
         [
@@ -382,6 +413,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 .Concat(target == TranslationTarget.CodeMinor ? codeMinors.NamesOf(ownerIds) : [])
                 .Concat(target == TranslationTarget.CodeMajor ? codeMajors.NamesOf(ownerIds) : [])
                 .Concat(target == TranslationTarget.CurrencyName ? currencies.NamesOf(ownerIds) : [])
+                .Concat(target == TranslationTarget.TaxCodeName ? taxCodes.NamesOf(ownerIds) : [])
                 .ToList());
     }
 
@@ -397,7 +429,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public static readonly DateTimeOffset Created = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
         public CompanyDto? Company { get; set; } = new(
-            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "WITH_SHIPMENT", false, Created);
+            "Quro", null, null, null, null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Created, "setup", Created, "setup");
 
         public CompanyLogoRow? Logo { get; set; }
 
@@ -418,9 +450,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 return Task.FromResult(false);
             }
             Company = new CompanyDto(
-                fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.RegisterNo, fields.Represent,
-                fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!,
-                fields.BillingMode!, false, Company.UpdatedAt.AddMinutes(1));
+                fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.Represent, fields.Email,
+                fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!, fields.TimeZone!,
+                fields.BillingMode!, false, Company.CreatedAt, Company.CreatedBy, Company.UpdatedAt.AddMinutes(1), updatedBy);
             UpdatedBy = updatedBy;
             return Task.FromResult(true);
         }
@@ -448,9 +480,83 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
     }
 
+    public sealed class InMemoryFieldPolicyRepository : IFieldPolicyRepository
+    {
+        public static readonly DateTimeOffset Saved = new(2026, 11, 1, 0, 0, 0, TimeSpan.Zero);
+
+        public List<FieldPolicyOverrideDto> Rows { get; } = [];
+
+        public Task<IReadOnlyList<FieldPolicyOverrideDto>> FindAllAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<FieldPolicyOverrideDto>>([.. Rows.OrderBy(r => r.FieldKey, StringComparer.Ordinal)]);
+
+        public Task UpsertAsync(string fieldKey, FieldPolicyEntry entry, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            Rows.RemoveAll(r => r.FieldKey == fieldKey);
+            Rows.Add(new(Rows.Count + 1, fieldKey, entry.State, entry.DefaultValue, entry.LabelKey, Saved, updatedBy));
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(IReadOnlyCollection<string> fieldKeys, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            Rows.RemoveAll(r => fieldKeys.Contains(r.FieldKey));
+            return Task.CompletedTask;
+        }
+    }
+
+    public sealed class InMemoryBusinessPlaceRepository : IBusinessPlaceRepository
+    {
+        public static readonly DateTimeOffset Created = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
+
+        public List<BusinessPlaceDto> Places { get; } =
+        [
+            new(1, "MAIN", "Quro", true, "2208162517", null, null, null, null, null, null, null, null, null, null, true,
+                Created, "system", Created, "system"),
+        ];
+
+        public Task<IReadOnlyList<BusinessPlaceDto>> ListAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<BusinessPlaceDto>>(Places.ToList());
+
+        public Task<BusinessPlaceDto?> FindAsync(long id, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Places.SingleOrDefault(p => p.Id == id));
+
+        public Task<bool> UpdateAsync(
+            long id, BusinessPlaceFields fields, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction,
+            CancellationToken cancellationToken)
+        {
+            var index = Places.FindIndex(p => p.Id == id && p.UpdatedAt == expectedUpdatedAt);
+            if (index < 0)
+            {
+                return Task.FromResult(false);
+            }
+            var place = Places[index];
+            Places[index] = place with
+            {
+                BusinessPlaceName = fields.BusinessPlaceName!,
+                BusinessRegNo = fields.BusinessRegNo,
+                SubBusinessNo = fields.SubBusinessNo,
+                CeoName = fields.CeoName,
+                BusinessType = fields.BusinessType,
+                BusinessItem = fields.BusinessItem,
+                Addr1 = fields.Addr1,
+                Addr2 = fields.Addr2,
+                City = fields.City,
+                State = fields.State,
+                ZipCode = fields.ZipCode,
+                TelNo = fields.TelNo,
+                UseYn = fields.UseYn,
+                UpdatedAt = place.UpdatedAt.AddMinutes(1),
+                UpdatedBy = updatedBy,
+            };
+            return Task.FromResult(true);
+        }
+
+        public Task<long?> FindDefaultIdAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Places.FirstOrDefault(p => p.IsDefault)?.Id);
+    }
+
     public sealed class InMemoryLocalizationRepository : ILocalizationRepository
     {
-        public CompanyLocalizationRow? Company { get; set; } = new("KR", "KRW", "ko", "DOCUMENT");
+        public CompanyLocalizationRow? Company { get; set; } = new("KR", "KRW", "ko", "DOCUMENT", "Asia/Seoul");
 
         public List<LanguageRow> Languages { get; } = [new("en", 1, true), new("ko", 2, true), new("sw", 3, false)];
 
@@ -481,13 +587,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         public DateTimeOffset Version { get; private set; } = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
-        public HashSet<string> ModulesWithDocuments { get; } = [];
+        public Dictionary<string, IReadOnlyList<string?>> DocumentCurrencies { get; } = [];
 
         public Task<DateTimeOffset> GetVersionAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(Version);
 
-        public Task<bool> HasDocumentsAsync(string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(ModulesWithDocuments.Contains(moduleCode));
+        public Task<IReadOnlyList<string?>> FindDocumentCurrenciesAsync(
+            string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(DocumentCurrencies.GetValueOrDefault(moduleCode) ?? []);
 
         public Task UpdateLanguagesAsync(IReadOnlyList<LanguageUseRow> languages, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
         {
@@ -582,7 +689,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         public Task<long> InsertAsync(Item item, string createdBy, IDbTransaction transaction, CancellationToken cancellationToken)
         {
             var id = Interlocked.Increment(ref _nextId);
-            _rows[id] = ToRow(id, item, new DateTimeOffset(2026, 10, 29, 0, 0, 0, TimeSpan.Zero));
+            var created = new DateTimeOffset(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
+            _rows[id] = ToRow(id, item, created, createdBy, created, createdBy);
             return Task.FromResult(id);
         }
 
@@ -593,7 +701,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             {
                 return Task.FromResult(false);
             }
-            _rows[item.Id] = ToRow(item.Id, item, row.UpdatedAt.AddSeconds(1));
+            _rows[item.Id] = ToRow(item.Id, item, row.CreatedAt, row.CreatedBy, row.UpdatedAt.AddSeconds(1), updatedBy);
             return Task.FromResult(true);
         }
 
@@ -613,6 +721,31 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         public Task<bool> DeleteAsync(long id, DateTimeOffset expectedUpdatedAt, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult(_rows.TryGetValue(id, out var row) && row.UpdatedAt == expectedUpdatedAt && _rows.TryRemove(id, out _));
+
+        public Task<IReadOnlyList<ItemBarcodeRow>> ListForBarcodeAsync(
+            string itemClass, string? validFlag, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ItemBarcodeRow>>(_rows.Values
+                .Where(r => r.ItemClass == itemClass && (validFlag is null || r.ValidFlag == validFlag))
+                .OrderBy(r => r.ItemCd, StringComparer.Ordinal)
+                .Select(r => new ItemBarcodeRow(r.Id, r.ItemCd, r.ItemName, r.SoUsdPrc, r.UpcCode))
+                .ToList());
+
+        public Task<IReadOnlyList<ItemBarcodeOwner>> FindBarcodeOwnersAsync(
+            IReadOnlyCollection<string> upcCodes, IReadOnlyCollection<long> exceptIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ItemBarcodeOwner>>(_rows.Values
+                .Where(r => r.UpcCode is not null && upcCodes.Contains(r.UpcCode) && !exceptIds.Contains(r.Id))
+                .Select(r => new ItemBarcodeOwner(r.UpcCode!, r.ItemCd))
+                .ToList());
+
+        public Task SaveBarcodesAsync(
+            IReadOnlyList<(long Id, string UpcCode)> barcodes, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            foreach (var (id, upcCode) in barcodes)
+            {
+                _rows[id] = _rows[id] with { UpcCode = upcCode, UpdatedAt = _rows[id].UpdatedAt.AddSeconds(1) };
+            }
+            return Task.CompletedTask;
+        }
 
         /// <summary>Stored images by item code.</summary>
         public ConcurrentDictionary<string, byte[]> Images { get; } = new();
@@ -649,13 +782,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             return Task.FromResult(true);
         }
 
-        private static ItemRow ToRow(long id, Item item, DateTimeOffset updatedAt)
+        private static ItemRow ToRow(
+            long id, Item item, DateTimeOffset createdAt, string createdBy, DateTimeOffset updatedAt, string updatedBy)
         {
             var f = item.Fields;
             return new ItemRow(
                 id, item.ItemCd, f.ItemName, f.ItemName2, f.ItemDesc, f.ItemType, f.Unit, f.ItemClass, f.ValidFlag, f.UsdPrc, f.SoUsdPrc,
                 f.UpcCode, f.Location, f.ReorderPoint, f.Memo1, f.Memo2, f.Memo3, f.Memo4, f.Memo5, f.ItemGrade, f.Taxable ?? true,
-                f.VatKind ?? Item.VatTaxable, item.Plating, item.ItemGroupCd, item.MvgCost, item.OnhandQty, item.StkVal, updatedAt);
+                f.VatKind ?? Item.VatTaxable, item.Plating, item.ItemGroupCd, item.MvgCost, item.OnhandQty, item.StkVal,
+                createdAt, createdBy, updatedAt, updatedBy);
         }
     }
 

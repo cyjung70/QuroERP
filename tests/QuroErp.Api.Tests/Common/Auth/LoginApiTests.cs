@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using QuroErp.Contracts.Common.Auth;
@@ -93,8 +94,23 @@ public class LoginApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var me = await client.GetFromJsonAsync<MeResponse>(AuthRoutes.Me);
 
         me!.UserId.Should().Be(ApiFactory.UserId);
-        me.Menus.Should().ContainSingle().Which.MenuCode.Should().Be("BC01");
+        me.Menus.Should().ContainSingle().Which.Should().BeEquivalentTo(new { MenuCode = "BC01", Type = "P" });
         me.DefaultWarehouse!.WarehouseCode.Should().Be("W01");
+        me.CompanyName.Should().Be("Quro Test Co.");
+    }
+
+    [Fact, Trait("Id", "CORE-044-T01")]
+    public async Task Me_SignedIn_HasNoRoleName()
+    {
+        var client = factory.CreateClient();
+        var login = await LoginAsync(client, new LoginRequest(ApiFactory.UserId, ApiFactory.Password));
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.AccessToken);
+
+        // The role name is a Web resource (Role.<role_code>), not part of the response (app-shell.md 5)
+        using var me = JsonDocument.Parse(await client.GetStringAsync(AuthRoutes.Me));
+
+        me.RootElement.TryGetProperty("roleName", out _).Should().BeFalse();
+        me.RootElement.GetProperty("roleCode").GetString().Should().NotBeNullOrEmpty();
     }
 
     [Fact, Trait("Id", "BC-UC-001-T19")]

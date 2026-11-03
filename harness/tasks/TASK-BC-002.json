@@ -1,12 +1,12 @@
 {
   "id": "TASK-BC-002",
   "project": "core",
-  "title": "로그인 화면 (S)",
+  "title": "로그인 화면 (F)",
   "module": "BC",
   "layer": [
     "Blazor"
   ],
-  "screenType": "S",
+  "screenType": "F",
   "specs": [
     "docs/specifications/BC/login.md"
   ],

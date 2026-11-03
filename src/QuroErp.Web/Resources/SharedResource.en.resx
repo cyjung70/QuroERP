@@ -9,8 +9,6 @@
   <data name="Bc.Login.Password" xml:space="preserve"><value>Password</value></data>
   <data name="Bc.Login.Submit" xml:space="preserve"><value>Sign in</value></data>
   <data name="Bc.Login.Copyright" xml:space="preserve"><value>© 2026 QuroSYS Co., Ltd. All Rights Reserved.</value></data>
-  <data name="Bc.Login.Product" xml:space="preserve"><value>QuroERP</value></data>
-  <data name="Bc.Login.Tagline" xml:space="preserve"><value>Purchasing, sales and inventory in one place</value></data>
   <data name="Common.Logout" xml:space="preserve"><value>Sign out</value></data>
   <data name="Common.Language" xml:space="preserve"><value>Language</value></data>
   <data name="Common.Language.ko" xml:space="preserve"><value>한국어</value></data>
@@ -48,6 +46,18 @@
   <data name="MM-E-002" xml:space="preserve"><value>{0} is in a closed month (closed through {1}), so stock movements cannot be saved.</value></data>
   <data name="MM-E-606" xml:space="preserve"><value>The stock movement quantity does not match its type, or the movement is already cancelled. Type: {0}, quantity: {1}</value></data>
   <data name="MM-E-009" xml:space="preserve"><value>Item {0} in warehouse {1} would have {3} on {2}, below zero, so the movement cannot be saved.</value></data>
+  <data name="MM-E-011" xml:space="preserve"><value>Line {0}: quantity must be greater than 0.</value></data>
+  <data name="MM-E-012" xml:space="preserve"><value>Line {0}: unit price cannot be 0.</value></data>
+  <data name="MM-E-013" xml:space="preserve"><value>Purchase order {0} cannot be changed or deleted. Only draft or approved orders with nothing received can.</value></data>
+  <data name="MM-E-014" xml:space="preserve"><value>Line {0}: the item does not exist or is not an inventory or service item.</value></data>
+  <data name="MM-E-019" xml:space="preserve"><value>The purchase order status cannot change from {0} to {1}.</value></data>
+  <data name="MM-E-020" xml:space="preserve"><value>Purchase order {0} cannot be approved. Only drafts with lines can.</value></data>
+  <data name="MM-E-022" xml:space="preserve"><value>Purchase order {0} cannot be closed. Only approved or partially received orders can.</value></data>
+  <data name="MM-E-023" xml:space="preserve"><value>Purchase order {0} cannot be cancelled. Only approved orders with nothing received can; delete a draft instead.</value></data>
+  <data name="MM-E-025" xml:space="preserve"><value>Line {0}: discount rate must be between 0 and 100.</value></data>
+  <data name="MM-E-026" xml:space="preserve"><value>Line {0}: due date {1} is before the PO date. Line 0 is the header.</value></data>
+  <data name="MM-E-027" xml:space="preserve"><value>Incoterms '{0}' is not valid. Choose an Incoterms 2020 code (EXW, FCA, FAS, FOB, CFR, CIF, CPT, CIP, DAP, DPU, DDP).</value></data>
+  <data name="MM-E-031" xml:space="preserve"><value>Currency {0} with rate {1} cannot be used. The rate must be above 0 and 1 for the base currency, and the currency cannot change once the order has lines.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>Item {0} in warehouse {1} would end month {2} at {3}, below zero, so the movement cannot be saved.</value></data>
   <data name="SD-E-006" xml:space="preserve"><value>All document numbers for {0} are used, so no more documents can be saved.</value></data>
   <data name="Common.Search" xml:space="preserve"><value>Search</value></data>
@@ -60,6 +70,10 @@
   <data name="Common.AddRow" xml:space="preserve"><value>Add Row</value></data>
   <data name="Common.DeleteRow" xml:space="preserve"><value>Delete Row</value></data>
   <data name="Common.RestoreRow" xml:space="preserve"><value>Restore</value></data>
+  <data name="Common.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Common.CodeNotFound" xml:space="preserve"><value>The code does not exist.</value></data>
+  <data name="Common.SelectPartnerFirst" xml:space="preserve"><value>Select the partner first.</value></data>
+  <data name="Common.PasteSkipped" xml:space="preserve"><value>{0} cell(s) were not pasted (read-only or not a valid value).</value></data>
   <data name="Common.Select" xml:space="preserve"><value>Select</value></data>
   <data name="Common.UndoRow" xml:space="preserve"><value>Undo</value></data>
   <data name="Common.Keyword" xml:space="preserve"><value>Keyword</value></data>
@@ -114,6 +128,11 @@
   <data name="Samples.Amount" xml:space="preserve"><value>Amount</value></data>
   <data name="Samples.TotalAmt" xml:space="preserve"><value>Total Amount</value></data>
   <data name="Samples.Path" xml:space="preserve"><value>Samples > Purchasing</value></data>
+  <data name="Samples.Menu" xml:space="preserve"><value>Samples</value></data>
+  <data name="Samples.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Samples.Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="Samples.Deactivate" xml:space="preserve"><value>Deactivate</value></data>
+  <data name="Samples.Activate" xml:space="preserve"><value>Activate</value></data>
   <data name="Samples.Status" xml:space="preserve"><value>Status</value></data>
   <data name="Samples.PoStatus.DR" xml:space="preserve"><value>Draft</value></data>
   <data name="Samples.PoStatus.AP" xml:space="preserve"><value>Approved</value></data>
@@ -127,15 +146,30 @@
   <data name="BC-E-403" xml:space="preserve"><value>Language '{0}' is the company default language and must stay in use.</value></data>
   <data name="BC-E-411" xml:space="preserve"><value>Currency '{0}' is not valid. Use 3 upper-case letters and 0 to 4 decimals.</value></data>
   <data name="BC-E-412" xml:space="preserve"><value>Currency '{0}' is not in use.</value></data>
+  <data name="BC-E-416" xml:space="preserve"><value>Currency '{0}' is the base currency or is used by documents or partners, so it cannot be deleted. Set it not in use instead.</value></data>
   <data name="BC-E-404" xml:space="preserve"><value>Enter the English (en) name of '{0}'.</value></data>
+  <data name="BC-E-501" xml:space="preserve"><value>Tax code '{0}' is empty, is not up to 10 upper-case letters or digits, or already exists.</value></data>
+  <data name="BC-E-502" xml:space="preserve"><value>The tax kind of tax code '{0}' cannot be used in the company country.</value></data>
+  <data name="BC-E-503" xml:space="preserve"><value>The rate of tax code '{0}' is not valid. A rate is 0 or more and under 100 with up to 4 decimals, and Sales Tax needs a tax area.</value></data>
+  <data name="BC-E-504" xml:space="preserve"><value>Tax code '{0}': price included can be chosen only for standard VAT (VAT_STANDARD).</value></data>
+  <data name="BC-E-505" xml:space="preserve"><value>Tax code '{0}' cannot be deleted, set not in use, or given another code or kind.</value></data>
+  <data name="BC-E-506" xml:space="preserve"><value>Tax code '{0}' is used by documents or partners, so it cannot be deleted and its rate or kind cannot change. Set it not in use, or create a new code.</value></data>
   <data name="BC-E-428" xml:space="preserve"><value>The country of currency '{0}' is not valid. Use 2 upper-case letters or leave it empty. The country of a currency that documents use cannot change.</value></data>
   <data name="BC-E-422" xml:space="preserve"><value>{0} decimals are out of range. Unit price allows 0 to 6, quantity 0 to 4.</value></data>
   <data name="BC-E-423" xml:space="preserve"><value>{0} allows up to {1} decimal places.</value></data>
   <data name="BC-E-424" xml:space="preserve"><value>Rounding mode '{0}' is not valid. Choose HALF_UP or DOWN.</value></data>
   <data name="BC-E-425" xml:space="preserve"><value>{0} decimals cannot be reduced because documents already use them.</value></data>
+  <data name="BC-E-432" xml:space="preserve"><value>{0} is required.</value></data>
+  <data name="BC-E-433" xml:space="preserve"><value>The field policy for {0} is not allowed. Use a field of the screen, a state of HIDDEN, OPTIONAL, REQUIRED or READONLY and a valid default; a required business field cannot be hidden.</value></data>
+  <data name="BC-E-436" xml:space="preserve"><value>{0} is not a field the country pack declares, so it cannot be saved.</value></data>
   <data name="quro.validation.required" xml:space="preserve"><value>This field is required. Enter a value.</value></data>
   <data name="quro.validation.min" xml:space="preserve"><value>Enter a value at or above the minimum.</value></data>
   <data name="quro.validation.max" xml:space="preserve"><value>Enter a value at or below the maximum.</value></data>
+  <data name="BC-E-511" xml:space="preserve"><value>Tax area '{0}' cannot be saved or deleted. The code must be up to 20 characters and not used by another area, and a name and a state are required. An area that tax codes use cannot be deleted.</value></data>
+  <data name="BC-E-512" xml:space="preserve"><value>The rate line {1} of tax area '{0}' is not valid. It needs a start date and a rate of 0 or more and under 100 with up to 4 decimals, and a start date can have only one line.</value></data>
+  <data name="BC-E-513" xml:space="preserve"><value>Tax code '{0}' has no rate valid on {1}. Add a tax area rate starting on or before that date.</value></data>
+  <data name="BC-E-521" xml:space="preserve"><value>Business registration number '{0}' is not valid. It must be 10 digits with a correct check digit.</value></data>
+  <data name="BC-W-525" xml:space="preserve"><value>The exemption certificate for this state has expired, so the customer's default tax code is used.</value></data>
   <data name="quro.validation.minExclusive" xml:space="preserve"><value>Enter a value greater than the minimum.</value></data>
   <data name="quro.validation.maxExclusive" xml:space="preserve"><value>Enter a value less than the maximum.</value></data>
   <data name="quro.validation.notEqual" xml:space="preserve"><value>This value is not allowed.</value></data>
@@ -168,6 +202,9 @@
   <data name="MM-E-809" xml:space="preserve"><value>Item {0} is not in use and cannot be selected.</value></data>
   <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
   <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
+  <data name="MM-E-901" xml:space="preserve"><value>Price group {0} / item {1}: a price group is up to 5 uppercase characters, and each item appears once in it.</value></data>
+  <data name="MM-E-902" xml:space="preserve"><value>Item {0} does not exist, is not an inventory item, or is not in use.</value></data>
+  <data name="MM-E-903" xml:space="preserve"><value>The purchase price of item {0} must be above 0.</value></data>
   <data name="Bc.Item.Title" xml:space="preserve"><value>Item Master</value></data>
   <data name="Bc.Item.ItemCd" xml:space="preserve"><value>Item Code</value></data>
   <data name="Bc.Item.ItemName" xml:space="preserve"><value>Item Name</value></data>
@@ -195,6 +232,27 @@
   <data name="Bc.Item.Memo4" xml:space="preserve"><value>Memo 4</value></data>
   <data name="Bc.Item.Memo5" xml:space="preserve"><value>Memo 5</value></data>
   <data name="Bc.Item.FindItem" xml:space="preserve"><value>Find Item</value></data>
+  <data name="Bc.Item.Image" xml:space="preserve"><value>Image</value></data>
+  <data name="Bc.ItemImageUpload.Title" xml:space="preserve"><value>Item Image Upload</value></data>
+  <data name="Bc.ItemImageUpload.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Bc.ItemImageUpload.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Bc.ItemImageUpload.Image" xml:space="preserve"><value>Item Image</value></data>
+  <data name="Bc.ItemImageUpload.Image.None" xml:space="preserve"><value>No image.</value></data>
+  <data name="Bc.ItemImageUpload.File" xml:space="preserve"><value>Image File</value></data>
+  <data name="Bc.ItemImageUpload.Hint" xml:space="preserve"><value>JPEG, 10 MB or less. Saving replaces the current image. Without an item image, the item group image is shown.</value></data>
+  <data name="Bc.ItemImageUpload.Delete" xml:space="preserve"><value>Delete Image</value></data>
+  <data name="Bc.ItemImageUpload.ConfirmDelete" xml:space="preserve"><value>Delete the item image? The item group image is shown if there is one.</value></data>
+  <data name="Bc.ItemBarcode.Title" xml:space="preserve"><value>Item Barcode</value></data>
+  <data name="Bc.ItemBarcode.ItemClass" xml:space="preserve"><value>Item Class</value></data>
+  <data name="Bc.ItemBarcode.ValidFlag" xml:space="preserve"><value>Valid Flag</value></data>
+  <data name="Bc.ItemBarcode.StartNo" xml:space="preserve"><value>Start No.</value></data>
+  <data name="Bc.ItemBarcode.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Bc.ItemBarcode.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Bc.ItemBarcode.SoUsdPrc" xml:space="preserve"><value>Sales Price</value></data>
+  <data name="Bc.ItemBarcode.UpcCode" xml:space="preserve"><value>Bar Code</value></data>
+  <data name="Bc.ItemBarcode.Generate" xml:space="preserve"><value>Generate Barcodes</value></data>
+  <data name="Bc.ItemBarcode.ConfirmGenerate" xml:space="preserve"><value>Of {0} selected items, {1} already have a barcode, which will be overwritten. Assign {2} to {3} in item code order?</value></data>
+  <data name="Bc.ItemBarcode.Generated" xml:space="preserve"><value>Generated {0} barcodes.</value></data>
   <data name="Bc.ChangePassword.Title" xml:space="preserve"><value>Change Password</value></data>
   <data name="Bc.ChangePassword.CurrentPassword" xml:space="preserve"><value>Current Password</value></data>
   <data name="Bc.ChangePassword.NewPassword" xml:space="preserve"><value>New Password</value></data>
@@ -234,10 +292,12 @@
   <data name="Bc.Login.Submitting" xml:space="preserve"><value>Signing in…</value></data>
   <data name="Bc.Login.ForgotPassword" xml:space="preserve"><value>Forgot your password? Please contact your administrator.</value></data>
   <data name="Bc.Login.Version" xml:space="preserve"><value>QuroERP {0} · Open source license LGPL-3.0</value></data>
+  <data name="Bc.Login.ProductName" xml:space="preserve"><value>QuroERP</value></data>
+  <data name="Bc.Login.Tagline" xml:space="preserve"><value>A Modern, .NET-Based, Open-Source ERP Platform Built for the World.</value></data>
+  <data name="Bc.Login.Edition" xml:space="preserve"><value>Community Edition · MM · SD</value></data>
   <data name="Common.LastLogin" xml:space="preserve"><value>Last sign-in: {0} (IP {1})</value></data>
   <data name="Common.Session.ExpiringSoon" xml:space="preserve"><value>You will be signed out in 2 minutes due to inactivity. Choose Stay signed in to continue.</value></data>
   <data name="Common.Session.Extend" xml:space="preserve"><value>Stay signed in</value></data>
-  <data name="Common.Home.Welcome" xml:space="preserve"><value>Welcome, {0}.</value></data>
   <data name="Common.UserMenu" xml:space="preserve"><value>User menu</value></data>
   <data name="Common.MyInfo" xml:space="preserve"><value>My info</value></data>
   <data name="Bc.User.Title" xml:space="preserve"><value>User Management</value></data>
@@ -286,6 +346,7 @@
   <data name="Bc.CompanyMenu.Title" xml:space="preserve"><value>Company Menus</value></data>
   <data name="Bc.CompanyMenu.MenuCode" xml:space="preserve"><value>Menu ID</value></data>
   <data name="Bc.CompanyMenu.Name" xml:space="preserve"><value>Menu Name</value></data>
+  <data name="Bc.CompanyMenu.DisplayName" xml:space="preserve"><value>Display Name</value></data>
   <data name="Bc.CompanyMenu.Type" xml:space="preserve"><value>Type</value></data>
   <data name="Bc.CompanyMenu.ProgramId" xml:space="preserve"><value>Program ID</value></data>
   <data name="Bc.CompanyMenu.Module" xml:space="preserve"><value>Module</value></data>
@@ -304,27 +365,44 @@
   <data name="BC-E-314" xml:space="preserve"><value>Default language {0} is not in use.</value></data>
   <data name="BC-E-315" xml:space="preserve"><value>Enter a valid 10-digit business registration number.</value></data>
   <data name="BC-E-316" xml:space="preserve"><value>The billing mode cannot change to {0}: the value is invalid or unbilled shipments exist.</value></data>
+  <data name="BC-E-318" xml:space="preserve"><value>Unknown time zone {0}. Choose an IANA name such as America/New_York or Asia/Seoul.</value></data>
   <data name="Bc.Company.Name" xml:space="preserve"><value>Company name</value></data>
   <data name="Bc.Company.Billto" xml:space="preserve"><value>Bill-to address</value></data>
   <data name="Bc.Company.Shipto" xml:space="preserve"><value>Ship-to address</value></data>
   <data name="Bc.Company.Contact" xml:space="preserve"><value>Contact</value></data>
   <data name="Bc.Company.TelNo" xml:space="preserve"><value>Phone</value></data>
   <data name="Bc.Company.FaxNo" xml:space="preserve"><value>Fax</value></data>
-  <data name="Bc.Company.RegisterNo" xml:space="preserve"><value>Business registration number</value></data>
   <data name="Bc.Company.Represent" xml:space="preserve"><value>Representative</value></data>
   <data name="Bc.Company.Email" xml:space="preserve"><value>Email</value></data>
-  <data name="Bc.Company.BusinessType" xml:space="preserve"><value>Business type</value></data>
-  <data name="Bc.Company.BusinessItem" xml:space="preserve"><value>Business item</value></data>
   <data name="Bc.Company.CountryCode" xml:space="preserve"><value>Country</value></data>
   <data name="Bc.Company.Country.US" xml:space="preserve"><value>United States</value></data>
   <data name="Bc.Company.Country.KR" xml:space="preserve"><value>Korea</value></data>
   <data name="Bc.Company.BaseCurrencyCode" xml:space="preserve"><value>Base currency</value></data>
   <data name="Bc.Company.DefaultLangCode" xml:space="preserve"><value>Default language</value></data>
+  <data name="Bc.Company.TimeZone" xml:space="preserve"><value>Time zone</value></data>
   <data name="Bc.Company.BillingMode" xml:space="preserve"><value>Billing</value></data>
   <data name="Bc.Company.BillingMode.WITH_SHIPMENT" xml:space="preserve"><value>Bill with shipment</value></data>
   <data name="Bc.Company.BillingMode.SEPARATE" xml:space="preserve"><value>Bill separately after shipment</value></data>
   <data name="Bc.Company.Logo.Delete" xml:space="preserve"><value>Delete Logo</value></data>
   <data name="Bc.Company.Logo.ConfirmDelete" xml:space="preserve"><value>Delete the logo? Printed documents will show the company name only.</value></data>
+  <data name="Bc.BusinessPlace.Title" xml:space="preserve"><value>Business Place</value></data>
+  <data name="Bc.BusinessPlace.BusinessPlaceCode" xml:space="preserve"><value>Business place code</value></data>
+  <data name="Bc.BusinessPlace.BusinessPlaceName" xml:space="preserve"><value>Business place name</value></data>
+  <data name="Bc.BusinessPlace.BusinessRegNo" xml:space="preserve"><value>Business registration number</value></data>
+  <data name="Bc.BusinessPlace.SubBusinessNo" xml:space="preserve"><value>Sub-business number</value></data>
+  <data name="Bc.BusinessPlace.CeoName" xml:space="preserve"><value>CEO</value></data>
+  <data name="Bc.BusinessPlace.BusinessType" xml:space="preserve"><value>Business type</value></data>
+  <data name="Bc.BusinessPlace.BusinessItem" xml:space="preserve"><value>Business item</value></data>
+  <data name="Bc.BusinessPlace.Addr1" xml:space="preserve"><value>Address 1</value></data>
+  <data name="Bc.BusinessPlace.Addr2" xml:space="preserve"><value>Address 2</value></data>
+  <data name="Bc.BusinessPlace.City" xml:space="preserve"><value>City</value></data>
+  <data name="Bc.BusinessPlace.State" xml:space="preserve"><value>State</value></data>
+  <data name="Bc.BusinessPlace.ZipCode" xml:space="preserve"><value>ZIP code</value></data>
+  <data name="Bc.BusinessPlace.TelNo" xml:space="preserve"><value>Phone</value></data>
+  <data name="Bc.BusinessPlace.UseYn" xml:space="preserve"><value>In use</value></data>
+  <data name="BC-E-319" xml:space="preserve"><value>Only the default business place is used. You cannot add a business place or stop using the default one.</value></data>
+  <data name="BC-E-320" xml:space="preserve"><value>Check {0}. A KR business registration number is required and has 10 digits; a sub-business number has 4 digits.</value></data>
+  <data name="BC-E-321" xml:space="preserve"><value>There is no business place. Create the default business place first.</value></data>
   <data name="Bc.Company.Security" xml:space="preserve"><value>Security Settings</value></data>
   <data name="Bc.Company.Security.Hint" xml:space="preserve"><value>Password policy changes apply from each user's next password change.</value></data>
   <data name="Bc.Company.Security.ConfirmRevoke" xml:space="preserve"><value>Turning off auto sign-in ends auto sign-in for every user. Continue?</value></data>
@@ -349,6 +427,8 @@
   <data name="Bc.Code.FindMajor" xml:space="preserve"><value>Find Major code</value></data>
   <data name="Bc.Code.MinorCode" xml:space="preserve"><value>Code</value></data>
   <data name="Bc.Code.Name" xml:space="preserve"><value>Name ({0})</value></data>
+  <data name="Bc.Code.NameEn" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="Bc.Code.NameKo" xml:space="preserve"><value>Name (한국어)</value></data>
   <data name="Bc.Code.SortOrder" xml:space="preserve"><value>Sort Order</value></data>
   <data name="Bc.Code.UseYn" xml:space="preserve"><value>In Use</value></data>
   <data name="Bc.Code.Attr1" xml:space="preserve"><value>Attribute 1</value></data>
@@ -362,11 +442,120 @@
   <data name="Bc.CodeMajor.MajorCode" xml:space="preserve"><value>Major Code</value></data>
   <data name="Bc.CodeMajor.Name" xml:space="preserve"><value>Major Name</value></data>
   <data name="Bc.CodeMajor.NameIn" xml:space="preserve"><value>Name ({0})</value></data>
+  <data name="Bc.CodeMajor.NameEn" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="Bc.CodeMajor.NameKo" xml:space="preserve"><value>Name (한국어)</value></data>
   <data name="Bc.CodeMajor.UseYn" xml:space="preserve"><value>In Use</value></data>
   <data name="Bc.CodeMajor.MinorCount" xml:space="preserve"><value>Minor Codes</value></data>
+  <data name="Bc.Currency.Title" xml:space="preserve"><value>Currencies</value></data>
+  <data name="Bc.Currency.CurrencyCode" xml:space="preserve"><value>Currency Code</value></data>
+  <data name="Bc.Currency.Name" xml:space="preserve"><value>Name ({0})</value></data>
+  <data name="Bc.Currency.NameEn" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="Bc.Currency.NameKo" xml:space="preserve"><value>Name (한국어)</value></data>
+  <data name="Bc.Currency.Decimals" xml:space="preserve"><value>Amount Decimals</value></data>
+  <data name="Bc.Currency.CountryCode" xml:space="preserve"><value>Country</value></data>
+  <data name="Bc.Currency.UseYn" xml:space="preserve"><value>In Use</value></data>
   <data name="SD-E-901" xml:space="preserve"><value>Major code {0} is empty, is not up to 30 upper-case letters, digits or _, already exists, or has no English name.</value></data>
   <data name="SD-E-902" xml:space="preserve"><value>The value of Major code {0} cannot be changed.</value></data>
   <data name="SD-E-903" xml:space="preserve"><value>Major code {0} has Minor codes and cannot be deleted. Delete its Minor codes first, or set it not in use.</value></data>
   <data name="SD-E-904" xml:space="preserve"><value>Major code {0} is used by the system and cannot be deleted or set not in use.</value></data>
+  <data name="SD-E-906" xml:space="preserve"><value>An exchange rate for {1} on {0} already exists. Each date and currency has one rate.</value></data>
+  <data name="SD-E-907" xml:space="preserve"><value>The exchange rate for {1} on {0} cannot be saved. It needs a date, a currency in use that is not the base currency, and a rate above 0 with up to 10 decimals.</value></data>
+  <data name="MM-E-816" xml:space="preserve"><value>The start number must be digits, and the barcodes made from it must be {0} digits or fewer.</value></data>
+  <data name="MM-E-817" xml:space="preserve"><value>The barcode is already used by another item ({0}). Nothing was saved.</value></data>
   <data name="MM-E-821" xml:space="preserve"><value>Choose one JPEG file of 10 MB or less for an existing item.</value></data>
+  <data name="Shell.ProductName" xml:space="preserve"><value>QuroERP</value></data>
+  <data name="Shell.Menu.Label" xml:space="preserve"><value>Menu</value></data>
+  <data name="Shell.Menu.Open" xml:space="preserve"><value>Open menu</value></data>
+  <data name="Shell.Menu.Empty" xml:space="preserve"><value>No menus are available.</value></data>
+  <data name="Shell.Menu.Collapse" xml:space="preserve"><value>Collapse menu</value></data>
+  <data name="Shell.Menu.Expand" xml:space="preserve"><value>Expand menu</value></data>
+  <data name="Shell.Logout" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Menu.G1BA" xml:space="preserve"><value>Master Data</value></data>
+  <data name="Menu.G2MM" xml:space="preserve"><value>Purchasing &amp; Inventory</value></data>
+  <data name="Menu.G3SD" xml:space="preserve"><value>Sales</value></data>
+  <data name="Menu.G4RP" xml:space="preserve"><value>Reports</value></data>
+  <data name="Menu.G5AD" xml:space="preserve"><value>Administration</value></data>
+  <data name="Menu.G1BA01" xml:space="preserve"><value>Items</value></data>
+  <data name="Menu.G1BA02" xml:space="preserve"><value>Codes</value></data>
+  <data name="Menu.G1BA03" xml:space="preserve"><value>Major Codes</value></data>
+  <data name="Menu.G5AD01" xml:space="preserve"><value>Company</value></data>
+  <data name="Menu.G5AD02" xml:space="preserve"><value>Currencies</value></data>
+  <data name="Menu.G5AD03" xml:space="preserve"><value>Users</value></data>
+  <data name="Menu.G5AD04" xml:space="preserve"><value>Menus</value></data>
+  <data name="Menu.G5AD05" xml:space="preserve"><value>Role Menus</value></data>
+  <data name="Role.poweruser" xml:space="preserve"><value>Power User</value></data>
+  <data name="Role.salesman" xml:space="preserve"><value>Salesperson</value></data>
+  <data name="Role.admin" xml:space="preserve"><value>Administrator</value></data>
+  <data name="Role.manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="Role.srep" xml:space="preserve"><value>Sales Rep</value></data>
+  <data name="Home.Welcome" xml:space="preserve"><value>Welcome, {0}.</value></data>
+  <data name="Home.Flow.Purchase" xml:space="preserve"><value>Purchasing flow</value></data>
+  <data name="Home.Flow.Sales" xml:space="preserve"><value>Sales flow</value></data>
+  <data name="Home.Links.Master" xml:space="preserve"><value>Master data</value></data>
+  <data name="Home.Links.Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Home.Step.PurchaseOrder" xml:space="preserve"><value>Purchase Order</value></data>
+  <data name="Home.Step.GoodsReceipt" xml:space="preserve"><value>Goods Receipt</value></data>
+  <data name="Home.Step.SupplierInvoice" xml:space="preserve"><value>Supplier Invoice</value></data>
+  <data name="Home.Step.ApPayment" xml:space="preserve"><value>Payment</value></data>
+  <data name="Home.Step.SalesOrder" xml:space="preserve"><value>Sales Order</value></data>
+  <data name="Home.Step.Shipment" xml:space="preserve"><value>Shipment</value></data>
+  <data name="Home.Step.SalesInvoice" xml:space="preserve"><value>Sales Invoice</value></data>
+  <data name="Home.Step.ArReceipt" xml:space="preserve"><value>Receipt</value></data>
+  <data name="Home.Link.Item" xml:space="preserve"><value>Items</value></data>
+  <data name="Home.Link.Customer" xml:space="preserve"><value>Customers</value></data>
+  <data name="Home.Link.Vendor" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="Home.Link.Stock" xml:space="preserve"><value>Stock on Hand</value></data>
+  <data name="Home.Link.Company" xml:space="preserve"><value>Company</value></data>
+  <data name="Home.NoPermission" xml:space="preserve"><value>You do not have permission to open this screen.</value></data>
+  <data name="Home.NotReady" xml:space="preserve"><value>Phase 2</value></data>
+  <data name="Common.BasicInfo" xml:space="preserve"><value>Basic Info</value></data>
+  <data name="Common.CopyAsNew" xml:space="preserve"><value>Copy as New</value></data>
+  <data name="Common.Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Samples.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Common.ShowAllFields" xml:space="preserve"><value>Show all fields</value></data>
+  <data name="Common.HiddenByPolicy" xml:space="preserve"><value>Hidden</value></data>
+  <data name="Samples.Country" xml:space="preserve"><value>Country pack</value></data>
+  <data name="Samples.Supply" xml:space="preserve"><value>Supply Type</value></data>
+  <data name="Samples.Supply.P" xml:space="preserve"><value>Purchased</value></data>
+  <data name="Samples.Supply.M" xml:space="preserve"><value>Made</value></data>
+  <data name="Samples.StockTab" xml:space="preserve"><value>Stock by Warehouse</value></data>
+  <data name="Samples.TransactionsTab" xml:space="preserve"><value>Transactions</value></data>
+  <data name="Samples.Warehouse" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Samples.OnHand" xml:space="preserve"><value>On Hand</value></data>
+  <data name="Samples.Allocated" xml:space="preserve"><value>Allocated</value></data>
+  <data name="Samples.Available" xml:space="preserve"><value>Available</value></data>
+  <data name="Samples.StockNote" xml:space="preserve"><value>Available = on hand - allocated.</value></data>
+  <data name="Samples.DocNo" xml:space="preserve"><value>Document No.</value></data>
+  <data name="Samples.DocDt" xml:space="preserve"><value>Date</value></data>
+  <data name="Samples.TransactionsNote" xml:space="preserve"><value>Double-click a row to open its document.</value></data>
+  <data name="Samples.ConfirmDeactivate" xml:space="preserve"><value>Deactivate this item?</value></data>
+  <data name="Samples.FreeForm.Title" xml:space="preserve"><value>Sample: Free-Form (F)</value></data>
+  <data name="Samples.FreeForm.Orders" xml:space="preserve"><value>Orders</value></data>
+  <data name="Samples.FreeForm.Receipts" xml:space="preserve"><value>Receipts</value></data>
+  <data name="Samples.FreeForm.Invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="Samples.FreeForm.Chip.brand" xml:space="preserve"><value>Open</value></data>
+  <data name="Samples.FreeForm.Chip.ok" xml:space="preserve"><value>Done</value></data>
+  <data name="Samples.FreeForm.Chip.neutral" xml:space="preserve"><value>Waiting</value></data>
+  <data name="Samples.FreeForm.Flow" xml:space="preserve"><value>Purchase Flow</value></data>
+  <data name="Samples.FreeForm.Step.Order" xml:space="preserve"><value>Order</value></data>
+  <data name="Samples.FreeForm.Step.Receipt" xml:space="preserve"><value>Receipt</value></data>
+  <data name="Samples.FreeForm.Step.Invoice" xml:space="preserve"><value>Supplier Invoice</value></data>
+  <data name="Samples.FreeForm.ShowNotice" xml:space="preserve"><value>Show Notice</value></data>
+  <data name="Samples.FreeForm.Notice" xml:space="preserve"><value>An F screen shows one message line.</value></data>
+  <data name="Sd.Customer.State" xml:space="preserve"><value>State</value></data>
+  <data name="Sd.Customer.ZipCode" xml:space="preserve"><value>ZIP code</value></data>
+  <data name="Sd.Customer.ShipState" xml:space="preserve"><value>Ship-to state</value></data>
+  <data name="Sd.Customer.Country" xml:space="preserve"><value>Country</value></data>
+  <data name="Sd.Customer.ShipCountry" xml:space="preserve"><value>Ship-to country</value></data>
+  <data name="Sd.Customer.BusinessRegNo" xml:space="preserve"><value>Business registration number</value></data>
+  <data name="Sd.Customer.CeoName" xml:space="preserve"><value>CEO</value></data>
+  <data name="Sd.Customer.BusinessType" xml:space="preserve"><value>Business type</value></data>
+  <data name="Sd.Customer.BusinessItem" xml:space="preserve"><value>Business item</value></data>
+  <data name="Sd.Customer.TaxExemptions" xml:space="preserve"><value>Tax exemption certificates</value></data>
+  <data name="Mm.Vendor.State" xml:space="preserve"><value>State</value></data>
+  <data name="Mm.Vendor.ZipCode" xml:space="preserve"><value>ZIP code</value></data>
+  <data name="Mm.Vendor.BusinessRegNo" xml:space="preserve"><value>Business registration number</value></data>
+  <data name="Mm.Vendor.CeoName" xml:space="preserve"><value>CEO</value></data>
+  <data name="Mm.Vendor.BusinessType" xml:space="preserve"><value>Business type</value></data>
+  <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>Business item</value></data>
 </root>

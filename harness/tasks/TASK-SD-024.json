@@ -1,7 +1,7 @@
 {
   "id": "TASK-SD-024",
   "project": "core",
-  "title": "기간별 품목군 매출 리포트 조회·PDF·화면",
+  "title": "기간별 매출 (기간별 품목군 매출 외) 리포트 조회·PDF·화면",
   "module": "SD",
   "layer": [
     "Api",
@@ -39,7 +39,9 @@
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
-    "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)"
+    "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)",
+    "화면 이름 '기간별 매출'. 보기 선택: 행 기준(품목군·지역×품목군·품목군×지역·고객·지역·담당자), 기간 열. 보기마다 AS IS 기간별 리포트의 열·합계·정렬·PDF와 같다",
+    "보기마다 단위 테스트 1개 이상 (합쳐진 태스크의 명세 테스트 시나리오 포함)"
   ],
   "estimateHours": 2,
   "status": "todo"

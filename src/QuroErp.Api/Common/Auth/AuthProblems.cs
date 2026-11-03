@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using QuroErp.Application.Common;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Domain.Common.Auth;
 
@@ -38,13 +39,13 @@ public static class AuthProblems
 
     public static ValueTask<bool> WriteAsync(HttpContext httpContext, AuthException exception)
     {
-        var clock = httpContext.RequestServices.GetRequiredService<TimeProvider>();
+        var clock = httpContext.RequestServices.GetRequiredService<IBusinessClock>();
         var args = exception.Code switch
         {
             AuthCodes.Required => exception.Args.Select(a => (object)Localize(httpContext, $"Auth.Field.{a}")).ToArray(),
-            // The unlock time is shown in the server time zone [추정: login.md says the user's time zone, which is not stored]
+            // The unlock time is shown in the company time zone (BC-BR-318)
             AuthCodes.Locked when exception.LockedUntil is { } until =>
-                [TimeZoneInfo.ConvertTime(until, clock.LocalTimeZone).ToString("HH:mm", CultureInfo.InvariantCulture)],
+                [clock.ToCompanyTime(until).ToString("HH:mm", CultureInfo.InvariantCulture)],
             _ => exception.Args.ToArray(),
         };
 

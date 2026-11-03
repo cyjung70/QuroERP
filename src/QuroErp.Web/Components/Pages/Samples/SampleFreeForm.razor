@@ -1,0 +1,62 @@
+@page "/samples/free-form"
+@rendermode InteractiveServer
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* Screen type F sample (TASK-CORE-043): title bar, cards and flow steps with the common classes. Development only. *@
+
+<PageTitle>@L["Samples.FreeForm.Title"]</PageTitle>
+
+@if (_ready)
+{
+    <QuroFreeForm Title="@L["Samples.FreeForm.Title"]" Path="@L["Samples.Menu"]" Notice="@_notice" TestId="free-form">
+        <div class="quro-free-grid">
+            @foreach (var (id, key, kind) in Cards)
+            {
+                <section class="quro-panel quro-free-card" data-testid="@($"free-form-card-{id}")">
+                    <h2>@L[key]</h2>
+                    <span class="@($"quro-chip quro-chip-{kind}")">@L[$"Samples.FreeForm.Chip.{kind}"]</span>
+                </section>
+            }
+        </div>
+        <section class="quro-panel" data-testid="free-form-flow">
+            <h2>@L["Samples.FreeForm.Flow"]</h2>
+            <ol class="quro-free-flow">
+                @foreach (var step in Steps)
+                {
+                    <li data-testid="@($"free-form-step-{step.ToLowerInvariant()}")">@L[$"Samples.FreeForm.Step.{step}"]</li>
+                }
+            </ol>
+            <button type="button" class="quro-btn quro-btn-primary" data-testid="free-form-show-notice" @onclick="ShowNotice">
+                @L["Samples.FreeForm.ShowNotice"]
+            </button>
+        </section>
+    </QuroFreeForm>
+}
+
+@code {
+    private static readonly (string Id, string Key, string Kind)[] Cards =
+    [
+        ("orders", "Samples.FreeForm.Orders", "brand"),
+        ("receipts", "Samples.FreeForm.Receipts", "ok"),
+        ("invoices", "Samples.FreeForm.Invoices", "neutral"),
+    ];
+
+    private static readonly string[] Steps = ["Order", "Receipt", "Invoice"];
+
+    private bool _ready;
+    private string? _notice;
+
+    protected override void OnInitialized()
+    {
+        // Like the other samples: only where the sample data is registered (Development)
+        _ready = Services.GetService<SampleStore>() is not null;
+        if (!_ready)
+        {
+            Navigation.NotFound();
+        }
+    }
+
+    private void ShowNotice() => _notice = L["Samples.FreeForm.Notice"];
+}

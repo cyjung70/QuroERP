@@ -1,5 +1,6 @@
 using System.Globalization;
 using QuroErp.Contracts.Bc.Users;
+using QuroErp.Contracts.Common;
 
 namespace QuroErp.Web.Components.Pages.Bc.Models;
 
@@ -34,6 +35,9 @@ public sealed class UserModel
     public bool MustChangePassword { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
+    /// <summary>Who created and last changed the record, for the audit area only (TASK-CORE-050).</summary>
+    public AuditInfo? Audit { get; set; }
+
     public bool PasswordsMatch => Password == ConfirmPassword;
 
     public static UserModel From(UserDto dto) => new()
@@ -53,6 +57,7 @@ public sealed class UserModel
         LastLoginIp = dto.LastLoginIp,
         MustChangePassword = dto.MustChangePassword,
         UpdatedAt = dto.UpdatedAt,
+        Audit = dto,
     };
 
     public CreateUserRequest ToCreateRequest() =>

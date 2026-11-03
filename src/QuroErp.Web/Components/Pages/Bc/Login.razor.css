@@ -1,50 +1,71 @@
-/* BC-UC-001 screen layout: brand panel left, form panel right with the form 360-400px wide and vertically centered.
-   Below 768px only the form panel shows, with 16px side margins. Colors are design tokens only (entry-frame.md 7). */
+/* BC-UC-001 split layout (TASK-CORE-036, login.md "화면 항목"): brand panel on the left, form panel on the right.
+   Below 768px only the form panel shows, with 16px side margins. Colours come from the design tokens (entry-frame.md 7). */
 .login-page {
     box-sizing: border-box;
     min-height: 100vh;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    display: flex;
     background: var(--q-surface-0);
     color: var(--q-ink);
-    font: 400 13px/20px var(--q-font-sans);
+    font-family: var(--q-font-sans);
 }
 
 .login-brand {
+    flex: 1 1 50%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 8px;
-    padding: 48px;
+    gap: 20px;
+    padding: 56px 64px;
     background: var(--q-brand);
     color: var(--q-on-brand);
 }
 
-.login-brand-name {
-    margin: 0;
-    font: 600 40px/48px var(--q-font-sans);
-    letter-spacing: -.01em;
+.login-brand-logo {
+    display: block;
+    width: 320px;
+    max-width: 100%;
+    height: auto;
 }
 
-.login-brand-tagline {
+.login-tagline {
+    max-width: 460px;
     margin: 0;
-    font-size: 16px;
-    line-height: 24px;
+    font: 400 20px/30px var(--q-font-sans);
+}
+
+.login-edition {
+    font: 500 12px/16px var(--q-font-sans);
+    opacity: .85;
 }
 
 .login-panel {
     position: relative;
+    flex: 1 1 50%;
     box-sizing: border-box;
-    display: grid;
-    place-items: center;
-    padding: 64px var(--q-panel-pad) 24px;
-    background: var(--q-surface-1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 64px 24px 24px;
 }
 
 .login-card {
     box-sizing: border-box;
     width: min(100%, 400px);
     min-width: min(100%, 360px);
+}
+
+.login-logo {
+    display: block;
+    width: 168px;
+    height: auto;
+    margin-bottom: 16px;
+}
+
+.login-logo-dark {
+    display: none;
 }
 
 .login-title {
@@ -55,14 +76,16 @@
 .login-error {
     margin: 0 0 12px;
     padding: 8px 12px;
-    border-radius: var(--q-radius-input);
+    border-radius: var(--q-radius-button);
     background: var(--q-danger-tint);
     color: var(--q-danger);
+    box-shadow: inset 4px 0 0 var(--q-danger);
+    font: 500 13px/20px var(--q-font-sans);
 }
 
 .login-card ::deep .login-form {
     display: grid;
-    gap: var(--q-field-gap);
+    gap: 14px;
 }
 
 .login-field {
@@ -78,13 +101,13 @@
 .login-field ::deep input {
     box-sizing: border-box;
     width: 100%;
-    height: var(--q-control-h);
+    height: 40px;
     padding: 0 8px;
     border: 1px solid var(--q-line);
     border-radius: var(--q-radius-input);
     background: var(--q-surface-1);
     color: var(--q-ink);
-    font: 400 13px/20px var(--q-font-sans);
+    font: 400 14px/20px var(--q-font-sans);
 }
 
 .login-password {
@@ -93,28 +116,27 @@
 }
 
 .login-password ::deep input {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: var(--q-radius-input) 0 0 var(--q-radius-input);
 }
 
 .login-toggle {
-    width: var(--q-control-h);
+    width: 40px;
     border: 1px solid var(--q-line);
     border-left: 0;
     border-radius: 0 var(--q-radius-input) var(--q-radius-input) 0;
     background: var(--q-surface-2);
-    color: var(--q-ink);
+    color: var(--q-ink-muted);
     cursor: pointer;
 }
 
 .login-toggle[aria-pressed=true] {
     background: var(--q-brand-tint);
+    color: var(--q-brand);
 }
 
 .login-field-error,
 .login-hint {
-    font-size: 12px;
-    line-height: 16px;
+    font: 400 12px/16px var(--q-font-sans);
 }
 
 .login-field-error {
@@ -132,20 +154,26 @@
 .login-check {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    font: 400 13px/20px var(--q-font-sans);
+}
+
+.login-check ::deep input {
+    accent-color: var(--q-brand);
 }
 
 .login-submit {
-    height: var(--q-control-h);
-    border: 0;
+    height: 44px;
+    border: 1px solid var(--q-brand);
     border-radius: var(--q-radius-button);
     background: var(--q-brand);
     color: var(--q-on-brand);
-    font: 600 13px/20px var(--q-font-sans);
+    font: 500 14px/1 var(--q-font-sans);
     cursor: pointer;
 }
 
-.login-submit:hover:not(:disabled) {
+.login-submit:hover {
+    border-color: var(--q-brand-strong);
     background: var(--q-brand-strong);
 }
 
@@ -158,36 +186,26 @@
 .login-panel select:focus-visible,
 .login-panel ::deep input:focus-visible {
     outline: 2px solid var(--q-brand);
-    outline-offset: 2px;
+    outline-offset: 1px;
 }
 
 .login-forgot {
-    margin: 12px 0 0;
+    margin: 16px 0 0;
     color: var(--q-ink-muted);
+    font: 400 12px/16px var(--q-font-sans);
 }
 
-.login-footer {
-    margin-top: 24px;
-    padding-top: 12px;
-    border-top: 1px solid var(--q-line);
-    color: var(--q-ink-muted);
-    font-size: 11px;
-    line-height: 16px;
-}
-
-.login-footer p {
-    margin: 0 0 4px;
-}
-
-/* Screen item 1: top right of the form panel, last in the tab order */
+/* Screen item 1 at the top right of the form panel */
 .login-language {
     position: absolute;
-    top: var(--q-panel-pad);
-    right: var(--q-panel-pad);
+    top: 16px;
+    right: 24px;
     display: flex;
     align-items: center;
     gap: 8px;
+    margin: 0;
     color: var(--q-ink-muted);
+    font: 500 12px/16px var(--q-font-sans);
 }
 
 .login-language select {
@@ -197,21 +215,60 @@
     border-radius: var(--q-radius-input);
     background: var(--q-surface-1);
     color: var(--q-ink);
-    font: inherit;
+    font: 400 13px/20px var(--q-font-sans);
+}
+
+/* Screen item 11 below the form */
+.login-footer {
+    width: min(100%, 400px);
+    color: var(--q-ink-muted);
+    font: 400 11px/16px var(--q-font-sans);
+}
+
+.login-footer p {
+    margin: 0;
+}
+
+/* Dark mode: brand-tint keeps the white logo readable; the light blue brand is for actions and focus */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .login-brand {
+        background: var(--q-brand-tint);
+        color: var(--q-ink);
+    }
+
+    :root:not([data-theme="light"]) .login-logo-light {
+        display: none;
+    }
+
+    :root:not([data-theme="light"]) .login-logo-dark {
+        display: block;
+    }
+}
+
+:root[data-theme="dark"] .login-brand {
+    background: var(--q-brand-tint);
+    color: var(--q-ink);
+}
+
+:root[data-theme="dark"] .login-logo-light {
+    display: none;
+}
+
+:root[data-theme="dark"] .login-logo-dark {
+    display: block;
 }
 
 @media (max-width: 767.98px) {
-    .login-page {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
     .login-brand {
         display: none;
     }
 
     .login-panel {
-        padding-right: 16px;
-        padding-left: 16px;
+        padding: 64px 16px 16px;
+    }
+
+    .login-card {
+        min-width: 0;
     }
 
     .login-language {

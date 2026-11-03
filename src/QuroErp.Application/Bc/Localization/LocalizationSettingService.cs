@@ -58,13 +58,16 @@ public sealed class LocalizationSettingService(
             .Select(d => new CountryDecimal(d.CountryCode, d.Module, d.UnitPriceDecimals)).ToList();
         var currentSettings = (await localization.FindDecimalSettingsAsync(uow.Transaction, cancellationToken))
             .Select(d => new DecimalSetting(d.Module, d.QtyDecimals, Rounding.ParseMode(d.RoundingMode))).ToList();
-        var hasDocuments = new Dictionary<string, bool>();
+        var currencyCountries = (await localization.FindCurrenciesAsync(uow.Transaction, cancellationToken))
+            .ToDictionary(c => c.CurrencyCode, c => c.CountryCode, StringComparer.Ordinal);
+        var documentCurrencies = new Dictionary<string, IReadOnlyCollection<string?>>();
         foreach (var module in DecimalModule.All)
         {
-            hasDocuments[module] = await settings.HasDocumentsAsync(module, uow.Transaction, cancellationToken);
+            documentCurrencies[module] = await settings.FindDocumentCurrenciesAsync(module, uow.Transaction, cancellationToken);
         }
         var inUse = LocalizationSettingRules.FindReducedInUse(
-            currentCountryDecimals, requestedCountryDecimals, currentSettings, requestedSettings, company.CountryCode, m => hasDocuments[m]);
+            currentCountryDecimals, requestedCountryDecimals, currentSettings, requestedSettings, company.CountryCode, currencyCountries,
+            m => documentCurrencies[m]);
         if (inUse is not null)
         {
             throw new ConflictException(LocalizationSettingRules.DecimalsInUseCode, inUse);

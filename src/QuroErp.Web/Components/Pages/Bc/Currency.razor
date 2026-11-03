@@ -1,0 +1,73 @@
+@page "/bc/currency"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject CurrencyApiClient Api
+@inject LocalizationApiClient Localization
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-026 currencies, screen type M. Every currency is listed on open; add, change or delete currencies and save them together.
+   Names are edited per language in use. The API checks every rule (BC-BR-404, 411, 412, 428, 312), including the 409 for
+   decimals or a country that documents use. *@
+
+<PageTitle>@L["Bc.Currency.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="currency-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid TRow="CurrencyRow" Title="@L["Bc.Currency.Title"]" TestId="currency" Path="@L["Menu.G5AD"]" LoadOnStart="true"
+                   Definition="bc.currency.list" Adjust="g => LanguageNames.InUse(g, _languages)" UpperCaseFields="UpperCaseFields"
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit">
+    </QuroMultiGrid>
+}
+
+@code {
+    // The en name is required (BC-BR-404); its column comes first
+    private const string FallbackLang = "en";
+    private const string UnavailableCode = "BC-E-003";
+    private static readonly string[] UpperCaseFields = ["currencyCode", "countryCode"];
+
+    private IReadOnlyList<string> _languages = [FallbackLang];
+    private bool _canEdit;
+    private bool _ready;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    private static string Lang => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy is applied, as in CurrencyController (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        try
+        {
+            var languages = (await Localization.GetAsync(Lang, CancellationToken.None)).Languages.OrderBy(l => l.SortOrder).Select(l => l.LangCode);
+            _languages = [FallbackLang, .. languages.Where(l => l != FallbackLang)];
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    private async Task<IReadOnlyList<CurrencyRow>> LoadAsync() =>
+        (await Api.SearchAsync(Lang, CancellationToken.None)).Select(c => CurrencyRow.From(c, _languages)).ToList();
+
+    private Task SaveAsync(BatchChanges<CurrencyRow> changes) => Api.SaveAsync(CurrencyRow.ToRequest(changes), Lang, CancellationToken.None);
+
+    private CurrencyRow NewRow() => CurrencyRow.New(_languages);
+}

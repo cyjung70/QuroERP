@@ -1,0 +1,33 @@
+{
+  "id": "TASK-CORE-061",
+  "project": "core",
+  "title": "셸 모듈 메뉴·화면 탭",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/app-shell.md",
+    "docs/architecture/screen-templates.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-060"
+  ],
+  "acceptance": [
+    "상단바 모듈 메뉴(app-shell.md 2장 3): 최상위 `M` 그룹 중 보이는 항목이 있는 것, 고르면 사이드 메뉴만 바뀐다. 모듈 선택 저장(localStorage)과 활성 탭에 따른 모듈 전환 (3장)",
+    "사이드 메뉴는 고른 모듈의 소제목·항목만 보인다. 768px 미만 메뉴 덮개 맨 위에 모듈 목록 (1장)",
+    "화면 탭 (3.3): 같은 경로는 한 탭, 홈 탭 고정, 최대 10개(`Shell.Tabs.Max`), 탭 전환 때 화면 상태 유지(숨긴 탭을 다시 만들지 않음), 주소 = 활성 탭 경로, 닫기·다른 탭 닫기·모두 닫기, 저장하지 않은 변경 확인(`Common.ConfirmUnsaved`, 탭 이름 뒤 ●), 새로고침 때 탭 목록만 sessionStorage에서 복원, 넘침 스크롤과 탭 목록",
+    "리소스 en·ko: `Shell.Modules`, `Shell.Tabs.Max`, `Shell.Tabs.Close`, `Shell.Tabs.CloseOthers`, `Shell.Tabs.CloseAll`, `Shell.Tabs.List`. `data-testid` app-shell.md 2장·3.3",
+    "bUnit: 모듈 전환, 같은 경로 두 번 열기 = 탭 1개, 11번째 탭 차단, 탭 전환 뒤 입력 값 유지, 변경 있는 탭 닫기 확인, 홈 탭 닫기 불가. 기존 bUnit·Tester Page Object(메뉴 이동)를 새 셸에 맞춘다",
+    "PR 설명에 라이트·다크, 1280px·768px 미만 캡처"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

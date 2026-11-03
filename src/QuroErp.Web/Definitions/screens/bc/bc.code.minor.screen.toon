@@ -1,0 +1,31 @@
+# BC-UC-008 Minor codes of one Major (TASK-CORE-057). Names per language in use.
+screen:
+  id: bc.code.minor
+  module: BC
+  title: Bc.Code.Title
+  version: 1
+  api: /api/bc/codes
+  key: id
+  layout: grid
+  perm:
+    read: BC.Read
+    write: BC.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: minorCodes
+    bind: minorCodes
+    rowKey: id
+    deletedRows: strike
+    columns[7]{id,label,type,width,edit,req,fmt,source,hidden}:
+      minorCode,Bc.Code.MinorCode,text,120,new,true,"","",false
+      nameEn,Bc.Code.NameEn,text,180,true,true,"","",false
+      nameKo,Bc.Code.NameKo,text,180,true,false,"","",false
+      sortOrder,Bc.Code.SortOrder,number,90,true,true,N0,"",false
+      useYn,Bc.Code.UseYn,checkbox,80,true,false,"","",false
+      attr1,Bc.Code.Attr1,text,120,true,false,"","",false
+      attr2,Bc.Code.Attr2,text,120,true,false,"","",false

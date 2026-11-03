@@ -1,0 +1,29 @@
+# BC-UC-006 company menus (TASK-CORE-057). Type and module have no common code: the screen declares them.
+screen:
+  id: bc.menu.company
+  module: BC
+  title: Bc.CompanyMenu.Title
+  version: 1
+  api: /api/sys/menus
+  key: id
+  layout: grid
+  perm:
+    read: BC.Read
+    write: BC.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: menus
+    bind: menus
+    rowKey: id
+    deletedRows: strike
+    columns[5]{id,label,type,width,edit,req,fmt,source,hidden}:
+      menuCode,Bc.CompanyMenu.MenuCode,text,110,new,true,"","",false
+      name,Bc.CompanyMenu.Name,text,180,true,true,"","",false
+      programId,Bc.CompanyMenu.ProgramId,text,160,true,false,"","",false
+      parentMenuCode,Bc.CompanyMenu.ParentMenuCode,text,110,true,false,"","",false
+      validFlag,Bc.CompanyMenu.ValidFlag,select,100,true,true,"",code:VALID_FLAG,false

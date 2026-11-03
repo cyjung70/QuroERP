@@ -1,0 +1,98 @@
+# Validate dev PRs directly; dev pushes run CI once through deploy.yml.
+# 브랜치 보호의 필수 검사 이름 ci를 유지합니다 (TASK-CORE-052).
+name: ci
+
+on:
+  pull_request:
+    branches: [dev]
+  # dev 배포가 같은 커밋의 검증 성공을 기다릴 수 있도록 재사용합니다.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Isolate callers and event types so independent workflows cannot cancel CI.
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        # 일회용 CI 테스트 전용 인증정보입니다. 외부 개발 DB나 운영 DB에는 사용하지 않습니다.
+        env:
+          POSTGRES_USER: quro_test
+          POSTGRES_PASSWORD: quro_test
+          POSTGRES_DB: quro_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quro_test -d quro_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      ConnectionStrings__QuroErpTest: Host=localhost;Port=5432;Database=quro_test;Username=quro_test;Password=quro_test
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -warnaserror -p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: dotnet test --no-build --logger trx --results-directory TestResults
+
+      # DB 테스트가 건너뛰어졌다면 검증 누락이므로 CI를 실패 처리합니다.
+      - name: Fail on skipped tests
+        shell: pwsh
+        run: |
+          $skipped = 0
+          foreach ($file in Get-ChildItem TestResults -Filter *.trx -Recurse) {
+            # TRX 파일명의 [1] 등을 와일드카드로 해석하지 않도록 LiteralPath를 사용합니다.
+            [xml]$trx = Get-Content -LiteralPath $file.FullName -Raw
+            # xUnit 건너뜀은 결과의 NotExecuted로 판별합니다. 요약 카운터는 0으로 남습니다.
+            $skipped += @($trx.TestRun.Results.UnitTestResult | Where-Object outcome -eq 'NotExecuted').Count
+          }
+          if ($skipped -gt 0) {
+            Write-Error "$skipped test(s) were skipped."
+            exit 1
+          }
+
+      - name: Validate Harness
+        shell: pwsh
+        run: ./scripts/validate-harness.ps1
+
+      # .toon 화면 정의를 검사합니다. 빈 폴더도 .gitkeep으로 유지하여 검사 자체를 건너뛰지 않습니다.
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Check screen definitions
+        run: dotnet quro-deflint src/QuroErp.Web/Definitions
+
+      - name: Check format
+        run: dotnet format --no-restore --verify-no-changes
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: warn

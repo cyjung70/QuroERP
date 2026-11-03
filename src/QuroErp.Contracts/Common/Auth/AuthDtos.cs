@@ -45,7 +45,11 @@ public sealed record LoginResponse(
 public sealed record LoginOptionsResponse(bool AutoLoginEnabled, string PasswordResetMode, int SessionIdleMinutes);
 
 /// <summary>Signed-in user (GET /api/auth/me).</summary>
-/// <param name="Menus">Menus the role may open, with the access level of each (the user's permissions).</param>
+/// <param name="Menus">
+/// Menus the role may open, with the access level of each (the user's permissions), and the parent menu groups of those menus
+/// without an access level (app-shell.md 5).
+/// </param>
+/// <param name="CompanyName">Company name for the shell top bar (bc_company).</param>
 public sealed record MeResponse(
     string UserId,
     string? UserName,
@@ -55,9 +59,12 @@ public sealed record MeResponse(
     DateTimeOffset? LastLoginAt,
     string? LastLoginIp,
     AuthWarehouse? DefaultWarehouse,
-    IReadOnlyList<AuthMenu> Menus);
+    IReadOnlyList<AuthMenu> Menus,
+    string? CompanyName);
 
-/// <summary>A menu of the user's role (sys_role_menu, sys_menu).</summary>
-public sealed record AuthMenu(string MenuCode, string? Name, string? ProgramId, string? Module, string? ParentMenuCode, string? FullAccess);
+/// <summary>A menu of the user's role (sys_role_menu, sys_menu), or a parent menu group of one (FullAccess null).</summary>
+/// <param name="Type">M menu group, P program, U popup.</param>
+public sealed record AuthMenu(
+    string MenuCode, string? Name, string? ProgramId, string? Module, string? ParentMenuCode, string? FullAccess, string? Type);
 
 public sealed record AuthWarehouse(long Id, string WarehouseCode, string WarehouseName);

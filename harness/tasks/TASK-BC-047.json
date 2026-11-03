@@ -38,5 +38,5 @@
     "`bc_exchange_rate`를 database-tables.md 정의로 바꾸는 마이그레이션: AS IS 형태(`cur_dt`, `cur_rp`, `cur_won`, UNIQUE `cur_dt`) → `rate_dt`, `currency_code`, `rate`(모두 NOT NULL), UNIQUE (`rate_dt`, `currency_code`). 기존 행은 통화별 행으로 옮긴다 (SD-BR-909)"
   ],
   "estimateHours": 2,
-  "status": "todo"
+  "status": "done"
 }

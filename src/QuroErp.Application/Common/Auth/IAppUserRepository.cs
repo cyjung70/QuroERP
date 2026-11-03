@@ -28,8 +28,14 @@ public interface IAppUserRepository
     Task ChangePasswordAsync(
         long id, string passwordHash, DateTimeOffset now, string auditUser, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Menus of the user's role, in menu code order.</summary>
+    /// <summary>
+    /// Menus of the user's role that are in use, with their parent menu groups (assigned or not), in menu code order.
+    /// A menu under a parent that is not in use is left out (app-shell.md 5).
+    /// </summary>
     Task<IReadOnlyList<AuthMenu>> FindMenusAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The company name (bc_company has one row), or null before the company is set up.</summary>
+    Task<string?> FindCompanyNameAsync(IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>The user's default warehouse, or the company default warehouse when the user has none.</summary>
     Task<AuthWarehouse?> FindDefaultWarehouseAsync(long appUserId, IDbTransaction transaction, CancellationToken cancellationToken);

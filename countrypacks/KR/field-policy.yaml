@@ -1,0 +1,16 @@
+# KR field policies (docs/architecture/field-policy.md "1차 국가팩 값").
+# Field key: state, or { state, default, label }. ext. keys declared here are the only ones ext_attrs may store (BC-BR-436).
+Sd.Customer.State: HIDDEN
+Sd.Customer.ZipCode: REQUIRED
+Sd.Customer.ShipState: HIDDEN
+Sd.Customer.BusinessRegNo: OPTIONAL
+Sd.Customer.CeoName: OPTIONAL
+Sd.Customer.BusinessType: OPTIONAL
+Sd.Customer.BusinessItem: OPTIONAL
+Sd.Customer.TaxExemptions: HIDDEN
+Mm.Vendor.State: HIDDEN
+Mm.Vendor.ZipCode: REQUIRED
+Mm.Vendor.BusinessRegNo: OPTIONAL
+Mm.Vendor.CeoName: OPTIONAL
+Mm.Vendor.BusinessType: OPTIONAL
+Mm.Vendor.BusinessItem: OPTIONAL

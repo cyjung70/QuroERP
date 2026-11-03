@@ -20,7 +20,10 @@ public sealed record UserRow(
     DateTimeOffset? LockedUntil,
     DateTimeOffset? LastLoginAt,
     string? LastLoginIp,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset CreatedAt,
+    string CreatedBy,
+    DateTimeOffset UpdatedAt,
+    string UpdatedBy);
 
 /// <param name="UserId">User ID starts with this (case-insensitive).</param>
 /// <param name="UserName">User name contains this (case-insensitive).</param>

@@ -19,7 +19,8 @@ public sealed class LoginService(
     IPasswordHashService passwords,
     IAccessTokenIssuer tokens,
     IUnitOfWorkFactory unitOfWork,
-    TimeProvider clock)
+    TimeProvider clock,
+    IBusinessClock businessClock)
 {
     private static readonly string[] Languages = ["ko", "en"];
 
@@ -255,11 +256,12 @@ public sealed class LoginService(
         var setting = await GetSettingAsync(tx, cancellationToken);
         var menus = await users.FindMenusAsync(user.Id, tx, cancellationToken);
         var warehouse = await users.FindDefaultWarehouseAsync(user.Id, tx, cancellationToken);
+        var companyName = await users.FindCompanyNameAsync(tx, cancellationToken);
         await uow.CommitAsync(cancellationToken);
 
         return new MeResponse(
             user.UserId, user.UserName, user.RoleCode, user.LangCode, user.RequiresPasswordChange(now, today, setting),
-            user.LastLoginAt, user.LastLoginIp, warehouse, menus);
+            user.LastLoginAt, user.LastLoginIp, warehouse, menus, companyName);
     }
 
     /// <summary>
@@ -340,7 +342,8 @@ public sealed class LoginService(
     }
 
     // [추정] 업무 날짜는 서버 현지 날짜로 본다
-    private DateOnly Today() => DateOnly.FromDateTime(clock.GetLocalNow().DateTime);
+    // Sign-in validity and password expiry dates are business dates in the company time zone (BC-BR-318)
+    private DateOnly Today() => businessClock.Today();
 
     private async Task<AuthSetting> GetSettingAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
         await settings.GetAsync(transaction, cancellationToken) ?? new AuthSetting();

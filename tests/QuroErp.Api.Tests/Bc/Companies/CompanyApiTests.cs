@@ -17,8 +17,17 @@ public class CompanyApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var company = await factory.NonAdmin().GetFromJsonAsync<CompanyDto>(CompanyRoutes.Base);
 
         company!.Name.Should().Be("Quro");
-        (company.CountryCode, company.BaseCurrencyCode, company.DefaultLangCode, company.BillingMode).Should().Be(("KR", "KRW", "ko", "WITH_SHIPMENT"));
+        (company.CountryCode, company.BaseCurrencyCode, company.DefaultLangCode, company.TimeZone, company.BillingMode)
+            .Should().Be(("KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT"));
         company.UpdatedAt.Should().Be(Created);
+    }
+
+    [Fact, Trait("Id", "CORE-050-IT-03")]
+    public async Task Company_ReturnsTheFourAuditFields()
+    {
+        using var response = await factory.NonAdmin().GetAsync(CompanyRoutes.Base);
+
+        (await response.ReadAuditFieldsAsync()).Should().Equal("createdAt", "createdBy", "updatedAt", "updatedBy");
     }
 
     [Fact, Trait("Id", "BC-UT-305")]
@@ -56,7 +65,7 @@ public class CompanyApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     {
         var client = factory.NonAdmin();
         var request = new UpdateCompanyRequest(
-            "Other", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "WITH_SHIPMENT", Created);
+            "Other", null, null, null, null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", Created);
 
         using var company = await client.PutAsJsonAsync(CompanyRoutes.Base, request);
         using var logo = await client.DeleteAsync(CompanyRoutes.Logo);
@@ -87,8 +96,7 @@ public class CompanyApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 public class CompanySaveApiTests
 {
     private static readonly UpdateCompanyRequest Request = new(
-        "Quro Korea", "Seoul", null, "Lee", "02-000-0000", null, "220-81-62517", "Kim", "info@quro.kr", "Service", "Software",
-        "KR", "KRW", "ko", "SEPARATE", Created);
+        "Quro Korea", "Seoul", null, "Lee", "02-000-0000", null, "Kim", "info@quro.kr", "KR", "KRW", "ko", "Asia/Seoul", "SEPARATE", Created);
 
     [Fact, Trait("Id", "BC-UC-007-T01")]
     public async Task Update_SavesAndReturnsTheCompany()
@@ -100,8 +108,21 @@ public class CompanySaveApiTests
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var saved = await response.Content.ReadFromJsonAsync<CompanyDto>();
-        (saved!.Name, saved.RegisterNo, saved.BusinessItem, saved.BillingMode).Should().Be(("Quro Korea", "2208162517", "Software", "SEPARATE"));
+        (saved!.Name, saved.Represent, saved.BillingMode).Should().Be(("Quro Korea", "Kim", "SEPARATE"));
         factory.Companies.UpdatedBy.Should().Be(ApiFactory.UserId);
+    }
+
+    [Fact, Trait("Id", "CORE-050-IT-04")]
+    public async Task Update_ChangesOnlyTheUpdatedPair()
+    {
+        await using var factory = new ApiFactory();
+        var client = await factory.AdminAsync();
+
+        using var response = await client.PutAsJsonAsync(CompanyRoutes.Base, Request);
+
+        var saved = (await response.Content.ReadFromJsonAsync<CompanyDto>())!;
+        (saved.CreatedAt, saved.CreatedBy, saved.UpdatedBy).Should().Be((Created, "setup", ApiFactory.UserId));
+        saved.UpdatedAt.Should().BeAfter(Created);
     }
 
     [Fact, Trait("Id", "BC-UC-007-T02")]
@@ -154,6 +175,32 @@ public class CompanySaveApiTests
         (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("BC-E-313");
     }
 
+    [Fact, Trait("Id", "CORE-024-IT-01"), Trait("Rule", "BC-BR-318")]
+    public async Task Update_SavesTheTimeZone_AndReturnsIt()
+    {
+        await using var factory = new ApiFactory();
+        var client = await factory.AdminAsync();
+
+        using var response = await client.PutAsJsonAsync(CompanyRoutes.Base, Request with { TimeZone = "America/New_York" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await response.Content.ReadFromJsonAsync<CompanyDto>())!.TimeZone.Should().Be("America/New_York");
+    }
+
+    [Theory, Trait("Id", "CORE-024-IT-02"), Trait("Rule", "BC-BR-318")]
+    [InlineData("Mars/Olympus")]
+    [InlineData("Korea Standard Time")]
+    public async Task Update_WithAnUnknownTimeZone_Returns400BcE318(string timeZone)
+    {
+        await using var factory = new ApiFactory();
+        var client = await factory.AdminAsync();
+
+        using var response = await client.PutAsJsonAsync(CompanyRoutes.Base, Request with { TimeZone = timeZone });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("BC-E-318");
+    }
+
     [Fact, Trait("Id", "BC-UT-312")]
     public async Task Update_ChangingTheCurrencyAfterTrading_Returns409BcE312()
     {
@@ -178,7 +225,6 @@ public class CompanySaveApiTests
             Request.CountryCode,
             Request.BaseCurrencyCode,
             Request.DefaultLangCode,
-            Request.RegisterNo,
             Request.UpdatedAt,
             CloseYearMonth = "202610",
         };

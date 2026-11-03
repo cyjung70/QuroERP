@@ -1,0 +1,55 @@
+@* Screen type F (screen-templates.md 5): an optional title bar, one message line and a free body. For screens that
+   save no business data (home) and shell parts. No command bar, search, audit or unsaved-changes check, and nothing
+   that needs interactivity, so it also renders in static SSR. The body uses tokens and the common quro-panel,
+   quro-btn and quro-chip classes; quro-free-grid stacks into one column below 768px. *@
+
+<section class="quro-free" data-testid="@TestId">
+    @if (Title is not null)
+    {
+        <header class="quro-entry-title" data-testid="@Id("title")">
+            @if (Path is not null)
+            {
+                <div class="quro-entry-path">@Path › @Title</div>
+            }
+            <div class="quro-entry-title-row">
+                <h1>@Title</h1>
+            </div>
+        </header>
+    }
+
+    @if (Error is not null)
+    {
+        <p class="quro-entry-message" role="alert" data-level="error" data-testid="@Id("message")">@Error</p>
+    }
+    else if (Notice is not null)
+    {
+        <p class="quro-entry-message" role="status" data-level="info" data-testid="@Id("message")">@Notice</p>
+    }
+
+    @ChildContent
+</section>
+
+@code {
+    /// <summary>Translated screen title; without it there is no title bar (the home has its own welcome heading).</summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>Menu group above the title (<c>Menu.&lt;group&gt;</c>); the frame adds " › title".</summary>
+    [Parameter]
+    public string? Path { get; set; }
+
+    [Parameter]
+    public string? Error { get; set; }
+
+    [Parameter]
+    public string? Notice { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Prefix of the <c>data-testid</c> values of this screen.</summary>
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private string? Id(string part) => TestId is null ? null : $"{TestId}-{part}";
+}

@@ -1,0 +1,113 @@
+/* Top bar (app-shell.md 2): 48px, solid brand colour, no gradient */
+.shell-top {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    height: 48px;
+    padding: 0 0.75rem;
+    background: var(--q-brand);
+    color: var(--q-on-brand);
+}
+
+.shell-top-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--q-radius-button);
+    background: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+    .shell-top-icon:hover,
+    .shell-top-icon:focus-visible {
+        background: var(--q-brand-strong);
+    }
+
+    .shell-top-icon svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+.shell-logo {
+    display: inline-flex;
+    align-items: center;
+}
+
+    .shell-logo img {
+        display: block;
+        height: 24px;
+        width: auto;
+    }
+
+.shell-spacer {
+    flex: 1;
+}
+
+.shell-company,
+.shell-role {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 16rem;
+}
+
+.shell-role {
+    padding: 0.125rem 0.5rem;
+    border: 1px solid currentColor;
+    border-radius: var(--q-radius-chip);
+    font-size: 0.8125rem;
+}
+
+.shell-language,
+.shell-logout {
+    margin: 0;
+}
+
+    .shell-language select {
+        height: 30px;
+        padding: 0 0.5rem;
+        border: 1px solid var(--q-brand-strong);
+        border-radius: var(--q-radius-input);
+        background: var(--q-surface-0);
+        color: var(--q-ink);
+        font: inherit;
+    }
+
+.shell-top ::deep .user-menu summary {
+    color: var(--q-on-brand);
+}
+
+.shell-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* Below 768px the menu opens as an overlay; company and role move into the user menu */
+@media (max-width: 767.98px) {
+    .shell-wide {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .shell-menu-toggle {
+        display: none;
+    }
+}

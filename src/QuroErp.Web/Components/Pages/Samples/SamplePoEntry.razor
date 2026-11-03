@@ -6,7 +6,8 @@
 @inject IStringLocalizer<SharedResource> L
 
 @* Screen type SM example on the entry frame: PO Entry (header + lines saved together, lookup dialogs, display totals,
-   status chip and an approve status command).
+   status chip and an approve status command). The lines are the package grid over samples.po.entry.screen.toon: item codes
+   are popup cells of the samplePoItem lookup, and the amount is the definition's rule (TASK-CORE-056).
    Development only, in-memory data. A real screen reads and saves through a Contracts API client. *@
 
 <PageTitle>@L["Samples.PoEntry.Title"]</PageTitle>
@@ -19,6 +20,7 @@
                       Find="k => Task.FromResult(_store.FindPos(k))" Load="LoadAsync" Initial="Initial"
                       Create="() => new SamplePo { PoDt = DateOnly.FromDateTime(DateTime.Today) }"
                       CreateLine="_ => new SamplePoLine()" Save="SaveAsync"
+                      Definition="samples.po.entry" Lookup="LookupItems" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
                       CanSave="po => po.Status == SamplePoStore.Draft" CanDelete="po => po.Status == SamplePoStore.Draft"
                       Delete="po => { _store.DeletePo(po.Id); return Task.CompletedTask; }" DeleteText="@L["Samples.DeletePo"]"
                       LinesHint="LinesHint">
@@ -37,37 +39,18 @@
                     @onclick="ApproveAsync">@L["Samples.Approve"]</button>
         </StatusCommands>
         <HeaderFields Context="po">
-            <QuroDate Label="@L["Samples.PoDt"]" @bind-Value="po.PoDt" Required TestId="po-entry-header-po-dt" />
+            <QuroDate Label="@L["Samples.PoDt"]" Field="PoDt" Required TestId="po-entry-header-po-dt" />
             <div class="quro-lookup-field">
-                <QuroText Label="@L["Samples.Vendor"]" @bind-Value="po.VendorCode" @bind-Value:after="() => FillVendor(po)"
-                          Required TextCase="TextCase.Upper" TestId="po-entry-header-vendor-code" />
+                <QuroText Label="@L["Samples.Vendor"]" Field="VendorCode" Required TextCase="TextCase.Upper" TestId="po-entry-header-vendor-code" />
                 <button type="button" aria-label="@L["Samples.FindVendor"]" data-testid="po-entry-header-vendor-lookup"
-                        @onclick="() => OpenVendorLookup(po)">…</button>
+                        @onclick="OpenVendorLookup">…</button>
             </div>
-            <QuroText Label="@L["Samples.VendorName"]" @bind-Value="po.VendorName" LockMode="LockMode.Always" Span="2" TestId="po-entry-header-vendor-name" />
-            <QuroText Label="@L["Samples.VendorMessage"]" @bind-Value="po.VendorMessage" Rows="3" Span="4" TestId="po-entry-header-vendor-message" />
+            <QuroText Label="@L["Samples.VendorName"]" Field="VendorName" LockMode="LockMode.Always" Span="2" TestId="po-entry-header-vendor-name" />
+            <QuroText Label="@L["Samples.VendorMessage"]" Field="VendorMessage" Rows="3" Span="4" TestId="po-entry-header-vendor-message" />
         </HeaderFields>
         <Totals Context="lines">
-            <QuroTotals Subtotal="@lines.Sum(l => l.Amount)" TestId="po-entry-totals" />
+            <QuroTotals Subtotal="@lines.Sum(l => l.Amount ?? 0)" TestId="po-entry-totals" />
         </Totals>
-        <LineColumns>
-            <QuroColumn TRow="SamplePoLine" Title="@L["Samples.Item"]" Value="l => l.ItemCode" Context="line">
-                <div class="quro-lookup-field">
-                    <QuroText Label="@L["Samples.Item"]" HideLabel @bind-Value="line.ItemCode" @bind-Value:after="() => FillItem(line)"
-                              Required TextCase="TextCase.Upper" TestId="po-entry-line-item-code" />
-                    <button type="button" aria-label="@L["Samples.FindItem"]" data-testid="po-entry-line-item-lookup"
-                            @onclick="() => OpenItemLookup(line)">…</button>
-                </div>
-            </QuroColumn>
-            <QuroColumn TRow="SamplePoLine" Title="@L["Samples.ItemName"]" Value="l => l.ItemName" />
-            <QuroColumn TRow="SamplePoLine" Title="@L["Samples.Qty"]" Value="l => l.Qty" Format="N2" Context="line">
-                <QuroNumber Label="@L["Samples.Qty"]" HideLabel @bind-Value="line.Qty" Required TestId="po-entry-line-qty" />
-            </QuroColumn>
-            <QuroColumn TRow="SamplePoLine" Title="@L["Samples.Fob"]" Value="l => l.Fob" Format="N2" Context="line">
-                <QuroNumber Label="@L["Samples.Fob"]" HideLabel @bind-Value="line.Fob" Required TestId="po-entry-line-fob" />
-            </QuroColumn>
-            <QuroColumn TRow="SamplePoLine" Title="@L["Samples.Amount"]" Value="l => l.Amount" Format="N2" />
-        </LineColumns>
     </QuroHeaderDetail>
 
     <QuroLookupDialog TItem="SampleLookupRow" Title="@L["Samples.FindVendor"]" TestId="po-entry-vendor-lookup"
@@ -77,24 +60,14 @@
             <QuroColumn TRow="SampleLookupRow" Title="@L["Samples.Name"]" Value="r => r.Name" />
         </Columns>
     </QuroLookupDialog>
-
-    <QuroLookupDialog TItem="SampleLookupRow" Title="@L["Samples.FindItem"]" TestId="po-entry-item-lookup"
-                      @bind-Visible="_itemLookupOpen" Search="k => Task.FromResult(_store.FindItems(k))" OnSelected="SelectItem">
-        <Columns>
-            <QuroColumn TRow="SampleLookupRow" Title="@L["Samples.Code"]" Value="r => r.Code" />
-            <QuroColumn TRow="SampleLookupRow" Title="@L["Samples.Name"]" Value="r => r.Name" />
-            <QuroColumn TRow="SampleLookupRow" Title="@L["Samples.Fob"]" Value="r => r.DefaultPrice" Format="N2" />
-        </Columns>
-    </QuroLookupDialog>
 }
 
 @code {
     private SamplePoStore? _store;
+    private static readonly string[] UpperCase = ["itemCode"];
+
     private QuroHeaderDetail<SamplePo, SamplePoLine>? _frame;
-    private SamplePo? _vendorTarget;
-    private SamplePoLine? _itemTarget;
     private bool _vendorLookupOpen;
-    private bool _itemLookupOpen;
 
     protected override void OnInitialized()
     {
@@ -134,43 +107,26 @@
 
     private string StatusText(string status) => L[$"Samples.PoStatus.{status}"];
 
-    private void FillVendor(SamplePo po) => po.VendorName = _store!.Vendor(po.VendorCode)?.Name;
-
-    // A typed item code fills the name, and the default price while no price is entered yet
-    private void FillItem(SamplePoLine line)
+    // A typed or picked vendor code fills the vendor name
+    private void HeaderChanged(string field)
     {
-        var item = _store!.Item(line.ItemCode);
-        line.ItemName = item?.Name;
-        line.Fob ??= item?.DefaultPrice;
-    }
-
-    private void OpenVendorLookup(SamplePo po)
-    {
-        _vendorTarget = po;
-        _vendorLookupOpen = true;
-    }
-
-    private void OpenItemLookup(SamplePoLine line)
-    {
-        _itemTarget = line;
-        _itemLookupOpen = true;
-    }
-
-    private void SelectVendor(SampleLookupRow vendor)
-    {
-        if (_vendorTarget is not null)
+        if (field == nameof(SamplePo.VendorCode))
         {
-            _vendorTarget.VendorCode = vendor.Code;
-            FillVendor(_vendorTarget);
+            var code = _frame!.HeaderValueOf(nameof(SamplePo.VendorCode)) as string;
+            _frame.SetHeaderValue(nameof(SamplePo.VendorName), _store!.Vendor(code)?.Name);
         }
     }
 
-    private void SelectItem(SampleLookupRow item)
+    // The samplePoItem lookup: typed text for the popup cell and its dialog, or the pasted codes in one call.
+    // A real screen calls the item API (GET /api/bc/items?codes=A,B,C)
+    private Task<IReadOnlyList<LookupRow>> LookupItems(LookupQuery query)
     {
-        if (_itemTarget is not null)
-        {
-            _itemTarget.ItemCode = item.Code;
-            FillItem(_itemTarget);
-        }
+        var items = query.Codes is { } codes ? codes.Select(_store!.Item).OfType<SampleLookupRow>() : _store!.FindItems(query.Keyword);
+        IReadOnlyList<LookupRow> rows = [.. items.Select(i => LookupRow.Of(("itemCode", i.Code), ("itemName", i.Name), ("fob", i.DefaultPrice)))];
+        return Task.FromResult(rows);
     }
+
+    private void OpenVendorLookup() => _vendorLookupOpen = true;
+
+    private void SelectVendor(SampleLookupRow vendor) => _frame!.SetHeaderValue(nameof(SamplePo.VendorCode), vendor.Code);
 }

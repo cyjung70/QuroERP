@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Time.Testing;
+using QuroErp.Application.Common;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Common.Auth;
@@ -40,7 +41,7 @@ public class ChangePasswordTests
 
     private LoginService Service =>
         new(_users, new FakeUserLoginLogRepository(), _settings, _autoLoginTokens, _history, _passwords,
-            new FakeAccessTokenIssuer(), _unitOfWork, _clock);
+            new FakeAccessTokenIssuer(), _unitOfWork, _clock, new BusinessClock(_clock, () => "UTC"));
 
     private Task<LoginResponse> ChangeAsync(string? current, string? next) =>
         Service.ChangePasswordAsync(7, new ChangePasswordRequest(current, next), CancellationToken.None);

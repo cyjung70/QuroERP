@@ -27,6 +27,7 @@ public class SamplePageHostTests(WebFactory factory) : IClassFixture<WebFactory>
     [InlineData("/samples/header-detail")]
     [InlineData("/samples/master-detail")]
     [InlineData("/samples/po-entry")]
+    [InlineData("/samples/free-form")]
     public async Task SamplePage_Anonymous_RedirectsToLogin(string path)
     {
         var response = await factory.CreateBrowser().GetAsync(path);

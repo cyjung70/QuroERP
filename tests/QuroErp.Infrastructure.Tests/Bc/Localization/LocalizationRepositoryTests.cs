@@ -41,8 +41,8 @@ public class LocalizationRepositoryTests(AuthSchemaFixture db)
         var repository = db.Get<ILocalizationRepository>();
         await uow.Transaction.Connection!.ExecuteAsync(
             """
-            INSERT INTO bc_company (id, name, country_code, base_currency_code, default_lang_code, created_by, updated_by)
-            VALUES (1, 'Quro', 'KR', 'KRW', 'ko', 's', 's'), (2, 'Other', 'US', 'USD', 'en', 's', 's')
+            INSERT INTO bc_company (id, name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
+            VALUES (1, 'Quro', 'KR', 'KRW', 'ko', 'Asia/Seoul', 's', 's'), (2, 'Other', 'US', 'USD', 'en', 'America/New_York', 's', 's')
             """,
             transaction: uow.Transaction);
 
@@ -51,7 +51,7 @@ public class LocalizationRepositoryTests(AuthSchemaFixture db)
         var names = await new TranslationService(db.Get<ITranslationRepository>(), repository).GetNamesAsync(
             TranslationTarget.CurrencyName, currencies.Select(c => c.Id).ToList(), "sw", uow.Transaction, CancellationToken.None);
 
-        company.Should().Be(new CompanyLocalizationRow("KR", "KRW", "ko", "DOCUMENT"));
+        company.Should().Be(new CompanyLocalizationRow("KR", "KRW", "ko", "DOCUMENT", "Asia/Seoul"));
         names.Values.Should().BeEquivalentTo("대한민국 원", "미국 달러");
     }
 
@@ -67,8 +67,8 @@ public class LocalizationRepositoryTests(AuthSchemaFixture db)
 
         var act = () => uow.Transaction.Connection!.ExecuteAsync(
             """
-            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, tax_calc_mode, created_by, updated_by)
-            VALUES ('Quro', @CountryCode, @BaseCurrencyCode, @DefaultLangCode, @TaxCalcMode, 's', 's')
+            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, tax_calc_mode, created_by, updated_by)
+            VALUES ('Quro', @CountryCode, @BaseCurrencyCode, @DefaultLangCode, 'Asia/Seoul', @TaxCalcMode, 's', 's')
             """,
             new { CountryCode = countryCode, BaseCurrencyCode = baseCurrencyCode, DefaultLangCode = defaultLangCode, TaxCalcMode = taxCalcMode },
             uow.Transaction);

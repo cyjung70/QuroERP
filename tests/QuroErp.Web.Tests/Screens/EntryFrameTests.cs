@@ -8,7 +8,8 @@ namespace QuroErp.Web.Tests.Screens;
 
 /// <summary>
 /// The SM entry frame (TASK-CORE-031, entry-frame.md): five parts, command groups, disabled commands, field and row
-/// colors, status chip, status commands and shortcuts. Uses the PO Entry sample.
+/// colors, status chip, status commands and shortcuts. Uses the PO Entry sample; the lines are the package grid
+/// (TASK-CORE-056).
 /// </summary>
 public class EntryFrameTests : ScreenContext
 {
@@ -17,9 +18,15 @@ public class EntryFrameTests : ScreenContext
     private IRenderedComponent<SamplePoEntry> Open(string poNo = "PO261000001")
     {
         var page = Render<SamplePoEntry>(p => p.Add(x => x.PoNo, poNo));
-        page.WaitForAssertion(() => page.FindAll("[data-testid=po-entry-line-item-code]").Should().HaveCount(2));
+        page.WaitForAssertion(() => Lines(page).Rows.Should().HaveCount(2));
         return page;
     }
+
+    private static DataGridPage<SamplePoLine> Lines(IRenderedComponent<SamplePoEntry> page) =>
+        page.DataGrid<SamplePoLine, SamplePoEntry>("po-entry-line");
+
+    private static QuroHeaderDetail<SamplePo, SamplePoLine> Frame(IRenderedComponent<SamplePoEntry> page) =>
+        page.FindComponent<QuroHeaderDetail<SamplePo, SamplePoLine>>().Instance;
 
     private static AngleSharp.Dom.IElement Button(IRenderedComponent<SamplePoEntry> page, string action) =>
         page.Find($"[data-testid={Screen}-toolbar-{action}]");
@@ -91,27 +98,35 @@ public class EntryFrameTests : ScreenContext
     public void AddRow_InsertsBelowSelectedLine_AndSelectsIt()
     {
         var page = Open();
-        page.Find("[data-testid=po-entry-line] tr[data-row-index='0']").Click();
-        page.Find("tr[data-row-index='0']").ClassList.Should().Contain("quro-row-selected");
+        var lines = Lines(page);
+        lines.Select(0);
 
         Button(page, "add-row").Click();
 
-        page.FindAll("[data-testid=po-entry-line-item-code]").Select(i => i.GetAttribute("value"))
-            .Should().Equal("COMIX010", null, "KBD10001");
-        page.Find("tr[data-row-index='1']").ClassList.Should().Contain("quro-row-selected");
-        page.Find("tr[data-row-index='1'] [data-state]").GetAttribute("data-state").Should().Be("I");
+        lines.Column("itemCode").Should().Equal("COMIX010", "", "KBD10001");
+        var added = lines.KeyOf(1);
+        Frame(page).Lines.CurrentRowKey.Should().Be(added);
+        Frame(page).Lines.GetState(added).Should().Be(Quro.Grid.Data.RowState.Inserted);
     }
 
     [Fact]
-    public void MarkDelete_NewLine_IsRemovedAtOnce()
+    public void MarkDelete_NewLine_IsRemovedAtOnce_ASavedLineIsMarkedAndUnmarked()
     {
         var page = Open();
+        var lines = Lines(page);
         Button(page, "add-row").Click();
 
         Button(page, "mark-delete").Click();
 
-        page.FindAll("[data-testid=po-entry-line-item-code]").Should().HaveCount(2);
-        page.FindAll("[data-state]").Should().BeEmpty();
+        lines.Rows.Should().HaveCount(2);
+        Frame(page).Lines.HasChanges.Should().BeFalse();
+
+        lines.Select(0);
+        Button(page, "mark-delete").Click();
+        Frame(page).Lines.GetState(lines.KeyOf(0)).Should().Be(Quro.Grid.Data.RowState.Deleted);
+        Button(page, "mark-delete").GetAttribute("aria-pressed").Should().Be("true");
+        Button(page, "mark-delete").Click();
+        Frame(page).Lines.HasChanges.Should().BeFalse();
     }
 
     [Fact]
@@ -131,8 +146,9 @@ public class EntryFrameTests : ScreenContext
         {
             Button(page, action).HasAttribute("disabled").Should().BeTrue(action);
         }
-        page.Find("[data-testid=po-entry-header-vendor-code]").HasAttribute("readonly").Should().BeTrue();
         Field(page, "vendor-code").ClassList.Should().Contain("quro-field-readonly");
+        Lines(page).IsReadOnly(0, "qty").Should().BeTrue("an approved PO's lines are locked");
+        Lines(page).Edit(0, "qty", "9").Should().BeFalse();
         PoStore.FindPo("PO261000001")!.Value.Po.Status.Should().Be(SamplePoStore.Approved);
     }
 
@@ -140,7 +156,7 @@ public class EntryFrameTests : ScreenContext
     public void StatusCommand_WithUnsavedChanges_AsksToSaveFirst()
     {
         var page = Open();
-        page.FindAll("[data-testid=po-entry-line-qty]")[0].Change("9");
+        Lines(page).Edit(0, "qty", "9");
 
         Button(page, "approve").Click();
 
@@ -157,7 +173,7 @@ public class EntryFrameTests : ScreenContext
         var page = Open();
         page.FindAll("[data-testid=po-entry-revision]").Should().BeEmpty();
 
-        page.FindAll("[data-testid=po-entry-line-qty]")[0].Change("3");
+        Lines(page).Edit(0, "qty", "3");
         Button(page, "save").Click();
 
         page.Find("[data-testid=po-entry-revision]").TextContent.Should().Be("Rev. 1");
@@ -180,7 +196,7 @@ public class EntryFrameTests : ScreenContext
     public void Search_WithUnsavedChanges_AsksBeforeOpeningDialog()
     {
         var page = Open();
-        page.FindAll("[data-testid=po-entry-line-qty]")[0].Change("9");
+        Lines(page).Edit(0, "qty", "9");
         Confirm.Answer = false;
 
         Button(page, "search").Click();
@@ -196,41 +212,27 @@ public class EntryFrameTests : ScreenContext
         JSInterop.VerifyInvoke("quroEntryShortcuts");
 
         await Shortcut(page, "add-row");
-        page.FindAll("[data-testid=po-entry-line-item-code]").Should().HaveCount(3);
+        Lines(page).Rows.Should().HaveCount(3);
         await Shortcut(page, "mark-delete");
-        page.FindAll("[data-testid=po-entry-line-item-code]").Should().HaveCount(2);
+        Lines(page).Rows.Should().HaveCount(2);
         await Shortcut(page, "search");
         page.FindAll("[data-testid=po-entry-find]").Should().ContainSingle();
 
         page.Find("[data-testid=po-entry-find-close]").Click();
         Button(page, "approve").Click();
         await Shortcut(page, "add-row");
-        page.FindAll("[data-testid=po-entry-line-item-code]").Should().HaveCount(2);
+        Lines(page).Rows.Should().HaveCount(2);
     }
 
     [Fact]
-    public void LockedLine_AllCellsReadOnly_AndCannotBeMarked()
+    public void LockedLine_CannotBeEdited_OrMarked()
     {
         var store = new SampleStore();
         var page = Render<QuroHeaderDetail<SampleOrder, SampleLine>>(p => p
             .Add(x => x.Title, "T")
             .Add(x => x.TestId, "t")
+            .Add(x => x.Definition, "samples.order.entry")
             .Add(x => x.HeaderFields, (RenderFragment<SampleOrder>)(_ => _ => { }))
-            .Add(x => x.LineColumns, (RenderFragment)(b =>
-            {
-                b.OpenComponent<QuroColumn<SampleLine>>(0);
-                b.AddAttribute(1, nameof(QuroColumn<SampleLine>.Title), "Qty");
-                b.AddAttribute(2, nameof(QuroColumn<SampleLine>.Value), (Func<SampleLine, object?>)(l => l.Qty));
-                b.AddAttribute(3, nameof(QuroColumn<SampleLine>.ChildContent), (RenderFragment<SampleLine>)(line => c =>
-                {
-                    c.OpenComponent<QuroNumber>(0);
-                    c.AddAttribute(1, nameof(QuroNumber.Label), "Qty");
-                    c.AddAttribute(2, nameof(QuroNumber.Value), line.Qty);
-                    c.AddAttribute(3, nameof(QuroNumber.TestId), "t-line-qty");
-                    c.CloseComponent();
-                }));
-                b.CloseComponent();
-            }))
             .Add(x => x.FindColumns, (RenderFragment)(_ => { }))
             .Add(x => x.Find, _ => Task.FromResult<IReadOnlyList<SampleOrder>>([]))
             .Add(x => x.Load, _ => Task.FromResult<HeaderLines<SampleOrder, SampleLine>?>(null))
@@ -240,14 +242,14 @@ public class EntryFrameTests : ScreenContext
             .Add(x => x.CreateLine, _ => new SampleLine())
             .Add(x => x.Save, (o, _, _) => Task.FromResult(new HeaderLines<SampleOrder, SampleLine>(o, [])))
             .Add(x => x.IsLineLocked, l => l.ItemCode == "A100"));
-        page.WaitForAssertion(() => page.FindAll("[data-testid=t-line-qty]").Should().HaveCount(2));
+        var lines = page.DataGrid<SampleLine, QuroHeaderDetail<SampleOrder, SampleLine>>("t-line");
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
 
-        page.Find("tr[data-row-index='0']").ClassList.Should().Contain("quro-row-locked");
-        page.FindAll("[data-testid=t-line-qty]")[0].HasAttribute("readonly").Should().BeTrue();
-        page.FindAll("[data-testid=t-line-qty]")[1].HasAttribute("readonly").Should().BeFalse();
-        page.Find("tr[data-row-index='0']").Click();
+        lines.Edit(0, "qty", "9").Should().BeFalse();
+        lines.Edit(1, "qty", "9").Should().BeTrue();
+        lines.Select(0);
         page.Find("[data-testid=t-toolbar-mark-delete]").HasAttribute("disabled").Should().BeTrue();
-        page.Find("tr[data-row-index='1']").Click();
+        lines.Select(1);
         page.Find("[data-testid=t-toolbar-mark-delete]").HasAttribute("disabled").Should().BeFalse();
     }
 }

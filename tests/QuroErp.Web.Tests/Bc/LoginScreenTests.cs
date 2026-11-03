@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using QuroErp.Contracts.Bc.Localization;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Web.Auth;
 
@@ -17,6 +17,9 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
         "login-header-user-id", "login-header-password", "login-header-show-password", "login-header-remember-id",
         "login-header-keep-signed-in", "login-toolbar-login", "login-forgot-password", "login-language",
     ];
+
+    // Split layout (TASK-CORE-036): the form, then the language selector, then version and copyright
+    private static readonly string[] FormPanelOrder = ["login-header-user-id", "login-toolbar-login", "login-language", "login-version"];
 
     [Fact, Trait("Id", "BC-002-WT-01")]
     public async Task Page_ShowsItemsInTabOrder_WithLimitsAndAutocomplete()
@@ -33,22 +36,6 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
             .And.NotContain("지우기");
     }
 
-    [Fact, Trait("Id", "CORE-036-WT-01")]
-    public async Task Page_IsSplit_BrandPanelWithoutInputsBeforeTheFormPanel()
-    {
-        factory.LoginOptions = new LoginOptionsResponse(true, "ADMIN_ONLY", 30);
-
-        var html = WebUtility.HtmlDecode(await factory.CreateClient().GetStringAsync(WebAuthentication.LoginPath));
-
-        var brand = Regex.Match(html, "<aside class=\"login-brand\"[^>]*data-testid=\"login-brand\"[^>]*>(.*?)</aside>", RegexOptions.Singleline);
-        brand.Success.Should().BeTrue();
-        brand.Groups[1].Value.Should().Contain(">QuroERP<").And.Contain("구매·판매·재고를 한 곳에서")
-            .And.NotContainAny("<input", "<select", "<button", "<form");
-        var panel = html.IndexOf("class=\"login-panel\"", StringComparison.Ordinal);
-        panel.Should().BeGreaterThan(brand.Index);
-        TabOrder.Should().OnlyContain(id => html.IndexOf($"data-testid=\"{id}\"", StringComparison.Ordinal) > panel);
-    }
-
     [Fact, Trait("Id", "BC-UC-001-T13")]
     public async Task Page_AutoLoginOff_HasNoKeepSignedInCheckbox()
     {
@@ -57,6 +44,23 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
         var html = await factory.CreateClient().GetStringAsync(WebAuthentication.LoginPath);
 
         html.Should().NotContain("login-header-keep-signed-in").And.Contain("login-header-remember-id");
+    }
+
+    [Fact, Trait("Id", "CORE-036-WT-01")]
+    public async Task Page_IsSplit_BrandPanelThenFormPanel_WithLanguageAndVersionInTheFormPanel()
+    {
+        factory.LoginOptions = new LoginOptionsResponse(false, "ADMIN_ONLY", 30);
+
+        var html = WebUtility.HtmlDecode(await factory.CreateClient().GetStringAsync(WebAuthentication.LoginPath));
+
+        var brand = html.IndexOf("data-testid=\"login-brand\"", StringComparison.Ordinal);
+        var panel = html.IndexOf("data-testid=\"login-panel\"", StringComparison.Ordinal);
+        brand.Should().BeGreaterThanOrEqualTo(0).And.BeLessThan(panel);
+        html[brand..panel].Should().Contain("img/quro-logo-white").And.Contain("alt=\"QuroERP\"")
+            .And.Contain("오픈소스 ERP 플랫폼").And.Contain("Community Edition").And.NotContain("<input");
+        FormPanelOrder.Select(id => html.IndexOf($"data-testid=\"{id}\"", StringComparison.Ordinal))
+            .Should().OnlyContain(i => i > panel).And.BeInAscendingOrder();
+        html.Should().Contain("img/quro-logo").And.NotContain("login-scene");
     }
 
     [Fact, Trait("Id", "BC-002-WT-02")]
@@ -123,7 +127,42 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
 
         var html = WebUtility.HtmlDecode(await browser.GetStringAsync("/"));
 
-        html.Should().MatchRegex("data-testid=\"home-last-login\">직전 로그인: [^<]+\\(IP 10\\.0\\.0\\.7\\)<");
+        html.Should().MatchRegex("data-testid=\"home-last-login\"[^>]*>직전 로그인: [^<]+\\(IP 10\\.0\\.0\\.7\\)<");
+    }
+
+    // The previous sign-in was 2026-10-28 09:30 UTC: 05:30 in New York (EDT), 18:30 in Seoul
+    [Theory, Trait("Id", "CORE-024-WT-01"), Trait("Rule", "BC-BR-318")]
+    [InlineData("America/New_York", "2026-10-28 오전 5:30")]
+    [InlineData("Asia/Seoul", "2026-10-28 오후 6:30")]
+    public async Task MainScreen_ShowsThePreviousSignIn_InTheCompanyTimeZone(string timeZone, string shown)
+    {
+        SignInResponse();
+        factory.AuthRouteResponse = path => path.EndsWith(AuthRoutes.Me, StringComparison.Ordinal)
+            ? new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new MeResponse("kim", "Kim", "user", "ko", false, null, null, null, [], "Quro Co.")),
+            }
+            : null;
+        factory.BusinessApiResponse = _ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new LocalizationDto("US", "USD", "en", timeZone, "SALES_TAX", "MM/dd/yyyy", "DOCUMENT",
+                [new LanguageDto("ko", 1), new LanguageDto("en", 2)], [], [], [])),
+        };
+        try
+        {
+            var (browser, token) = await OpenAsync();
+            await PostAsync(browser, token, "kim", "pass");
+
+            var html = WebUtility.HtmlDecode(await browser.GetStringAsync("/"));
+
+            // The ko display patterns (i18n.md "숫자·날짜"); the hour is what the time zone decides
+            html.Should().MatchRegex($"data-testid=\"home-last-login\"[^>]*>직전 로그인: {shown} \\(IP 10\\.0\\.0\\.7\\)<");
+        }
+        finally
+        {
+            factory.AuthRouteResponse = _ => null;
+            factory.BusinessApiResponse = _ => new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
     }
 
     private void SignInResponse()

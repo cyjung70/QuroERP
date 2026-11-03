@@ -8,7 +8,7 @@ internal sealed class LocalizationRepository : ILocalizationRepository
 {
     // Single company (BC-BR-301): the lowest id is the company
     private const string SelectCompany = """
-        SELECT country_code, base_currency_code, default_lang_code, tax_calc_mode
+        SELECT country_code, base_currency_code, default_lang_code, tax_calc_mode, time_zone
         FROM bc_company
         ORDER BY id
         LIMIT 1

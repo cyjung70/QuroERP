@@ -1,0 +1,30 @@
+@* Audit line at the bottom of an S or SM screen: created and updated time and user (screen-templates.md 0, entry-frame.md 1).
+   Empty for a new record. *@
+@using QuroErp.Web.Common
+@inject IStringLocalizer<SharedResource> L
+@inject CompanyTime CompanyTime
+
+<footer class="quro-entry-audit" data-testid="@TestId">
+    @if (Audit is not null)
+    {
+        <dl><dt>@L["Common.Audit.Created"]</dt><dd>@Stamp(Audit.CreatedAt, Audit.CreatedBy)</dd></dl>
+        <dl><dt>@L["Common.Audit.Updated"]</dt><dd>@Stamp(Audit.UpdatedAt, Audit.UpdatedBy)</dd></dl>
+    }
+</footer>
+
+@code {
+    /// <summary>Audit of the open record; null for a new one.</summary>
+    [Parameter]
+    public QuroAudit? Audit { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private TimeZoneInfo _zone = TimeZoneInfo.Utc;
+
+    protected override async Task OnInitializedAsync() => _zone = await CompanyTime.GetZoneAsync(CancellationToken.None);
+
+    // In the company time zone and the user's language format (screen-templates.md 0, BC-BR-318)
+    private string Stamp(DateTimeOffset? at, string? by) =>
+        string.Join(' ', new[] { at is { } time ? CompanyTime.Format(time, _zone) : null, by }.Where(s => !string.IsNullOrEmpty(s)));
+}

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Time.Testing;
+using QuroErp.Application.Common;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Common.Auth;
@@ -41,7 +42,7 @@ public class LoginServiceTests
     private AppUser Kim => _users.Users.Single(u => u.Id == 7);
 
     private LoginService Service =>
-        new(_users, _logs, _settings, _autoLoginTokens, _history, _passwords, new FakeAccessTokenIssuer(), _unitOfWork, _clock);
+        new(_users, _logs, _settings, _autoLoginTokens, _history, _passwords, new FakeAccessTokenIssuer(), _unitOfWork, _clock, new BusinessClock(_clock, () => "UTC"));
 
     private Task<LoginResponse> LoginAsync(string loginId, string password, bool autoLogin = false, string? language = null) =>
         Service.LoginAsync(new LoginRequest(loginId, password, autoLogin, language), Client, CancellationToken.None);
@@ -488,8 +489,9 @@ public class LoginServiceTests
     [Fact, Trait("Id", "BC-UC-001-T02")]
     public async Task MeAsync_ReturnsUserMenusAndDefaultWarehouse()
     {
-        _users.Menus.Add(new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y"));
+        _users.Menus.Add(new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y", "P"));
         _users.DefaultWarehouse = new AuthWarehouse(1, "W01", "Main");
+        _users.CompanyName = "Quro Test Co.";
 
         var me = await Service.MeAsync(7, CancellationToken.None);
 
@@ -499,7 +501,8 @@ public class LoginServiceTests
             RoleCode = "admin",
             MustChangePassword = false,
             DefaultWarehouse = new AuthWarehouse(1, "W01", "Main"),
-            Menus = new[] { new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y") },
+            Menus = new[] { new AuthMenu("BC01", "Company", "bc-company", "BC", null, "Y", "P") },
+            CompanyName = "Quro Test Co.",
         });
     }
 

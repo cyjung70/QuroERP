@@ -52,7 +52,7 @@ public class TranslationServiceTests
     [Fact, Trait("Id", "BC-UT-402")]
     public async Task GetNamesAsync_RequestedMissing_UsesCompanyDefaultLanguageBeforeEn()
     {
-        _localization.Company = new CompanyLocalizationRow("KR", "KRW", "ko", "DOCUMENT");
+        _localization.Company = new CompanyLocalizationRow("KR", "KRW", "ko", "DOCUMENT", "Asia/Seoul");
 
         var names = await Service.GetNamesAsync(
             TranslationTarget.CodeMajor, [1, 2, 4], "sw", null!, CancellationToken.None);

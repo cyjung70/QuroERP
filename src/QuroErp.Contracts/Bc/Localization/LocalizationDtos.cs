@@ -20,10 +20,12 @@ public static class LocalizationRoutes
 /// <param name="TaxMethod">SALES_TAX or VAT, from the country.</param>
 /// <param name="DateFormat">.NET date format of the country, e.g. MM/dd/yyyy.</param>
 /// <param name="TaxCalcMode">DOCUMENT or LINE (BC-BR-543).</param>
+/// <param name="TimeZone">IANA name of the company time zone; the web shows every time in it (BC-BR-318).</param>
 public sealed record LocalizationDto(
     string CountryCode,
     string BaseCurrencyCode,
     string DefaultLangCode,
+    string TimeZone,
     string TaxMethod,
     string DateFormat,
     string TaxCalcMode,

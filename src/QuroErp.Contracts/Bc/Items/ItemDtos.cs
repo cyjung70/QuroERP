@@ -1,3 +1,5 @@
+using QuroErp.Contracts.Common;
+
 namespace QuroErp.Contracts.Bc.Items;
 
 /// <summary>Item master API routes (BC-UC-009).</summary>
@@ -63,7 +65,10 @@ public sealed record ItemDto(
     decimal MvgCost,
     decimal OnhandQty,
     decimal StkVal,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset CreatedAt,
+    string CreatedBy,
+    DateTimeOffset UpdatedAt,
+    string UpdatedBy) : AuditInfo(CreatedAt, CreatedBy, UpdatedAt, UpdatedBy);
 
 /// <summary>A page of items in item class, item code order (the screen's previous and next order).</summary>
 public sealed record ItemListDto(IReadOnlyList<ItemDto> Items, int Total);

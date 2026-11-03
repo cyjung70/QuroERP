@@ -12,7 +12,8 @@ public class LocalizationApiTests(ApiFactory factory) : IClassFixture<ApiFactory
 {
     private string? _accessToken;
 
-    [Fact, Trait("Id", "CORE-014-IT-01")]
+    // BC-BR-426: screens size their fields from these values only (currency country, country unit price and module quantity decimals)
+    [Fact, Trait("Id", "CORE-014-IT-01"), Trait("Id", "BC-UT-426"), Trait("Rule", "BC-BR-426")]
     public async Task Get_SignedIn_ReturnsCompanyCountryValuesAndSettingsInUse()
     {
         var client = await SignedInClientAsync();
@@ -22,6 +23,7 @@ public class LocalizationApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         dto!.CountryCode.Should().Be("KR");
         dto.BaseCurrencyCode.Should().Be("KRW");
         dto.DefaultLangCode.Should().Be("ko");
+        dto.TimeZone.Should().Be("Asia/Seoul");
         dto.TaxMethod.Should().Be("VAT");
         dto.DateFormat.Should().Be("yyyy-MM-dd");
         dto.TaxCalcMode.Should().Be("DOCUMENT");

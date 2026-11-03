@@ -31,6 +31,18 @@ public sealed class DatabaseFactAttribute : FactAttribute
     }
 }
 
+/// <summary>연결 문자열이 없으면 건너뛰는 DB 통합 테스트 (데이터 행마다).</summary>
+public sealed class DatabaseTheoryAttribute : TheoryAttribute
+{
+    public DatabaseTheoryAttribute()
+    {
+        if (string.IsNullOrWhiteSpace(TestDatabase.ConnectionString))
+        {
+            Skip = TestDatabase.SkipReason;
+        }
+    }
+}
+
 public sealed class MigratedSchemaFixture : IDisposable
 {
     public MigratedSchemaFixture()

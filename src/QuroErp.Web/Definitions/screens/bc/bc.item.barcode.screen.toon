@@ -1,0 +1,28 @@
+# BC-UC-011 item barcodes (TASK-CORE-057), view only. The price format comes from the localization settings.
+screen:
+  id: bc.item.barcode
+  module: BC
+  title: Bc.ItemBarcode.Title
+  version: 1
+  api: /api/bc/item-barcodes
+  key: id
+  layout: grid
+  perm:
+    read: BC.Read
+    write: BC.Write
+toolbar[2]: query,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: barcodes
+    bind: barcodes
+    rowKey: id
+    deletedRows: strike
+    columns[4]{id,label,type,width,edit,req,fmt,source,hidden}:
+      itemCd,Bc.ItemBarcode.ItemCd,text,120,false,false,"","",false
+      itemName,Bc.ItemBarcode.ItemName,text,220,false,false,"","",false
+      soUsdPrc,Bc.ItemBarcode.SoUsdPrc,number,110,false,false,"","",false
+      upcCode,Bc.ItemBarcode.UpcCode,text,140,false,false,"","",false

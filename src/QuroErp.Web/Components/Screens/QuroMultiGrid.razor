@@ -1,34 +1,105 @@
-@* Screen type M: search conditions → grid (view or row edit) → batch save of changed rows (screens.md). *@
+@* Screen type M: search conditions → grid (view or row edit) → batch save of changed rows (screens.md).
+   The grid is the QuroGrid package over a data set, its columns and rules from the screen's .toon
+   (TASK-CORE-055, qurogrid-integration.md 10). *@
 @typeparam TRow where TRow : class
 @attribute [CascadingTypeParameter(nameof(TRow))]
 @inherits QuroScreenBase
+@using Quro.Grid
+@using Quro.Grid.Data
+@using Quro.Grid.Definition
+@using QuroErp.Web.Common
 @inject IJSRuntime JS
+@inject IServiceProvider Services
 
-<QuroScreenFrame Title="@Title" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
-                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice">
+<QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
+                 OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice" Policies="Policies">
     <Toolbar>
-        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync"
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanShowAllFields="CanShowAllFields" ShowAllFields="Policies.ShowAllFields" OnToggleShowAllFields="ToggleShowAllFields" CanNew="CanWrite" CanSave="CanWrite"
                      OnNew="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)"
                      OnSave="@(Editable ? EventCallback.Factory.Create(this, SaveAsync) : default)"
-                     OnPrint="OnPrint" OnExport="ExportAsync" />
+                     OnPrint="OnPrint" OnExport="ExportAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
-        <QuroGrid @ref="_grid" TRow="TRow" Rows="_rows" Columns="Columns" Editable="Editable" Busy="Busy" TestId="@Id("grid")"
-                  OnAddRow="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)" OnChanged="StateHasChanged" />
+        @if (_definition is not null)
+        {
+            @* The package ignores button cells of a deleted row, so the selected deleted row is restored from here (TODO(QuroGrid-request)) *@
+            @if (Editable)
+            {
+                <div class="quro-grid-commands">
+                    <button type="button" disabled="@(Busy || !CanWrite || !CurrentIsDeleted)" data-testid="@Id("grid-restore-row")"
+                            @onclick="RestoreCurrent">@L["Common.RestoreRow"]</button>
+                </div>
+            }
+            @* The package rows take no test id or row index yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
+            <div class="quro-grid-host" data-testid="@Id("grid")">
+                <QuroGrid @ref="_dataGrid" TItem="TRow" DataSet="_data" Definition="GridDefinition" Localizer="L" OptionsFor="OptionsFor"
+                          Culture="DisplayCulture.Current" ConfirmLeave="false" AddRowsOnPaste="CanEdit"
+                          ItemsProvider="LoadPage" PageSize="@(_definition.PageSize > 0 ? _definition.PageSize : 100)"
+                          OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged"
+                          OnRowAdded="OnRowAdded" OnRowDeleting="OnRowDeleting" OnPasting="OnPasting"
+                          OnCellButtonClick="OnCellButtonClick">
+                    @* The package puts declared columns after the definition's: the screen's own, then row state, delete and undo *@
+                    @Columns
+                    @if (Editable)
+                    {
+                        <Quro.Grid.QuroColumn Field="@StateField" HeaderKey="Common.RowState" Width="60" Compute="StateOf" />
+                        <Quro.Grid.QuroColumn Field="@DeleteField" HeaderKey="Common.Delete" Type="CellType.Button" TextKey="Common.DeleteRow" Width="70" />
+                        <Quro.Grid.QuroColumn Field="@UndoField" HeaderKey="Common.UndoRow" Type="CellType.Button" TextKey="Common.UndoRow" Width="80" />
+                    }
+                </QuroGrid>
+            </div>
+        }
     </ChildContent>
 </QuroScreenFrame>
 
 @code {
-    private readonly GridRows<TRow> _rows = new();
-    private QuroGrid<TRow>? _grid;
+    private const string StateField = "rowState";
+    private const string DeleteField = "deleteRow";
+    private const string UndoField = "undoRow";
 
-    /// <summary>QuroColumn declarations.</summary>
+    private readonly Dictionary<string, IReadOnlyList<ComboOption>> _options = [];
+    private QuroDataSet<TRow> _data = new();
+    private QuroGrid<TRow>? _dataGrid;
+    private GridDef? _definition;
+    private GridDef? _applied;
+    private GridDef? _locked;
+    private int _policyVersion = -1;
+
+    /// <summary>
+    /// Id of the screen definition (<c>Definitions/screens/**/{id}.screen.toon</c>) whose first grid gives the columns and
+    /// validation rules.
+    /// </summary>
     [Parameter, EditorRequired]
-    public RenderFragment Columns { get; set; } = default!;
+    public string Definition { get; set; } = default!;
+
+    /// <summary>
+    /// Changes the definition grid once when the screen opens, for what is known only at run time: languages in use,
+    /// a format from the localization settings.
+    /// </summary>
+    [Parameter]
+    public Func<GridDef, GridDef>? Adjust { get; set; }
+
+    /// <summary>
+    /// The screen's own package columns after the definition's, for a list the definition cannot name as a source
+    /// (no common code) or a value shown from a resource.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? Columns { get; set; }
+
+    /// <summary>Text fields of a definition grid whose typed value is kept in upper case (a column has no case setting).</summary>
+    [Parameter]
+    public IReadOnlyCollection<string>? UpperCaseFields { get; set; }
 
     /// <summary>Reads the rows for the current search conditions.</summary>
     [Parameter, EditorRequired]
     public Func<Task<IReadOnlyList<TRow>>> Load { get; set; } = default!;
+
+    /// <summary>
+    /// Reads one page of a large list on the server, with the grid's sort and header filters (<c>request.Filters</c>). With a
+    /// definition grid it replaces <see cref="Load"/>; small lists stay in memory.
+    /// </summary>
+    [Parameter]
+    public Func<GridItemsRequest, Task<GridItemsResult<TRow>>>? LoadPage { get; set; }
 
     /// <summary>A new row. An editable grid needs this or <see cref="OnAddRequested"/>.</summary>
     [Parameter]
@@ -45,6 +116,13 @@
     [Parameter]
     public Func<BatchChanges<TRow>, Task>? Save { get; set; }
 
+    /// <summary>
+    /// Permission: false for a user without Full Access (BC-BR-214). New, save and the grid are disabled, not hidden.
+    /// Whether the grid edits at all stays the screen's function (a list without save has no new or save at all).
+    /// </summary>
+    [Parameter]
+    public bool CanWrite { get; set; } = true;
+
     /// <summary>Searches when the screen opens.</summary>
     [Parameter]
     public bool LoadOnStart { get; set; }
@@ -52,15 +130,84 @@
     [Parameter]
     public EventCallback OnPrint { get; set; }
 
-    public override bool IsDirty => _rows.IsDirty;
+    /// <summary>The screen's own commands after the standard buttons and a separator (screen-templates.md 0).</summary>
+    [Parameter]
+    public RenderFragment? ExtraCommands { get; set; }
+
+    public override bool IsDirty => _data.HasChanges;
 
     /// <summary>Rows on the grid that are not marked deleted, including new ones.</summary>
-    public IEnumerable<TRow> Items => _rows.All.Where(r => !r.IsDeleted).Select(r => r.Item);
+    public IEnumerable<TRow> Items => _data.RowKeys.Where(k => _data.GetState(k) != Quro.Grid.Data.RowState.Deleted).Select(_data.GetItem);
+
+    /// <summary>The rows as a data set, e.g. for a screen that reads a column.</summary>
+    public QuroDataSet<TRow> Data => _data;
+
+    /// <summary>The package grid, e.g. for tests that edit through its entry points.</summary>
+    public QuroGrid<TRow>? Grid => _dataGrid;
 
     private bool Editable => Save is not null && (CreateRow is not null || OnAddRequested.HasDelegate);
 
+    private bool CanEdit => Editable && CanWrite;
+
+    // A view-only list or a user without Full Access gets every cell read-only; the package has no grid-wide lock yet (TODO(QuroGrid-R4))
+    private GridDef? GridDefinition => CanEdit ? _applied : _locked;
+
+    // The screen's field policies apply to the columns by their label key (field-policy.md 3). The definitions change only
+    // with the definition or the policies, so the grid is not set up again on every render
+    private void ApplyPolicies()
+    {
+        var version = Policies.Version;
+        if (_definition is null || _policyVersion == version)
+        {
+            return;
+        }
+        _policyVersion = version;
+        _applied = Policies.Apply(_definition);
+        _locked = _applied with
+        {
+            Columns = [.. _applied.Columns.Select(c => c with { Edit = ColumnEdit.ReadOnly, Req = false })],
+        };
+    }
+
+    protected override void OnPoliciesChanged() => ApplyPolicies();
+
+    // The first search runs in OnInitializedAsync, before OnParametersSet, so the definition is resolved there too
+    protected override void OnParametersSet() => ResolveDefinition();
+
+    private void ResolveDefinition()
+    {
+        if (_definition is null)
+        {
+            var grid = ScreenDefinitions.Shared.Get(Definition).Grids[0];
+            _definition = Adjust is null ? grid : Adjust(grid);
+            // Server paging keeps rows by the grid's row key (the definition's rowKey property)
+            var key = typeof(TRow).GetProperty(_definition.RowKey,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+            if (key is not null)
+            {
+                _data = new QuroDataSet<TRow>(item => key.GetValue(item)!);
+            }
+            _data.CurrentRowChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
+        }
+        ApplyPolicies();
+    }
+
+    private bool CurrentIsDeleted =>
+        _data.CurrentRowKey is { } key && _data.GetState(key) == Quro.Grid.Data.RowState.Deleted;
+
+    private void RestoreCurrent()
+    {
+        if (CanWrite && CurrentIsDeleted)
+        {
+            _data.RevertRow(_data.CurrentRowKey!.Value);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        await LoadPoliciesAsync();
+        ResolveDefinition();
+        await LoadOptionsAsync();
         if (LoadOnStart)
         {
             await RunAsync(LoadRowsAsync);
@@ -77,36 +224,91 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Runs an action of the screen other than save (for example a bulk change on the server) with the grid's busy state and
+    /// messages, then reads the rows again. Unsaved changes are confirmed first. The action returns the notice to show, or null.
+    /// </summary>
+    public async Task RunActionAsync(Func<Task<string?>> action)
+    {
+        if (!await ConfirmDiscardAsync())
+        {
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            var notice = await action();
+            await LoadRowsAsync();
+            Notice = notice;
+        });
+        StateHasChanged();
+    }
+
     /// <summary>Adds rows as new (state I), e.g. the ones picked in the screen's dialog.</summary>
     public void AddRows(IEnumerable<TRow> items)
     {
         foreach (var item in items)
         {
-            _rows.Add(item);
+            Add(item);
         }
         StateHasChanged();
     }
 
+    private void Add(TRow item) => _data.MoveTo(_data.AddRow(item));
+
+    // Combo columns name a common code (source code:{Major}); the grid asks for the options while drawing, so they are read first
+    private async Task LoadOptionsAsync()
+    {
+        var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        CodeDataSets? codes = null;
+        foreach (var source in _definition!.Columns.Where(c => c.Type == ColumnType.Select).Select(c => c.DataSource).OfType<string>().Distinct())
+        {
+            if (source.Split(':', 2) is ["code", var major])
+            {
+                try
+                {
+                    codes ??= ActivatorUtilities.GetServiceOrCreateInstance<CodeDataSets>(Services);
+                    var set = await codes.GetAsync(major, lang);
+                    _options[source] = [.. set.RowKeys.Select(set.GetItem).Select(c => new ComboOption(c.Code, c.Name))];
+                }
+                catch (Exception e) when (e is ApiProblemException or HttpRequestException)
+                {
+                    // Without options the stored code still shows; the API rejects a value that is not a code
+                    _options[source] = [];
+                }
+            }
+        }
+    }
+
+    private IReadOnlyList<ComboOption>? OptionsFor(string source) => _options.GetValueOrDefault(source);
+
     private async Task AddRow()
     {
+        if (!CanWrite)
+        {
+            return;
+        }
         if (OnAddRequested.HasDelegate)
         {
             await OnAddRequested.InvokeAsync();
             return;
         }
-        _rows.Add(CreateRow!());
+        Add(CreateRow!());
     }
 
     private async Task SaveAsync()
     {
-        var changes = _rows.Changes();
+        if (!CanWrite)
+        {
+            return;
+        }
+        var changes = Changes();
         if (changes.IsEmpty)
         {
             Error = null;
             Notice = L["Common.NoChanges"];
             return;
         }
-        if (!CheckRequired(_grid?.FirstMissing()))
+        if (!CheckValid())
         {
             return;
         }
@@ -118,26 +320,147 @@
         });
     }
 
+    private BatchChanges<TRow> Changes()
+    {
+        var changes = _data.GetChanges();
+        return new([.. changes.Inserted.Select(r => r.Item)], [.. changes.Updated.Select(r => r.Item)], [.. changes.Deleted.Select(r => r.Item)]);
+    }
+
+    // The definition's req columns are required columns of the data set; the first error is shown with its column header
+    private bool CheckValid()
+    {
+        var result = _data.Validate();
+        if (result.IsValid)
+        {
+            return true;
+        }
+        var error = result.Errors[0];
+        var label = L[ColumnOf(error.Field)?.Label ?? error.Field];
+        if (error.MessageKey == ValidationKeys.Required)
+        {
+            return CheckRequired(new Missing(label));
+        }
+        Error = $"{label}: {L[error.MessageKey]}";
+        Notice = null;
+        return false;
+    }
+
+    private ColumnDef? ColumnOf(string field) =>
+        _definition!.Columns.FirstOrDefault(c => string.Equals(c.Id, field, StringComparison.OrdinalIgnoreCase));
+
     private async Task ExportAsync()
     {
-        if (_grid is null)
+        if (_definition is null)
         {
             return;
         }
-        await RunAsync(async () =>
-        {
-            var rows = _rows.All.Where(r => !r.IsDeleted).Select(r => r.Item);
-            var content = QuroExcel.Create(Title, _grid.ColumnList, rows);
-            await QuroExcel.DownloadAsync(JS, $"{Title}.xlsx", content);
-        });
+        await RunAsync(() => QuroExcel.DownloadAsync(JS, $"{Title}.xlsx", ExportDefinitionGrid()));
+    }
+
+    private byte[] ExportDefinitionGrid()
+    {
+        var columns = _definition!.Columns.Where(c => !c.Hidden).ToList();
+        var rows = _data.RowKeys.Where(k => _data.GetState(k) != Quro.Grid.Data.RowState.Deleted)
+            .Select(k => (IReadOnlyList<object?>)[.. columns.Select(c => _data.GetValue(k, c.Id))]);
+        return QuroExcel.Create(Title, [.. columns.Select(c => L[c.Label].Value)], rows);
     }
 
     private async Task LoadRowsAsync()
     {
-        _rows.Load(await Load());
-        if (_rows.All.Count == 0)
+        if (LoadPage is not null)
+        {
+            if (_dataGrid is not null)
+            {
+                await _dataGrid.ReloadAsync();
+            }
+            return;
+        }
+        var rows = await Load();
+        _data.Load(rows);
+        // Load numbers the rows from 1 again and the package grid redraws a row only when its key, revision or place changes;
+        // applying its own layout again makes it redraw every row (TODO(QuroGrid-request))
+        _dataGrid?.ApplyLayout(_dataGrid.GetLayout());
+        if (rows.Count == 0)
         {
             Notice = L["Common.NoData"];
         }
+    }
+
+    private object? StateOf(object item)
+    {
+        var state = KeyOf((TRow)item) is { } key ? _data.GetState(key) : Quro.Grid.Data.RowState.Normal;
+        return state switch
+        {
+            Quro.Grid.Data.RowState.Inserted => L["Common.RowState.Added"].Value,
+            Quro.Grid.Data.RowState.Updated => L["Common.RowState.Modified"].Value,
+            Quro.Grid.Data.RowState.Deleted => L["Common.RowState.Deleted"].Value,
+            _ => null,
+        };
+    }
+
+    private int? KeyOf(TRow item)
+    {
+        foreach (var key in _data.RowKeys)
+        {
+            if (ReferenceEquals(_data.GetItem(key), item))
+            {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    private void OnCellValueChanging(CellValueChangingArgs<TRow> args) => args.Cancel |= !CanEdit;
+
+    // Upper case is written back as a second value change in the same undo step
+    private void OnCellValueChanged(CellValueChangedArgs<TRow> args)
+    {
+        if (args.NewValue is string text && UpperCaseFields?.Contains(args.Field, StringComparer.OrdinalIgnoreCase) == true)
+        {
+            var upper = text.ToUpperInvariant();
+            if (upper != text)
+            {
+                _data.SetValue(args.RowKey, args.Field, upper);
+            }
+        }
+    }
+
+    // The package cannot cancel adding a row, so a row added to a locked grid is taken out again (TODO(QuroGrid-R4))
+    private void OnRowAdded(RowAddedArgs<TRow> args)
+    {
+        if (!CanEdit)
+        {
+            _data.DeleteRow(args.RowKey);
+        }
+    }
+
+    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanEdit;
+
+    private void OnPasting(PastingArgs args) => args.Cancel |= !CanEdit;
+
+    // Delete marks a loaded row (a new row goes away); undo restores the row's loaded values, also of a deleted row
+    private void OnCellButtonClick(CellButtonClickArgs<TRow> args)
+    {
+        if (!CanEdit || Busy)
+        {
+            return;
+        }
+        var state = _data.GetState(args.RowKey);
+        if (args.Field == DeleteField && state != Quro.Grid.Data.RowState.Deleted)
+        {
+            _data.DeleteRow(args.RowKey);
+        }
+        else if (args.Field == UndoField && state is Quro.Grid.Data.RowState.Updated or Quro.Grid.Data.RowState.Deleted)
+        {
+            _data.RevertRow(args.RowKey);
+        }
+        StateHasChanged();
+    }
+
+    private sealed record Missing(string Label) : IQuroField
+    {
+        public bool IsRequiredNow => true;
+
+        public bool IsEmpty => true;
     }
 }

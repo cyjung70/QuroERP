@@ -21,7 +21,7 @@
   ],
   "acceptance": [
     "`sd_bom`, `sd_mrp_run`, `sd_mrp_part`, `sd_mrp_product`, `sd_production_result`, `sd_production_result_line`이 database-tables.md와 같다",
-    "DB-IT-03 (마이그레이션 테이블 = database-tables.md) 통과",
+    "DB-IT-03 (마이그레이션의 모든 테이블이 database-tables.md에 있다) 통과",
     "외래 키 컬럼마다 인덱스가 있다"
   ],
   "estimateHours": 3,

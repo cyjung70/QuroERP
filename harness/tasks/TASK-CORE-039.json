@@ -1,0 +1,44 @@
+{
+  "id": "TASK-CORE-039",
+  "project": "core",
+  "title": "홈 2단계: KPI 카드, 단계별 대기 건수, `GET /api/home/summary`",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/app-shell.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-038",
+    "TASK-MM-005",
+    "TASK-MM-007",
+    "TASK-MM-047",
+    "TASK-MM-030",
+    "TASK-MM-017",
+    "TASK-SD-003",
+    "TASK-SD-063",
+    "TASK-SD-005",
+    "TASK-SD-035"
+  ],
+  "acceptance": [
+    "`GET /api/home/summary` (app-shell.md 7.1): 값마다 그 화면 메뉴 배정을 보고 없으면 `null`. 기간 = 회사 시간대 이번 달 1일~오늘, 금액 = 기준 통화·기준 통화 자릿수",
+    "KPI 카드 4개(이번 달 수주 금액, 미결 수주 상태별, 마이너스 재고 품목+창고 수, 지급 대기 공급자 송장)와 단계별 대기 건수 배지 (app-shell.md 7.2). 0이면 배지 없음, 99 초과 `99+`",
+    "요청마다 계산(캐시 없음), 테스트 DB 기준 500ms 이내. 필요한 인덱스가 없으면 마이그레이션으로 더한다",
+    "단위·API 테스트: 권한별 `null`, 기간 경계(월초·회사 시간대), 상태별 건수, KRW 0자리·USD 2자리. bUnit: `null` 카드 숨김, 카드 링크"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

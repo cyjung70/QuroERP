@@ -1,0 +1,40 @@
+# Screen type SM sample on the entry frame (TASK-CORE-056): PO Entry. Item codes fill the name and default price, and the
+# amount is calculated for display (the API calculates the stored amount again). Development only.
+screen:
+  id: samples.po.entry
+  module: SAMPLES
+  title: Samples.PoEntry.Title
+  version: 1
+  api: /api/samples/pos
+  key: id
+  layout: form-grid
+  perm:
+    read: SAMPLES.Read
+    write: SAMPLES.Write
+toolbar[4]: query,new,save,delete
+form:
+  cols: 4
+  fields[6]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+    poNo,Samples.PoNo,text,auto,"","","","",1,""
+    poDt,Samples.PoDt,date,req,"","","","",1,""
+    vendorCode,Samples.Vendor,text,req,"",upper,"","",1,""
+    vendorName,Samples.VendorName,text,ro,"","","","",2,""
+    vendorMessage,Samples.VendorMessage,textarea,opt,"","","","",4,""
+grids[1]:
+  - id: lines
+    bind: lines
+    rowKey: id
+    deletedRows: strike
+    columns[5]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      itemCode,Samples.Item,text,140,true,true,"",samplePoItem,false,false
+      itemName,Samples.ItemName,text,200,false,false,"","",false,false
+      qty,Samples.Qty,number,100,true,true,N2,"",false,false
+      fob,Samples.Fob,number,110,true,true,N2,"",false,false
+      amount,Samples.Amount,number,130,false,false,N2,"",true,false
+    rules[3]{on,action,target,expr}:
+      itemCode.change,lookup,"itemName|fob","samplePoItem.all()"
+      qty.change,calc,amount,"qty * fob"
+      fob.change,calc,amount,"qty * fob"
+    validate[1]{target,rule,msg}:
+      itemCode,requires vendorCode,Common.SelectPartnerFirst

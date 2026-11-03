@@ -175,6 +175,123 @@ window.quroSubmit = (form) => form.requestSubmit();
     });
 })();
 
+// App shell (app-shell.md 3). The layout is static, so the menu toggle, group folding, collapse and the narrow-screen overlay
+// are plain DOM handlers. Folded groups and the collapsed state stay in localStorage; enhanced navigation redraws the shell
+// from the server, so the state is applied again after every page load.
+(() => {
+    const collapsedKey = "quro.shell.collapsed";
+    const foldedKey = "quro.shell.folded";
+    const narrow = window.matchMedia("(max-width: 767.98px)");
+    const local = () => { try { return window.localStorage; } catch { return null; } };
+
+    const shell = () => document.querySelector("[data-shell]");
+    const toggle = () => document.querySelector("[data-shell-toggle]");
+    const nav = () => document.querySelector("[data-shell-nav]");
+
+    const folded = () => {
+        try { return new Set(JSON.parse(local()?.getItem(foldedKey) ?? "[]")); } catch { return new Set(); }
+    };
+
+    const setGroup = (group, open) => group.querySelector("[data-shell-group-toggle]")?.setAttribute("aria-expanded", String(open));
+
+    const setCollapsed = (collapsed) => {
+        const el = shell();
+        if (!el) return;
+        el.toggleAttribute("data-shell-collapsed", collapsed);
+        const button = document.querySelector("[data-shell-collapse]");
+        if (button) {
+            button.setAttribute("aria-pressed", String(collapsed));
+            button.setAttribute("aria-label", collapsed ? button.dataset.expandLabel : button.dataset.collapseLabel);
+        }
+    };
+
+    const setOpen = (open) => {
+        const el = shell();
+        if (!el) return;
+        el.toggleAttribute("data-shell-open", open);
+        toggle()?.setAttribute("aria-expanded", String(open));
+        const backdrop = document.querySelector("[data-shell-backdrop]");
+        if (backdrop) backdrop.hidden = !open;
+        if (open) nav()?.querySelector("a, button")?.focus();
+    };
+
+    const close = () => {
+        if (!shell()?.hasAttribute("data-shell-open")) return;
+        setOpen(false);
+        toggle()?.focus();
+    };
+
+    const init = () => {
+        if (!shell()) return;
+        const closed = folded();
+        // The group of the open screen always opens (app-shell.md 3)
+        document.querySelectorAll("[data-shell-group]").forEach((group) =>
+            setGroup(group, group.dataset.current === "true" || !closed.has(group.dataset.shellGroup)));
+        setCollapsed(local()?.getItem(collapsedKey) === "1");
+        setOpen(false);
+    };
+
+    document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!target.closest || !shell()) return;
+        if (target.closest("[data-shell-toggle]")) {
+            setOpen(!shell().hasAttribute("data-shell-open"));
+            return;
+        }
+        if (target.closest("[data-shell-backdrop]")) { close(); return; }
+        if (target.closest("[data-shell-collapse]")) {
+            const collapsed = !shell().hasAttribute("data-shell-collapsed");
+            local()?.setItem(collapsedKey, collapsed ? "1" : "0");
+            setCollapsed(collapsed);
+            return;
+        }
+        const groupToggle = target.closest("[data-shell-group-toggle]");
+        if (groupToggle) {
+            const group = groupToggle.closest("[data-shell-group]");
+            // A group icon of the collapsed menu expands the menu with that group open
+            if (shell().hasAttribute("data-shell-collapsed") && !narrow.matches) {
+                local()?.setItem(collapsedKey, "0");
+                setCollapsed(false);
+                setGroup(group, true);
+            } else {
+                setGroup(group, groupToggle.getAttribute("aria-expanded") !== "true");
+            }
+            const closed = folded();
+            const code = group.dataset.shellGroup;
+            if (groupToggle.getAttribute("aria-expanded") === "true") closed.delete(code); else closed.add(code);
+            local()?.setItem(foldedKey, JSON.stringify([...closed]));
+            return;
+        }
+        // Picking a screen closes the overlay
+        if (target.closest("[data-shell-nav] a")) setOpen(false);
+    });
+
+    // The overlay closes on Esc and keeps focus inside the menu
+    document.addEventListener("keydown", (e) => {
+        if (!shell()?.hasAttribute("data-shell-open")) return;
+        if (e.key === "Escape") { e.preventDefault(); close(); return; }
+        if (e.key !== "Tab") return;
+        const items = [...(nav()?.querySelectorAll("a, button") ?? [])].filter((el) => el.offsetParent !== null);
+        if (items.length === 0) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        else if (!nav().contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    });
+
+    document.addEventListener("change", (e) => {
+        if (e.target.matches?.("[data-shell-language]")) e.target.form.requestSubmit();
+    });
+
+    narrow.addEventListener?.("change", () => setOpen(false));
+
+    document.addEventListener("DOMContentLoaded", () => {
+        init();
+        window.Blazor?.addEventListener?.("enhancedload", init);
+    });
+})();
+
 // Entry frame shortcuts (entry-frame.md 2): F3 search, Ctrl+S save, Ctrl+Insert add row, Ctrl+Delete mark delete.
 // One entry frame is on a page; it registers while mounted and disposes the returned reference when it goes.
 window.quroEntryShortcuts = (frame) => {

@@ -1,3 +1,5 @@
+using QuroErp.Contracts.Common;
+
 namespace QuroErp.Contracts.Bc.Users;
 
 /// <summary>User management API routes (BC-UC-004).</summary>
@@ -42,7 +44,10 @@ public sealed record UserDto(
     DateTimeOffset? LockedUntil,
     DateTimeOffset? LastLoginAt,
     string? LastLoginIp,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset CreatedAt,
+    string CreatedBy,
+    DateTimeOffset UpdatedAt,
+    string UpdatedBy) : AuditInfo(CreatedAt, CreatedBy, UpdatedAt, UpdatedBy);
 
 public sealed record UserListDto(IReadOnlyList<UserDto> Items, int Total);
 

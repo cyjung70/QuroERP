@@ -1,0 +1,37 @@
+{
+  "id": "TASK-CORE-042",
+  "project": "core",
+  "title": "M 목록형: 상태 칩 필터·필터 행·더블클릭 열기·서버 엑셀",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/screens.md",
+    "docs/architecture/reports.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-040",
+    "TASK-CORE-033"
+  ],
+  "acceptance": [
+    "`QuroMultiGrid`의 `ReadOnly` 목록형: 상태 칩 필터(`전체` + 상태별 건수, 건수는 API 응답 값), 헤더 정렬, QuroGrid 필터 행, 아래 줄 건수·안내 문구 (screen-templates.md 2장)",
+    "행 더블클릭·Enter → `OpenRow` 콜백(문서 SM 화면 `/{모듈}/{화면}/{번호}`), 신규 → SM 화면 빈 문서",
+    "엑셀 버튼: 목록 API의 `.xlsx`를 같은 조회 조건으로 부른다 (서버 ClosedXML 공통 writer, 조회 결과 전체, 열 제목 리소스 키). 화면 그리드 내용을 내보내지 않는다",
+    "조회 조건 초기화 버튼, 기간 조건 시작·끝 2칸",
+    "샘플 `/samples/multi`에 목록형 예(메모리 데이터, 상태 4개)를 더하고 bUnit 테스트: 칩 필터, 더블클릭 콜백, 엑셀 요청 조건. 편집형 동작(행 상태·일괄 저장)은 그대로"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

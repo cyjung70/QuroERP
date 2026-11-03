@@ -7,6 +7,7 @@ using QuroErp.Web.Bc.Menus;
 using QuroErp.Web.Bc.Roles;
 using QuroErp.Web.Bc.UserProfiles;
 using QuroErp.Web.Bc.Users;
+using QuroErp.Web.Components.Screens;
 using QuroErp.Web.Mm.Inventory;
 using QuroErp.Web.Mm.Warehouses;
 
@@ -21,11 +22,13 @@ public static class WebApiClients
             ?? throw new InvalidOperationException($"Setting {WebAuthentication.ApiBaseUrlKey} is missing."));
 
         services.AddHttpClient<CompanyApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<BusinessPlaceApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<AuthSettingApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<InventorySettingApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CodeApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<LocalizationApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<ItemApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<ItemBarcodeApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<WarehouseApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserProfileApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserApiClient>(http => http.BaseAddress = apiBaseUrl);
@@ -33,6 +36,14 @@ public static class WebApiClients
         services.AddHttpClient<MenuApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CodeMinorApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CodeMajorApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<CurrencyApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<FieldPolicyApiClient>(http => http.BaseAddress = apiBaseUrl);
+        // Code lists for combo boxes, read once per circuit
+        services.AddScoped<CodeDataSets>();
+        // Field policies of a screen, read once per circuit (field-policy.md 3)
+        services.AddScoped<FieldPolicyCache>();
+        // Company time zone for every shown time (BC-BR-318)
+        services.AddScoped(CompanyTime.Create);
         return services;
     }
 }

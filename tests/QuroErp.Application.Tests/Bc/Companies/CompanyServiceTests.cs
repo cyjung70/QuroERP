@@ -3,6 +3,7 @@ using FluentAssertions;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Common;
 using QuroErp.Application.Tests.Bc.Localization;
+using QuroErp.Application.Tests.Common;
 using QuroErp.Application.Tests.Common.Auth;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Domain.Bc.Companies;
@@ -17,15 +18,15 @@ public class CompanyServiceTests
     private static readonly CancellationToken None = CancellationToken.None;
 
     private static readonly UpdateCompanyRequest Request = new(
-        "Quro", "1 Main St", null, null, "010-0000-0000", null, "220-81-62517", "Kim", "info@quro.kr", "Service", "Software",
-        "KR", "KRW", "ko", "WITH_SHIPMENT", Read);
+        "Quro", "1 Main St", null, null, "010-0000-0000", null, "Kim", "info@quro.kr", "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", Read);
 
     private readonly FakeCompanies _companies = new();
     private readonly FakeLocalizationRepository _localization = new();
     private readonly FakeUnitOfWorkFactory _uow = new();
+    private readonly FakeBusinessClock _clock = new();
     private readonly CompanyService _service;
 
-    public CompanyServiceTests() => _service = new CompanyService(_companies, _localization, _uow);
+    public CompanyServiceTests() => _service = new CompanyService(_companies, _localization, _uow, _clock);
 
     [Fact, Trait("Id", "BC-UT-301")]
     public async Task Get_WithoutACompany_IsNotFoundBcE006()
@@ -42,10 +43,31 @@ public class CompanyServiceTests
         var saved = await _service.UpdateAsync(Request with { Name = " Quro Korea " }, "kim", None);
 
         saved.Name.Should().Be("Quro Korea");
-        saved.RegisterNo.Should().Be("2208162517");
-        saved.BusinessType.Should().Be("Service");
+        saved.Represent.Should().Be("Kim");
         saved.UpdatedAt.Should().BeAfter(Read);
         _uow.Commits.Should().Be(1);
+    }
+
+    [Fact, Trait("Id", "BC-UT-318"), Trait("Rule", "BC-BR-318")]
+    public async Task Update_SavesTheTimeZone_AndResetsTheBusinessClock()
+    {
+        var saved = await _service.UpdateAsync(Request with { TimeZone = "America/New_York" }, "kim", None);
+
+        saved.TimeZone.Should().Be("America/New_York");
+        _clock.Resets.Should().Be(1);
+    }
+
+    [Theory, Trait("Id", "BC-UT-318"), Trait("Rule", "BC-BR-318")]
+    [InlineData("Mars/Olympus")]
+    [InlineData("Korea Standard Time")]
+    [InlineData(null)]
+    public async Task Update_WithAnUnknownTimeZone_Is400BcE318_AndWritesNothing(string? timeZone)
+    {
+        var act = () => _service.UpdateAsync(Request with { TimeZone = timeZone }, "kim", None);
+
+        (await act.Should().ThrowAsync<BadRequestException>()).Which.Code.Should().Be(CompanyRules.TimeZoneCode);
+        _uow.Commits.Should().Be(0);
+        _clock.Resets.Should().Be(0);
     }
 
     [Fact, Trait("Id", "BC-UC-007-T02")]
@@ -96,7 +118,7 @@ public class CompanyServiceTests
         _companies.HasTransactions = true;
 
         var act = () => _service.UpdateAsync(
-            Request with { CountryCode = "US", BaseCurrencyCode = "USD", DefaultLangCode = "en", RegisterNo = null }, "kim", None);
+            Request with { CountryCode = "US", BaseCurrencyCode = "USD", DefaultLangCode = "en" }, "kim", None);
 
         (await act.Should().ThrowAsync<ConflictException>()).Which.Code.Should().Be(CompanyRules.CountryCode);
     }
@@ -117,7 +139,7 @@ public class CompanyServiceTests
     public async Task Update_ChangingCountryAndCurrencyBeforeTrading_IsAllowed()
     {
         var saved = await _service.UpdateAsync(
-            Request with { CountryCode = "us", BaseCurrencyCode = "usd", DefaultLangCode = "en", RegisterNo = null }, "kim", None);
+            Request with { CountryCode = "us", BaseCurrencyCode = "usd", DefaultLangCode = "en" }, "kim", None);
 
         (saved.CountryCode, saved.BaseCurrencyCode, saved.DefaultLangCode).Should().Be(("US", "USD", "en"));
     }
@@ -156,7 +178,7 @@ public class CompanyServiceTests
     private sealed class FakeCompanies : ICompanyRepository
     {
         public CompanyDto? Company { get; set; } = new(
-            "Quro", null, null, null, null, null, "2208162517", null, null, null, null, "KR", "KRW", "ko", "WITH_SHIPMENT", false, Read);
+            "Quro", null, null, null, null, null, null, null, "KR", "KRW", "ko", "Asia/Seoul", "WITH_SHIPMENT", false, Read, "setup", Read, "setup");
 
         public bool HasTransactions { get; set; }
 
@@ -177,9 +199,9 @@ public class CompanyServiceTests
                 return Task.FromResult(false);
             }
             Company = new CompanyDto(
-                fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.RegisterNo, fields.Represent,
-                fields.Email, fields.BusinessType, fields.BusinessItem, fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!,
-                fields.BillingMode!, Company.HasLogo, Company.UpdatedAt.AddMinutes(1));
+                fields.Name!, fields.Billto, fields.Shipto, fields.Contact, fields.TelNo, fields.FaxNo, fields.Represent, fields.Email,
+                fields.CountryCode!, fields.BaseCurrencyCode!, fields.DefaultLangCode!, fields.TimeZone!,
+                fields.BillingMode!, Company.HasLogo, Company.CreatedAt, Company.CreatedBy, Company.UpdatedAt.AddMinutes(1), updatedBy);
             return Task.FromResult(true);
         }
 

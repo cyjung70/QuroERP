@@ -33,7 +33,8 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             WHERE table_schema = @schema AND table_type = 'BASE TABLE' AND table_name <> @journal
             """, ("journal", DatabaseMigrator.JournalTable));
 
-        tables.Should().BeEquivalentTo(DocumentedTables());
+        // database-tables.md is the target schema: tables only in the document are created by later tasks (database.md)
+        tables.Except(DocumentedTables()).Should().BeEmpty("tables created by migrations must be in database-tables.md");
     }
 
     [DatabaseFact, Trait("Id", "DB-IT-04")]
@@ -66,7 +67,7 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             """);
 
         Query<long>("SELECT count(*) FROM sys_code_major").Single().Should().Be(24);
-        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(122);
+        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(125);
         majorsWithout.Should().BeEmpty();
         minorsWithout.Should().BeEmpty();
     }

@@ -34,6 +34,7 @@ public class UserProfileScreenTests : BunitContext
         CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("ko");
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddWebLocalization();
+        Services.AddCompanyTime();
         Services.AddSingleton<IQuroConfirm>(_confirm);
         Services.AddSingleton(TimeProvider.System);
         Services.AddSingleton<AccessTokenStore>();
@@ -198,7 +199,7 @@ public class UserProfileScreenTests : BunitContext
             var path = request.RequestUri!.AbsolutePath;
             if (path == "/" + LocalizationRoutes.Base)
             {
-                return Json(new LocalizationDto("KR", "KRW", "ko", "VAT", "yyyy-MM-dd", "DOCUMENT",
+                return Json(new LocalizationDto("KR", "KRW", "ko", "Asia/Seoul", "VAT", "yyyy-MM-dd", "DOCUMENT",
                     [new LanguageDto("ko", 1), new LanguageDto("en", 2)], [], [], []));
             }
             if (path == "/" + WarehouseRoutes.Options)

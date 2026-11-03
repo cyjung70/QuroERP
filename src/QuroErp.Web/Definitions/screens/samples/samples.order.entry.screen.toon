@@ -1,0 +1,27 @@
+# Screen type SM sample (TASK-CORE-056): an order header with its lines, saved together. Development only.
+screen:
+  id: samples.order.entry
+  module: SAMPLES
+  title: Samples.HeaderDetail.Title
+  version: 1
+  api: /api/samples/orders
+  key: id
+  layout: form-grid
+  perm:
+    read: SAMPLES.Read
+    write: SAMPLES.Write
+toolbar[4]: query,new,save,delete
+form:
+  cols: 4
+  fields[3]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+    orderNo,Samples.OrderNo,text,key,"",upper,"","",1,""
+    orderDt,Samples.OrderDt,date,req,"","","","",1,""
+grids[1]:
+  - id: lines
+    bind: lines
+    rowKey: id
+    deletedRows: strike
+    columns[2]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      itemCode,Samples.Item,text,140,true,true,"",sampleItem,false,false
+      qty,Samples.Qty,number,110,true,true,N2,"",false,false

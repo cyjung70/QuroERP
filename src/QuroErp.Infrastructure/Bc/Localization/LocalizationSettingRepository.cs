@@ -23,24 +23,29 @@ internal sealed class LocalizationSettingRepository : ILocalizationSettingReposi
             (SELECT updated_at FROM (SELECT updated_at FROM bc_company ORDER BY id LIMIT 1 FOR UPDATE) b))
         """;
 
-    // Document lines with quantities of each module (BC-BR-425). The MVP has no quotation; the shipment issues
-    // stock and the sales invoice bills it, and the goods receipt is also the purchase invoice.
-    // sd_production_result_line is the SD simple result for sales BOM (SET) items, not a production (PP) document.
-    private const string SelectMmHasDocuments = """
-        SELECT EXISTS (SELECT 1 FROM mm_purchase_order_line)
-            OR EXISTS (SELECT 1 FROM mm_goods_receipt_line)
-            OR EXISTS (SELECT 1 FROM mm_goods_issue_line)
+    // Document lines of each module and their document currency (BC-BR-425, BC-BR-429). The MVP has no quotation; the shipment
+    // issues stock and the sales invoice bills it, and the goods receipt is also the purchase invoice. Lines of documents without a
+    // currency answer NULL. sd_production_result_line is the SD simple result for sales BOM (SET) items, not a production (PP) document.
+    private const string SelectMmCurrencies = """
+        SELECT h.currency_code FROM mm_purchase_order h WHERE EXISTS (SELECT 1 FROM mm_purchase_order_line l WHERE l.purchase_order_id = h.id)
+        UNION
+        SELECT h.currency_code FROM mm_goods_receipt h WHERE EXISTS (SELECT 1 FROM mm_goods_receipt_line l WHERE l.goods_receipt_id = h.id)
+        UNION
+        SELECT NULL WHERE EXISTS (SELECT 1 FROM mm_goods_issue_line)
             OR EXISTS (SELECT 1 FROM mm_goods_return_line)
             OR EXISTS (SELECT 1 FROM mm_unplanned_receipt_line)
             OR EXISTS (SELECT 1 FROM mm_stock_count_line)
             OR EXISTS (SELECT 1 FROM mm_stock_transfer_line)
         """;
 
-    private const string SelectSdHasDocuments = """
-        SELECT EXISTS (SELECT 1 FROM sd_sales_order_line)
-            OR EXISTS (SELECT 1 FROM sd_shipment_line)
-            OR EXISTS (SELECT 1 FROM sd_sales_invoice_line)
-            OR EXISTS (SELECT 1 FROM sd_production_result_line)
+    private const string SelectSdCurrencies = """
+        SELECT h.currency_code FROM sd_sales_order h WHERE EXISTS (SELECT 1 FROM sd_sales_order_line l WHERE l.sales_order_id = h.id)
+        UNION
+        SELECT h.currency_code FROM sd_shipment h WHERE EXISTS (SELECT 1 FROM sd_shipment_line l WHERE l.shipment_id = h.id)
+        UNION
+        SELECT h.currency_code FROM sd_sales_invoice h WHERE EXISTS (SELECT 1 FROM sd_sales_invoice_line l WHERE l.sales_invoice_id = h.id)
+        UNION
+        SELECT NULL WHERE EXISTS (SELECT 1 FROM sd_production_result_line)
         """;
 
     private const string UpdateLanguage = """
@@ -81,16 +86,17 @@ internal sealed class LocalizationSettingRepository : ILocalizationSettingReposi
         return version is { } value ? new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc)) : DateTimeOffset.UnixEpoch;
     }
 
-    public Task<bool> HasDocumentsAsync(string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string?>> FindDocumentCurrenciesAsync(
+        string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var sql = moduleCode switch
         {
-            "MM" => SelectMmHasDocuments,
-            "SD" => SelectSdHasDocuments,
+            "MM" => SelectMmCurrencies,
+            "SD" => SelectSdCurrencies,
             _ => throw new ArgumentOutOfRangeException(nameof(moduleCode), moduleCode, "Only MM and SD have decimal settings."),
         };
-        return transaction.Connection!.ExecuteScalarAsync<bool>(
-            new CommandDefinition(sql, transaction: transaction, cancellationToken: cancellationToken));
+        return (await transaction.Connection!.QueryAsync<string?>(
+            new CommandDefinition(sql, transaction: transaction, cancellationToken: cancellationToken))).AsList();
     }
 
     public Task UpdateLanguagesAsync(

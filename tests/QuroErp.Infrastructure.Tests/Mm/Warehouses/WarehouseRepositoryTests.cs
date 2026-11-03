@@ -17,8 +17,10 @@ public class WarehouseRepositoryTests(AuthSchemaFixture db)
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
         await uow.Transaction.Connection!.ExecuteAsync(
             """
-            INSERT INTO bc_warehouse (warehouse_code, warehouse_name, use_yn, created_by, updated_by) VALUES
-                ('ZZ1', 'Last', true, 't', 't'), ('AA1', 'First', true, 't', 't'), ('OFF1', 'Closed', false, 't', 't')
+            INSERT INTO bc_warehouse (warehouse_code, warehouse_name, use_yn, business_place_id, created_by, updated_by)
+            SELECT w.code, w.name, w.use_yn, p.id, 't', 't'
+            FROM (VALUES ('ZZ1', 'Last', true), ('AA1', 'First', true), ('OFF1', 'Closed', false)) w (code, name, use_yn)
+            CROSS JOIN bc_business_place p WHERE p.is_default
             """,
             transaction: uow.Transaction);
 

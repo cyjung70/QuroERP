@@ -3,12 +3,12 @@ using QuroErp.Application.Bc.Localization;
 
 namespace QuroErp.Application.Tests.Bc.Localization;
 
-/// <summary>Records the writes; documents exist only for the modules in ModulesWithDocuments.</summary>
+/// <summary>Records the writes; document lines exist only for the modules in DocumentCurrencies, with those currencies.</summary>
 internal sealed class FakeLocalizationSettingRepository : ILocalizationSettingRepository
 {
     public DateTimeOffset Version { get; set; } = new(2026, 10, 29, 0, 0, 0, TimeSpan.Zero);
 
-    public HashSet<string> ModulesWithDocuments { get; } = [];
+    public Dictionary<string, IReadOnlyList<string?>> DocumentCurrencies { get; } = [];
 
     public List<bool> VersionLocks { get; } = [];
 
@@ -30,8 +30,8 @@ internal sealed class FakeLocalizationSettingRepository : ILocalizationSettingRe
         return Task.FromResult(Version);
     }
 
-    public Task<bool> HasDocumentsAsync(string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        Task.FromResult(ModulesWithDocuments.Contains(moduleCode));
+    public Task<IReadOnlyList<string?>> FindDocumentCurrenciesAsync(string moduleCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        Task.FromResult(DocumentCurrencies.GetValueOrDefault(moduleCode) ?? []);
 
     public Task UpdateLanguagesAsync(IReadOnlyList<LanguageUseRow> languages, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
     {

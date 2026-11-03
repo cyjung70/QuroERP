@@ -31,6 +31,7 @@ public sealed class LocalizationService(
             profile.CountryCode,
             company?.BaseCurrencyCode ?? profile.BaseCurrencyCode,
             company?.DefaultLangCode ?? profile.DefaultLangCode,
+            company?.TimeZone ?? profile.DefaultTimeZone,
             profile.TaxMethod,
             profile.DateFormat,
             company?.TaxCalcMode ?? TaxCalcMode.Document,

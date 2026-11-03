@@ -9,7 +9,7 @@
     "Domain",
     "Infrastructure"
   ],
-  "screenType": "S",
+  "screenType": "F",
   "specs": [
     "docs/specifications/BC/login.md"
   ],
