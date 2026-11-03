@@ -60,7 +60,7 @@ public class VendorApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var vendor = (await response.Content.ReadFromJsonAsync<VendorDto>())!;
         vendor.VName.Should().Be("NEW SUPPLY");
-        (vendor.Terms, vendor.ValidFlag, vendor.Country).Should().Be(("NET 30", "Y", "USA"));
+        (vendor.Terms, vendor.ValidFlag, vendor.Country).Should().Be(("NET_30", "Y", "USA"));
         (vendor.ShipAddr1, vendor.ShipState, vendor.ShipZipCode).Should().Be(("1 Main St", "CA", "06236"));
         vendor.VendorPrice.Should().Be("NEW SUPPLY");
         (vendor.TaxCodeId, vendor.TaxCode).Should().Be((InMemoryTaxCodeRepository.Vat10Id, "VAT10"));
@@ -168,11 +168,11 @@ public class VendorApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         using var response = await client.PutAsJsonAsync(
             $"{VendorRoutes.Base}/{AcmeId}",
-            new UpdateVendorRequest { Phone1 = "555-0199", ZipCode = "1", Terms = "NET 60", TaxPartyType = "INDIVIDUAL", UpdatedAt = Created });
+            new UpdateVendorRequest { Phone1 = "555-0199", ZipCode = "1", Terms = "NET_60", TaxPartyType = "INDIVIDUAL", UpdatedAt = Created });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var vendor = (await response.Content.ReadFromJsonAsync<VendorDto>())!;
-        (vendor.VName, vendor.Phone1, vendor.Terms, vendor.UpdatedBy).Should().Be(("ACME", "555-0199", "NET 60", ApiFactory.UserId));
+        (vendor.VName, vendor.Phone1, vendor.Terms, vendor.UpdatedBy).Should().Be(("ACME", "555-0199", "NET_60", ApiFactory.UserId));
         vendor.BalAmt.Should().Be(70.5m);
     }
 

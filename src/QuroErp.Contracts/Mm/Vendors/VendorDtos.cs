@@ -122,7 +122,7 @@ public abstract record VendorFieldsRequest
     public string? BusinessItem { get; init; }
 }
 
-/// <summary>New vendor. Missing Terms, ValidFlag, Country and ShipCountry get NET 30, Y, USA and USA (MM-BR-851).</summary>
+/// <summary>New vendor. Missing Terms, ValidFlag, Country and ShipCountry get NET_30, Y, USA and USA (MM-BR-851).</summary>
 public sealed record CreateVendorRequest : VendorFieldsRequest
 {
     /// <summary>Stored trimmed in upper case, up to 100 characters, unique (MM-BR-852).</summary>

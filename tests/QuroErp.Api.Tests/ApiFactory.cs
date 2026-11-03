@@ -398,7 +398,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             ["GRADE"] = ["A01"],
             ["DISPLAY_OPTIONS"] = ["Y", "N", "ALL"],
             ["STATE"] = ["CA", "NY"],
-            ["TERMS"] = ["NET 30", "NET 60"],
+            ["TERMS"] = ["NET_30", "NET_60"],
         };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(

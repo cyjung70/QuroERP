@@ -77,7 +77,7 @@ public sealed partial class Vendor
     /// <summary>Another vendor has the same KR business number; the save goes on (BC-BR-522). Arg: the other vendor names.</summary>
     public const string SameBusinessRegNoWarning = "BC-W-522";
 
-    public const string DefaultTerms = "NET 30";
+    public const string DefaultTerms = "NET_30";
     public const string ValidFlagYes = "Y";
     public const string DefaultCountry = "USA";
 

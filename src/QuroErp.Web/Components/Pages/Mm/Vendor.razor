@@ -1,0 +1,213 @@
+@page "/mm/vendor"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Bc.Localization
+@using QuroErp.Contracts.Bc.Tax
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.Vendors
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.Tax
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.Vendors
+@inject VendorApiClient Api
+@inject LocalizationApiClient LocalizationApi
+@inject TaxCodeApiClient TaxCodeApi
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* MM-UC-001 vendor master, screen type S. Rules are checked by the API (MM-BR-851~872, BC-BR-415, BC-BR-521~523); this
+   screen only shows defaults. Country fields follow the field policies of Mm.Vendor (field-policy.md 3). *@
+
+<PageTitle>@L["Mm.Vendor.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="vendor-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroSingleForm @ref="_form" TModel="VendorModel" Title="@L["Mm.Vendor.Title"]" TestId="vendor" ReadOnly="!_canEdit"
+                    Path="@L["Menu.G1BA"]" PolicyScreen="Mm.Vendor" RecordCode="vendor => vendor.VName"
+                    Audit="vendor => QuroAudit.From(vendor.Audit)" SavedNotice="_ => _savedWarning"
+                    Load="LoadAsync" Create="() => new VendorModel()" Save="SaveAsync" Delete="DeleteAsync"
+                    LoadPrevious="vendor => LoadAdjacentAsync(vendor, forward: false)" LoadNext="vendor => LoadAdjacentAsync(vendor, forward: true)">
+        <SearchContent>
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Mm.Vendor.VName"]" @bind-Value="_searchName" Required TextCase="TextCase.Upper" TestId="vendor-search-v-name" />
+                <button type="button" aria-label="@L["Mm.Vendor.FindVendor"]" data-testid="vendor-search-v-name-lookup" @onclick="() => _lookupOpen = true">…</button>
+            </div>
+        </SearchContent>
+        <Fields>
+            <QuroText Policy="Mm.Vendor.VName" Field="VName" Required LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="vendor-header-v-name" />
+            <QuroCodeSelect Major="VALID_FLAG" Policy="Mm.Vendor.ValidFlag" Field="ValidFlag" Radio TestId="vendor-header-valid-flag" />
+            <QuroText Policy="Mm.Vendor.Contact" Field="Contact" TestId="vendor-header-contact" />
+            <QuroText Policy="Mm.Vendor.Contact2" Field="Contact2" TestId="vendor-header-contact2" />
+            <QuroText Policy="Mm.Vendor.Phone1" Field="Phone1" Required TestId="vendor-header-phone1" />
+            <QuroText Policy="Mm.Vendor.Phone2" Field="Phone2" TestId="vendor-header-phone2" />
+            <QuroText Policy="Mm.Vendor.Phone3" Field="Phone3" TestId="vendor-header-phone3" />
+            <QuroText Policy="Mm.Vendor.FaxNo" Field="FaxNo" TestId="vendor-header-fax-no" />
+            <QuroText Policy="Mm.Vendor.Email" Field="Email" TestId="vendor-header-email" />
+            <QuroCodeSelect Major="TERMS" Policy="Mm.Vendor.Terms" Field="Terms" TestId="vendor-header-terms" />
+            @* Empty is the base currency (BC-BR-415); empty tax code gets the country default (BC-BR-523) *@
+            <QuroSelect Label="@L["Mm.Vendor.CurrencyCode"]" Field="CurrencyCode" Options="_currencies" TestId="vendor-header-currency-code" />
+            <QuroSelect Label="@L["Mm.Vendor.TaxCode"]" Field="TaxCode" Options="_taxCodes" TestId="vendor-header-tax-code" />
+            @* Changed only by goods receipts and payments (MM-BR-858) *@
+            <QuroNumber Policy="Mm.Vendor.BalAmt" Field="BalAmt" Decimals="_amountDecimals" LockMode="LockMode.Always" TestId="vendor-header-bal-amt" />
+            <QuroText Policy="Mm.Vendor.VendorPrice" Field="VendorPrice" TextCase="TextCase.Upper" TestId="vendor-header-vendor-price" />
+            <QuroText Policy="Mm.Vendor.Addr1" Field="Addr1" TestId="vendor-header-addr1" />
+            <QuroText Policy="Mm.Vendor.Addr2" Field="Addr2" TestId="vendor-header-addr2" />
+            <QuroText Policy="Mm.Vendor.City" Field="City" TestId="vendor-header-city" />
+            <QuroCodeSelect Major="STATE" Policy="Mm.Vendor.State" Field="State" TestId="vendor-header-state" />
+            <QuroText Policy="Mm.Vendor.Country" Field="Country" TextCase="TextCase.Upper" TestId="vendor-header-country" />
+            <QuroText Policy="Mm.Vendor.ZipCode" Field="ZipCode" TestId="vendor-header-zip-code" />
+            @* An empty ship address 1 copies the billing address (MM-BR-853) *@
+            <QuroText Policy="Mm.Vendor.ShipAddr1" Field="ShipAddr1" TestId="vendor-header-ship-addr1" />
+            <QuroText Policy="Mm.Vendor.ShipAddr2" Field="ShipAddr2" TestId="vendor-header-ship-addr2" />
+            <QuroText Policy="Mm.Vendor.ShipCity" Field="ShipCity" TestId="vendor-header-ship-city" />
+            <QuroCodeSelect Major="STATE" Policy="Mm.Vendor.ShipState" Field="ShipState" TestId="vendor-header-ship-state" />
+            <QuroText Policy="Mm.Vendor.ShipCountry" Field="ShipCountry" TextCase="TextCase.Upper" TestId="vendor-header-ship-country" />
+            <QuroText Policy="Mm.Vendor.ShipZipCode" Field="ShipZipCode" TestId="vendor-header-ship-zip-code" />
+            @* The tax party type follows the company tax method (MM-BR-872), not the country code (localization.md) *@
+            @if (_localization?.TaxMethod == VatMethod)
+            {
+                <QuroSelect Label="@L["Mm.Vendor.TaxPartyType"]" Field="TaxPartyType" Options="_taxPartyTypes" Required TestId="vendor-header-tax-party-type" />
+            }
+            <QuroText Policy="Mm.Vendor.BusinessRegNo" Field="BusinessRegNo" TestId="vendor-header-business-reg-no" />
+            <QuroText Policy="Mm.Vendor.CeoName" Field="CeoName" TestId="vendor-header-ceo-name" />
+            <QuroText Policy="Mm.Vendor.BusinessType" Field="BusinessType" TestId="vendor-header-business-type" />
+            <QuroText Policy="Mm.Vendor.BusinessItem" Field="BusinessItem" TestId="vendor-header-business-item" />
+            <QuroText Policy="Mm.Vendor.Remarks" Field="Remarks" Rows="3" TestId="vendor-header-remarks" />
+        </Fields>
+    </QuroSingleForm>
+
+    <QuroLookupDialog TItem="VendorDto" Title="@L["Mm.Vendor.FindVendor"]" TestId="vendor-vendor-lookup"
+                      @bind-Visible="_lookupOpen" Search="FindVendorsAsync" OnSelected="SelectVendorAsync">
+        <Columns>
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.Vendor.VName"]" Value="v => v.VName" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.Vendor.Phone1"]" Value="v => v.Phone1" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.Vendor.City"]" Value="v => v.City" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.Vendor.ValidFlag"]" Value="v => v.ValidFlag" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string VatMethod = "VAT";
+    private const string UnavailableCode = "BC-E-003";
+
+    // These messages name the field by its property name; the screen shows its label instead
+    private static readonly HashSet<string> FieldCodes = ["MM-E-851", "MM-E-859", "MM-E-872", "BC-E-522"];
+
+    private QuroSingleForm<VendorModel>? _form;
+    private LocalizationDto? _localization;
+    private IReadOnlyList<TaxCodeDto> _taxCodeRows = [];
+    private IReadOnlyList<CodeItemDto> _currencies = [];
+    private IReadOnlyList<CodeItemDto> _taxCodes = [];
+    private IReadOnlyList<CodeItemDto> _taxPartyTypes = [];
+    private int? _amountDecimals;
+    private bool _canEdit;
+    private bool _ready;
+    private bool _lookupOpen;
+    private string? _searchName;
+    private string? _savedWarning;
+    private VendorDto? _picked;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy exists, as in VendorController
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        _taxPartyTypes =
+        [
+            new(VendorModel.Business, L[$"Mm.Vendor.TaxPartyType.{VendorModel.Business}"]),
+            new(VendorModel.Individual, L[$"Mm.Vendor.TaxPartyType.{VendorModel.Individual}"]),
+        ];
+        var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        try
+        {
+            _localization = await LocalizationApi.GetAsync(lang, CancellationToken.None);
+            _amountDecimals = _localization.BaseAmount();
+            _currencies = [.. _localization.Currencies.Select(c => new CodeItemDto(c.CurrencyCode, $"{c.CurrencyCode} {c.Name}"))];
+            _taxCodeRows = await TaxCodeApi.InUseAsync(lang, CancellationToken.None);
+            _taxCodes = [.. _taxCodeRows.Select(t => new CodeItemDto(t.TaxCode, $"{t.TaxCode} {t.Name}"))];
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    private async Task<VendorModel?> LoadAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_searchName))
+        {
+            return null;
+        }
+        // A vendor picked in the lookup is read by id; a typed name is matched exactly
+        var vendor = _picked is not null && string.Equals(_picked.VName, _searchName.Trim(), StringComparison.OrdinalIgnoreCase)
+            ? await Api.GetAsync(_picked.Id, CancellationToken.None)
+            : await Api.FindByNameAsync(_searchName, CancellationToken.None);
+        return vendor is null ? null : VendorModel.From(vendor);
+    }
+
+    // Previous and next follow name order (MM-UC-001)
+    private async Task<VendorModel?> LoadAdjacentAsync(VendorModel vendor, bool forward)
+    {
+        if (await Api.GetAdjacentAsync(vendor.Id, forward, CancellationToken.None) is not { } adjacent)
+        {
+            return null;
+        }
+        _picked = adjacent;
+        _searchName = adjacent.VName;
+        return VendorModel.From(adjacent);
+    }
+
+    private async Task<VendorModel> SaveAsync(VendorModel vendor, bool isNew)
+    {
+        _savedWarning = null;
+        var taxCodeId = string.IsNullOrEmpty(vendor.TaxCode) ? null : _taxCodeRows.FirstOrDefault(t => t.TaxCode == vendor.TaxCode)?.Id;
+        VendorDto saved;
+        try
+        {
+            saved = isNew
+                ? await Api.CreateAsync(vendor.ToCreateRequest(taxCodeId), CancellationToken.None)
+                : await Api.UpdateAsync(vendor.Id, vendor.ToUpdateRequest(taxCodeId), CancellationToken.None);
+        }
+        catch (ApiProblemException e) when (e.Problem is { Code: { } code, Args: [var field, ..] } && FieldCodes.Contains(code)
+                                            && L[$"Mm.Vendor.{field}"] is { ResourceNotFound: false } label)
+        {
+            throw new ApiProblemException(e.Problem with { Args = [label.Value, .. e.Problem.Args.Skip(1)] });
+        }
+        // A save can pass with warnings, e.g. BC-W-522 for a business number another vendor has
+        _savedWarning = saved.Warnings.Count == 0 ? null : string.Join(" ", saved.Warnings.Select(w => Messages.Get(w.Code, [.. w.Args])));
+        _searchName = saved.VName;
+        _picked = saved;
+        return VendorModel.From(saved);
+    }
+
+    private async Task DeleteAsync(VendorModel vendor)
+    {
+        await Api.DeleteAsync(vendor.Id, vendor.UpdatedAt, CancellationToken.None);
+        _searchName = null;
+        _picked = null;
+    }
+
+    private Task<IReadOnlyList<VendorDto>> FindVendorsAsync(string? keyword) => Api.LookupAsync(keyword, CancellationToken.None);
+
+    private async Task SelectVendorAsync(VendorDto vendor)
+    {
+        _picked = vendor;
+        _searchName = vendor.VName;
+        await _form!.SearchAsync();
+    }
+}
