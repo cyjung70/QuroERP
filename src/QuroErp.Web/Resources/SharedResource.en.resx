@@ -210,6 +210,10 @@
   <data name="MM-E-901" xml:space="preserve"><value>Price group {0} / item {1}: a price group is up to 5 uppercase characters, and each item appears once in it.</value></data>
   <data name="MM-E-902" xml:space="preserve"><value>Item {0} does not exist, is not an inventory item, or is not in use.</value></data>
   <data name="MM-E-903" xml:space="preserve"><value>The purchase price of item {0} must be above 0.</value></data>
+  <data name="SD-E-501" xml:space="preserve"><value>Item {0} is not a set item. Only an item of type Set that is in use can have components.</value></data>
+  <data name="SD-E-502" xml:space="preserve"><value>Item {0} cannot be a component. A component must be an inventory item in use.</value></data>
+  <data name="SD-E-503" xml:space="preserve"><value>The quantity of component {0} must be above 0.</value></data>
+  <data name="SD-E-504" xml:space="preserve"><value>Component {0} is in the set twice. Each component can be in a set only once.</value></data>
   <data name="Bc.Item.Title" xml:space="preserve"><value>Item Master</value></data>
   <data name="Bc.Item.ItemCd" xml:space="preserve"><value>Item Code</value></data>
   <data name="Bc.Item.ItemName" xml:space="preserve"><value>Item Name</value></data>
@@ -492,6 +496,7 @@
   <data name="Menu.G5AD05" xml:space="preserve"><value>Role Menus</value></data>
   <data name="Menu.G1BA04" xml:space="preserve"><value>Item Barcodes</value></data>
   <data name="Menu.G1BA05" xml:space="preserve"><value>Purchase Prices</value></data>
+  <data name="Menu.G1BA06" xml:space="preserve"><value>Set Item Composition</value></data>
   <data name="Menu.G2MM01" xml:space="preserve"><value>Purchase Orders</value></data>
   <data name="Menu.G5AD06" xml:space="preserve"><value>Exchange Rates</value></data>
   <data name="Menu.G5AD07" xml:space="preserve"><value>Tax Codes</value></data>

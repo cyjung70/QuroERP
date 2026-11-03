@@ -210,6 +210,10 @@
   <data name="MM-E-901" xml:space="preserve"><value>가격 그룹 {0} / 품목 {1}: 가격 그룹은 대문자 5자 이하이고, 한 그룹에 품목은 한 번만 넣을 수 있습니다.</value></data>
   <data name="MM-E-902" xml:space="preserve"><value>품목 {0}이(가) 없거나, 재고(Inventory) 품목이 아니거나, 사용하지 않는 품목입니다.</value></data>
   <data name="MM-E-903" xml:space="preserve"><value>품목 {0}의 구매 단가는 0보다 커야 합니다.</value></data>
+  <data name="SD-E-501" xml:space="preserve"><value>품목 {0}은(는) 세트 품목이 아닙니다. 품목 마스터에 있고 유형이 Set이며 사용 중인 품목만 세트로 구성할 수 있습니다.</value></data>
+  <data name="SD-E-502" xml:space="preserve"><value>품목 {0}은(는) 구성품이 될 수 없습니다. 구성품은 사용 중인 재고(Inventory) 품목이어야 합니다.</value></data>
+  <data name="SD-E-503" xml:space="preserve"><value>구성품 {0}의 수량은 0보다 커야 합니다.</value></data>
+  <data name="SD-E-504" xml:space="preserve"><value>구성품 {0}이(가) 세트에 두 번 들어 있습니다. 한 세트에 같은 구성품은 한 번만 넣을 수 있습니다.</value></data>
   <data name="Bc.Item.Title" xml:space="preserve"><value>품목 마스터</value></data>
   <data name="Bc.Item.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
   <data name="Bc.Item.ItemName" xml:space="preserve"><value>품목 이름</value></data>
@@ -492,6 +496,7 @@
   <data name="Menu.G5AD05" xml:space="preserve"><value>역할 메뉴</value></data>
   <data name="Menu.G1BA04" xml:space="preserve"><value>품목 바코드</value></data>
   <data name="Menu.G1BA05" xml:space="preserve"><value>매입 단가</value></data>
+  <data name="Menu.G1BA06" xml:space="preserve"><value>세트 품목 구성</value></data>
   <data name="Menu.G2MM01" xml:space="preserve"><value>발주</value></data>
   <data name="Menu.G5AD06" xml:space="preserve"><value>환율</value></data>
   <data name="Menu.G5AD07" xml:space="preserve"><value>세금 코드</value></data>
