@@ -9,9 +9,11 @@ using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.PurchaseOrders;
+using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Mm.PurchaseOrders;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.PurchaseOrders;
+using QuroErp.Domain.Mm.Warehouses;
 using QuroErp.Infrastructure.Tests.Common.Auth;
 using QuroErp.Infrastructure.Tests.Common.Persistence;
 
@@ -37,7 +39,7 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
     private PurchaseOrderService Service => new(
         db.Get<IPurchaseOrderRepository>(), db.Get<ITaxRepository>(), new TaxAreaRateProvider(db.Get<ITaxRepository>()),
         db.Get<ILocalizationRepository>(), db.Get<IBusinessPlaceRepository>(), new DocumentNumberService(db.Get<IDocumentNumberRepository>()),
-        db.Get<IUnitOfWorkFactory>());
+        db.Get<IWarehouseRepository>(), db.Get<IUnitOfWorkFactory>());
 
     [DatabaseFact, Trait("Id", "MM-UC-003-T01"), Trait("Id", "MM-UC-003-T07")]
     public async Task Create_SavesADraftWithANumber_AndServerAmounts()
@@ -209,6 +211,28 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
         var act = () => Service.CreateAsync(Request(m, Line(m.Item), Line(m.Item, qty: 0m)), "kim", None);
 
         (await act.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal(2);
+        (await Service.SearchAsync(new(null, m.Vendor, null, null, null), None)).Should().BeEmpty();
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-710"), Trait("Rule", "MM-BR-710")]
+    public async Task ConsignmentWarehouse_OnAHeaderOrALine_IsMmE710_AndSavesNothing()
+    {
+        var m = await MastersAsync();
+        ConsignmentWarehouse consignment;
+        await using (var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None))
+        {
+            consignment = (await db.Get<IWarehouseRepository>().FindConsignmentAsync(uow.Transaction, None))!;
+        }
+
+        var onHeader = () => Service.CreateAsync(Request(m, Line(m.Item)) with { WarehouseId = consignment.Id }, "kim", None);
+        var onLine = () => Service.CreateAsync(Request(m, Line(m.Item) with { WarehouseId = consignment.Id }), "kim", None);
+
+        foreach (var act in new[] { onHeader, onLine })
+        {
+            var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+            error.Code.Should().Be(WarehouseRules.ConsignmentNotSelectableCode);
+            error.Args.Should().Equal("CONSIGN");
+        }
         (await Service.SearchAsync(new(null, m.Vendor, null, null, null), None)).Should().BeEmpty();
     }
 

@@ -214,6 +214,7 @@
   <data name="MM-E-814" xml:space="preserve"><value>Alternate item group {0} has items, so it can't be deleted. Take its items out on the alternate item screen first.</value></data>
   <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
   <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
+  <data name="MM-E-710" xml:space="preserve"><value>Warehouse {0} is the consignment warehouse and can't be picked for a document or as your default warehouse. Pick another warehouse.</value></data>
   <data name="MM-E-851" xml:space="preserve"><value>Enter the required field {0}.</value></data>
   <data name="MM-E-852" xml:space="preserve"><value>Vendor name '{0}' already exists.</value></data>
   <data name="MM-E-853" xml:space="preserve"><value>Enter the ship zip code when you enter a ship address.</value></data>

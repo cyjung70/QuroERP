@@ -543,6 +543,10 @@ public class InventoryServiceTests
 
     private sealed class FakeInventoryRepository : IInventoryRepository
     {
+        public Task<IReadOnlyDictionary<long, decimal>> GetSellableOnHandAsync(
+            IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
         public string? CloseYearMonth { get; set; }
 
         public Dictionary<long, ItemStock> Items { get; } = [];
