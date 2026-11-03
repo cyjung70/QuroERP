@@ -21,7 +21,7 @@ public class WarehouseRepositoryTests(AuthSchemaFixture db)
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         await InsertWarehousesAsync(uow);
 
-        var options = await db.Get<IWarehouseRepository>().FindOptionsAsync(includeConsignment: false, uow.Transaction, None);
+        var options = await db.Get<IWarehouseRepository>().FindOptionsAsync(includeConsignment: false, includeInactive: false, uow.Transaction, None);
 
         options.Select(o => o.WarehouseCode).Should().Equal("AA1", "MAIN", "ZZ1");
         options.Should().ContainSingle(o => o.WarehouseCode == "MAIN").Which.WarehouseName.Should().Be("Main");
@@ -34,7 +34,7 @@ public class WarehouseRepositoryTests(AuthSchemaFixture db)
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         await InsertWarehousesAsync(uow);
 
-        var options = await db.Get<IWarehouseRepository>().FindOptionsAsync(includeConsignment: true, uow.Transaction, None);
+        var options = await db.Get<IWarehouseRepository>().FindOptionsAsync(includeConsignment: true, includeInactive: false, uow.Transaction, None);
 
         options.Select(o => (o.WarehouseCode, o.WarehouseType)).Should().Equal(
             ("AA1", "NORMAL"), ("CONSIGN", "CONSIGNMENT"), ("MAIN", "NORMAL"), ("ZZ1", "NORMAL"));

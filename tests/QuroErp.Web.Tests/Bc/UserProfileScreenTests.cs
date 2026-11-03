@@ -204,7 +204,7 @@ public class UserProfileScreenTests : BunitContext
             }
             if (path == "/" + WarehouseRoutes.Options)
             {
-                return Json(new[] { new WarehouseOptionDto(1, "MAIN", "Main", "NORMAL"), new WarehouseOptionDto(2, "W02", "Second", "NORMAL") });
+                return Json(new[] { new WarehouseOptionDto(1, "MAIN", "Main", "NORMAL", true), new WarehouseOptionDto(2, "W02", "Second", "NORMAL", true) });
             }
             if (path == "/" + UserProfileRoutes.RevokeTokens && request.Method == HttpMethod.Post)
             {

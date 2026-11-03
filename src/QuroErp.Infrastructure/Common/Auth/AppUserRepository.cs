@@ -84,7 +84,10 @@ internal sealed class AppUserRepository : IAppUserRepository
     private const string SelectDefaultWarehouse = """
         SELECT w.id, w.warehouse_code, w.warehouse_name
         FROM sys_app_user u
-        JOIN bc_warehouse w ON w.id = u.default_warehouse_id OR (u.default_warehouse_id IS NULL AND w.is_default)
+        -- MM-BR-703: the user's warehouse while it is in use, otherwise the company default warehouse
+        JOIN bc_warehouse w ON w.id = coalesce(
+            (SELECT d.id FROM bc_warehouse d WHERE d.id = u.default_warehouse_id AND d.use_yn),
+            (SELECT c.id FROM bc_warehouse c WHERE c.is_default))
         WHERE u.id = @Id
         """;
 

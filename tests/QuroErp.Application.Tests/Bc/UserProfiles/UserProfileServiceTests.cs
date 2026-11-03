@@ -156,11 +156,34 @@ public class UserProfileServiceTests
     private sealed class FakeWarehouseRepository : IWarehouseRepository
     {
         public Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(
-            bool includeConsignment, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            bool includeConsignment, bool includeInactive, IDbTransaction transaction, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<ConsignmentWarehouse?> FindConsignmentAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<ConsignmentWarehouse?>(new ConsignmentWarehouse(3, "CONSIGN"));
+
+        public Task<IReadOnlyList<WarehouseRow>> FindAllAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyDictionary<long, string>> FindInactivationBlockersAsync(
+            IReadOnlyCollection<long> warehouseIds, DateOnly today, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyDictionary<long, string>> FindDeleteBlockersAsync(
+            IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task ClearDefaultAsync(string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<long> InsertAsync(WarehouseState warehouse, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task UpdateAsync(WarehouseState warehouse, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task DeleteAsync(IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakeUserProfileRepository : IUserProfileRepository

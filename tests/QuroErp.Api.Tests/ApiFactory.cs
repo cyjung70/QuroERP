@@ -110,7 +110,16 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     /// <summary>Warehouse choice list the API returns as is (the repository filters and sorts).</summary>
     public List<WarehouseOptionDto> WarehouseOptions { get; } =
-        [new(1, "MAIN", "Main", "NORMAL"), new(2, "W02", "Second", "NORMAL"), new(3, "CONSIGN", "Consignment", "CONSIGNMENT")];
+        [new(1, "MAIN", "Main", "NORMAL", true), new(2, "W02", "Second", "NORMAL", true), new(3, "CONSIGN", "Consignment", "CONSIGNMENT", true),
+         new(4, "OLD", "Closed", "NORMAL", false)];
+
+    /// <summary>Stored warehouses the master API reads (MM-UC-017): MAIN is the default, OLD is not in use.</summary>
+    public List<WarehouseRow> Warehouses { get; } =
+    [
+        new(1, "MAIN", "Main", true, true, "NORMAL", null, new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+        new(3, "CONSIGN", "Consignment", false, true, "CONSIGNMENT", null, new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+        new(4, "OLD", "Closed", false, false, "NORMAL", null, new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+    ];
 
     /// <summary>Roles, menus and role menu assignments (BC-UC-005).</summary>
     public InMemoryRoleRepository Roles { get; } = new();
@@ -275,12 +284,35 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     private sealed class FakeWarehouseRepository(ApiFactory factory) : IWarehouseRepository
     {
         public Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(
-            bool includeConsignment, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            bool includeConsignment, bool includeInactive, IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<WarehouseOptionDto>>(
-                [.. factory.WarehouseOptions.Where(w => includeConsignment || w.WarehouseType != WarehouseTypes.Consignment)]);
+                [.. factory.WarehouseOptions.Where(w => (includeConsignment || w.WarehouseType != WarehouseTypes.Consignment) && (includeInactive || w.UseYn))]);
 
         public Task<ConsignmentWarehouse?> FindConsignmentAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<ConsignmentWarehouse?>(new ConsignmentWarehouse(3, "CONSIGN"));
+
+        public Task<IReadOnlyList<WarehouseRow>> FindAllAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<WarehouseRow>>([.. factory.Warehouses]);
+
+        public Task<IReadOnlyDictionary<long, string>> FindInactivationBlockersAsync(
+            IReadOnlyCollection<long> warehouseIds, DateOnly today, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<long, string>>(new Dictionary<long, string>());
+
+        public Task<IReadOnlyDictionary<long, string>> FindDeleteBlockersAsync(
+            IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<long, string>>(new Dictionary<long, string>());
+
+        public Task ClearDefaultAsync(string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<long> InsertAsync(WarehouseState warehouse, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task UpdateAsync(WarehouseState warehouse, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task DeleteAsync(IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            warehouseIds.Count == 0 ? Task.CompletedTask : throw new NotSupportedException();
     }
 
     private sealed class FakeAuthSettingRepository(ApiFactory factory) : IAuthSettingRepository
