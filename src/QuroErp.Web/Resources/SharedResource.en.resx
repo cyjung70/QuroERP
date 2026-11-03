@@ -151,6 +151,7 @@
   <data name="BC-E-403" xml:space="preserve"><value>Language '{0}' is the company default language and must stay in use.</value></data>
   <data name="BC-E-411" xml:space="preserve"><value>Currency '{0}' is not valid. Use 3 upper-case letters and 0 to 4 decimals.</value></data>
   <data name="BC-E-412" xml:space="preserve"><value>Currency '{0}' is not in use.</value></data>
+  <data name="BC-E-415" xml:space="preserve"><value>Transaction currency '{0}' is not a currency in use.</value></data>
   <data name="BC-E-416" xml:space="preserve"><value>Currency '{0}' is the base currency or is used by documents or partners, so it cannot be deleted. Set it not in use instead.</value></data>
   <data name="BC-E-404" xml:space="preserve"><value>Enter the English (en) name of '{0}'.</value></data>
   <data name="BC-E-501" xml:space="preserve"><value>Tax code '{0}' is empty, is not up to 10 upper-case letters or digits, or already exists.</value></data>
@@ -174,6 +175,9 @@
   <data name="BC-E-512" xml:space="preserve"><value>The rate line {1} of tax area '{0}' is not valid. It needs a start date and a rate of 0 or more and under 100 with up to 4 decimals, and a start date can have only one line.</value></data>
   <data name="BC-E-513" xml:space="preserve"><value>Tax code '{0}' has no rate valid on {1}. Add a tax area rate starting on or before that date.</value></data>
   <data name="BC-E-521" xml:space="preserve"><value>Business registration number '{0}' is not valid. It must be 10 digits with a correct check digit.</value></data>
+  <data name="BC-E-522" xml:space="preserve"><value>A business party needs {0}.</value></data>
+  <data name="BC-W-522" xml:space="preserve"><value>Other vendors have the same business registration number: {0}. The vendor was saved.</value></data>
+  <data name="BC-E-523" xml:space="preserve"><value>Tax code {0} does not exist or is not in use.</value></data>
   <data name="BC-W-525" xml:space="preserve"><value>The exemption certificate for this state has expired, so the customer's default tax code is used.</value></data>
   <data name="quro.validation.minExclusive" xml:space="preserve"><value>Enter a value greater than the minimum.</value></data>
   <data name="quro.validation.maxExclusive" xml:space="preserve"><value>Enter a value less than the maximum.</value></data>
@@ -210,6 +214,13 @@
   <data name="MM-E-814" xml:space="preserve"><value>Alternate item group {0} has items, so it can't be deleted. Take its items out on the alternate item screen first.</value></data>
   <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
   <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
+  <data name="MM-E-851" xml:space="preserve"><value>Enter the required field {0}.</value></data>
+  <data name="MM-E-852" xml:space="preserve"><value>Vendor name '{0}' already exists.</value></data>
+  <data name="MM-E-853" xml:space="preserve"><value>Enter the ship zip code when you enter a ship address.</value></data>
+  <data name="MM-E-856" xml:space="preserve"><value>Enter remarks of up to {0} characters.</value></data>
+  <data name="MM-E-857" xml:space="preserve"><value>Vendor {0} has purchase orders, goods receipts, payments or purchase prices and cannot be deleted. Set it to not in use instead.</value></data>
+  <data name="MM-E-859" xml:space="preserve"><value>Enter {0} in the right form, up to {1} characters.</value></data>
+  <data name="MM-E-872" xml:space="preserve"><value>For a KR vendor, choose {0}: BUSINESS or INDIVIDUAL.</value></data>
   <data name="MM-E-901" xml:space="preserve"><value>Price group {0} / item {1}: a price group is up to 5 uppercase characters, and each item appears once in it.</value></data>
   <data name="MM-E-902" xml:space="preserve"><value>Item {0} does not exist, is not an inventory item, or is not in use.</value></data>
   <data name="MM-E-903" xml:space="preserve"><value>The purchase price of item {0} must be above 0.</value></data>
@@ -524,6 +535,7 @@
   <data name="Menu.G1BA07" xml:space="preserve"><value>Sales Prices</value></data>
   <data name="Menu.G1BA08" xml:space="preserve"><value>Alternate Items</value></data>
   <data name="Menu.G1BA09" xml:space="preserve"><value>Alternate Item Groups</value></data>
+  <data name="Menu.G1BA10" xml:space="preserve"><value>Vendors</value></data>
   <data name="Menu.G2MM01" xml:space="preserve"><value>Purchase Orders</value></data>
   <data name="Menu.G5AD06" xml:space="preserve"><value>Exchange Rates</value></data>
   <data name="Menu.G5AD07" xml:space="preserve"><value>Tax Codes</value></data>

@@ -21,6 +21,7 @@ using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Mm.Lots;
 using QuroErp.Application.Mm.PurchaseOrders;
+using QuroErp.Application.Mm.Vendors;
 using QuroErp.Application.Mm.Warehouses;
 
 namespace QuroErp.Application;
@@ -60,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<AlternateItemService>();
         services.AddScoped<AlternateItemGroupService>();
         services.AddScoped<WarehouseService>();
+        services.AddScoped<VendorService>();
         services.AddScoped<PurchaseOrderService>();
         services.AddScoped<RoleService>();
         services.AddScoped<MenuService>();

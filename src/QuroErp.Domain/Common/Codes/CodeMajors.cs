@@ -9,6 +9,8 @@ public static class CodeMajors
     public const string ItemType = "ITEM_TYPE";
     public const string MovementType = "MOVEMENT_TYPE";
     public const string Plating = "PLATING";
+    public const string State = "STATE";
+    public const string Terms = "TERMS";
     public const string Unit = "UNIT";
     public const string ValidFlag = "VALID_FLAG";
 }
