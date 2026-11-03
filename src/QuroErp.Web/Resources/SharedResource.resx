@@ -616,35 +616,35 @@
   <data name="Mm.Vendor.BusinessRegNo" xml:space="preserve"><value>사업자등록번호</value></data>
   <data name="Mm.Vendor.CeoName" xml:space="preserve"><value>대표자</value></data>
   <data name="Mm.Vendor.BusinessType" xml:space="preserve"><value>업태</value></data>
-  <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>종목</value></data>
-  <data name="Mm.Vendor.Title" xml:space="preserve"><value>공급자</value></data>
-  <data name="Mm.Vendor.FindVendor" xml:space="preserve"><value>공급자 찾기</value></data>
-  <data name="Mm.Vendor.VName" xml:space="preserve"><value>공급자 이름</value></data>
-  <data name="Mm.Vendor.Contact" xml:space="preserve"><value>담당자</value></data>
-  <data name="Mm.Vendor.Contact2" xml:space="preserve"><value>담당자 2</value></data>
-  <data name="Mm.Vendor.Phone1" xml:space="preserve"><value>전화 1</value></data>
-  <data name="Mm.Vendor.Phone2" xml:space="preserve"><value>전화 2</value></data>
-  <data name="Mm.Vendor.Phone3" xml:space="preserve"><value>전화 3</value></data>
-  <data name="Mm.Vendor.FaxNo" xml:space="preserve"><value>팩스</value></data>
-  <data name="Mm.Vendor.Email" xml:space="preserve"><value>이메일</value></data>
-  <data name="Mm.Vendor.Terms" xml:space="preserve"><value>지급 조건</value></data>
-  <data name="Mm.Vendor.ValidFlag" xml:space="preserve"><value>사용 여부</value></data>
-  <data name="Mm.Vendor.BalAmt" xml:space="preserve"><value>잔액</value></data>
-  <data name="Mm.Vendor.Remarks" xml:space="preserve"><value>메모</value></data>
-  <data name="Mm.Vendor.Addr1" xml:space="preserve"><value>주소 1</value></data>
-  <data name="Mm.Vendor.Addr2" xml:space="preserve"><value>주소 2</value></data>
-  <data name="Mm.Vendor.City" xml:space="preserve"><value>도시</value></data>
-  <data name="Mm.Vendor.Country" xml:space="preserve"><value>국가</value></data>
-  <data name="Mm.Vendor.ShipAddr1" xml:space="preserve"><value>배송 주소 1</value></data>
-  <data name="Mm.Vendor.ShipAddr2" xml:space="preserve"><value>배송 주소 2</value></data>
-  <data name="Mm.Vendor.ShipCity" xml:space="preserve"><value>배송 도시</value></data>
-  <data name="Mm.Vendor.ShipState" xml:space="preserve"><value>배송 주</value></data>
-  <data name="Mm.Vendor.ShipCountry" xml:space="preserve"><value>배송 국가</value></data>
-  <data name="Mm.Vendor.ShipZipCode" xml:space="preserve"><value>배송 우편번호</value></data>
-  <data name="Mm.Vendor.VendorPrice" xml:space="preserve"><value>구매 단가 그룹</value></data>
-  <data name="Mm.Vendor.CurrencyCode" xml:space="preserve"><value>거래 통화</value></data>
-  <data name="Mm.Vendor.TaxCode" xml:space="preserve"><value>세금 코드</value></data>
-  <data name="Mm.Vendor.TaxPartyType" xml:space="preserve"><value>거래처 구분</value></data>
-  <data name="Mm.Vendor.TaxPartyType.BUSINESS" xml:space="preserve"><value>사업자</value></data>
+  <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>종목</value></data>
+  <data name="Mm.Vendor.Title" xml:space="preserve"><value>공급자</value></data>
+  <data name="Mm.Vendor.FindVendor" xml:space="preserve"><value>공급자 찾기</value></data>
+  <data name="Mm.Vendor.VName" xml:space="preserve"><value>공급자 이름</value></data>
+  <data name="Mm.Vendor.Contact" xml:space="preserve"><value>담당자</value></data>
+  <data name="Mm.Vendor.Contact2" xml:space="preserve"><value>담당자 2</value></data>
+  <data name="Mm.Vendor.Phone1" xml:space="preserve"><value>전화 1</value></data>
+  <data name="Mm.Vendor.Phone2" xml:space="preserve"><value>전화 2</value></data>
+  <data name="Mm.Vendor.Phone3" xml:space="preserve"><value>전화 3</value></data>
+  <data name="Mm.Vendor.FaxNo" xml:space="preserve"><value>팩스</value></data>
+  <data name="Mm.Vendor.Email" xml:space="preserve"><value>이메일</value></data>
+  <data name="Mm.Vendor.Terms" xml:space="preserve"><value>지급 조건</value></data>
+  <data name="Mm.Vendor.ValidFlag" xml:space="preserve"><value>사용 여부</value></data>
+  <data name="Mm.Vendor.BalAmt" xml:space="preserve"><value>잔액</value></data>
+  <data name="Mm.Vendor.Remarks" xml:space="preserve"><value>메모</value></data>
+  <data name="Mm.Vendor.Addr1" xml:space="preserve"><value>주소 1</value></data>
+  <data name="Mm.Vendor.Addr2" xml:space="preserve"><value>주소 2</value></data>
+  <data name="Mm.Vendor.City" xml:space="preserve"><value>도시</value></data>
+  <data name="Mm.Vendor.Country" xml:space="preserve"><value>국가</value></data>
+  <data name="Mm.Vendor.ShipAddr1" xml:space="preserve"><value>배송 주소 1</value></data>
+  <data name="Mm.Vendor.ShipAddr2" xml:space="preserve"><value>배송 주소 2</value></data>
+  <data name="Mm.Vendor.ShipCity" xml:space="preserve"><value>배송 도시</value></data>
+  <data name="Mm.Vendor.ShipState" xml:space="preserve"><value>배송 주</value></data>
+  <data name="Mm.Vendor.ShipCountry" xml:space="preserve"><value>배송 국가</value></data>
+  <data name="Mm.Vendor.ShipZipCode" xml:space="preserve"><value>배송 우편번호</value></data>
+  <data name="Mm.Vendor.VendorPrice" xml:space="preserve"><value>구매 단가 그룹</value></data>
+  <data name="Mm.Vendor.CurrencyCode" xml:space="preserve"><value>거래 통화</value></data>
+  <data name="Mm.Vendor.TaxCode" xml:space="preserve"><value>세금 코드</value></data>
+  <data name="Mm.Vendor.TaxPartyType" xml:space="preserve"><value>거래처 구분</value></data>
+  <data name="Mm.Vendor.TaxPartyType.BUSINESS" xml:space="preserve"><value>사업자</value></data>
   <data name="Mm.Vendor.TaxPartyType.INDIVIDUAL" xml:space="preserve"><value>개인</value></data>
 </root>

@@ -5,12 +5,12 @@ using QuroErp.Web.Bc.Items;
 using QuroErp.Web.Bc.Localization;
 using QuroErp.Web.Bc.Menus;
 using QuroErp.Web.Bc.Roles;
-using QuroErp.Web.Bc.SetItems;
+using QuroErp.Web.Bc.SetItems;
 using QuroErp.Web.Bc.Tax;
 using QuroErp.Web.Bc.UserProfiles;
 using QuroErp.Web.Bc.Users;
 using QuroErp.Web.Components.Screens;
-using QuroErp.Web.Mm.Inventory;
+using QuroErp.Web.Mm.Inventory;
 using QuroErp.Web.Mm.Vendors;
 using QuroErp.Web.Mm.Warehouses;
 
@@ -40,8 +40,8 @@ public static class WebApiClients
         services.AddHttpClient<MenuApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CodeMinorApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CodeMajorApiClient>(http => http.BaseAddress = apiBaseUrl);
-        services.AddHttpClient<CurrencyApiClient>(http => http.BaseAddress = apiBaseUrl);
-        services.AddHttpClient<TaxCodeApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<CurrencyApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<TaxCodeApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<VendorApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<FieldPolicyApiClient>(http => http.BaseAddress = apiBaseUrl);
         // Code lists for combo boxes, read once per circuit
