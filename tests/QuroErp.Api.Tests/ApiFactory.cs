@@ -131,6 +131,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public InMemoryAlternateItemRepository AlternateItems { get; } = new();
 
+    public InMemoryAlternateItemGroupRepository AlternateItemGroups { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -186,6 +188,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ITaxCodeRepository>(TaxCodes);
             services.AddSingleton<ITaxAreaRepository>(TaxAreas);
             services.AddSingleton<IAlternateItemRepository>(AlternateItems);
+            services.AddSingleton<IAlternateItemGroupRepository>(AlternateItemGroups);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
