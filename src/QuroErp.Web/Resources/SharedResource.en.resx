@@ -214,6 +214,7 @@
   <data name="MM-E-814" xml:space="preserve"><value>Alternate item group {0} has items, so it can't be deleted. Take its items out on the alternate item screen first.</value></data>
   <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
   <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
+  <data name="MM-E-710" xml:space="preserve"><value>Warehouse {0} is the consignment warehouse and can't be picked for a document or as your default warehouse. Pick another warehouse.</value></data>
   <data name="MM-E-851" xml:space="preserve"><value>Enter the required field {0}.</value></data>
   <data name="MM-E-852" xml:space="preserve"><value>Vendor name '{0}' already exists.</value></data>
   <data name="MM-E-853" xml:space="preserve"><value>Enter the ship zip code when you enter a ship address.</value></data>
@@ -615,35 +616,35 @@
   <data name="Mm.Vendor.BusinessRegNo" xml:space="preserve"><value>Business registration number</value></data>
   <data name="Mm.Vendor.CeoName" xml:space="preserve"><value>CEO</value></data>
   <data name="Mm.Vendor.BusinessType" xml:space="preserve"><value>Business type</value></data>
-  <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>Business item</value></data>
-  <data name="Mm.Vendor.Title" xml:space="preserve"><value>Vendors</value></data>
-  <data name="Mm.Vendor.FindVendor" xml:space="preserve"><value>Find vendor</value></data>
-  <data name="Mm.Vendor.VName" xml:space="preserve"><value>Vendor name</value></data>
-  <data name="Mm.Vendor.Contact" xml:space="preserve"><value>Contact</value></data>
-  <data name="Mm.Vendor.Contact2" xml:space="preserve"><value>Contact 2</value></data>
-  <data name="Mm.Vendor.Phone1" xml:space="preserve"><value>Phone 1</value></data>
-  <data name="Mm.Vendor.Phone2" xml:space="preserve"><value>Phone 2</value></data>
-  <data name="Mm.Vendor.Phone3" xml:space="preserve"><value>Phone 3</value></data>
-  <data name="Mm.Vendor.FaxNo" xml:space="preserve"><value>Fax</value></data>
-  <data name="Mm.Vendor.Email" xml:space="preserve"><value>Email</value></data>
-  <data name="Mm.Vendor.Terms" xml:space="preserve"><value>Payment terms</value></data>
-  <data name="Mm.Vendor.ValidFlag" xml:space="preserve"><value>Active</value></data>
-  <data name="Mm.Vendor.BalAmt" xml:space="preserve"><value>Balance</value></data>
-  <data name="Mm.Vendor.Remarks" xml:space="preserve"><value>Remarks</value></data>
-  <data name="Mm.Vendor.Addr1" xml:space="preserve"><value>Address 1</value></data>
-  <data name="Mm.Vendor.Addr2" xml:space="preserve"><value>Address 2</value></data>
-  <data name="Mm.Vendor.City" xml:space="preserve"><value>City</value></data>
-  <data name="Mm.Vendor.Country" xml:space="preserve"><value>Country</value></data>
-  <data name="Mm.Vendor.ShipAddr1" xml:space="preserve"><value>Ship-to address 1</value></data>
-  <data name="Mm.Vendor.ShipAddr2" xml:space="preserve"><value>Ship-to address 2</value></data>
-  <data name="Mm.Vendor.ShipCity" xml:space="preserve"><value>Ship-to city</value></data>
-  <data name="Mm.Vendor.ShipState" xml:space="preserve"><value>Ship-to state</value></data>
-  <data name="Mm.Vendor.ShipCountry" xml:space="preserve"><value>Ship-to country</value></data>
-  <data name="Mm.Vendor.ShipZipCode" xml:space="preserve"><value>Ship-to ZIP code</value></data>
-  <data name="Mm.Vendor.VendorPrice" xml:space="preserve"><value>Purchase price group</value></data>
-  <data name="Mm.Vendor.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
-  <data name="Mm.Vendor.TaxCode" xml:space="preserve"><value>Tax code</value></data>
-  <data name="Mm.Vendor.TaxPartyType" xml:space="preserve"><value>Tax party type</value></data>
-  <data name="Mm.Vendor.TaxPartyType.BUSINESS" xml:space="preserve"><value>Business</value></data>
+  <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>Business item</value></data>
+  <data name="Mm.Vendor.Title" xml:space="preserve"><value>Vendors</value></data>
+  <data name="Mm.Vendor.FindVendor" xml:space="preserve"><value>Find vendor</value></data>
+  <data name="Mm.Vendor.VName" xml:space="preserve"><value>Vendor name</value></data>
+  <data name="Mm.Vendor.Contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="Mm.Vendor.Contact2" xml:space="preserve"><value>Contact 2</value></data>
+  <data name="Mm.Vendor.Phone1" xml:space="preserve"><value>Phone 1</value></data>
+  <data name="Mm.Vendor.Phone2" xml:space="preserve"><value>Phone 2</value></data>
+  <data name="Mm.Vendor.Phone3" xml:space="preserve"><value>Phone 3</value></data>
+  <data name="Mm.Vendor.FaxNo" xml:space="preserve"><value>Fax</value></data>
+  <data name="Mm.Vendor.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Mm.Vendor.Terms" xml:space="preserve"><value>Payment terms</value></data>
+  <data name="Mm.Vendor.ValidFlag" xml:space="preserve"><value>Active</value></data>
+  <data name="Mm.Vendor.BalAmt" xml:space="preserve"><value>Balance</value></data>
+  <data name="Mm.Vendor.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Mm.Vendor.Addr1" xml:space="preserve"><value>Address 1</value></data>
+  <data name="Mm.Vendor.Addr2" xml:space="preserve"><value>Address 2</value></data>
+  <data name="Mm.Vendor.City" xml:space="preserve"><value>City</value></data>
+  <data name="Mm.Vendor.Country" xml:space="preserve"><value>Country</value></data>
+  <data name="Mm.Vendor.ShipAddr1" xml:space="preserve"><value>Ship-to address 1</value></data>
+  <data name="Mm.Vendor.ShipAddr2" xml:space="preserve"><value>Ship-to address 2</value></data>
+  <data name="Mm.Vendor.ShipCity" xml:space="preserve"><value>Ship-to city</value></data>
+  <data name="Mm.Vendor.ShipState" xml:space="preserve"><value>Ship-to state</value></data>
+  <data name="Mm.Vendor.ShipCountry" xml:space="preserve"><value>Ship-to country</value></data>
+  <data name="Mm.Vendor.ShipZipCode" xml:space="preserve"><value>Ship-to ZIP code</value></data>
+  <data name="Mm.Vendor.VendorPrice" xml:space="preserve"><value>Purchase price group</value></data>
+  <data name="Mm.Vendor.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Mm.Vendor.TaxCode" xml:space="preserve"><value>Tax code</value></data>
+  <data name="Mm.Vendor.TaxPartyType" xml:space="preserve"><value>Tax party type</value></data>
+  <data name="Mm.Vendor.TaxPartyType.BUSINESS" xml:space="preserve"><value>Business</value></data>
   <data name="Mm.Vendor.TaxPartyType.INDIVIDUAL" xml:space="preserve"><value>Individual</value></data>
 </root>

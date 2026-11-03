@@ -29,6 +29,15 @@ public interface IInventoryRepository
     /// </summary>
     Task<OnHandRow> LockOnHandAsync(long itemId, long warehouseId, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Sellable stock per item: the on-hand quantity of every warehouse except the consignment warehouse (MM-BR-711). For
+    /// available quantities on sales orders, the cart and shipments, and the current stock of the purchase simulation.
+    /// Stock reports, stock value, month close and reconciliation keep the consignment stock.
+    /// </summary>
+    /// <returns>Every requested item; 0 for an item without on-hand rows.</returns>
+    Task<IReadOnlyDictionary<long, decimal>> GetSellableOnHandAsync(
+        IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
     Task UpdateOnHandAsync(long itemId, long warehouseId, decimal onHandQty, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Saves bc_item.onhand_qty, stk_val and mvg_cost.</summary>

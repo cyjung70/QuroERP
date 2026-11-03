@@ -11,6 +11,8 @@ namespace QuroErp.Api.Mm.Warehouses;
 [ApiController, Route(WarehouseRoutes.Base)]
 public sealed class WarehouseController(WarehouseService service) : ControllerBase
 {
+    /// <param name="includeConsignment">true adds the consignment warehouse, for report conditions only (MM-BR-710).</param>
     [HttpGet("options")]
-    public Task<IReadOnlyList<WarehouseOptionDto>> GetOptions(CancellationToken cancellationToken) => service.GetOptionsAsync(cancellationToken);
+    public Task<IReadOnlyList<WarehouseOptionDto>> GetOptions([FromQuery] bool includeConsignment, CancellationToken cancellationToken) =>
+        service.GetOptionsAsync(includeConsignment, cancellationToken);
 }

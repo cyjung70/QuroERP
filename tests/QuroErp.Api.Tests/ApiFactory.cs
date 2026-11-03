@@ -43,6 +43,7 @@ using QuroErp.Domain.Bc.Companies;
 using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Bc.UserProfiles;
 using QuroErp.Domain.Common.Auth;
+using QuroErp.Domain.Mm.Warehouses;
 
 namespace QuroErp.Api.Tests;
 
@@ -108,7 +109,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public InMemoryItemRepository Items { get; } = new();
 
     /// <summary>Warehouse choice list the API returns as is (the repository filters and sorts).</summary>
-    public List<WarehouseOptionDto> WarehouseOptions { get; } = [new(1, "MAIN", "Main"), new(2, "W02", "Second")];
+    public List<WarehouseOptionDto> WarehouseOptions { get; } =
+        [new(1, "MAIN", "Main", "NORMAL"), new(2, "W02", "Second", "NORMAL"), new(3, "CONSIGN", "Consignment", "CONSIGNMENT")];
 
     /// <summary>Roles, menus and role menu assignments (BC-UC-005).</summary>
     public InMemoryRoleRepository Roles { get; } = new();
@@ -272,8 +274,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     private sealed class FakeWarehouseRepository(ApiFactory factory) : IWarehouseRepository
     {
-        public Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<WarehouseOptionDto>>(factory.WarehouseOptions);
+        public Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(
+            bool includeConsignment, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<WarehouseOptionDto>>(
+                [.. factory.WarehouseOptions.Where(w => includeConsignment || w.WarehouseType != WarehouseTypes.Consignment)]);
+
+        public Task<ConsignmentWarehouse?> FindConsignmentAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<ConsignmentWarehouse?>(new ConsignmentWarehouse(3, "CONSIGN"));
     }
 
     private sealed class FakeAuthSettingRepository(ApiFactory factory) : IAuthSettingRepository

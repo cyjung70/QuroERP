@@ -55,7 +55,7 @@ public class VendorScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        // The combo box keys its options in lower case
+        // The combo box keys its options in lower case
         page.Field("vendor-header-terms").Selected.Should().BeEquivalentTo("NET_30");
         page.Find("[data-testid=vendor-header-valid-flag-y]").HasAttribute("checked").Should().BeTrue();
         page.Field("vendor-header-country").Value.Should().Be("USA");

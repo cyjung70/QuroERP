@@ -38,6 +38,14 @@ internal sealed class InventoryRepository : IInventoryRepository
         FOR UPDATE OF o
         """;
 
+    private const string SelectSellableOnHand = """
+        SELECT o.item_id, sum(o.onhand_qty) AS onhand_qty
+        FROM mm_onhand o
+        JOIN bc_warehouse w ON w.id = o.warehouse_id
+        WHERE o.item_id = ANY(@ItemIds) AND w.warehouse_type <> 'CONSIGNMENT'
+        GROUP BY o.item_id
+        """;
+
     private const string UpdateOnHand = """
         UPDATE mm_onhand
         SET onhand_qty = @OnHandQty, updated_at = now(), updated_by = @User
@@ -145,6 +153,15 @@ internal sealed class InventoryRepository : IInventoryRepository
         var rows = await transaction.Connection!.QueryAsync<ItemRow>(
             new CommandDefinition(LockItems, new { ItemIds = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken));
         return rows.Select(r => new ItemStock(r.ItemId, r.ItemCd, r.Type, r.OnhandQty, r.StkVal, r.MvgCost, r.LotManaged, r.LotManagedFrom)).ToList();
+    }
+
+    public async Task<IReadOnlyDictionary<long, decimal>> GetSellableOnHandAsync(
+        IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var rows = (await transaction.Connection!.QueryAsync<(long ItemId, decimal OnHandQty)>(new CommandDefinition(
+            SelectSellableOnHand, new { ItemIds = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken)))
+            .ToDictionary(r => r.ItemId, r => r.OnHandQty);
+        return itemIds.Distinct().ToDictionary(id => id, id => rows.GetValueOrDefault(id));
     }
 
     public async Task<OnHandRow> LockOnHandAsync(long itemId, long warehouseId, string user, IDbTransaction transaction, CancellationToken cancellationToken)

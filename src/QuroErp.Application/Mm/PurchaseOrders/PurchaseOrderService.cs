@@ -5,12 +5,14 @@ using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
+using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Mm.PurchaseOrders;
 using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.PurchaseOrders;
+using QuroErp.Domain.Mm.Warehouses;
 
 namespace QuroErp.Application.Mm.PurchaseOrders;
 
@@ -25,6 +27,7 @@ public sealed class PurchaseOrderService(
     ILocalizationRepository localization,
     IBusinessPlaceRepository businessPlaces,
     DocumentNumberService numbers,
+    IWarehouseRepository warehouseMasters,
     IUnitOfWorkFactory unitOfWork)
 {
     /// <summary>The purchase order does not exist. Arg: id.</summary>
@@ -49,7 +52,7 @@ public sealed class PurchaseOrderService(
     }
 
     /// <summary>Saves a new draft with the next PO number of the order date's month (MM-BR-017, MM-BR-019).</summary>
-    /// <exception cref="DomainException">MM-E-011, 012, 014, 025, 026, 027, 031; Common-E-005, Common-E-006; BC-E-412, BC-E-513.</exception>
+    /// <exception cref="DomainException">MM-E-011, 012, 014, 025, 026, 027, 031, MM-E-710; Common-E-005, Common-E-006; BC-E-412, BC-E-513.</exception>
     /// <exception cref="BadRequestException">400 BC-E-321 when there is no default business place.</exception>
     public async Task<PurchaseOrderDto> CreateAsync(SavePurchaseOrderRequest request, string user, CancellationToken cancellationToken)
     {
@@ -178,6 +181,9 @@ public sealed class PurchaseOrderService(
 
         var itemTypes = await orders.FindItemTypesAsync([.. lines.Select(l => l.ItemId).Distinct()], transaction, cancellationToken);
         var warehouseIds = lines.Select(l => l.WarehouseId).Append(header.WarehouseId).OfType<long>().Distinct().ToList();
+        // MM-BR-710: the PO warehouse becomes the receipt warehouse, so users cannot pick the consignment warehouse
+        WarehouseRules.EnsureUserSelectable(
+            warehouseIds.Select(id => (long?)id), await warehouseMasters.FindConsignmentAsync(transaction, cancellationToken));
         var warehouses = await orders.FindUsableWarehousesAsync(warehouseIds, transaction, cancellationToken);
         var taxCodes = await taxes.FindTaxCodesAsync([.. lines.Select(l => l.TaxCodeId).Distinct()], transaction, cancellationToken);
         var rates = new Dictionary<long, TaxCodeRate>();
