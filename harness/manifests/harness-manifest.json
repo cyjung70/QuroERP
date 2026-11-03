@@ -72,7 +72,7 @@
     },
     {
       "path": "docs/architecture/app-shell.md",
-      "sha256": "fa31ce5f416c61c703fdef4fa18293db357de9e062054e4e2ec296dc70de4187"
+      "sha256": "4570c3a5134f0fb87dfd3be4928e268b15b49eacea84ff7b57205b786ca3c4d0"
     },
     {
       "path": "docs/architecture/codes.md",
@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/architecture/entry-frame.md",
-      "sha256": "8f48949429981235d34c706f49282ad1074605f4d7cfb4bcf246248e85cd78cc"
+      "sha256": "70677a128687ae3e63cb1c359dae0dc8cef82375e5933356ec2be880230175d3"
     },
     {
       "path": "docs/architecture/field-policy.md",
@@ -132,11 +132,11 @@
     },
     {
       "path": "docs/architecture/screen-templates.md",
-      "sha256": "9c41a9336bb35607270980e51337dae80c46f695085d00e8aa0298773a6db561"
+      "sha256": "6437ed27bc1d3caa4a7f7cdda518f67bf36c93d8cd16d80d108964aee28d0982"
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "21da6a51bd21f64fef26a57450fcbfc3a07bd7299d4ef43457ff174c04f670cc"
+      "sha256": "b67b0379384d2a4ae998eb113cde0ffeb9d59c59e7bc3cdbb3db87fb2bbe3a22"
     },
     {
       "path": "docs/architecture/security.md",
@@ -1208,7 +1208,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-040.json",
-      "sha256": "3529004f03443a0e221627b7c3d08566bf4a3118c1697234c3b433e4e0c1fc62"
+      "sha256": "60a561459d3e6594d37851cbe83415a57dd97b4b2b9169466f6d1eb5af42d01e"
     },
     {
       "path": "harness/tasks/TASK-CORE-041.json",
@@ -1292,7 +1292,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-061.json",
-      "sha256": "d4eb65d45a0d6d82fec0fcb5501ff9ffa76cd689b75e0f90b87752b63894c8e1"
+      "sha256": "17279bf5cc8b6ebb4d5e67720d642308ba3583c63a255f52a05866ea477aee72"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
