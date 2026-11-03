@@ -496,6 +496,7 @@
   <data name="Menu.G5AD05" xml:space="preserve"><value>역할 메뉴</value></data>
   <data name="Menu.G1BA04" xml:space="preserve"><value>품목 바코드</value></data>
   <data name="Menu.G1BA05" xml:space="preserve"><value>매입 단가</value></data>
+  <data name="Menu.G1BA06" xml:space="preserve"><value>세트 품목 구성</value></data>
   <data name="Menu.G2MM01" xml:space="preserve"><value>발주</value></data>
   <data name="Menu.G5AD06" xml:space="preserve"><value>환율</value></data>
   <data name="Menu.G5AD07" xml:space="preserve"><value>세금 코드</value></data>
