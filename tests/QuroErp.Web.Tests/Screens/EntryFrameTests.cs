@@ -80,14 +80,16 @@ public class EntryFrameTests : ScreenContext
         page.Find(".quro-entry-lines-head").TextContent.Should().Contain("공급자를 먼저 고르세요.");
     }
 
-    [Fact]
+    [Fact, Trait("Id", "CORE-060-WT-02")]
     public void Fields_ColorClasses_FollowRequiredAndLockMode()
     {
         var page = Render<SamplePoEntry>();
 
-        Field(page, "vendor-code").ClassList.Should().Contain(["quro-field-editable", "quro-field-required"]);
-        Field(page, "vendor-name").ClassList.Should().Contain("quro-field-readonly").And.Contain("quro-span-2");
-        Field(page, "vendor-message").ClassList.Should().Contain("quro-field-editable").And.Contain("quro-span-4")
+        // Required = input + required (light yellow), other input = input (white), locked = read-only (gray)
+        Field(page, "vendor-code").ClassList.Should().Contain(["quro-field-input", "quro-field-required"]).And.NotContain("quro-field-readonly");
+        Field(page, "vendor-name").ClassList.Should().Contain("quro-field-readonly").And.Contain("quro-span-2")
+            .And.NotContain("quro-field-input");
+        Field(page, "vendor-message").ClassList.Should().Contain("quro-field-input").And.Contain("quro-span-4")
             .And.NotContain("quro-field-required");
     }
 

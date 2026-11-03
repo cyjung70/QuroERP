@@ -41,6 +41,36 @@ public partial class DesignTokenTests
         Contrast(t["brand"], t["brand-tint"]).Should().BeGreaterThanOrEqualTo(4.5);
     }
 
+    public static TheoryData<string, string, string> FieldValues => new()
+    {
+        { ":root {", "#fff8dc", "#ffffff" },
+        { ":root:not([data-theme=\"light\"]) {", "#2d2a19", "#1a2029" },
+        { ":root[data-theme=\"dark\"] {", "#2d2a19", "#1a2029" },
+    };
+
+    [Theory, Trait("Id", "CORE-060-WT-01")]
+    [MemberData(nameof(FieldValues))]
+    public void FieldTokens_AreRequiredYellowAndInputWhite_InEveryTheme(string block, string requiredBg, string input)
+    {
+        var tokens = Tokens(block);
+
+        tokens["field-required-bg"].Should().Be(requiredBg);
+        tokens["field-input"].Should().Be(input);
+        tokens.Should().NotContainKey("field-editable");
+    }
+
+    [Fact, Trait("Id", "CORE-060-WT-01")]
+    public void NothingUsesTheOldEditableFieldToken()
+    {
+        var web = Path.Combine(RepositoryRoot(), "src", "QuroErp.Web");
+        var files = Directory.GetFiles(web, "*.*", SearchOption.AllDirectories)
+            .Where(f => f.EndsWith(".css", StringComparison.Ordinal) || f.EndsWith(".razor", StringComparison.Ordinal) || f.EndsWith(".cs", StringComparison.Ordinal))
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
+
+        files.Where(f => File.ReadAllText(f).Contains("field-editable", StringComparison.Ordinal)).Should().BeEmpty();
+    }
+
     [Fact]
     public void ComponentStyles_DoNotHardCodeTheOldBrandColours()
     {
