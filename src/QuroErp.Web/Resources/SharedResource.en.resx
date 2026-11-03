@@ -214,6 +214,9 @@
   <data name="SD-E-502" xml:space="preserve"><value>Item {0} cannot be a component. A component must be an inventory item in use.</value></data>
   <data name="SD-E-503" xml:space="preserve"><value>The quantity of component {0} must be above 0.</value></data>
   <data name="SD-E-504" xml:space="preserve"><value>Component {0} is in the set twice. Each component can be in a set only once.</value></data>
+  <data name="SD-E-403" xml:space="preserve"><value>Price level {0} / item {1}: a price level is up to 5 uppercase characters, and each item appears once in it.</value></data>
+  <data name="SD-E-407" xml:space="preserve"><value>The sales price of item {0} must be above 0.</value></data>
+  <data name="SD-E-408" xml:space="preserve"><value>Item {0} does not exist, is not an inventory item, or is not in use.</value></data>
   <data name="Bc.Item.Title" xml:space="preserve"><value>Item Master</value></data>
   <data name="Bc.Item.ItemCd" xml:space="preserve"><value>Item Code</value></data>
   <data name="Bc.Item.ItemName" xml:space="preserve"><value>Item Name</value></data>
@@ -507,6 +510,7 @@
   <data name="Menu.G1BA04" xml:space="preserve"><value>Item Barcodes</value></data>
   <data name="Menu.G1BA05" xml:space="preserve"><value>Purchase Prices</value></data>
   <data name="Menu.G1BA06" xml:space="preserve"><value>Set Item Composition</value></data>
+  <data name="Menu.G1BA07" xml:space="preserve"><value>Sales Prices</value></data>
   <data name="Menu.G2MM01" xml:space="preserve"><value>Purchase Orders</value></data>
   <data name="Menu.G5AD06" xml:space="preserve"><value>Exchange Rates</value></data>
   <data name="Menu.G5AD07" xml:space="preserve"><value>Tax Codes</value></data>
