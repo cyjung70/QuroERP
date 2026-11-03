@@ -35,7 +35,9 @@ public sealed record ItemRow(
     DateTimeOffset CreatedAt,
     string CreatedBy,
     DateTimeOffset UpdatedAt,
-    string UpdatedBy);
+    string UpdatedBy,
+    bool LotManaged = false,
+    DateOnly? LotManagedFrom = null);
 
 /// <summary>List conditions as given by the caller; the repository escapes LIKE wildcards.</summary>
 public sealed record ItemSearch(string? ItemCd, string? ItemName, string? ItemClass, string? ValidFlag, int Offset, int Limit);

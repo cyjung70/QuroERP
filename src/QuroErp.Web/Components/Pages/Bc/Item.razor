@@ -62,6 +62,9 @@
             <QuroNumber Label="@L["Bc.Item.MvgCost"]" Field="MvgCost" Decimals="_mmPriceDecimals" LockMode="LockMode.Always" TestId="item-header-mvg-cost" />
             <QuroNumber Label="@L["Bc.Item.OnhandQty"]" Field="OnhandQty" Decimals="_qtyDecimals" LockMode="LockMode.Always" TestId="item-header-onhand-qty" />
             <QuroNumber Label="@L["Bc.Item.StkVal"]" Field="StkVal" Decimals="_amountDecimals" LockMode="LockMode.Always" TestId="item-header-stk-val" />
+            @* Turning it on moves the stock to lot MIGRATED; the API refuses it when not allowed (MM-BR-351, MM-BR-361) *@
+            <QuroCheckbox Label="@L["Bc.Item.LotManaged"]" Field="LotManaged" TestId="item-header-lot-managed" />
+            <QuroDate Label="@L["Bc.Item.LotManagedFrom"]" Field="LotManagedFrom" LockMode="LockMode.Always" TestId="item-header-lot-managed-from" />
             <QuroText Label="@L["Bc.Item.Memo1"]" Field="Memo1" TextCase="TextCase.Upper" TestId="item-header-memo1" />
             <QuroText Label="@L["Bc.Item.Memo2"]" Field="Memo2" TextCase="TextCase.Upper" TestId="item-header-memo2" />
             <QuroText Label="@L["Bc.Item.Memo3"]" Field="Memo3" TextCase="TextCase.Upper" TestId="item-header-memo3" />

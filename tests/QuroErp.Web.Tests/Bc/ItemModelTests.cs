@@ -52,8 +52,24 @@ public class ItemModelTests
             ItemGrade = "A01",
             Taxable = false,
             VatKind = "EXEMPT",
+            LotManaged = false,
             UpdatedAt = updatedAt,
         });
+    }
+
+    [Fact, Trait("Id", "MM-UT-351"), Trait("Rule", "MM-BR-351")]
+    public void LotManagement_IsShownWithItsStartDay_AndSentBack()
+    {
+        var updatedAt = new DateTimeOffset(2026, 10, 29, 1, 2, 3, TimeSpan.Zero);
+        var dto = new ItemDto(7, "A100", "APPLE", null, null, "INVENTORY", "EA", "FR", "Y", 1m, 2m, null, null, 0m,
+            null, null, null, null, null, null, true, "TAXABLE", "A100", 1m, 0m, 0m, updatedAt, "setup", updatedAt, "kim",
+            LotManaged: true, LotManagedFrom: new DateOnly(2026, 10, 1));
+
+        var model = ItemModel.From(dto);
+
+        (model.LotManaged, model.LotManagedFrom).Should().Be((true, new DateOnly(2026, 10, 1)));
+        model.ToUpdateRequest().LotManaged.Should().BeTrue();
+        new ItemModel().ToCreateRequest().LotManaged.Should().BeFalse();
     }
 
     [Fact, Trait("Id", "BC-009-WT-08")]

@@ -39,5 +39,5 @@
     "단위 테스트: 로트 자동 번호, 로트 잔고 부족은 ALLOW_IN_MONTH에서도 차단, 로트 관리 켜기·끄기"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
