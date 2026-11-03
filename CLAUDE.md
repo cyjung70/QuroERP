@@ -54,6 +54,7 @@ Next gate: …  (waiting for the maintainer)
 
 ## 7. 작업 규칙
 ### Git
+- 태스크를 시작하기(G1) 전에 `git fetch origin`으로 최신 `origin/dev`를 받는다. Harness 문서·태스크는 자동 동기화 PR(`harness/auto-sync`)이 머지될 때 바뀐다. 이 PR은 메인테이너가 머지한다 — 세션이 머지하거나 고치지 않는다.
 - 개발 기준 브랜치는 `dev`다. 태스크마다 `origin/dev`에서 작업 브랜치(예: `task/mm-025-warehouse-api`)를 만들어 커밋하고, PR은 `dev`로 보낸다 (`gh pr create --base dev`).
 - `dev`·`main`에 바로 커밋하지 않는다. `main`에는 `dev`를 머지해서만 반영한다. `dev` 머지는 개발 서버, `main` 머지는 운영 서버 배포를 일으킨다 (`deploy/README.md`).
 - PR을 만들기 전에 base가 `dev`인지 확인한다. 태스크 PR을 `main`으로 보내지 않는다 (`main` 머지는 운영 배포다).
