@@ -80,5 +80,5 @@
     "남은 항목 분담 (QuroERP dev 대조): 발주 번호 6자리 → TASK-CORE-032, 발주서 PDF·엑셀(`print/*`, 머리 `Rev. n`) → TASK-MM-006, 요청 가져오기 `open-request-lines` → TASK-MM-045, 화면 경로 권한 → TASK-CORE-059, MM-BR-024 → TASK-MM-007. 위 항목을 뺀 나머지가 통과하면 `done`"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

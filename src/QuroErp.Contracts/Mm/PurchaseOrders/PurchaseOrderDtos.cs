@@ -81,7 +81,9 @@ public sealed record PurchaseOrderLineDto(
 /// <summary>
 /// New or changed purchase order. Lines are the whole list in screen order: lines left out are deleted, lines without Id are added.
 /// CurrencyCode defaults to the vendor's trade currency, then the base currency (MM-BR-031); ExchangeRate defaults to 1.
-/// UpdatedAt is required on PUT.
+/// UpdatedAt is required on PUT. UpdateVendorPrice answers the vendor price question (MM-BR-016): null asks with 422
+/// MM-W-016 (confirmField updateVendorPrice) when a price differs from both the standard and the vendor's group price, true
+/// also saves those prices to the vendor's price group, false saves the order only.
 /// </summary>
 public sealed record SavePurchaseOrderRequest(
     long VendorId,
@@ -95,7 +97,8 @@ public sealed record SavePurchaseOrderRequest(
     string? Buyer,
     string? Remarks,
     IReadOnlyList<SavePurchaseOrderLineRequest> Lines,
-    DateTimeOffset? UpdatedAt);
+    DateTimeOffset? UpdatedAt,
+    bool? UpdateVendorPrice = null);
 
 /// <summary>
 /// One line. DueDt and WarehouseId default to the header's, TaxCodeId to the vendor's default tax code (MM-BR-026, BC-BR-542).

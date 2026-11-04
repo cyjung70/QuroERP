@@ -56,6 +56,7 @@
   <data name="MM-E-023" xml:space="preserve"><value>Purchase order {0} cannot be cancelled. Only approved orders with nothing received can; delete a draft instead.</value></data>
   <data name="MM-E-025" xml:space="preserve"><value>Line {0}: discount rate must be between 0 and 100.</value></data>
   <data name="MM-E-026" xml:space="preserve"><value>Line {0}: due date {1} is before the PO date. Line 0 is the header.</value></data>
+  <data name="MM-W-016" xml:space="preserve"><value>The price of these items differs from the standard purchase price and the vendor price: {0}. Update the vendor price too?</value></data>
   <data name="MM-E-027" xml:space="preserve"><value>Incoterms '{0}' is not valid. Choose an Incoterms 2020 code (EXW, FCA, FAS, FOB, CFR, CIF, CPT, CIP, DAP, DPU, DDP).</value></data>
   <data name="MM-E-031" xml:space="preserve"><value>Currency {0} with rate {1} cannot be used. The rate must be above 0 and 1 for the base currency, and the currency cannot change once the order has lines.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>Item {0} in warehouse {1} would end month {2} at {3}, below zero, so the movement cannot be saved.</value></data>

@@ -38,6 +38,12 @@ public sealed record StoredWarehouses(long? Header, IReadOnlyDictionary<long, lo
 /// </summary>
 public sealed record PurchaseOrderSettings(string BaseCurrencyCode, string TaxCalcMode, RoundingMode RoundingMode = RoundingMode.HalfUp);
 
+/// <summary>An item with its type, standard purchase price and price in the vendor's price group, null when missing (MM-BR-016).</summary>
+public sealed record VendorPriceReference(long ItemId, string ItemCd, string ItemType, decimal? StdPrc, decimal? GroupPrc);
+
+/// <summary>A price the save would add to or change in the vendor's price group (MM-BR-016).</summary>
+public sealed record VendorPriceChange(long ItemId, string ItemCd, decimal PurchasePrc);
+
 /// <summary>
 /// Purchase order input checked on the server before save (MM-UC-003, docs/business-rules/MM/purchase-order.md). Line amounts
 /// come from PoCalculator and tax from TaxCalculator; status rules are PoStatusRules.
@@ -51,6 +57,12 @@ public static class PoEntryRules
     public const string DueDateCode = "MM-E-026";
     public const string IncotermsCode = "MM-E-027";
     public const string CurrencyCode = "MM-E-031";
+
+    /// <summary>Some prices differ from the standard and the vendor's group price (MM-BR-016). Arg: item codes.</summary>
+    public const string VendorPriceWarningCode = "MM-W-016";
+
+    /// <summary>Request field that answers <see cref="VendorPriceWarningCode"/>.</summary>
+    public const string UpdateVendorPriceField = "updateVendorPrice";
 
     /// <summary>A vendor, warehouse or other master row does not exist or is not in use. Arg: id.</summary>
     public const string NotFoundCode = "Common-E-006";
@@ -98,6 +110,25 @@ public static class PoEntryRules
             sums.Subtotal, sums.Discount, tax.SupplyAmt, tax.TaxAmt, tax.TotalAmt,
             ExchangeRate.BaseAmount(tax.TotalAmt, header.ExchangeRate, settings.BaseCurrencyCode, rounder, settings.RoundingMode));
         return (computed, totals);
+    }
+
+    /// <summary>
+    /// Items whose price differs from both the standard purchase price and the vendor's group price (MM-BR-016), in line order.
+    /// Service items, vendors without a price group and orders outside the base currency are left out: the prices have no
+    /// currency. When an item is on several lines, its last line gives the price.
+    /// </summary>
+    public static IReadOnlyList<VendorPriceChange> VendorPriceChanges(
+        IReadOnlyList<PurchaseOrderLine> lines, string? vendorPriceGroup, string currencyCode, string baseCurrencyCode,
+        IReadOnlyDictionary<long, VendorPriceReference> references)
+    {
+        if (string.IsNullOrWhiteSpace(vendorPriceGroup) || currencyCode != baseCurrencyCode)
+        {
+            return [];
+        }
+        return [.. lines.GroupBy(l => l.ItemId)
+            .Select(g => (Reference: references.GetValueOrDefault(g.Key), Price: g.Last().PoPrc))
+            .Where(x => x.Reference is { } r && r.ItemType != "SERVICE" && x.Price != r.StdPrc && x.Price != r.GroupPrc)
+            .Select(x => new VendorPriceChange(x.Reference!.ItemId, x.Reference.ItemCd, x.Price))];
     }
 
     /// <summary>Saving an approved order keeps it approved and counts a revision; drafts stay at 0 (MM-BR-021).</summary>

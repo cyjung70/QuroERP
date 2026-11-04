@@ -18,8 +18,8 @@ public sealed record PurchaseOrderLineRow(
     decimal DcAmt, decimal PoAmt, long TaxCodeId, decimal SupplyAmt, decimal TaxAmt, DateOnly? DueDt, long? WarehouseId,
     decimal ReceivedQty);
 
-/// <summary>The vendor fields a purchase order defaults from (MM-BR-031, BC-BR-542).</summary>
-public sealed record PurchaseOrderVendorRow(long Id, string? VName, string? CurrencyCode, long? TaxCodeId);
+/// <summary>The vendor fields a purchase order defaults from (MM-BR-031, BC-BR-542) and its price group (MM-BR-016).</summary>
+public sealed record PurchaseOrderVendorRow(long Id, string? VName, string? CurrencyCode, long? TaxCodeId, string? VendorPrice);
 
 /// <summary>A purchase order to insert or update: header fields, computed totals, status and revision.</summary>
 public sealed record PurchaseOrderWrite(
@@ -43,6 +43,14 @@ public interface IPurchaseOrderRepository
     /// <summary>bc_item.item_type of the items that exist.</summary>
     Task<IReadOnlyDictionary<long, string>> FindItemTypesAsync(
         IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Items that exist with their standard purchase price and price in <paramref name="vendorPrice"/> (MM-BR-016).</summary>
+    Task<IReadOnlyList<VendorPriceReference>> FindVendorPricesAsync(
+        string vendorPrice, IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Adds or changes the prices of the price group (bc_purchase_price, MM-BR-016).</summary>
+    Task UpsertVendorPricesAsync(
+        string vendorPrice, IReadOnlyList<VendorPriceChange> prices, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>The warehouses among <paramref name="warehouseIds"/> that are in use.</summary>
     Task<IReadOnlySet<long>> FindUsableWarehousesAsync(
