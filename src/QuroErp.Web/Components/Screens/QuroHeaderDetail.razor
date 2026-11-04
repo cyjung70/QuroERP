@@ -145,7 +145,7 @@
         </div>
         @* Add row, mark delete and restore act on the current line from the command bar (entry-frame.md 5) *@
         <QuroLineGrid @ref="_lineGrid" TLine="TLine" Data="_lines" Definition="_definition" CanEdit="@(CanSaveNow && !Busy)"
-                      IsLineLocked="IsLineLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
+                      IsLineLocked="IsLineLocked" IsLineReadOnly="IsLineReadOnly" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
                       OnMessage="ShowWarning" OnChanged="StateHasChanged" TestId="@Id("line")" />
     </div>
 
@@ -293,6 +293,10 @@
     /// <summary>Lines whose cells are all locked, e.g. received PO lines. They cannot be marked for delete.</summary>
     [Parameter]
     public Func<TLine, bool>? IsLineLocked { get; set; }
+
+    /// <summary>Lines whose cells are all locked but which can be marked for delete, e.g. saved receipt lines (MM-BR-107).</summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineReadOnly { get; set; }
 
     // Inputs bound with @bind-Value change the header object without the data set knowing, so the snapshot still counts
     public override bool IsDirty => _headerData.DataSet.HasChanges || Snapshot.Of(_header) != _snapshot || _lines.HasChanges;

@@ -718,4 +718,43 @@
   <data name="Mm.PurchaseOrder.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
   <data name="Mm.PurchaseOrder.FindWarehouse" xml:space="preserve"><value>창고 찾기</value></data>
   <data name="Mm.PurchaseOrder.FindTaxCode" xml:space="preserve"><value>세금 코드 찾기</value></data>
+  <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>입고 등록</value></data>
+  <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>입고 번호</value></data>
+  <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Mm.GoodsReceipt.Status.OP" xml:space="preserve"><value>미대사</value></data>
+  <data name="Mm.GoodsReceipt.Status.PA" xml:space="preserve"><value>부분 대사</value></data>
+  <data name="Mm.GoodsReceipt.Status.CL" xml:space="preserve"><value>대사 완료</value></data>
+  <data name="Mm.GoodsReceipt.Status.VO" xml:space="preserve"><value>무효</value></data>
+  <data name="Mm.GoodsReceipt.VendorName" xml:space="preserve"><value>공급자</value></data>
+  <data name="Mm.GoodsReceipt.FindVendor" xml:space="preserve"><value>공급자 찾기</value></data>
+  <data name="Mm.GoodsReceipt.GrDt" xml:space="preserve"><value>입고일</value></data>
+  <data name="Mm.GoodsReceipt.WarehouseCode" xml:space="preserve"><value>기본 창고</value></data>
+  <data name="Mm.GoodsReceipt.CurrencyCode" xml:space="preserve"><value>통화</value></data>
+  <data name="Mm.GoodsReceipt.ExchangeRate" xml:space="preserve"><value>환율</value></data>
+  <data name="Mm.GoodsReceipt.RefNo" xml:space="preserve"><value>참조 번호</value></data>
+  <data name="Mm.GoodsReceipt.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Mm.GoodsReceipt.TotGrAmt" xml:space="preserve"><value>합계</value></data>
+  <data name="Mm.GoodsReceipt.Delete" xml:space="preserve"><value>입고 삭제</value></data>
+  <data name="Mm.GoodsReceipt.ImportPo" xml:space="preserve"><value>발주 가져오기</value></data>
+  <data name="Mm.GoodsReceipt.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Mm.GoodsReceipt.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Mm.GoodsReceipt.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Mm.GoodsReceipt.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Mm.GoodsReceipt.LineWarehouseCode" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.GoodsReceipt.LotNo" xml:space="preserve"><value>로트</value></data>
+  <data name="Mm.GoodsReceipt.OnHandQty" xml:space="preserve"><value>로트 잔고</value></data>
+  <data name="Mm.GoodsReceipt.GrQty" xml:space="preserve"><value>수량</value></data>
+  <data name="Mm.GoodsReceipt.GrPrc" xml:space="preserve"><value>단가</value></data>
+  <data name="Mm.GoodsReceipt.GrAmt" xml:space="preserve"><value>금액</value></data>
+  <data name="Mm.GoodsReceipt.LineTaxCode" xml:space="preserve"><value>세금 코드</value></data>
+  <data name="Mm.GoodsReceipt.TaxAmt" xml:space="preserve"><value>세액</value></data>
+  <data name="Mm.GoodsReceipt.PoNo" xml:space="preserve"><value>발주 번호</value></data>
+  <data name="Mm.GoodsReceipt.PoSeq" xml:space="preserve"><value>발주 줄</value></data>
+  <data name="Mm.GoodsReceipt.PoDt" xml:space="preserve"><value>발주일</value></data>
+  <data name="Mm.GoodsReceipt.PoQty" xml:space="preserve"><value>발주 수량</value></data>
+  <data name="Mm.GoodsReceipt.PoReceivedQty" xml:space="preserve"><value>입고 누계</value></data>
+  <data name="Mm.GoodsReceipt.RemainingQty" xml:space="preserve"><value>남은 수량</value></data>
+  <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
+  <data name="Mm.GoodsReceipt.FindLot" xml:space="preserve"><value>로트 찾기</value></data>
+  <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>저장하지 않았습니다. 입고 수량을 확인하세요.</value></data>
 </root>
