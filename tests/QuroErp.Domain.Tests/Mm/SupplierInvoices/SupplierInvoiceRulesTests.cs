@@ -190,6 +190,21 @@ public class SupplierInvoiceRulesTests
         lines.Select(l => (l.Id, l.Seq, l.PvAmt)).Should().Equal(((long?)501, 1, 12m), (null, 2, 20m));
     }
 
+    [Fact, Trait("Id", "MM-UT-760"), Trait("Rule", "MM-BR-760")]
+    public void TheDateCurrencyAndRate_StayWhileLinesAreSaved()
+    {
+        var stored = Header();
+
+        CodeOf(() => SupplierInvoiceRules.EnsureHeaderChange("VI1", stored, 1, stored with { InvoiceDt = InvoiceDt.AddDays(1) }))
+            .Should().Be(SupplierInvoiceRules.LockedCode);
+        CodeOf(() => SupplierInvoiceRules.EnsureHeaderChange("VI1", stored, 1, stored with { ExchangeRate = 1.1m }))
+            .Should().Be(SupplierInvoiceRules.LockedCode);
+        CodeOf(() => SupplierInvoiceRules.EnsureHeaderChange("VI1", stored, 1, stored with { CurrencyCode = "EUR" }))
+            .Should().Be(SupplierInvoiceRules.LockedCode);
+        SupplierInvoiceRules.EnsureHeaderChange("VI1", stored, 1, stored with { DueDt = InvoiceDt.AddDays(30), RefNo = "INV-2" });
+        SupplierInvoiceRules.EnsureHeaderChange("VI1", stored, 0, stored with { InvoiceDt = InvoiceDt.AddDays(1), ExchangeRate = 1.1m });
+    }
+
     [Theory, Trait("Id", "MM-UT-761"), Trait("Rule", "MM-BR-761")]
     [InlineData(false, "100", "100", SupplierInvoiceStatus.Open)]
     [InlineData(false, "100", "40", SupplierInvoiceStatus.PartiallyPaid)]

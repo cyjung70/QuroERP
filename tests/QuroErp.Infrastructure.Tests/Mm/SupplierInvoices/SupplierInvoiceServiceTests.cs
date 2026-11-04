@@ -195,6 +195,25 @@ public partial class SupplierInvoiceServiceTests(AuthSchemaFixture db)
         (await MovementsAsync(invoice.InvoiceNo)).Should().Equal(("PV", 1, 0m, 40m, InvoiceDt, false), ("PV", 1, 0m, -40m, Today, true));
     }
 
+    [DatabaseFact, Trait("Id", "MM-UT-760")]
+    public async Task ANewDateOrRate_IsRefusedWhileLinesAreSaved()
+    {
+        var m = await MastersAsync();
+        var gr = await ReceiveAsync(m, (m.Item, 10m));
+        var invoice = await Service.CreateAsync(Request(m, "date", Match(gr.Lines[0], 1m)), "kim", None);
+        var keep = Request(m, invoice.UpdatedAt, "date", Keep(invoice.Lines[0]));
+
+        var date = () => Service.UpdateAsync(invoice.Id, keep with { InvoiceDt = InvoiceDt.AddDays(1) }, "kim", None);
+        var rate = () => Service.UpdateAsync(invoice.Id, keep with { ExchangeRate = 1.1m }, "kim", None);
+        var replaced = () => Service.UpdateAsync(
+            invoice.Id, Request(m, invoice.UpdatedAt, "date", Match(gr.Lines[0], 2m)) with { InvoiceDt = InvoiceDt.AddDays(1) }, "kim", None);
+
+        (await date.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(SupplierInvoiceRules.LockedCode);
+        (await rate.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(SupplierInvoiceRules.LockedCode);
+        (await replaced.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(SupplierInvoiceRules.LockedCode);
+        (await Service.UpdateAsync(invoice.Id, keep with { DueDt = InvoiceDt.AddDays(30) }, "kim", None)).DueDt.Should().Be(InvoiceDt.AddDays(30));
+    }
+
     [DatabaseFact, Trait("Id", "MM-UT-764")]
     public async Task VendorInvoiceNumbers_AreUniquePerVendor()
     {

@@ -107,7 +107,10 @@ public static class SupplierInvoiceRules
     /// <summary>Request field that answers <see cref="PriceDifferenceWarningCode"/> (api.md "경고").</summary>
     public const string ConfirmPriceDifferenceField = "confirmPriceDifference";
 
-    /// <summary>The invoice is paid, or a saved line was changed (MM-BR-760). Arg: invoice number.</summary>
+    /// <summary>
+    /// The invoice is paid, a saved line was changed (MM-BR-760), or the date, currency or rate of an invoice with saved lines
+    /// changed (as the goods receipt, MM-BR-117, MM-BR-161). Arg: invoice number.
+    /// </summary>
     public const string LockedCode = "MM-E-760";
 
     /// <summary>A Debit Memo is changed only through its vendor return (MM-BR-762). Arg: invoice number.</summary>
@@ -151,10 +154,24 @@ public static class SupplierInvoiceRules
     }
 
     /// <summary>
+    /// MM-BR-760: while the invoice has saved lines, its date, currency and rate stay; their tax and price variance were computed
+    /// with them. Delete the lines and save first, as on the goods receipt (MM-BR-117, MM-BR-161).
+    /// </summary>
+    /// <exception cref="DomainException">MM-E-760.</exception>
+    public static void EnsureHeaderChange(string invoiceNo, SupplierInvoiceHeader stored, int storedLineCount, SupplierInvoiceHeader header)
+    {
+        if (storedLineCount > 0 && (header.InvoiceDt != stored.InvoiceDt || header.CurrencyCode != stored.CurrencyCode
+                || header.ExchangeRate != stored.ExchangeRate))
+        {
+            throw new DomainException(LockedCode, invoiceNo);
+        }
+    }
+
+    /// <summary>
     /// MM-BR-751, MM-BR-756: the currency of the receipts the new lines match. They must share one currency, which must be the
     /// saved invoice's when it has lines.
     /// </summary>
-    /// <param name="storedCurrency">The saved invoice's currency when it keeps lines, else null.</param>
+    /// <param name="storedCurrency">The saved invoice's currency when it has saved lines, else null.</param>
     /// <exception cref="DomainException">MM-E-751 when there is no line or the currencies differ.</exception>
     public static string DocumentCurrency(string? storedCurrency, IEnumerable<InvoiceReceiptLine> addedReceiptLines)
     {

@@ -89,7 +89,8 @@ public sealed record SupplierInvoiceLineDto(
 
 /// <summary>
 /// New or changed invoice. The currency is the matched receipts' (MM-BR-756); ExchangeRate defaults to the invoice date's rate,
-/// DueDt to the invoice date and Terms to the vendor's.
+/// DueDt to the invoice date and Terms to the vendor's. While the invoice has saved lines, InvoiceDt, the currency and
+/// ExchangeRate cannot change (422 MM-E-760).
 /// </summary>
 /// <param name="Lines">Every line to keep, unchanged and with its Id, and the new lines without an Id. A saved line left out is
 /// deleted; a changed saved line is refused (MM-BR-760).</param>

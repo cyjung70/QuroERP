@@ -101,7 +101,9 @@ public sealed class SupplierInvoiceService(
     /// Changes the header, adds lines and deletes the lines left out (MM-BR-760). A deleted line gives back its invoiced qty and
     /// reverses its price variance.
     /// </summary>
-    /// <exception cref="DomainException">MM-E-760, 762 and the checks of <see cref="CreateAsync"/>.</exception>
+    /// <exception cref="DomainException">
+    /// MM-E-760 (also a new date, currency or rate while lines are saved), 762 and the checks of <see cref="CreateAsync"/>.
+    /// </exception>
     /// <exception cref="ConfirmationRequiredException">MM-W-754 as on <see cref="CreateAsync"/>.</exception>
     /// <exception cref="ConcurrencyException">updatedAt is missing or differs, or a line id is not one of this invoice.</exception>
     /// <exception cref="NotFoundException">Common-E-006.</exception>
@@ -201,14 +203,20 @@ public sealed class SupplierInvoiceService(
                 ? Input(l, r.GrPrc, r.TaxCodeId, r.Deductible)
                 : throw new DomainException(SupplierInvoiceRules.NotFoundCode, l.GoodsReceiptLineId))
             .ToList();
+        // MM-BR-760: an invoice with saved lines keeps its currency and rate
+        var hasSavedLines = storedLines.Count > 0;
         var currencyCode = SupplierInvoiceRules.DocumentCurrency(
-            kept.Count > 0 ? stored!.CurrencyCode : null, added.Select(l => receiptLines[l.GoodsReceiptLineId]));
+            hasSavedLines ? stored!.CurrencyCode : null, added.Select(l => receiptLines[l.GoodsReceiptLineId]));
         var exchangeRate = request.ExchangeRate
-            ?? (kept.Count > 0 ? stored!.ExchangeRate : await DefaultRateAsync(currencyCode, request.InvoiceDt, context.Settings, transaction, cancellationToken));
+            ?? (hasSavedLines ? stored!.ExchangeRate : await DefaultRateAsync(currencyCode, request.InvoiceDt, context.Settings, transaction, cancellationToken));
         var header = new SupplierInvoiceHeader(
             request.VendorId, Clean(request.RefNo)?.ToUpperInvariant(), request.InvoiceDt, request.DueDt ?? request.InvoiceDt,
             Clean(request.Terms) ?? (stored is null ? vendor.Terms : null), currencyCode, exchangeRate, request.TaxInvoiceReceived,
             Clean(request.Remarks));
+        if (stored is not null)
+        {
+            SupplierInvoiceRules.EnsureHeaderChange(invoiceNo, Header(stored), storedLines.Count, header);
+        }
 
         var masters = new SupplierInvoiceMasters(
             receiptLines,

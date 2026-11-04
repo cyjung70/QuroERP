@@ -678,7 +678,7 @@
   <data name="MM-E-753" xml:space="preserve"><value>{0}번 줄의 수량은 0보다 크고 입고 미대사 수량({1}) 이하여야 합니다.</value></data>
   <data name="MM-E-754" xml:space="preserve"><value>{0}번 줄의 단가는 0일 수 없습니다.</value></data>
   <data name="MM-W-754" xml:space="preserve"><value>{0}번 줄의 단가 {1}이(가) 발주 단가 {2}와 다릅니다. 그래도 저장할까요?</value></data>
-  <data name="MM-E-760" xml:space="preserve"><value>송장 {0}: 지급한 송장은 고치거나 지울 수 없고, 저장한 줄은 고칠 수 없습니다. 줄을 지우고 다시 넣으세요.</value></data>
+  <data name="MM-E-760" xml:space="preserve"><value>송장 {0}: 지급한 송장은 고치거나 지울 수 없습니다. 저장한 줄은 고칠 수 없으니 지우고 다시 넣고, 저장한 줄이 있는 송장은 일자·통화·환율을 바꿀 수 없으니 줄을 지우고 저장한 뒤 바꾸세요.</value></data>
   <data name="MM-E-762" xml:space="preserve"><value>송장 {0}은(는) Debit Memo라 여기서 고치거나 지울 수 없습니다. 공급자 반품을 Void하세요.</value></data>
   <data name="MM-E-764" xml:space="preserve"><value>공급자 송장 번호 {0}은(는) 이 공급자의 다른 송장에 이미 있습니다.</value></data>
 </root>
