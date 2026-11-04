@@ -622,6 +622,14 @@
   <data name="Mm.Vendor.CeoName" xml:space="preserve"><value>대표자</value></data>
   <data name="Mm.Vendor.BusinessType" xml:space="preserve"><value>업태</value></data>
   <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>종목</value></data>
+  <data name="Mm.Warehouse.IncludeInactive" xml:space="preserve"><value>사용 안 함 포함</value></data>
+  <data name="Mm.Warehouse.IsDefault" xml:space="preserve"><value>기본 창고</value></data>
+  <data name="Mm.Warehouse.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Mm.Warehouse.Title" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.Warehouse.UseYn" xml:space="preserve"><value>사용</value></data>
+  <data name="Mm.Warehouse.WarehouseCode" xml:space="preserve"><value>창고 코드</value></data>
+  <data name="Mm.Warehouse.WarehouseName" xml:space="preserve"><value>창고 이름</value></data>
+  <data name="Mm.Warehouse.WarehouseType" xml:space="preserve"><value>창고 유형</value></data>
   <data name="Mm.Vendor.Title" xml:space="preserve"><value>공급자</value></data>
   <data name="Mm.Vendor.FindVendor" xml:space="preserve"><value>공급자 찾기</value></data>
   <data name="Mm.Vendor.VName" xml:space="preserve"><value>공급자 이름</value></data>

@@ -622,6 +622,14 @@
   <data name="Mm.Vendor.CeoName" xml:space="preserve"><value>CEO</value></data>
   <data name="Mm.Vendor.BusinessType" xml:space="preserve"><value>Business type</value></data>
   <data name="Mm.Vendor.BusinessItem" xml:space="preserve"><value>Business item</value></data>
+  <data name="Mm.Warehouse.IncludeInactive" xml:space="preserve"><value>Include not in use</value></data>
+  <data name="Mm.Warehouse.IsDefault" xml:space="preserve"><value>Default</value></data>
+  <data name="Mm.Warehouse.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Mm.Warehouse.Title" xml:space="preserve"><value>Warehouses</value></data>
+  <data name="Mm.Warehouse.UseYn" xml:space="preserve"><value>In Use</value></data>
+  <data name="Mm.Warehouse.WarehouseCode" xml:space="preserve"><value>Warehouse Code</value></data>
+  <data name="Mm.Warehouse.WarehouseName" xml:space="preserve"><value>Warehouse Name</value></data>
+  <data name="Mm.Warehouse.WarehouseType" xml:space="preserve"><value>Type</value></data>
   <data name="Mm.Vendor.Title" xml:space="preserve"><value>Vendors</value></data>
   <data name="Mm.Vendor.FindVendor" xml:space="preserve"><value>Find vendor</value></data>
   <data name="Mm.Vendor.VName" xml:space="preserve"><value>Vendor name</value></data>
