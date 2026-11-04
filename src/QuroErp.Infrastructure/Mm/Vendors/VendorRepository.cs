@@ -7,13 +7,14 @@ namespace QuroErp.Infrastructure.Mm.Vendors;
 
 internal sealed class VendorRepository : IVendorRepository
 {
-    // MM-BR-858: every goods receipt balance of the vendor, negative ones too
+    // MM-BR-858: the unpaid balance. Goods receipts no longer carry one (TASK-MM-007, MM-BR-112); it is 0 until supplier
+    // invoices hold the balance (MM-BR-755)
     private const string Columns = """
         v.id, v.v_name, v.contact, v.contact2, v.phone1, v.phone2, v.phone3, v.fax_no, v.email, v.terms, v.valid_flag, v.remarks,
         v.addr1, v.addr2, v.city, v.state, v.country, v.zip_code, v.ship_addr1, v.ship_addr2, v.ship_city, v.ship_state,
         v.ship_country, v.ship_zip_code, v.vendor_price, v.currency_code, v.tax_code_id, v.tax_party_type, v.business_reg_no,
         v.ceo_name, v.business_type, v.business_item, v.created_at, v.created_by, v.updated_at, v.updated_by,
-        coalesce((SELECT sum(g.bal_amt) FROM mm_goods_receipt g WHERE g.vendor_id = v.id), 0) AS bal_amt,
+        0::numeric AS bal_amt,
         t.tax_code
         """;
 

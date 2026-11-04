@@ -61,6 +61,24 @@ public static class PoStatusRules
         _ => false,
     };
 
+    /// <summary>
+    /// MM-BR-018: the status of a PO, RE or CL order after its receipt lines changed: nothing received → PO, the remaining
+    /// quantities sum to 0 or less → CL, else RE. Other statuses (DR, MC, CN) stay as they are.
+    /// </summary>
+    /// <param name="lines">Ordered and received quantity of every line.</param>
+    public static PoStatus AfterReceipt(PoStatus status, IReadOnlyCollection<(decimal PoQty, decimal ReceivedQty)> lines)
+    {
+        if (status is not (PoStatus.Approved or PoStatus.PartiallyReceived or PoStatus.Received))
+        {
+            return status;
+        }
+        if (lines.Sum(l => l.ReceivedQty) == 0)
+        {
+            return PoStatus.Approved;
+        }
+        return lines.Sum(l => l.PoQty - l.ReceivedQty) <= 0 ? PoStatus.Received : PoStatus.PartiallyReceived;
+    }
+
     /// <exception cref="DomainException">MM-E-013.</exception>
     public static void EnsureEditable(PurchaseOrder po)
     {

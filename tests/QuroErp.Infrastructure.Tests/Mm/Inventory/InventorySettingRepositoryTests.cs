@@ -33,7 +33,9 @@ public class InventorySettingRepositoryTests(AuthSchemaFixture db)
         row!.NegativeStockMode.Should().Be("DENY");
         row.UpdatedBy.Should().Be("system");
         count.Should().Be(1);
-        columns.Should().BeEquivalentTo("id", "negative_stock_mode", "created_at", "created_by", "updated_at", "updated_by");
+        // over_receipt_mode: 0407 (MM-BR-102)
+        columns.Should().BeEquivalentTo(
+            "id", "negative_stock_mode", "over_receipt_mode", "created_at", "created_by", "updated_at", "updated_by");
     }
 
     [DatabaseFact, Trait("Id", "MM-SET-IT-02")]

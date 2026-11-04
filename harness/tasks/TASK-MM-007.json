@@ -109,5 +109,5 @@
     "수정·삭제 잠금은 줄 `invoiced_qty`·`returned_qty`로 본다 (MM-BR-104). 상태는 대사 수량으로 계산한다 (MM-BR-105)"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

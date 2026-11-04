@@ -42,18 +42,28 @@ public class DocumentNumberFormatTests
     [Theory, Trait("Id", "CORE-007-T01")]
     [InlineData("CM")]
     [InlineData("PO")]
-    [InlineData("GR")]
     [InlineData("UR")]
     [InlineData("CT")]
     public void Next_MonthlyDocuments_ArePrefixYymmFiveDigits(string prefix)
     {
         var format = new[]
         {
-            DocumentNumberFormat.CreditMemo, DocumentNumberFormat.PurchaseOrder, DocumentNumberFormat.GoodsReceipt,
-            DocumentNumberFormat.UnplannedReceipt, DocumentNumberFormat.StockCount,
+            DocumentNumberFormat.CreditMemo, DocumentNumberFormat.PurchaseOrder, DocumentNumberFormat.UnplannedReceipt,
+            DocumentNumberFormat.StockCount,
         }.Single(f => f.Prefix == prefix);
 
         format.Next(Day, null).Should().Be($"{prefix}261000001");
+    }
+
+    [Theory, Trait("Id", "MM-UT-106"), Trait("Rule", "MM-BR-106")]
+    [InlineData("2026-10-27", "GR2610000011", "GR2610000012")]
+    [InlineData("2026-11-02", "GR2610000012", "GR2611000001")]
+    [InlineData("2026-10-27", null, "GR2610000001")]
+    public void Next_GoodsReceipt_IsGrYymmSixDigitsOfTheReceiptDate_AndRestartsMonthly(string grDt, string? last, string expected)
+    {
+        var date = DateOnly.Parse(grDt, System.Globalization.CultureInfo.InvariantCulture);
+
+        DocumentNumberFormat.GoodsReceipt.Next(date, last).Should().Be(expected);
     }
 
     [Theory, Trait("Id", "MM-UT-017"), Trait("Rule", "MM-BR-017")]

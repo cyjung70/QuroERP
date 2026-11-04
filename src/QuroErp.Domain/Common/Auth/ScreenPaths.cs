@@ -12,6 +12,7 @@ public static class ScreenPaths
     public const string ItemBarcode = "/bc/item-barcode";
     public const string PurchasePrice = "/bc/purchase-price";
     public const string PurchaseOrder = "/mm/purchase-order";
+    public const string GoodsReceipt = "/mm/goods-receipt";
     public const string Company = "/bc/company";
     public const string Currency = "/bc/currency";
     public const string User = "/bc/user";
@@ -31,7 +32,7 @@ public static class ScreenPaths
     /// <summary>Every path above. A test checks the seed gives the admin role Full Access to each.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
-        Item, Code, CodeMajor, ItemBarcode, PurchasePrice, PurchaseOrder, Company, Currency, User, CompanyMenu, RoleMenu,
+        Item, Code, CodeMajor, ItemBarcode, PurchasePrice, PurchaseOrder, GoodsReceipt, Company, Currency, User, CompanyMenu, RoleMenu,
         ExchangeRate, TaxCode, TaxArea, LocalizationSetting, SetItem, SalesPrice, AlternateItem, AlternateItemGroup, Vendor,
         Warehouse,
     ];
