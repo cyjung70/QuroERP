@@ -67,7 +67,7 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             """);
 
         Query<long>("SELECT count(*) FROM sys_code_major").Single().Should().Be(24);
-        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(125);
+        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(127);
         majorsWithout.Should().BeEmpty();
         minorsWithout.Should().BeEmpty();
     }
@@ -80,6 +80,11 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
             WHERE m.major_code = 'SO_STATUS' ORDER BY n.sort_order
             """).Should().Equal("SO", "RE", "CL");
+        // inventory.md movement types, PV and VR last (TASK-CORE-028)
+        Query<string>("""
+            SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
+            WHERE m.major_code = 'MOVEMENT_TYPE' ORDER BY n.sort_order
+            """).Should().EndWith(["TR", "PV", "VR"]).And.HaveCount(10);
         Query<string>("SELECT role_code FROM sys_role ORDER BY role_code")
             .Should().Equal("admin", "manager", "poweruser", "salesman", "srep");
     }

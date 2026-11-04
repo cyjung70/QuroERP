@@ -33,5 +33,5 @@
     "단위 테스트: `PV` 뒤 원가 = 재고금액/재고수량, 재고 0일 때 원가 유지, `VR` 재고 부족 차단, 마감 달 `PV` 일자 이동"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

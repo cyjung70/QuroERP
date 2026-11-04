@@ -11,10 +11,12 @@ namespace QuroErp.Application.Mm.Inventory;
 /// One stock change asked by a document line. Qty is signed (+ in, − out). Price null means the item's moving
 /// average cost at that moment (issues); receipts pass their price. LotId or LotNo names the lot of a lot-managed item and is
 /// ignored for other items: an increase with neither gets an automatic number, a decrease must name one (MM-BR-353, MM-BR-355).
+/// A price difference (PV) has Qty 0 and the value change in Amount; a vendor return (VR) passes the original receipt price.
 /// </summary>
 public sealed record StockMovementRequest(
     string MovType, DateOnly DocumentDt, long ItemId, long WarehouseId, decimal Qty,
-    decimal? Price = null, string? RefKey = null, int? RefSeq = null, long? LotId = null, string? LotNo = null);
+    decimal? Price = null, string? RefKey = null, int? RefSeq = null, long? LotId = null, string? LotNo = null,
+    decimal? Amount = null);
 
 /// <summary>
 /// Posts stock movements for every stock document (inventory.md, AS IS receipt_inv, issue_inv, insert_inv, update_inv).
@@ -29,8 +31,11 @@ public sealed class InventoryService(
 {
     /// <summary>
     /// Posts original movements. Service items are skipped and set items are expanded into their components
-    /// (MM-BR-007, MM-BR-008).
+    /// (MM-BR-007, MM-BR-008). A price difference (PV) changes only the item's stock value and moving average cost: no stock,
+    /// lot or negative stock check, and a date in a closed month moves to the first open day (MM-BR-005, MM-BR-759). A vendor
+    /// return (VR) is an issue at the price asked, checked like any issue (MM-BR-602, MM-BR-356, MM-BR-785).
     /// </summary>
+    /// <exception cref="ArgumentException">A VR without a price, or a PV or VR of a set item (sets are not bought).</exception>
     /// <exception cref="QuroErp.Domain.Common.DomainException">
     /// MM-E-002 closed month, MM-E-606 wrong sign or zero qty, MM-E-001 not enough stock in DENY mode,
     /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end (a set component error ends with the
@@ -42,8 +47,15 @@ public sealed class InventoryService(
         IReadOnlyList<StockMovementRequest> requests, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var closeYearMonth = await inventory.GetCloseYearMonthAsync(transaction, cancellationToken);
+        requests = [.. requests.Select(r => MovementType.IsAmountOnly(r.MovType)
+            ? r with { DocumentDt = InventoryClosing.OpenDateFor(closeYearMonth, r.DocumentDt) }
+            : r)];
         foreach (var request in requests)
         {
+            if (request.MovType == MovementType.VendorReturn && request.Price is null)
+            {
+                throw new ArgumentException("A vendor return posts at the original receipt price.", nameof(requests));
+            }
             InventoryClosing.EnsureOpen(closeYearMonth, request.DocumentDt);
         }
 
@@ -65,17 +77,23 @@ public sealed class InventoryService(
         foreach (var request in requests)
         {
             var item = items[request.ItemId];
+            var amountOnly = MovementType.IsAmountOnly(request.MovType);
             if (!item.IsSet)
             {
-                lines.Add(new Line(request.ItemId, request.WarehouseId, request.DocumentDt, "", request.Qty, request.LotId, request.LotNo, false, stock => GoodsMovement.Create(
-                    request.MovType, request.DocumentDt, request.ItemId, request.WarehouseId, request.Qty,
-                    request.Price ?? stock.MovingAverageCost, request.RefKey, request.RefSeq)));
+                lines.Add(new Line(request.ItemId, request.WarehouseId, request.DocumentDt, "", request.Qty, request.LotId, request.LotNo, false, amountOnly,
+                    stock => GoodsMovement.Create(
+                        request.MovType, request.DocumentDt, request.ItemId, request.WarehouseId, request.Qty,
+                        request.Price ?? stock.MovingAverageCost, request.RefKey, request.RefSeq, amount: request.Amount)));
                 continue;
+            }
+            if (amountOnly || request.MovType == MovementType.VendorReturn)
+            {
+                throw new ArgumentException($"Set item {item.ItemCd} is not bought, so it has no {request.MovType} movement.", nameof(requests));
             }
             // Components move at their own moving average cost and remember the set (MM-BR-007)
             foreach (var (componentId, qty) in SetComponent.Expand(item.ItemCd, request.Qty, components.Where(c => c.SetItemId == item.ItemId)))
             {
-                lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, item.ItemCd, qty, null, null, false, stock => GoodsMovement.Create(
+                lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, item.ItemCd, qty, null, null, false, false, stock => GoodsMovement.Create(
                     request.MovType, request.DocumentDt, componentId, request.WarehouseId, qty,
                     stock.MovingAverageCost, request.RefKey, request.RefSeq, item.ItemId)));
             }
@@ -89,6 +107,7 @@ public sealed class InventoryService(
     /// Cancels movements: each gets a reversal dated reversalDt with the same type and price and the opposite sign
     /// (MM-BR-601). A reversal that decreases stock (e.g. a receipt reversal) is checked like an issue (MM-BR-602). A lot-managed
     /// item's reversal uses the original lot, or MIGRATED when the original is from before lot management (MM-BR-355).
+    /// A price difference (PV) reversal negates the amount and, like the original, moves out of a closed month (MM-BR-759).
     /// </summary>
     /// <exception cref="QuroErp.Domain.Common.DomainException">
     /// MM-E-002 closed month, MM-E-606 already reversed or a reversal, MM-E-001 not enough stock in DENY mode,
@@ -99,7 +118,7 @@ public sealed class InventoryService(
         IReadOnlyList<long> movementIds, DateOnly reversalDt, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var closeYearMonth = await inventory.GetCloseYearMonthAsync(transaction, cancellationToken);
-        InventoryClosing.EnsureOpen(closeYearMonth, reversalDt);
+        var amountOnlyDt = InventoryClosing.OpenDateFor(closeYearMonth, reversalDt);
 
         var saved = (await inventory.LockMovementsAsync(movementIds, transaction, cancellationToken)).ToDictionary(s => s.Movement.Id);
         var reversedNow = new HashSet<long>();
@@ -107,8 +126,13 @@ public sealed class InventoryService(
         foreach (var id in movementIds)
         {
             var original = saved.GetValueOrDefault(id) ?? throw new InvalidOperationException($"Goods movement {id} does not exist.");
+            var amountOnly = MovementType.IsAmountOnly(original.Movement.MovType);
+            if (!amountOnly)
+            {
+                InventoryClosing.EnsureOpen(closeYearMonth, reversalDt);
+            }
             // The same id twice in one call is a second reversal
-            reversals.Add(original.Movement.Reverse(reversalDt, original.Reversed || !reversedNow.Add(id)));
+            reversals.Add(original.Movement.Reverse(amountOnly ? amountOnlyDt : reversalDt, original.Reversed || !reversedNow.Add(id)));
         }
 
         // Set rows are locked with the components, in the same id order as posting, for the set code in errors
@@ -116,7 +140,8 @@ public sealed class InventoryService(
             reversals.Select(r => r.ItemId).Concat(reversals.Where(r => r.SetItemId is not null).Select(r => r.SetItemId!.Value)),
             transaction, cancellationToken);
         var lines = reversals.Select(r => new Line(
-            r.ItemId, r.WarehouseId, r.DocumentDt, r.SetItemId is { } setId ? items[setId].ItemCd : "", r.Qty, r.LotId, null, true, _ => r)).ToList();
+            r.ItemId, r.WarehouseId, r.DocumentDt, r.SetItemId is { } setId ? items[setId].ItemCd : "", r.Qty, r.LotId, null, true,
+            MovementType.IsAmountOnly(r.MovType), _ => r)).ToList();
         return await ApplyAsync(lines, items, closeYearMonth, user, transaction, cancellationToken);
     }
 
@@ -139,7 +164,10 @@ public sealed class InventoryService(
         var lots = new List<LotRef?>(lines.Count);
         foreach (var line in lines)
         {
-            lots.Add(items[line.ItemId].LotManaged ? await ResolveLotAsync(line, items[line.ItemId], user, transaction, cancellationToken) : null);
+            // A price difference changes the item's value only, so it has no lot (MM-BR-360)
+            lots.Add(items[line.ItemId].LotManaged && !line.AmountOnly
+                ? await ResolveLotAsync(line, items[line.ItemId], user, transaction, cancellationToken)
+                : null);
         }
         var lotQty = new Dictionary<(long ItemId, long WarehouseId, long LotId), decimal>();
         foreach (var key in lines.Zip(lots).Where(p => p.Second is not null).Select(p => (p.First.ItemId, p.First.WarehouseId, p.Second!.Id)).Distinct().Order())
@@ -157,7 +185,9 @@ public sealed class InventoryService(
             var item = items[line.ItemId];
             var warehouseCode = onHand[key].WarehouseCode;
             var movement = line.Build(item);
-            movement.NegativeStock = StockPolicy.CheckOnHand(mode, qty[key], movement.Qty, item.ItemCd, warehouseCode, line.SetItemCd);
+            // A price difference does not change the quantity, so there is nothing to check (MM-BR-602)
+            movement.NegativeStock = !line.AmountOnly
+                && StockPolicy.CheckOnHand(mode, qty[key], movement.Qty, item.ItemCd, warehouseCode, line.SetItemCd);
             if (movement.Qty < 0 && mode != NegativeStockMode.Allow)
             {
                 // Earlier lines of this document are already in the ledger, so they count
@@ -255,8 +285,8 @@ public sealed class InventoryService(
 
     // Build runs at posting time so an issue takes the moving average cost after the lines before it.
     // SetItemCd is the set a component line came from, empty otherwise (last arg of stock errors). Qty is the signed change;
-    // LotId and LotNo are what the caller asked for, or the original lot of a reversal
+    // LotId and LotNo are what the caller asked for, or the original lot of a reversal. AmountOnly is a price difference (PV)
     private sealed record Line(
         long ItemId, long WarehouseId, DateOnly DocumentDt, string SetItemCd, decimal Qty, long? LotId, string? LotNo, bool Reversal,
-        Func<ItemStock, GoodsMovement> Build);
+        bool AmountOnly, Func<ItemStock, GoodsMovement> Build);
 }
