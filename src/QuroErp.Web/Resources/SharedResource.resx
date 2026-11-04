@@ -535,6 +535,7 @@
   <data name="Menu.G1BA" xml:space="preserve"><value>기준정보</value></data>
   <data name="Menu.G2MM" xml:space="preserve"><value>구매·재고</value></data>
   <data name="Menu.G3SD" xml:space="preserve"><value>판매</value></data>
+  <data name="Menu.G3SD01" xml:space="preserve"><value>고객</value></data>
   <data name="Menu.G4RP" xml:space="preserve"><value>리포트</value></data>
   <data name="Menu.G5AD" xml:space="preserve"><value>관리</value></data>
   <data name="Menu.G1BA01" xml:space="preserve"><value>품목</value></data>
@@ -627,6 +628,51 @@
   <data name="Sd.Customer.BusinessType" xml:space="preserve"><value>업태</value></data>
   <data name="Sd.Customer.BusinessItem" xml:space="preserve"><value>종목</value></data>
   <data name="Sd.Customer.TaxExemptions" xml:space="preserve"><value>면세 증명서</value></data>
+  <data name="Sd.Customer.Title" xml:space="preserve"><value>고객</value></data>
+  <data name="Sd.Customer.FindCustomer" xml:space="preserve"><value>고객 찾기</value></data>
+  <data name="Sd.Customer.CName" xml:space="preserve"><value>고객 이름</value></data>
+  <data name="Sd.Customer.ShipName" xml:space="preserve"><value>배송지 이름</value></data>
+  <data name="Sd.Customer.Contact" xml:space="preserve"><value>담당자</value></data>
+  <data name="Sd.Customer.Contact2" xml:space="preserve"><value>담당자 2</value></data>
+  <data name="Sd.Customer.Phone1" xml:space="preserve"><value>전화 1</value></data>
+  <data name="Sd.Customer.Phone2" xml:space="preserve"><value>전화 2</value></data>
+  <data name="Sd.Customer.Phone3" xml:space="preserve"><value>전화 3</value></data>
+  <data name="Sd.Customer.FaxNo" xml:space="preserve"><value>팩스</value></data>
+  <data name="Sd.Customer.Email" xml:space="preserve"><value>이메일</value></data>
+  <data name="Sd.Customer.Rep" xml:space="preserve"><value>영업 담당</value></data>
+  <data name="Sd.Customer.PriceLevel" xml:space="preserve"><value>판매 단가 그룹</value></data>
+  <data name="Sd.Customer.FreightCharge" xml:space="preserve"><value>운임 부담</value></data>
+  <data name="Sd.Customer.BalAmt" xml:space="preserve"><value>잔액</value></data>
+  <data name="Sd.Customer.Remarks" xml:space="preserve"><value>메모</value></data>
+  <data name="Sd.Customer.Memo2" xml:space="preserve"><value>메모 2</value></data>
+  <data name="Sd.Customer.Memo3" xml:space="preserve"><value>메모 3</value></data>
+  <data name="Sd.Customer.Terms" xml:space="preserve"><value>결제 조건</value></data>
+  <data name="Sd.Customer.ValidFlag" xml:space="preserve"><value>사용 여부</value></data>
+  <data name="Sd.Customer.Addr1" xml:space="preserve"><value>주소 1</value></data>
+  <data name="Sd.Customer.Addr2" xml:space="preserve"><value>주소 2</value></data>
+  <data name="Sd.Customer.City" xml:space="preserve"><value>도시</value></data>
+  <data name="Sd.Customer.ShipAddr1" xml:space="preserve"><value>배송 주소 1</value></data>
+  <data name="Sd.Customer.ShipAddr2" xml:space="preserve"><value>배송 주소 2</value></data>
+  <data name="Sd.Customer.ShipCity" xml:space="preserve"><value>배송 도시</value></data>
+  <data name="Sd.Customer.ShipZipCode" xml:space="preserve"><value>배송 우편번호</value></data>
+  <data name="Sd.Customer.ShipPhone" xml:space="preserve"><value>배송지 전화</value></data>
+  <data name="Sd.Customer.ShipFax" xml:space="preserve"><value>배송지 팩스</value></data>
+  <data name="Sd.Customer.CreditLimit" xml:space="preserve"><value>여신 한도</value></data>
+  <data name="Sd.Customer.DcStatus" xml:space="preserve"><value>할인 구분</value></data>
+  <data name="Sd.Customer.StartDt" xml:space="preserve"><value>거래 시작일</value></data>
+  <data name="Sd.Customer.BillingFlow" xml:space="preserve"><value>출하·청구 방식</value></data>
+  <data name="Sd.Customer.BillingFlow.SHIP_AND_BILL" xml:space="preserve"><value>출하와 함께 청구</value></data>
+  <data name="Sd.Customer.BillingFlow.SHIP_THEN_BILL" xml:space="preserve"><value>출하 후 따로 청구</value></data>
+  <data name="Sd.Customer.BillingFlow.BILL_THEN_SHIP" xml:space="preserve"><value>청구 후 출하</value></data>
+  <data name="Sd.Customer.CurrencyCode" xml:space="preserve"><value>거래 통화</value></data>
+  <data name="Sd.Customer.TaxCode" xml:space="preserve"><value>세금 코드</value></data>
+  <data name="Sd.Customer.TaxCodeId" xml:space="preserve"><value>세금 코드</value></data>
+  <data name="Sd.Customer.TaxPartyType" xml:space="preserve"><value>거래처 구분</value></data>
+  <data name="Sd.Customer.TaxPartyType.BUSINESS" xml:space="preserve"><value>사업자</value></data>
+  <data name="Sd.Customer.TaxPartyType.INDIVIDUAL" xml:space="preserve"><value>개인</value></data>
+  <data name="Sd.Customer.CertificateNo" xml:space="preserve"><value>증명서 번호</value></data>
+  <data name="Sd.Customer.StateCode" xml:space="preserve"><value>면세 주</value></data>
+  <data name="Sd.Customer.ValidTo" xml:space="preserve"><value>유효 기한</value></data>
   <data name="Mm.Vendor.State" xml:space="preserve"><value>주</value></data>
   <data name="Mm.Vendor.ZipCode" xml:space="preserve"><value>우편번호</value></data>
   <data name="Mm.Vendor.BusinessRegNo" xml:space="preserve"><value>사업자등록번호</value></data>

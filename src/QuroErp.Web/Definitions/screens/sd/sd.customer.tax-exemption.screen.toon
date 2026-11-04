@@ -1,0 +1,28 @@
+# SD-UC-001 customer master (TASK-SD-002): the exemption certificates of a US customer (BC-BR-524), edited under the S form
+# and saved on their own. The API checks every value; the state is a STATE code typed in upper case.
+screen:
+  id: sd.customer.tax-exemption
+  module: SD
+  title: Sd.Customer.TaxExemptions
+  version: 1
+  api: /api/sd/customers
+  key: id
+  layout: grid
+  perm:
+    read: SD.Read
+    write: SD.Write
+toolbar[3]: addRow,deleteRow,save
+# A grid screen still names its key as a form field; the section draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: exemptions
+    bind: exemptions
+    rowKey: id
+    deletedRows: strike
+    columns[3]{id,label,type,width,edit,req,fmt,source,hidden}:
+      certificateNo,Sd.Customer.CertificateNo,text,180,true,true,"","",false
+      stateCode,Sd.Customer.StateCode,text,90,true,true,"","",false
+      validTo,Sd.Customer.ValidTo,date,120,true,false,"","",false
