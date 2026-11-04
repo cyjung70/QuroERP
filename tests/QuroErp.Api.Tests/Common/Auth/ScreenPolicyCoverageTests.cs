@@ -66,6 +66,7 @@ public class ScreenPolicyCoverageTests
             "UserController.Search", "UserController.Get", "UserController.Previous", "UserController.Next",
             "RoleController.GetMenus", "RoleController.GetUnassignedMenus",
             "PurchaseOrderController.Search", "PurchaseOrderController.Get",
-            "GoodsReceiptController.Search", "GoodsReceiptController.Get", "GoodsReceiptController.OpenPoLines");
+            "GoodsReceiptController.Search", "GoodsReceiptController.Get", "GoodsReceiptController.OpenPoLines",
+            "SupplierInvoiceController.Search", "SupplierInvoiceController.Get", "SupplierInvoiceController.OpenReceiptLines");
     }
 }
