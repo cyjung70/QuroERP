@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <ItemGroup>
     <ProjectReference Include="..\QuroErp.Application\QuroErp.Application.csproj" />
@@ -6,10 +6,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="Dapper" Version="2.1.89" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.64.1" />
     <PackageReference Include="Npgsql.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
@@ -17,6 +21,12 @@
   <!-- Country packs (field-policy.md "국가팩"): built in, read by EmbeddedCountryPackProvider -->
   <ItemGroup>
     <EmbeddedResource Include="..\..\countrypacks\**\*.yaml" LogicalName="countrypacks/%(RecursiveDir)%(Filename)%(Extension)" WithCulture="false" />
+  </ItemGroup>
+
+  <!-- Print fonts (SIL OFL-1.1, with OFL.txt) and customer templates ship as app files (reports.md) -->
+  <ItemGroup>
+    <None Include="Reports\Fonts\*.*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="Reports\Custom\**\*.frx" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>

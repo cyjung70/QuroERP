@@ -32,6 +32,16 @@ USER app
 # API는 Compose 내부 HTTP 8080으로 통신합니다.
 FROM web-runtime AS api
 COPY --from=publish /out/api .
+# PDF printing (reports.md "배포"): headless Chromium and its system libraries, installed with the Playwright driver that
+# ships in the publish output, so the image needs no PowerShell. The health check at /health starts it.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+USER root
+RUN node="$(find .playwright/node -type f -name node | head -n 1)" \
+    && chmod +x "$node" \
+    && "$node" .playwright/package/cli.js install --with-deps --only-shell chromium \
+    && chmod -R a+rX /ms-playwright \
+    && rm -rf /var/lib/apt/lists/*
+USER app
 ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "QuroErp.Api.dll"]

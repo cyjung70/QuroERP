@@ -1,0 +1,33 @@
+@* Sample document for the PDF tests only: company head, Korean text, a table over several pages and page numbers. *@
+@using System.Globalization
+@using QuroErp.Application.Common.Printing
+@using QuroErp.Infrastructure.Reports.Templates.Common
+
+<PrintLayout Company="Company" Title="@Title" DocumentNo="@DocumentNo" Culture="Culture">
+    <p>@Note</p>
+    <table>
+        <thead>
+            <tr><th>No</th><th>품목</th><th class="num">수량</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var (line, index) in Lines.Select((l, i) => (l, i + 1)))
+            {
+                <tr><td class="num">@index</td><td>@line</td><td class="num">@index.ToString("N2", Culture)</td></tr>
+            }
+        </tbody>
+    </table>
+</PrintLayout>
+
+@code {
+    [Parameter] public PrintCompany Company { get; set; } = default!;
+
+    [Parameter] public string Title { get; set; } = string.Empty;
+
+    [Parameter] public string? DocumentNo { get; set; }
+
+    [Parameter] public string? Note { get; set; }
+
+    [Parameter] public IReadOnlyList<string> Lines { get; set; } = [];
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+}

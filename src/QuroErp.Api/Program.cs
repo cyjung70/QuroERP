@@ -52,6 +52,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Container health (reports.md "배포"): database and Chromium, no sign-in
+app.MapHealthChecks("/health").AllowAnonymous();
+
 app.Run();
 
 /// <summary>통합 테스트(WebApplicationFactory)에서 쓴다.</summary>

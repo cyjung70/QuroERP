@@ -56,6 +56,11 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -warnaserror -p:ContinuousIntegrationBuild=true
 
+      # PDF tests run real Chromium (reports.md "배포")
+      - name: Install Chromium
+        shell: pwsh
+        run: ./tests/QuroErp.Infrastructure.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
       - name: Test
         run: dotnet test --no-build --logger trx --results-directory TestResults
 

@@ -20,6 +20,7 @@ using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
+using QuroErp.Application.Common.Printing;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Mm.Lots;
 using QuroErp.Application.Mm.PurchaseOrders;
@@ -43,7 +44,9 @@ using QuroErp.Infrastructure.Common.Auth;
 using QuroErp.Infrastructure.Common.Codes;
 using QuroErp.Infrastructure.Common.DocumentNumbers;
 using QuroErp.Infrastructure.Common.I18n;
+using QuroErp.Infrastructure.Common.Health;
 using QuroErp.Infrastructure.Common.Persistence;
+using QuroErp.Infrastructure.Reports;
 using QuroErp.Infrastructure.Mm.Inventory;
 using QuroErp.Infrastructure.Mm.Lots;
 using QuroErp.Infrastructure.Mm.PurchaseOrders;
@@ -113,6 +116,16 @@ public static class DependencyInjection
         services.AddSingleton<ISalesPriceRepository, SalesPriceRepository>();
         services.AddSingleton<IFieldPolicyRepository, FieldPolicyRepository>();
         services.AddSingleton<ICountryPackProvider, EmbeddedCountryPackProvider>();
+
+        // Printing (reports.md): one Chromium per process, disposed with the container
+        services.AddSingleton(PrintOptions.From(configuration));
+        services.AddSingleton<PdfRenderer>();
+        services.AddSingleton<IPdfRenderer>(sp => sp.GetRequiredService<PdfRenderer>());
+        services.AddSingleton<IExcelWriter, ExcelWriter>();
+        services.AddSingleton<IPrintTemplateResolver>(_ => new PrintTemplateResolver());
+        services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>("database")
+            .AddCheck<ChromiumHealthCheck>("chromium");
         return services;
     }
 }
