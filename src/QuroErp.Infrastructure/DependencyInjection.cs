@@ -26,6 +26,7 @@ using QuroErp.Application.Mm.Lots;
 using QuroErp.Application.Mm.GoodsReceipts;
 using QuroErp.Application.Mm.PurchaseOrders;
 using QuroErp.Application.Mm.Vendors;
+using QuroErp.Application.Sd.Customers;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Infrastructure.Bc.BusinessPlaces;
 using QuroErp.Infrastructure.Bc.Codes;
@@ -54,6 +55,7 @@ using QuroErp.Infrastructure.Mm.Lots;
 using QuroErp.Infrastructure.Mm.GoodsReceipts;
 using QuroErp.Infrastructure.Mm.PurchaseOrders;
 using QuroErp.Infrastructure.Mm.Vendors;
+using QuroErp.Infrastructure.Sd.Customers;
 using QuroErp.Infrastructure.Mm.Warehouses;
 
 namespace QuroErp.Infrastructure;
@@ -110,6 +112,7 @@ public static class DependencyInjection
         services.AddSingleton<IGoodsReceiptRepository, GoodsReceiptRepository>();
         services.AddSingleton<IWarehouseRepository, WarehouseRepository>();
         services.AddSingleton<IVendorRepository, VendorRepository>();
+        services.AddSingleton<ICustomerRepository, CustomerRepository>();
         services.AddSingleton<ILotRepository, LotRepository>();
         services.AddSingleton<IRoleRepository, RoleRepository>();
         services.AddSingleton<IMenuRepository, MenuRepository>();
