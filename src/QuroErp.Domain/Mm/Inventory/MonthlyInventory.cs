@@ -12,15 +12,16 @@ public sealed record MonthlyInventory(decimal BasQty, decimal BasAmt, decimal Rc
 
     /// <summary>
     /// The month after a closing balance. A month without movements carries the balance forward.
-    /// Receipt types (GR, RT, BP, UR) count as receipts and their reversals reduce receipts; issue types (GI, DN, VR)
-    /// count as issues; CT and TR count by sign. A price difference (PV, qty 0) adds its amount to the receipts (MM-BR-410).
+    /// Receipt types (GR, RT, BP, UR) count as receipts and their reversals reduce receipts; issue types (GI, DN)
+    /// count as issues; CT and TR count by sign. A price difference (PV, qty 0) adds its amount to the receipts and a vendor
+    /// return (VR) its negative qty and amount (MM-BR-410).
     /// </summary>
     public static MonthlyInventory Roll(decimal openingQty, decimal openingAmt, IEnumerable<(string MovType, decimal Qty, decimal Amount)> movements)
     {
         decimal rcptQty = 0, rcptAmt = 0, issueQty = 0, issueAmt = 0;
         foreach (var (movType, qty, amount) in movements)
         {
-            var isReceipt = MovementType.IsAmountOnly(movType) || MovementType.OriginalSign(movType) switch
+            var isReceipt = MovementType.IsAmountOnly(movType) || movType == MovementType.VendorReturn || MovementType.OriginalSign(movType) switch
             {
                 1 => true,
                 -1 => false,

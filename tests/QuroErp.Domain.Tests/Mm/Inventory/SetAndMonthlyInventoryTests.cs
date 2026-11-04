@@ -50,7 +50,7 @@ public class SetAndMonthlyInventoryTests
     }
 
     [Fact, Trait("Id", "MM-UT-410"), Trait("Rule", "MM-BR-410")]
-    public void Roll_PriceVarianceAddsToReceiptAmount_AndVendorReturnIsAnIssue()
+    public void Roll_PriceVarianceAndVendorReturn_GoIntoTheReceipts()
     {
         var month = MonthlyInventory.Roll(10, 100, [
             ("GR", 5, 60),
@@ -59,7 +59,7 @@ public class SetAndMonthlyInventoryTests
             ("VR", -2, -24),
         ]);
 
-        month.Should().Be(new MonthlyInventory(10, 100, RcptQty: 5, RcptAmt: 65, IssueQty: 2, IssueAmt: 24));
+        month.Should().Be(new MonthlyInventory(10, 100, RcptQty: 3, RcptAmt: 41, IssueQty: 0, IssueAmt: 0));
     }
 
     [Fact, Trait("Id", "MM-UT-006")]
