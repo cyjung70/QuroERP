@@ -1,0 +1,60 @@
+# MM-UC-003 purchase order (TASK-MM-006), screen type SM on the entry frame. The item, warehouse and tax code columns are
+# lookups; the item fills its name, unit and price (vendor group price, then standard price) and the page keeps the ids of
+# the picked codes. Amounts and tax are display values the page calculates with the document decimals; the API calculates
+# the stored ones.
+screen:
+  id: mm.purchase-order.entry
+  module: MM
+  title: Mm.PurchaseOrder.Title
+  version: 1
+  api: /api/mm/purchase-orders
+  key: id
+  layout: form-grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[4]: query,new,save,delete
+# The header due date, warehouse and default tax code share their ids with the line columns they are copied to, so only the
+# page draws them (ids are one namespace)
+form:
+  cols: 4
+  fields[14]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+    vendorId,"",hidden,ro,"","","","",0,""
+    poNo,Mm.PurchaseOrder.PoNo,text,auto,"",upper,"","",1,""
+    vendorName,Mm.PurchaseOrder.VendorName,text,req,"",upper,"","",2,""
+    poDt,Mm.PurchaseOrder.PoDt,date,req,"","","","",1,""
+    currencyCode,Mm.PurchaseOrder.CurrencyCode,text,req,"",upper,"","",1,""
+    exchangeRate,Mm.PurchaseOrder.ExchangeRate,number,req,"","","","",1,""
+    incoterms,Mm.PurchaseOrder.Incoterms,text,opt,"",upper,"","",1,""
+    paymentTerms,Mm.PurchaseOrder.PaymentTerms,text,opt,50,"","","",1,""
+    buyer,Mm.PurchaseOrder.Buyer,text,opt,50,"","","",1,""
+    totBaseAmt,Mm.PurchaseOrder.TotBaseAmt,number,ro,"","","","",1,""
+    remarks,Mm.PurchaseOrder.Remarks,textarea,opt,"","","","",4,""
+    status,"",hidden,ro,"","","","",0,""
+    updatedAt,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: lines
+    bind: lines
+    rowKey: id
+    deletedRows: strike
+    columns[13]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      seq,Mm.PurchaseOrder.Seq,number,50,false,false,N0,"",false,false
+      itemCd,Mm.PurchaseOrder.ItemCd,text,130,true,true,"",mmPoItem,false,false
+      itemName,Mm.PurchaseOrder.ItemName,text,200,false,false,"","",false,false
+      unit,Mm.PurchaseOrder.Unit,text,60,false,false,"","",false,false
+      warehouseCode,Mm.PurchaseOrder.LineWarehouseCode,text,100,true,false,"",mmPoWarehouse,false,false
+      poQty,Mm.PurchaseOrder.PoQty,number,90,true,true,N2,"",false,false
+      poPrc,Mm.PurchaseOrder.PoPrc,number,110,true,true,N2,"",false,false
+      dcRate,Mm.PurchaseOrder.DcRate,number,80,true,false,N2,"",false,false
+      poAmt,Mm.PurchaseOrder.PoAmt,number,120,false,false,N2,"",false,false
+      taxCode,Mm.PurchaseOrder.LineTaxCode,text,90,true,false,"",mmPoTaxCode,false,false
+      taxAmt,Mm.PurchaseOrder.TaxAmt,number,100,false,false,N2,"",false,false
+      dueDt,Mm.PurchaseOrder.LineDueDt,date,110,true,false,"","",false,false
+      receivedQty,Mm.PurchaseOrder.ReceivedQty,number,90,false,false,N2,"",false,false
+    rules[3]{on,action,target,expr}:
+      itemCd.change,lookup,"itemName|unit|poPrc","mmPoItem.all()"
+      warehouseCode.change,lookup,"","mmPoWarehouse.all()"
+      taxCode.change,lookup,"","mmPoTaxCode.all()"
+    validate[1]{target,rule,msg}:
+      itemCd,requires vendorId,Common.SelectPartnerFirst

@@ -1,0 +1,18 @@
+# Items a purchase order line can buy (TASK-MM-006): Inventory and Service items in use (MM-BR-014), with the price the line
+# takes: the vendor's price group price, then the standard purchase price. The purchase order screen answers it from the
+# item and purchase price APIs; the API checks the item type again when the order is saved.
+lookup:
+  id: mmPoItem
+  title: Mm.PurchaseOrder.FindItem
+  version: 1
+  api: /api/bc/items
+  key: itemCd
+  text: itemName
+  minChars: 1
+queries[1]{id,params}:
+  all,""
+columns[4]{id,label,type,width,fmt}:
+  itemCd,Mm.PurchaseOrder.ItemCd,text,130,""
+  itemName,Mm.PurchaseOrder.ItemName,text,220,""
+  unit,Mm.PurchaseOrder.Unit,text,60,""
+  poPrc,Mm.PurchaseOrder.PoPrc,number,100,""

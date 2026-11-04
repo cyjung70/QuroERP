@@ -63,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<WarehouseService>();
         services.AddScoped<VendorService>();
         services.AddScoped<PurchaseOrderService>();
+        services.AddScoped<PurchaseOrderPrintService>();
         services.AddScoped<RoleService>();
         services.AddScoped<MenuService>();
         services.AddSingleton<MenuPermissionService>();

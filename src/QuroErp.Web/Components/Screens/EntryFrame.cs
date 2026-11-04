@@ -21,8 +21,10 @@ public enum ChipKind
     Danger,
 }
 
-/// <summary>Audit columns shown at the bottom of the entry frame (created_*, updated_*).</summary>
-public sealed record QuroAudit(string? CreatedBy, DateTimeOffset? CreatedAt, string? UpdatedBy, DateTimeOffset? UpdatedAt)
+/// <summary>Audit columns shown at the bottom of the entry frame (created_*, updated_*, and approved_* once approved).</summary>
+public sealed record QuroAudit(
+    string? CreatedBy, DateTimeOffset? CreatedAt, string? UpdatedBy, DateTimeOffset? UpdatedAt,
+    string? ApprovedBy = null, DateTimeOffset? ApprovedAt = null)
 {
     /// <summary>The four audit fields of a one-record response (api.md); null when there is none yet.</summary>
     public static QuroAudit? From(AuditInfo? audit) =>

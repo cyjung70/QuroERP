@@ -661,4 +661,48 @@
   <data name="Mm.Vendor.TaxPartyType" xml:space="preserve"><value>거래처 구분</value></data>
   <data name="Mm.Vendor.TaxPartyType.BUSINESS" xml:space="preserve"><value>사업자</value></data>
   <data name="Mm.Vendor.TaxPartyType.INDIVIDUAL" xml:space="preserve"><value>개인</value></data>
+  <data name="Common.Audit.Approved" xml:space="preserve"><value>승인</value></data>
+  <data name="Mm.PurchaseOrder.Title" xml:space="preserve"><value>발주 등록</value></data>
+  <data name="Mm.PurchaseOrder.PoNo" xml:space="preserve"><value>발주 번호</value></data>
+  <data name="Mm.PurchaseOrder.Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Mm.PurchaseOrder.VendorName" xml:space="preserve"><value>공급자</value></data>
+  <data name="Mm.PurchaseOrder.FindVendor" xml:space="preserve"><value>공급자 찾기</value></data>
+  <data name="Mm.PurchaseOrder.PoDt" xml:space="preserve"><value>발주일</value></data>
+  <data name="Mm.PurchaseOrder.DueDt" xml:space="preserve"><value>납기일</value></data>
+  <data name="Mm.PurchaseOrder.CurrencyCode" xml:space="preserve"><value>통화</value></data>
+  <data name="Mm.PurchaseOrder.ExchangeRate" xml:space="preserve"><value>환율</value></data>
+  <data name="Mm.PurchaseOrder.WarehouseCode" xml:space="preserve"><value>입고 창고</value></data>
+  <data name="Mm.PurchaseOrder.TaxCode" xml:space="preserve"><value>기본 세금 코드</value></data>
+  <data name="Mm.PurchaseOrder.Incoterms" xml:space="preserve"><value>인코텀즈</value></data>
+  <data name="Mm.PurchaseOrder.PaymentTerms" xml:space="preserve"><value>결제 조건</value></data>
+  <data name="Mm.PurchaseOrder.Buyer" xml:space="preserve"><value>구매 담당</value></data>
+  <data name="Mm.PurchaseOrder.TotBaseAmt" xml:space="preserve"><value>기준 통화 합계</value></data>
+  <data name="Mm.PurchaseOrder.TotPoAmt" xml:space="preserve"><value>합계</value></data>
+  <data name="Mm.PurchaseOrder.Remarks" xml:space="preserve"><value>비고 (공급자 메시지)</value></data>
+  <data name="Mm.PurchaseOrder.Approve" xml:space="preserve"><value>승인</value></data>
+  <data name="Mm.PurchaseOrder.Close" xml:space="preserve"><value>마감</value></data>
+  <data name="Mm.PurchaseOrder.Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Mm.PurchaseOrder.ConfirmApprove" xml:space="preserve"><value>이 발주를 승인할까요?</value></data>
+  <data name="Mm.PurchaseOrder.ConfirmClose" xml:space="preserve"><value>이 발주를 마감할까요? 남은 수량은 더 입고하지 않습니다.</value></data>
+  <data name="Mm.PurchaseOrder.ConfirmCancel" xml:space="preserve"><value>이 발주를 취소할까요?</value></data>
+  <data name="Mm.PurchaseOrder.Delete" xml:space="preserve"><value>발주 삭제</value></data>
+  <data name="Mm.PurchaseOrder.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Mm.PurchaseOrder.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Mm.PurchaseOrder.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Mm.PurchaseOrder.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Mm.PurchaseOrder.LineWarehouseCode" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.PurchaseOrder.WarehouseName" xml:space="preserve"><value>창고 이름</value></data>
+  <data name="Mm.PurchaseOrder.PoQty" xml:space="preserve"><value>수량</value></data>
+  <data name="Mm.PurchaseOrder.PoPrc" xml:space="preserve"><value>단가</value></data>
+  <data name="Mm.PurchaseOrder.DcRate" xml:space="preserve"><value>할인율 %</value></data>
+  <data name="Mm.PurchaseOrder.PoAmt" xml:space="preserve"><value>금액</value></data>
+  <data name="Mm.PurchaseOrder.LineTaxCode" xml:space="preserve"><value>세금 코드</value></data>
+  <data name="Mm.PurchaseOrder.TaxCodeName" xml:space="preserve"><value>세금 코드 이름</value></data>
+  <data name="Mm.PurchaseOrder.TaxRate" xml:space="preserve"><value>세율 %</value></data>
+  <data name="Mm.PurchaseOrder.TaxAmt" xml:space="preserve"><value>세액</value></data>
+  <data name="Mm.PurchaseOrder.LineDueDt" xml:space="preserve"><value>납기일</value></data>
+  <data name="Mm.PurchaseOrder.ReceivedQty" xml:space="preserve"><value>입고 수량</value></data>
+  <data name="Mm.PurchaseOrder.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
+  <data name="Mm.PurchaseOrder.FindWarehouse" xml:space="preserve"><value>창고 찾기</value></data>
+  <data name="Mm.PurchaseOrder.FindTaxCode" xml:space="preserve"><value>세금 코드 찾기</value></data>
 </root>

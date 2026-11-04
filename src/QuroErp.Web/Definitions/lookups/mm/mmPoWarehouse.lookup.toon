@@ -1,0 +1,15 @@
+# Receiving warehouses of a purchase order line (TASK-MM-006): general warehouses in use, no consignment warehouses
+# (MM-BR-026). The purchase order screen answers it from the warehouse options API.
+lookup:
+  id: mmPoWarehouse
+  title: Mm.PurchaseOrder.FindWarehouse
+  version: 1
+  api: /api/mm/warehouses/options
+  key: warehouseCode
+  text: warehouseName
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[2]{id,label,type,width,fmt}:
+  warehouseCode,Mm.PurchaseOrder.LineWarehouseCode,text,110,""
+  warehouseName,Mm.PurchaseOrder.WarehouseName,text,200,""

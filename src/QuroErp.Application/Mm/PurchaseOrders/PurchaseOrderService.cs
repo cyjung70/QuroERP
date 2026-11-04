@@ -238,8 +238,8 @@ public sealed class PurchaseOrderService(
             r.TotBaseAmt, r.RevisionNo, r.ApprovedAt, r.ApprovedBy, r.ClosedAt, r.ClosedBy, r.CancelledAt, r.CancelledBy, r.ReceivedQty,
             lines.Select(l => new PurchaseOrderLineDto(
                 l.Id, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.PoQty, l.PoPrc, l.GrossAmt, l.DcRate, l.DcAmt, l.PoAmt, l.TaxCodeId,
-                l.SupplyAmt, l.TaxAmt, l.DueDt, l.WarehouseId, l.ReceivedQty)).ToList(),
-            r.UpdatedAt);
+                l.SupplyAmt, l.TaxAmt, l.DueDt, l.WarehouseId, l.ReceivedQty, l.Unit)).ToList(),
+            r.UpdatedAt, r.CreatedAt, r.CreatedBy, r.UpdatedBy);
     }
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
