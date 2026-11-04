@@ -1,0 +1,386 @@
+@page "/sd/customer"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Data
+@using Quro.Grid.Definition
+@using QuroErp.Contracts.Bc.FieldPolicies
+@using QuroErp.Contracts.Bc.Localization
+@using QuroErp.Contracts.Bc.Tax
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Sd.Customers
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.Tax
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Sd.Models
+@using QuroErp.Web.Sd.Customers
+@inject CustomerApiClient Api
+@inject LocalizationApiClient LocalizationApi
+@inject TaxCodeApiClient TaxCodeApi
+@inject FieldPolicyCache PolicyCache
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* SD-UC-001 customer master, screen type S. Rules are checked by the API (SD-BR-301~335, BC-BR-415, BC-BR-521~524); this
+   screen only shows defaults. Country fields follow the field policies of Sd.Customer (field-policy.md 3). The exemption
+   certificates of a US customer are a section under the form that saves on its own (BC-BR-524). *@
+
+<PageTitle>@L["Sd.Customer.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="customer-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroSingleForm @ref="_form" TModel="CustomerModel" Title="@L["Sd.Customer.Title"]" TestId="customer" ReadOnly="!_canEdit"
+                    Path="@L["Menu.G3SD"]" PolicyScreen="@PolicyScreen" RecordCode="customer => customer.CName"
+                    Audit="customer => QuroAudit.From(customer.Audit)" SavedNotice="_ => _savedWarning"
+                    Load="LoadAsync" Create="NewCustomer" Save="SaveAsync" Delete="DeleteAsync"
+                    HasSectionChanges="() => _exemptions.HasChanges">
+        <SearchContent>
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Sd.Customer.CName"]" @bind-Value="_searchName" Required TextCase="TextCase.Upper" TestId="customer-search-c-name" />
+                <button type="button" aria-label="@L["Sd.Customer.FindCustomer"]" data-testid="customer-search-c-name-lookup" @onclick="() => _lookupOpen = true">…</button>
+            </div>
+        </SearchContent>
+        <Fields>
+            <QuroText Policy="Sd.Customer.CName" Field="CName" Required LockMode="LockMode.NewOnly" TextCase="TextCase.Upper" TestId="customer-header-c-name" />
+            <QuroText Policy="Sd.Customer.ShipName" Field="ShipName" Required TextCase="TextCase.Upper" TestId="customer-header-ship-name" />
+            <QuroCodeSelect Major="VALID_FLAG" Policy="Sd.Customer.ValidFlag" Field="ValidFlag" Radio TestId="customer-header-valid-flag" />
+            <QuroText Policy="Sd.Customer.Contact" Field="Contact" TestId="customer-header-contact" />
+            <QuroText Policy="Sd.Customer.Contact2" Field="Contact2" TestId="customer-header-contact2" />
+            <QuroText Policy="Sd.Customer.Phone1" Field="Phone1" Required TestId="customer-header-phone1" />
+            <QuroText Policy="Sd.Customer.Phone2" Field="Phone2" TestId="customer-header-phone2" />
+            <QuroText Policy="Sd.Customer.Phone3" Field="Phone3" TestId="customer-header-phone3" />
+            <QuroText Policy="Sd.Customer.FaxNo" Field="FaxNo" TestId="customer-header-fax-no" />
+            <QuroText Policy="Sd.Customer.Email" Field="Email" TestId="customer-header-email" />
+            <QuroCodeSelect Major="SALES_REP" Policy="Sd.Customer.Rep" Field="Rep" Required TestId="customer-header-rep" />
+            <QuroCodeSelect Major="TERMS" Policy="Sd.Customer.Terms" Field="Terms" Required TestId="customer-header-terms" />
+            @* An empty price level becomes the customer name (SD-BR-304) *@
+            <QuroText Policy="Sd.Customer.PriceLevel" Field="PriceLevel" TextCase="TextCase.Upper" TestId="customer-header-price-level" />
+            <QuroCodeSelect Major="FREIGHT_CHARGE" Policy="Sd.Customer.FreightCharge" Field="FreightCharge" TestId="customer-header-freight-charge" />
+            <QuroCodeSelect Major="DISCOUNT_STATUS" Policy="Sd.Customer.DcStatus" Field="DcStatus" TestId="customer-header-dc-status" />
+            @* Empty on a new customer: the company billing setting decides (SD-BR-335) *@
+            <QuroSelect Label="@L["Sd.Customer.BillingFlow"]" Field="BillingFlow" Options="_billingFlows" TestId="customer-header-billing-flow" />
+            @* Empty is the base currency (BC-BR-415); the tax code is required in a US company (SD-BR-331) *@
+            <QuroSelect Label="@L["Sd.Customer.CurrencyCode"]" Field="CurrencyCode" Options="_currencies" TestId="customer-header-currency-code" />
+            <QuroSelect Label="@L["Sd.Customer.TaxCode"]" Field="TaxCode" Options="_taxCodes" Required="@(_localization?.CountryCode == UsCountry)"
+                        TestId="customer-header-tax-code" />
+            @* Changed only by invoices, Credit Memos and receipts (SD-BR-308) *@
+            <QuroNumber Policy="Sd.Customer.BalAmt" Field="BalAmt" Decimals="_amountDecimals" LockMode="LockMode.Always" TestId="customer-header-bal-amt" />
+            <QuroNumber Policy="Sd.Customer.CreditLimit" Field="CreditLimit" Decimals="_amountDecimals" TestId="customer-header-credit-limit" />
+            @* Empty on a new customer: the API takes the business date (SD-BR-301) *@
+            <QuroDate Policy="Sd.Customer.StartDt" Field="StartDt" TestId="customer-header-start-dt" />
+            <QuroText Policy="Sd.Customer.Addr1" Field="Addr1" TestId="customer-header-addr1" />
+            <QuroText Policy="Sd.Customer.Addr2" Field="Addr2" TestId="customer-header-addr2" />
+            <QuroText Policy="Sd.Customer.City" Field="City" TestId="customer-header-city" />
+            <QuroCodeSelect Major="STATE" Policy="Sd.Customer.State" Field="State" TestId="customer-header-state" />
+            <QuroText Policy="Sd.Customer.Country" Field="Country" TextCase="TextCase.Upper" TestId="customer-header-country" />
+            <QuroText Policy="Sd.Customer.ZipCode" Field="ZipCode" Required TestId="customer-header-zip-code" />
+            @* An empty ship address 1 copies the billing address (SD-BR-303) *@
+            <QuroText Policy="Sd.Customer.ShipAddr1" Field="ShipAddr1" TestId="customer-header-ship-addr1" />
+            <QuroText Policy="Sd.Customer.ShipAddr2" Field="ShipAddr2" TestId="customer-header-ship-addr2" />
+            <QuroText Policy="Sd.Customer.ShipCity" Field="ShipCity" TestId="customer-header-ship-city" />
+            <QuroCodeSelect Major="STATE" Policy="Sd.Customer.ShipState" Field="ShipState" TestId="customer-header-ship-state" />
+            <QuroText Policy="Sd.Customer.ShipCountry" Field="ShipCountry" TextCase="TextCase.Upper" TestId="customer-header-ship-country" />
+            <QuroText Policy="Sd.Customer.ShipZipCode" Field="ShipZipCode" TestId="customer-header-ship-zip-code" />
+            <QuroText Policy="Sd.Customer.ShipPhone" Field="ShipPhone" TestId="customer-header-ship-phone" />
+            <QuroText Policy="Sd.Customer.ShipFax" Field="ShipFax" TestId="customer-header-ship-fax" />
+            @* The tax party type follows the company tax method (SD-BR-332), not the country code (localization.md) *@
+            @if (_localization?.TaxMethod == VatMethod)
+            {
+                <QuroSelect Label="@L["Sd.Customer.TaxPartyType"]" Field="TaxPartyType" Options="_taxPartyTypes" Required TestId="customer-header-tax-party-type" />
+            }
+            <QuroText Policy="Sd.Customer.BusinessRegNo" Field="BusinessRegNo" TestId="customer-header-business-reg-no" />
+            <QuroText Policy="Sd.Customer.CeoName" Field="CeoName" TestId="customer-header-ceo-name" />
+            <QuroText Policy="Sd.Customer.BusinessType" Field="BusinessType" TestId="customer-header-business-type" />
+            <QuroText Policy="Sd.Customer.BusinessItem" Field="BusinessItem" TestId="customer-header-business-item" />
+            <QuroText Policy="Sd.Customer.Remarks" Field="Remarks" Rows="3" TestId="customer-header-remarks" />
+            <QuroText Policy="Sd.Customer.Memo2" Field="Memo2" Rows="3" TestId="customer-header-memo2" />
+            <QuroText Policy="Sd.Customer.Memo3" Field="Memo3" Rows="3" TestId="customer-header-memo3" />
+        </Fields>
+    </QuroSingleForm>
+
+    @* BC-BR-524: shown for a loaded customer when the policy shows the certificates (hidden in KR, where the API has none) *@
+    @if (_exemptionsShown)
+    {
+        <section class="quro-panel" aria-labelledby="customer-tax-exemptions-title" data-testid="customer-tax-exemptions">
+            <h2 id="customer-tax-exemptions-title">@L["Sd.Customer.TaxExemptions"]</h2>
+            @if (_exemptionError is not null)
+            {
+                <p class="page-error" role="alert" data-testid="customer-tax-exemptions-message">@_exemptionError</p>
+            }
+            @if (_exemptionNotice is not null)
+            {
+                <p class="page-notice" role="status" data-testid="customer-tax-exemptions-message">@_exemptionNotice</p>
+            }
+            <div class="quro-actions">
+                <button type="button" disabled="@(!_canEdit || _exemptionBusy)" data-testid="customer-tax-exemptions-add-row" @onclick="AddExemption">
+                    @L["Common.AddRow"]
+                </button>
+                <button type="button" disabled="@(!_canEdit || _exemptionBusy || _exemptions.CurrentRowKey is null)"
+                        data-testid="customer-tax-exemptions-delete-row" @onclick="DeleteExemption">
+                    @L["Common.DeleteRow"]
+                </button>
+                <button type="button" disabled="@(!_canEdit || _exemptionBusy)" data-testid="customer-tax-exemptions-save" @onclick="SaveExemptionsAsync">
+                    @L["Common.Save"]
+                </button>
+            </div>
+            <QuroLineGrid TLine="CustomerTaxExemptionRow" Data="_exemptions" Definition="_exemptionGrid" CanEdit="@(_canEdit && !_exemptionBusy)"
+                          UpperCaseFields="UpperCaseFields" OnChanged="StateHasChanged" TestId="customer-tax-exemptions-grid" />
+        </section>
+    }
+
+    <QuroLookupDialog TItem="CustomerDto" Title="@L["Sd.Customer.FindCustomer"]" TestId="customer-customer-lookup"
+                      @bind-Visible="_lookupOpen" Search="FindCustomersAsync" OnSelected="SelectCustomerAsync">
+        <Columns>
+            <QuroColumn TRow="CustomerDto" Title="@L["Sd.Customer.CName"]" Value="c => c.CName" />
+            <QuroColumn TRow="CustomerDto" Title="@L["Sd.Customer.Phone1"]" Value="c => c.Phone1" />
+            <QuroColumn TRow="CustomerDto" Title="@L["Sd.Customer.City"]" Value="c => c.City" />
+            <QuroColumn TRow="CustomerDto" Title="@L["Sd.Customer.ValidFlag"]" Value="c => c.ValidFlag" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string PolicyScreen = "Sd.Customer";
+    private const string ExemptionsField = "Sd.Customer.TaxExemptions";
+    private const string ExemptionDefinition = "sd.customer.tax-exemption";
+    private const string VatMethod = "VAT";
+    private const string UsCountry = "US";
+    private const string UnavailableCode = "BC-E-003";
+    private static readonly string[] UpperCaseFields = ["certificateNo", "stateCode"];
+
+    // Codes whose first argument is a property name (of the customer or of an exemption certificate)
+    private static readonly HashSet<string> FieldCodes = ["SD-E-301", "SD-E-314", "SD-E-331", "SD-E-332", "BC-E-522", "BC-E-524"];
+
+    private QuroSingleForm<CustomerModel>? _form;
+    private LocalizationDto? _localization;
+    private IReadOnlyList<TaxCodeDto> _taxCodeRows = [];
+    private IReadOnlyList<CodeItemDto> _currencies = [];
+    private IReadOnlyList<CodeItemDto> _taxCodes = [];
+    private IReadOnlyList<CodeItemDto> _taxPartyTypes = [];
+    private IReadOnlyList<CodeItemDto> _billingFlows = [];
+    private int? _amountDecimals;
+    private bool _canEdit;
+    private bool _ready;
+    private bool _lookupOpen;
+    private string? _searchName;
+    private string? _savedWarning;
+    private CustomerDto? _picked;
+    private string? _loadError;
+
+    // The exemption section: the certificates of the loaded customer (BC-BR-524)
+    private readonly QuroDataSet<CustomerTaxExemptionRow> _exemptions = new();
+    private GridDef _exemptionGrid = default!;
+    private bool _exemptionsHidden;
+    private long? _exemptionCustomerId;
+    private bool _exemptionBusy;
+    private string? _exemptionError;
+    private string? _exemptionNotice;
+
+    private bool _exemptionsShown => !_exemptionsHidden && _exemptionCustomerId is not null;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy exists, as in CustomerController
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        _exemptionGrid = ScreenDefinitions.Shared.Get(ExemptionDefinition).Grids[0];
+        _taxPartyTypes =
+        [
+            new(CustomerModel.Business, L[$"Sd.Customer.TaxPartyType.{CustomerModel.Business}"]),
+            new(CustomerModel.Individual, L[$"Sd.Customer.TaxPartyType.{CustomerModel.Individual}"]),
+        ];
+        _billingFlows = [.. CustomerModel.BillingFlows.Select(f => new CodeItemDto(f, L[$"Sd.Customer.BillingFlow.{f}"]))];
+        var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        try
+        {
+            _localization = await LocalizationApi.GetAsync(lang, CancellationToken.None);
+            _amountDecimals = _localization.BaseAmount();
+            _currencies = [.. _localization.Currencies.Select(c => new CodeItemDto(c.CurrencyCode, $"{c.CurrencyCode} {c.Name}"))];
+            _taxCodeRows = await TaxCodeApi.InUseAsync(lang, CancellationToken.None);
+            _taxCodes = [.. _taxCodeRows.Select(t => new CodeItemDto(t.TaxCode, $"{t.TaxCode} {t.Name}"))];
+            // The country pack hides the certificates in KR (field-policy.md 3); the form reads the same cached policies
+            _exemptionsHidden = (await PolicyCache.GetAsync(PolicyScreen, CancellationToken.None))
+                .Any(p => p.FieldKey == ExemptionsField && p.State == FieldPolicyStates.Hidden);
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    private CustomerModel NewCustomer()
+    {
+        ClearExemptions();
+        return new CustomerModel();
+    }
+
+    private async Task<CustomerModel?> LoadAsync()
+    {
+        ClearExemptions();
+        if (string.IsNullOrWhiteSpace(_searchName))
+        {
+            return null;
+        }
+        // A customer picked in the lookup is read by id; a typed name is matched exactly
+        var customer = _picked is not null && string.Equals(_picked.CName, _searchName.Trim(), StringComparison.OrdinalIgnoreCase)
+            ? await Api.GetAsync(_picked.Id, CancellationToken.None)
+            : await Api.FindByNameAsync(_searchName, CancellationToken.None);
+        if (customer is null)
+        {
+            return null;
+        }
+        await LoadExemptionsAsync(customer.Id);
+        return CustomerModel.From(customer);
+    }
+
+    private async Task<CustomerModel> SaveAsync(CustomerModel customer, bool isNew)
+    {
+        _savedWarning = null;
+        var taxCodeId = string.IsNullOrEmpty(customer.TaxCode) ? null : _taxCodeRows.FirstOrDefault(t => t.TaxCode == customer.TaxCode)?.Id;
+        CustomerDto saved;
+        try
+        {
+            saved = isNew
+                ? await Api.CreateAsync(customer.ToCreateRequest(taxCodeId), CancellationToken.None)
+                : await Api.UpdateAsync(customer.Id, customer.ToUpdateRequest(taxCodeId), CancellationToken.None);
+        }
+        catch (ApiProblemException e)
+        {
+            throw new ApiProblemException(WithFieldLabel(e.Problem));
+        }
+        // A save can pass with warnings, e.g. BC-W-522 for a business number another party has
+        _savedWarning = saved.Warnings.Count == 0 ? null : string.Join(" ", saved.Warnings.Select(w => Messages.Get(w.Code, [.. w.Args])));
+        _searchName = saved.CName;
+        _picked = saved;
+        if (isNew)
+        {
+            // A new customer can have certificates from now on; it has none yet
+            await LoadExemptionsAsync(saved.Id);
+        }
+        return CustomerModel.From(saved);
+    }
+
+    // These messages name the field by its property name; the screen shows its label instead
+    private ApiProblem WithFieldLabel(ApiProblem problem) =>
+        problem is { Code: { } code, Args: [var field, ..] } && FieldCodes.Contains(code)
+        && L[$"Sd.Customer.{field}"] is { ResourceNotFound: false } label
+            ? problem with { Args = [label.Value, .. problem.Args.Skip(1)] }
+            : problem;
+
+    private async Task DeleteAsync(CustomerModel customer)
+    {
+        await Api.DeleteAsync(customer.Id, customer.UpdatedAt, CancellationToken.None);
+        _searchName = null;
+        _picked = null;
+        ClearExemptions();
+    }
+
+    private Task<IReadOnlyList<CustomerDto>> FindCustomersAsync(string? keyword) => Api.LookupAsync(keyword, CancellationToken.None);
+
+    private async Task SelectCustomerAsync(CustomerDto customer)
+    {
+        _picked = customer;
+        _searchName = customer.CName;
+        await _form!.SearchAsync();
+    }
+
+    // The form renders itself after loading; the section belongs to this page, so the page renders again when it changes
+    private void ClearExemptions()
+    {
+        var shown = _exemptionsShown;
+        _exemptionCustomerId = null;
+        _exemptions.Load([]);
+        _exemptionError = null;
+        _exemptionNotice = null;
+        if (shown)
+        {
+            StateHasChanged();
+        }
+    }
+
+    // In a KR company the API has no certificates (404): the section stays hidden even without the policy
+    private async Task LoadExemptionsAsync(long customerId)
+    {
+        if (_exemptionsHidden || await Api.GetTaxExemptionsAsync(customerId, CancellationToken.None) is not { } rows)
+        {
+            return;
+        }
+        _exemptions.Load([.. rows.Select(CustomerTaxExemptionRow.From)]);
+        _exemptionCustomerId = customerId;
+        StateHasChanged();
+    }
+
+    private void AddExemption()
+    {
+        _exemptionNotice = null;
+        _exemptions.MoveTo(_exemptions.AddRow(new CustomerTaxExemptionRow(), _exemptions.CurrentRowKey));
+    }
+
+    // Toggle: a saved row is marked (and unmarked with its loaded values), a new row is removed at once
+    private void DeleteExemption()
+    {
+        if (_exemptions.CurrentRowKey is not { } key)
+        {
+            return;
+        }
+        _exemptionNotice = null;
+        if (_exemptions.GetState(key) == RowState.Deleted)
+        {
+            _exemptions.RevertRow(key);
+        }
+        else
+        {
+            _exemptions.DeleteRow(key);
+        }
+    }
+
+    // The certificates save together, apart from the form (BC-BR-524); the API checks every value
+    private async Task SaveExemptionsAsync()
+    {
+        if (_exemptionCustomerId is not { } customerId)
+        {
+            return;
+        }
+        _exemptionError = null;
+        _exemptionNotice = null;
+        var changes = _exemptions.GetChanges();
+        var batch = new BatchChanges<CustomerTaxExemptionRow>(
+            [.. changes.Inserted.Select(r => r.Item)], [.. changes.Updated.Select(r => r.Item)], [.. changes.Deleted.Select(r => r.Item)]);
+        if (batch.IsEmpty)
+        {
+            _exemptionNotice = L["Common.NoChanges"];
+            return;
+        }
+        _exemptionBusy = true;
+        try
+        {
+            var saved = await Api.SaveTaxExemptionsAsync(customerId, CustomerTaxExemptionRow.ToRequest(batch), CancellationToken.None);
+            _exemptions.Load([.. saved.Select(CustomerTaxExemptionRow.From)]);
+            _exemptionNotice = L["Common.Saved"];
+        }
+        catch (ApiProblemException e)
+        {
+            _exemptionError = Messages.Get(WithFieldLabel(e.Problem));
+        }
+        catch (HttpRequestException)
+        {
+            _exemptionError = Messages.Get(UnavailableCode);
+        }
+        finally
+        {
+            _exemptionBusy = false;
+        }
+    }
+}

@@ -535,6 +535,7 @@
   <data name="Menu.G1BA" xml:space="preserve"><value>Master Data</value></data>
   <data name="Menu.G2MM" xml:space="preserve"><value>Purchasing &amp; Inventory</value></data>
   <data name="Menu.G3SD" xml:space="preserve"><value>Sales</value></data>
+  <data name="Menu.G3SD01" xml:space="preserve"><value>Customers</value></data>
   <data name="Menu.G4RP" xml:space="preserve"><value>Reports</value></data>
   <data name="Menu.G5AD" xml:space="preserve"><value>Administration</value></data>
   <data name="Menu.G1BA01" xml:space="preserve"><value>Items</value></data>
@@ -627,6 +628,51 @@
   <data name="Sd.Customer.BusinessType" xml:space="preserve"><value>Business type</value></data>
   <data name="Sd.Customer.BusinessItem" xml:space="preserve"><value>Business item</value></data>
   <data name="Sd.Customer.TaxExemptions" xml:space="preserve"><value>Tax exemption certificates</value></data>
+  <data name="Sd.Customer.Title" xml:space="preserve"><value>Customers</value></data>
+  <data name="Sd.Customer.FindCustomer" xml:space="preserve"><value>Find customer</value></data>
+  <data name="Sd.Customer.CName" xml:space="preserve"><value>Customer name</value></data>
+  <data name="Sd.Customer.ShipName" xml:space="preserve"><value>Ship-to name</value></data>
+  <data name="Sd.Customer.Contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="Sd.Customer.Contact2" xml:space="preserve"><value>Contact 2</value></data>
+  <data name="Sd.Customer.Phone1" xml:space="preserve"><value>Phone 1</value></data>
+  <data name="Sd.Customer.Phone2" xml:space="preserve"><value>Phone 2</value></data>
+  <data name="Sd.Customer.Phone3" xml:space="preserve"><value>Phone 3</value></data>
+  <data name="Sd.Customer.FaxNo" xml:space="preserve"><value>Fax</value></data>
+  <data name="Sd.Customer.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Sd.Customer.Rep" xml:space="preserve"><value>Sales rep</value></data>
+  <data name="Sd.Customer.PriceLevel" xml:space="preserve"><value>Price level</value></data>
+  <data name="Sd.Customer.FreightCharge" xml:space="preserve"><value>Freight charge</value></data>
+  <data name="Sd.Customer.BalAmt" xml:space="preserve"><value>Balance</value></data>
+  <data name="Sd.Customer.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Sd.Customer.Memo2" xml:space="preserve"><value>Memo 2</value></data>
+  <data name="Sd.Customer.Memo3" xml:space="preserve"><value>Memo 3</value></data>
+  <data name="Sd.Customer.Terms" xml:space="preserve"><value>Payment terms</value></data>
+  <data name="Sd.Customer.ValidFlag" xml:space="preserve"><value>Active</value></data>
+  <data name="Sd.Customer.Addr1" xml:space="preserve"><value>Address 1</value></data>
+  <data name="Sd.Customer.Addr2" xml:space="preserve"><value>Address 2</value></data>
+  <data name="Sd.Customer.City" xml:space="preserve"><value>City</value></data>
+  <data name="Sd.Customer.ShipAddr1" xml:space="preserve"><value>Ship-to address 1</value></data>
+  <data name="Sd.Customer.ShipAddr2" xml:space="preserve"><value>Ship-to address 2</value></data>
+  <data name="Sd.Customer.ShipCity" xml:space="preserve"><value>Ship-to city</value></data>
+  <data name="Sd.Customer.ShipZipCode" xml:space="preserve"><value>Ship-to ZIP code</value></data>
+  <data name="Sd.Customer.ShipPhone" xml:space="preserve"><value>Ship-to phone</value></data>
+  <data name="Sd.Customer.ShipFax" xml:space="preserve"><value>Ship-to fax</value></data>
+  <data name="Sd.Customer.CreditLimit" xml:space="preserve"><value>Credit limit</value></data>
+  <data name="Sd.Customer.DcStatus" xml:space="preserve"><value>Discount status</value></data>
+  <data name="Sd.Customer.StartDt" xml:space="preserve"><value>Start date</value></data>
+  <data name="Sd.Customer.BillingFlow" xml:space="preserve"><value>Billing flow</value></data>
+  <data name="Sd.Customer.BillingFlow.SHIP_AND_BILL" xml:space="preserve"><value>Ship and bill</value></data>
+  <data name="Sd.Customer.BillingFlow.SHIP_THEN_BILL" xml:space="preserve"><value>Ship, then bill</value></data>
+  <data name="Sd.Customer.BillingFlow.BILL_THEN_SHIP" xml:space="preserve"><value>Bill, then ship</value></data>
+  <data name="Sd.Customer.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Sd.Customer.TaxCode" xml:space="preserve"><value>Tax code</value></data>
+  <data name="Sd.Customer.TaxCodeId" xml:space="preserve"><value>Tax code</value></data>
+  <data name="Sd.Customer.TaxPartyType" xml:space="preserve"><value>Tax party type</value></data>
+  <data name="Sd.Customer.TaxPartyType.BUSINESS" xml:space="preserve"><value>Business</value></data>
+  <data name="Sd.Customer.TaxPartyType.INDIVIDUAL" xml:space="preserve"><value>Individual</value></data>
+  <data name="Sd.Customer.CertificateNo" xml:space="preserve"><value>Certificate no.</value></data>
+  <data name="Sd.Customer.StateCode" xml:space="preserve"><value>Exempt state</value></data>
+  <data name="Sd.Customer.ValidTo" xml:space="preserve"><value>Valid to</value></data>
   <data name="Mm.Vendor.State" xml:space="preserve"><value>State</value></data>
   <data name="Mm.Vendor.ZipCode" xml:space="preserve"><value>ZIP code</value></data>
   <data name="Mm.Vendor.BusinessRegNo" xml:space="preserve"><value>Business registration number</value></data>
