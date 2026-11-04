@@ -11,6 +11,10 @@ public static class PurchaseOrderRoutes
     public const string Close = "close";
     public const string Cancel = "cancel";
 
+    /// <summary>GET {Base}/{id}/print/purchase-order.pdf and .xlsx: the purchase order form (print-documents.md, MM-BR-021).</summary>
+    public const string PrintPdf = "print/purchase-order.pdf";
+    public const string PrintXlsx = "print/purchase-order.xlsx";
+
     /// <summary>Most rows the list returns, newest first.</summary>
     public const int MaxListSize = 200;
 }
@@ -25,6 +29,7 @@ public sealed record PurchaseOrderSummaryDto(
 /// One purchase order. Amounts are computed by the server (MM-BR-015, MM-BR-032): GrossAmt and DcAmt for the totals panel,
 /// SupplyAmt + TaxAmt = TotPoAmt, TotBaseAmt in base currency. RevisionNo counts saves after approval (MM-BR-021).
 /// ReceivedQty is the quantity received on all lines; anything above 0 blocks edit, delete and cancel (MM-BR-013, 023).
+/// CreatedAt, CreatedBy and UpdatedBy are the audit line of the screen; migrated rows may lack them.
 /// </summary>
 public sealed record PurchaseOrderDto(
     long Id,
@@ -56,9 +61,12 @@ public sealed record PurchaseOrderDto(
     string? CancelledBy,
     decimal ReceivedQty,
     IReadOnlyList<PurchaseOrderLineDto> Lines,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? CreatedAt = null,
+    string? CreatedBy = null,
+    string? UpdatedBy = null);
 
-/// <summary>One line. PoAmt = GrossAmt − DcAmt is the supply amount; TaxAmt is an estimate (BC-BR-547).</summary>
+/// <summary>One line. PoAmt = GrossAmt − DcAmt is the supply amount; TaxAmt is an estimate (BC-BR-547). Unit is the item's.</summary>
 public sealed record PurchaseOrderLineDto(
     long Id,
     int Seq,
@@ -76,7 +84,8 @@ public sealed record PurchaseOrderLineDto(
     decimal TaxAmt,
     DateOnly? DueDt,
     long? WarehouseId,
-    decimal ReceivedQty);
+    decimal ReceivedQty,
+    string? Unit = null);
 
 /// <summary>
 /// New or changed purchase order. Lines are the whole list in screen order: lines left out are deleted, lines without Id are added.
