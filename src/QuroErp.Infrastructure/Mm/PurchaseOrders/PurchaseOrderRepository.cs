@@ -50,7 +50,21 @@ internal sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         ORDER BY l.seq
         """;
 
-    private const string SelectVendor = "SELECT id, v_name, currency_code, tax_code_id FROM bc_vendor WHERE id = @Id";
+    private const string SelectVendor = "SELECT id, v_name, currency_code, tax_code_id, vendor_price FROM bc_vendor WHERE id = @Id";
+
+    private const string SelectVendorPrices = """
+        SELECT i.id AS item_id, i.item_cd, i.type AS item_type, i.usd_prc AS std_prc, p.purchase_prc AS group_prc
+        FROM bc_item i LEFT JOIN bc_purchase_price p ON p.item_id = i.id AND p.vendor_price = @VendorPrice
+        WHERE i.id = ANY(@Ids) AND i.type IS NOT NULL
+        """;
+
+    // One row per group and item (uq_bc_purchase_price_vendor_price_item_id), so concurrent saves cannot add it twice
+    private const string UpsertVendorPrice = """
+        INSERT INTO bc_purchase_price (vendor_price, item_id, purchase_prc, created_by, updated_by)
+        VALUES (@VendorPrice, @ItemId, @PurchasePrc, @User, @User)
+        ON CONFLICT (vendor_price, item_id) DO UPDATE
+        SET purchase_prc = EXCLUDED.purchase_prc, updated_at = now(), updated_by = EXCLUDED.updated_by
+        """;
 
     private const string SelectItemTypes = "SELECT id, type AS item_type FROM bc_item WHERE id = ANY(@Ids) AND type IS NOT NULL";
 
@@ -151,6 +165,17 @@ internal sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         (await transaction.Connection!.QueryAsync<(long Id, string ItemType)>(new CommandDefinition(
             SelectItemTypes, new { Ids = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken)))
         .ToDictionary(r => r.Id, r => r.ItemType);
+
+    public async Task<IReadOnlyList<VendorPriceReference>> FindVendorPricesAsync(
+        string vendorPrice, IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        [.. await transaction.Connection!.QueryAsync<VendorPriceReference>(new CommandDefinition(
+            SelectVendorPrices, new { VendorPrice = vendorPrice, Ids = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken))];
+
+    public Task UpsertVendorPricesAsync(
+        string vendorPrice, IReadOnlyList<VendorPriceChange> prices, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            UpsertVendorPrice, prices.Select(p => new { VendorPrice = vendorPrice, p.ItemId, p.PurchasePrc, User = user }).ToList(), transaction,
+            cancellationToken: cancellationToken));
 
     public async Task<IReadOnlySet<long>> FindUsableWarehousesAsync(
         IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>

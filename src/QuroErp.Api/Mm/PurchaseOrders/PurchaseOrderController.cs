@@ -25,7 +25,10 @@ public sealed class PurchaseOrderController(PurchaseOrderService service) : Cont
     [HttpGet("{id:long}"), Authorize(Policy = Screen)]
     public Task<PurchaseOrderDto> Get(long id, CancellationToken cancellationToken) => service.GetAsync(id, cancellationToken);
 
-    /// <summary>201 with a new draft (DR) and its PO number. 422 MM-E-011~031, Common-E-005/006, BC-E-412, BC-E-513.</summary>
+    /// <summary>
+    /// 201 with a new draft (DR) and its PO number. 422 MM-E-011~031, Common-E-005/006, BC-E-412, BC-E-513; 422 MM-W-016 with
+    /// confirmField updateVendorPrice when the vendor price question is not answered (MM-BR-016).
+    /// </summary>
     [HttpPost, Authorize(Policy = Screen)]
     public async Task<ActionResult<PurchaseOrderDto>> Create(SavePurchaseOrderRequest request, CancellationToken cancellationToken)
     {
@@ -33,7 +36,7 @@ public sealed class PurchaseOrderController(PurchaseOrderService service) : Cont
         return CreatedAtAction(nameof(Get), new { id = dto.Id }, dto);
     }
 
-    /// <summary>200 with the saved order. 422 MM-E-013 when it is not DR or PO, or something was received.</summary>
+    /// <summary>200 with the saved order. 422 MM-E-013 when it is not DR or PO, or something was received; MM-W-016 as on POST.</summary>
     [HttpPut("{id:long}"), Authorize(Policy = Screen)]
     public Task<PurchaseOrderDto> Update(long id, SavePurchaseOrderRequest request, CancellationToken cancellationToken) =>
         service.UpdateAsync(id, request, User.Identity!.Name!, cancellationToken);

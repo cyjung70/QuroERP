@@ -8,7 +8,7 @@ namespace QuroErp.Api.Common.Errors;
 
 /// <summary>
 /// Maps known exceptions to ProblemDetails with code and args (api.md "오류", quro-api step 5):
-/// BadRequestException → 400, DomainException → 422, NotFoundException → 404, ConflictException and ConcurrencyException → 409, AuthException → AUTH-xxx status with localized title and detail. Other exceptions fall through to the default handler (500).
+/// BadRequestException → 400, DomainException → 422 (ConfirmationRequiredException adds confirmField), NotFoundException → 404, ConflictException and ConcurrencyException → 409, AuthException → AUTH-xxx status with localized title and detail. Other exceptions fall through to the default handler (500).
 /// </summary>
 public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetails) : IExceptionHandler
 {
@@ -34,7 +34,7 @@ public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetail
         }
 
         httpContext.Response.StatusCode = status;
-        return await problemDetails.TryWriteAsync(new ProblemDetailsContext
+        var context = new ProblemDetailsContext
         {
             HttpContext = httpContext,
             Exception = exception,
@@ -43,6 +43,11 @@ public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetail
                 Status = status,
                 Extensions = { ["code"] = code, ["args"] = args },
             },
-        });
+        };
+        if (exception is ConfirmationRequiredException confirmation)
+        {
+            context.ProblemDetails.Extensions["confirmField"] = confirmation.ConfirmField;
+        }
+        return await problemDetails.TryWriteAsync(context);
     }
 }

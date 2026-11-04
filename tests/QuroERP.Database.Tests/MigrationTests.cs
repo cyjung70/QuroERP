@@ -136,6 +136,25 @@ public partial class MigrationTests(MigratedSchemaFixture db)
         foreignKeys.Should().BeEquivalentTo("fk_mm_purchase_order_warehouse_id", "fk_mm_purchase_order_line_warehouse_id");
     }
 
+    [DatabaseFact, Trait("Id", "DB-IT-10"), Trait("Rule", "MM-BR-019")]
+    public void Seed_PoStatusHasTheSixStatusesWithTheirNames()
+    {
+        // purchase-order business rules, status name table; legacy names (PO Entry, Released) are gone
+        var names = Query<string>("""
+            SELECT n.minor_code || ' ' || n.sort_order || ' ' || en.name || ' / ' || ko.name
+            FROM sys_code_minor n
+            JOIN sys_code_major m ON m.id = n.major_id
+            JOIN sys_code_minor_translation en ON en.minor_id = n.id AND en.lang_code = 'en'
+            JOIN sys_code_minor_translation ko ON ko.minor_id = n.id AND ko.lang_code = 'ko'
+            WHERE m.major_code = 'PO_STATUS'
+            ORDER BY n.sort_order
+            """);
+
+        names.Should().Equal(
+            "DR 5 Draft / 작성중", "PO 10 Approved / 승인", "RE 20 Partially Received / 부분 입고", "CL 30 Received / 입고 완료",
+            "MC 40 Closed / 마감", "CN 50 Cancelled / 취소");
+    }
+
     /// <summary>database-tables.md의 "목록"과 "새 테이블" 표에 있는 테이블 이름.</summary>
     private static IEnumerable<string> DocumentedTables()
     {

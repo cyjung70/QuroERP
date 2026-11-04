@@ -193,5 +193,38 @@ public class PoEntryRulesTests
         PoEntryRules.RevisionAfterSave(status, before).Should().Be(after);
     }
 
+    [Fact, Trait("Id", "MM-UT-016")]
+    public void VendorPriceChanges_OnlyPricesThatDifferFromStandardAndGroup()
+    {
+        var references = new Dictionary<long, VendorPriceReference>
+        {
+            [1] = new(1, "NEW", "INVENTORY", 100m, null),
+            [2] = new(2, "STD", "INVENTORY", 100m, 90m),
+            [3] = new(3, "GRP", "INVENTORY", 100m, 90m),
+            [4] = new(4, "SVC", "SERVICE", null, null),
+            [5] = new(5, "TWO", "INVENTORY", null, 90m),
+        };
+
+        // 1 has no group price yet, 2 equals the standard, 3 the group price, 4 is a service, 5's last line gives its price
+        PoEntryRules.VendorPriceChanges(
+                [PriceLine(1, 120m), PriceLine(2, 100m), PriceLine(3, 90m), PriceLine(4, 5m), PriceLine(5, 90m), PriceLine(5, 95m)],
+                "A", "USD", "USD", references)
+            .Should().Equal(new VendorPriceChange(1, "NEW", 120m), new VendorPriceChange(5, "TWO", 95m));
+    }
+
+    [Theory, Trait("Id", "MM-UT-016")]
+    [InlineData(null, "USD")]
+    [InlineData(" ", "USD")]
+    [InlineData("A", "KRW")]
+    public void VendorPriceChanges_NoneWithoutAGroupOrOutsideTheBaseCurrency(string? group, string currency)
+    {
+        var references = new Dictionary<long, VendorPriceReference> { [1] = new(1, "NEW", "INVENTORY", 100m, null) };
+
+        PoEntryRules.VendorPriceChanges([PriceLine(1, 120m)], group, currency, "USD", references).Should().BeEmpty();
+    }
+
+    private static PurchaseOrderLine PriceLine(long item, decimal price) =>
+        new(null, 1, item, null, 1m, price, price, 0m, 0m, price, Vat10, price, 0m, null, null);
+
     private static decimal D(string value) => decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
 }
