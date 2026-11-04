@@ -6,4 +6,31 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Print.Phone" xml:space="preserve"><value>Tel</value></data>
   <data name="Print.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Print.Fax" xml:space="preserve"><value>Fax</value></data>
+  <data name="Print.Revision" xml:space="preserve"><value>Rev. {0}</value></data>
+  <data name="Print.PurchaseOrder.Title" xml:space="preserve"><value>Purchase Order</value></data>
+  <data name="Print.PurchaseOrder.PoNo" xml:space="preserve"><value>PO No.</value></data>
+  <data name="Print.PurchaseOrder.RevisionNo" xml:space="preserve"><value>Revision</value></data>
+  <data name="Print.PurchaseOrder.Vendor" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Print.PurchaseOrder.Contact" xml:space="preserve"><value>Attn.</value></data>
+  <data name="Print.PurchaseOrder.PoDt" xml:space="preserve"><value>PO Date</value></data>
+  <data name="Print.PurchaseOrder.DueDt" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Print.PurchaseOrder.Currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="Print.PurchaseOrder.Incoterms" xml:space="preserve"><value>Incoterms</value></data>
+  <data name="Print.PurchaseOrder.PaymentTerms" xml:space="preserve"><value>Payment Terms</value></data>
+  <data name="Print.PurchaseOrder.Buyer" xml:space="preserve"><value>Buyer</value></data>
+  <data name="Print.PurchaseOrder.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Print.PurchaseOrder.ItemCode" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Print.PurchaseOrder.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Print.PurchaseOrder.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Print.PurchaseOrder.Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Print.PurchaseOrder.UnitPrice" xml:space="preserve"><value>Unit Price</value></data>
+  <data name="Print.PurchaseOrder.DcRate" xml:space="preserve"><value>Disc. %</value></data>
+  <data name="Print.PurchaseOrder.Amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="Print.PurchaseOrder.LineDueDt" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Print.PurchaseOrder.Subtotal" xml:space="preserve"><value>Subtotal</value></data>
+  <data name="Print.PurchaseOrder.Discount" xml:space="preserve"><value>Discount</value></data>
+  <data name="Print.PurchaseOrder.Tax" xml:space="preserve"><value>Tax</value></data>
+  <data name="Print.PurchaseOrder.Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Print.PurchaseOrder.Remarks" xml:space="preserve"><value>Remarks</value></data>
 </root>

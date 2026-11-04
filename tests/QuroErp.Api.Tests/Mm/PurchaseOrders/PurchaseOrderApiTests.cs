@@ -32,6 +32,28 @@ public class PurchaseOrderApiTests(ApiFactory factory) : IClassFixture<ApiFactor
         responses.Select(r => r.StatusCode).Should().OnlyContain(s => s == HttpStatusCode.Forbidden);
     }
 
+    [Fact, Trait("Id", "BC-UT-214")]
+    public async Task Print_WithoutTheScreen_Returns403_AndWithoutSignIn_Returns401()
+    {
+        var pdf = $"{PurchaseOrderRoutes.Base}/1/{PurchaseOrderRoutes.PrintPdf}";
+        var xlsx = $"{PurchaseOrderRoutes.Base}/1/{PurchaseOrderRoutes.PrintXlsx}";
+        var client = factory.NonAdmin();
+
+        (await client.GetAsync(pdf)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await client.GetAsync(xlsx)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await factory.CreateClient().GetAsync(pdf)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact, Trait("Id", "MM-UC-003-T07")]
+    public async Task Print_AnotherDocumentName_Returns404()
+    {
+        var client = await factory.AdminAsync();
+
+        using var response = await client.GetAsync($"{PurchaseOrderRoutes.Base}/1/print/goods-receipt.pdf");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
     [Fact]
     public async Task List_WithoutSignIn_Returns401()
     {
