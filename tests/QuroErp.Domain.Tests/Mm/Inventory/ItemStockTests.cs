@@ -56,6 +56,38 @@ public class ItemStockTests
         (item.OnHandQty, item.StockValue, item.MovingAverageCost).Should().Be((6m, 90m, 15m));
     }
 
+    [Fact, Trait("Id", "MM-UT-005"), Trait("Rule", "MM-BR-005"), Trait("Rule", "MM-BR-759")]
+    public void Apply_PriceVariance_ChangesTheValueOnly_AndTheCostIsValueOverQty()
+    {
+        var item = new ItemStock(1, "A", "INVENTORY", onHandQty: 10, stockValue: 150, movingAverageCost: 15);
+
+        item.Apply(qty: 0, amount: 20, price: 0, MovementType.RecalculatesCost("PV", 0));
+
+        (item.OnHandQty, item.StockValue, item.MovingAverageCost).Should().Be((10m, 170m, 17m));
+    }
+
+    [Theory, Trait("Id", "MM-UT-005"), Trait("Rule", "MM-BR-005")]
+    [InlineData(0)]
+    [InlineData(-2)]
+    public void Apply_PriceVarianceWithoutStock_KeepsTheCost(int onHand)
+    {
+        var item = new ItemStock(1, "A", "INVENTORY", onHandQty: onHand, stockValue: onHand * 15, movingAverageCost: 15);
+
+        item.Apply(qty: 0, amount: 20, price: 0, MovementType.RecalculatesCost("PV", 0));
+
+        (item.OnHandQty, item.StockValue, item.MovingAverageCost).Should().Be(((decimal)onHand, onHand * 15 + 20m, 15m));
+    }
+
+    [Fact, Trait("Id", "MM-UT-785"), Trait("Rule", "MM-BR-785"), Trait("Rule", "MM-BR-005")]
+    public void Apply_VendorReturnAtTheReceiptPrice_RecalculatesTheCost()
+    {
+        var item = new ItemStock(1, "A", "INVENTORY", onHandQty: 10, stockValue: 150, movingAverageCost: 15);
+
+        item.Apply(qty: -4, amount: -4 * 12m, price: 12, MovementType.RecalculatesCost("VR", -4));
+
+        (item.OnHandQty, item.StockValue, item.MovingAverageCost).Should().Be((6m, 102m, 17m));
+    }
+
     [Theory, Trait("Id", "MM-UT-008")]
     [InlineData("INVENTORY", true, false)]
     [InlineData("SET", true, true)]
