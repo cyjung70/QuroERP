@@ -19,7 +19,7 @@ public static partial class CodeMajorRules
     public static readonly IReadOnlySet<string> ProtectedMajors = new HashSet<string>(StringComparer.Ordinal)
     {
         CodeMajors.DiscountStatus, CodeMajors.DisplayOptions, CodeMajors.FreightCharge, CodeMajors.Grade, CodeMajors.ItemClass,
-        CodeMajors.ItemType, CodeMajors.MovementType, CodeMajors.Plating, CodeMajors.SalesRep, CodeMajors.State, CodeMajors.Terms,
+        CodeMajors.ItemType, CodeMajors.MovementType, CodeMajors.Plating, CodeMajors.SalesRep, CodeMajors.ShipmentVia, CodeMajors.State, CodeMajors.Terms,
         CodeMajors.Unit, CodeMajors.ValidFlag,
     };
 

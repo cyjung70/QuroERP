@@ -728,4 +728,17 @@
   <data name="Mm.PurchaseOrder.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
   <data name="Mm.PurchaseOrder.FindWarehouse" xml:space="preserve"><value>창고 찾기</value></data>
   <data name="Mm.PurchaseOrder.FindTaxCode" xml:space="preserve"><value>세금 코드 찾기</value></data>
+  <data name="SD-E-001" xml:space="preserve"><value>{0}번 줄의 수량은 0보다 커야 합니다.</value></data>
+  <data name="SD-E-002" xml:space="preserve"><value>{0}번 줄의 단가는 0일 수 없습니다.</value></data>
+  <data name="SD-E-003" xml:space="preserve"><value>수주 {0}은(는) 입력(SO) 상태가 아니거나 출하·송장이 있어 바꾸거나 지울 수 없습니다.</value></data>
+  <data name="SD-E-004" xml:space="preserve"><value>{0}번 줄의 품목이 품목 마스터에 없습니다.</value></data>
+  <data name="SD-E-017" xml:space="preserve"><value>줄 파일은 {0}바이트, {1}줄 이하여야 합니다.</value></data>
+  <data name="SD-E-019" xml:space="preserve"><value>파일에 쓸 수 없는 줄이 {0}개 있어 아무 줄도 넣지 않았습니다.</value></data>
+  <data name="SD-E-023" xml:space="preserve"><value>저장한 수주의 고객은 바꿀 수 없습니다. 수주를 지우고 새로 만드세요.</value></data>
+  <data name="SD-E-031" xml:space="preserve"><value>통화 {0}의 환율 {1}이(가) 올바르지 않거나, 줄이 있어 통화를 바꿀 수 없습니다.</value></data>
+  <data name="SD-E-035" xml:space="preserve"><value>청구 흐름 '{0}'은(는) 올바르지 않거나, 출하·송장이 있어 바꿀 수 없습니다.</value></data>
+  <data name="SD-E-404" xml:space="preserve"><value>{0}번 줄의 할인 코드 '{1}'이(가) 없습니다.</value></data>
+  <data name="SD-W-009" xml:space="preserve"><value>배송지·운송비가 고객 마스터와 다릅니다. 고객 배송지도 바꿀까요?</value></data>
+  <data name="SD-W-010" xml:space="preserve"><value>단가가 표준가와도, 가격 레벨 단가와도 다른 품목이 있습니다: {0}. 가격 레벨 단가도 바꿀까요?</value></data>
+  <data name="SD-W-309" xml:space="preserve"><value>저장하면 고객 잔액이 {1}(으)로 신용 한도 {0}을(를) 넘습니다. 그래도 저장할까요?</value></data>
 </root>

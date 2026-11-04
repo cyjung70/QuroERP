@@ -57,6 +57,9 @@ using QuroErp.Infrastructure.Mm.PurchaseOrders;
 using QuroErp.Infrastructure.Mm.Vendors;
 using QuroErp.Infrastructure.Sd.Customers;
 using QuroErp.Infrastructure.Mm.Warehouses;
+using QuroErp.Application.Sd.SalesOrders;
+using QuroErp.Infrastructure.Reports.Sd;
+using QuroErp.Infrastructure.Sd.SalesOrders;
 
 namespace QuroErp.Infrastructure;
 
@@ -113,6 +116,8 @@ public static class DependencyInjection
         services.AddSingleton<IWarehouseRepository, WarehouseRepository>();
         services.AddSingleton<IVendorRepository, VendorRepository>();
         services.AddSingleton<ICustomerRepository, CustomerRepository>();
+        services.AddSingleton<ISalesOrderRepository, SalesOrderRepository>();
+        services.AddSingleton<ISalesOrderDocument, SalesOrderDocument>();
         services.AddSingleton<ILotRepository, LotRepository>();
         services.AddSingleton<IRoleRepository, RoleRepository>();
         services.AddSingleton<IMenuRepository, MenuRepository>();

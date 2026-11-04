@@ -1,0 +1,103 @@
+@* Set component list (print-documents.md "set-component-list"): each Set line expanded to its components, quantity = order
+   quantity × component quantity. No amounts. Values use Razor output only. *@
+@using QuroErp.Application.Sd.SalesOrders
+
+<PrintLayout Company="Order.Company" Title="@T("Print.SetComponentList.Title")" DocumentNo="@Order.Order.SoNo" Culture="Culture">
+    <section class="parties">
+        <div class="party">
+            <div class="label">@T("Print.SalesOrder.BillTo")</div>
+            <div class="name">@Order.BillTo.Name</div>
+            @foreach (var line in Order.BillTo.AddressLines)
+            {
+                <div>@line</div>
+            }
+        </div>
+        <div class="party">
+            <div class="label">@T("Print.SalesOrder.ShipTo")</div>
+            <div class="name">@Order.ShipTo.Name</div>
+            @foreach (var line in Order.ShipTo.AddressLines)
+            {
+                <div>@line</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Order.ShipTo.Phone))
+            {
+                <div>@T("Print.Phone") @Order.ShipTo.Phone</div>
+            }
+        </div>
+        <table class="fields">
+            <tbody>
+                <tr><th>@T("Print.SalesOrder.SoDt")</th><td>@Date(Order.Order.SoDt)</td></tr>
+                <tr><th>@T("Print.SalesOrder.ExpShipDt")</th><td>@Date(Order.Order.ExpShipDt)</td></tr>
+                <tr><th>@T("Print.SalesOrder.Rep")</th><td>@Order.Order.Rep</td></tr>
+                <tr><th>@T("Print.SalesOrder.ShipVia")</th><td>@Order.Order.ShipVia</td></tr>
+                
+            </tbody>
+        </table>
+    </section>
+
+    @if (Print.Components.Count == 0)
+    {
+        <p>@T("Print.SetComponentList.None")</p>
+    }
+    else
+    {
+        <table class="lines">
+            <thead>
+                <tr>
+                    <th class="num">@T("Print.SalesOrder.Seq")</th>
+                    <th>@T("Print.SetComponentList.SetItem")</th>
+                    <th class="num">@T("Print.SalesOrder.Qty")</th>
+                    <th>@T("Print.SetComponentList.Component")</th>
+                    <th>@T("Print.SalesOrder.ItemName")</th>
+                    <th>@T("Print.PickingList.Location")</th>
+                    <th>@T("Print.SalesOrder.Unit")</th>
+                    <th class="num">@T("Print.SetComponentList.ComponentQty")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Print.Components)
+                {
+                    <tr>
+                        <td class="num">@c.Seq</td>
+                        <td class="mono">@c.SetItemCd</td>
+                        <td class="num">@N(c.SoQty, Order.QtyDecimals)</td>
+                        <td class="mono">@c.ComponentCd</td>
+                        <td>@c.ComponentName</td>
+                        <td class="mono">@c.Location</td>
+                        <td>@c.Unit</td>
+                        <td class="num">@N(c.SoQty * c.ChildQty, Order.QtyDecimals)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <style>
+        .parties { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 12px; }
+        .parties .label, .remarks .label { font-size: 8.5pt; color: #555; }
+        .parties .name { font-weight: 700; font-size: 11pt; }
+        table.fields { width: auto; }
+        table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+        table.totals { width: 45%; margin: 12px 0 0 auto; }
+        table.totals th { background: none; text-align: right; }
+        table.totals tr.total th, table.totals tr.total td { font-weight: 700; border-top: 2px solid #333; }
+        .remarks { margin-top: 16px; }
+        .remarks .text { white-space: pre-wrap; }
+        .packing { margin-top: 24px; display: flex; gap: 32px; }
+        .packing div { border-bottom: 1px solid #333; min-width: 160px; padding-top: 18px; }
+    </style>
+</PrintLayout>
+
+@code {
+    [Parameter, EditorRequired] public SalesOrderSetComponentPrint Print { get; set; } = default!;
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+    private SalesOrderPrint Order => Print.Order;
+
+    private string T(string key) => PrintText.Get(key, Culture);
+
+    private string N(decimal value, int decimals) => value.ToString("N" + decimals, Culture);
+
+    private string? Date(DateOnly? value) => value?.ToString("d", Culture);
+}

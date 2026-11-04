@@ -12,6 +12,7 @@ public static class CodeMajors
     public const string MovementType = "MOVEMENT_TYPE";
     public const string Plating = "PLATING";
     public const string SalesRep = "SALES_REP";
+    public const string ShipmentVia = "SHIPMENT_VIA";
     public const string State = "STATE";
     public const string Terms = "TERMS";
     public const string Unit = "UNIT";
