@@ -661,4 +661,17 @@
   <data name="Mm.Vendor.TaxPartyType" xml:space="preserve"><value>Tax party type</value></data>
   <data name="Mm.Vendor.TaxPartyType.BUSINESS" xml:space="preserve"><value>Business</value></data>
   <data name="Mm.Vendor.TaxPartyType.INDIVIDUAL" xml:space="preserve"><value>Individual</value></data>
+  <data name="Menu.G2MM02" xml:space="preserve"><value>Goods Receipts</value></data>
+  <data name="MM-E-024" xml:space="preserve"><value>Lines of purchase order {0} cannot be received. Only approved or partially received orders of the same vendor can be imported.</value></data>
+  <data name="MM-E-101" xml:space="preserve"><value>Line {0}: quantity must be greater than 0.</value></data>
+  <data name="MM-E-102" xml:space="preserve"><value>You cannot receive more than the remaining quantity ({2}) of purchase order {0}. Check receipt line {1}.</value></data>
+  <data name="MM-W-102" xml:space="preserve"><value>This receives more than the remaining quantity ({2}) of purchase order {0} (receipt line {1}). Save anyway?</value></data>
+  <data name="MM-E-103" xml:space="preserve"><value>Line {0}: unit price cannot be 0.</value></data>
+  <data name="MM-E-104" xml:space="preserve"><value>Goods receipt {0} cannot be changed or deleted because a supplier invoice matched it or it has a vendor return.</value></data>
+  <data name="MM-E-107" xml:space="preserve"><value>Saved receipt line {0} cannot be changed. Delete the line and add it again.</value></data>
+  <data name="MM-E-115" xml:space="preserve"><value>Line {0}: the item is missing or is not an inventory or service item.</value></data>
+  <data name="MM-E-116" xml:space="preserve"><value>The vendor of a saved receipt cannot be changed. Delete the receipt and create a new one.</value></data>
+  <data name="MM-E-117" xml:space="preserve"><value>The receipt date cannot change while the receipt has lines. Delete the lines and add them again.</value></data>
+  <data name="MM-E-161" xml:space="preserve"><value>Currency {0} with rate {1} cannot be used. A receipt from a purchase order uses the order's currency and rate, and the currency cannot change once the receipt has lines.</value></data>
+  <data name="MM-E-703" xml:space="preserve"><value>Line {0} has no warehouse. Line 0 is the header.</value></data>
 </root>

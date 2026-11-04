@@ -20,6 +20,7 @@ using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Mm.Lots;
+using QuroErp.Application.Mm.GoodsReceipts;
 using QuroErp.Application.Mm.PurchaseOrders;
 using QuroErp.Application.Mm.Vendors;
 using QuroErp.Application.Mm.Warehouses;
@@ -63,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<WarehouseService>();
         services.AddScoped<VendorService>();
         services.AddScoped<PurchaseOrderService>();
+        services.AddScoped<GoodsReceiptService>();
         services.AddScoped<RoleService>();
         services.AddScoped<MenuService>();
         services.AddSingleton<MenuPermissionService>();

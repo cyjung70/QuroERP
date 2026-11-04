@@ -76,16 +76,16 @@ public class VendorRepositoryTests(AuthSchemaFixture db)
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-858"), Trait("Rule", "MM-BR-858")]
-    public async Task Balance_IsTheSumOfAllGoodsReceiptBalances_NegativeOnesToo()
+    public async Task Balance_IsZero_GoodsReceiptsHaveNoPayable()
     {
+        // Goods receipts no longer carry a balance (TASK-MM-007); supplier invoices will (MM-BR-755)
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         var repository = db.Get<IVendorRepository>();
         var id = await repository.InsertAsync(Vendor.Restore(0, "ZZQV_BAL", Fields), "kim", uow.Transaction, None);
 
-        await ReceiveAsync(uow, id, "ZZQGR1", 100.5m);
-        await ReceiveAsync(uow, id, "ZZQGR2", -30m);
+        await ReceiveAsync(uow, id, "ZZQGR1");
 
-        (await repository.FindAsync(id, false, uow.Transaction, None))!.BalAmt.Should().Be(70.5m);
+        (await repository.FindAsync(id, false, uow.Transaction, None))!.BalAmt.Should().Be(0m);
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-857"), Trait("Rule", "MM-BR-857")]
@@ -97,7 +97,7 @@ public class VendorRepositoryTests(AuthSchemaFixture db)
         var received = await repository.InsertAsync(Vendor.Restore(0, "ZZQV_GR", Fields with { VendorPrice = "ZZQV_GR" }), "kim", uow.Transaction, None);
         var priced = await repository.InsertAsync(Vendor.Restore(0, "ZZQV_PR", Fields with { VendorPrice = "ZZQP" }), "kim", uow.Transaction, None);
         var unused = await repository.InsertAsync(Vendor.Restore(0, "ZZQV_NO", Fields with { VendorPrice = "ZZQV_NO" }), "kim", uow.Transaction, None);
-        await ReceiveAsync(uow, received, "ZZQGR3", 0);
+        await ReceiveAsync(uow, received, "ZZQGR3");
         await connection.ExecuteAsync(
             "INSERT INTO bc_purchase_price (vendor_price, purchase_prc, created_by, updated_by) VALUES ('ZZQP', 1, 't', 't')",
             transaction: uow.Transaction);
@@ -112,12 +112,12 @@ public class VendorRepositoryTests(AuthSchemaFixture db)
         (await repository.IsInUseAsync(unused, uow.Transaction, None)).Should().BeFalse();
     }
 
-    private static Task<int> ReceiveAsync(IUnitOfWork uow, long vendorId, string grNo, decimal balance) =>
+    private static Task<int> ReceiveAsync(IUnitOfWork uow, long vendorId, string grNo) =>
         uow.Transaction.Connection!.ExecuteAsync(
             """
-            INSERT INTO mm_goods_receipt (gr_no, vendor_id, bal_amt, warehouse_id, currency_code, exchange_rate, business_place_id, created_by, updated_by)
-            VALUES (@GrNo, @VendorId, @Balance, (SELECT min(id) FROM bc_warehouse), 'USD', 1, (SELECT id FROM bc_business_place WHERE is_default), 't', 't')
+            INSERT INTO mm_goods_receipt (gr_no, vendor_id, warehouse_id, currency_code, exchange_rate, business_place_id, created_by, updated_by)
+            VALUES (@GrNo, @VendorId, (SELECT min(id) FROM bc_warehouse), 'USD', 1, (SELECT id FROM bc_business_place WHERE is_default), 't', 't')
             """,
-            new { GrNo = grNo, VendorId = vendorId, Balance = balance },
+            new { GrNo = grNo, VendorId = vendorId },
             uow.Transaction);
 }

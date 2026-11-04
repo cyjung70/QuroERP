@@ -35,7 +35,7 @@ public static class CodeUsages
         ],
         ["TERMS"] =
         [
-            new("bc_customer", "terms"), new("bc_vendor", "terms"), new("mm_goods_receipt", "terms"), new("sd_sales_order", "terms"),
+            new("bc_customer", "terms"), new("bc_vendor", "terms"), new("sd_sales_order", "terms"),
             new("sd_sales_invoice", "terms"),
         ],
         [CodeMajors.Unit] =

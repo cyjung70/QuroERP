@@ -65,6 +65,7 @@ public class ScreenPolicyCoverageTests
         reads.Should().BeEquivalentTo(
             "UserController.Search", "UserController.Get", "UserController.Previous", "UserController.Next",
             "RoleController.GetMenus", "RoleController.GetUnassignedMenus",
-            "PurchaseOrderController.Search", "PurchaseOrderController.Get");
+            "PurchaseOrderController.Search", "PurchaseOrderController.Get",
+            "GoodsReceiptController.Search", "GoodsReceiptController.Get", "GoodsReceiptController.OpenPoLines");
     }
 }
