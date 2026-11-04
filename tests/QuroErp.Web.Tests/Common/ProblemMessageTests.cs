@@ -24,6 +24,20 @@ public class ProblemMessageTests(WebFactory factory) : IClassFixture<WebFactory>
         problem.Should().BeEquivalentTo(new ApiProblem(422, "SD-E-001", ["A-100", "3"]));
     }
 
+    [Fact, Trait("Id", "MM-UT-016"), Trait("Rule", "MM-BR-016")]
+    public async Task ReadAsync_AWarningToConfirm_ReadsTheConfirmField()
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.UnprocessableEntity)
+        {
+            Content = new StringContent("""{"status":422,"code":"MM-W-016","args":["BOLT"],"confirmField":"updateVendorPrice"}""", null,
+                "application/problem+json"),
+        };
+
+        var problem = await ApiProblemReader.ReadAsync(response, CancellationToken.None);
+
+        problem.Should().BeEquivalentTo(new ApiProblem(422, "MM-W-016", ["BOLT"], "updateVendorPrice"));
+    }
+
     [Theory, Trait("Id", "CORE-004-WT-08")]
     [InlineData("text/html", "<html></html>")]
     [InlineData("application/json", "{not json")]

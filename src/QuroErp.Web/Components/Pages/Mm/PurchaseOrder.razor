@@ -1,0 +1,571 @@
+@page "/mm/purchase-order"
+@page "/mm/purchase-order/{PoNo}"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Data
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Bc.Localization
+@using QuroErp.Contracts.Bc.Tax
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.PurchaseOrders
+@using QuroErp.Contracts.Mm.Vendors
+@using QuroErp.Contracts.Mm.Warehouses
+@using QuroErp.Web.Bc.Codes
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.PurchasePrices
+@using QuroErp.Web.Bc.Tax
+@using QuroErp.Web.Bc.UserProfiles
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.PurchaseOrders
+@using QuroErp.Web.Mm.Vendors
+@using QuroErp.Web.Mm.Warehouses
+@implements IDisposable
+@inject PurchaseOrderApiClient Api
+@inject VendorApiClient VendorApi
+@inject ItemApiClient ItemApi
+@inject PurchasePriceApiClient PriceApi
+@inject ExchangeRateApiClient RateApi
+@inject LocalizationApiClient LocalizationApi
+@inject TaxCodeApiClient TaxCodeApi
+@inject WarehouseApiClient WarehouseApi
+@inject UserProfileApiClient ProfileApi
+@inject CodeApiClient CodeApi
+@inject IQuroConfirm Confirm
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* MM-UC-003 purchase order, screen type SM on the entry frame (entry-frame.md). The API checks every rule and calculates
+   the stored amounts (MM-BR-011~032, BC-BR-541~547); this screen shows defaults, locks and display amounts with the
+   document decimals. Buttons follow the "status and buttons" table of purchase-order.md: blocked commands are disabled. *@
+
+<PageTitle>@L["Mm.PurchaseOrder.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="purchase-order-load-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroHeaderDetail @ref="_frame" THeader="PurchaseOrderHeader" TLine="PurchaseOrderLine" Title="@L["Mm.PurchaseOrder.Title"]"
+                      TestId="purchase-order" Path="@L["Menu.G2MM"]" ReadOnly="!_canEdit"
+                      DocumentNo="po => po.PoNo" Revision="po => po.RevisionNo" Audit="po => po.ToAudit()"
+                      Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
+                      Definition="mm.purchase-order.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
+                      ColumnFormats="_decimals.ColumnFormats" IsLineLocked="l => l.IsReceived()"
+                      CanSave="PurchaseOrderStatus.CanSave" CanDelete="po => _canEdit && PurchaseOrderStatus.CanDelete(po)"
+                      Delete="DeleteAsync" DeleteText="@L["Mm.PurchaseOrder.Delete"]" OnPdf="PdfAsync" OnExport="ExcelAsync"
+                      LinesHint="LinesHint">
+        <FindColumns>
+            <QuroColumn TRow="PurchaseOrderHeader" Title="@L["Mm.PurchaseOrder.PoNo"]" Value="p => p.PoNo" />
+            <QuroColumn TRow="PurchaseOrderHeader" Title="@L["Mm.PurchaseOrder.PoDt"]" Value="p => p.PoDt" />
+            <QuroColumn TRow="PurchaseOrderHeader" Title="@L["Mm.PurchaseOrder.VendorName"]" Value="p => p.VendorName" />
+            <QuroColumn TRow="PurchaseOrderHeader" Title="@L["Mm.PurchaseOrder.Status"]" Value="p => StatusText(p.Status)" />
+            <QuroColumn TRow="PurchaseOrderHeader" Title="@L["Mm.PurchaseOrder.TotPoAmt"]" Value="FindTotal" />
+        </FindColumns>
+        <StatusChip Context="po">
+            <QuroStatusChip Code="@(po.Status ?? "")" Kind="PurchaseOrderStatus.ChipOf(po.Status)" Text="@StatusText(po.Status)" />
+        </StatusChip>
+        <StatusCommands Context="po">
+            <button type="button" disabled="@(!_canEdit || !PurchaseOrderStatus.CanApprove(po))" data-testid="purchase-order-toolbar-approve"
+                    @onclick="ApproveAsync">@L["Mm.PurchaseOrder.Approve"]</button>
+            <button type="button" disabled="@(!_canEdit || !PurchaseOrderStatus.CanClose(po))" data-testid="purchase-order-toolbar-close"
+                    @onclick="CloseAsync">@L["Mm.PurchaseOrder.Close"]</button>
+            <button type="button" disabled="@(!_canEdit || !PurchaseOrderStatus.CanCancel(po))" data-testid="purchase-order-toolbar-cancel"
+                    @onclick="CancelAsync">@L["Mm.PurchaseOrder.Cancel"]</button>
+        </StatusCommands>
+        <HeaderFields Context="po">
+            @* 1: vendor (2), order date, due date *@
+            <div class="quro-lookup-field quro-span-2">
+                <QuroText Label="@L["Mm.PurchaseOrder.VendorName"]" Field="VendorName" Required TextCase="TextCase.Upper"
+                          LockMode="@(po.HasSavedLines ? LockMode.Always : LockMode.None)" TestId="purchase-order-header-vendor-name" />
+                <button type="button" aria-label="@L["Mm.PurchaseOrder.FindVendor"]" disabled="@(!CanChangeVendor(po))"
+                        data-testid="purchase-order-header-vendor-lookup" @onclick="() => _vendorLookupOpen = true">…</button>
+            </div>
+            <QuroDate Label="@L["Mm.PurchaseOrder.PoDt"]" Field="PoDt" Required TestId="purchase-order-header-po-dt" />
+            <QuroDate Label="@L["Mm.PurchaseOrder.DueDt"]" Field="DueDt" TestId="purchase-order-header-due-dt" />
+            @* 2: currency, rate, receiving warehouse, default tax code *@
+            <QuroSelect Label="@L["Mm.PurchaseOrder.CurrencyCode"]" Field="CurrencyCode" Options="_currencies" Required
+                        LockMode="@(HasLines ? LockMode.Always : LockMode.None)" TestId="purchase-order-header-currency-code" />
+            <QuroNumber Label="@L["Mm.PurchaseOrder.ExchangeRate"]" Field="ExchangeRate" Required TestId="purchase-order-header-exchange-rate" />
+            <QuroSelect Label="@L["Mm.PurchaseOrder.WarehouseCode"]" Field="WarehouseCode" Options="_warehouseOptions"
+                        TestId="purchase-order-header-warehouse-code" />
+            <QuroSelect Label="@L["Mm.PurchaseOrder.TaxCode"]" Field="TaxCode" Options="_taxCodeOptions" TestId="purchase-order-header-tax-code" />
+            @* 3: Incoterms, payment terms, buyer, base currency total *@
+            <QuroSelect Label="@L["Mm.PurchaseOrder.Incoterms"]" Field="Incoterms" Options="IncotermsOptions" TestId="purchase-order-header-incoterms" />
+            <QuroText Label="@L["Mm.PurchaseOrder.PaymentTerms"]" Field="PaymentTerms" MaxLength="50" TestId="purchase-order-header-payment-terms" />
+            <QuroText Label="@L["Mm.PurchaseOrder.Buyer"]" Field="Buyer" MaxLength="50" TestId="purchase-order-header-buyer" />
+            @if (_decimals.IsForeign)
+            {
+                <QuroNumber Label="@L["Mm.PurchaseOrder.TotBaseAmt"]" Value="BaseTotal(po)" Decimals="_decimals.BaseAmount"
+                            LockMode="LockMode.Always" TestId="purchase-order-header-tot-base-amt" />
+            }
+            @* 4: remarks, printed on the form *@
+            <QuroText Label="@L["Mm.PurchaseOrder.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="purchase-order-header-remarks" />
+        </HeaderFields>
+        <Totals Context="lines">
+            @{ var totals = TotalsOf(lines); }
+            <QuroTotals Subtotal="totals.Subtotal" Discount="totals.Discount" Tax="totals.Tax" CurrencyCode="@_decimals.CurrencyCode"
+                        Decimals="_decimals.Amount" TestId="purchase-order-totals" />
+        </Totals>
+    </QuroHeaderDetail>
+
+    <QuroLookupDialog TItem="VendorDto" Title="@L["Mm.PurchaseOrder.FindVendor"]" TestId="purchase-order-vendor-lookup"
+                      @bind-Visible="_vendorLookupOpen" Search="k => VendorApi.LookupAsync(k, CancellationToken.None)" OnSelected="SelectVendorAsync">
+        <Columns>
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.PurchaseOrder.VendorName"]" Value="v => v.VName" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.PurchaseOrder.CurrencyCode"]" Value="v => v.CurrencyCode" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.PurchaseOrder.TaxCode"]" Value="v => v.TaxCode" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string UnavailableCode = "BC-E-003";
+    private const string NotFoundCode = "Common-E-006";
+    private const string StatusMajor = "PO_STATUS";
+    private const string VendorPriceField = "updateVendorPrice";
+    private static readonly string[] PurchasableTypes = ["INVENTORY", "SERVICE"];
+    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "taxCode"];
+    private static readonly HashSet<string> AmountInputs =
+        new([nameof(PurchaseOrderLine.PoQty), nameof(PurchaseOrderLine.PoPrc), nameof(PurchaseOrderLine.DcRate), nameof(PurchaseOrderLine.TaxCodeId)],
+            StringComparer.OrdinalIgnoreCase);
+
+    // Incoterms 2020 (MM-BR-027); the codes are the same in every language
+    private static readonly IReadOnlyList<CodeItemDto> IncotermsOptions =
+        [.. new[] { "EXW", "FCA", "FAS", "FOB", "CFR", "CIF", "CPT", "CIP", "DAP", "DPU", "DDP" }.Select(c => new CodeItemDto(c, c))];
+
+    private QuroHeaderDetail<PurchaseOrderHeader, PurchaseOrderLine>? _frame;
+    private QuroDataSet<PurchaseOrderLine>? _watchedLines;
+    private LocalizationDto? _localization;
+    private PurchaseOrderDecimals _decimals = new("USD", 2, 2, 2, PurchaseOrderCalculator.HalfUp, PurchaseOrderCalculator.LineMode, "USD", 2);
+    private IReadOnlyList<TaxCodeDto> _taxCodes = [];
+    private IReadOnlyList<WarehouseOptionDto> _warehouses = [];
+    private IReadOnlyList<CodeItemDto> _currencies = [];
+    private IReadOnlyList<CodeItemDto> _warehouseOptions = [];
+    private IReadOnlyList<CodeItemDto> _taxCodeOptions = [];
+    private Dictionary<string, string> _statusNames = [];
+    private string? _defaultWarehouseCode;
+    private IReadOnlyDictionary<long, decimal> _groupPrices = new Dictionary<long, decimal>();
+    private readonly Dictionary<string, long> _itemIds = new(StringComparer.OrdinalIgnoreCase);
+    private bool _canEdit;
+    private bool _ready;
+    private bool _vendorLookupOpen;
+    private bool _applyingVendor;
+    private string? _loadError;
+
+    /// <summary>PO number from the address /mm/purchase-order/{PoNo}.</summary>
+    [Parameter]
+    public string? PoNo { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy reaches the screens, as on the master screens (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        try
+        {
+            _localization = await LocalizationApi.GetAsync(lang, CancellationToken.None);
+            _decimals = PurchaseOrderDecimals.Of(_localization, null);
+            _currencies = [.. _localization.Currencies.Select(c => new CodeItemDto(c.CurrencyCode, $"{c.CurrencyCode} {c.Name}"))];
+            _taxCodes = await TaxCodeApi.InUseAsync(lang, CancellationToken.None);
+            _taxCodeOptions = [.. _taxCodes.Select(t => new CodeItemDto(t.TaxCode, $"{t.TaxCode} {t.Name}"))];
+            // General warehouses only: goods never come into the consignment warehouse from a purchase order (MM-BR-026)
+            _warehouses = [.. (await WarehouseApi.GetOptionsAsync(CancellationToken.None)).Where(w => w.UseYn && w.WarehouseType == "NORMAL")];
+            _warehouseOptions = [.. _warehouses.Select(w => new CodeItemDto(w.WarehouseCode, $"{w.WarehouseCode} {w.WarehouseName}"))];
+            _statusNames = (await CodeApi.GetAsync(StatusMajor, lang, CancellationToken.None)).ToDictionary(c => c.Code, c => c.Name);
+            var profile = await ProfileApi.GetAsync(CancellationToken.None);
+            _defaultWarehouseCode = _warehouses.FirstOrDefault(w => w.Id == profile.DefaultWarehouseId)?.WarehouseCode;
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // The frame exists after its first render; its lines are watched once for the display amounts
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_frame is not null && _watchedLines is null)
+        {
+            _watchedLines = _frame.Lines;
+            _watchedLines.ValueChanged += OnLineValueChanged;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_watchedLines is not null)
+        {
+            _watchedLines.ValueChanged -= OnLineValueChanged;
+        }
+    }
+
+    // A new order is in the base currency until a vendor is picked; the page draws again for its number formats
+    private PurchaseOrderHeader CreateHeader()
+    {
+        _groupPrices = new Dictionary<long, decimal>();
+        UseDecimals(_localization?.BaseCurrencyCode);
+        return new PurchaseOrderHeader
+        {
+            PoDt = DateOnly.FromDateTime(DateTime.Today),
+            CurrencyCode = _localization?.BaseCurrencyCode,
+            ExchangeRate = 1m,
+            WarehouseCode = _defaultWarehouseCode,
+        };
+    }
+
+    // Add Row copies the header due date, warehouse and default tax code (MM-BR-026, BC-BR-542)
+    private PurchaseOrderLine CreateLine(PurchaseOrderHeader po)
+    {
+        var warehouse = _warehouses.FirstOrDefault(w => w.WarehouseCode == po.WarehouseCode);
+        var tax = _taxCodes.FirstOrDefault(t => t.TaxCode == po.TaxCode);
+        return new PurchaseOrderLine
+        {
+            DueDt = po.DueDt,
+            WarehouseCode = warehouse?.WarehouseCode,
+            WarehouseId = warehouse?.Id,
+            TaxCode = tax?.TaxCode,
+            TaxCodeId = tax?.Id,
+        };
+    }
+
+    private Func<Task<HeaderLines<PurchaseOrderHeader, PurchaseOrderLine>?>>? Initial => PoNo is null
+        ? null
+        : async () => await Api.FindByNoAsync(PoNo, CancellationToken.None) is { } order ? await DocumentAsync(order) : null;
+
+    // The find dialog (F3): a keyword that starts like a PO number searches by number, any other keyword by vendor name
+    private async Task<IReadOnlyList<PurchaseOrderHeader>> FindAsync(string? keyword)
+    {
+        var text = keyword?.Trim();
+        var byNumber = text is { Length: > 0 } && text.StartsWith("PO", StringComparison.OrdinalIgnoreCase);
+        var orders = await Api.SearchAsync(new PurchaseOrderSearchQuery(byNumber ? text : null, null, null, null, null), CancellationToken.None);
+        return [.. orders
+            .Where(o => byNumber || string.IsNullOrEmpty(text) || (o.VendorName?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Select(PurchaseOrderHeader.From)];
+    }
+
+    private string FindTotal(PurchaseOrderHeader po) =>
+        po.TotPoAmt.ToString("N" + DecimalsOf(po.CurrencyCode).Amount.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture)
+        + " " + po.CurrencyCode;
+
+    private async Task<HeaderLines<PurchaseOrderHeader, PurchaseOrderLine>?> LoadAsync(PurchaseOrderHeader picked) =>
+        await DocumentAsync(await Api.GetAsync(picked.Id, CancellationToken.None));
+
+    // The stored order with the vendor's default tax code and price group, which new lines take
+    private async Task<HeaderLines<PurchaseOrderHeader, PurchaseOrderLine>> DocumentAsync(PurchaseOrderDto order)
+    {
+        VendorDto? vendor = null;
+        try
+        {
+            vendor = await VendorApi.GetAsync(order.VendorId, CancellationToken.None);
+        }
+        catch (ApiProblemException)
+        {
+            // A migrated order may name a vendor that is gone; the order still opens
+        }
+        await UseVendorPricesAsync(vendor);
+        var warehouseCodes = _warehouses.ToDictionary(w => w.Id, w => w.WarehouseCode);
+        var taxCodes = _taxCodes.ToDictionary(t => t.Id, t => t.TaxCode);
+        UseDecimals(order.CurrencyCode);
+        return new HeaderLines<PurchaseOrderHeader, PurchaseOrderLine>(
+            PurchaseOrderHeader.From(order, warehouseCodes, vendor?.TaxCode),
+            [.. order.Lines.OrderBy(l => l.Seq).Select(l => PurchaseOrderLine.From(l, warehouseCodes, taxCodes))]);
+    }
+
+    // The lines kept, in screen order, go in one request (lines left out are deleted). A price that differs from the standard
+    // and the vendor's group price asks whether to update the group price (MM-W-016); either answer saves the order
+    private async Task<HeaderLines<PurchaseOrderHeader, PurchaseOrderLine>> SaveAsync(
+        PurchaseOrderHeader po, bool isNew, BatchChanges<PurchaseOrderLine> changes)
+    {
+        var lines = ActiveLines();
+        var warehouseId = _warehouses.FirstOrDefault(w => w.WarehouseCode == po.WarehouseCode)?.Id;
+        bool? updateVendorPrice = null;
+        while (true)
+        {
+            var request = po.ToRequest(isNew, warehouseId, lines, updateVendorPrice);
+            try
+            {
+                var saved = isNew
+                    ? await Api.CreateAsync(request, CancellationToken.None)
+                    : await Api.UpdateAsync(po.Id, request, CancellationToken.None);
+                return await DocumentAsync(saved);
+            }
+            catch (ApiProblemException e) when (updateVendorPrice is null && e.Problem.ConfirmField == VendorPriceField)
+            {
+                updateVendorPrice = await Confirm.ConfirmAsync(Messages.Get(e.Problem));
+            }
+        }
+    }
+
+    private Task DeleteAsync(PurchaseOrderHeader po) => Api.DeleteAsync(po.Id, po.UpdatedAt!.Value, CancellationToken.None);
+
+    // Status commands: the frame asks to save first when there are changes, then asks the question; the result is shown
+    private Task ApproveAsync() => _frame!.RunStatusAsync(
+        async po => await DocumentAsync(await Api.ApproveAsync(po.Id, po.UpdatedAt!.Value, CancellationToken.None)),
+        L["Mm.PurchaseOrder.ConfirmApprove"]);
+
+    private Task CloseAsync() => _frame!.RunStatusAsync(
+        async po => await DocumentAsync(await Api.CloseAsync(po.Id, po.UpdatedAt!.Value, CancellationToken.None)),
+        L["Mm.PurchaseOrder.ConfirmClose"]);
+
+    private Task CancelAsync() => _frame!.RunStatusAsync(
+        async po => await DocumentAsync(await Api.CancelAsync(po.Id, po.UpdatedAt!.Value, CancellationToken.None)),
+        L["Mm.PurchaseOrder.ConfirmCancel"]);
+
+    // Saved orders only (the frame disables both for a new one); the file comes straight from the API
+    private Task PdfAsync() => DownloadAsync(po => Api.PdfAsync(po.Id, po.PoNo!, CancellationToken.None));
+
+    private Task ExcelAsync() => DownloadAsync(po => Api.XlsxAsync(po.Id, po.PoNo!, CancellationToken.None));
+
+    private Task DownloadAsync(Func<PurchaseOrderHeader, Task<DownloadedFile>> read) => _frame!.RunCommandAsync(async () =>
+    {
+        var po = Header();
+        var file = await read(po);
+        await QuroExcel.DownloadAsync(JS, file.FileName, file.Content);
+    });
+
+    private string? LinesHint(PurchaseOrderHeader po) => po.VendorId is null ? L["Common.SelectPartnerFirst"].Value : null;
+
+    private string StatusText(string? status) => status is null ? "" : _statusNames.GetValueOrDefault(status, status);
+
+    private bool HasLines => _frame is not null && ActiveLines().Count > 0;
+
+    private bool CanChangeVendor(PurchaseOrderHeader po) =>
+        _canEdit && !po.HasSavedLines && (po.Status is null || PurchaseOrderStatus.CanSave(po));
+
+    // A typed vendor name is matched exactly; the currency, rate and default tax code follow the vendor (MM-BR-031, BC-BR-542)
+    private void HeaderChanged(string field)
+    {
+        if (_applyingVendor)
+        {
+            return;
+        }
+        if (string.Equals(field, nameof(PurchaseOrderHeader.VendorName), StringComparison.OrdinalIgnoreCase))
+        {
+            var name = Header().VendorName;
+            _ = InvokeAsync(() => _frame!.RunCommandAsync(() => FindVendorAsync(name)));
+        }
+        else if (string.Equals(field, nameof(PurchaseOrderHeader.CurrencyCode), StringComparison.OrdinalIgnoreCase)
+                 || string.Equals(field, nameof(PurchaseOrderHeader.PoDt), StringComparison.OrdinalIgnoreCase))
+        {
+            UseDecimals(Header().CurrencyCode);
+            _ = InvokeAsync(async () =>
+            {
+                await RefreshRateAsync();
+                StateHasChanged();
+            });
+        }
+    }
+
+    private async Task FindVendorAsync(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            SetVendorId(null);
+            return;
+        }
+        if (await VendorApi.FindByNameAsync(name, CancellationToken.None) is { } vendor)
+        {
+            await ApplyVendorAsync(vendor);
+            return;
+        }
+        SetVendorId(null);
+        throw new ApiProblemException(new ApiProblem(404, NotFoundCode, [name]));
+    }
+
+    private Task SelectVendorAsync(VendorDto vendor) => _frame!.RunCommandAsync(() => ApplyVendorAsync(vendor));
+
+    private async Task ApplyVendorAsync(VendorDto vendor)
+    {
+        _applyingVendor = true;
+        try
+        {
+            _frame!.SetHeaderValue(nameof(PurchaseOrderHeader.VendorName), vendor.VName);
+            SetVendorId(vendor.Id);
+            // The currency stays once there are lines (MM-BR-031)
+            if (!HasLines)
+            {
+                _frame.SetHeaderValue(nameof(PurchaseOrderHeader.CurrencyCode), vendor.CurrencyCode ?? _localization?.BaseCurrencyCode);
+            }
+            _frame.SetHeaderValue(nameof(PurchaseOrderHeader.TaxCode), vendor.TaxCode);
+        }
+        finally
+        {
+            _applyingVendor = false;
+        }
+        UseDecimals(Header().CurrencyCode);
+        await UseVendorPricesAsync(vendor);
+        await RefreshRateAsync();
+        StateHasChanged();
+    }
+
+    private void SetVendorId(long? id)
+    {
+        var applying = _applyingVendor;
+        _applyingVendor = true;
+        _frame!.SetHeaderValue(nameof(PurchaseOrderHeader.VendorId), id);
+        _applyingVendor = applying;
+    }
+
+    // Item prices for the vendor's price group (MM-BR-016); none when the vendor has no group or the prices cannot be read
+    private async Task UseVendorPricesAsync(VendorDto? vendor)
+    {
+        _groupPrices = new Dictionary<long, decimal>();
+        if (vendor?.VendorPrice is { Length: > 0 } group)
+        {
+            try
+            {
+                _groupPrices = await PriceApi.GroupAsync(group, CancellationToken.None);
+            }
+            catch (ApiProblemException)
+            {
+                // The standard purchase price is used; the API still checks the price on save
+            }
+        }
+    }
+
+    // The rate of the order date, 1 for the base currency (BC-BR-412); empty when no rate is entered for that day
+    private async Task RefreshRateAsync()
+    {
+        var po = Header();
+        if (po.CurrencyCode is not { Length: > 0 } currency || _localization is null)
+        {
+            return;
+        }
+        var rate = currency == _localization.BaseCurrencyCode
+            ? 1m
+            : await RateApi.RateOnAsync(currency, po.PoDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        _applyingVendor = true;
+        try
+        {
+            _frame!.SetHeaderValue(nameof(PurchaseOrderHeader.ExchangeRate), rate);
+        }
+        finally
+        {
+            _applyingVendor = false;
+        }
+    }
+
+    // Line lookups: items with the vendor price (group, then standard), general warehouses and tax codes in use
+    private async Task<IReadOnlyList<LookupRow>> LookupAsync(LookupQuery query)
+    {
+        switch (query.LookupId)
+        {
+            case "mmPoItem":
+                IReadOnlyList<ItemDto> items = query.Codes is { } codes
+                    ? [.. (await Task.WhenAll(codes.Select(c => ItemApi.FindByCodeAsync(c, CancellationToken.None)))).OfType<ItemDto>()]
+                    : await ItemApi.LookupAsync(query.Keyword, CancellationToken.None);
+                var purchasable = items.Where(i => PurchasableTypes.Contains(i.ItemType)).ToList();
+                purchasable.ForEach(i => _itemIds[i.ItemCd] = i.Id);
+                return [.. purchasable.Select(i => LookupRow.Of(
+                    ("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit),
+                    ("poPrc", _groupPrices.TryGetValue(i.Id, out var price) ? price : i.UsdPrc)))];
+            case "mmPoWarehouse":
+                return [.. _warehouses.Where(w => Matches(query, w.WarehouseCode, w.WarehouseName)).Select(w => LookupRow.Of(
+                    ("warehouseCode", w.WarehouseCode), ("warehouseName", w.WarehouseName)))];
+            case "mmPoTaxCode":
+                return [.. _taxCodes.Where(t => Matches(query, t.TaxCode, t.Name)).Select(t => LookupRow.Of(
+                    ("taxCode", t.TaxCode), ("name", t.Name), ("rate", t.Rate)))];
+            default:
+                return [];
+        }
+    }
+
+    private static bool Matches(LookupQuery query, string code, string? name) =>
+        query.Codes is { } codes
+            ? codes.Contains(code, StringComparer.OrdinalIgnoreCase)
+            : string.IsNullOrWhiteSpace(query.Keyword)
+              || code.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase)
+              || (name?.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase) ?? false);
+
+    // The ids of the codes a line names, and the display amounts of a changed line (MM-BR-015, MM-BR-025, MM-BR-032).
+    // A line back at its stored values (restore row) keeps the ids and amounts the API stored
+    private void OnLineValueChanged(object? sender, DataSetValueChangedEventArgs e)
+    {
+        var lines = _frame!.Lines;
+        if (lines.GetState(e.RowKey) is RowState.Normal or RowState.Deleted)
+        {
+            return;
+        }
+        var line = lines.GetItem(e.RowKey);
+        // The item lookup fills the name after the code, so the id is known by then (typed, picked or pasted)
+        if (Is(e.Field, nameof(PurchaseOrderLine.ItemCd)) || Is(e.Field, nameof(PurchaseOrderLine.ItemName)))
+        {
+            long? itemId = line.ItemCd is { } code && _itemIds.TryGetValue(code, out var id) ? id : null;
+            lines.SetValue(e.RowKey, nameof(PurchaseOrderLine.ItemId), itemId);
+        }
+        else if (Is(e.Field, nameof(PurchaseOrderLine.WarehouseCode)))
+        {
+            lines.SetValue(e.RowKey, nameof(PurchaseOrderLine.WarehouseId),
+                _warehouses.FirstOrDefault(w => Is(w.WarehouseCode, line.WarehouseCode ?? ""))?.Id);
+        }
+        else if (Is(e.Field, nameof(PurchaseOrderLine.TaxCode)))
+        {
+            // The tax code id is an amount input: setting it calculates the tax again
+            lines.SetValue(e.RowKey, nameof(PurchaseOrderLine.TaxCodeId), _taxCodes.FirstOrDefault(t => Is(t.TaxCode, line.TaxCode ?? ""))?.Id);
+        }
+        if (!AmountInputs.Contains(e.Field))
+        {
+            return;
+        }
+        var amounts = PurchaseOrderCalculator.Line(line.PoQty ?? 0, line.PoPrc ?? 0, line.DcRate ?? 0, _decimals.Amount, _decimals.RoundingMode);
+        var tax = TaxOf(line.TaxCodeId);
+        lines.SetValue(e.RowKey, nameof(PurchaseOrderLine.GrossAmt), amounts.Gross);
+        lines.SetValue(e.RowKey, nameof(PurchaseOrderLine.DcAmt), amounts.Discount);
+        lines.SetValue(e.RowKey, nameof(PurchaseOrderLine.PoAmt), amounts.Amount);
+        lines.SetValue(e.RowKey, nameof(PurchaseOrderLine.TaxAmt), tax is null
+            ? 0m
+            : PurchaseOrderCalculator.Tax(amounts.Amount, tax.Rate, tax.PriceIncluded, _decimals.Amount, _decimals.RoundingMode));
+    }
+
+    private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+
+    private PoDisplayTotals TotalsOf(IEnumerable<PurchaseOrderLine> lines) => PurchaseOrderCalculator.Totals(
+        lines.Select(l => TaxOf(l.TaxCodeId) is { } tax
+            ? new PoLineInput(l.PoQty ?? 0, l.PoPrc ?? 0, l.DcRate ?? 0, tax.Id, tax.Rate, tax.PriceIncluded)
+            : new PoLineInput(l.PoQty ?? 0, l.PoPrc ?? 0, l.DcRate ?? 0, l.TaxCodeId ?? 0, 0m)),
+        _decimals.Amount, _decimals.TaxCalcMode, _decimals.RoundingMode);
+
+    // Total × rate in base currency decimals (BC-BR-413), for another document currency only
+    private decimal? BaseTotal(PurchaseOrderHeader po) => po.ExchangeRate is { } rate
+        ? PurchaseOrderCalculator.BaseTotal(TotalsOf(ActiveLines()).Total, rate, _decimals.BaseAmount, _decimals.RoundingMode)
+        : null;
+
+    private TaxCodeDto? TaxOf(long? taxCodeId) => taxCodeId is { } id ? _taxCodes.FirstOrDefault(t => t.Id == id) : null;
+
+    // The line formats are a frame parameter, so the page draws again when the currency changes
+    private void UseDecimals(string? currencyCode)
+    {
+        var decimals = DecimalsOf(currencyCode);
+        if (decimals != _decimals)
+        {
+            _decimals = decimals;
+            StateHasChanged();
+        }
+    }
+
+    private PurchaseOrderDecimals DecimalsOf(string? currencyCode) =>
+        _localization is null ? _decimals : PurchaseOrderDecimals.Of(_localization, currencyCode);
+
+    private List<PurchaseOrderLine> ActiveLines()
+    {
+        var lines = _frame!.Lines;
+        return [.. lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).Select(lines.GetItem)];
+    }
+
+    // The header as the frame holds it (the inputs write to this object)
+    private PurchaseOrderHeader Header() => _frame!.Header;
+}

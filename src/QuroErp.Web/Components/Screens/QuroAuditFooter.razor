@@ -9,6 +9,10 @@
     {
         <dl><dt>@L["Common.Audit.Created"]</dt><dd>@Stamp(Audit.CreatedAt, Audit.CreatedBy)</dd></dl>
         <dl><dt>@L["Common.Audit.Updated"]</dt><dd>@Stamp(Audit.UpdatedAt, Audit.UpdatedBy)</dd></dl>
+        @if (Audit.ApprovedAt is not null)
+        {
+            <dl><dt>@L["Common.Audit.Approved"]</dt><dd>@Stamp(Audit.ApprovedAt, Audit.ApprovedBy)</dd></dl>
+        }
     }
 </footer>
 

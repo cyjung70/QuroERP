@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuroErp.Api.Common.Auth;
@@ -12,7 +13,7 @@ namespace QuroErp.Api.Mm.PurchaseOrders;
 /// the screen path policy (BC-BR-214). Writes answer 409 Common-E-004 when updatedAt is stale.
 /// </summary>
 [ApiController, Route(PurchaseOrderRoutes.Base)]
-public sealed class PurchaseOrderController(PurchaseOrderService service) : ControllerBase
+public sealed class PurchaseOrderController(PurchaseOrderService service, PurchaseOrderPrintService print) : ControllerBase
 {
     private const string Screen = ScreenPolicy.Prefix + ScreenPaths.PurchaseOrder;
 
@@ -59,8 +60,20 @@ public sealed class PurchaseOrderController(PurchaseOrderService service) : Cont
     public Task<PurchaseOrderDto> Close(long id, PurchaseOrderActionRequest request, CancellationToken cancellationToken) =>
         service.CloseAsync(id, request.UpdatedAt, User.Identity!.Name!, cancellationToken);
 
+    /// <summary>The purchase order form as PDF in the request language, Rev. n after changes (MM-BR-021). 404 Common-E-006.</summary>
+    [HttpGet("{id:long}/" + PurchaseOrderRoutes.PrintPdf), Authorize(Policy = Screen)]
+    public async Task<IActionResult> PrintPdf(long id, CancellationToken cancellationToken) =>
+        Download(await print.PdfAsync(id, CultureInfo.CurrentUICulture, cancellationToken));
+
+    /// <summary>The same content as one XLSX sheet (print-documents.md "엑셀"). 404 Common-E-006.</summary>
+    [HttpGet("{id:long}/" + PurchaseOrderRoutes.PrintXlsx), Authorize(Policy = Screen)]
+    public async Task<IActionResult> PrintXlsx(long id, CancellationToken cancellationToken) =>
+        Download(await print.ExcelAsync(id, CultureInfo.CurrentUICulture, cancellationToken));
+
     /// <summary>PO with nothing received → CN. 422 MM-E-023 for another status or when something was received.</summary>
     [HttpPost("{id:long}/" + PurchaseOrderRoutes.Cancel), Authorize(Policy = Screen)]
     public Task<PurchaseOrderDto> Cancel(long id, PurchaseOrderActionRequest request, CancellationToken cancellationToken) =>
         service.CancelAsync(id, request.UpdatedAt, User.Identity!.Name!, cancellationToken);
+
+    private FileContentResult Download(PrintFile file) => File(file.Content, file.ContentType, file.FileName);
 }

@@ -1,0 +1,16 @@
+# Tax codes in use for a purchase order line (TASK-MM-006, BC-BR-542): code, name and rate. The purchase order screen answers
+# it from the tax code API.
+lookup:
+  id: mmPoTaxCode
+  title: Mm.PurchaseOrder.FindTaxCode
+  version: 1
+  api: /api/bc/tax-codes
+  key: taxCode
+  text: name
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[3]{id,label,type,width,fmt}:
+  taxCode,Mm.PurchaseOrder.LineTaxCode,text,100,""
+  name,Mm.PurchaseOrder.TaxCodeName,text,180,""
+  rate,Mm.PurchaseOrder.TaxRate,number,80,N3
