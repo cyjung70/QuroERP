@@ -34,6 +34,18 @@ public class InventoryClosingTests
         error.Args.Should().Equal("2026-09-30", "202609");
     }
 
+    [Theory, Trait("Id", "MM-UT-759"), Trait("Rule", "MM-BR-759")]
+    [InlineData(null, "2026-08-15", "2026-08-15")]
+    [InlineData("202610", "2026-10-05", "2026-10-05")]
+    [InlineData("202610", "2026-09-30", "2026-10-01")]
+    [InlineData("202610", "2026-03-31", "2026-10-01")]
+    public void OpenDateFor_ClosedMonthDate_MovesToTheFirstOpenDay(string? closeYearMonth, string date, string expected)
+    {
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+
+        InventoryClosing.OpenDateFor(closeYearMonth, DateOnly.Parse(date, culture)).Should().Be(DateOnly.Parse(expected, culture));
+    }
+
     [Fact, Trait("Id", "MM-UT-004")]
     public void EnsureOpen_FirstDayOfOpenMonth_IsAllowed()
     {

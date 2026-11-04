@@ -30,7 +30,8 @@ public static partial class CodeMinorRules
         [CodeMajors.ItemType] = Set(ItemStock.Inventory, ItemStock.Set, ItemStock.Service),
         [CodeMajors.MovementType] = Set(
             MovementType.GoodsReceipt, MovementType.Return, MovementType.SetAssembly, MovementType.UnplannedReceipt, MovementType.StockCount,
-            MovementType.GoodsIssue, MovementType.Delivery, MovementType.StockTransfer),
+            MovementType.GoodsIssue, MovementType.Delivery, MovementType.StockTransfer, MovementType.PriceVariance,
+            MovementType.VendorReturn),
         [CodeMajors.Plating] = Set(Item.DefaultPlating),
         [CodeMajors.Unit] = Set(Item.DefaultUnit),
         [CodeMajors.ValidFlag] = Set(Item.ValidFlagYes, Item.ValidFlagNo),
