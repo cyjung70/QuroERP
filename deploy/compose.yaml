@@ -21,10 +21,10 @@ services:
       Kestrel__Endpoints__Http__Url: http://+:8080
     # API는 Docker 내부 전용이며 호스트 포트를 공개하지 않습니다.
     healthcheck:
-      # DB 설정을 읽는 기존 API로 외부 DB 연결까지 확인합니다.
-      test: [CMD-SHELL, "test \"$$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:8080/api/auth/login-options)\" = 200"]
+      # /health checks the external DB connection and that Chromium starts for PDF printing.
+      test: [CMD-SHELL, "test \"$$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 http://localhost:8080/health)\" = 200"]
       interval: 30s
-      timeout: 10s
+      timeout: 25s
       start_period: 30s
       retries: 5
 

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Collections.Concurrent;
 using System.Data;
 using Microsoft.AspNetCore.Hosting;
@@ -158,6 +159,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Inventory setting state; DENY at start.</summary>
     public InMemoryInventorySettingRepository InventorySettings { get; } = new();
 
+    /// <summary>Status /health reports in these tests.</summary>
+    public HealthStatus Health { get; set; } = HealthStatus.Healthy;
+
+    private sealed class DelegateHealthCheck(Func<HealthCheckResult> result) : IHealthCheck
+    {
+        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) =>
+            Task.FromResult(result());
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // 연결은 열지 않는다 (Repository를 가짜로 바꾼다)
@@ -207,6 +217,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IAlternateItemGroupRepository>(AlternateItemGroups);
             services.AddSingleton<IVendorRepository>(Vendors);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
+            // /health without PostgreSQL or Chromium: one check whose status the test sets
+            services.Configure<HealthCheckServiceOptions>(o =>
+            {
+                o.Registrations.Clear();
+                o.Registrations.Add(new HealthCheckRegistration(
+                    "test", _ => new DelegateHealthCheck(() => new HealthCheckResult(Health)), null, null));
+            });
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
