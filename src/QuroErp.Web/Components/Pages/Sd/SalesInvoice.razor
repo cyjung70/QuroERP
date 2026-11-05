@@ -185,7 +185,8 @@
         <Totals Context="lines">
             @{ var totals = TotalsOf(lines); }
             <QuroTotals Subtotal="totals.Subtotal" Discount="totals.Discount" Tax="totals.Tax" CurrencyCode="@_decimals.CurrencyCode"
-                        Decimals="_decimals.Amount" TestId="sales-invoice-totals" />
+                        Decimals="_decimals.Amount" BaseTotal="BaseTotal(totals.Total)" BaseCurrencyCode="@_decimals.BaseCurrencyCode"
+                        BaseDecimals="_decimals.BaseAmount" TestId="sales-invoice-totals" />
         </Totals>
     </QuroHeaderDetail>
 
@@ -849,6 +850,11 @@
 
     private decimal AmountOf(SalesInvoiceLine line) =>
         SalesOrderCalculator.Line(line.DnQty ?? 0, line.DnPrc ?? 0, line.DcRate ?? 0, _decimals.Amount, _decimals.RoundingMode).Amount;
+
+    // Entry frame totals: the document total in the base currency; the panel shows it only when the currencies differ
+    private decimal? BaseTotal(decimal total) => _frame?.Header.ExchangeRate is { } rate
+        ? SalesOrderCalculator.BaseTotal(total, rate, _decimals.BaseAmount, _decimals.RoundingMode)
+        : null;
 
     private SoDisplayTotals TotalsOf(IEnumerable<SalesInvoiceLine> lines) => SalesOrderCalculator.Totals(
         lines.Select(l => TaxOf(l.TaxCodeId) is { } tax

@@ -342,6 +342,61 @@ public class SalesInvoiceScreenTests : BunitContext
         _api.Saved.Should().ContainSingle("no answer means no second save");
     }
 
+    [Theory, Trait("Id", "SD-UT-117"), Trait("Rule", "SD-BR-117")]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ShipToQuestion_SavesAgainWithTheAnswer_EvenWhenItIsNo(bool answer)
+    {
+        _api.Invoice = Invoice();
+        var page = Open();
+        page.Field("sales-invoice-header-remarks").Change("New dock");
+        _api.SaveProblems.Enqueue("""{"status":422,"code":"SD-W-009","confirmField":"updateCustomerShipTo"}""");
+        _confirm.Answer = answer;
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => _api.Saved.Should().HaveCount(2));
+        (_api.Saved[0].UpdateCustomerShipTo, _api.Saved[1].UpdateCustomerShipTo).Should().Be(((bool?)null, (bool?)answer));
+        _confirm.Questions.Should().ContainSingle();
+    }
+
+    [Fact, Trait("Id", "SD-UC-003-T04")]
+    public void SaveAfterSomeoneElseSaved_Shows409Message()
+    {
+        _api.Invoice = Invoice();
+        var page = Open();
+        page.Field("sales-invoice-header-remarks").Change("Late");
+        _api.SaveProblems.Enqueue("""{"status":409,"code":"Common-E-004"}""");
+        _api.SaveProblemStatus = HttpStatusCode.Conflict;
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=sales-invoice-message]").TextContent
+            .Should().Be("다른 사용자가 먼저 수정했습니다. 다시 조회한 뒤 저장하세요."));
+    }
+
+    [Fact, Trait("Id", "SD-UC-003-T01"), Trait("Rule", "SD-BR-131")]
+    public void ForeignInvoice_ShowsTheTotalInTheBaseCurrency()
+    {
+        _api.Invoice = Invoice() with { CurrencyCode = "EUR", ExchangeRate = 1.1m };
+
+        var page = Open();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=sales-invoice-totals-base-total]").TextContent.Should().Contain("48.40").And.Contain("USD"));
+        page.Find("[data-testid=sales-invoice-totals-total]").TextContent.Should().Contain("44.00").And.Contain("EUR");
+    }
+
+    [Fact, Trait("Id", "SD-UC-003-T01"), Trait("Rule", "SD-BR-131")]
+    public void BaseCurrencyInvoice_ShowsNoBaseTotal()
+    {
+        _api.Invoice = Invoice();
+
+        var page = Open();
+
+        page.Find("[data-testid=sales-invoice-totals-total]").TextContent.Should().Contain("44.00").And.Contain("USD");
+        page.FindAll("[data-testid=sales-invoice-totals-base-total]").Should().BeEmpty();
+    }
+
     [Fact, Trait("Id", "SD-UC-003-T01")]
     public void Print_DownloadsTheInvoice()
     {
@@ -496,6 +551,8 @@ public class SalesInvoiceScreenTests : BunitContext
         /// <summary>The bodies of the next saves' errors, in order; a save without one passes.</summary>
         public Queue<string> SaveProblems { get; } = new();
 
+        public HttpStatusCode SaveProblemStatus { get; set; } = HttpStatusCode.UnprocessableEntity;
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Requests.Add(request);
@@ -563,7 +620,7 @@ public class SalesInvoiceScreenTests : BunitContext
                     Saved.Add((await request.Content!.ReadFromJsonAsync<SaveSalesInvoiceRequest>(cancellationToken))!);
                     if (SaveProblems.TryDequeue(out var problem))
                     {
-                        return new HttpResponseMessage(HttpStatusCode.UnprocessableEntity)
+                        return new HttpResponseMessage(SaveProblemStatus)
                         {
                             Content = new StringContent(problem, null, "application/problem+json"),
                         };
