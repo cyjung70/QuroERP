@@ -117,7 +117,8 @@
         <Totals Context="lines">
             @{ var totals = TotalsOf(lines); }
             <QuroTotals Subtotal="totals.Subtotal" Discount="totals.Discount" Tax="totals.Tax" CurrencyCode="@_decimals.CurrencyCode"
-                        Decimals="_decimals.Amount" TestId="shipment-totals" />
+                        Decimals="_decimals.Amount" BaseTotal="BaseTotal(totals.Total)" BaseCurrencyCode="@_decimals.BaseCurrencyCode"
+                        BaseDecimals="_decimals.BaseAmount" TestId="shipment-totals" />
         </Totals>
     </QuroHeaderDetail>
 
@@ -689,6 +690,11 @@
             ? new SoLineInput(l.ShipQty ?? 0, l.ShipPrc ?? 0, l.DcRate ?? 0, tax.Id, tax.Rate, tax.PriceIncluded)
             : new SoLineInput(l.ShipQty ?? 0, l.ShipPrc ?? 0, l.DcRate ?? 0, l.TaxCodeId ?? 0, 0m)),
         _decimals.Amount, _decimals.TaxCalcMode, _decimals.RoundingMode);
+
+    // Entry frame totals: the document total in the base currency; the panel shows it only when the currencies differ
+    private decimal? BaseTotal(decimal total) => _frame?.Header.ExchangeRate is { } rate
+        ? SalesOrderCalculator.BaseTotal(total, rate, _decimals.BaseAmount, _decimals.RoundingMode)
+        : null;
 
     private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 
