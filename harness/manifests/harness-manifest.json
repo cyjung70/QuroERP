@@ -344,7 +344,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "b2505bf225c0b242f08bf5b15252d01e9009e92db3c27e0c445253ec1e67b261"
+      "sha256": "d10e54a7fe382d41db75502c9a9e7eaea6c490aabc861c80b399d9934a959f18"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -800,11 +800,11 @@
     },
     {
       "path": "docs/specifications/SD/sales-return.md",
-      "sha256": "7fee69062c71930440ee4248dc4151f2fdba84d0432903db86812b0a7d63e479"
+      "sha256": "05b9e129eed6c61bbaada7dc7ed11d6075d83d43297cfa40c13c6448a130d729"
     },
     {
       "path": "docs/specifications/SD/shipment.md",
-      "sha256": "97914ff98b01fb927b837bb44b1e7ce554de6c449ac9754c07f522fbb46d79b1"
+      "sha256": "80e8a2bf25b3a43ebacdcc042601ab805c0584e6611f741d9c1c40fd51923908"
     },
     {
       "path": "GEMINI.md",
@@ -1744,15 +1744,15 @@
     },
     {
       "path": "harness/tasks/TASK-SD-063.json",
-      "sha256": "f50ce9e21b8804e8d30450b9f46085832693774bc4afe9b06723247b3350c695"
+      "sha256": "0acdbba20289227fc9fe05955a4dee8cfbab779a302c122775e779e91e5371c7"
     },
     {
       "path": "harness/tasks/TASK-SD-064.json",
-      "sha256": "80df45c1b6695f85b04b9a00db96028120a95bd4623378efa13a9276e806a4fa"
+      "sha256": "7015d9827b822c93aea4a6e226775028880a3957b32c4c57a78d7d3bfe0de579"
     },
     {
       "path": "harness/tasks/TASK-SD-065.json",
-      "sha256": "d29fa99f109a54d7050fd32a065daa19f2fc556369bbdf41f6170df4d346bad6"
+      "sha256": "1a08456adc1928c57f1300c49571209f9ced41800a1ba805177c27884e7e2fed"
     },
     {
       "path": "harness/tasks/TASK-SD-066.json",
