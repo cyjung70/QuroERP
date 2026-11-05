@@ -848,4 +848,14 @@
   <data name="Sd.SalesOrder.FileError.QTY" xml:space="preserve"><value>Qty is not a number above 0</value></data>
   <data name="Sd.SalesOrder.FileError.NOT_FOUND" xml:space="preserve"><value>Item not found</value></data>
   <data name="Sd.SalesOrder.FileError.NOT_IN_USE" xml:space="preserve"><value>Item not in use</value></data>
+  <data name="SD-E-104" xml:space="preserve"><value>Invoice {0} has a receipt or credit applied, so it can't be changed or voided.</value></data>
+  <data name="SD-E-107" xml:space="preserve"><value>Saved line {0} can't be changed. Delete the line and add it again.</value></data>
+  <data name="SD-E-114" xml:space="preserve"><value>Item {0} has a moving average cost of 0, so it can't be shipped.</value></data>
+  <data name="SD-E-161" xml:space="preserve"><value>Line {0}: the quantity must be above 0 and the price can't be 0.</value></data>
+  <data name="SD-E-162" xml:space="preserve"><value>Order {0} line {1} has {2} left to ship. Ship that much or less.</value></data>
+  <data name="SD-E-168" xml:space="preserve"><value>Line {1} of shipment {0} is billed, so it can't be deleted or voided.</value></data>
+  <data name="SD-E-170" xml:space="preserve"><value>The shipment currency {0} differs from the order or invoice currency {1}.</value></data>
+  <data name="SD-E-174" xml:space="preserve"><value>Order {0} bills before shipping, so ship it with Import invoice only.</value></data>
+  <data name="SD-E-175" xml:space="preserve"><value>A bill-first shipment takes only lines from Import invoice and can't mix them with other lines (invoice {0}, line {1}, unshipped {2}).</value></data>
+  <data name="Menu.G3SD03" xml:space="preserve"><value>Shipments</value></data>
 </root>
