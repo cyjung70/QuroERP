@@ -80,7 +80,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "d4c442db64c14ffff76df89769e7ea904647e189dc3c9063d60bed9b79333154"
+      "sha256": "34c4cc6cc9159cfdab07fa4e0bbf88d5a166b18c2eb67c3a2df17e2f5703cf2a"
     },
     {
       "path": "docs/architecture/database.md",
@@ -100,7 +100,7 @@
     },
     {
       "path": "docs/architecture/inventory.md",
-      "sha256": "e466b6b2b73c32a6394b8f3a2f79d047f79b0c75526d01a84d7b0ce9a1cdf807"
+      "sha256": "5f1d4fe7a154dd16f2eb833d3b7ddfd2270be4fb6c96cdf1378c3c1ded35a533"
     },
     {
       "path": "docs/architecture/layers.md",
@@ -212,7 +212,7 @@
     },
     {
       "path": "docs/business-rules/MM/inventory.md",
-      "sha256": "75be884199143b346a91a74345f9480ba31c4cc78707311ece322722d56180af"
+      "sha256": "92af876c9185b6ee2b4d83ab10ce248f72df6be5745af09a4cdc5338e414d557"
     },
     {
       "path": "docs/business-rules/MM/item.md",
@@ -388,7 +388,7 @@
     },
     {
       "path": "docs/specifications/BC/company.md",
-      "sha256": "e91258c09cdaf102a4eeac43906fbc4380f3fb140b67e944c5ecacbbfaf40a94"
+      "sha256": "e777afd92d1bae270b8592cc1e70e060cb25f8db998eaa5c5662b2444bf47c23"
     },
     {
       "path": "docs/specifications/BC/currency.md",
