@@ -1,0 +1,55 @@
+# SD-UC-051 shipment (TASK-SD-064), screen type SM on the entry frame. Lines come from an order (SD-BR-172), a bill-first
+# invoice (SD-BR-175) or are entered directly (SD-BR-173): a picked item takes the sales order line defaults (price, tax code).
+# The warehouse column defaults to the header warehouse (MM-BR-703); the lot column picks a lot with a balance on the ship date
+# (MM-BR-355, MM-BR-362). Saved lines are not changed but deleted and added again (SD-BR-171). Amounts are display values; the
+# API calculates the stored ones.
+screen:
+  id: sd.shipment.entry
+  module: SD
+  title: Sd.Shipment.Title
+  version: 1
+  api: /api/sd/shipments
+  key: id
+  layout: form-grid
+  perm:
+    read: SD.Read
+    write: SD.Write
+toolbar[3]: query,new,save
+# The page draws the header (customer lookup, warehouse and code combos, ship-to); these are the fields the frame binds by id
+form:
+  cols: 4
+  fields[8]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+    customerId,"",hidden,ro,"","","","",0,""
+    shipNo,Sd.Shipment.ShipNo,text,auto,"",upper,"","",1,""
+    customerName,Sd.Shipment.CustomerId,text,req,"",upper,"","",2,""
+    shipDt,Sd.Shipment.ShipDt,date,req,"","","","",1,""
+    remarks,Sd.Shipment.Remarks,textarea,opt,"","","","",4,""
+    status,"",hidden,ro,"","","","",0,""
+    updatedAt,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: lines
+    bind: lines
+    rowKey: id
+    deletedRows: strike
+    columns[14]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      seq,Sd.Shipment.Seq,number,50,false,false,N0,"",false,false
+      itemCd,Sd.Shipment.ItemCd,text,130,true,true,"",sdSoItem,false,false
+      itemName,Sd.Shipment.ItemName,text,200,true,false,"","",false,false
+      unit,Sd.Shipment.Unit,text,60,false,false,"","",false,false
+      warehouseCode,Sd.Shipment.LineWarehouseId,text,100,true,true,"",sdShipWarehouse,false,false
+      lotNo,Sd.Shipment.LotNo,text,120,true,false,"",sdShipLot,false,false
+      shipQty,Sd.Shipment.ShipQty,number,90,true,true,N2,"",false,false
+      shipPrc,Sd.Shipment.ShipPrc,number,110,true,true,N2,"",false,false
+      taxCode,Sd.Shipment.TaxCode,text,90,true,false,"",sdSoTaxCode,false,false
+      shipAmt,Sd.Shipment.ShipAmt,number,120,false,false,N2,"",false,false
+      billedQty,Sd.Shipment.BilledQty,number,90,false,false,N2,"",false,false
+      onhandQty,Sd.Shipment.OnhandQty,number,90,false,false,N2,"",false,false
+      source,Sd.Shipment.Source,text,140,false,false,"","",false,false
+      dcRate,Sd.Shipment.DcRate,number,70,false,false,N2,"",false,true
+    rules[3]{on,action,target,expr}:
+      itemCd.change,lookup,"itemName|unit","sdSoItem.all()"
+      warehouseCode.change,lookup,"","sdShipWarehouse.all()"
+      taxCode.change,lookup,"","sdSoTaxCode.all()"
+    validate[1]{target,rule,msg}:
+      itemCd,requires customerId,Common.SelectPartnerFirst

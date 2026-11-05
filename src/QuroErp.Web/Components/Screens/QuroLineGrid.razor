@@ -68,6 +68,13 @@
     [Parameter]
     public Func<TLine, bool>? IsLineLocked { get; set; }
 
+    /// <summary>
+    /// A line that may be deleted. Without it a line may be deleted unless it is locked; with it a locked line can still be
+    /// deleted, e.g. a saved shipment line that is deleted and added again instead of changed.
+    /// </summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineRemovable { get; set; }
+
     /// <summary>Reads the lookups of the code columns. Without it a code column is plain text.</summary>
     [Parameter]
     public Func<LookupQuery, Task<IReadOnlyList<LookupRow>>>? Lookup { get; set; }
@@ -271,7 +278,9 @@
         await OnChanged.InvokeAsync();
     }
 
-    private void OnRowDeleting(RowDeletingArgs<TLine> args) => args.Cancel |= !CanEdit || Locked(args.Item);
+    private void OnRowDeleting(RowDeletingArgs<TLine> args) => args.Cancel |= !CanEdit || !Removable(args.Item);
+
+    private bool Removable(TLine item) => IsLineRemovable?.Invoke(item) ?? !Locked(item);
 
     private Task OnRowDeleted() => OnChanged.InvokeAsync();
 

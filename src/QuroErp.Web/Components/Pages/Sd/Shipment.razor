@@ -1,0 +1,721 @@
+@page "/sd/shipment"
+@page "/sd/shipment/{ShipNo}"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Data
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Bc.Localization
+@using QuroErp.Contracts.Bc.Tax
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.Warehouses
+@using QuroErp.Contracts.Sd.Customers
+@using QuroErp.Contracts.Sd.SalesOrders
+@using QuroErp.Contracts.Sd.Shipments
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.Tax
+@using QuroErp.Web.Bc.UserProfiles
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Components.Pages.Sd.Models
+@using QuroErp.Web.Mm.Lots
+@using QuroErp.Web.Mm.PurchaseOrders
+@using QuroErp.Web.Mm.Warehouses
+@using QuroErp.Web.Sd.Customers
+@using QuroErp.Web.Sd.SalesOrders
+@using QuroErp.Web.Sd.Shipments
+@implements IDisposable
+@inject ShipmentApiClient Api
+@inject SalesOrderApiClient OrderApi
+@inject CustomerApiClient CustomerApi
+@inject ItemApiClient ItemApi
+@inject ExchangeRateApiClient RateApi
+@inject LocalizationApiClient LocalizationApi
+@inject TaxCodeApiClient TaxCodeApi
+@inject WarehouseApiClient WarehouseApi
+@inject UserProfileApiClient ProfileApi
+@inject LotApiClient LotApi
+@inject IQuroConfirm Confirm
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* SD-UC-051 shipment, screen type SM on the entry frame (entry-frame.md). The API checks every rule, issues the stock and makes the
+   invoice of a ship-and-bill shipment (SD-BR-161~177, MM-BR-001~010, MM-BR-353~362); this screen imports order and bill-first
+   invoice lines, shows defaults, locks and display amounts. Saved lines are deleted and added again, never changed (SD-BR-171). *@
+
+<PageTitle>@L["Sd.Shipment.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="shipment-load-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroHeaderDetail @ref="_frame" THeader="ShipmentHeader" TLine="ShipmentLine" Title="@L["Sd.Shipment.Title"]"
+                      TestId="shipment" Path="@L["Menu.G3SD"]" ReadOnly="!_canEdit"
+                      DocumentNo="s => s.ShipNo" Audit="s => s.ToAudit()"
+                      Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
+                      Definition="sd.shipment.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
+                      ColumnFormats="ShipmentFormats.Of(_decimals)" IsLineLocked="l => l.IsSaved"
+                      IsLineRemovable="l => l.IsRemovable(_frame?.Header.BillingFlow)"
+                      CanSave="ShipmentStatus.CanSave" OnPdf="DeliveryNotePdfAsync" LinesHint="LinesHint">
+        <FindColumns>
+            <QuroColumn TRow="ShipmentHeader" Title="@L["Sd.Shipment.ShipNo"]" Value="s => s.ShipNo" />
+            <QuroColumn TRow="ShipmentHeader" Title="@L["Sd.Shipment.ShipDt"]" Value="s => s.ShipDt" />
+            <QuroColumn TRow="ShipmentHeader" Title="@L["Sd.Shipment.CustomerId"]" Value="s => s.CustomerName" />
+            <QuroColumn TRow="ShipmentHeader" Title="@L["Sd.Shipment.Status"]" Value="s => StatusText(s.Status)" />
+            <QuroColumn TRow="ShipmentHeader" Title="@L["Sd.Shipment.SalesInvoiceNo"]" Value="s => s.SalesInvoiceNo" />
+        </FindColumns>
+        <StatusChip Context="s">
+            <QuroStatusChip Code="@(s.Status ?? "")" Kind="ShipmentStatus.ChipOf(s.Status)" Text="@StatusText(s.Status)" />
+        </StatusChip>
+        <RowCommands Context="s">
+            @* SD-BR-172, SD-BR-175: the lines of an order or bill-first invoice are added to the grid, not saved *@
+            <button type="button" disabled="@(!CanImport(s))" data-testid="shipment-toolbar-import-order"
+                    @onclick="() => _orderLookupOpen = true">@L["Sd.Shipment.ImportOrder"]</button>
+            <button type="button" disabled="@(!CanImport(s))" data-testid="shipment-toolbar-import-invoice"
+                    @onclick="() => _invoiceLookupOpen = true">@L["Sd.Shipment.ImportInvoice"]</button>
+        </RowCommands>
+        <StatusCommands Context="s">
+            <button type="button" class="quro-danger-text" disabled="@(!_canEdit || !ShipmentStatus.CanVoid(s))"
+                    data-testid="shipment-toolbar-void" @onclick="VoidAsync">@L["Sd.Shipment.Void"]</button>
+        </StatusCommands>
+        <HeaderFields Context="s">
+            @* 1: customer (2), ship date, warehouse *@
+            <div class="quro-lookup-field quro-span-2">
+                <QuroText Label="@L["Sd.Shipment.CustomerId"]" Field="CustomerName" Required TextCase="TextCase.Upper"
+                          LockMode="@(s.IsSaved || HasLines ? LockMode.Always : LockMode.None)" TestId="shipment-header-customer-name" />
+                <button type="button" aria-label="@L["Sd.Shipment.FindCustomer"]" disabled="@(!CanChangeCustomer(s))"
+                        data-testid="shipment-header-customer-lookup" @onclick="() => _customerLookupOpen = true">…</button>
+            </div>
+            <QuroDate Label="@L["Sd.Shipment.ShipDt"]" Field="ShipDt" Required LockMode="@(s.IsSaved ? LockMode.Always : LockMode.None)"
+                      TestId="shipment-header-ship-dt" />
+            <QuroSelect Label="@L["Sd.Shipment.WarehouseId"]" Field="WarehouseCode" Options="_warehouseOptions" Required
+                        TestId="shipment-header-warehouse-code" />
+            @* 2: currency, rate, ship via, billing flow *@
+            <QuroText Label="@L["Sd.Shipment.CurrencyCode"]" Field="CurrencyCode" LockMode="LockMode.Always" TestId="shipment-header-currency-code" />
+            <QuroNumber Label="@L["Sd.Shipment.ExchangeRate"]" Field="ExchangeRate" LockMode="LockMode.Always" TestId="shipment-header-exchange-rate" />
+            <QuroCodeSelect Major="SHIPMENT_VIA" Label="@L["Sd.Shipment.ShipVia"]" Field="ShipVia" TestId="shipment-header-ship-via" />
+            <QuroSelect Label="@L["Sd.Shipment.BillingFlow"]" Field="BillingFlow" Options="_billingFlows" LockMode="LockMode.Always"
+                        TestId="shipment-header-billing-flow" />
+            @* 3: the invoice of a ship-and-bill shipment, ship-to *@
+            <QuroText Label="@L["Sd.Shipment.SalesInvoiceNo"]" Field="SalesInvoiceNo" LockMode="LockMode.Always"
+                      TestId="shipment-header-sales-invoice-no" />
+            <QuroText Label="@L["Sd.Shipment.ShipName"]" Field="ShipName" Span="2" TestId="shipment-header-ship-name" />
+            <QuroText Label="@L["Sd.Shipment.ShipPhone"]" Field="ShipPhone" TestId="shipment-header-ship-phone" />
+            <QuroText Label="@L["Sd.Shipment.ShipAddr1"]" Field="ShipAddr1" Span="2" TestId="shipment-header-ship-addr1" />
+            <QuroText Label="@L["Sd.Shipment.ShipAddr2"]" Field="ShipAddr2" Span="2" TestId="shipment-header-ship-addr2" />
+            <QuroText Label="@L["Sd.Shipment.ShipCity"]" Field="ShipCity" TestId="shipment-header-ship-city" />
+            <QuroCodeSelect Major="STATE" Label="@L["Sd.Shipment.ShipState"]" Field="ShipState" TestId="shipment-header-ship-state" />
+            <QuroText Label="@L["Sd.Shipment.ShipZipCode"]" Field="ShipZipCode" TestId="shipment-header-ship-zip-code" />
+            <QuroText Label="@L["Sd.Shipment.ShipCountry"]" Field="ShipCountry" TestId="shipment-header-ship-country" />
+            <QuroText Label="@L["Sd.Shipment.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="shipment-header-remarks" />
+        </HeaderFields>
+        <Totals Context="lines">
+            @{ var totals = TotalsOf(lines); }
+            <QuroTotals Subtotal="totals.Subtotal" Discount="totals.Discount" Tax="totals.Tax" CurrencyCode="@_decimals.CurrencyCode"
+                        Decimals="_decimals.Amount" TestId="shipment-totals" />
+        </Totals>
+    </QuroHeaderDetail>
+
+    <QuroLookupDialog TItem="CustomerDto" Title="@L["Sd.Shipment.FindCustomer"]" TestId="shipment-customer-lookup"
+                      @bind-Visible="_customerLookupOpen" Search="k => CustomerApi.LookupAsync(k, CancellationToken.None)"
+                      OnSelected="SelectCustomerAsync">
+        <Columns>
+            <QuroColumn TRow="CustomerDto" Title="@L["Sd.Shipment.CustomerId"]" Value="c => c.CName" />
+            <QuroColumn TRow="CustomerDto" Title="@L["Sd.Shipment.ShipCity"]" Value="c => c.ShipCity" />
+            <QuroColumn TRow="CustomerDto" Title="@L["Sd.Shipment.ShipState"]" Value="c => c.ShipState" />
+            <QuroColumn TRow="CustomerDto" Title="@L["Sd.Shipment.BillingFlow"]" Value="c => FlowText(c.BillingFlow)" />
+        </Columns>
+    </QuroLookupDialog>
+
+    <QuroLookupDialog TItem="OpenSalesOrderDto" Title="@L["Sd.Shipment.ImportOrder"]" TestId="shipment-order-lookup"
+                      @bind-Visible="_orderLookupOpen" Search="FindOrdersAsync" OnSelected="ImportOrderAsync">
+        <Columns>
+            <QuroColumn TRow="OpenSalesOrderDto" Title="@L["Sd.Shipment.SoNo"]" Value="o => o.SoNo" />
+            <QuroColumn TRow="OpenSalesOrderDto" Title="@L["Sd.Shipment.SoDt"]" Value="o => o.SoDt" />
+            <QuroColumn TRow="OpenSalesOrderDto" Title="@L["Sd.Shipment.CurrencyCode"]" Value="o => o.CurrencyCode" />
+            <QuroColumn TRow="OpenSalesOrderDto" Title="@L["Sd.Shipment.BillingFlow"]" Value="o => FlowText(o.BillingFlow)" />
+            <QuroColumn TRow="OpenSalesOrderDto" Title="@L["Sd.Shipment.LineCount"]" Value="o => o.Lines.Count" />
+        </Columns>
+    </QuroLookupDialog>
+
+    <QuroLookupDialog TItem="ShipmentInvoiceChoice" Title="@L["Sd.Shipment.ImportInvoice"]" TestId="shipment-invoice-lookup"
+                      @bind-Visible="_invoiceLookupOpen" Search="FindInvoicesAsync" OnSelected="ImportInvoiceAsync">
+        <Columns>
+            <QuroColumn TRow="ShipmentInvoiceChoice" Title="@L["Sd.Shipment.DnNo"]" Value="i => i.DnNo" />
+            <QuroColumn TRow="ShipmentInvoiceChoice" Title="@L["Sd.Shipment.CurrencyCode"]" Value="i => i.CurrencyCode" />
+            <QuroColumn TRow="ShipmentInvoiceChoice" Title="@L["Sd.Shipment.LineCount"]" Value="i => i.Lines.Count" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string UnavailableCode = "BC-E-003";
+    private const string NotFoundCode = "Common-E-006";
+    private const string ItemNotInUse = "N";
+    private const string NormalWarehouse = "NORMAL";
+    private const string ConsignmentWarehouse = "CONSIGNMENT";
+    private const string CreditLimitField = "confirmCreditLimit";
+    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "lotNo", "taxCode"];
+    private static readonly HashSet<string> AmountInputs =
+        new([nameof(ShipmentLine.ShipQty), nameof(ShipmentLine.ShipPrc), nameof(ShipmentLine.DcRate)], StringComparer.OrdinalIgnoreCase);
+
+    private QuroHeaderDetail<ShipmentHeader, ShipmentLine>? _frame;
+    private QuroDataSet<ShipmentLine>? _watchedLines;
+    private LocalizationDto? _localization;
+    private SalesOrderDecimals _decimals = new("USD", 2, 2, 2, PurchaseOrderCalculator.HalfUp, PurchaseOrderCalculator.LineMode, "USD", 2);
+    private IReadOnlyList<TaxCodeDto> _taxCodes = [];
+    private IReadOnlyList<WarehouseOptionDto> _allWarehouses = [];
+    private IReadOnlyList<WarehouseOptionDto> _warehouses = [];
+    private IReadOnlyList<CodeItemDto> _warehouseOptions = [];
+    private IReadOnlyList<CodeItemDto> _billingFlows = [];
+    private readonly Dictionary<string, long> _itemIds = new(StringComparer.OrdinalIgnoreCase);
+    private string? _defaultWarehouseCode;
+    private bool _canEdit;
+    private bool _ready;
+    private bool _customerLookupOpen;
+    private bool _orderLookupOpen;
+    private bool _invoiceLookupOpen;
+    private bool _applying;
+    private string? _loadError;
+
+    /// <summary>Shipment number from the address /sd/shipment/{ShipNo}.</summary>
+    [Parameter]
+    public string? ShipNo { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy reaches the screens, as on the sales order screen (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        _billingFlows = [.. new[] { ShipmentFlows.ShipAndBill, ShipmentFlows.ShipThenBill, ShipmentFlows.BillThenShip }
+            .Select(f => new CodeItemDto(f, FlowText(f)))];
+        try
+        {
+            _localization = await LocalizationApi.GetAsync(lang, CancellationToken.None);
+            _decimals = SalesOrderDecimals.Of(_localization, null);
+            _taxCodes = await TaxCodeApi.InUseAsync(lang, CancellationToken.None);
+            // Lines issue from general warehouses; the consignment warehouse is only for bill-first lines (MM-BR-703, SD-BR-176)
+            _allWarehouses = await WarehouseApi.GetOptionsAsync(CancellationToken.None);
+            _warehouses = [.. _allWarehouses.Where(w => w.UseYn && w.WarehouseType == NormalWarehouse)];
+            _warehouseOptions = [.. _allWarehouses.Select(w => new CodeItemDto(w.WarehouseCode, $"{w.WarehouseCode} {w.WarehouseName}"))];
+            // The user's default warehouse, else the company default warehouse (MM-BR-702, MM-BR-703)
+            var profile = await ProfileApi.GetAsync(CancellationToken.None);
+            var companyDefault = (await WarehouseApi.SearchAsync(false, CancellationToken.None)).FirstOrDefault(w => w.IsDefault)?.Id;
+            _defaultWarehouseCode = (_warehouses.FirstOrDefault(w => w.Id == profile.DefaultWarehouseId)
+                                     ?? _warehouses.FirstOrDefault(w => w.Id == companyDefault))?.WarehouseCode;
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // The frame exists after its first render; its lines are watched once for the ids and display amounts
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_frame is not null && _watchedLines is null)
+        {
+            _watchedLines = _frame.Lines;
+            _watchedLines.ValueChanged += OnLineValueChanged;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_watchedLines is not null)
+        {
+            _watchedLines.ValueChanged -= OnLineValueChanged;
+        }
+    }
+
+    // A new shipment is dated today from the user's default warehouse, in the base currency until a customer is picked (MM-BR-703)
+    private ShipmentHeader CreateHeader()
+    {
+        UseDecimals(_localization?.BaseCurrencyCode);
+        return new ShipmentHeader
+        {
+            ShipDt = DateOnly.FromDateTime(DateTime.Today),
+            WarehouseCode = _defaultWarehouseCode,
+            CurrencyCode = _localization?.BaseCurrencyCode,
+            ExchangeRate = 1m,
+        };
+    }
+
+    // Add Row is a direct line from the header warehouse with qty 1 (SD-BR-173, MM-BR-703)
+    private ShipmentLine CreateLine(ShipmentHeader s)
+    {
+        var warehouse = WarehouseOf(s.WarehouseCode);
+        return new ShipmentLine { ShipQty = 1m, WarehouseCode = warehouse?.WarehouseCode, WarehouseId = warehouse?.Id };
+    }
+
+    private Func<Task<HeaderLines<ShipmentHeader, ShipmentLine>?>>? Initial => ShipNo is null
+        ? null
+        : async () => await Api.FindByNoAsync(ShipNo, CancellationToken.None) is { } shipment ? Document(shipment) : null;
+
+    // The find dialog (F3): a keyword that starts like a shipment number searches by number, any other keyword by customer name
+    private async Task<IReadOnlyList<ShipmentHeader>> FindAsync(string? keyword)
+    {
+        var text = keyword?.Trim();
+        var byNumber = text is { Length: > 0 } && text.StartsWith("SH", StringComparison.OrdinalIgnoreCase);
+        var shipments = await Api.SearchAsync(new ShipmentSearchQuery(byNumber ? text : null, null, null, null, null), CancellationToken.None);
+        return [.. shipments
+            .Where(s => byNumber || string.IsNullOrEmpty(text) || (s.CustomerName?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Select(ShipmentHeader.From)];
+    }
+
+    private async Task<HeaderLines<ShipmentHeader, ShipmentLine>?> LoadAsync(ShipmentHeader picked) =>
+        Document(await Api.GetAsync(picked.Id, CancellationToken.None));
+
+    private HeaderLines<ShipmentHeader, ShipmentLine> Document(ShipmentDto shipment)
+    {
+        UseDecimals(shipment.CurrencyCode);
+        var taxCodes = TaxCodesById();
+        foreach (var line in shipment.Lines.Where(l => l.ItemCd is not null))
+        {
+            _itemIds[line.ItemCd!] = line.ItemId;
+        }
+        return new HeaderLines<ShipmentHeader, ShipmentLine>(
+            ShipmentHeader.From(shipment, _allWarehouses.ToDictionary(w => w.Id, w => w.WarehouseCode)),
+            [.. shipment.Lines.OrderBy(l => l.Seq).Select(l => WithAmount(ShipmentLine.From(l, taxCodes)))]);
+    }
+
+    // The lines kept, in screen order, go in one request (lines left out are deleted). Going over the credit limit is asked once;
+    // no stops the save (SD-BR-309)
+    private async Task<HeaderLines<ShipmentHeader, ShipmentLine>> SaveAsync(ShipmentHeader s, bool isNew, BatchChanges<ShipmentLine> changes)
+    {
+        var lines = ActiveLines();
+        var warehouseId = WarehouseOf(s.WarehouseCode)?.Id;
+        bool? confirmCreditLimit = null;
+        while (true)
+        {
+            try
+            {
+                var request = s.ToRequest(isNew, warehouseId, lines, confirmCreditLimit);
+                var saved = isNew
+                    ? await Api.CreateAsync(request, CancellationToken.None)
+                    : await Api.UpdateAsync(s.Id, request, CancellationToken.None);
+                return Document(saved);
+            }
+            catch (ApiProblemException e) when (e.Problem.ConfirmField == CreditLimitField && confirmCreditLimit is null)
+            {
+                if (!await Confirm.ConfirmAsync(Messages.Get(e.Problem)))
+                {
+                    throw;
+                }
+                confirmCreditLimit = true;
+            }
+        }
+    }
+
+    // SD-BR-169: void issues the stock back and voids a ship-and-bill invoice, after a question
+    private Task VoidAsync() => _frame!.RunStatusAsync(
+        async s => Document(await Api.VoidAsync(s.Id, s.UpdatedAt!.Value, CancellationToken.None)),
+        L["Sd.Shipment.ConfirmVoid"]);
+
+    // Saved shipments only; the delivery note comes straight from the API
+    private Task DeliveryNotePdfAsync() => _frame!.RunCommandAsync(async () =>
+    {
+        var s = Header();
+        if (!s.IsSaved)
+        {
+            return;
+        }
+        var file = await Api.DeliveryNotePdfAsync(s.Id, s.ShipNo!, CancellationToken.None);
+        await QuroExcel.DownloadAsync(JS, file.FileName, file.Content);
+    });
+
+    private string? LinesHint(ShipmentHeader s) => s.CustomerId is null ? L["Common.SelectPartnerFirst"].Value : null;
+
+    private string StatusText(string? status) => status is null ? "" : L["Sd.Shipment.Status." + status].Value;
+
+    private string FlowText(string? flow) => flow is null ? "" : L["Sd.Customer.BillingFlow." + flow].Value;
+
+    private bool HasLines => _frame is not null && ActiveLines().Count > 0;
+
+    private bool CanChangeCustomer(ShipmentHeader s) => _canEdit && !s.IsSaved && !HasLines;
+
+    // Lines are imported once the customer is picked, into a shipment that can still change
+    private bool CanImport(ShipmentHeader s) => _canEdit && s.CustomerId is not null && ShipmentStatus.CanSave(s);
+
+    // A typed customer name is matched exactly
+    private void HeaderChanged(string field)
+    {
+        if (_applying || !Is(field, nameof(ShipmentHeader.CustomerName)))
+        {
+            return;
+        }
+        var name = Header().CustomerName;
+        _ = InvokeAsync(() => _frame!.RunCommandAsync(() => FindCustomerAsync(name)));
+    }
+
+    private async Task FindCustomerAsync(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            SetQuietly(nameof(ShipmentHeader.CustomerId), null);
+            return;
+        }
+        if (await CustomerApi.FindByNameAsync(name, CancellationToken.None) is { } customer)
+        {
+            await ApplyCustomerAsync(customer);
+            return;
+        }
+        SetQuietly(nameof(ShipmentHeader.CustomerId), null);
+        throw new ApiProblemException(new ApiProblem(404, NotFoundCode, [name]));
+    }
+
+    private Task SelectCustomerAsync(CustomerDto customer) => _frame!.RunCommandAsync(() => ApplyCustomerAsync(customer));
+
+    // The customer fills the ship-to and the billing flow and currency of direct lines (SD-BR-173, SD-BR-174)
+    private async Task ApplyCustomerAsync(CustomerDto customer)
+    {
+        _applying = true;
+        try
+        {
+            _frame!.SetHeaderValue(nameof(ShipmentHeader.CustomerName), customer.CName);
+            _frame.SetHeaderValue(nameof(ShipmentHeader.CustomerId), customer.Id);
+            _frame.SetHeaderValue(nameof(ShipmentHeader.BillingFlow), customer.BillingFlow);
+            _frame.SetHeaderValue(nameof(ShipmentHeader.CurrencyCode), customer.CurrencyCode ?? _localization?.BaseCurrencyCode);
+            SetShipTo(customer.ShipName, customer.ShipAddr1, customer.ShipAddr2, customer.ShipCity, customer.ShipState, customer.ShipZipCode,
+                customer.ShipCountry, customer.ShipPhone);
+        }
+        finally
+        {
+            _applying = false;
+        }
+        UseDecimals(Header().CurrencyCode);
+        await RefreshRateAsync();
+        StateHasChanged();
+    }
+
+    private void SetShipTo(string? name, string? addr1, string? addr2, string? city, string? state, string? zip, string? country, string? phone)
+    {
+        _frame!.SetHeaderValue(nameof(ShipmentHeader.ShipName), name);
+        _frame.SetHeaderValue(nameof(ShipmentHeader.ShipAddr1), addr1);
+        _frame.SetHeaderValue(nameof(ShipmentHeader.ShipAddr2), addr2);
+        _frame.SetHeaderValue(nameof(ShipmentHeader.ShipCity), city);
+        _frame.SetHeaderValue(nameof(ShipmentHeader.ShipState), state);
+        _frame.SetHeaderValue(nameof(ShipmentHeader.ShipZipCode), zip);
+        _frame.SetHeaderValue(nameof(ShipmentHeader.ShipCountry), country);
+        _frame.SetHeaderValue(nameof(ShipmentHeader.ShipPhone), phone);
+    }
+
+    // The latest rate of a direct-line currency, 1 for the base currency (BC-BR-412). The API sets the stored rate
+    private async Task RefreshRateAsync()
+    {
+        var s = Header();
+        if (s.CurrencyCode is not { Length: > 0 } currency || _localization is null)
+        {
+            return;
+        }
+        var rate = currency == _localization.BaseCurrencyCode
+            ? 1m
+            : await RateApi.RateOnAsync(currency, s.ShipDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        SetQuietly(nameof(ShipmentHeader.ExchangeRate), rate);
+    }
+
+    private void SetQuietly(string field, object? value)
+    {
+        var applying = _applying;
+        _applying = true;
+        try
+        {
+            _frame!.SetHeaderValue(field, value);
+        }
+        finally
+        {
+            _applying = applying;
+        }
+    }
+
+    // SD-BR-172: the customer's orders with lines left to ship. Bill-first orders ship through their invoice (SD-BR-174)
+    private async Task<IReadOnlyList<OpenSalesOrderDto>> FindOrdersAsync(string? keyword)
+    {
+        if (Header().CustomerId is not { } customerId)
+        {
+            return [];
+        }
+        var orders = await Api.OpenOrderLinesAsync(customerId, CancellationToken.None);
+        var text = keyword?.Trim();
+        return [.. orders.Where(o => o.BillingFlow != ShipmentFlows.BillThenShip
+                                     && (string.IsNullOrEmpty(text) || o.SoNo.Contains(text, StringComparison.OrdinalIgnoreCase)))];
+    }
+
+    // The order's lines that are not on the grid yet, with the remaining qty, from the header warehouse. The first import also
+    // takes the order's currency, rate, ship via and ship-to (SD-BR-170)
+    private Task ImportOrderAsync(OpenSalesOrderDto order) => _frame!.RunCommandAsync(() =>
+    {
+        var onGrid = ActiveLines().Select(l => l.SalesOrderLineId).OfType<long>().ToHashSet();
+        var warehouse = WarehouseOf(Header().WarehouseCode);
+        var taxCodes = TaxCodesById();
+        var added = order.Lines.Where(l => !onGrid.Contains(l.SalesOrderLineId))
+            .Select(l => WithAmount(ShipmentLine.From(order, l, warehouse?.Id, warehouse?.WarehouseCode, taxCodes)))
+            .ToList();
+        if (!HasLines)
+        {
+            UseDocument(order.CurrencyCode, order.ExchangeRate, order.BillingFlow);
+            _applying = true;
+            try
+            {
+                _frame.SetHeaderValue(nameof(ShipmentHeader.ShipVia), order.ShipVia);
+                SetShipTo(order.ShipName, order.ShipAddr1, order.ShipAddr2, order.ShipCity, order.ShipState, order.ShipZipCode,
+                    order.ShipCountry, order.ShipPhone);
+            }
+            finally
+            {
+                _applying = false;
+            }
+        }
+        Append(added);
+        return Task.CompletedTask;
+    });
+
+    // SD-BR-175: the customer's bill-first invoices with lines left to ship, one row per invoice
+    private async Task<IReadOnlyList<ShipmentInvoiceChoice>> FindInvoicesAsync(string? keyword)
+    {
+        if (Header().CustomerId is not { } customerId)
+        {
+            return [];
+        }
+        var lines = await Api.UnshippedInvoiceLinesAsync(customerId, CancellationToken.None);
+        var text = keyword?.Trim();
+        return [.. ShipmentInvoiceChoice.Of(lines)
+            .Where(i => string.IsNullOrEmpty(text) || i.DnNo.Contains(text, StringComparison.OrdinalIgnoreCase))];
+    }
+
+    // The invoice's lines that are not on the grid yet, with the unshipped qty, from the consignment warehouse (SD-BR-176)
+    private Task ImportInvoiceAsync(ShipmentInvoiceChoice invoice) => _frame!.RunCommandAsync(() =>
+    {
+        var onGrid = ActiveLines().Select(l => l.SalesInvoiceLineId).OfType<long>().ToHashSet();
+        var consignment = _allWarehouses.FirstOrDefault(w => w.WarehouseType == ConsignmentWarehouse);
+        var taxCodes = TaxCodesById();
+        var added = invoice.Lines.Where(l => !onGrid.Contains(l.SalesInvoiceLineId))
+            .Select(l => WithAmount(ShipmentLine.From(l, consignment?.Id, consignment?.WarehouseCode, taxCodes)))
+            .ToList();
+        if (!HasLines)
+        {
+            UseDocument(invoice.CurrencyCode, invoice.ExchangeRate, ShipmentFlows.BillThenShip);
+        }
+        Append(added);
+        return Task.CompletedTask;
+    });
+
+    private void UseDocument(string currencyCode, decimal exchangeRate, string billingFlow)
+    {
+        SetQuietly(nameof(ShipmentHeader.CurrencyCode), currencyCode);
+        SetQuietly(nameof(ShipmentHeader.ExchangeRate), exchangeRate);
+        SetQuietly(nameof(ShipmentHeader.BillingFlow), billingFlow);
+        UseDecimals(currencyCode);
+    }
+
+    private void Append(List<ShipmentLine> added)
+    {
+        foreach (var line in added.Where(l => l.ItemCd is not null))
+        {
+            _itemIds[line.ItemCd!] = line.ItemId ?? 0;
+        }
+        _applying = true;
+        try
+        {
+            _frame!.AppendLines(added);
+        }
+        finally
+        {
+            _applying = false;
+        }
+        _frame.ShowMessage(string.Format(CultureInfo.CurrentCulture, L["Sd.Shipment.LinesAdded"], added.Count), isError: false);
+    }
+
+    // Line lookups: items in use, general warehouses, tax codes in use and the lots of the current line
+    private async Task<IReadOnlyList<LookupRow>> LookupAsync(LookupQuery query)
+    {
+        switch (query.LookupId)
+        {
+            case "sdSoItem":
+                IReadOnlyList<ItemDto> items = query.Codes is { } codes
+                    ? [.. (await Task.WhenAll(codes.Select(c => ItemApi.FindByCodeAsync(c, CancellationToken.None)))).OfType<ItemDto>()]
+                    : await ItemApi.LookupAsync(query.Keyword, CancellationToken.None);
+                var inUse = items.Where(i => i.ValidFlag != ItemNotInUse).ToList();
+                inUse.ForEach(i => _itemIds[i.ItemCd] = i.Id);
+                return [.. inUse.Select(i => LookupRow.Of(
+                    ("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit), ("stdPrc", i.SoUsdPrc)))];
+            case "sdShipWarehouse":
+                return [.. _warehouses.Where(w => Matches(query, w.WarehouseCode, w.WarehouseName)).Select(w => LookupRow.Of(
+                    ("warehouseCode", w.WarehouseCode), ("warehouseName", w.WarehouseName)))];
+            case "sdSoTaxCode":
+                return [.. _taxCodes.Where(t => Matches(query, t.TaxCode, t.Name)).Select(t => LookupRow.Of(
+                    ("taxCode", t.TaxCode), ("name", t.Name), ("rate", t.Rate)))];
+            case "sdShipLot":
+                return await LotsAsync(query);
+            default:
+                return [];
+        }
+    }
+
+    // MM-BR-362: lots of the current line's item in its warehouse with a balance above zero at the end of the ship date
+    private async Task<IReadOnlyList<LookupRow>> LotsAsync(LookupQuery query)
+    {
+        var lines = _frame!.Lines;
+        if (lines.CurrentRowKey is not { } key || lines.GetItem(key) is not { ItemId: { } itemId, WarehouseId: { } warehouseId })
+        {
+            return [];
+        }
+        var lots = await LotApi.SearchAsync(itemId, warehouseId, Header().ShipDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        return [.. lots.Where(l => Matches(query, l.LotNo, null)).Select(l => LookupRow.Of(("lotNo", l.LotNo), ("onHandQty", l.OnHandQty)))];
+    }
+
+    private static bool Matches(LookupQuery query, string code, string? name) =>
+        query.Codes is { } codes
+            ? codes.Contains(code, StringComparer.OrdinalIgnoreCase)
+            : string.IsNullOrWhiteSpace(query.Keyword)
+              || code.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase)
+              || (name?.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase) ?? false);
+
+    // The ids of the codes a line names, the defaults of a direct line's item and the display amount of a changed line
+    private void OnLineValueChanged(object? sender, DataSetValueChangedEventArgs e)
+    {
+        var lines = _frame!.Lines;
+        if (lines.GetState(e.RowKey) is RowState.Normal or RowState.Deleted)
+        {
+            return;
+        }
+        var line = lines.GetItem(e.RowKey);
+        if (Is(e.Field, nameof(ShipmentLine.ItemCd)))
+        {
+            long? itemId = line.ItemCd is { } code && _itemIds.TryGetValue(code, out var id) ? id : null;
+            lines.SetValue(e.RowKey, nameof(ShipmentLine.ItemId), itemId);
+            lines.SetValue(e.RowKey, nameof(ShipmentLine.LotNo), null);
+            if (itemId is not null && !_applying && line.SalesOrderLineId is null && line.SalesInvoiceLineId is null)
+            {
+                // After the grid finishes the edit: the change event comes in the middle of it
+                var rowKey = e.RowKey;
+                _ = InvokeAsync(async () =>
+                {
+                    await Task.Yield();
+                    await ApplyLineDefaultsAsync(rowKey);
+                });
+            }
+        }
+        else if (Is(e.Field, nameof(ShipmentLine.WarehouseCode)))
+        {
+            lines.SetValue(e.RowKey, nameof(ShipmentLine.WarehouseId), WarehouseOf(line.WarehouseCode)?.Id);
+            lines.SetValue(e.RowKey, nameof(ShipmentLine.LotNo), null);
+        }
+        else if (Is(e.Field, nameof(ShipmentLine.LotNo)))
+        {
+            lines.SetValue(e.RowKey, nameof(ShipmentLine.LotId), null);
+        }
+        else if (Is(e.Field, nameof(ShipmentLine.TaxCode)))
+        {
+            lines.SetValue(e.RowKey, nameof(ShipmentLine.TaxCodeId), _taxCodes.FirstOrDefault(t => Is(t.TaxCode, line.TaxCode ?? ""))?.Id);
+        }
+        if (AmountInputs.Contains(e.Field))
+        {
+            lines.SetValue(e.RowKey, nameof(ShipmentLine.ShipAmt), AmountOf(line));
+        }
+    }
+
+    // SD-BR-173: a direct line takes the sales order line defaults of the item (customer price, tax code). Not a frame command:
+    // the busy state would stop the grid while it is still filling the item's lookup columns
+    private async Task ApplyLineDefaultsAsync(int rowKey)
+    {
+        var s = Header();
+        var lines = _frame!.Lines;
+        if (s.CustomerId is not { } customerId || lines.GetItem(rowKey).ItemCd is not { Length: > 0 } itemCd)
+        {
+            return;
+        }
+        SalesOrderLineDefaultsDto defaults;
+        try
+        {
+            defaults = await OrderApi.LineDefaultsAsync(new SalesOrderLineDefaultsQuery(customerId, itemCd, s.ShipState, s.ShipDt), CancellationToken.None);
+        }
+        catch (ApiProblemException e)
+        {
+            _frame.ShowMessage(Messages.Get(e.Problem), isError: true);
+            return;
+        }
+        catch (HttpRequestException)
+        {
+            _frame.ShowMessage(Messages.Get(UnavailableCode), isError: true);
+            return;
+        }
+        if (lines.GetItem(rowKey).ItemCd is not { } current || !Is(current, itemCd))
+        {
+            return;
+        }
+        _applying = true;
+        try
+        {
+            lines.SetValue(rowKey, nameof(ShipmentLine.ItemName), defaults.ItemName);
+            lines.SetValue(rowKey, nameof(ShipmentLine.Unit), defaults.Unit);
+            lines.SetValue(rowKey, nameof(ShipmentLine.ShipPrc), defaults.SoPrc);
+            lines.SetValue(rowKey, nameof(ShipmentLine.DcRate), defaults.DcRate);
+            lines.SetValue(rowKey, nameof(ShipmentLine.TaxCode), TaxOf(defaults.TaxCodeId)?.TaxCode);
+            lines.SetValue(rowKey, nameof(ShipmentLine.TaxCodeId), defaults.TaxCodeId);
+            lines.SetValue(rowKey, nameof(ShipmentLine.ShipAmt), AmountOf(lines.GetItem(rowKey)));
+        }
+        finally
+        {
+            _applying = false;
+        }
+        StateHasChanged();
+    }
+
+    private ShipmentLine WithAmount(ShipmentLine line)
+    {
+        line.ShipAmt = AmountOf(line);
+        return line;
+    }
+
+    private decimal AmountOf(ShipmentLine line) =>
+        SalesOrderCalculator.Line(line.ShipQty ?? 0, line.ShipPrc ?? 0, line.DcRate ?? 0, _decimals.Amount, _decimals.RoundingMode).Amount;
+
+    private SoDisplayTotals TotalsOf(IEnumerable<ShipmentLine> lines) => SalesOrderCalculator.Totals(
+        lines.Select(l => TaxOf(l.TaxCodeId) is { } tax
+            ? new SoLineInput(l.ShipQty ?? 0, l.ShipPrc ?? 0, l.DcRate ?? 0, tax.Id, tax.Rate, tax.PriceIncluded)
+            : new SoLineInput(l.ShipQty ?? 0, l.ShipPrc ?? 0, l.DcRate ?? 0, l.TaxCodeId ?? 0, 0m)),
+        _decimals.Amount, _decimals.TaxCalcMode, _decimals.RoundingMode);
+
+    private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+
+    private WarehouseOptionDto? WarehouseOf(string? code) =>
+        code is null ? null : _allWarehouses.FirstOrDefault(w => Is(w.WarehouseCode, code));
+
+    private TaxCodeDto? TaxOf(long? taxCodeId) => taxCodeId is { } id ? _taxCodes.FirstOrDefault(t => t.Id == id) : null;
+
+    private Dictionary<long, string> TaxCodesById() => _taxCodes.ToDictionary(t => t.Id, t => t.TaxCode);
+
+    // The line formats are a frame parameter, so the page draws again when the currency changes
+    private void UseDecimals(string? currencyCode)
+    {
+        var decimals = _localization is null ? _decimals : SalesOrderDecimals.Of(_localization, currencyCode);
+        if (decimals != _decimals)
+        {
+            _decimals = decimals;
+            StateHasChanged();
+        }
+    }
+
+    private List<ShipmentLine> ActiveLines()
+    {
+        var lines = _frame!.Lines;
+        return [.. lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).Select(lines.GetItem)];
+    }
+
+    // The header as the frame holds it (the inputs write to this object)
+    private ShipmentHeader Header() => _frame!.Header;
+}

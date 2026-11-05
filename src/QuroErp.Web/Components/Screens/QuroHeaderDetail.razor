@@ -146,7 +146,7 @@
         </div>
         @* Add row, mark delete and restore act on the current line from the command bar (entry-frame.md 5) *@
         <QuroLineGrid @ref="_lineGrid" TLine="TLine" Data="_lines" Definition="_definition" CanEdit="@(CanSaveNow && !Busy)"
-                      IsLineLocked="IsLineLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
+                      IsLineLocked="IsLineLocked" IsLineRemovable="IsLineRemovable" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
                       OnMessage="ShowWarning" OnChanged="StateHasChanged" TestId="@Id("line")" />
     </div>
 
@@ -298,6 +298,13 @@
     [Parameter]
     public Func<TLine, bool>? IsLineLocked { get; set; }
 
+    /// <summary>
+    /// Lines that can be marked for delete. Without it every line that is not locked; with it a locked line can be removable,
+    /// e.g. a saved shipment line that is deleted and added again instead of changed (SD-BR-171).
+    /// </summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineRemovable { get; set; }
+
     // Inputs bound with @bind-Value change the header object without the data set knowing, so the snapshot still counts
     public override bool IsDirty => _headerData.DataSet.HasChanges || Snapshot.Of(_header) != _snapshot || _lines.HasChanges;
 
@@ -319,7 +326,8 @@
     private bool SelectedIsDeleted => SelectedKey is { } key && _lines.GetState(key) == Quro.Grid.Data.RowState.Deleted;
 
     private bool CanMarkSelected =>
-        CanSaveNow && SelectedKey is { } key && IsLineLocked?.Invoke(_lines.GetItem(key)) != true;
+        CanSaveNow && SelectedKey is { } key
+        && (IsLineRemovable?.Invoke(_lines.GetItem(key)) ?? IsLineLocked?.Invoke(_lines.GetItem(key)) != true);
 
     private bool CanRestoreSelected =>
         CanSaveNow && SelectedKey is { } key && _lines.GetState(key) != Quro.Grid.Data.RowState.Normal;
