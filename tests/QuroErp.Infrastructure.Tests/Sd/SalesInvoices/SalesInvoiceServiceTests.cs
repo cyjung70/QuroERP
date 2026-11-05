@@ -20,6 +20,7 @@ using QuroErp.Contracts.Sd.Shipments;
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Sd.SalesInvoices;
+using QuroErp.Domain.Sd.SalesOrders;
 using QuroErp.Infrastructure.Tests.Common.Auth;
 using QuroErp.Infrastructure.Tests.Common.Persistence;
 
@@ -46,6 +47,7 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
     private static readonly CancellationToken None = CancellationToken.None;
     private static readonly DateOnly DnDt = new(2026, 11, 4);
     private static readonly DateOnly Today = new(2026, 11, 10);
+    private static readonly DateOnly AfterTheRateChange = new(2026, 11, 6);
 
     private SalesInvoiceService Service => new(
         db.Get<ISalesInvoiceRepository>(), db.Get<IShipmentRepository>(), db.Get<ISalesOrderRepository>(), db.Get<ICustomerRepository>(),
@@ -153,7 +155,7 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
         await afterVoid.Should().ThrowAsync<ConcurrencyException>();
     }
 
-    [DatabaseFact, Trait("Id", "SD-UT-141"), Trait("Id", "SD-UT-142"), Trait("Id", "SD-UT-143"), Trait("Id", "MM-UT-709"), Trait("Id", "MM-UT-710")]
+    [DatabaseFact, Trait("Id", "SD-UT-141"), Trait("Id", "SD-UT-142"), Trait("Id", "SD-UT-143"), Trait("Id", "MM-UT-706"), Trait("Id", "MM-UT-709"), Trait("Id", "MM-UT-710")]
     public async Task BillFirst_MovesTheStockToConsignment_KeepsItsValue_AndSellableStockLeavesConsignmentOut()
     {
         var m = await MastersAsync(BillThenShip);
@@ -287,6 +289,97 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
             .Should().Contain("KRW");
     }
 
+    [DatabaseFact, Trait("Id", "SD-UT-111"), Trait("Id", "SD-UT-135")]
+    public async Task AnInvoiceLeavesTheStock_AndTaxAndCurrencyLeaveTheStockValue()
+    {
+        var m = await MastersAsync(ShipThenBill);
+        await ReceiveAsync(m.Item, m.Main, 20m);
+
+        // The shipment issues at the cost of 50 in the base currency, whatever the document's currency and tax
+        var sh = await Shipments.CreateAsync(ShipmentRequest(m, ShipmentLine(m.Item, 3m)) with { CurrencyCode = "KRW", ExchangeRate = 1300m }, "kim", None);
+        (await MovementsAsync(sh.ShipNo)).Select(x => (x.Qty, x.Amount)).Should().Equal((-3m, -150m));
+
+        var inv = await Service.CreateAsync(Request(m, FromShipment(sh.Lines[0].Id, 2m)), "kim", None);
+
+        (inv.CurrencyCode, inv.SupplyAmt, inv.TaxAmt).Should().Be(("KRW", 200m, 20m));
+        (await MovementsAsync(inv.DnNo)).Should().BeEmpty();
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(17m);
+        (await StockValueAsync(m.Item)).Should().Be(850m);
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UT-117")]
+    public async Task ADifferentShipTo_IsAskedFirst_AndOnlyYesUpdatesTheCustomer()
+    {
+        var m = await MastersAsync(ShipThenBill);
+        var request = Request(m, Direct(m.Service, 1m, 30m, m.NoTax));
+
+        var unanswered = () => Service.CreateAsync(request with { UpdateCustomerShipTo = null }, "kim", None);
+        var asked = (await unanswered.Should().ThrowAsync<ConfirmationRequiredException>()).Which;
+        (asked.Code, asked.ConfirmField).Should().Be((SalesOrderEntryRules.ShipToWarningCode, SalesOrderEntryRules.UpdateCustomerShipToField));
+        (await CountAsync("SELECT count(*) FROM sd_sales_invoice WHERE customer_id = @Id", m.Customer)).Should().Be(0);
+
+        await Service.CreateAsync(request with { UpdateCustomerShipTo = false }, "kim", None);
+        (await CustomerShipNameAsync(m.Customer)).Should().BeNull();
+
+        await Service.CreateAsync(request with { UpdateCustomerShipTo = true }, "kim", None);
+        (await CustomerShipNameAsync(m.Customer)).Should().Be("Ship " + m.Key);
+
+        // The customer now has this ship-to, so there is nothing left to ask
+        var same = await Service.CreateAsync(request with { UpdateCustomerShipTo = null }, "kim", None);
+        same.ShipName.Should().Be("Ship " + m.Key);
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UT-133")]
+    public async Task AUsInvoice_KeepsTheTaxAreaThroughItsTaxCode_AndTheCertificateItWasExemptedBy()
+    {
+        var m = await MastersAsync(ShipThenBill);
+        var area = await SalesTaxCodeAsync(m.Key);
+        var exempt = await ExemptTaxCodeAsync();
+        await SetCustomerTaxCodeAsync(m.Customer, area);
+        var line = Direct(m.Service, 1m, 100m, m.NoTax) with { TaxCodeId = null };
+
+        var taxed = await Service.CreateAsync(Request(m, line), "kim", None);
+
+        (taxed.Lines[0].TaxCodeId, taxed.TaxAmt, taxed.TaxExemptionCertNo).Should().Be((area, 5m, (string?)null));
+        (await TaxAreaOfLineAsync(taxed.Lines[0].Id)).Should().Be("A" + m.Key);
+
+        await AddExemptionAsync(m.Customer, "CERT-" + m.Key, "TX");
+
+        var exempted = await Service.CreateAsync(Request(m, line), "kim", None);
+
+        (exempted.Lines[0].TaxCodeId, exempted.TaxAmt, exempted.TaxExemptionCertNo).Should().Be((exempt, 0m, "CERT-" + m.Key));
+        (await Service.GetAsync(exempted.Id, None)).TaxExemptionCertNo.Should().Be("CERT-" + m.Key);
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UT-547"), Trait("Id", "SD-UT-132")]
+    public async Task AnInvoice_TaxesTheOrderLineAtTheRateOfItsOwnDate()
+    {
+        var m = await MastersAsync(BillThenShip);
+        await ReceiveAsync(m.Item, m.Main, 2m);
+        var so = await OrderAsync(m, BillThenShip, 2m, 100m, await SalesTaxCodeAsync(m.Key));
+
+        var before = await Service.CreateAsync(Request(m, FromOrder(so.Line, 1m)), "kim", None);
+        var after = await Service.CreateAsync(Request(m, FromOrder(so.Line, 1m)) with { DnDt = AfterTheRateChange }, "kim", None);
+
+        (before.SupplyAmt, before.TaxAmt, before.TotDnAmt).Should().Be((100m, 5m, 105m));
+        (after.SupplyAmt, after.TaxAmt, after.TotDnAmt).Should().Be((100m, 8m, 108m));
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UT-546")]
+    public async Task ACancellationCreditMemo_KeepsTheRateOfTheInvoice_AfterTheRateChanged()
+    {
+        var m = await MastersAsync(BillThenShip);
+        await ReceiveAsync(m.Item, m.Main, 2m);
+        var so = await OrderAsync(m, BillThenShip, 2m, 100m, await SalesTaxCodeAsync(m.Key));
+        var inv = await Service.CreateAsync(Request(m, FromOrder(so.Line, 2m)), "kim", None);
+
+        var cm = await Service.CancelUnshippedAsync(
+            inv.Id, new CancelUnshippedRequest(AfterTheRateChange, null, [new(inv.Lines[0].Id, 2m)], inv.UpdatedAt), "kim", None);
+
+        inv.TotDnAmt.Should().Be(210m);
+        (await CreditMemoAsync(cm.CreditMemoId)).TotDnAmt.Should().Be(-210m, "the invoice's 5%, not the 8% of the Credit Memo date");
+    }
+
     private static SaveSalesInvoiceRequest Request(Masters m, params SaveSalesInvoiceLineRequest[] lines) =>
         new(m.Customer, DnDt, null, null, null, null, "DEMO_A", null, null, null, "Ship " + m.Key, "1 Main St", null, "Dallas", "TX", "75001",
             "USA", null, null, null, lines, null, UpdateCustomerShipTo: false);
@@ -348,8 +441,64 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
         return new Masters(key, ids.Customer, ids.Item, ids.Service, ids.Main, ids.Consignment, ids.Vat10, ids.NoTax);
     }
 
-    // A USD order of the customer with one line of the item, without discount and tax
-    private async Task<Order> OrderAsync(Masters m, string billingFlow, decimal qty, decimal price)
+    // A US sales tax code of a TX tax area: 5% on the invoice date, 8% from the day after it (A + key, T + key)
+    private async Task<long> SalesTaxCodeAsync(string key)
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        return await connection.QuerySingleAsync<long>(
+            """
+            WITH a AS (INSERT INTO bc_tax_area (tax_area_code, tax_area_name, state_code, created_by, updated_by)
+                       VALUES ('A' || @Key, 'Area ' || @Key, 'TX', 't', 't') RETURNING id),
+                 r AS (INSERT INTO bc_tax_area_rate (tax_area_id, effective_from, rate, created_by, updated_by)
+                       SELECT id, d, rate, 't', 't' FROM a, (VALUES ('2026-01-01'::date, 5), ('2026-11-05'::date, 8)) AS v (d, rate))
+            INSERT INTO bc_tax_code (tax_code, tax_kind, tax_area_id, created_by, updated_by)
+            SELECT 'T' || @Key, 'SALES_TAX', id, 't', 't' FROM a RETURNING id
+            """,
+            new { Key = key });
+    }
+
+    // The one exempt tax code the service finds by its kind; test classes have their own schema, and this class keeps it
+    private async Task<long> ExemptTaxCodeAsync()
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        return await connection.QuerySingleAsync<long>(
+            """
+            INSERT INTO bc_tax_code (tax_code, tax_kind, created_by, updated_by) VALUES ('EXEMPT_TEST', 'SALES_TAX_EXEMPT', 't', 't')
+            ON CONFLICT (tax_code) DO UPDATE SET use_yn = true RETURNING id
+            """);
+    }
+
+    private async Task SetCustomerTaxCodeAsync(long customer, long taxCode)
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        await connection.ExecuteAsync("UPDATE bc_customer SET tax_code_id = @TaxCode WHERE id = @Customer", new { TaxCode = taxCode, Customer = customer });
+    }
+
+    private async Task AddExemptionAsync(long customer, string certificateNo, string state)
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        await connection.ExecuteAsync(
+            """
+            INSERT INTO sd_customer_tax_exemption (customer_id, certificate_no, state_code, created_by, updated_by)
+            VALUES (@Customer, @CertificateNo, @State, 't', 't')
+            """,
+            new { Customer = customer, CertificateNo = certificateNo, State = state });
+    }
+
+    private async Task<string?> TaxAreaOfLineAsync(long line) =>
+        (await QueryAsync<string?>(
+            """
+            SELECT a.tax_area_code FROM sd_sales_invoice_line l
+            JOIN bc_tax_code c ON c.id = l.tax_code_id JOIN bc_tax_area a ON a.id = c.tax_area_id
+            WHERE l.id = @Id
+            """, new { Id = line }))
+        .Single();
+
+    private async Task<string?> CustomerShipNameAsync(long customer) =>
+        (await QueryAsync<string?>("SELECT ship_name FROM bc_customer WHERE id = @Id", new { Id = customer })).Single();
+
+    // A USD order of the customer with one line of the item, without discount and, unless a tax code is given, without tax
+    private async Task<Order> OrderAsync(Masters m, string billingFlow, decimal qty, decimal price, long? taxCode = null)
     {
         var soNo = "SO" + Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
         await using var connection = new NpgsqlConnection(db.ConnectionString);
@@ -364,7 +513,7 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
                        SELECT id, 1, @Item, @Qty, @Price, @Qty * @Price, 0, @NoTax, 0, 't', 't' FROM o RETURNING id)
             SELECT (SELECT id FROM o), (SELECT id FROM l)
             """,
-            new { SoNo = soNo, m.Customer, SoDt = DnDt, Flow = billingFlow, m.Item, Qty = qty, Price = price, m.NoTax });
+            new { SoNo = soNo, m.Customer, SoDt = DnDt, Flow = billingFlow, m.Item, Qty = qty, Price = price, NoTax = taxCode ?? m.NoTax });
         return new Order(ids.Id, soNo, ids.Line);
     }
 
