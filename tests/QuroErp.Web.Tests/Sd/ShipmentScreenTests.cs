@@ -114,6 +114,38 @@ public class ShipmentScreenTests : BunitContext
         page.WaitForAssertion(() => page.Find("[data-testid=shipment-doc-no]").TextContent.Should().Be("SH0000001"));
     }
 
+    [Fact, Trait("Id", "SD-UC-051-T01"), Trait("Rule", "SD-BR-170")]
+    public void ImportedForeignOrder_ShowsTheTotalInTheBaseCurrency()
+    {
+        _api.OrderCurrency = ("EUR", 1.1m);
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        page.FindAll("[data-testid=shipment-totals-base-total]").Should().BeEmpty("a new shipment is in the base currency");
+
+        Button(page, "import-order").Click();
+        page.WaitForAssertion(() => page.LookupRows("shipment-order-lookup").Should().HaveCount(1));
+        page.PickLookupRow<OpenSalesOrderDto, Shipment>("shipment-order-lookup", 0);
+
+        page.WaitForAssertion(() => page.Find("[data-testid=shipment-totals-base-total]").TextContent.Should().Contain("133.10").And.Contain("USD"));
+        page.Find("[data-testid=shipment-totals-total]").TextContent.Should().Contain("121.00").And.Contain("EUR");
+    }
+
+    [Fact, Trait("Id", "SD-UC-051-T01"), Trait("Rule", "SD-BR-170")]
+    public void BaseCurrencyImport_ShowsNoBaseTotal()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+
+        Button(page, "import-order").Click();
+        page.WaitForAssertion(() => page.LookupRows("shipment-order-lookup").Should().HaveCount(1));
+        page.PickLookupRow<OpenSalesOrderDto, Shipment>("shipment-order-lookup", 0);
+
+        page.WaitForAssertion(() => Lines(page).Rows.Should().HaveCount(2));
+        page.FindAll("[data-testid=shipment-totals-base-total]").Should().BeEmpty();
+    }
+
     [Fact, Trait("Id", "SD-UC-051-T06"), Trait("Rule", "SD-BR-175"), Trait("Rule", "SD-BR-176")]
     public void ImportInvoice_AddsTheUnshippedLinesFromTheConsignmentWarehouse()
     {
@@ -387,6 +419,9 @@ public class ShipmentScreenTests : BunitContext
 
         public ShipmentDto? Shipment { get; set; }
 
+        /// <summary>The currency and rate of the open orders.</summary>
+        public (string Code, decimal Rate) OrderCurrency { get; set; } = ("USD", 1m);
+
         /// <summary>The bodies of the next saves' errors, in order; a save without one passes.</summary>
         public Queue<string> SaveProblems { get; } = new();
 
@@ -471,8 +506,8 @@ public class ShipmentScreenTests : BunitContext
             }
         }
 
-        private static OpenSalesOrderDto Order(long id, string soNo, string billingFlow) => new(
-            id, soNo, new DateOnly(2026, 11, 4), "USD", 1m, billingFlow, "KIM", "UPS", "ACME DOCK", "1 Main St", null, "Springfield", "CA",
+        private OpenSalesOrderDto Order(long id, string soNo, string billingFlow) => new(
+            id, soNo, new DateOnly(2026, 11, 4), OrderCurrency.Code, OrderCurrency.Rate, billingFlow, "KIM", "UPS", "ACME DOCK", "1 Main St", null, "Springfield", "CA",
             "90001", "USA", null,
             [
                 new(5001, 1, 11, "BOLT", "Hex Bolt", "EA", 10m, 4m, 6m, 10m, null, 0m, 1),

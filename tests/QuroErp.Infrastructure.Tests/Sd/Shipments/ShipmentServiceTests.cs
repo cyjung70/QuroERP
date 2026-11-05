@@ -303,6 +303,62 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         sh.Lines.Single().LotNo.Should().Be("B1");
     }
 
+    [DatabaseFact, Trait("Id", "MM-UT-360"), Trait("Rule", "MM-BR-360")]
+    public async Task LotItem_IsIssuedAtTheItemMovingCost_NotTheCostOfItsLot()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipThenBill);
+        await using (var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None))
+        {
+            await Inventory.PostAsync(
+                [
+                    new StockMovementRequest("GR", ShipDt, m.LotItem, m.Main, 5m, 10m, "GR-TEST", 1, LotNo: "A1"),
+                    new StockMovementRequest("GR", ShipDt, m.LotItem, m.Main, 5m, 30m, "GR-TEST", 2, LotNo: "B1"),
+                ],
+                "kim", uow.Transaction, None);
+            await uow.CommitAsync(None);
+        }
+
+        var sh = await Service.CreateAsync(Request(m, Direct(m.LotItem, 1m) with { LotNo = "a1" }), "kim", None);
+
+        sh.Lines.Single().LotNo.Should().Be("A1");
+        (await QueryAsync<decimal>("SELECT prc FROM mm_goods_movement WHERE ref_key = @No", new { No = sh.ShipNo })).Single().Should().Be(20m);
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UT-112"), Trait("Rule", "SD-BR-112"), Trait("Id", "MM-UT-007"), Trait("Id", "MM-UT-008")]
+    public async Task IssueLineDeleteAndVoid_ExpandSetsIntoComponents_AndMoveNoStockForServiceItems()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipThenBill);
+        var (first, second) = (m.Item, m.NoCostItem);
+        await ReceiveAsync(first, m.Main, 10m);
+        await ReceiveAsync(second, m.Main, 10m);
+        var set = await SetItemAsync(m.Key, (first, 1m), (second, 3m));
+
+        var sh = await Service.CreateAsync(Request(m, Direct(set, 2m), Direct(m.Service, 1m)), "kim", None);
+
+        (await QueryAsync<(long ItemId, decimal Qty, long? SetItemId)>(
+                "SELECT item_id, qty, set_item_id FROM mm_goods_movement WHERE ref_key = @No ORDER BY id", new { No = sh.ShipNo }))
+            .Should().Equal((first, -2m, set), (second, -6m, set));
+        (await OnHandAsync(first, m.Main)).Should().Be(8m);
+        (await OnHandAsync(second, m.Main)).Should().Be(4m);
+
+        // Deleting the set line gives its components back; the service line stays without a movement
+        var kept = await Service.UpdateAsync(sh.Id, Saved(sh, Keep(sh.Lines[1])), "kim", None);
+        kept.Lines.Select(l => l.ItemId).Should().Equal(m.Service);
+        (await OnHandAsync(first, m.Main)).Should().Be(10m);
+        (await OnHandAsync(second, m.Main)).Should().Be(10m);
+
+        var voided = await Service.CreateAsync(Request(m, Direct(set, 1m), Direct(m.Service, 1m)), "kim", None);
+        (await OnHandAsync(second, m.Main)).Should().Be(7m);
+        await Service.VoidAsync(voided.Id, voided.UpdatedAt, "kim", None);
+
+        (await OnHandAsync(first, m.Main)).Should().Be(10m);
+        (await OnHandAsync(second, m.Main)).Should().Be(10m);
+        (await OnHandAsync(set, m.Main)).Should().Be(0m, "a set keeps no stock");
+        (await OnHandAsync(m.Service, m.Main)).Should().Be(0m, "a service item has no stock");
+    }
+
     [DatabaseFact, Trait("Id", "SD-UC-051-T10"), Trait("Id", "MM-UT-001")]
     public async Task Deny_RefusesAnIssueOverTheWarehouseOnHand()
     {
@@ -444,6 +500,22 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
             new { Key = key, Flow = billingFlow });
         return new Masters(
             key, ids.Customer, ids.Item, ids.Service, ids.LotItem, ids.NoCost, ids.Main, ids.Consignment, ids.Vat10, ids.NoTax);
+    }
+
+    // A set item with these components (MM-BR-007)
+    private async Task<long> SetItemAsync(string key, params (long Item, decimal Qty)[] components)
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        var id = await connection.ExecuteScalarAsync<long>(
+            "INSERT INTO bc_item (item_cd, item_name, type, created_by, updated_by) VALUES (@Code, 'Kit', 'SET', 't', 't') RETURNING id",
+            new { Code = "K" + key });
+        foreach (var (component, seq) in components.Select((c, i) => (c, i + 1)))
+        {
+            await connection.ExecuteAsync(
+                "INSERT INTO sd_bom (parent_item_id, seq, child_item_id, child_qty, created_by, updated_by) VALUES (@Id, @Seq, @Item, @Qty, 't', 't')",
+                new { Id = id, Seq = seq, component.Item, component.Qty });
+        }
+        return id;
     }
 
     // A USD order of the customer with these lines (item, qty, price, discount rate, tax code)

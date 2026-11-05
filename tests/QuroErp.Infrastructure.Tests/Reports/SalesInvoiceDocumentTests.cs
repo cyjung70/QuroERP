@@ -47,6 +47,19 @@ public class SalesInvoiceDocumentTests(PdfRendererFixture fixture) : IClassFixtu
         text.IndexOf("HexBolt", StringComparison.Ordinal).Should().BeLessThan(text.IndexOf("Freight", StringComparison.Ordinal));
     }
 
+    [Fact, Trait("Id", "SD-UT-133")]
+    public async Task SalesInvoice_ShowsSupplyTaxAndTotalApart_AndTheExemptionCertificate()
+    {
+        var print = new SalesInvoicePrint(
+            Company, new SalesOrderPrintParty("Blue River Market", ["9 Lake Rd"], null),
+            new SalesOrderPrintParty("Blue River Dock", ["2 Pier Rd"], "555-0102"), Invoice with { TaxExemptionCertNo = "TX-EX-1" }, 2, 2, 2, ShowDiscount: true);
+
+        var text = Text(await Document(fixture.Renderer).SalesInvoicePdfAsync(print, PrintPaper.Letter, new CultureInfo("en"), CancellationToken.None));
+
+        text.Should().Contain("Exemption").And.Contain("TX-EX-1")
+            .And.Contain("Subtotal1,030.00").And.Contain("Tax90.00").And.Contain("Total(USD)1,120.00");
+    }
+
     [Fact, Trait("Id", "SD-UT-134")]
     public async Task TaxInvoice_HasSupplierBuyerAndLineSupplyAndTax()
     {
