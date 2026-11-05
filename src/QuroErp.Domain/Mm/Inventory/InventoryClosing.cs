@@ -26,6 +26,13 @@ public static class InventoryClosing
         return firstOpenDay.AddDays(-1);
     }
 
+    /// <summary>
+    /// The date a price difference (PV) is posted on: the invoice date, or the first day of the first open month when the
+    /// invoice date is in a closed month (MM-BR-759).
+    /// </summary>
+    public static DateOnly OpenDateFor(string? closeYearMonth, DateOnly date) =>
+        LastClosedMonthEnd(closeYearMonth) is { } end && date <= end ? end.AddDays(1) : date;
+
     /// <summary>Movements dated in a closed month cannot be added (MM-BR-004). A reversal uses its own date.</summary>
     /// <exception cref="DomainException">MM-E-002 when documentDt is on or before the last closed month end.</exception>
     public static void EnsureOpen(string? closeYearMonth, DateOnly documentDt)

@@ -109,6 +109,8 @@ public class CodeMinorRulesTests
     [InlineData(CodeMajors.ItemType, "INVENTORY")]
     [InlineData(CodeMajors.ValidFlag, "N")]
     [InlineData(CodeMajors.MovementType, "TR")]
+    [InlineData(CodeMajors.MovementType, "PV")]
+    [InlineData(CodeMajors.MovementType, "VR")]
     [InlineData(CodeMajors.Unit, "EA")]
     public void ConstantCode_IsSdE916(string major, string minor)
     {
