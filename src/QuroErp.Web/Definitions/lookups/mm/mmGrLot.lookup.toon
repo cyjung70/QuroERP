@@ -1,0 +1,16 @@
+# Lots of a goods receipt line (TASK-MM-008, MM-BR-353, MM-BR-362): the lots of the line's item in the line's warehouse with a
+# balance above zero on the receipt date. A receipt adds stock, so a typed number that is not in the list is a new lot; an
+# empty cell makes one. The goods receipt screen answers it from the lot API with the current line.
+lookup:
+  id: mmGrLot
+  title: Mm.GoodsReceipt.FindLot
+  version: 1
+  api: /api/mm/lots
+  key: lotNo
+  text: lotNo
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[2]{id,label,type,width,fmt}:
+  lotNo,Mm.GoodsReceipt.LotNo,text,140,""
+  onHandQty,Mm.GoodsReceipt.OnHandQty,number,100,""

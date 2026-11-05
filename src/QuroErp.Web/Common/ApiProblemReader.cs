@@ -35,7 +35,8 @@ public static class ApiProblemReader
             var args = root.TryGetProperty("args", out var a) && a.ValueKind == JsonValueKind.Array
                 ? a.EnumerateArray().Select(ArgText).ToList()
                 : [];
-            return new ApiProblem(status, code, args);
+            var confirmField = root.TryGetProperty("confirmField", out var f) && f.ValueKind == JsonValueKind.String ? f.GetString() : null;
+            return new ApiProblem(status, code, args, confirmField);
         }
         catch (JsonException)
         {

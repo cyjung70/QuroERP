@@ -1,0 +1,614 @@
+@page "/mm/goods-receipt"
+@page "/mm/goods-receipt/{GrNo}"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Data
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Bc.Localization
+@using QuroErp.Contracts.Bc.Tax
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.GoodsReceipts
+@using QuroErp.Contracts.Mm.Vendors
+@using QuroErp.Contracts.Mm.Warehouses
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.Tax
+@using QuroErp.Web.Bc.UserProfiles
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.GoodsReceipts
+@using QuroErp.Web.Mm.Lots
+@using QuroErp.Web.Mm.Vendors
+@using QuroErp.Web.Mm.Warehouses
+@implements IDisposable
+@inject GoodsReceiptApiClient Api
+@inject VendorApiClient VendorApi
+@inject ItemApiClient ItemApi
+@inject LotApiClient LotApi
+@inject ExchangeRateApiClient RateApi
+@inject LocalizationApiClient LocalizationApi
+@inject TaxCodeApiClient TaxCodeApi
+@inject WarehouseApiClient WarehouseApi
+@inject UserProfileApiClient ProfileApi
+@inject IQuroConfirm Confirm
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* MM-UC-004 goods receipt, screen type SM on the entry frame (entry-frame.md). The API checks every rule and calculates the
+   stored amounts, stock, lots and PO quantities (MM-BR-101~117, MM-BR-161~164, MM-BR-703); this screen shows defaults, locks
+   and display amounts with the document decimals. The receipt has no payable: no due date, terms, balance or paid amount
+   (MM-BR-751). The status is how far supplier invoices matched it (MM-BR-105). *@
+
+<PageTitle>@L["Mm.GoodsReceipt.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="goods-receipt-load-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroHeaderDetail @ref="_frame" THeader="GoodsReceiptHeader" TLine="GoodsReceiptLine" Title="@L["Mm.GoodsReceipt.Title"]"
+                      TestId="goods-receipt" Path="@L["Menu.G2MM"]" ReadOnly="!_canEdit"
+                      DocumentNo="gr => gr.GrNo" Audit="gr => gr.ToAudit()"
+                      Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
+                      Definition="mm.goods-receipt.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
+                      ColumnFormats="GoodsReceiptFormats.Of(_decimals)" IsLineReadOnly="l => l.IsSaved()"
+                      CanSave="GoodsReceiptStatus.CanSave" CanDelete="gr => _canEdit && GoodsReceiptStatus.CanDelete(gr)"
+                      Delete="DeleteAsync" DeleteText="@L["Mm.GoodsReceipt.Delete"]" LinesHint="LinesHint">
+        <FindColumns>
+            <QuroColumn TRow="GoodsReceiptHeader" Title="@L["Mm.GoodsReceipt.GrNo"]" Value="g => g.GrNo" />
+            <QuroColumn TRow="GoodsReceiptHeader" Title="@L["Mm.GoodsReceipt.GrDt"]" Value="g => g.GrDt" />
+            <QuroColumn TRow="GoodsReceiptHeader" Title="@L["Mm.GoodsReceipt.VendorName"]" Value="g => g.VendorName" />
+            <QuroColumn TRow="GoodsReceiptHeader" Title="@L["Mm.GoodsReceipt.Status"]" Value="g => StatusText(g.Status)" />
+            <QuroColumn TRow="GoodsReceiptHeader" Title="@L["Mm.GoodsReceipt.TotGrAmt"]" Value="FindTotal" />
+        </FindColumns>
+        <StatusChip Context="gr">
+            <QuroStatusChip Code="@(gr.Status ?? "")" Kind="GoodsReceiptStatus.ChipOf(gr.Status)" Text="@StatusText(gr.Status)" />
+        </StatusChip>
+        <RowCommands Context="gr">
+            <button type="button" disabled="@(!CanImport(gr))" data-testid="goods-receipt-toolbar-import-po"
+                    @onclick="() => _importOpen = true">@L["Mm.GoodsReceipt.ImportPo"]</button>
+        </RowCommands>
+        <HeaderFields Context="gr">
+            @* 1: vendor (2), receipt date, default warehouse *@
+            <div class="quro-lookup-field quro-span-2">
+                <QuroText Label="@L["Mm.GoodsReceipt.VendorName"]" Field="VendorName" Required TextCase="TextCase.Upper"
+                          LockMode="@(gr.Id != 0 ? LockMode.Always : LockMode.None)" TestId="goods-receipt-header-vendor-name" />
+                <button type="button" aria-label="@L["Mm.GoodsReceipt.FindVendor"]" disabled="@(!CanChangeVendor(gr))"
+                        data-testid="goods-receipt-header-vendor-lookup" @onclick="() => _vendorLookupOpen = true">…</button>
+            </div>
+            <QuroDate Label="@L["Mm.GoodsReceipt.GrDt"]" Field="GrDt" Required
+                      LockMode="@(gr.HasSavedLines ? LockMode.Always : LockMode.None)" TestId="goods-receipt-header-gr-dt" />
+            <QuroSelect Label="@L["Mm.GoodsReceipt.WarehouseCode"]" Field="WarehouseCode" Options="_warehouseOptions" Required
+                        TestId="goods-receipt-header-warehouse-code" />
+            @* 2: currency and rate (from the vendor or the PO, MM-BR-161), reference number *@
+            <QuroText Label="@L["Mm.GoodsReceipt.CurrencyCode"]" Field="CurrencyCode" LockMode="LockMode.Always"
+                      TestId="goods-receipt-header-currency-code" />
+            <QuroNumber Label="@L["Mm.GoodsReceipt.ExchangeRate"]" Field="ExchangeRate" LockMode="LockMode.Always"
+                        TestId="goods-receipt-header-exchange-rate" />
+            <QuroText Label="@L["Mm.GoodsReceipt.RefNo"]" Field="RefNo" MaxLength="50" TextCase="TextCase.Upper" Span="2"
+                      TestId="goods-receipt-header-ref-no" />
+            @* 3: remarks *@
+            <QuroText Label="@L["Mm.GoodsReceipt.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="goods-receipt-header-remarks" />
+        </HeaderFields>
+        <Totals Context="lines">
+            @{ var totals = TotalsOf(lines); }
+            <QuroTotals Subtotal="totals.Supply" Tax="totals.Tax" CurrencyCode="@_decimals.CurrencyCode" Decimals="_decimals.Amount"
+                        BaseTotal="BaseTotal(totals.Total)" BaseCurrencyCode="@_decimals.BaseCurrencyCode" BaseDecimals="_decimals.BaseAmount"
+                        TestId="goods-receipt-totals" />
+        </Totals>
+    </QuroHeaderDetail>
+
+    <QuroLookupDialog TItem="VendorDto" Title="@L["Mm.GoodsReceipt.FindVendor"]" TestId="goods-receipt-vendor-lookup"
+                      @bind-Visible="_vendorLookupOpen" Search="k => VendorApi.LookupAsync(k, CancellationToken.None)" OnSelected="SelectVendorAsync">
+        <Columns>
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.GoodsReceipt.VendorName"]" Value="v => v.VName" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.GoodsReceipt.CurrencyCode"]" Value="v => v.CurrencyCode" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.GoodsReceipt.LineTaxCode"]" Value="v => v.TaxCode" />
+        </Columns>
+    </QuroLookupDialog>
+
+    @* Import PO lines (MM-BR-113): one picked line is added at a time; lines already on the receipt are not offered again *@
+    <QuroLookupDialog TItem="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.ImportPo"]" TestId="goods-receipt-po-lookup"
+                      @bind-Visible="_importOpen" Search="OpenPoLinesAsync" OnSelected="ImportAsync">
+        <Columns>
+            <QuroColumn TRow="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.PoNo"]" Value="p => p.PoNo" />
+            <QuroColumn TRow="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.PoSeq"]" Value="p => p.PoSeq" />
+            <QuroColumn TRow="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.PoDt"]" Value="p => p.PoDt" />
+            <QuroColumn TRow="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.ItemCd"]" Value="p => p.ItemCd" />
+            <QuroColumn TRow="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.ItemName"]" Value="p => p.ItemName" />
+            <QuroColumn TRow="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.PoQty"]" Value="p => p.PoQty" Format="@QtyFormat" />
+            <QuroColumn TRow="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.PoReceivedQty"]" Value="p => p.ReceivedQty" Format="@QtyFormat" />
+            <QuroColumn TRow="OpenPoLineDto" Title="@L["Mm.GoodsReceipt.RemainingQty"]" Value="p => p.RemainingQty" Format="@QtyFormat" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string UnavailableCode = "BC-E-003";
+    private const string NotFoundCode = "Common-E-006";
+    private const string OverReceiptField = "confirmOverReceipt";
+    private const string NotSavedCode = "Mm.GoodsReceipt.OverReceiptNotSaved";
+    private static readonly string[] ReceivableTypes = ["INVENTORY", "SERVICE"];
+    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "lotNo", "taxCode"];
+    private static readonly HashSet<string> AmountInputs =
+        new([nameof(GoodsReceiptLine.GrQty), nameof(GoodsReceiptLine.GrPrc), nameof(GoodsReceiptLine.TaxCodeId)],
+            StringComparer.OrdinalIgnoreCase);
+
+    private QuroHeaderDetail<GoodsReceiptHeader, GoodsReceiptLine>? _frame;
+    private QuroDataSet<GoodsReceiptLine>? _watchedLines;
+    private LocalizationDto? _localization;
+    private PurchaseOrderDecimals _decimals = new("USD", 2, 2, 2, PurchaseOrderCalculator.HalfUp, PurchaseOrderCalculator.LineMode, "USD", 2);
+    private IReadOnlyList<TaxCodeDto> _taxCodes = [];
+    private IReadOnlyList<WarehouseOptionDto> _warehouses = [];
+    private IReadOnlyList<CodeItemDto> _warehouseOptions = [];
+    private string? _defaultWarehouseCode;
+    private readonly Dictionary<string, ItemDto> _items = new(StringComparer.OrdinalIgnoreCase);
+    private bool _canEdit;
+    private bool _ready;
+    private bool _vendorLookupOpen;
+    private bool _importOpen;
+    private bool _applyingVendor;
+    private string? _loadError;
+
+    /// <summary>Receipt number from the address /mm/goods-receipt/{GrNo}.</summary>
+    [Parameter]
+    public string? GrNo { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy reaches the screens, as on the master screens (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        try
+        {
+            _localization = await LocalizationApi.GetAsync(lang, CancellationToken.None);
+            _decimals = PurchaseOrderDecimals.Of(_localization, null);
+            _taxCodes = await TaxCodeApi.InUseAsync(lang, CancellationToken.None);
+            // General warehouses only: only the system posts to the consignment warehouse (MM-BR-710)
+            _warehouses = [.. (await WarehouseApi.GetOptionsAsync(CancellationToken.None)).Where(w => w.UseYn && w.WarehouseType == "NORMAL")];
+            _warehouseOptions = [.. _warehouses.Select(w => new CodeItemDto(w.WarehouseCode, $"{w.WarehouseCode} {w.WarehouseName}"))];
+            var profile = await ProfileApi.GetAsync(CancellationToken.None);
+            _defaultWarehouseCode = _warehouses.FirstOrDefault(w => w.Id == profile.DefaultWarehouseId)?.WarehouseCode
+                                    ?? _warehouses.FirstOrDefault()?.WarehouseCode;
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // The frame exists after its first render; its lines are watched once for the ids and display amounts
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_frame is not null && _watchedLines is null)
+        {
+            _watchedLines = _frame.Lines;
+            _watchedLines.ValueChanged += OnLineValueChanged;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_watchedLines is not null)
+        {
+            _watchedLines.ValueChanged -= OnLineValueChanged;
+        }
+    }
+
+    // A new receipt is in the base currency until a vendor is picked, with the user's default warehouse (MM-BR-703)
+    private GoodsReceiptHeader CreateHeader()
+    {
+        UseDecimals(_localization?.BaseCurrencyCode);
+        return new GoodsReceiptHeader
+        {
+            GrDt = DateOnly.FromDateTime(DateTime.Today),
+            CurrencyCode = _localization?.BaseCurrencyCode,
+            ExchangeRate = 1m,
+            WarehouseCode = _defaultWarehouseCode,
+        };
+    }
+
+    // Add Row copies the header warehouse and the vendor's tax code (MM-BR-703, BC-BR-542)
+    private GoodsReceiptLine CreateLine(GoodsReceiptHeader gr)
+    {
+        var warehouse = WarehouseOf(gr.WarehouseCode);
+        var tax = _taxCodes.FirstOrDefault(t => t.TaxCode == gr.VendorTaxCode);
+        return new GoodsReceiptLine
+        {
+            WarehouseCode = warehouse?.WarehouseCode,
+            WarehouseId = warehouse?.Id,
+            TaxCode = tax?.TaxCode,
+            TaxCodeId = tax?.Id,
+        };
+    }
+
+    private Func<Task<HeaderLines<GoodsReceiptHeader, GoodsReceiptLine>?>>? Initial => GrNo is null
+        ? null
+        : async () => await Api.FindByNoAsync(GrNo, CancellationToken.None) is { } receipt ? await DocumentAsync(receipt) : null;
+
+    // The find dialog (F3): a keyword that starts like a receipt number searches by number, any other keyword by vendor name
+    private async Task<IReadOnlyList<GoodsReceiptHeader>> FindAsync(string? keyword)
+    {
+        var text = keyword?.Trim();
+        var byNumber = text is { Length: > 0 } && text.StartsWith("GR", StringComparison.OrdinalIgnoreCase);
+        var receipts = await Api.SearchAsync(new GoodsReceiptSearchQuery(byNumber ? text : null, null, null, null), CancellationToken.None);
+        return [.. receipts
+            .Where(r => byNumber || string.IsNullOrEmpty(text) || (r.VendorName?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Select(GoodsReceiptHeader.From)];
+    }
+
+    private string FindTotal(GoodsReceiptHeader gr) =>
+        gr.TotGrAmt.ToString("N" + DecimalsOf(gr.CurrencyCode).Amount.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture)
+        + " " + gr.CurrencyCode;
+
+    private async Task<HeaderLines<GoodsReceiptHeader, GoodsReceiptLine>?> LoadAsync(GoodsReceiptHeader picked) =>
+        await DocumentAsync(await Api.GetAsync(picked.Id, CancellationToken.None));
+
+    // The stored receipt with the vendor's default tax code, which new lines take
+    private async Task<HeaderLines<GoodsReceiptHeader, GoodsReceiptLine>> DocumentAsync(GoodsReceiptDto receipt)
+    {
+        VendorDto? vendor = null;
+        try
+        {
+            vendor = await VendorApi.GetAsync(receipt.VendorId, CancellationToken.None);
+        }
+        catch (ApiProblemException)
+        {
+            // A migrated receipt may name a vendor that is gone; the receipt still opens
+        }
+        var warehouseCodes = _warehouses.ToDictionary(w => w.Id, w => w.WarehouseCode);
+        var taxCodes = _taxCodes.ToDictionary(t => t.Id, t => t.TaxCode);
+        UseDecimals(receipt.CurrencyCode);
+        return new HeaderLines<GoodsReceiptHeader, GoodsReceiptLine>(
+            GoodsReceiptHeader.From(receipt, warehouseCodes, vendor?.TaxCode),
+            [.. receipt.Lines.OrderBy(l => l.Seq).Select(l => GoodsReceiptLine.From(l, taxCodes))]);
+    }
+
+    // The kept lines, in screen order, go in one request (saved lines left out are deleted, MM-BR-107). More than a PO line has
+    // left asks in WARN mode (MM-W-102); yes saves the over-receipt, no keeps the screen as it is (MM-BR-102)
+    private async Task<HeaderLines<GoodsReceiptHeader, GoodsReceiptLine>> SaveAsync(
+        GoodsReceiptHeader gr, bool isNew, BatchChanges<GoodsReceiptLine> changes)
+    {
+        var lines = ActiveLines();
+        var warehouseId = WarehouseOf(gr.WarehouseCode)?.Id;
+        bool? confirmOverReceipt = null;
+        while (true)
+        {
+            var request = gr.ToRequest(isNew, warehouseId, lines, confirmOverReceipt);
+            try
+            {
+                var saved = isNew
+                    ? await Api.CreateAsync(request, CancellationToken.None)
+                    : await Api.UpdateAsync(gr.Id, request, CancellationToken.None);
+                return await DocumentAsync(saved);
+            }
+            catch (ApiProblemException e) when (confirmOverReceipt is null && e.Problem.ConfirmField == OverReceiptField)
+            {
+                if (!await Confirm.ConfirmAsync(Messages.Get(e.Problem)))
+                {
+                    throw new ApiProblemException(new ApiProblem(422, NotSavedCode, []));
+                }
+                confirmOverReceipt = true;
+            }
+        }
+    }
+
+    private Task DeleteAsync(GoodsReceiptHeader gr) => Api.DeleteAsync(gr.Id, gr.UpdatedAt!.Value, CancellationToken.None);
+
+    private string? LinesHint(GoodsReceiptHeader gr) => gr.VendorId is null ? L["Common.SelectPartnerFirst"].Value : null;
+
+    private string StatusText(string? status) => status is null ? "" : L[$"Mm.GoodsReceipt.Status.{status}"];
+
+    private string QtyFormat => "N" + _decimals.Qty.ToString(CultureInfo.InvariantCulture);
+
+    private bool HasLines => _frame is not null && ActiveLines().Count > 0;
+
+    private bool HasPoLines => _frame is not null && ActiveLines().Any(l => l.PurchaseOrderLineId is not null);
+
+    private bool CanChangeVendor(GoodsReceiptHeader gr) => _canEdit && gr.Id == 0;
+
+    private bool CanImport(GoodsReceiptHeader gr) =>
+        _canEdit && gr.VendorId is not null && (gr.Id == 0 || GoodsReceiptStatus.CanSave(gr));
+
+    // A typed vendor name is matched exactly; the currency, rate and default tax code follow the vendor (MM-BR-161, BC-BR-542)
+    private void HeaderChanged(string field)
+    {
+        if (_applyingVendor)
+        {
+            return;
+        }
+        if (string.Equals(field, nameof(GoodsReceiptHeader.VendorName), StringComparison.OrdinalIgnoreCase))
+        {
+            var name = Header().VendorName;
+            _ = InvokeAsync(() => _frame!.RunCommandAsync(() => FindVendorAsync(name)));
+        }
+        else if (string.Equals(field, nameof(GoodsReceiptHeader.GrDt), StringComparison.OrdinalIgnoreCase) && !HasPoLines)
+        {
+            _ = InvokeAsync(async () =>
+            {
+                await RefreshRateAsync();
+                StateHasChanged();
+            });
+        }
+    }
+
+    private async Task FindVendorAsync(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            SetHeader(nameof(GoodsReceiptHeader.VendorId), null);
+            return;
+        }
+        if (await VendorApi.FindByNameAsync(name, CancellationToken.None) is { } vendor)
+        {
+            await ApplyVendorAsync(vendor);
+            return;
+        }
+        SetHeader(nameof(GoodsReceiptHeader.VendorId), null);
+        throw new ApiProblemException(new ApiProblem(404, NotFoundCode, [name]));
+    }
+
+    private Task SelectVendorAsync(VendorDto vendor) => _frame!.RunCommandAsync(() => ApplyVendorAsync(vendor));
+
+    private async Task ApplyVendorAsync(VendorDto vendor)
+    {
+        SetHeader(nameof(GoodsReceiptHeader.VendorName), vendor.VName);
+        SetHeader(nameof(GoodsReceiptHeader.VendorId), vendor.Id);
+        Header().VendorTaxCode = vendor.TaxCode;
+        // The currency stays once there are lines (MM-BR-161)
+        if (!HasLines)
+        {
+            SetHeader(nameof(GoodsReceiptHeader.CurrencyCode), vendor.CurrencyCode ?? _localization?.BaseCurrencyCode);
+            UseDecimals(Header().CurrencyCode);
+            await RefreshRateAsync();
+        }
+        StateHasChanged();
+    }
+
+    // The rate of the receipt date, 1 for the base currency (BC-BR-412); empty when no rate is entered for that day
+    private async Task RefreshRateAsync()
+    {
+        var gr = Header();
+        if (gr.CurrencyCode is not { Length: > 0 } currency || _localization is null)
+        {
+            return;
+        }
+        var rate = currency == _localization.BaseCurrencyCode
+            ? 1m
+            : await RateApi.RateOnAsync(currency, gr.GrDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        SetHeader(nameof(GoodsReceiptHeader.ExchangeRate), rate);
+    }
+
+    // Header values the page sets itself do not run the vendor and rate lookups again
+    private void SetHeader(string field, object? value)
+    {
+        var applying = _applyingVendor;
+        _applyingVendor = true;
+        try
+        {
+            _frame!.SetHeaderValue(field, value);
+        }
+        finally
+        {
+            _applyingVendor = applying;
+        }
+    }
+
+    private async Task<IReadOnlyList<OpenPoLineDto>> OpenPoLinesAsync(string? keyword)
+    {
+        if (Header().VendorId is not { } vendorId)
+        {
+            return [];
+        }
+        var taken = ActiveLines().Select(l => l.PurchaseOrderLineId).OfType<long>().ToHashSet();
+        var text = keyword?.Trim();
+        return [.. (await Api.OpenPoLinesAsync(vendorId, CancellationToken.None))
+            .Where(p => !taken.Contains(p.PurchaseOrderLineId))
+            .Where(p => string.IsNullOrEmpty(text)
+                        || p.PoNo.Contains(text, StringComparison.OrdinalIgnoreCase)
+                        || (p.ItemCd?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false)
+                        || (p.ItemName?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false))];
+    }
+
+    // The picked PO line becomes a new line; the first PO line also sets the receipt currency and rate (MM-BR-161)
+    private Task ImportAsync(OpenPoLineDto poLine) => _frame!.RunCommandAsync(async () =>
+    {
+        if (!HasPoLines)
+        {
+            SetHeader(nameof(GoodsReceiptHeader.CurrencyCode), poLine.CurrencyCode);
+            SetHeader(nameof(GoodsReceiptHeader.ExchangeRate), poLine.ExchangeRate);
+            UseDecimals(poLine.CurrencyCode);
+        }
+        var warehouse = (poLine.WarehouseId is { } id ? _warehouses.FirstOrDefault(w => w.Id == id) : null) ?? WarehouseOf(Header().WarehouseCode);
+        var price = PurchaseOrderCalculator.Round(poLine.PoPrc * (100m - poLine.DcRate) / 100m, _decimals.Price, _decimals.RoundingMode);
+        var line = GoodsReceiptLine.From(poLine, warehouse?.WarehouseCode, warehouse?.Id,
+            _taxCodes.FirstOrDefault(t => t.Id == poLine.TaxCodeId)?.TaxCode, price);
+        if (poLine.ItemCd is { } code && await ItemOfAsync(code) is { } item)
+        {
+            line.LotManaged = item.LotManaged;
+        }
+        Amounts(line);
+        var lines = _frame.Lines;
+        lines.MoveTo(lines.AddRow(line, lines.CurrentRowKey));
+    });
+
+    private async Task<ItemDto?> ItemOfAsync(string code)
+    {
+        if (_items.TryGetValue(code, out var known))
+        {
+            return known;
+        }
+        if (await ItemApi.FindByCodeAsync(code, CancellationToken.None) is { } item)
+        {
+            _items[item.ItemCd] = item;
+            return item;
+        }
+        return null;
+    }
+
+    // Line lookups: items with the standard purchase price, general warehouses, tax codes in use and the lots of the line
+    private async Task<IReadOnlyList<LookupRow>> LookupAsync(LookupQuery query)
+    {
+        switch (query.LookupId)
+        {
+            case "mmGrItem":
+                IReadOnlyList<ItemDto> items = query.Codes is { } codes
+                    ? [.. (await Task.WhenAll(codes.Select(c => ItemApi.FindByCodeAsync(c, CancellationToken.None)))).OfType<ItemDto>()]
+                    : await ItemApi.LookupAsync(query.Keyword, CancellationToken.None);
+                var receivable = items.Where(i => ReceivableTypes.Contains(i.ItemType)).ToList();
+                receivable.ForEach(i => _items[i.ItemCd] = i);
+                return [.. receivable.Select(i => LookupRow.Of(
+                    ("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit), ("grPrc", i.UsdPrc)))];
+            case "mmPoWarehouse":
+                return [.. _warehouses.Where(w => Matches(query, w.WarehouseCode, w.WarehouseName)).Select(w => LookupRow.Of(
+                    ("warehouseCode", w.WarehouseCode), ("warehouseName", w.WarehouseName)))];
+            case "mmPoTaxCode":
+                return [.. _taxCodes.Where(t => Matches(query, t.TaxCode, t.Name)).Select(t => LookupRow.Of(
+                    ("taxCode", t.TaxCode), ("name", t.Name), ("rate", t.Rate)))];
+            case "mmGrLot":
+                return await LotsAsync(query.Keyword);
+            default:
+                return [];
+        }
+    }
+
+    // The lots of the current line's item in its warehouse on the receipt date (MM-BR-362). A receipt adds stock, so a typed
+    // number that is not listed is offered as a new lot (MM-BR-353); a line whose item has no lots has none
+    private async Task<IReadOnlyList<LookupRow>> LotsAsync(string? keyword)
+    {
+        var lines = _frame!.Lines;
+        if (lines.CurrentRowKey is not { } key || lines.GetItem(key) is not { LotManaged: true } line)
+        {
+            return [];
+        }
+        var text = keyword?.Trim().ToUpperInvariant();
+        var rows = new List<LookupRow>();
+        if (line.ItemId is { } itemId && line.WarehouseId is { } warehouseId)
+        {
+            var lots = await LotApi.SearchAsync(itemId, warehouseId, Header().GrDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+            rows.AddRange(lots.Where(l => string.IsNullOrEmpty(text) || l.LotNo.Contains(text, StringComparison.OrdinalIgnoreCase))
+                .Select(l => LookupRow.Of(("lotNo", l.LotNo), ("onHandQty", l.OnHandQty))));
+        }
+        if (!string.IsNullOrEmpty(text) && !rows.Any(r => string.Equals(r["lotNo"] as string, text, StringComparison.OrdinalIgnoreCase)))
+        {
+            rows.Insert(0, LookupRow.Of(("lotNo", text), ("onHandQty", null)));
+        }
+        return rows;
+    }
+
+    private static bool Matches(LookupQuery query, string code, string? name) =>
+        query.Codes is { } codes
+            ? codes.Contains(code, StringComparer.OrdinalIgnoreCase)
+            : string.IsNullOrWhiteSpace(query.Keyword)
+              || code.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase)
+              || (name?.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase) ?? false);
+
+    // The ids of the codes a new line names, its lot flag, and its display amounts (MM-BR-112, MM-BR-162)
+    private void OnLineValueChanged(object? sender, DataSetValueChangedEventArgs e)
+    {
+        var lines = _frame!.Lines;
+        if (lines.GetState(e.RowKey) is RowState.Normal or RowState.Deleted)
+        {
+            return;
+        }
+        var line = lines.GetItem(e.RowKey);
+        // The item lookup fills the name after the code, so the item is known by then (typed, picked or pasted)
+        if (Is(e.Field, nameof(GoodsReceiptLine.ItemCd)) || Is(e.Field, nameof(GoodsReceiptLine.ItemName)))
+        {
+            var item = line.ItemCd is { } code ? _items.GetValueOrDefault(code) : null;
+            lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.ItemId), item?.Id);
+            lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.LotManaged), item?.LotManaged ?? false);
+            if (item?.LotManaged != true && line.LotNo is not null)
+            {
+                lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.LotNo), null);
+            }
+        }
+        else if (Is(e.Field, nameof(GoodsReceiptLine.LotNo)) && !line.LotManaged && line.LotNo is not null)
+        {
+            // Only a lot-managed item has a lot (MM-BR-353)
+            lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.LotNo), null);
+        }
+        else if (Is(e.Field, nameof(GoodsReceiptLine.WarehouseCode)))
+        {
+            lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.WarehouseId), WarehouseOf(line.WarehouseCode)?.Id);
+        }
+        else if (Is(e.Field, nameof(GoodsReceiptLine.TaxCode)))
+        {
+            // The tax code id is an amount input: setting it calculates the tax again
+            lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.TaxCodeId), _taxCodes.FirstOrDefault(t => Is(t.TaxCode, line.TaxCode ?? ""))?.Id);
+        }
+        if (!AmountInputs.Contains(e.Field))
+        {
+            return;
+        }
+        var amount = LineAmount(line);
+        lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.GrAmt), amount);
+        lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.TaxAmt), LineTax(line, amount));
+    }
+
+    private void Amounts(GoodsReceiptLine line)
+    {
+        line.GrAmt = LineAmount(line);
+        line.TaxAmt = LineTax(line, line.GrAmt.Value);
+    }
+
+    // GrAmt = round(GrQty × GrPrc) in the document decimals (MM-BR-112, BC-BR-421)
+    private decimal LineAmount(GoodsReceiptLine line) =>
+        PurchaseOrderCalculator.Line(line.GrQty ?? 0, line.GrPrc ?? 0, 0m, _decimals.Amount, _decimals.RoundingMode).Amount;
+
+    private decimal LineTax(GoodsReceiptLine line, decimal amount) => TaxOf(line.TaxCodeId) is { } tax
+        ? PurchaseOrderCalculator.Tax(amount, tax.Rate, tax.PriceIncluded, _decimals.Amount, _decimals.RoundingMode)
+        : 0m;
+
+    private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+
+    private PoDisplayTotals TotalsOf(IEnumerable<GoodsReceiptLine> lines) => PurchaseOrderCalculator.Totals(
+        lines.Select(l => TaxOf(l.TaxCodeId) is { } tax
+            ? new PoLineInput(l.GrQty ?? 0, l.GrPrc ?? 0, 0m, tax.Id, tax.Rate, tax.PriceIncluded)
+            : new PoLineInput(l.GrQty ?? 0, l.GrPrc ?? 0, 0m, l.TaxCodeId ?? 0, 0m)),
+        _decimals.Amount, _decimals.TaxCalcMode, _decimals.RoundingMode);
+
+    // Total × rate in base currency decimals (BC-BR-413), shown by the totals panel for another document currency only
+    private decimal? BaseTotal(decimal total) => _frame is not null && Header().ExchangeRate is { } rate
+        ? PurchaseOrderCalculator.BaseTotal(total, rate, _decimals.BaseAmount, _decimals.RoundingMode)
+        : null;
+
+    private TaxCodeDto? TaxOf(long? taxCodeId) => taxCodeId is { } id ? _taxCodes.FirstOrDefault(t => t.Id == id) : null;
+
+    private WarehouseOptionDto? WarehouseOf(string? code) =>
+        code is null ? null : _warehouses.FirstOrDefault(w => Is(w.WarehouseCode, code));
+
+    // The line formats are a frame parameter, so the page draws again when the currency changes
+    private void UseDecimals(string? currencyCode)
+    {
+        var decimals = DecimalsOf(currencyCode);
+        if (decimals != _decimals)
+        {
+            _decimals = decimals;
+            StateHasChanged();
+        }
+    }
+
+    private PurchaseOrderDecimals DecimalsOf(string? currencyCode) =>
+        _localization is null ? _decimals : PurchaseOrderDecimals.Of(_localization, currencyCode);
+
+    private List<GoodsReceiptLine> ActiveLines()
+    {
+        var lines = _frame!.Lines;
+        return [.. lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).Select(lines.GetItem)];
+    }
+
+    // The header as the frame holds it (the inputs write to this object)
+    private GoodsReceiptHeader Header() => _frame!.Header;
+}

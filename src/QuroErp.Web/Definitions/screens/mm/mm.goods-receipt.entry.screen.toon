@@ -1,0 +1,58 @@
+# MM-UC-004 goods receipt (TASK-MM-008), screen type SM on the entry frame. The item, warehouse, lot and tax code columns are
+# lookups; the item fills its name, unit and standard purchase price and the page keeps the ids of the picked codes. Lines
+# imported from a purchase order carry its number, line, ordered and received quantities. Amounts and tax are display values
+# the page calculates with the document decimals; the API calculates the stored ones. Saved lines are read-only (MM-BR-107).
+screen:
+  id: mm.goods-receipt.entry
+  module: MM
+  title: Mm.GoodsReceipt.Title
+  version: 1
+  api: /api/mm/goods-receipts
+  key: id
+  layout: form-grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[4]: query,new,save,delete
+# The header warehouse shares its id with the line column it is copied to, so only the page draws it (ids are one namespace)
+form:
+  cols: 4
+  fields[11]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+    vendorId,"",hidden,ro,"","","","",0,""
+    grNo,Mm.GoodsReceipt.GrNo,text,auto,"",upper,"","",1,""
+    vendorName,Mm.GoodsReceipt.VendorName,text,req,"",upper,"","",2,""
+    grDt,Mm.GoodsReceipt.GrDt,date,req,"","","","",1,""
+    currencyCode,Mm.GoodsReceipt.CurrencyCode,text,ro,"",upper,"","",1,""
+    exchangeRate,Mm.GoodsReceipt.ExchangeRate,number,ro,"","","","",1,""
+    refNo,Mm.GoodsReceipt.RefNo,text,opt,50,upper,"","",1,""
+    remarks,Mm.GoodsReceipt.Remarks,textarea,opt,"","","","",4,""
+    status,"",hidden,ro,"","","","",0,""
+    updatedAt,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: lines
+    bind: lines
+    rowKey: id
+    deletedRows: strike
+    columns[15]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      seq,Mm.GoodsReceipt.Seq,number,50,false,false,N0,"",false,false
+      itemCd,Mm.GoodsReceipt.ItemCd,text,130,true,true,"",mmGrItem,false,false
+      itemName,Mm.GoodsReceipt.ItemName,text,200,false,false,"","",false,false
+      unit,Mm.GoodsReceipt.Unit,text,60,false,false,"","",false,false
+      warehouseCode,Mm.GoodsReceipt.LineWarehouseCode,text,100,true,true,"",mmPoWarehouse,false,false
+      lotNo,Mm.GoodsReceipt.LotNo,text,120,true,false,"",mmGrLot,false,false
+      grQty,Mm.GoodsReceipt.GrQty,number,90,true,true,N2,"",false,false
+      grPrc,Mm.GoodsReceipt.GrPrc,number,110,true,true,N2,"",false,false
+      grAmt,Mm.GoodsReceipt.GrAmt,number,120,false,false,N2,"",false,false
+      taxCode,Mm.GoodsReceipt.LineTaxCode,text,90,true,false,"",mmPoTaxCode,false,false
+      taxAmt,Mm.GoodsReceipt.TaxAmt,number,100,false,false,N2,"",false,false
+      poNo,Mm.GoodsReceipt.PoNo,text,120,false,false,"","",false,false
+      poSeq,Mm.GoodsReceipt.PoSeq,number,50,false,false,N0,"",false,false
+      poQty,Mm.GoodsReceipt.PoQty,number,90,false,false,N2,"",false,false
+      poReceivedQty,Mm.GoodsReceipt.PoReceivedQty,number,90,false,false,N2,"",false,false
+    rules[3]{on,action,target,expr}:
+      itemCd.change,lookup,"itemName|unit|grPrc","mmGrItem.all()"
+      warehouseCode.change,lookup,"","mmPoWarehouse.all()"
+      taxCode.change,lookup,"","mmPoTaxCode.all()"
+    validate[1]{target,rule,msg}:
+      itemCd,requires vendorId,Common.SelectPartnerFirst

@@ -681,4 +681,87 @@
   <data name="MM-E-760" xml:space="preserve"><value>Invoice {0}: a paid invoice can't be changed or deleted. A saved line can't be changed, so delete it and add it again; the date, currency and rate of an invoice with saved lines can't change, so delete the lines and save first.</value></data>
   <data name="MM-E-762" xml:space="preserve"><value>Invoice {0} is a Debit Memo and can't be changed or deleted here. Void the vendor return instead.</value></data>
   <data name="MM-E-764" xml:space="preserve"><value>Vendor invoice number {0} is already on another invoice of this vendor.</value></data>
+  <data name="Common.Audit.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Mm.PurchaseOrder.Title" xml:space="preserve"><value>PO Entry</value></data>
+  <data name="Mm.PurchaseOrder.PoNo" xml:space="preserve"><value>PO No.</value></data>
+  <data name="Mm.PurchaseOrder.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Mm.PurchaseOrder.VendorName" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Mm.PurchaseOrder.FindVendor" xml:space="preserve"><value>Find vendor</value></data>
+  <data name="Mm.PurchaseOrder.PoDt" xml:space="preserve"><value>PO Date</value></data>
+  <data name="Mm.PurchaseOrder.DueDt" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Mm.PurchaseOrder.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Mm.PurchaseOrder.ExchangeRate" xml:space="preserve"><value>Exch. Rate</value></data>
+  <data name="Mm.PurchaseOrder.WarehouseCode" xml:space="preserve"><value>Receiving WH</value></data>
+  <data name="Mm.PurchaseOrder.TaxCode" xml:space="preserve"><value>Default Tax Code</value></data>
+  <data name="Mm.PurchaseOrder.Incoterms" xml:space="preserve"><value>Incoterms</value></data>
+  <data name="Mm.PurchaseOrder.PaymentTerms" xml:space="preserve"><value>Payment Terms</value></data>
+  <data name="Mm.PurchaseOrder.Buyer" xml:space="preserve"><value>Buyer</value></data>
+  <data name="Mm.PurchaseOrder.TotBaseAmt" xml:space="preserve"><value>Base Total</value></data>
+  <data name="Mm.PurchaseOrder.TotPoAmt" xml:space="preserve"><value>Total</value></data>
+  <data name="Mm.PurchaseOrder.Remarks" xml:space="preserve"><value>Remarks (to Vendor)</value></data>
+  <data name="Mm.PurchaseOrder.Approve" xml:space="preserve"><value>Approve</value></data>
+  <data name="Mm.PurchaseOrder.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Mm.PurchaseOrder.Cancel" xml:space="preserve"><value>Cancel PO</value></data>
+  <data name="Mm.PurchaseOrder.ConfirmApprove" xml:space="preserve"><value>Approve this purchase order?</value></data>
+  <data name="Mm.PurchaseOrder.ConfirmClose" xml:space="preserve"><value>Close this purchase order? The remaining quantity will not be received.</value></data>
+  <data name="Mm.PurchaseOrder.ConfirmCancel" xml:space="preserve"><value>Cancel this purchase order?</value></data>
+  <data name="Mm.PurchaseOrder.Delete" xml:space="preserve"><value>Delete PO</value></data>
+  <data name="Mm.PurchaseOrder.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Mm.PurchaseOrder.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Mm.PurchaseOrder.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Mm.PurchaseOrder.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Mm.PurchaseOrder.LineWarehouseCode" xml:space="preserve"><value>WH</value></data>
+  <data name="Mm.PurchaseOrder.WarehouseName" xml:space="preserve"><value>Warehouse Name</value></data>
+  <data name="Mm.PurchaseOrder.PoQty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Mm.PurchaseOrder.PoPrc" xml:space="preserve"><value>Unit Price</value></data>
+  <data name="Mm.PurchaseOrder.DcRate" xml:space="preserve"><value>Disc. %</value></data>
+  <data name="Mm.PurchaseOrder.PoAmt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Mm.PurchaseOrder.LineTaxCode" xml:space="preserve"><value>Tax Code</value></data>
+  <data name="Mm.PurchaseOrder.TaxCodeName" xml:space="preserve"><value>Tax Code Name</value></data>
+  <data name="Mm.PurchaseOrder.TaxRate" xml:space="preserve"><value>Rate %</value></data>
+  <data name="Mm.PurchaseOrder.TaxAmt" xml:space="preserve"><value>Tax</value></data>
+  <data name="Mm.PurchaseOrder.LineDueDt" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Mm.PurchaseOrder.ReceivedQty" xml:space="preserve"><value>Received</value></data>
+  <data name="Mm.PurchaseOrder.FindItem" xml:space="preserve"><value>Find item</value></data>
+  <data name="Mm.PurchaseOrder.FindWarehouse" xml:space="preserve"><value>Find warehouse</value></data>
+  <data name="Mm.PurchaseOrder.FindTaxCode" xml:space="preserve"><value>Find tax code</value></data>
+  <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>Goods Receipt</value></data>
+  <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>GR No.</value></data>
+  <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Mm.GoodsReceipt.Status.OP" xml:space="preserve"><value>Open</value></data>
+  <data name="Mm.GoodsReceipt.Status.PA" xml:space="preserve"><value>Partly Matched</value></data>
+  <data name="Mm.GoodsReceipt.Status.CL" xml:space="preserve"><value>Matched</value></data>
+  <data name="Mm.GoodsReceipt.Status.VO" xml:space="preserve"><value>Void</value></data>
+  <data name="Mm.GoodsReceipt.VendorName" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Mm.GoodsReceipt.FindVendor" xml:space="preserve"><value>Find Vendor</value></data>
+  <data name="Mm.GoodsReceipt.GrDt" xml:space="preserve"><value>Receipt Date</value></data>
+  <data name="Mm.GoodsReceipt.WarehouseCode" xml:space="preserve"><value>Default Warehouse</value></data>
+  <data name="Mm.GoodsReceipt.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Mm.GoodsReceipt.ExchangeRate" xml:space="preserve"><value>Exchange Rate</value></data>
+  <data name="Mm.GoodsReceipt.RefNo" xml:space="preserve"><value>Reference No.</value></data>
+  <data name="Mm.GoodsReceipt.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Mm.GoodsReceipt.TotGrAmt" xml:space="preserve"><value>Total</value></data>
+  <data name="Mm.GoodsReceipt.Delete" xml:space="preserve"><value>Delete Receipt</value></data>
+  <data name="Mm.GoodsReceipt.ImportPo" xml:space="preserve"><value>Import PO Lines</value></data>
+  <data name="Mm.GoodsReceipt.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Mm.GoodsReceipt.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Mm.GoodsReceipt.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Mm.GoodsReceipt.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Mm.GoodsReceipt.LineWarehouseCode" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Mm.GoodsReceipt.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.GoodsReceipt.OnHandQty" xml:space="preserve"><value>Lot Balance</value></data>
+  <data name="Mm.GoodsReceipt.GrQty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Mm.GoodsReceipt.GrPrc" xml:space="preserve"><value>Unit Price</value></data>
+  <data name="Mm.GoodsReceipt.GrAmt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Mm.GoodsReceipt.LineTaxCode" xml:space="preserve"><value>Tax Code</value></data>
+  <data name="Mm.GoodsReceipt.TaxAmt" xml:space="preserve"><value>Tax</value></data>
+  <data name="Mm.GoodsReceipt.PoNo" xml:space="preserve"><value>PO No.</value></data>
+  <data name="Mm.GoodsReceipt.PoSeq" xml:space="preserve"><value>PO Line</value></data>
+  <data name="Mm.GoodsReceipt.PoDt" xml:space="preserve"><value>PO Date</value></data>
+  <data name="Mm.GoodsReceipt.PoQty" xml:space="preserve"><value>PO Qty</value></data>
+  <data name="Mm.GoodsReceipt.PoReceivedQty" xml:space="preserve"><value>Received</value></data>
+  <data name="Mm.GoodsReceipt.RemainingQty" xml:space="preserve"><value>Remaining</value></data>
+  <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>Find Item</value></data>
+  <data name="Mm.GoodsReceipt.FindLot" xml:space="preserve"><value>Find Lot</value></data>
+  <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>Not saved. Check the received quantities.</value></data>
 </root>

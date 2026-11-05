@@ -49,6 +49,7 @@ using QuroErp.Infrastructure.Common.I18n;
 using QuroErp.Infrastructure.Common.Health;
 using QuroErp.Infrastructure.Common.Persistence;
 using QuroErp.Infrastructure.Reports;
+using QuroErp.Infrastructure.Reports.Mm;
 using QuroErp.Infrastructure.Mm.Inventory;
 using QuroErp.Infrastructure.Mm.Lots;
 using QuroErp.Infrastructure.Mm.GoodsReceipts;
@@ -128,6 +129,7 @@ public static class DependencyInjection
         services.AddSingleton<PdfRenderer>();
         services.AddSingleton<IPdfRenderer>(sp => sp.GetRequiredService<PdfRenderer>());
         services.AddSingleton<IExcelWriter, ExcelWriter>();
+        services.AddSingleton<IPurchaseOrderDocument, PurchaseOrderDocument>();
         services.AddSingleton<IPrintTemplateResolver>(_ => new PrintTemplateResolver());
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database")

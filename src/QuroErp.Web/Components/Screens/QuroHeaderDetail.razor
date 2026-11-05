@@ -104,7 +104,7 @@
             }
             @if (OnExport.HasDelegate)
             {
-                <button type="button" disabled="@(Busy || _lines.RowKeys.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport">@L["Common.ExportExcel"]</button>
+                <button type="button" disabled="@(Busy || _form.IsNew || _lines.RowKeys.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport">@L["Common.ExportExcel"]</button>
             }
         </div>
         @if (CanShowAllFields)
@@ -145,7 +145,7 @@
         </div>
         @* Add row, mark delete and restore act on the current line from the command bar (entry-frame.md 5) *@
         <QuroLineGrid @ref="_lineGrid" TLine="TLine" Data="_lines" Definition="_definition" CanEdit="@(CanSaveNow && !Busy)"
-                      IsLineLocked="IsLineLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
+                      IsLineLocked="IsLineLocked" IsLineReadOnly="IsLineReadOnly" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
                       OnMessage="ShowWarning" OnChanged="StateHasChanged" TestId="@Id("line")" />
     </div>
 
@@ -163,6 +163,8 @@
     private readonly QuroDataSet<TLine> _lines = new();
     private QuroLineGrid<TLine>? _lineGrid;
     private GridDef _definition = default!;
+    private GridDef _baseDefinition = default!;
+    private string _formatsKey = "";
     private string _snapshot = "";
     private string? _warning;
     private bool _findOpen;
@@ -179,6 +181,13 @@
     /// </summary>
     [Parameter, EditorRequired]
     public string Definition { get; set; } = default!;
+
+    /// <summary>
+    /// Number formats by line column id that replace the definition's, e.g. N0 amounts for a KRW document (decimals from
+    /// GET api/bc/localization: amount by currency, unit price by currency country × module, quantity by module).
+    /// </summary>
+    [Parameter]
+    public IReadOnlyDictionary<string, string>? ColumnFormats { get; set; }
 
     /// <summary>Reads the lookups of the line code columns (popup cells, pasted codes) from a Contracts API client.</summary>
     [Parameter]
@@ -275,12 +284,25 @@
     [Parameter]
     public Func<THeader, bool>? CanDelete { get; set; }
 
+    /// <summary>
+    /// The user may only read (no Full Access, BC-BR-214): a new document cannot be saved either, and every field is locked.
+    /// </summary>
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
     /// <summary>Lines whose cells are all locked, e.g. received PO lines. They cannot be marked for delete.</summary>
     [Parameter]
     public Func<TLine, bool>? IsLineLocked { get; set; }
 
+    /// <summary>Lines whose cells are all locked but which can be marked for delete, e.g. saved receipt lines (MM-BR-107).</summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineReadOnly { get; set; }
+
     // Inputs bound with @bind-Value change the header object without the data set knowing, so the snapshot still counts
     public override bool IsDirty => _headerData.DataSet.HasChanges || Snapshot.Of(_header) != _snapshot || _lines.HasChanges;
+
+    /// <summary>The open header; the bound inputs write to it, e.g. for a screen that reads a field after a change.</summary>
+    public THeader Header => _header;
 
     /// <summary>The lines as a data set, e.g. for a screen that reads a column.</summary>
     public QuroDataSet<TLine> Lines => _lines;
@@ -290,7 +312,7 @@
 
     private THeader _header => _headerData.Item;
 
-    private bool CanSaveNow => _form.IsNew || CanSave?.Invoke(_header) != false;
+    private bool CanSaveNow => !ReadOnly && (_form.IsNew || CanSave?.Invoke(_header) != false);
 
     private int? SelectedKey => _lines.CurrentRowKey;
 
@@ -323,7 +345,7 @@
 
     protected override void OnInitialized()
     {
-        _definition = ScreenDefinitions.Shared.Get(Definition).Grids[0];
+        _baseDefinition = _definition = ScreenDefinitions.Shared.Get(Definition).Grids[0];
         _form.Data = _headerData;
         _headerData.DataSet.ValueChanged += (_, e) => OnHeaderChanged?.Invoke(e.Field);
         _headerData.Changed += () =>
@@ -332,6 +354,23 @@
             InvokeAsync(StateHasChanged);
         };
         _lines.CurrentRowChanged += (_, _) => _ = InvokeAsync(StateHasChanged);
+    }
+
+    // A new definition only when the formats change, so the line grid is not set up again on every render
+    protected override void OnParametersSet()
+    {
+        var key = ColumnFormats is null ? "" : string.Join(";", ColumnFormats.OrderBy(f => f.Key, StringComparer.Ordinal).Select(f => $"{f.Key}={f.Value}"));
+        if (key == _formatsKey)
+        {
+            return;
+        }
+        _formatsKey = key;
+        _definition = ColumnFormats is null
+            ? _baseDefinition
+            : _baseDefinition with
+            {
+                Columns = [.. _baseDefinition.Columns.Select(c => ColumnFormats.TryGetValue(c.Id, out var format) ? c with { Fmt = format } : c)],
+            };
     }
 
     /// <summary>
@@ -352,6 +391,17 @@
             return;
         }
         await RunAsync(async () => SetLoaded(await action(_header)));
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Runs a screen command that is not a status change (e.g. PDF, or reading the vendor a typed name names) with the busy state,
+    /// and shows its API error in the message line.
+    /// </summary>
+    public async Task RunCommandAsync(Func<Task> action)
+    {
+        _warning = null;
+        await RunAsync(action);
         StateHasChanged();
     }
 
@@ -581,7 +631,7 @@
     {
         var created = Create();
         _form.IsNew = true;
-        _form.ReadOnly = false;
+        _form.ReadOnly = ReadOnly;
         _snapshot = Snapshot.Of(created);
         _headerData.StartNew(created);
         _lines.Load([]);
@@ -592,7 +642,7 @@
     {
         _headerData.SetLoaded(document.Header);
         _form.IsNew = false;
-        _form.ReadOnly = CanSave?.Invoke(_header) == false;
+        _form.ReadOnly = ReadOnly || CanSave?.Invoke(_header) == false;
         _snapshot = Snapshot.Of(_header);
         _lines.Load(document.Lines);
         _form.NotifyChanged();

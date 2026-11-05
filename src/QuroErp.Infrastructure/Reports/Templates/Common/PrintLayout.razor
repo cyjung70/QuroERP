@@ -49,7 +49,10 @@
     </header>
     <div class="title">
         <h1>@Title</h1>
-        <span class="mono">@DocumentNo</span>
+        <span class="mono">@DocumentNo@if (Revision is not null)
+            {
+                <span class="revision"> @Revision</span>
+            }</span>
     </div>
     @ChildContent
 </body>
@@ -63,6 +66,9 @@
 
     /// <summary>The stored document number, printed in full (print-documents.md).</summary>
     [Parameter] public string? DocumentNo { get; set; }
+
+    /// <summary>Revision text next to the number, e.g. Rev. 2 (MM-BR-021); none when null.</summary>
+    [Parameter] public string? Revision { get; set; }
 
     [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
 

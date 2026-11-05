@@ -6,4 +6,31 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Print.Phone" xml:space="preserve"><value>전화</value></data>
   <data name="Print.Email" xml:space="preserve"><value>이메일</value></data>
+  <data name="Print.Fax" xml:space="preserve"><value>팩스</value></data>
+  <data name="Print.Revision" xml:space="preserve"><value>Rev. {0}</value></data>
+  <data name="Print.PurchaseOrder.Title" xml:space="preserve"><value>발주서</value></data>
+  <data name="Print.PurchaseOrder.PoNo" xml:space="preserve"><value>발주 번호</value></data>
+  <data name="Print.PurchaseOrder.RevisionNo" xml:space="preserve"><value>개정</value></data>
+  <data name="Print.PurchaseOrder.Vendor" xml:space="preserve"><value>공급자</value></data>
+  <data name="Print.PurchaseOrder.Contact" xml:space="preserve"><value>담당</value></data>
+  <data name="Print.PurchaseOrder.PoDt" xml:space="preserve"><value>발주일</value></data>
+  <data name="Print.PurchaseOrder.DueDt" xml:space="preserve"><value>납기일</value></data>
+  <data name="Print.PurchaseOrder.Currency" xml:space="preserve"><value>통화</value></data>
+  <data name="Print.PurchaseOrder.Incoterms" xml:space="preserve"><value>인코텀즈</value></data>
+  <data name="Print.PurchaseOrder.PaymentTerms" xml:space="preserve"><value>결제 조건</value></data>
+  <data name="Print.PurchaseOrder.Buyer" xml:space="preserve"><value>구매 담당</value></data>
+  <data name="Print.PurchaseOrder.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Print.PurchaseOrder.ItemCode" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Print.PurchaseOrder.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Print.PurchaseOrder.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Print.PurchaseOrder.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Print.PurchaseOrder.UnitPrice" xml:space="preserve"><value>단가</value></data>
+  <data name="Print.PurchaseOrder.DcRate" xml:space="preserve"><value>할인율 %</value></data>
+  <data name="Print.PurchaseOrder.Amount" xml:space="preserve"><value>금액</value></data>
+  <data name="Print.PurchaseOrder.LineDueDt" xml:space="preserve"><value>납기일</value></data>
+  <data name="Print.PurchaseOrder.Subtotal" xml:space="preserve"><value>소계</value></data>
+  <data name="Print.PurchaseOrder.Discount" xml:space="preserve"><value>할인</value></data>
+  <data name="Print.PurchaseOrder.Tax" xml:space="preserve"><value>세액</value></data>
+  <data name="Print.PurchaseOrder.Total" xml:space="preserve"><value>합계</value></data>
+  <data name="Print.PurchaseOrder.Remarks" xml:space="preserve"><value>비고</value></data>
 </root>
