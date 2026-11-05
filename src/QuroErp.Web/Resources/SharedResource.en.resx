@@ -674,6 +674,13 @@
   <data name="MM-E-117" xml:space="preserve"><value>The receipt date cannot change while the receipt has lines. Delete the lines and add them again.</value></data>
   <data name="MM-E-161" xml:space="preserve"><value>Currency {0} with rate {1} cannot be used. A receipt from a purchase order uses the order's currency and rate, and the currency cannot change once the receipt has lines.</value></data>
   <data name="MM-E-703" xml:space="preserve"><value>Line {0} has no warehouse. Line 0 is the header.</value></data>
+  <data name="MM-E-751" xml:space="preserve"><value>Invoice lines must come from receipt lines of this invoice's vendor in the same currency ({0}), and there must be at least one. The vendor of an invoice with lines can't change.</value></data>
+  <data name="MM-E-753" xml:space="preserve"><value>The quantity of line {0} must be above 0 and at most the receipt's uninvoiced quantity ({1}).</value></data>
+  <data name="MM-E-754" xml:space="preserve"><value>The price of line {0} can't be 0.</value></data>
+  <data name="MM-W-754" xml:space="preserve"><value>The price {1} of line {0} differs from the purchase order price {2}. Save anyway?</value></data>
+  <data name="MM-E-760" xml:space="preserve"><value>Invoice {0}: a paid invoice can't be changed or deleted. A saved line can't be changed, so delete it and add it again; the date, currency and rate of an invoice with saved lines can't change, so delete the lines and save first.</value></data>
+  <data name="MM-E-762" xml:space="preserve"><value>Invoice {0} is a Debit Memo and can't be changed or deleted here. Void the vendor return instead.</value></data>
+  <data name="MM-E-764" xml:space="preserve"><value>Vendor invoice number {0} is already on another invoice of this vendor.</value></data>
   <data name="Common.Audit.Approved" xml:space="preserve"><value>Approved</value></data>
   <data name="Mm.PurchaseOrder.Title" xml:space="preserve"><value>PO Entry</value></data>
   <data name="Mm.PurchaseOrder.PoNo" xml:space="preserve"><value>PO No.</value></data>
