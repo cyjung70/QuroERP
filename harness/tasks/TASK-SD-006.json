@@ -91,5 +91,5 @@
     "줄에 출하·취소·미출하 수량 열, '미출하 취소' 대화상자(줄별 수량, 사유 8개)"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

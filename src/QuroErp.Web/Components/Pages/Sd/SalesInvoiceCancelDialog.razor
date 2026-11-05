@@ -1,0 +1,128 @@
+@using System.Globalization
+@using QuroErp.Contracts.Sd.SalesInvoices
+@using QuroErp.Web.Components.Pages.Sd.Models
+@inject IStringLocalizer<SharedResource> L
+
+@* SD-BR-145 unshipped cancellation of a bill-first invoice: a qty per line up to its unshipped qty, the cancel date and the eight
+   Credit Memo reasons (SD-BR-208). The page sends the request; the API checks it again (SD-E-145). *@
+
+@if (Visible)
+{
+    <div class="quro-dialog-backdrop">
+        <div class="quro-dialog" role="dialog" aria-modal="true" aria-label="@L["Sd.SalesInvoice.CancelUnshipped"]" data-testid="@Id("")">
+            <h2>@L["Sd.SalesInvoice.CancelUnshipped"]</h2>
+            <p>@L["Sd.SalesInvoice.CancelUnshippedHint"]</p>
+            <QuroDate Label="@L["Sd.SalesInvoice.CancelDt"]" @bind-Value="_cancelDt" Required TestId="@Id("cancel-dt")" />
+            <table class="quro-table" data-testid="@Id("lines")">
+                <thead>
+                    <tr>
+                        <th>@L["Sd.SalesInvoice.Seq"]</th>
+                        <th>@L["Sd.SalesInvoice.ItemCd"]</th>
+                        <th>@L["Sd.SalesInvoice.ItemName"]</th>
+                        <th class="num">@L["Sd.SalesInvoice.UnshippedQty"]</th>
+                        <th class="num">@L["Sd.SalesInvoice.CancelQty"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Rows)
+                    {
+                        <tr data-row-index="@row.Seq">
+                            <td>@row.Seq</td>
+                            <td>@row.ItemCd</td>
+                            <td>@row.ItemName</td>
+                            <td class="num">@row.UnshippedQty.ToString("N" + QtyDecimals.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture)</td>
+                            <td class="num">
+                                <QuroNumber Label="@L["Sd.SalesInvoice.CancelQty"]" HideLabel @bind-Value="row.Qty" Decimals="QtyDecimals"
+                                            TestId="@Id("qty")" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <fieldset class="quro-checks" data-testid="@Id("reasons")">
+                <legend>@L["Sd.SalesInvoice.CmReasons"]</legend>
+                @for (var i = 0; i < _reasons.Length; i++)
+                {
+                    var index = i;
+                    <QuroCheckbox Label="@L[ReasonKey(index)]" Value="_reasons[index]" ValueChanged="v => _reasons[index] = v"
+                                  TestId="@Id(ReasonId(index))" />
+                }
+            </fieldset>
+            @if (_error is not null)
+            {
+                <p class="page-error" role="alert" data-testid="@Id("message")">@_error</p>
+            }
+            <div class="quro-dialog-actions">
+                <button type="button" class="quro-danger-text" data-testid="@Id("ok")" @onclick="ConfirmAsync">@L["Sd.SalesInvoice.CancelUnshipped"]</button>
+                <button type="button" data-testid="@Id("close")" @onclick="CloseAsync">@L["Common.Close"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Number of Credit Memo reasons (cm_reason01..08, SD-BR-208).</summary>
+    public const int ReasonCount = 8;
+
+    private readonly bool[] _reasons = new bool[ReasonCount];
+    private DateOnly? _cancelDt;
+    private string? _error;
+    private bool _wasVisible;
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
+
+    /// <summary>The invoice's saved lines with unshipped qty; the dialog fills their qty.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<UnshippedCancelRow> Rows { get; set; } = [];
+
+    [Parameter]
+    public int QtyDecimals { get; set; } = 2;
+
+    /// <summary>The invoice's updatedAt the request carries (409 when stale).</summary>
+    [Parameter]
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>Called with a checked request; the page sends it and closes the dialog.</summary>
+    [Parameter]
+    public EventCallback<CancelUnshippedRequest> OnConfirm { get; set; }
+
+    [Parameter]
+    public string TestId { get; set; } = "";
+
+    /// <summary>The resource key of reason 1..8 (SD-BR-208).</summary>
+    public static string ReasonKey(int index) => "Sd.SalesInvoice.CmReason" + (index + 1).ToString("00", CultureInfo.InvariantCulture);
+
+    // Each opening starts with today, no reasons and no message
+    protected override void OnParametersSet()
+    {
+        if (Visible && !_wasVisible)
+        {
+            _cancelDt = DateOnly.FromDateTime(DateTime.Today);
+            Array.Clear(_reasons);
+            _error = null;
+        }
+        _wasVisible = Visible;
+    }
+
+    private async Task ConfirmAsync()
+    {
+        var request = _cancelDt is { } date ? UnshippedCancelRow.Request(Rows, date, _reasons, UpdatedAt) : null;
+        if (request is null)
+        {
+            _error = L["Sd.SalesInvoice.CancelQtyInvalid"];
+            return;
+        }
+        _error = null;
+        await OnConfirm.InvokeAsync(request);
+    }
+
+    private Task CloseAsync() => VisibleChanged.InvokeAsync(false);
+
+    private static string ReasonId(int index) => "reason-" + (index + 1).ToString("00", CultureInfo.InvariantCulture);
+
+    private string Id(string part) => part.Length == 0 ? TestId : $"{TestId}-{part}";
+}

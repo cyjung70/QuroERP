@@ -923,4 +923,94 @@
   <data name="SD-E-144" xml:space="preserve"><value>송장 {0}의 줄 {1}은(는) 출하 또는 취소가 있어 지우거나 Void할 수 없습니다.</value></data>
   <data name="SD-E-145" xml:space="preserve"><value>송장 {0} 줄 {1}: 취소 수량은 0보다 크고 미출하 수량 {2} 이하여야 합니다 (선청구 송장만).</value></data>
   <data name="SD-E-146" xml:space="preserve"><value>Credit Memo {0}이(가) 적용되어 미출하 취소를 되돌릴 수 없습니다.</value></data>
+  <data name="Sd.SalesInvoice.Title" xml:space="preserve"><value>매출 송장</value></data>
+  <data name="Sd.SalesInvoice.DnNo" xml:space="preserve"><value>송장 번호</value></data>
+  <data name="Sd.SalesInvoice.DnDt" xml:space="preserve"><value>송장 일자</value></data>
+  <data name="Sd.SalesInvoice.DueDt" xml:space="preserve"><value>만기일</value></data>
+  <data name="Sd.SalesInvoice.CustomerId" xml:space="preserve"><value>고객</value></data>
+  <data name="Sd.SalesInvoice.FindCustomer" xml:space="preserve"><value>고객 찾기</value></data>
+  <data name="Sd.SalesInvoice.BillTo" xml:space="preserve"><value>청구지</value></data>
+  <data name="Sd.SalesInvoice.Terms" xml:space="preserve"><value>결제 조건</value></data>
+  <data name="Sd.SalesInvoice.Rep" xml:space="preserve"><value>영업 담당</value></data>
+  <data name="Sd.SalesInvoice.CurrencyCode" xml:space="preserve"><value>통화</value></data>
+  <data name="Sd.SalesInvoice.ExchangeRate" xml:space="preserve"><value>환율</value></data>
+  <data name="Sd.SalesInvoice.WarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Sd.SalesInvoice.BillingFlow" xml:space="preserve"><value>청구 흐름</value></data>
+  <data name="Sd.SalesInvoice.ShipVia" xml:space="preserve"><value>운송 방법</value></data>
+  <data name="Sd.SalesInvoice.FreightCharge" xml:space="preserve"><value>운임 조건</value></data>
+  <data name="Sd.SalesInvoice.DcStatus" xml:space="preserve"><value>고객 할인 상태</value></data>
+  <data name="Sd.SalesInvoice.SourceDocument" xml:space="preserve"><value>원본 문서</value></data>
+  <data name="Sd.SalesInvoice.ShipName" xml:space="preserve"><value>배송지 이름</value></data>
+  <data name="Sd.SalesInvoice.ShipAddr1" xml:space="preserve"><value>배송지 주소 1</value></data>
+  <data name="Sd.SalesInvoice.ShipAddr2" xml:space="preserve"><value>배송지 주소 2</value></data>
+  <data name="Sd.SalesInvoice.ShipCity" xml:space="preserve"><value>배송지 도시</value></data>
+  <data name="Sd.SalesInvoice.ShipState" xml:space="preserve"><value>배송지 주</value></data>
+  <data name="Sd.SalesInvoice.ShipZipCode" xml:space="preserve"><value>배송지 우편번호</value></data>
+  <data name="Sd.SalesInvoice.ShipCountry" xml:space="preserve"><value>배송지 국가</value></data>
+  <data name="Sd.SalesInvoice.ShipPhone" xml:space="preserve"><value>배송지 전화</value></data>
+  <data name="Sd.SalesInvoice.ShipFax" xml:space="preserve"><value>배송지 팩스</value></data>
+  <data name="Sd.SalesInvoice.TotDnAmt" xml:space="preserve"><value>송장 합계</value></data>
+  <data name="Sd.SalesInvoice.PaymentApplied" xml:space="preserve"><value>입금 적용</value></data>
+  <data name="Sd.SalesInvoice.CreditApplied" xml:space="preserve"><value>크레딧 적용</value></data>
+  <data name="Sd.SalesInvoice.BalAmt" xml:space="preserve"><value>잔액</value></data>
+  <data name="Sd.SalesInvoice.AvailableCredit" xml:space="preserve"><value>사용 가능 크레딧</value></data>
+  <data name="Sd.SalesInvoice.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Sd.SalesInvoice.Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Sd.SalesInvoice.Status.OP" xml:space="preserve"><value>미결</value></data>
+  <data name="Sd.SalesInvoice.Status.PA" xml:space="preserve"><value>부분 입금</value></data>
+  <data name="Sd.SalesInvoice.Status.CL" xml:space="preserve"><value>완결</value></data>
+  <data name="Sd.SalesInvoice.Status.VO" xml:space="preserve"><value>취소</value></data>
+  <data name="Sd.SalesInvoice.Delete" xml:space="preserve"><value>송장 삭제</value></data>
+  <data name="Sd.SalesInvoice.Void" xml:space="preserve"><value>송장 Void</value></data>
+  <data name="Sd.SalesInvoice.ConfirmVoid" xml:space="preserve"><value>이 송장을 Void할까요? 청구한 수량과 위탁 창고 이동을 되돌립니다.</value></data>
+  <data name="Sd.SalesInvoice.TaxInvoice" xml:space="preserve"><value>세금계산서</value></data>
+  <data name="Sd.SalesInvoice.ImportShipment" xml:space="preserve"><value>출하 가져오기</value></data>
+  <data name="Sd.SalesInvoice.ImportOrder" xml:space="preserve"><value>선청구 수주 가져오기</value></data>
+  <data name="Sd.SalesInvoice.LinesAdded" xml:space="preserve"><value>줄 {0}개를 더했습니다. 저장해야 반영됩니다.</value></data>
+  <data name="Sd.SalesInvoice.ShipNo" xml:space="preserve"><value>출하 번호</value></data>
+  <data name="Sd.SalesInvoice.ShipDt" xml:space="preserve"><value>출하 일자</value></data>
+  <data name="Sd.SalesInvoice.SoNo" xml:space="preserve"><value>수주 번호</value></data>
+  <data name="Sd.SalesInvoice.SoDt" xml:space="preserve"><value>수주 일자</value></data>
+  <data name="Sd.SalesInvoice.LineCount" xml:space="preserve"><value>줄 수</value></data>
+  <data name="Sd.SalesInvoice.SellableQty" xml:space="preserve"><value>청구 가능 수량</value></data>
+  <data name="Sd.SalesInvoice.Seq" xml:space="preserve"><value>번호</value></data>
+  <data name="Sd.SalesInvoice.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Sd.SalesInvoice.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Sd.SalesInvoice.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Sd.SalesInvoice.LineWarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Sd.SalesInvoice.LotNo" xml:space="preserve"><value>로트</value></data>
+  <data name="Sd.SalesInvoice.DnQty" xml:space="preserve"><value>수량</value></data>
+  <data name="Sd.SalesInvoice.DnPrc" xml:space="preserve"><value>단가</value></data>
+  <data name="Sd.SalesInvoice.DcCd" xml:space="preserve"><value>할인 코드</value></data>
+  <data name="Sd.SalesInvoice.DcRate" xml:space="preserve"><value>할인율</value></data>
+  <data name="Sd.SalesInvoice.StdPrc" xml:space="preserve"><value>표준 단가</value></data>
+  <data name="Sd.SalesInvoice.TaxCode" xml:space="preserve"><value>세금 코드</value></data>
+  <data name="Sd.SalesInvoice.DnAmt" xml:space="preserve"><value>금액</value></data>
+  <data name="Sd.SalesInvoice.Source" xml:space="preserve"><value>원본 줄</value></data>
+  <data name="Sd.SalesInvoice.ShippedQty" xml:space="preserve"><value>출하 수량</value></data>
+  <data name="Sd.SalesInvoice.CancelledQty" xml:space="preserve"><value>취소 수량</value></data>
+  <data name="Sd.SalesInvoice.UnshippedQty" xml:space="preserve"><value>미출하 수량</value></data>
+  <data name="Sd.SalesInvoice.CancelUnshipped" xml:space="preserve"><value>미출하 취소</value></data>
+  <data name="Sd.SalesInvoice.CancelUnshippedHint" xml:space="preserve"><value>취소할 수량을 넣으세요. 취소 금액만큼 Credit Memo를 만들고 재고는 위탁 창고에서 원래 창고로 돌아갑니다.</value></data>
+  <data name="Sd.SalesInvoice.CancelDt" xml:space="preserve"><value>취소 일자</value></data>
+  <data name="Sd.SalesInvoice.CancelQty" xml:space="preserve"><value>취소할 수량</value></data>
+  <data name="Sd.SalesInvoice.CancelQtyInvalid" xml:space="preserve"><value>취소 일자를 넣고, 한 줄 이상에 0보다 크고 미출하 수량 이하인 수량을 넣으세요.</value></data>
+  <data name="Sd.SalesInvoice.CmReasons" xml:space="preserve"><value>Credit Memo 사유</value></data>
+  <data name="Sd.SalesInvoice.CmReason01" xml:space="preserve"><value>파손</value></data>
+  <data name="Sd.SalesInvoice.CmReason02" xml:space="preserve"><value>가격 조정</value></data>
+  <data name="Sd.SalesInvoice.CmReason03" xml:space="preserve"><value>불량 상품</value></data>
+  <data name="Sd.SalesInvoice.CmReason04" xml:space="preserve"><value>주문 착오</value></data>
+  <data name="Sd.SalesInvoice.CmReason05" xml:space="preserve"><value>출하 착오</value></data>
+  <data name="Sd.SalesInvoice.CmReason06" xml:space="preserve"><value>디자인 불만</value></data>
+  <data name="Sd.SalesInvoice.CmReason07" xml:space="preserve"><value>가격 불만</value></data>
+  <data name="Sd.SalesInvoice.CmReason08" xml:space="preserve"><value>교환</value></data>
+  <data name="Sd.SalesInvoice.Cancelled" xml:space="preserve"><value>미출하 수량을 취소하고 Credit Memo {0}을(를) 만들었습니다.</value></data>
+  <data name="Sd.SalesInvoice.Cancellations" xml:space="preserve"><value>미출하 취소</value></data>
+  <data name="Sd.SalesInvoice.CmNo" xml:space="preserve"><value>Credit Memo 번호</value></data>
+  <data name="Sd.SalesInvoice.CmAmt" xml:space="preserve"><value>Credit Memo 금액</value></data>
+  <data name="Sd.SalesInvoice.CmApplied" xml:space="preserve"><value>적용</value></data>
+  <data name="Sd.SalesInvoice.CmApplied.Y" xml:space="preserve"><value>예</value></data>
+  <data name="Sd.SalesInvoice.CmApplied.N" xml:space="preserve"><value>아니요</value></data>
+  <data name="Sd.SalesInvoice.UndoCancel" xml:space="preserve"><value>취소 되돌리기</value></data>
+  <data name="Sd.SalesInvoice.ConfirmUndoCancel" xml:space="preserve"><value>Credit Memo {0}을(를) 지우고 미출하 취소를 되돌릴까요? 재고는 위탁 창고로 돌아갑니다.</value></data>
 </root>
