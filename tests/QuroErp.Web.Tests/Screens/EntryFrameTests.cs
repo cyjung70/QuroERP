@@ -254,6 +254,33 @@ public class EntryFrameTests : ScreenContext
         lines.Select(1);
         page.Find("[data-testid=t-toolbar-mark-delete]").HasAttribute("disabled").Should().BeFalse();
     }
+
+    [Fact, Trait("Rule", "MM-BR-107")]
+    public void ReadOnlyLine_CannotBeEdited_ButCanBeMarked()
+    {
+        var store = new SampleStore();
+        var page = Render<QuroHeaderDetail<SampleOrder, SampleLine>>(p => p
+            .Add(x => x.Title, "T")
+            .Add(x => x.TestId, "t")
+            .Add(x => x.Definition, "samples.order.entry")
+            .Add(x => x.HeaderFields, (RenderFragment<SampleOrder>)(_ => _ => { }))
+            .Add(x => x.FindColumns, (RenderFragment)(_ => { }))
+            .Add(x => x.Find, _ => Task.FromResult<IReadOnlyList<SampleOrder>>([]))
+            .Add(x => x.Load, _ => Task.FromResult<HeaderLines<SampleOrder, SampleLine>?>(null))
+            .Add(x => x.Initial, () => Task.FromResult(store.FindOrder("SO261000001") is { } o
+                ? new HeaderLines<SampleOrder, SampleLine>(o.Order, o.Lines) : null))
+            .Add(x => x.Create, () => new SampleOrder())
+            .Add(x => x.CreateLine, _ => new SampleLine())
+            .Add(x => x.Save, (o, _, _) => Task.FromResult(new HeaderLines<SampleOrder, SampleLine>(o, [])))
+            .Add(x => x.IsLineReadOnly, l => l.ItemCode == "A100"));
+        var lines = page.DataGrid<SampleLine, QuroHeaderDetail<SampleOrder, SampleLine>>("t-line");
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
+
+        lines.Edit(0, "qty", "9").Should().BeFalse();
+        lines.Edit(1, "qty", "9").Should().BeTrue();
+        lines.Select(0);
+        page.Find("[data-testid=t-toolbar-mark-delete]").HasAttribute("disabled").Should().BeFalse("a saved line is deleted and entered again");
+    }
 }
 
 /// <summary>Totals panel and status chip of the entry frame (entry-frame.md 4, 6).</summary>
