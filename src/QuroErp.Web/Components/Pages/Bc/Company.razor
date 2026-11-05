@@ -154,12 +154,29 @@
                         }
                     </InputRadioGroup>
                 </fieldset>
-                <button type="button" disabled="@(_busy || _mode == _setting.NegativeStockMode)" data-testid="company-inventory-save"
+                <fieldset>
+                    <legend>@L["Mm.InventorySetting.OverReceiptMode"]</legend>
+                    <InputRadioGroup Name="over-receipt-mode" @bind-Value="_overReceiptMode">
+                        @foreach (var mode in OverReceiptModes.All)
+                        {
+                            <label>
+                                <InputRadio Name="over-receipt-mode" Value="mode" data-testid="@($"company-inventory-over-receipt-{mode.ToLowerInvariant()}")" />
+                                @L[$"Mm.InventorySetting.OverReceiptMode.{mode}"]
+                            </label>
+                        }
+                    </InputRadioGroup>
+                </fieldset>
+                <QuroCheckbox Label="@L["Mm.InventorySetting.AllowCostAdjustmentEdit"]" @bind-Value="_allowCostAdjustmentEdit"
+                              TestId="company-inventory-allow-cost-adjustment-edit" />
+                <button type="button" disabled="@(_busy || !SettingChanged)" data-testid="company-inventory-save"
                         @onclick="SaveSettingAsync">@L["Common.Save"]</button>
             }
             else
             {
                 <p>@L["Mm.InventorySetting.NegativeStockMode"]: @L[$"Mm.InventorySetting.Mode.{_setting.NegativeStockMode}"]</p>
+                <p>@L["Mm.InventorySetting.OverReceiptMode"]: @L[$"Mm.InventorySetting.OverReceiptMode.{_setting.OverReceiptMode}"]</p>
+                <QuroCheckbox Label="@L["Mm.InventorySetting.AllowCostAdjustmentEdit"]" Value="_setting.AllowCostAdjustmentEdit" LockMode="LockMode.Always"
+                              TestId="company-inventory-allow-cost-adjustment-edit" />
             }
         }
     </section>
@@ -231,6 +248,8 @@
     private IBrowserFile? _logoFile;
     private InventorySettingDto? _setting;
     private string _mode = NegativeStockModes.Deny;
+    private string _overReceiptMode = OverReceiptModes.Deny;
+    private bool _allowCostAdjustmentEdit;
     private SecuritySettingModel? _security;
     private string? _securitySnapshot;
     private BusinessPlaceModel? _place;
@@ -291,12 +310,18 @@
         return company;
     }
 
-    // BC-BR-317: changed business place values, a picked logo not uploaded yet, a changed inventory mode or changed security values
+    // BC-BR-317: changed business place values, a picked logo not uploaded yet, changed inventory settings or changed security values
     private bool HasSectionChanges() =>
         (_place is not null && Snapshot.Of(_place) != _placeSnapshot)
         || _logoFile is not null
-        || (_setting is not null && _mode != _setting.NegativeStockMode)
+        || SettingChanged
         || (_security is not null && Snapshot.Of(_security) != _securitySnapshot);
+
+    private bool SettingChanged =>
+        _setting is not null
+        && (_mode != _setting.NegativeStockMode
+            || _overReceiptMode != _setting.OverReceiptMode
+            || _allowCostAdjustmentEdit != _setting.AllowCostAdjustmentEdit);
 
     // A stored name the system list lacks stays selectable
     private static IReadOnlyList<CodeItemDto> TimeZones(string? current) =>
@@ -366,7 +391,7 @@
         await RunAsync(async () =>
         {
             ApplySetting(await InventorySettingApi.UpdateAsync(
-                new UpdateInventorySettingRequest(_mode, _setting!.UpdatedAt), CancellationToken.None));
+                new UpdateInventorySettingRequest(_mode, _overReceiptMode, _allowCostAdjustmentEdit, _setting!.UpdatedAt), CancellationToken.None));
             _notice = L["Common.Saved"];
         });
     }
@@ -419,6 +444,8 @@
     {
         _setting = setting;
         _mode = setting.NegativeStockMode;
+        _overReceiptMode = setting.OverReceiptMode;
+        _allowCostAdjustmentEdit = setting.AllowCostAdjustmentEdit;
     }
 
     private void ApplySecurity(AuthSettingDto setting)

@@ -47,16 +47,18 @@ public class InventoryServiceTests
     }
 
     [Fact, Trait("Id", "MM-UT-002")]
-    public async Task PostAsync_AllowIssueAboveOnHand_SavesNegativeAndFlagsMovement()
+    public async Task PostAsync_AllowInMonthIssueAboveTheDayBalance_SavesAndFlagsMovement()
     {
-        _settings.Mode = "ALLOW";
+        _settings.Mode = "ALLOW_IN_MONTH";
         _inventory.AddItem(10, "A", onHand: (Main, 5m), cost: 2);
+        // The month must still end at zero or above (MM-BR-010)
+        await Post(new StockMovementRequest("GR", new DateOnly(2026, 10, 20), 10, Main, 5, Price: 2));
 
         var posted = await Post(new StockMovementRequest("DN", Day, 10, Main, -6));
 
         posted.Should().ContainSingle().Which.NegativeStock.Should().BeTrue();
-        _inventory.OnHand[(10, Main)].Should().Be(-1);
-        _inventory.Items[10].OnHandQty.Should().Be(-1);
+        _inventory.OnHand[(10, Main)].Should().Be(4);
+        _inventory.Items[10].OnHandQty.Should().Be(4);
     }
 
     [Fact, Trait("Id", "MM-UT-003")]
@@ -710,10 +712,11 @@ public class InventoryServiceTests
         public string? Mode { get; set; } = "DENY";
 
         public Task<InventorySettingRow?> GetAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(Mode is null ? null : new InventorySettingRow(Mode, DateTimeOffset.UnixEpoch, "system"));
+            Task.FromResult(Mode is null ? null : new InventorySettingRow(Mode, "DENY", false, DateTimeOffset.UnixEpoch, "system"));
 
         public Task<InventorySettingRow?> UpdateAsync(
-            string negativeStockMode, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            string negativeStockMode, string overReceiptMode, bool allowCostAdjustmentEdit, DateTimeOffset expectedUpdatedAt, string updatedBy,
+            IDbTransaction transaction, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }
 
