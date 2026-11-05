@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/architecture/entry-frame.md",
-      "sha256": "70677a128687ae3e63cb1c359dae0dc8cef82375e5933356ec2be880230175d3"
+      "sha256": "70a879b84a0d86b1f68e02dfcf26cb6709da550494c2ac2f718a0251d5febd13"
     },
     {
       "path": "docs/architecture/field-policy.md",
@@ -484,7 +484,7 @@
     },
     {
       "path": "docs/specifications/MM/purchase-order.md",
-      "sha256": "75d750754f84fcd81dc093171f4086106d300de6f811ecc9b30672b356933730"
+      "sha256": "598a28597eaaf200fa2161ad7949c4ff99003eff7ca2c5143af11d1902c9a47f"
     },
     {
       "path": "docs/specifications/MM/purchase-request.md",
