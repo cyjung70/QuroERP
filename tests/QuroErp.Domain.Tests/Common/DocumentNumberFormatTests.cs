@@ -41,9 +41,17 @@ public class DocumentNumberFormatTests
         DocumentNumberFormat.SalesInvoice.Period(Day.AddMonths(1)).Should().BeEmpty();
     }
 
-    // SD-BR-206, MM-BR-017, MM-BR-106, MM-BR-208, MM-BR-308
+    [Theory, Trait("Id", "SD-UT-206"), Trait("Rule", "SD-BR-206")]
+    [InlineData(null, "CM2610000001")]
+    [InlineData("CM261000041", "CM2610000042")]
+    [InlineData("CM2610000041", "CM2610000042")]
+    public void Next_CreditMemo_IsCmYymmSixDigits_ContinuingAfterMigratedFiveDigitNumbers(string? last, string expected)
+    {
+        DocumentNumberFormat.CreditMemo.Next(Day, last).Should().Be(expected);
+    }
+
+    // MM-BR-017, MM-BR-208, MM-BR-308
     [Theory, Trait("Id", "CORE-007-T01")]
-    [InlineData("CM")]
     [InlineData("PO")]
     [InlineData("UR")]
     [InlineData("CT")]
@@ -51,8 +59,7 @@ public class DocumentNumberFormatTests
     {
         var format = new[]
         {
-            DocumentNumberFormat.CreditMemo, DocumentNumberFormat.PurchaseOrder, DocumentNumberFormat.UnplannedReceipt,
-            DocumentNumberFormat.StockCount,
+            DocumentNumberFormat.PurchaseOrder, DocumentNumberFormat.UnplannedReceipt, DocumentNumberFormat.StockCount,
         }.Single(f => f.Prefix == prefix);
 
         format.Next(Day, null).Should().Be($"{prefix}261000001");

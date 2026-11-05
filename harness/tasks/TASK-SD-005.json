@@ -108,5 +108,5 @@
     "단위 테스트: 위탁 이동 뒤 재고 금액 불변, 판매 가능 재고에서 위탁 창고 제외, 일부 출하 뒤 미출하 취소 → 위탁 재고 0·Credit Memo 금액"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

@@ -150,6 +150,10 @@ public interface IShipmentRepository
     Task<long> InsertInvoiceAsync(
         string dnNo, long businessPlaceId, ShipmentInvoiceHeader header, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>Qty, price, discount and tax code of every line of the invoice, by its line number (SD-BR-109).</summary>
+    Task<IReadOnlyList<ShipmentInvoiceInput>> FindInvoiceLineInputsAsync(
+        long salesInvoiceId, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <summary>
     /// Brings the SHIP_AND_BILL invoice in line with its shipment: adds the new lines, then writes every line's amounts, the header
     /// copy fields and the totals with balance = total and status OP (SD-BR-109). Lines of deleted shipment lines went with them.

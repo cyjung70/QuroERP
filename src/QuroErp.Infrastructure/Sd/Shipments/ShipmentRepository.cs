@@ -200,6 +200,13 @@ internal sealed class ShipmentRepository : IShipmentRepository
                 @TaxAmt, @ShipmentLineId, @User, @User)
         """;
 
+    private const string SelectInvoiceLineInputs = """
+        SELECT seq, coalesce(dn_qty, 0) AS qty, coalesce(dn_prc, 0) AS prc, coalesce(dc_rate, 0) AS dc_rate, tax_code_id
+        FROM sd_sales_invoice_line
+        WHERE sales_invoice_id = @Id
+        ORDER BY seq
+        """;
+
     private const string UpdateInvoiceLineAmounts = """
         UPDATE sd_sales_invoice_line SET dn_amt = @DnAmt, supply_amt = @SupplyAmt, tax_amt = @TaxAmt, updated_at = now(), updated_by = @User
         WHERE sales_invoice_id = @Id AND seq = @Seq
@@ -444,6 +451,11 @@ internal sealed class ShipmentRepository : IShipmentRepository
         transaction.Connection!.ExecuteScalarAsync<long>(new CommandDefinition(
             InsertInvoice, InvoiceParameters(header, user, new { DnNo = dnNo, BusinessPlaceId = businessPlaceId, Type = InvoiceType }), transaction,
             cancellationToken: cancellationToken));
+
+    public async Task<IReadOnlyList<ShipmentInvoiceInput>> FindInvoiceLineInputsAsync(
+        long salesInvoiceId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<ShipmentInvoiceInput>(new CommandDefinition(
+            SelectInvoiceLineInputs, new { Id = salesInvoiceId }, transaction, cancellationToken: cancellationToken))).AsList();
 
     public async Task UpdateInvoiceAsync(
         long salesInvoiceId, ShipmentInvoiceHeader header, IReadOnlyList<ShipmentInvoiceLineWrite> added,

@@ -75,4 +75,22 @@
   <data name="Print.DeliveryNote.LotNo" xml:space="preserve"><value>Lot</value></data>
   <data name="Print.DeliveryNote.ReceivedBy" xml:space="preserve"><value>Received By</value></data>
   <data name="Print.DeliveryNote.ReceivedDt" xml:space="preserve"><value>Date Received</value></data>
+  <data name="Print.SalesInvoice.Title" xml:space="preserve"><value>Invoice</value></data>
+  <data name="Print.SalesInvoice.DnDt" xml:space="preserve"><value>Invoice Date</value></data>
+  <data name="Print.SalesInvoice.SoNo" xml:space="preserve"><value>SO No.</value></data>
+  <data name="Print.SalesInvoice.TaxExemptionCertNo" xml:space="preserve"><value>Exemption Certificate</value></data>
+  <data name="Print.SalesInvoice.Paid" xml:space="preserve"><value>Paid / Applied</value></data>
+  <data name="Print.SalesInvoice.Balance" xml:space="preserve"><value>Balance Due</value></data>
+  <data name="Print.TaxInvoice.Title" xml:space="preserve"><value>Tax Invoice</value></data>
+  <data name="Print.TaxInvoice.Supplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="Print.TaxInvoice.Buyer" xml:space="preserve"><value>Buyer</value></data>
+  <data name="Print.TaxInvoice.BusinessRegNo" xml:space="preserve"><value>Business Reg. No.</value></data>
+  <data name="Print.TaxInvoice.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Print.TaxInvoice.CeoName" xml:space="preserve"><value>Representative</value></data>
+  <data name="Print.TaxInvoice.Address" xml:space="preserve"><value>Address</value></data>
+  <data name="Print.TaxInvoice.BusinessType" xml:space="preserve"><value>Business Type</value></data>
+  <data name="Print.TaxInvoice.BusinessItem" xml:space="preserve"><value>Business Item</value></data>
+  <data name="Print.TaxInvoice.WrittenDt" xml:space="preserve"><value>Date Written</value></data>
+  <data name="Print.TaxInvoice.SupplyAmt" xml:space="preserve"><value>Supply Amount</value></data>
+  <data name="Print.TaxInvoice.TaxAmt" xml:space="preserve"><value>Tax</value></data>
 </root>
