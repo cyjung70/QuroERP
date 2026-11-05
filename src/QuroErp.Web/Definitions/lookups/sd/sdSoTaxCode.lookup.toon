@@ -1,0 +1,16 @@
+# Tax codes in use for a sales order line (TASK-SD-004, SD-BR-033, BC-BR-542): code, name and rate. The sales order screen
+# answers it from the tax code API.
+lookup:
+  id: sdSoTaxCode
+  title: Sd.SalesOrder.FindTaxCode
+  version: 1
+  api: /api/bc/tax-codes
+  key: taxCode
+  text: name
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[3]{id,label,type,width,fmt}:
+  taxCode,Sd.SalesOrder.LineTaxCode,text,100,""
+  name,Sd.SalesOrder.TaxCodeName,text,180,""
+  rate,Sd.SalesOrder.TaxRate,number,80,N3

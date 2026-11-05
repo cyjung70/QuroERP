@@ -63,6 +63,17 @@ public partial class SalesOrderServiceTests(AuthSchemaFixture db)
             .Should().ContainSingle(s => s.Id == so.Id && s.CustomerName == "Customer " + m.Key);
     }
 
+    [DatabaseFact, Trait("Id", "SD-UT-404")]
+    public async Task DiscountRates_ListsTheCodesWithTheirRates_InCodeOrder()
+    {
+        var m = await MastersAsync();
+
+        var rates = await Service.GetDiscountRatesAsync(None);
+
+        rates.Should().ContainSingle(r => r.DcCd == m.Discount).Which.DcRate.Should().Be(-10m);
+        rates.Select(r => r.DcCd).Should().BeInAscendingOrder(StringComparer.Ordinal);
+    }
+
     [DatabaseFact, Trait("Id", "SD-UC-002-T02")]
     public async Task Update_AddsChangesAndDeletesLines()
     {

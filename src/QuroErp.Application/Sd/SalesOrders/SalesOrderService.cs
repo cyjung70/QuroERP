@@ -146,6 +146,15 @@ public sealed class SalesOrderService(
         return context.Defaults(item, SalesOrderDefaults.Qty);
     }
 
+    /// <summary>The discount codes a line can take, in code order (SD-BR-404).</summary>
+    public async Task<IReadOnlyList<SalesOrderDiscountRateDto>> GetDiscountRatesAsync(CancellationToken cancellationToken)
+    {
+        await using var uow = await unitOfWork.BeginAsync(cancellationToken);
+        var rates = await orders.FindDiscountRatesAsync(uow.Transaction, cancellationToken);
+        await uow.CommitAsync(cancellationToken);
+        return [.. rates.OrderBy(r => r.Key, StringComparer.Ordinal).Select(r => new SalesOrderDiscountRateDto(r.Key, r.Value))];
+    }
+
     /// <summary>
     /// Reads a line or barcode file (SD-BR-017~022). All rows become lines with the file quantity and the customer's price, or
     /// none when any row is wrong. Nothing is saved.

@@ -68,7 +68,7 @@ public class ScreenPolicyCoverageTests
             "PurchaseOrderController.Search", "PurchaseOrderController.Get",
             "GoodsReceiptController.Search", "GoodsReceiptController.Get", "GoodsReceiptController.OpenPoLines",
             "PurchaseOrderController.PrintPdf", "PurchaseOrderController.PrintXlsx",
-            "SalesOrderController.Search", "SalesOrderController.Get", "SalesOrderController.LineDefaults",
+            "SalesOrderController.Search", "SalesOrderController.Get", "SalesOrderController.LineDefaults", "SalesOrderController.DiscountRates",
             "SalesOrderController.PrintSalesOrder", "SalesOrderController.PrintPickingList", "SalesOrderController.PrintSetComponentList");
     }
 }

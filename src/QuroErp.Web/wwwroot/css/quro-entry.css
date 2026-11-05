@@ -125,6 +125,14 @@ fieldset.quro-commandbar-group { min-inline-size: 0; margin: 0; padding: 0; bord
 .quro-commandbar button.quro-primary { background: var(--q-brand); border-color: var(--q-brand); color: var(--q-on-brand); }
 .quro-commandbar button.quro-danger-text { color: var(--q-danger); }
 .quro-commandbar button:disabled { opacity: .45; cursor: not-allowed; }
+/* A file command: a label that looks like a command button around a hidden file input (e.g. upload a line file) */
+.quro-commandbar .quro-file-command { position: relative; display: inline-flex; align-items: center; height: var(--q-control-h); padding: 0 12px;
+    box-sizing: border-box; border: 1px solid var(--q-line); border-radius: var(--q-radius-button); background: var(--q-surface-1); color: var(--q-ink);
+    font: 500 13px/20px var(--q-font-sans); white-space: nowrap; cursor: pointer; }
+.quro-commandbar .quro-file-command input[type=file] { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.quro-commandbar .quro-file-command[aria-disabled=true] { opacity: .45; cursor: not-allowed; }
+.quro-commandbar .quro-file-command[aria-disabled=true] input[type=file] { cursor: not-allowed; }
+.quro-commandbar .quro-file-command:focus-within { outline: 2px solid var(--q-brand); outline-offset: 1px; }
 
 /* Header panel: 4-column field grid + 320px totals panel (3, 4) */
 .quro-entry-top { display: flex; gap: var(--q-panel-gap); align-items: stretch; }

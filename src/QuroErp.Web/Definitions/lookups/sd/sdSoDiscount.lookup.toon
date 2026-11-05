@@ -1,0 +1,15 @@
+# Discount codes of a sales order line (TASK-SD-004, SD-BR-404): code and rate, a negative percentage. The sales order screen
+# answers it from the discount rate API.
+lookup:
+  id: sdSoDiscount
+  title: Sd.SalesOrder.FindDiscount
+  version: 1
+  api: /api/sd/sales-orders/discount-rates
+  key: dcCd
+  text: dcCd
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[2]{id,label,type,width,fmt}:
+  dcCd,Sd.SalesOrder.DcCd,text,100,""
+  dcRate,Sd.SalesOrder.DcRate,number,80,N2

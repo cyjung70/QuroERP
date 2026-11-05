@@ -12,6 +12,9 @@ public static class SalesOrderRoutes
     /// <summary>POST {Base}/line-file with a multipart "file" and <see cref="SalesOrderLineFileQuery"/>: lines of a line or barcode file (SD-BR-017~022).</summary>
     public const string LineFile = "line-file";
 
+    /// <summary>GET {Base}/discount-rates: the discount codes a line can take, with their rates (SD-BR-404).</summary>
+    public const string DiscountRates = "discount-rates";
+
     /// <summary>Multipart field of the line file.</summary>
     public const string LineFileFormField = "file";
 
@@ -172,6 +175,9 @@ public sealed record SalesOrderLineDefaultsDto(
     decimal DcRate,
     long? TaxCodeId,
     string? Warning);
+
+/// <summary>A discount code and its rate, a negative percentage (SD-BR-404).</summary>
+public sealed record SalesOrderDiscountRateDto(string DcCd, decimal DcRate);
 
 /// <summary>Customer and ship-to of the order the file adds to, and the file kind (<see cref="SalesOrderLineFileKind"/>).</summary>
 public sealed record SalesOrderLineFileQuery(long CustomerId, string Kind, string? ShipState, DateOnly? SoDt);

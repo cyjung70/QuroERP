@@ -106,6 +106,7 @@
             {
                 <button type="button" disabled="@(Busy || _form.IsNew || _lines.RowKeys.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport">@L["Common.ExportExcel"]</button>
             }
+            @OutputCommands?.Invoke(_header)
         </div>
         @if (CanShowAllFields)
         {
@@ -261,6 +262,9 @@
     /// <summary>Screen line commands at the end of the Rows group (e.g. import cart). They add lines and never remove them.</summary>
     [Parameter]
     public RenderFragment<THeader>? RowCommands { get; set; }
+    /// <summary>More output commands after PDF and Excel (e.g. other print forms). Disable them for a new document.</summary>
+    [Parameter]
+    public RenderFragment<THeader>? OutputCommands { get; set; }
 
     /// <summary>Status commands (e.g. approve, close, cancel). Without them the Status group is not drawn.</summary>
     [Parameter]
@@ -332,6 +336,34 @@
 
     /// <summary>A header field value as the header data set holds it.</summary>
     public object? HeaderValueOf(string field) => _headerData.GetValue(field);
+
+    /// <summary>
+    /// Adds lines after the last line, as Add Row would, e.g. the lines a screen row command read from a file. Lines that are
+    /// there stay.
+    /// </summary>
+    public void AppendLines(IEnumerable<TLine> lines)
+    {
+        _warning = null;
+        int? last = _lines.RowKeys.Count == 0 ? null : _lines.RowKeys[^1];
+        foreach (var line in lines)
+        {
+            last = _lines.AddRow(line, last);
+        }
+        if (last is { } key)
+        {
+            _lines.MoveTo(key);
+        }
+        StateHasChanged();
+    }
+
+    /// <summary>Shows a screen message: an error (alert) or, when <paramref name="isError"/> is false, a notice.</summary>
+    public void ShowMessage(string message, bool isError)
+    {
+        _warning = null;
+        Error = isError ? message : null;
+        Notice = isError ? null : message;
+        StateHasChanged();
+    }
 
     private void ShowWarning(string? warning)
     {

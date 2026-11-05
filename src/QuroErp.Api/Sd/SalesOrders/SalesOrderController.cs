@@ -58,6 +58,11 @@ public sealed class SalesOrderController(SalesOrderService service, SalesOrderPr
     public Task<SalesOrderLineDefaultsDto> LineDefaults([FromQuery] SalesOrderLineDefaultsQuery query, CancellationToken cancellationToken) =>
         service.GetLineDefaultsAsync(query, cancellationToken);
 
+    /// <summary>The discount codes a line can take, with their rates (SD-BR-404).</summary>
+    [HttpGet(SalesOrderRoutes.DiscountRates), Authorize(Policy = Screen)]
+    public Task<IReadOnlyList<SalesOrderDiscountRateDto>> DiscountRates(CancellationToken cancellationToken) =>
+        service.GetDiscountRatesAsync(cancellationToken);
+
     /// <summary>
     /// Lines of a UTF-8 line or barcode file (SD-BR-017~022), or the error rows. Nothing is saved. 422 SD-E-017 for a file over
     /// 1 MB or 1,000 lines.
