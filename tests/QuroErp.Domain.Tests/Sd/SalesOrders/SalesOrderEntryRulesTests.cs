@@ -20,9 +20,16 @@ public class SalesOrderEntryRulesTests
     private static readonly IAmountRounder Rounder = new AmountRounder([new Currency("USD", 2), new Currency("KRW", 0)]);
     private static readonly SalesOrderSettings Settings = new("USD", TaxCalcMode.Document);
 
+    // The seeded defaults: SD quantity 0 decimals, unit price US 2 and KR 0 (BC-BR-422)
+    private static readonly IDecimalPolicy Decimals = new DecimalPolicy(
+        "US",
+        [new DecimalSetting(DecimalModule.Sd, 0, RoundingMode.HalfUp)],
+        [new CountryDecimal("US", DecimalModule.Sd, 2), new CountryDecimal("KR", DecimalModule.Sd, 0)],
+        new Dictionary<string, string?> { ["USD"] = "US", ["KRW"] = "KR" });
+
     private static readonly SalesOrderMasters Masters = new(
         new Dictionary<long, string> { [Item] = "INVENTORY", [Service] = "SERVICE", [Set] = "SET" },
-        new Dictionary<string, decimal> { ["A"] = -10m, ["B"] = -33m },
+        new Dictionary<string, decimal> { ["A"] = -10m, ["B"] = -33m, ["C"] = -5m },
         new Dictionary<long, TaxCodeRate>
         {
             [Vat10] = new(Vat10, 10m, false),
@@ -73,7 +80,7 @@ public class SalesOrderEntryRulesTests
     [InlineData(10, 100, null, 1000)]
     [InlineData(10, 100, "A", 900)]
     [InlineData(3, 9.99, "B", 20.08)] // 29.97 × 0.67 = 20.0799
-    [InlineData(1, 0.015, null, 0.02)]
+    [InlineData(1, 0.25, "A", 0.23)] // 0.225 rounds half up
     public void LineAmount_IsQtyTimesPriceTimesOnePlusRate_Rounded(decimal qty, decimal price, string? dcCd, decimal expected)
     {
         Calculate(Line(qty: qty, price: price, dcCd: dcCd)).Lines.Single().SoAmt.Should().Be(expected);
@@ -86,6 +93,46 @@ public class SalesOrderEntryRulesTests
 
         lines.Select(l => (l.Seq, l.SoAmt, l.SupplyAmt, l.TaxAmt)).Should().Equal((1, 900m, 900m, 90m), (2, 10m, 10m, 0m));
         totals.Should().Be(new SalesOrderTotals(910m, 90m, 1000m, 1000m));
+    }
+
+    [Theory, Trait("Id", "SD-UC-002-T05"), Trait("Rule", "SD-BR-005"), Trait("Rule", "SD-BR-034"), Trait("Rule", "BC-BR-413")]
+    [InlineData(TaxCalcMode.Line)]
+    [InlineData(TaxCalcMode.Document)]
+    public void SpecExample_GivesTheSameAmounts_InBothTaxModes(string taxCalcMode)
+    {
+        var header = Header() with { ExchangeRate = 1382.5m };
+
+        var (lines, totals) = SalesOrderEntryRules.Calculate(
+            header, [Line(qty: 10m, price: 1250m), Line(qty: 5m, price: 280.5m, dcCd: "C")], null, Masters, new SalesOrderSettings("KRW", taxCalcMode), Rounder, Decimals);
+
+        lines.Select(l => l.SoAmt).Should().Equal(12500m, 1332.38m);
+        totals.Should().Be(new SalesOrderTotals(13832.38m, 1383.24m, 15215.62m, 21035595m));
+    }
+
+    [Theory, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423"), Trait("Rule", "BC-BR-429")]
+    [InlineData("USD", 1, 12.345, "soPrc", 2)]
+    [InlineData("KRW", 1, 100.5, "soPrc", 0)]
+    [InlineData("USD", 1.5, 100, "soQty", 0)]
+    public void TooManyDecimals_IsBcE423_AndTheCurrencyCountryDecidesThePrice(string currency, decimal qty, decimal price, string field, int allowed)
+    {
+        var header = Header() with { CurrencyCode = currency, ExchangeRate = currency == "USD" ? 1m : 0.00075m };
+
+        var act = () => SalesOrderEntryRules.Calculate(header, [Line(qty: qty, price: price)], null, Masters, Settings, Rounder, Decimals);
+
+        var error = act.Should().Throw<DomainException>().Which;
+        error.Code.Should().Be("BC-E-423");
+        error.Args.Should().Equal(field, allowed);
+    }
+
+    [Theory, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423")]
+    [InlineData("12.34")]
+    [InlineData("12.340")]
+    [InlineData("-12.34")]
+    public void PriceWithinItsDecimals_IsKept_NotRounded(string price)
+    {
+        var value = decimal.Parse(price, System.Globalization.CultureInfo.InvariantCulture);
+
+        Calculate(Line(qty: 1m, price: value)).Lines.Single().SoPrc.Should().Be(value);
     }
 
     [Fact, Trait("Id", "SD-UT-032"), Trait("Rule", "BC-BR-544")]
@@ -101,7 +148,7 @@ public class SalesOrderEntryRulesTests
     {
         var header = Header() with { CurrencyCode = "KRW", ExchangeRate = 0.00075m };
 
-        var (_, totals) = SalesOrderEntryRules.Calculate(header, [Line(qty: 1m, price: 10000m)], null, Masters, Settings, Rounder);
+        var (_, totals) = SalesOrderEntryRules.Calculate(header, [Line(qty: 1m, price: 10000m)], null, Masters, Settings, Rounder, Decimals);
 
         (totals.TotSoAmt, totals.TotBaseAmt).Should().Be((11000m, 8.25m));
     }
@@ -113,7 +160,7 @@ public class SalesOrderEntryRulesTests
     public void BadRateOrCurrencyChangeWithLines_IsSdE031(string currency, decimal rate, string? previous)
     {
         var act = () => SalesOrderEntryRules.Calculate(
-            Header() with { CurrencyCode = currency, ExchangeRate = rate }, [Line()], previous, Masters, Settings, Rounder);
+            Header() with { CurrencyCode = currency, ExchangeRate = rate }, [Line()], previous, Masters, Settings, Rounder, Decimals);
 
         act.Should().Throw<DomainException>().Which.Code.Should().Be("SD-E-031");
     }
@@ -121,7 +168,7 @@ public class SalesOrderEntryRulesTests
     [Fact, Trait("Id", "SD-UT-035")]
     public void UnknownBillingFlow_IsSdE035()
     {
-        var act = () => SalesOrderEntryRules.Calculate(Header() with { BillingFlow = "LATER" }, [Line()], null, Masters, Settings, Rounder);
+        var act = () => SalesOrderEntryRules.Calculate(Header() with { BillingFlow = "LATER" }, [Line()], null, Masters, Settings, Rounder, Decimals);
 
         act.Should().Throw<DomainException>().Which.Should().Match<DomainException>(e => e.Code == "SD-E-035" && (string)e.Args[0] == "LATER");
     }
@@ -148,7 +195,7 @@ public class SalesOrderEntryRulesTests
             _ => Header() with { CustomerId = 0 },
         };
 
-        var act = () => SalesOrderEntryRules.Calculate(header, [Line()], null, Masters, Settings, Rounder);
+        var act = () => SalesOrderEntryRules.Calculate(header, [Line()], null, Masters, Settings, Rounder, Decimals);
 
         act.Should().Throw<DomainException>().Which.Args.Should().Equal(field);
     }
@@ -209,7 +256,7 @@ public class SalesOrderEntryRulesTests
     }
 
     private static (IReadOnlyList<SalesOrderLine> Lines, SalesOrderTotals Totals) Calculate(params SalesOrderLineInput[] lines) =>
-        SalesOrderEntryRules.Calculate(Header(), lines, null, Masters, Settings, Rounder);
+        SalesOrderEntryRules.Calculate(Header(), lines, null, Masters, Settings, Rounder, Decimals);
 
     private static SalesOrderHeader Header() => new(
         1, SoDt, SoDt, SoDt.AddDays(30), "USD", 1m, "SHIP_AND_BILL", "DEMO_A", "NET_30", null,

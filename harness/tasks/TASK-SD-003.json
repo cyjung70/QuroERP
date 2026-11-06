@@ -86,5 +86,5 @@
     "장바구니에서 줄 가져오기와 저장 때 장바구니 비우기(SD-BR-011)는 TASK-SD-069가 한다. 이 태스크는 장바구니 없이 수주를 저장한다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
