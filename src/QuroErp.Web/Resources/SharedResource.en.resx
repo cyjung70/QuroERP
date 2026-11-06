@@ -855,6 +855,7 @@
   <data name="Sd.SalesOrder.BarcodeFile" xml:space="preserve"><value>Upload barcode file</value></data>
   <data name="Sd.SalesOrder.PickingList" xml:space="preserve"><value>Picking list</value></data>
   <data name="Sd.SalesOrder.SetComponentList" xml:space="preserve"><value>Set component list</value></data>
+  <data name="Sd.SalesOrder.CheckThisCell" xml:space="preserve"><value>Check the value in this cell.</value></data>
   <data name="Sd.SalesOrder.LinesAdded" xml:space="preserve"><value>{0} lines were added from the file. Save to keep them.</value></data>
   <data name="Sd.SalesOrder.ConfirmRefillTax" xml:space="preserve"><value>The ship-to state changed. Fill the line tax codes again?</value></data>
   <data name="Sd.SalesOrder.FileErrorRow" xml:space="preserve"><value>Row {0} '{1}': {2}</value></data>

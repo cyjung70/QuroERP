@@ -2,6 +2,7 @@
 @page "/sd/sales-order/{SoNo}"
 @rendermode InteractiveServer
 @using System.Globalization
+@using Quro.Grid
 @using Quro.Grid.Data
 @using QuroErp.Contracts.Bc.Items
 @using QuroErp.Contracts.Bc.Localization
@@ -52,6 +53,8 @@
                       DocumentNo="so => so.SoNo" Audit="so => so.ToAudit()"
                       Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
                       Definition="sd.sales-order.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
+                      LineOptionsFor="LineOptions" AddRowOnLastEnter="true" FillAddedLine="FillLine" OnLinesPasted="OnLinesPastedAsync"
+                      ShadeLockedLines="true" OnLinesChanged="NumberLines"
                       ColumnFormats="_decimals.ColumnFormats" IsLineLocked="l => l.IsShippedOrInvoiced()"
                       CanSave="SalesOrderStatus.CanSave" CanDelete="so => _canEdit && SalesOrderStatus.CanDelete(so)"
                       Delete="DeleteAsync" DeleteText="@L["Sd.SalesOrder.Delete"]" OnPdf="SalesOrderPdfAsync"
@@ -164,7 +167,20 @@
     private const string StatusMajor = "SO_STATUS";
     private const string ItemNotInUse = "N";
     private const long MaxFileBytes = 1024 * 1024;
-    private static readonly string[] UpperCase = ["itemCd", "dcCd", "taxCode"];
+    private const string TooManyDecimalsCode = "BC-E-423";
+    private const string CheckCellKey = "Sd.SalesOrder.CheckThisCell";
+    private const string DiscountOptions = "lookup:sdSoDiscount";
+    private const string TaxCodeOptions = "lookup:sdSoTaxCode";
+    private static readonly string[] UpperCase = ["itemCd"];
+
+    // The cell a save error names: the problem's first argument is the line's place among the lines sent
+    private static readonly Dictionary<string, string> ProblemCells = new(StringComparer.Ordinal)
+    {
+        ["SD-E-001"] = nameof(SalesOrderLine.SoQty),
+        ["SD-E-002"] = nameof(SalesOrderLine.SoPrc),
+        ["SD-E-004"] = nameof(SalesOrderLine.ItemCd),
+        ["SD-E-404"] = nameof(SalesOrderLine.DcCd),
+    };
     private static readonly string[] BillingFlows = ["SHIP_AND_BILL", "SHIP_THEN_BILL", "BILL_THEN_SHIP"];
     private static readonly HashSet<string> AmountInputs =
         new([nameof(SalesOrderLine.SoQty), nameof(SalesOrderLine.SoPrc), nameof(SalesOrderLine.DcRate), nameof(SalesOrderLine.TaxCodeId)],
@@ -186,6 +202,8 @@
     private IReadOnlyList<CodeItemDto> _billingFlows = [];
     private IReadOnlyList<CodeItemDto> _taxCodeOptions = [];
     private IReadOnlyList<CodeItemDto> _statusOptions = [];
+    private IReadOnlyList<ComboOption> _discountOptions = [];
+    private IReadOnlyList<ComboOption> _lineTaxOptions = [];
     private Dictionary<string, string> _statusNames = [];
     private readonly Dictionary<string, long> _itemIds = new(StringComparer.OrdinalIgnoreCase);
     private CustomerDefaults? _customerDefaults;
@@ -219,7 +237,14 @@
             _currencies = [.. _localization.Currencies.Select(c => new CodeItemDto(c.CurrencyCode, $"{c.CurrencyCode} {c.Name}"))];
             _taxCodes = await TaxCodeApi.InUseAsync(lang, CancellationToken.None);
             _taxCodeOptions = [.. _taxCodes.Select(t => new CodeItemDto(t.TaxCode, $"{t.TaxCode} {t.Name}"))];
+            _lineTaxOptions = [.. _taxCodes.Select(t => new ComboOption(t.TaxCode, $"{t.TaxCode} {t.Name}"))];
             _discounts = await Api.DiscountRatesAsync(CancellationToken.None);
+            // The blank option takes the discount off a line (SD-BR-405); every line has a tax code
+            _discountOptions =
+            [
+                new ComboOption(null, ""),
+                .. _discounts.Select(d => new ComboOption(d.DcCd, $"{d.DcCd} ({d.DcRate.ToString("0.##", CultureInfo.CurrentCulture)}%)")),
+            ];
             _statusOptions = await CodeApi.GetAsync(StatusMajor, lang, CancellationToken.None);
             _statusNames = _statusOptions.ToDictionary(c => c.Code, c => c.Name);
         }
@@ -272,17 +297,21 @@
     // SD-BR-016, SD-BR-405, BC-BR-542: a new line has qty 1 and the header's default tax code and discount status; the item fills the rest
     private SalesOrderLine CreateLine(SalesOrderHeader so)
     {
+        var line = new SalesOrderLine();
+        FillLine(so, line);
+        return line;
+    }
+
+    private void FillLine(SalesOrderHeader so, SalesOrderLine line)
+    {
         var tax = _taxCodes.FirstOrDefault(t => t.TaxCode == so.TaxCode);
         var discount = HeaderDiscount(so);
-        return new SalesOrderLine
-        {
-            Seq = NextSeq(),
-            SoQty = 1m,
-            TaxCode = tax?.TaxCode,
-            TaxCodeId = tax?.Id,
-            DcCd = discount?.DcCd,
-            DcRate = discount?.DcRate ?? 0m,
-        };
+        line.Seq = NextSeq();
+        line.SoQty = 1m;
+        line.TaxCode = tax?.TaxCode;
+        line.TaxCodeId = tax?.Id;
+        line.DcCd = discount?.DcCd;
+        line.DcRate = discount?.DcRate ?? 0m;
     }
 
     // SD-BR-405: a discount status with no rate gives no default
@@ -295,11 +324,30 @@
         return lines.RowKeys.Select(k => lines.GetItem(k).Seq ?? 0).DefaultIfEmpty(0).Max() + 1;
     }
 
+    // The No column follows the screen order of the lines kept, as the API numbers them on save; a line marked for delete has none.
+    // Written to the line directly: a number is not a change of the line. A row redraws only when its revision moves, and clearing
+    // the empty mark of the seq cell moves it. TODO(QuroGrid-R7): a row number column would make this unnecessary
+    private void NumberLines()
+    {
+        var lines = _frame!.Lines;
+        var no = 0;
+        foreach (var key in lines.RowKeys)
+        {
+            var line = lines.GetItem(key);
+            int? seq = lines.GetState(key) == RowState.Deleted ? null : ++no;
+            if (line.Seq != seq)
+            {
+                line.Seq = seq;
+                lines.SetCellMark(key, nameof(SalesOrderLine.Seq), null);
+            }
+        }
+    }
+
     private Func<Task<HeaderLines<SalesOrderHeader, SalesOrderLine>?>>? Initial => SoNo is null
         ? null
         : async () => await Api.FindByNoAsync(SoNo, CancellationToken.None) is { } order ? await DocumentAsync(order) : null;
 
-    // The find dialog (F3): the keyword is the start of an SO number; the API has no customer name search, so the list is narrowed here
+    // The find dialog (F3): the keyword is the start of an SO number; the API filters every condition
     private async Task<IReadOnlyList<SalesOrderHeader>> FindAsync(string? keyword)
     {
         var number = keyword?.Trim();
@@ -346,6 +394,7 @@
         SalesOrderHeader so, bool isNew, BatchChanges<SalesOrderLine> changes)
     {
         var lines = ActiveLines();
+        CheckLineDecimals();
         var answers = new SalesOrderSaveAnswers();
         while (true)
         {
@@ -365,6 +414,57 @@
                     throw;
                 }
                 answers = answers.With(field, answer);
+            }
+            catch (ApiProblemException e)
+            {
+                MarkProblemCell(e.Problem);
+                throw;
+            }
+        }
+    }
+
+    // BC-BR-423: the API refuses these too; here the message names the column and the cell is marked before anything is sent
+    private void CheckLineDecimals()
+    {
+        var lines = _frame!.Lines;
+        foreach (var key in lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted))
+        {
+            var line = lines.GetItem(key);
+            if (HasTooManyDecimals(line.SoQty, _decimals.Qty))
+            {
+                throw TooManyDecimals(key, nameof(SalesOrderLine.SoQty), "Sd.SalesOrder.SoQty", _decimals.Qty);
+            }
+            if (HasTooManyDecimals(line.SoPrc, _decimals.Price))
+            {
+                throw TooManyDecimals(key, nameof(SalesOrderLine.SoPrc), "Sd.SalesOrder.SoPrc", _decimals.Price);
+            }
+        }
+    }
+
+    private ApiProblemException TooManyDecimals(int rowKey, string field, string labelKey, int decimals)
+    {
+        MarkCell(rowKey, field, true);
+        return new ApiProblemException(new ApiProblem(422, TooManyDecimalsCode,
+            [L[labelKey].Value, decimals.ToString(CultureInfo.InvariantCulture)]));
+    }
+
+    private static bool HasTooManyDecimals(decimal? value, int decimals) =>
+        value is { } number && decimal.Round(number, decimals) != number;
+
+    // A warning, so it shows the cell without stopping the next save; the API decides again then
+    private void MarkCell(int rowKey, string field, bool marked) =>
+        _frame!.Lines.SetCellMark(rowKey, field, marked ? new CellMark(CellMarkLevel.Warning, CheckCellKey) : null);
+
+    private void MarkProblemCell(ApiProblem problem)
+    {
+        if (problem.Code is { } code && ProblemCells.TryGetValue(code, out var field)
+            && problem.Args.Count > 0 && int.TryParse(problem.Args[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq))
+        {
+            var lines = _frame!.Lines;
+            var keys = lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).ToList();
+            if (seq >= 1 && seq <= keys.Count)
+            {
+                MarkCell(keys[seq - 1], field, true);
             }
         }
     }
@@ -590,41 +690,61 @@
         });
     }
 
-    // Line lookups: items in use, discount codes and tax codes in use
+    // The item lookup: items in use
     private async Task<IReadOnlyList<LookupRow>> LookupAsync(LookupQuery query)
     {
-        switch (query.LookupId)
+        if (query.LookupId != "sdSoItem")
         {
-            case "sdSoItem":
-                IReadOnlyList<ItemDto> items = query.Codes is { } codes
-                    ? [.. (await Task.WhenAll(codes.Select(c => ItemApi.FindByCodeAsync(c, CancellationToken.None)))).OfType<ItemDto>()]
-                    : await ItemApi.LookupAsync(query.Keyword, CancellationToken.None);
-                var inUse = items.Where(i => i.ValidFlag != ItemNotInUse).ToList();
-                inUse.ForEach(i => _itemIds[i.ItemCd] = i.Id);
-                return [.. inUse.Select(i => LookupRow.Of(
-                    ("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit), ("stdPrc", i.SoUsdPrc)))];
-            case "sdSoDiscount":
-                return [.. _discounts.Where(d => Matches(query, d.DcCd, null)).Select(d => LookupRow.Of(("dcCd", d.DcCd), ("dcRate", d.DcRate)))];
-            case "sdSoTaxCode":
-                return [.. _taxCodes.Where(t => Matches(query, t.TaxCode, t.Name)).Select(t => LookupRow.Of(
-                    ("taxCode", t.TaxCode), ("name", t.Name), ("rate", t.Rate)))];
-            default:
-                return [];
+            return [];
         }
+        IReadOnlyList<ItemDto> items = query.Codes is { } codes
+            ? [.. (await Task.WhenAll(codes.Select(c => ItemApi.FindByCodeAsync(c, CancellationToken.None)))).OfType<ItemDto>()]
+            : await ItemApi.LookupAsync(query.Keyword, CancellationToken.None);
+        var inUse = items.Where(i => i.ValidFlag != ItemNotInUse).ToList();
+        inUse.ForEach(i => _itemIds[i.ItemCd] = i.Id);
+        return [.. inUse.Select(i => LookupRow.Of(
+            ("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit), ("stdPrc", i.SoUsdPrc)))];
     }
 
-    private static bool Matches(LookupQuery query, string code, string? name) =>
-        query.Codes is { } codes
-            ? codes.Contains(code, StringComparer.OrdinalIgnoreCase)
-            : string.IsNullOrWhiteSpace(query.Keyword)
-              || code.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase)
-              || (name?.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase) ?? false);
+    // The discount and tax code combos. A code no longer in the list shows as it is until the user picks another
+    private IReadOnlyList<ComboOption>? LineOptions(string source) => source switch
+    {
+        DiscountOptions => _discountOptions,
+        TaxCodeOptions => _lineTaxOptions,
+        _ => null,
+    };
+
+    // A paste's codes are read after its last cell, so the ids and line defaults come here, one line after another. A price,
+    // discount or tax code pasted with the item stays
+    private async Task OnLinesPastedAsync(IReadOnlyList<(int RowKey, string Field)> changes)
+    {
+        var lines = _frame!.Lines;
+        foreach (var rowKey in changes.Where(c => Is(c.Field, nameof(SalesOrderLine.ItemCd))).Select(c => c.RowKey).Distinct().ToList())
+        {
+            if (!lines.RowKeys.Contains(rowKey))
+            {
+                continue;
+            }
+            var line = lines.GetItem(rowKey);
+            long? itemId = line.ItemCd is { } code && _itemIds.TryGetValue(code, out var id) ? id : null;
+            lines.SetValue(rowKey, nameof(SalesOrderLine.ItemId), itemId);
+            if (itemId is not null)
+            {
+                bool Pasted(string field) => changes.Any(c => c.RowKey == rowKey && Is(c.Field, field));
+                await ApplyLineDefaultsAsync(rowKey, new PastedValues(
+                    Pasted(nameof(SalesOrderLine.SoPrc)) && line.SoPrc is not null,
+                    Pasted(nameof(SalesOrderLine.DcCd)) && line.DcCd is { Length: > 0 },
+                    Pasted(nameof(SalesOrderLine.TaxCode)) && line.TaxCode is { Length: > 0 }));
+            }
+        }
+    }
 
     // The ids of the codes a line names, the line defaults of a new item and the display amounts of a changed line.
     // A line back at its stored values (restore row) keeps the ids and amounts the API stored
     private void OnLineValueChanged(object? sender, DataSetValueChangedEventArgs e)
     {
         var lines = _frame!.Lines;
+        UpdateCellMark(e.RowKey, e.Field);
         if (lines.GetState(e.RowKey) is RowState.Normal or RowState.Deleted)
         {
             return;
@@ -634,7 +754,15 @@
         {
             long? itemId = line.ItemCd is { } code && _itemIds.TryGetValue(code, out var id) ? id : null;
             lines.SetValue(e.RowKey, nameof(SalesOrderLine.ItemId), itemId);
-            if (itemId is not null && !_applying)
+            if (line.ItemCd is not { Length: > 0 })
+            {
+                // No item, nothing of it stays: the price also takes the amount out of the totals
+                lines.SetValue(e.RowKey, nameof(SalesOrderLine.ItemName), null);
+                lines.SetValue(e.RowKey, nameof(SalesOrderLine.Unit), null);
+                lines.SetValue(e.RowKey, nameof(SalesOrderLine.StdPrc), null);
+                lines.SetValue(e.RowKey, nameof(SalesOrderLine.SoPrc), null);
+            }
+            else if (itemId is not null && !_applying && _frame.LineGrid?.IsPasting != true)
             {
                 // After the grid finishes the edit: the change event comes in the middle of it
                 var rowKey = e.RowKey;
@@ -663,9 +791,28 @@
         }
     }
 
+    // An edit clears the mark a save left on the cell; a quantity or price with too many decimals is marked at once (BC-BR-423)
+    private void UpdateCellMark(int rowKey, string field)
+    {
+        var lines = _frame!.Lines;
+        var line = lines.GetItem(rowKey);
+        if (Is(field, nameof(SalesOrderLine.SoQty)))
+        {
+            MarkCell(rowKey, nameof(SalesOrderLine.SoQty), HasTooManyDecimals(line.SoQty, _decimals.Qty));
+        }
+        else if (Is(field, nameof(SalesOrderLine.SoPrc)))
+        {
+            MarkCell(rowKey, nameof(SalesOrderLine.SoPrc), HasTooManyDecimals(line.SoPrc, _decimals.Price));
+        }
+        else if (Is(field, nameof(SalesOrderLine.DcCd)) && lines.GetCellMark(rowKey, field) is not null)
+        {
+            MarkCell(rowKey, nameof(SalesOrderLine.DcCd), false);
+        }
+    }
+
     // SD-BR-016, 033, 401, 405: the customer's price, discount code and tax code of the picked item; the qty stays when typed.
     // Not a frame command: the busy state would stop the grid while it is still filling the item's lookup columns
-    private async Task ApplyLineDefaultsAsync(int rowKey)
+    private async Task ApplyLineDefaultsAsync(int rowKey, PastedValues? pasted = null)
     {
         var so = Header();
         var lines = _frame!.Lines;
@@ -688,7 +835,7 @@
             _frame.ShowMessage(Messages.Get(UnavailableCode), isError: true);
             return;
         }
-        if (lines.GetItem(rowKey).ItemCd is not { } current || !Is(current, itemCd))
+        if (!lines.RowKeys.Contains(rowKey) || lines.GetItem(rowKey).ItemCd is not { } current || !Is(current, itemCd))
         {
             return;
         }
@@ -702,16 +849,25 @@
             {
                 lines.SetValue(rowKey, nameof(SalesOrderLine.SoQty), defaults.SoQty);
             }
-            lines.SetValue(rowKey, nameof(SalesOrderLine.SoPrc), defaults.SoPrc);
+            if (pasted?.Price != true)
+            {
+                lines.SetValue(rowKey, nameof(SalesOrderLine.SoPrc), defaults.SoPrc);
+            }
             // The API gives the customer's defaults, or another code for this item (an exempt item or a certificate). The header's
             // defaults, which the user may have changed, take the place of the customer's (SD-BR-405, BC-BR-542)
             var customer = _customerDefaults;
-            lines.SetValue(rowKey, nameof(SalesOrderLine.DcCd),
-                customer is not null && defaults.DcCd == customer.DcStatus ? HeaderDiscount(so)?.DcCd : defaults.DcCd);
-            lines.SetValue(rowKey, nameof(SalesOrderLine.TaxCode),
-                customer is not null && defaults.TaxCodeId == customer.TaxCodeId && so.TaxCode is { Length: > 0 } headerTax
-                    ? headerTax
-                    : TaxCodeOf(defaults.TaxCodeId));
+            if (pasted?.Discount != true)
+            {
+                lines.SetValue(rowKey, nameof(SalesOrderLine.DcCd),
+                    customer is not null && defaults.DcCd == customer.DcStatus ? HeaderDiscount(so)?.DcCd : defaults.DcCd);
+            }
+            if (pasted?.TaxCode != true)
+            {
+                lines.SetValue(rowKey, nameof(SalesOrderLine.TaxCode),
+                    customer is not null && defaults.TaxCodeId == customer.TaxCodeId && so.TaxCode is { Length: > 0 } headerTax
+                        ? headerTax
+                        : TaxCodeOf(defaults.TaxCodeId));
+            }
         }
         finally
         {
@@ -785,4 +941,7 @@
 
     // What the customer master gives, to tell it from a code the API chose for one item
     private sealed record CustomerDefaults(long? TaxCodeId, string? DcStatus);
+
+    // The values a paste brought with the item, which the line defaults leave alone
+    private sealed record PastedValues(bool Price, bool Discount, bool TaxCode);
 }

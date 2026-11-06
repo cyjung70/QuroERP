@@ -550,6 +550,297 @@ public class SalesOrderScreenTests : BunitContext
         page.Field("sales-order-header-ship-country").Value.Should().Be("US");
     }
 
+    [Fact, Trait("Rule", "SD-BR-016"), Trait("Rule", "SD-BR-401")]
+    public void Paste_ReadsTheItems_TakesTheLineDefaultsLineByLine_AndSaves()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        Button(page, "add-row").Click();
+        var lines = Lines(page);
+
+        lines.Paste(0, "itemCd", ["bolt"], ["PANEL"]).Should().BeTrue();
+
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(lines.KeyOf(1)).SoPrc.Should().Be(9.5m));
+        var pasted = Frame(page).Lines.RowKeys.Select(Frame(page).Lines.GetItem).ToList();
+        pasted.Select(l => (l.Seq, l.ItemCd, l.ItemId, l.SoQty, l.SoPrc, l.DcCd, l.TaxCode)).Should().Equal(
+            (1, "BOLT", 11L, 1m, 9.5m, "D10", "ST10"),
+            (2, "PANEL", 12L, 1m, 9.5m, "D10", "ST10"));
+        _api.Requests.Count(r => r.RequestUri!.AbsolutePath.EndsWith("line-defaults", StringComparison.Ordinal)).Should().Be(2);
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => _api.Saved.Should().ContainSingle());
+        _api.Saved[0].Lines.Select(l => (l.ItemId, l.SoPrc)).Should().Equal((11L, (decimal?)9.5m), (12L, (decimal?)9.5m));
+    }
+
+    [Fact]
+    public void Paste_KeepsThePriceDiscountAndTaxCodePastedWithTheItem()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        Button(page, "add-row").Click();
+        var lines = Lines(page);
+
+        lines.Paste(0, "itemCd", ["PANEL", "", "", "3", "7.5", "d5", "", "", "none"]);
+
+        var key = lines.KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(key).StdPrc.Should().NotBeNull());
+        var line = Frame(page).Lines.GetItem(key);
+        (line.SoQty, line.SoPrc, line.DcCd, line.DcRate, line.TaxCode, line.TaxCodeId, line.SoAmt)
+            .Should().Be((3m, 7.5m, "D5", -5m, "NONE", 2L, 21.38m));
+    }
+
+    [Fact]
+    public void Paste_MarksAnUnknownCode_AndTheSaveWaits()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        Button(page, "add-row").Click();
+        var lines = Lines(page);
+
+        lines.Paste(0, "itemCd", ["bolt"], ["NOPE"]);
+
+        page.WaitForAssertion(() => Frame(page).Lines.GetCellMark(lines.KeyOf(1), "itemCd").Should().NotBeNull());
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(lines.KeyOf(0)).SoPrc.Should().Be(9.5m));
+        Frame(page).Lines.GetItem(lines.KeyOf(1)).ItemId.Should().BeNull();
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=sales-order-message]").GetAttribute("data-level").Should().Be("error"));
+        _api.Saved.Should().BeEmpty();
+    }
+
+    [Fact, Trait("Rule", "SD-BR-016"), Trait("Rule", "SD-BR-405"), Trait("Rule", "BC-BR-542")]
+    public void ALineTheGridAdds_HasTheDefaultsOfAddRow()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => page.Field("sales-order-header-tax-code").Selected.Should().BeEquivalentTo("ST10"));
+        Button(page, "add-row").Click();
+        var lines = Lines(page);
+
+        lines.Paste(0, "soPrc", ["1"], ["2"]);
+
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
+        var added = Frame(page).Lines.GetItem(lines.KeyOf(1));
+        (added.Seq, added.SoQty, added.SoPrc, added.TaxCode, added.TaxCodeId, added.DcCd, added.DcRate)
+            .Should().Be((2, 1m, 2m, "ST10", 1L, "D10", -10m));
+    }
+
+    [Theory]
+    [InlineData("SO", true)]
+    [InlineData("CL", false)]
+    public void EnterOnTheLastCell_AddsALine_OnlyWhileTheLinesCanChange(string status, bool adds)
+    {
+        _api.Order = Order(status);
+
+        var page = Open();
+
+        page.FindComponent<Quro.Grid.QuroGrid<SalesOrderLine>>().Instance.AddRowOnLastEnter.Should().Be(adds);
+    }
+
+    [Fact]
+    public async Task ClearingTheItem_RemovesItsNamePriceAndAmount()
+    {
+        var page = Open();
+        var lines = Lines(page);
+
+        (await lines.EditAsync(0, "itemCd", "")).Should().BeTrue();
+
+        var line = Frame(page).Lines.GetItem(lines.KeyOf(0));
+        (line.ItemId, line.ItemName, line.Unit, line.StdPrc, line.SoPrc, line.SoAmt, line.TaxAmt)
+            .Should().Be(((long?)null, (string?)null, (string?)null, (decimal?)null, (decimal?)null, 0m, 0m));
+        page.WaitForAssertion(() => page.Find("[data-testid=sales-order-totals-total]").TextContent.Should().Contain("0.00"));
+    }
+
+    [Theory, Trait("Rule", "SD-BR-003")]
+    [InlineData(5, true)]
+    [InlineData(0, false)]
+    public void ALockedLine_IsGray(decimal invoiced, bool gray)
+    {
+        _api.Order = Order(invoiced: invoiced);
+
+        var page = Open();
+
+        var selector = $".quro-row[data-row=\"{Lines(page).KeyOf(0)}\"]";
+        page.FindAll("[data-testid=sales-order-line] style").Any(s => s.TextContent.Contains(selector, StringComparison.Ordinal))
+            .Should().Be(gray);
+    }
+
+    [Fact]
+    public void TheNoColumn_FollowsTheLines()
+    {
+        _api.Order = Order() with { Lines = [OrderLine(9001, 1, 10m, 100m, null, 0m), OrderLine(9002, 2, 5m, 10m, null, 0m)] };
+        var page = Open(2);
+        var lines = Lines(page);
+
+        lines.Select(0);
+        Button(page, "add-row").Click();
+        page.WaitForAssertion(() => lines.Column("seq").Should().Equal("1", "2", "3"));
+        Frame(page).Lines.GetItem(lines.KeyOf(2)).Id.Should().Be(9002);
+
+        lines.Select(0);
+        Button(page, "mark-delete").Click();
+        page.WaitForAssertion(() => lines.Column("seq").Should().Equal("", "1", "2"));
+
+        lines.Select(0);
+        Button(page, "restore-row").Click();
+        page.WaitForAssertion(() => lines.Column("seq").Should().Equal("1", "2", "3"));
+    }
+
+    [Fact]
+    public void TheNoColumn_IsNotAChangeOfTheLine()
+    {
+        _api.Order = Order() with { Lines = [OrderLine(9001, 1, 10m, 100m, null, 0m), OrderLine(9002, 2, 5m, 10m, null, 0m)] };
+        var page = Open(2);
+        var lines = Lines(page);
+
+        lines.Select(0);
+        Button(page, "mark-delete").Click();
+        page.WaitForAssertion(() => lines.Column("seq").Should().Equal("", "1"));
+
+        Frame(page).Lines.GetState(lines.KeyOf(1)).Should().Be(RowState.Normal);
+    }
+
+    [Fact, Trait("Rule", "SD-BR-405")]
+    public async Task TheDiscountCombo_ListsTheCodesWithTheirRates_AndABlank_AndSetsTheAmount()
+    {
+        var page = Open();
+        var lines = Lines(page);
+        var key = lines.KeyOf(0);
+        var grid = page.FindComponent<Quro.Grid.QuroGrid<SalesOrderLine>>().Instance;
+        lines.Text(0, "dcCd").Should().Be("D10 (-10%)");
+
+        await page.InvokeAsync(() => grid.OpenPicker(key, "dcCd", ""));
+        page.WaitForAssertion(() => page.FindAll(".quro-option").Select(o => o.TextContent).Should().Equal("", "D10 (-10%)", "D5 (-5%)"));
+        await page.InvokeAsync(() => grid.PickOption(2));
+
+        var line = Frame(page).Lines.GetItem(key);
+        (line.DcCd, line.DcRate, line.SoAmt).Should().Be(("D5", -5m, 950m));
+
+        await page.InvokeAsync(() => grid.OpenPicker(key, "dcCd", ""));
+        page.WaitForAssertion(() => page.FindAll(".quro-option").Should().HaveCount(3));
+        await page.InvokeAsync(() => grid.PickOption(0));
+
+        (line.DcCd, line.DcRate, line.SoAmt).Should().Be(((string?)null, 0m, 1000m));
+        line.ToRequest().DcCd.Should().Be("", "the blank is no discount, not the customer's default");
+    }
+
+    [Fact]
+    public async Task TheTaxCombo_ListsTheCodesWithTheirNames_AndNoBlank()
+    {
+        var page = Open();
+        var lines = Lines(page);
+        var key = lines.KeyOf(0);
+        var grid = page.FindComponent<Quro.Grid.QuroGrid<SalesOrderLine>>().Instance;
+        lines.Text(0, "taxCode").Should().Be("ST10 Sales tax 10%");
+
+        await page.InvokeAsync(() => grid.OpenPicker(key, "taxCode", ""));
+        page.WaitForAssertion(() => page.FindAll(".quro-option").Should().HaveCount(2));
+        page.FindAll(".quro-option").Select(o => o.TextContent).Should().NotContain("").And.Contain(o => o.StartsWith("NONE", StringComparison.Ordinal));
+
+        await page.InvokeAsync(() => grid.PickOption(1));
+
+        var line = Frame(page).Lines.GetItem(key);
+        (line.TaxCode, line.TaxCodeId).Should().Be(("NONE", 2L));
+    }
+
+    [Fact]
+    public async Task ACombo_RefusesATypedCodeNotInItsList_AndTakesOneInAnyCase()
+    {
+        var page = Open();
+        var lines = Lines(page);
+        var line = Frame(page).Lines.GetItem(lines.KeyOf(0));
+
+        await lines.EditAsync(0, "dcCd", "NOPE");
+        line.DcCd.Should().Be("D10");
+
+        (await lines.EditAsync(0, "dcCd", "d5")).Should().BeTrue();
+        line.DcCd.Should().Be("D5");
+    }
+
+    [Fact]
+    public void ACodeNoLongerInTheList_ShowsAsItIs()
+    {
+        _api.Order = Order() with { Lines = [OrderLine(9001, 1, 10m, 100m, "OLD", -3m)] };
+
+        var page = Open();
+
+        Lines(page).Text(0, "dcCd").Should().Be("OLD");
+    }
+
+    [Theory, Trait("Rule", "SD-BR-001"), Trait("Rule", "SD-BR-002"), Trait("Rule", "SD-BR-404")]
+    [InlineData("SD-E-001", "soQty")]
+    [InlineData("SD-E-002", "soPrc")]
+    [InlineData("SD-E-004", "itemCd")]
+    [InlineData("SD-E-404", "dcCd")]
+    public void ASaveErrorOnALine_MarksTheCell(string code, string field)
+    {
+        _api.Order = Order() with { Lines = [OrderLine(9001, 1, 10m, 100m, null, 0m), OrderLine(9002, 2, 5m, 10m, null, 0m)] };
+        var page = Open(2);
+        var lines = Lines(page);
+        page.Field("sales-order-header-remarks").Change("Changed remarks");
+        _api.SaveProblems.Enqueue($$"""{"status":422,"code":"{{code}}","args":["2","X"]}""");
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => lines.Rows[1].QuerySelector($"[data-field={field}]")!.ClassList.Should().Contain("quro-mark-warning"));
+        lines.Rows[0].QuerySelector($"[data-field={field}]")!.ClassList.Should().NotContain("quro-mark-warning");
+        Frame(page).Lines.GetCellMark(lines.KeyOf(1), field)!.MessageKey.Should().Be("Sd.SalesOrder.CheckThisCell");
+    }
+
+    [Fact]
+    public async Task EditingAMarkedCell_ClearsTheMark_AndAMarkDoesNotStopTheNextSave()
+    {
+        var page = Open();
+        var lines = Lines(page);
+        page.Field("sales-order-header-remarks").Change("Changed remarks");
+        _api.SaveProblems.Enqueue("""{"status":422,"code":"SD-E-001","args":["1"]}""");
+        Button(page, "save").Click();
+        var key = lines.KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetCellMark(key, "soQty").Should().NotBeNull());
+
+        Button(page, "save").Click();
+        page.WaitForAssertion(() => _api.Saved.Should().HaveCount(2));
+
+        _api.SaveProblems.Enqueue("""{"status":422,"code":"SD-E-001","args":["1"]}""");
+        page.Field("sales-order-header-remarks").Change("Changed again");
+        Button(page, "save").Click();
+        var marked = lines.KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetCellMark(marked, "soQty").Should().NotBeNull());
+
+        await lines.EditAsync(0, "soQty", "12");
+
+        Frame(page).Lines.GetCellMark(marked, "soQty").Should().BeNull();
+    }
+
+    [Theory, Trait("Rule", "BC-BR-423")]
+    [InlineData("soPrc", "12.345", "단가")]
+    [InlineData("soQty", "1.234", "수량")]
+    public async Task TooManyDecimals_MarkTheCell_AndTheSaveNamesTheColumn_WithoutCallingTheApi(string field, string value, string label)
+    {
+        var page = Open();
+        var lines = Lines(page);
+        var key = lines.KeyOf(0);
+
+        (await lines.EditAsync(0, field, value)).Should().BeTrue();
+
+        Frame(page).Lines.GetCellMark(key, field)!.Level.Should().Be(CellMarkLevel.Warning);
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=sales-order-message]").TextContent.Should().StartWith(label).And.Contain("2"));
+        _api.Saved.Should().BeEmpty();
+
+        await lines.EditAsync(0, field, "12.34");
+
+        Frame(page).Lines.GetCellMark(key, field).Should().BeNull();
+    }
+
     private IRenderedComponent<SalesOrder> RenderAs(string role, string? soNo = null)
     {
         var store = Services.GetRequiredService<AccessTokenStore>();
