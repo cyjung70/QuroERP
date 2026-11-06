@@ -47,7 +47,8 @@
 @if (_ready)
 {
     <QuroHeaderDetail @ref="_frame" THeader="SalesOrderHeader" TLine="SalesOrderLine" Title="@L["Sd.SalesOrder.Title"]"
-                      TestId="sales-order" Path="@L["Menu.G3SD"]" ReadOnly="!_canEdit"
+                      TestId="sales-order" Path="@L["Sd.SalesOrder.Path"]" PolicyScreen="Sd.SalesOrder" ReadOnly="!_canEdit"
+                      FindKeywordLabel="@L["Sd.SalesOrder.SoNo"]"
                       DocumentNo="so => so.SoNo" Audit="so => so.ToAudit()"
                       Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
                       Definition="sd.sales-order.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
@@ -55,6 +56,12 @@
                       CanSave="SalesOrderStatus.CanSave" CanDelete="so => _canEdit && SalesOrderStatus.CanDelete(so)"
                       Delete="DeleteAsync" DeleteText="@L["Sd.SalesOrder.Delete"]" OnPdf="SalesOrderPdfAsync"
                       LinesHint="LinesHint">
+        <FindFilters>
+            <QuroText Label="@L["Sd.SalesOrder.CustomerId"]" @bind-Value="_findCustomer" TestId="sales-order-find-customer" />
+            <QuroDate Label="@L["Sd.SalesOrder.FindFrom"]" @bind-Value="_findFrom" TestId="sales-order-find-from" />
+            <QuroDate Label="@L["Sd.SalesOrder.FindTo"]" @bind-Value="_findTo" TestId="sales-order-find-to" />
+            <QuroSelect Label="@L["Sd.SalesOrder.Status"]" @bind-Value="_findStatus" Options="_statusOptions" TestId="sales-order-find-status" />
+        </FindFilters>
         <FindColumns>
             <QuroColumn TRow="SalesOrderHeader" Title="@L["Sd.SalesOrder.SoNo"]" Value="s => s.SoNo" />
             <QuroColumn TRow="SalesOrderHeader" Title="@L["Sd.SalesOrder.SoDt"]" Value="s => s.SoDt" />
@@ -94,42 +101,46 @@
             </div>
             <QuroDate Label="@L["Sd.SalesOrder.SoDt"]" Field="SoDt" Required TestId="sales-order-header-so-dt" />
             <QuroDate Label="@L["Sd.SalesOrder.ExpShipDt"]" Field="ExpShipDt" Required TestId="sales-order-header-exp-ship-dt" />
-            @* 2: terms, due date, sales rep, billing flow *@
-            <QuroCodeSelect Major="TERMS" Label="@L["Sd.SalesOrder.Terms"]" Field="Terms" TestId="sales-order-header-terms" />
-            <QuroDate Label="@L["Sd.SalesOrder.DueDt"]" Field="DueDt" Required TestId="sales-order-header-due-dt" />
-            <QuroCodeSelect Major="SALES_REP" Label="@L["Sd.SalesOrder.Rep"]" Field="Rep" Required TestId="sales-order-header-rep" />
-            <QuroSelect Label="@L["Sd.SalesOrder.BillingFlow"]" Field="BillingFlow" Options="_billingFlows" Required
-                        LockMode="@(so.BillingFlowLocked ? LockMode.Always : LockMode.None)" TestId="sales-order-header-billing-flow" />
-            @* 3: currency, rate, ship via, freight *@
+            @* 2: currency, rate, due date, billing flow *@
             <QuroSelect Label="@L["Sd.SalesOrder.CurrencyCode"]" Field="CurrencyCode" Options="_currencies" Required
                         LockMode="@(HasLines ? LockMode.Always : LockMode.None)" TestId="sales-order-header-currency-code" />
             <QuroNumber Label="@L["Sd.SalesOrder.ExchangeRate"]" Field="ExchangeRate" Required TestId="sales-order-header-exchange-rate" />
+            <QuroDate Label="@L["Sd.SalesOrder.DueDt"]" Field="DueDt" Required TestId="sales-order-header-due-dt" />
+            <QuroSelect Label="@L["Sd.SalesOrder.BillingFlow"]" Field="BillingFlow" Options="_billingFlows" Required
+                        LockMode="@(so.BillingFlowLocked ? LockMode.Always : LockMode.None)" TestId="sales-order-header-billing-flow" />
+            @* 3: default tax code and discount status (not saved, a new line takes them), sales rep, terms *@
+            <QuroSelect Label="@L["Sd.SalesOrder.TaxCode"]" Field="TaxCode" Options="_taxCodeOptions" TestId="sales-order-header-tax-code" />
+            <QuroCodeSelect Major="SALES_REP" Label="@L["Sd.SalesOrder.Rep"]" Field="Rep" Required TestId="sales-order-header-rep" />
+            <QuroCodeSelect Major="TERMS" Label="@L["Sd.SalesOrder.Terms"]" Field="Terms" TestId="sales-order-header-terms" />
+            <QuroCodeSelect Major="DISCOUNT_STATUS" Label="@L["Sd.SalesOrder.DcStatus"]" Field="DcStatus" TestId="sales-order-header-dc-status" />
+            @* 4: ship via, freight, base currency total *@
             <QuroCodeSelect Major="SHIPMENT_VIA" Label="@L["Sd.SalesOrder.ShipVia"]" Field="ShipVia" TestId="sales-order-header-ship-via" />
             <QuroCodeSelect Major="FREIGHT_CHARGE" Label="@L["Sd.SalesOrder.FreightCharge"]" Field="FreightCharge" TestId="sales-order-header-freight-charge" />
-            @* 4: ship-to *@
-            <QuroText Label="@L["Sd.SalesOrder.ShipName"]" Field="ShipName" Span="2" TestId="sales-order-header-ship-name" />
-            <QuroText Label="@L["Sd.SalesOrder.ShipAddr1"]" Field="ShipAddr1" Span="2" TestId="sales-order-header-ship-addr1" />
-            <QuroText Label="@L["Sd.SalesOrder.ShipAddr2"]" Field="ShipAddr2" Span="2" TestId="sales-order-header-ship-addr2" />
-            <QuroText Label="@L["Sd.SalesOrder.ShipCity"]" Field="ShipCity" TestId="sales-order-header-ship-city" />
-            <QuroCodeSelect Major="STATE" Label="@L["Sd.SalesOrder.ShipState"]" Field="ShipState" TestId="sales-order-header-ship-state" />
-            <QuroText Label="@L["Sd.SalesOrder.ShipZipCode"]" Field="ShipZipCode" Required TestId="sales-order-header-ship-zip-code" />
-            <QuroText Label="@L["Sd.SalesOrder.ShipCountry"]" Field="ShipCountry" TestId="sales-order-header-ship-country" />
-            <QuroText Label="@L["Sd.SalesOrder.ShipPhone"]" Field="ShipPhone" TestId="sales-order-header-ship-phone" />
-            <QuroText Label="@L["Sd.SalesOrder.ShipFax"]" Field="ShipFax" TestId="sales-order-header-ship-fax" />
-            @* 5: the customer's discount status (shown only) and the base currency total *@
-            <QuroCodeSelect Major="DISCOUNT_STATUS" Label="@L["Sd.SalesOrder.DcStatus"]" Field="DcStatus" LockMode="LockMode.Always"
-                            TestId="sales-order-header-dc-status" />
             @if (_decimals.IsForeign)
             {
                 <QuroNumber Label="@L["Sd.SalesOrder.TotBaseAmt"]" Value="BaseTotal(so)" Decimals="_decimals.BaseAmount"
-                            LockMode="LockMode.Always" TestId="sales-order-header-tot-base-amt" />
+                            LockMode="LockMode.Always" Span="2" TestId="sales-order-header-tot-base-amt" />
             }
+            @* The ship-to, collapsed unless a picked customer leaves the required ZIP code empty *@
+            <QuroFieldSection Title="@L["Sd.SalesOrder.ShipTo"]" KeepOpen="@(so.CustomerId is not null && string.IsNullOrWhiteSpace(so.ShipZipCode))"
+                              TestId="sales-order-header-ship-to">
+                <QuroText Label="@L["Sd.SalesOrder.ShipName"]" Field="ShipName" Span="2" TestId="sales-order-header-ship-name" />
+                <QuroText Label="@L["Sd.SalesOrder.ShipAddr1"]" Field="ShipAddr1" Span="2" TestId="sales-order-header-ship-addr1" />
+                <QuroText Label="@L["Sd.SalesOrder.ShipAddr2"]" Field="ShipAddr2" Span="2" TestId="sales-order-header-ship-addr2" />
+                <QuroText Label="@L["Sd.SalesOrder.ShipCity"]" Field="ShipCity" TestId="sales-order-header-ship-city" />
+                <QuroCodeSelect Major="STATE" Label="@L["Sd.SalesOrder.ShipState"]" Policy="Sd.SalesOrder.ShipState" Field="ShipState" TestId="sales-order-header-ship-state" />
+                <QuroText Label="@L["Sd.SalesOrder.ShipZipCode"]" Field="ShipZipCode" Required TestId="sales-order-header-ship-zip-code" />
+                <QuroText Label="@L["Sd.SalesOrder.ShipCountry"]" Policy="Sd.SalesOrder.ShipCountry" Field="ShipCountry" TestId="sales-order-header-ship-country" />
+                <QuroText Label="@L["Sd.SalesOrder.ShipPhone"]" Field="ShipPhone" TestId="sales-order-header-ship-phone" />
+                <QuroText Label="@L["Sd.SalesOrder.ShipFax"]" Field="ShipFax" TestId="sales-order-header-ship-fax" />
+            </QuroFieldSection>
             <QuroText Label="@L["Sd.SalesOrder.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="sales-order-header-remarks" />
         </HeaderFields>
         <Totals Context="lines">
+            @* Supply, estimated tax and total: the line amounts already take the discount (SD-BR-005, SD-BR-034) *@
             @{ var totals = TotalsOf(lines); }
-            <QuroTotals Subtotal="totals.Subtotal" Discount="totals.Discount" Tax="totals.Tax" CurrencyCode="@_decimals.CurrencyCode"
-                        Decimals="_decimals.Amount" TestId="sales-order-totals" />
+            <QuroTotals Subtotal="totals.Supply" Tax="totals.Tax" SubtotalLabel="@L["Sd.SalesOrder.SupplyAmt"]" TaxLabel="@L["Sd.SalesOrder.TaxEstimate"]"
+                        CurrencyCode="@_decimals.CurrencyCode" Decimals="_decimals.Amount" TestId="sales-order-totals" />
         </Totals>
     </QuroHeaderDetail>
 
@@ -173,8 +184,15 @@
     private IReadOnlyList<SalesOrderDiscountRateDto> _discounts = [];
     private IReadOnlyList<CodeItemDto> _currencies = [];
     private IReadOnlyList<CodeItemDto> _billingFlows = [];
+    private IReadOnlyList<CodeItemDto> _taxCodeOptions = [];
+    private IReadOnlyList<CodeItemDto> _statusOptions = [];
     private Dictionary<string, string> _statusNames = [];
     private readonly Dictionary<string, long> _itemIds = new(StringComparer.OrdinalIgnoreCase);
+    private CustomerDefaults? _customerDefaults;
+    private string? _findCustomer;
+    private string? _findStatus;
+    private DateOnly? _findFrom;
+    private DateOnly? _findTo;
     private bool _canEdit;
     private bool _ready;
     private bool _customerLookupOpen;
@@ -200,8 +218,10 @@
             _decimals = SalesOrderDecimals.Of(_localization, null);
             _currencies = [.. _localization.Currencies.Select(c => new CodeItemDto(c.CurrencyCode, $"{c.CurrencyCode} {c.Name}"))];
             _taxCodes = await TaxCodeApi.InUseAsync(lang, CancellationToken.None);
+            _taxCodeOptions = [.. _taxCodes.Select(t => new CodeItemDto(t.TaxCode, $"{t.TaxCode} {t.Name}"))];
             _discounts = await Api.DiscountRatesAsync(CancellationToken.None);
-            _statusNames = (await CodeApi.GetAsync(StatusMajor, lang, CancellationToken.None)).ToDictionary(c => c.Code, c => c.Name);
+            _statusOptions = await CodeApi.GetAsync(StatusMajor, lang, CancellationToken.None);
+            _statusNames = _statusOptions.ToDictionary(c => c.Code, c => c.Name);
         }
         catch (ApiProblemException e)
         {
@@ -232,10 +252,11 @@
         }
     }
 
-    // A new order is SO, dated today, in the base currency until a customer is picked (SD-BR-031)
+    // A new order is SO, dated today, in the base currency and shipping to the company's country until a customer is picked (SD-BR-031)
     private SalesOrderHeader CreateHeader()
     {
         UseDecimals(_localization?.BaseCurrencyCode);
+        _customerDefaults = null;
         var today = DateOnly.FromDateTime(DateTime.Today);
         return new SalesOrderHeader
         {
@@ -244,24 +265,49 @@
             DueDt = today,
             CurrencyCode = _localization?.BaseCurrencyCode,
             ExchangeRate = 1m,
+            ShipCountry = _localization?.CountryCode,
         };
     }
 
-    // SD-BR-016: a new line has qty 1; the item fills the rest from the line defaults
-    private SalesOrderLine CreateLine(SalesOrderHeader so) => new() { SoQty = 1m };
+    // SD-BR-016, SD-BR-405, BC-BR-542: a new line has qty 1 and the header's default tax code and discount status; the item fills the rest
+    private SalesOrderLine CreateLine(SalesOrderHeader so)
+    {
+        var tax = _taxCodes.FirstOrDefault(t => t.TaxCode == so.TaxCode);
+        var discount = HeaderDiscount(so);
+        return new SalesOrderLine
+        {
+            Seq = NextSeq(),
+            SoQty = 1m,
+            TaxCode = tax?.TaxCode,
+            TaxCodeId = tax?.Id,
+            DcCd = discount?.DcCd,
+            DcRate = discount?.DcRate ?? 0m,
+        };
+    }
+
+    // SD-BR-405: a discount status with no rate gives no default
+    private SalesOrderDiscountRateDto? HeaderDiscount(SalesOrderHeader so) => _discounts.FirstOrDefault(d => d.DcCd == so.DcStatus);
+
+    // The No column of a line not saved yet; the API numbers the lines in screen order on save
+    private int NextSeq()
+    {
+        var lines = _frame!.Lines;
+        return lines.RowKeys.Select(k => lines.GetItem(k).Seq ?? 0).DefaultIfEmpty(0).Max() + 1;
+    }
 
     private Func<Task<HeaderLines<SalesOrderHeader, SalesOrderLine>?>>? Initial => SoNo is null
         ? null
-        : async () => await Api.FindByNoAsync(SoNo, CancellationToken.None) is { } order ? Document(order) : null;
+        : async () => await Api.FindByNoAsync(SoNo, CancellationToken.None) is { } order ? await DocumentAsync(order) : null;
 
-    // The find dialog (F3): a keyword that starts like an SO number searches by number, any other keyword by customer name
+    // The find dialog (F3): the keyword is the start of an SO number; the API has no customer name search, so the list is narrowed here
     private async Task<IReadOnlyList<SalesOrderHeader>> FindAsync(string? keyword)
     {
-        var text = keyword?.Trim();
-        var byNumber = text is { Length: > 0 } && text.StartsWith("SO", StringComparison.OrdinalIgnoreCase);
-        var orders = await Api.SearchAsync(new SalesOrderSearchQuery(byNumber ? text : null, null, null, null, null), CancellationToken.None);
+        var number = keyword?.Trim();
+        var customer = _findCustomer?.Trim();
+        var orders = await Api.SearchAsync(
+            new SalesOrderSearchQuery(string.IsNullOrEmpty(number) ? null : number, null, _findStatus, _findFrom, _findTo), CancellationToken.None);
         return [.. orders
-            .Where(o => byNumber || string.IsNullOrEmpty(text) || (o.CustomerName?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Where(o => string.IsNullOrEmpty(customer) || (o.CustomerName?.Contains(customer, StringComparison.OrdinalIgnoreCase) ?? false))
             .Select(SalesOrderHeader.From)];
     }
 
@@ -270,10 +316,21 @@
         + " " + so.CurrencyCode;
 
     private async Task<HeaderLines<SalesOrderHeader, SalesOrderLine>?> LoadAsync(SalesOrderHeader picked) =>
-        Document(await Api.GetAsync(picked.Id, CancellationToken.None));
+        await DocumentAsync(await Api.GetAsync(picked.Id, CancellationToken.None));
 
-    private HeaderLines<SalesOrderHeader, SalesOrderLine> Document(SalesOrderDto order)
+    private async Task<HeaderLines<SalesOrderHeader, SalesOrderLine>> DocumentAsync(SalesOrderDto order)
     {
+        // The default tax code is not stored on the order, so it comes from the customer
+        CustomerDto? customer = null;
+        try
+        {
+            customer = await CustomerApi.GetAsync(order.CustomerId, CancellationToken.None);
+        }
+        catch (ApiProblemException)
+        {
+            // A migrated order may name a customer that is gone; the order still opens
+        }
+        _customerDefaults = customer is null ? null : new CustomerDefaults(customer.TaxCodeId, customer.DcStatus);
         UseDecimals(order.CurrencyCode);
         var taxCodes = TaxCodesById();
         foreach (var line in order.Lines.Where(l => l.ItemCd is not null))
@@ -281,7 +338,7 @@
             _itemIds[line.ItemCd!] = line.ItemId;
         }
         return new HeaderLines<SalesOrderHeader, SalesOrderLine>(
-            SalesOrderHeader.From(order), [.. order.Lines.OrderBy(l => l.Seq).Select(l => SalesOrderLine.From(l, taxCodes))]);
+            SalesOrderHeader.From(order, customer?.TaxCode), [.. order.Lines.OrderBy(l => l.Seq).Select(l => SalesOrderLine.From(l, taxCodes))]);
     }
 
     // The lines kept, in screen order, go in one request (lines left out are deleted). The API asks up to three questions with
@@ -300,7 +357,7 @@
                 var saved = isNew
                     ? await Api.CreateAsync(request, CancellationToken.None)
                     : await Api.UpdateAsync(so.Id, request, CancellationToken.None);
-                return Document(saved);
+                return await DocumentAsync(saved);
             }
             catch (ApiProblemException e) when (e.Problem.ConfirmField is { } field && answers.Asks(field))
             {
@@ -391,9 +448,11 @@
 
     private Task SelectCustomerAsync(CustomerDto customer) => _frame!.RunCommandAsync(() => ApplyCustomerAsync(customer));
 
-    // The customer fills the ship-to, freight, rep, terms, billing flow, discount status and currency (SD-BR-031, SD-BR-035)
+    // The customer fills the ship-to, freight, rep, terms, billing flow, default tax code, discount status and currency
+    // (SD-BR-031, SD-BR-035, BC-BR-542). The ship-to country falls back to the company's country
     private async Task ApplyCustomerAsync(CustomerDto customer)
     {
+        _customerDefaults = new CustomerDefaults(customer.TaxCodeId, customer.DcStatus);
         _applying = true;
         try
         {
@@ -405,13 +464,14 @@
             _frame.SetHeaderValue(nameof(SalesOrderHeader.ShipCity), customer.ShipCity);
             _frame.SetHeaderValue(nameof(SalesOrderHeader.ShipState), customer.ShipState);
             _frame.SetHeaderValue(nameof(SalesOrderHeader.ShipZipCode), customer.ShipZipCode);
-            _frame.SetHeaderValue(nameof(SalesOrderHeader.ShipCountry), customer.ShipCountry);
+            _frame.SetHeaderValue(nameof(SalesOrderHeader.ShipCountry), customer.ShipCountry ?? _localization?.CountryCode);
             _frame.SetHeaderValue(nameof(SalesOrderHeader.ShipPhone), customer.ShipPhone);
             _frame.SetHeaderValue(nameof(SalesOrderHeader.ShipFax), customer.ShipFax);
             _frame.SetHeaderValue(nameof(SalesOrderHeader.FreightCharge), customer.FreightCharge);
             _frame.SetHeaderValue(nameof(SalesOrderHeader.Rep), customer.Rep);
             _frame.SetHeaderValue(nameof(SalesOrderHeader.Terms), customer.Terms);
             _frame.SetHeaderValue(nameof(SalesOrderHeader.DcStatus), customer.DcStatus);
+            _frame.SetHeaderValue(nameof(SalesOrderHeader.TaxCode), customer.TaxCode);
             if (!Header().BillingFlowLocked)
             {
                 _frame.SetHeaderValue(nameof(SalesOrderHeader.BillingFlow), customer.BillingFlow);
@@ -524,7 +584,9 @@
             {
                 _itemIds[line.ItemCd] = line.ItemId;
             }
+            var seq = NextSeq();
             var added = result.Lines.Select(l => WithAmounts(SalesOrderLine.From(l, taxCodes))).ToList();
+            added.ForEach(l => l.Seq = seq++);
             _frame.AppendLines(added);
             _frame.ShowMessage(string.Format(CultureInfo.CurrentCulture, L["Sd.SalesOrder.LinesAdded"], added.Count), isError: false);
         });
@@ -643,8 +705,15 @@
                 lines.SetValue(rowKey, nameof(SalesOrderLine.SoQty), defaults.SoQty);
             }
             lines.SetValue(rowKey, nameof(SalesOrderLine.SoPrc), defaults.SoPrc);
-            lines.SetValue(rowKey, nameof(SalesOrderLine.DcCd), defaults.DcCd);
-            lines.SetValue(rowKey, nameof(SalesOrderLine.TaxCode), TaxCodeOf(defaults.TaxCodeId));
+            // The API gives the customer's defaults, or another code for this item (an exempt item or a certificate). The header's
+            // defaults, which the user may have changed, take the place of the customer's (SD-BR-405, BC-BR-542)
+            var customer = _customerDefaults;
+            lines.SetValue(rowKey, nameof(SalesOrderLine.DcCd),
+                customer is not null && defaults.DcCd == customer.DcStatus ? HeaderDiscount(so)?.DcCd : defaults.DcCd);
+            lines.SetValue(rowKey, nameof(SalesOrderLine.TaxCode),
+                customer is not null && defaults.TaxCodeId == customer.TaxCodeId && so.TaxCode is { Length: > 0 } headerTax
+                    ? headerTax
+                    : TaxCodeOf(defaults.TaxCodeId));
         }
         finally
         {
@@ -715,4 +784,7 @@
 
     // The header as the frame holds it (the inputs write to this object)
     private SalesOrderHeader Header() => _frame!.Header;
+
+    // What the customer master gives, to tell it from a code the API chose for one item
+    private sealed record CustomerDefaults(long? TaxCodeId, string? DcStatus);
 }

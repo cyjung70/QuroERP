@@ -1,3 +1,4 @@
 # US defaults for new records: field key -> value.
 Sd.Customer.Country: US
 Sd.Customer.ShipCountry: US
+Sd.SalesOrder.ShipCountry: US

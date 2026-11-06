@@ -75,6 +75,10 @@
     [Parameter]
     public Func<TLine, bool>? IsLineRemovable { get; set; }
 
+    /// <summary>A line whose cells may not be changed but which may be deleted, e.g. a saved receipt line (delete and re-enter).</summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineReadOnly { get; set; }
+
     /// <summary>Reads the lookups of the code columns. Without it a code column is plain text.</summary>
     [Parameter]
     public Func<LookupQuery, Task<IReadOnlyList<LookupRow>>>? Lookup { get; set; }
@@ -185,6 +189,8 @@
 
     private bool Locked(TLine item) => IsLineLocked?.Invoke(item) == true;
 
+    private bool CellsLocked(TLine item) => Locked(item) || IsLineReadOnly?.Invoke(item) == true;
+
     // validate "requires {field}": the column waits for a header field, e.g. the vendor before item codes (screens.md "SM")
     private ValidateDef? MissingRequirement(string field) => Definition.Validate.FirstOrDefault(v =>
         Is(v.Target, field) && v.Rule.StartsWith("requires ", StringComparison.Ordinal)
@@ -192,7 +198,7 @@
 
     private void OnCellValueChanging(CellValueChangingArgs<TLine> args)
     {
-        if (!CanEdit || Locked(args.Item))
+        if (!CanEdit || CellsLocked(args.Item))
         {
             args.Cancel = true;
             return;
@@ -310,7 +316,7 @@
     // Several matches or F4: the lookup's dialog opens and the grid waits for the picked code (null keeps the cell as it is)
     private async Task OnPopupRequested(PopupRequestedArgs<TLine> args)
     {
-        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || Locked(args.Item))
+        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || CellsLocked(args.Item))
         {
             return;
         }

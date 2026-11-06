@@ -9,7 +9,8 @@
         <div class="quro-dialog" role="dialog" aria-modal="true" aria-label="@Title" data-testid="@TestId">
             <h2>@Title</h2>
             <form class="quro-search" role="search" @onsubmit="SearchAsync" @onsubmit:preventDefault>
-                <QuroText Label="@L["Common.Keyword"]" @bind-Value="_keyword" TestId="@Id("keyword")" />
+                <QuroText Label="@(KeywordLabel ?? L["Common.Keyword"].Value)" @bind-Value="_keyword" TestId="@Id("keyword")" />
+                @Filters
                 <button type="submit" disabled="@_busy" data-testid="@Id("search")">@L["Common.Search"]</button>
             </form>
             <QuroListGrid TRow="TItem" Items="_rows" Columns="Columns" Busy="_busy" TestId="@Id("grid")" OnSelect="SelectAsync" />
@@ -52,6 +53,14 @@
     /// <summary>The keyword an opening starts with, e.g. the text typed in a grid code cell (null = all).</summary>
     [Parameter]
     public string? InitialKeyword { get; set; }
+
+    /// <summary>What the keyword searches, e.g. the document number. Defaults to Common.Keyword.</summary>
+    [Parameter]
+    public string? KeywordLabel { get; set; }
+
+    /// <summary>More search conditions next to the keyword. The screen keeps their values and reads them in <see cref="Search"/>.</summary>
+    [Parameter]
+    public RenderFragment? Filters { get; set; }
 
     // Each opening starts with the initial keyword (usually empty) and its list
     protected override async Task OnParametersSetAsync()

@@ -3,12 +3,12 @@
 @using System.Globalization
 @inject IStringLocalizer<SharedResource> L
 
-<div class="quro-totals-row" data-testid="@Id("subtotal")"><span>@L["Common.Totals.Subtotal"]</span><b>@Amount(Subtotal)</b></div>
+<div class="quro-totals-row" data-testid="@Id("subtotal")"><span>@(SubtotalLabel ?? L["Common.Totals.Subtotal"].Value)</span><b>@Amount(Subtotal)</b></div>
 @if (Discount != 0)
 {
     <div class="quro-totals-row quro-totals-discount" data-testid="@Id("discount")"><span>@L["Common.Totals.Discount"]</span><b>@Amount(-Discount)</b></div>
 }
-<div class="quro-totals-row" data-testid="@Id("tax")"><span>@L["Common.Totals.Tax"]</span><b>@Amount(Tax)</b></div>
+<div class="quro-totals-row" data-testid="@Id("tax")"><span>@(TaxLabel ?? L["Common.Totals.Tax"].Value)</span><b>@Amount(Tax)</b></div>
 <div class="quro-totals-total" data-testid="@Id("total")">
     <span>@L["Common.Totals.Total"]</span>
     <span><b>@Amount(Subtotal - Discount + Tax)</b><small>@CurrencyCode</small></span>
@@ -31,6 +31,14 @@
 
     [Parameter]
     public decimal Tax { get; set; }
+
+    /// <summary>The first row's label when the screen's table names it, e.g. the supply amount. Defaults to Common.Totals.Subtotal.</summary>
+    [Parameter]
+    public string? SubtotalLabel { get; set; }
+
+    /// <summary>The tax row's label when the screen's table names it, e.g. the estimated tax. Defaults to Common.Totals.Tax.</summary>
+    [Parameter]
+    public string? TaxLabel { get; set; }
 
     [Parameter]
     public string? CurrencyCode { get; set; }

@@ -30,6 +30,9 @@ public sealed record DocumentNumberFormat(string Prefix, int Digits, bool Restar
     /// <summary>MM-BR-106: GR + yymm + 6 digits.</summary>
     public static readonly DocumentNumberFormat GoodsReceipt = new("GR", 6, RestartsMonthly: true);
 
+    /// <summary>MM-BR-752: VI + yymm + 6 digits.</summary>
+    public static readonly DocumentNumberFormat SupplierInvoice = new("VI", 6, RestartsMonthly: true);
+
     /// <summary>MM-BR-208: UR + yymm + 5 digits.</summary>
     public static readonly DocumentNumberFormat UnplannedReceipt = new("UR", 5, RestartsMonthly: true);
 

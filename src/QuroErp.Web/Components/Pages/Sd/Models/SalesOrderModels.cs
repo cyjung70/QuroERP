@@ -35,6 +35,10 @@ public sealed class SalesOrderHeader
     public string? ShipFax { get; set; }
     public string? Remarks { get; set; }
     public string? DcStatus { get; set; }
+
+    /// <summary>The default tax code that a new line takes; not saved (BC-BR-542, SD-BR-033).</summary>
+    public string? TaxCode { get; set; }
+
     public decimal TotSoAmt { get; set; }
 
     /// <summary>A shipment or invoice exists, so the billing flow cannot change (SD-BR-035).</summary>
@@ -63,8 +67,11 @@ public sealed class SalesOrderHeader
         TotSoAmt = order.TotSoAmt,
     };
 
-    public static SalesOrderHeader From(SalesOrderDto order) => new()
+    /// <param name="order">The stored order.</param>
+    /// <param name="defaultTaxCode">The customer's tax code, which is not stored on the order.</param>
+    public static SalesOrderHeader From(SalesOrderDto order, string? defaultTaxCode) => new()
     {
+        TaxCode = defaultTaxCode,
         Id = order.Id,
         SoNo = order.SoNo,
         Status = order.Status,
@@ -235,7 +242,6 @@ public static class SalesOrderStatus
 
     public static ChipKind ChipOf(string? status) => status switch
     {
-        Open => ChipKind.Brand,
         PartlyShipped => ChipKind.Warn,
         Closed => ChipKind.Ok,
         _ => ChipKind.Neutral,
