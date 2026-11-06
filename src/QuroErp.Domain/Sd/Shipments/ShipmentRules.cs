@@ -161,11 +161,14 @@ public static class ShipmentRules
     /// <exception cref="DomainException">SD-E-104 with the dn_no.</exception>
     public static void EnsureInvoiceOpen(string dnNo, decimal totDnAmt, decimal balAmt)
     {
-        if (totDnAmt != balAmt)
+        if (!IsInvoiceOpen(totDnAmt, balAmt))
         {
             throw new DomainException(InvoicePaidCode, dnNo);
         }
     }
+
+    /// <summary>SD-BR-104: an invoice with no receipt or credit applied still has its whole total as the balance.</summary>
+    public static bool IsInvoiceOpen(decimal totDnAmt, decimal balAmt) => totDnAmt == balAmt;
 
     /// <summary>SD-BR-163, SD-BR-114: an issue at a moving average cost of 0 cannot be saved.</summary>
     /// <exception cref="DomainException">SD-E-114 with the item code.</exception>

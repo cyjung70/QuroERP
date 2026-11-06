@@ -872,6 +872,13 @@
   <data name="SD-E-174" xml:space="preserve"><value>Order {0} bills before shipping, so ship it with Import invoice only.</value></data>
   <data name="SD-E-175" xml:space="preserve"><value>A bill-first shipment takes only lines from Import invoice and can't mix them with other lines (invoice {0}, line {1}, unshipped {2}).</value></data>
   <data name="Menu.G3SD03" xml:space="preserve"><value>Shipments</value></data>
+  <data name="Sd.Shipment.FindFrom" xml:space="preserve"><value>Ship date from</value></data>
+  <data name="Sd.Shipment.FindTo" xml:space="preserve"><value>Ship date to</value></data>
+  <data name="Sd.Shipment.ShipTo" xml:space="preserve"><value>Ship-to</value></data>
+  <data name="Sd.Shipment.TotalQty" xml:space="preserve"><value>Total qty</value></data>
+  <data name="Sd.Shipment.RemainingQty" xml:space="preserve"><value>Remaining qty</value></data>
+  <data name="Sd.Shipment.ImportLines" xml:space="preserve"><value>Import</value></data>
+  <data name="Sd.Shipment.Path" xml:space="preserve"><value>SD &gt; Sales</value></data>
   <data name="Sd.Shipment.Title" xml:space="preserve"><value>Shipment</value></data>
   <data name="Sd.Shipment.ShipNo" xml:space="preserve"><value>Ship no.</value></data>
   <data name="Sd.Shipment.ShipDt" xml:space="preserve"><value>Ship date</value></data>
@@ -903,7 +910,6 @@
   <data name="Sd.Shipment.ConfirmVoid" xml:space="preserve"><value>Void this shipment? The issued stock comes back, and an invoice made with the shipment is voided too.</value></data>
   <data name="Sd.Shipment.LinesAdded" xml:space="preserve"><value>Added {0} lines. Save to issue the stock.</value></data>
   <data name="Sd.Shipment.SoNo" xml:space="preserve"><value>SO no.</value></data>
-  <data name="Sd.Shipment.SoDt" xml:space="preserve"><value>SO date</value></data>
   <data name="Sd.Shipment.DnNo" xml:space="preserve"><value>Invoice no.</value></data>
   <data name="Sd.Shipment.LineCount" xml:space="preserve"><value>Lines</value></data>
   <data name="Sd.Shipment.Seq" xml:space="preserve"><value>No.</value></data>
@@ -918,12 +924,9 @@
   <data name="Sd.Shipment.LotOnhandQty" xml:space="preserve"><value>Lot on hand</value></data>
   <data name="Sd.Shipment.ShipQty" xml:space="preserve"><value>Ship qty</value></data>
   <data name="Sd.Shipment.ShipPrc" xml:space="preserve"><value>Unit price</value></data>
-  <data name="Sd.Shipment.DcRate" xml:space="preserve"><value>Discount rate</value></data>
-  <data name="Sd.Shipment.TaxCode" xml:space="preserve"><value>Tax code</value></data>
-  <data name="Sd.Shipment.ShipAmt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Sd.Shipment.ShipAmt" xml:space="preserve"><value>Shipment amount</value></data>
   <data name="Sd.Shipment.BilledQty" xml:space="preserve"><value>Billed qty</value></data>
   <data name="Sd.Shipment.OnhandQty" xml:space="preserve"><value>On hand</value></data>
-  <data name="Sd.Shipment.Source" xml:space="preserve"><value>Source line</value></data>
   <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>Goods Receipt</value></data>
   <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>GR No.</value></data>
   <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>Status</value></data>

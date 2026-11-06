@@ -79,6 +79,10 @@
     [Parameter]
     public Func<TLine, bool>? IsLineReadOnly { get; set; }
 
+    /// <summary>One cell of a line that may not be changed, e.g. the item code of a line imported from an order.</summary>
+    [Parameter]
+    public Func<TLine, string, bool>? IsCellLocked { get; set; }
+
     /// <summary>Reads the lookups of the code columns. Without it a code column is plain text.</summary>
     [Parameter]
     public Func<LookupQuery, Task<IReadOnlyList<LookupRow>>>? Lookup { get; set; }
@@ -198,7 +202,7 @@
 
     private void OnCellValueChanging(CellValueChangingArgs<TLine> args)
     {
-        if (!CanEdit || CellsLocked(args.Item))
+        if (!CanEdit || CellsLocked(args.Item) || IsCellLocked?.Invoke(args.Item, args.Field) == true)
         {
             args.Cancel = true;
             return;
@@ -316,7 +320,8 @@
     // Several matches or F4: the lookup's dialog opens and the grid waits for the picked code (null keeps the cell as it is)
     private async Task OnPopupRequested(PopupRequestedArgs<TLine> args)
     {
-        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || CellsLocked(args.Item))
+        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || CellsLocked(args.Item)
+            || IsCellLocked?.Invoke(args.Item, args.Field) == true)
         {
             return;
         }

@@ -1,0 +1,139 @@
+@* Picks lines of a source document and the qty to take of each, e.g. the order lines a shipment imports. The API checks the qty
+   against what is left when the document is saved. *@
+@typeparam TSource
+@using System.Globalization
+@inject IStringLocalizer<SharedResource> L
+
+@if (Visible)
+{
+    <div class="quro-dialog-backdrop">
+        <div class="quro-dialog quro-line-import" role="dialog" aria-modal="true" aria-label="@Title" data-testid="@TestId">
+            <h2>@Title</h2>
+            <form class="quro-search" role="search" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+                <QuroText Label="@Labels.DocumentNo" @bind-Value="_keyword" TestId="@Id("keyword")" />
+                <button type="submit" disabled="@_busy" data-testid="@Id("search")">@L["Common.Search"]</button>
+            </form>
+            <div class="quro-line-import-rows" aria-busy="@(_busy ? "true" : null)">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" aria-label="@L["Common.Select"]" checked="@AllSelected" data-testid="@Id("check-all")" @onchange="SelectAll" /></th>
+                            <th>@Labels.DocumentNo</th>
+                            <th>@Labels.Seq</th>
+                            <th>@Labels.ItemCd</th>
+                            <th>@Labels.ItemName</th>
+                            <th>@Labels.Unit</th>
+                            <th>@Labels.RemainingQty</th>
+                            <th>@Labels.Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < _rows.Count; i++)
+                        {
+                            var row = _rows[i];
+                            var index = i;
+                            <tr data-testid="@Id("row")">
+                                <td><input type="checkbox" aria-label="@L["Common.Select"]" @bind="row.Selected" data-testid="@Id($"check-{index}")" /></td>
+                                <td>@row.DocumentNo</td>
+                                <td>@row.Seq</td>
+                                <td>@row.ItemCd</td>
+                                <td>@row.ItemName</td>
+                                <td>@row.Unit</td>
+                                <td class="quro-line-import-number">@row.RemainingQty.ToString("N" + QtyDecimals.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture)</td>
+                                <td class="quro-line-import-qty">
+                                    <QuroNumber Label="@Labels.Qty" HideLabel @bind-Value="row.Qty" Decimals="QtyDecimals" TestId="@Id($"qty-{index}")" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="quro-dialog-actions">
+                <button type="button" class="quro-primary" disabled="@(!CanImport)" data-testid="@Id("import")" @onclick="ImportAsync">@Labels.Import</button>
+                <button type="button" data-testid="@Id("close")" @onclick="CloseAsync">@L["Common.Close"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<LineImportRow<TSource>> _rows = [];
+    private string? _keyword;
+    private bool _busy;
+    private bool _wasVisible;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public LineImportLabels Labels { get; set; } = default!;
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
+
+    /// <summary>Finds the lines for a document number keyword (null = all).</summary>
+    [Parameter, EditorRequired]
+    public Func<string?, Task<IReadOnlyList<LineImportRow<TSource>>>> Search { get; set; } = default!;
+
+    /// <summary>The checked lines with their qty.</summary>
+    [Parameter]
+    public EventCallback<IReadOnlyList<LineImportRow<TSource>>> OnImport { get; set; }
+
+    /// <summary>Quantity decimals from GET api/bc/localization.</summary>
+    [Parameter]
+    public int QtyDecimals { get; set; } = 2;
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private bool AllSelected => _rows.Count > 0 && _rows.All(r => r.Selected);
+
+    // At least one checked line, and every checked line takes a qty above zero (the API checks the upper limit)
+    private bool CanImport => !_busy && _rows.Any(r => r.Selected) && _rows.Where(r => r.Selected).All(r => r.Qty > 0);
+
+    // Each opening starts empty, with the list of all lines
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && !_wasVisible)
+        {
+            _keyword = null;
+            await SearchAsync();
+        }
+        _wasVisible = Visible;
+    }
+
+    private async Task SearchAsync()
+    {
+        _busy = true;
+        try
+        {
+            _rows = await Search(_keyword);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void SelectAll(ChangeEventArgs e)
+    {
+        var selected = e.Value is true;
+        foreach (var row in _rows)
+        {
+            row.Selected = selected;
+        }
+    }
+
+    private async Task ImportAsync()
+    {
+        await OnImport.InvokeAsync([.. _rows.Where(r => r.Selected)]);
+        await CloseAsync();
+    }
+
+    private Task CloseAsync() => VisibleChanged.InvokeAsync(false);
+
+    private string? Id(string part) => TestId is null ? null : $"{TestId}-{part}";
+}

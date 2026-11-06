@@ -76,6 +76,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         sh.Lines.Select(l => (l.Seq, l.ShipQty, l.ShipPrc, l.DcRate, l.TaxCodeId, l.BilledQty, l.SalesOrderLineId, l.SoNo))
             .Should().Equal((1, 4m, 100m, -10m, m.Vat10, 4m, (long?)so.Lines[0], so.SoNo), (2, 2m, 120m, 0m, m.NoTax, 2m, null, null));
         sh.Lines[0].OnhandQty.Should().Be(14m);
+        sh.Lines.Select(l => l.RemainingQty).Should().Equal(6m, null);
         (await OnHandAsync(m.Item, m.Main)).Should().Be(14m);
         (await MovementsAsync(sh.ShipNo)).Should().Equal(("DN", 1, -4m, -200m, (DateOnly?)null), ("DN", 2, -2m, -100m, null));
         (await OrderLineAsync(so.Lines[0])).Should().Be((4m, 4m));
@@ -88,7 +89,22 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await InvoiceLinesAsync(invoice.Id)).Should().Equal(
             (1, 4m, 360m, 36m, (long?)so.Lines[0], sh.Lines[0].Id), (2, 2m, 240m, 0m, null, sh.Lines[1].Id));
         (await Service.SearchAsync(new(sh.ShipNo, m.Customer, null, ShipDt, ShipDt), None))
-            .Should().ContainSingle(s => s.Id == sh.Id && s.SalesInvoiceNo == sh.SalesInvoiceNo);
+            .Should().ContainSingle(s => s.Id == sh.Id && s.SalesInvoiceNo == sh.SalesInvoiceNo && s.ShipAmt == 600m);
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UC-051-T01")]
+    public async Task Search_FindsByPartOfTheCustomerName_WithoutTreatingItsWildcardsAsPatterns()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipAndBill);
+        await ReceiveAsync(m.Item, m.Main, 20m);
+        var sh = await Service.CreateAsync(Request(m, Direct(m.Item, 2m, 120m, m.NoTax)), "kim", None);
+        var name = sh.CustomerName!;
+
+        (await Service.SearchAsync(new(null, null, null, null, null, name[1..^1].ToLowerInvariant()), None))
+            .Should().ContainSingle(s => s.Id == sh.Id && s.ShipAmt == 240m);
+        (await Service.SearchAsync(new(null, null, null, null, null, "%"), None)).Should().NotContain(s => s.Id == sh.Id);
+        (await Service.SearchAsync(new(null, null, null, null, null, "NO SUCH CUSTOMER"), None)).Should().BeEmpty();
     }
 
     [DatabaseFact, Trait("Id", "SD-UC-051-T02"), Trait("Id", "SD-UT-169"), Trait("Id", "SD-UT-104")]
@@ -107,6 +123,8 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         var voidPaid = () => Service.VoidAsync(paid.Id, paid.UpdatedAt, "kim", None);
         var voided = await Service.VoidAsync(open.Id, open.UpdatedAt, "kim", None);
 
+        (await Service.GetAsync(paid.Id, None)).InvoiceHasPayments.Should().BeTrue();
+        open.InvoiceHasPayments.Should().BeFalse();
         (await update.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal(paid.SalesInvoiceNo!);
         (await voidPaid.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(ShipmentRules.InvoicePaidCode);
         (voided.Status, voided.Lines[0].BilledQty).Should().Be(("VO", 0m));

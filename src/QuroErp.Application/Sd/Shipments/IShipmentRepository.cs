@@ -19,11 +19,14 @@ public sealed record ShipmentRow(
 public sealed record ShipmentLineRow(
     long Id, int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, long WarehouseId, string? WarehouseCode, long? LotId,
     string? LotNo, decimal ShipQty, decimal ShipPrc, string? DcCd, decimal DcRate, long TaxCodeId, decimal BilledQty, decimal OnhandQty,
-    long? SalesOrderLineId, string? SoNo, int? SoSeq, long? SalesInvoiceLineId, string? DnNo, int? DnSeq)
+    long? SalesOrderLineId, string? SoNo, int? SoSeq, long? SalesInvoiceLineId, string? DnNo, int? DnSeq, decimal? RemainingQty)
 {
     public StoredShipmentLine ToStored() => new(
         Id, Seq, ItemId, ItemName, WarehouseId, ShipQty, ShipPrc, DcCd, DcRate, TaxCodeId, LotId, BilledQty, SalesOrderLineId, SalesInvoiceLineId);
 }
+
+/// <summary>What the amount of a listed shipment is calculated from.</summary>
+public sealed record ShipmentAmountLineRow(long ShipmentId, int Seq, decimal ShipQty, decimal ShipPrc, decimal DcRate, long TaxCodeId);
 
 /// <summary>Header fields a save writes. SalesOrderId is the first order the lines come from.</summary>
 public sealed record ShipmentHeader(
@@ -64,6 +67,9 @@ public interface IShipmentRepository
 {
     /// <summary>Newest first (ship_dt, ship_no), at most <paramref name="limit"/> rows.</summary>
     Task<IReadOnlyList<ShipmentRow>> SearchAsync(ShipmentSearchQuery query, int limit, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The lines of these shipments, by shipment and seq, for the list's amounts.</summary>
+    Task<IReadOnlyList<ShipmentAmountLineRow>> FindAmountLinesAsync(IReadOnlyList<long> shipmentIds, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <param name="forUpdate">Locks the header row until the transaction ends.</param>
     Task<ShipmentRow?> FindAsync(long id, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken);

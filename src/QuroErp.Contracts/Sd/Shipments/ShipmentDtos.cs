@@ -25,17 +25,20 @@ public static class ShipmentRoutes
     public const int MaxListSize = 200;
 }
 
-/// <summary>List conditions; all optional. ShipNo matches the start of the number.</summary>
-public sealed record ShipmentSearchQuery(string? ShipNo, long? CustomerId, string? Status, DateOnly? FromDt, DateOnly? ToDt);
+/// <summary>List conditions; all optional. ShipNo matches the start of the number, CustomerName any part of the name.</summary>
+public sealed record ShipmentSearchQuery(
+    string? ShipNo, long? CustomerId, string? Status, DateOnly? FromDt, DateOnly? ToDt, string? CustomerName = null);
 
+/// <summary>A row of the list. ShipAmt is calculated, not stored: the line amounts after discount without tax, in the document currency.</summary>
 public sealed record ShipmentSummaryDto(
     long Id, string ShipNo, string Status, string BillingFlow, DateOnly ShipDt, long CustomerId, string? CustomerName, string CurrencyCode,
-    string? SalesInvoiceNo);
+    string? SalesInvoiceNo, decimal ShipAmt);
 
 /// <summary>
 /// One shipment. Status is OP, PB, BL or VO (SD-BR-166). BillingFlow is fixed by the first save (SD-BR-174). SalesInvoiceId and
 /// SalesInvoiceNo are the invoice a SHIP_AND_BILL shipment made (SD-BR-167). Currency and rate come from the order or invoice
-/// (SD-BR-170). CreatedAt, CreatedBy and UpdatedBy are the audit line of the screen.
+/// (SD-BR-170). CreatedAt, CreatedBy and UpdatedBy are the audit line of the screen. InvoiceHasPayments says a SHIP_AND_BILL invoice
+/// has a receipt or credit applied, so the shipment no longer changes (SD-BR-104, SD-BR-167).
 /// </summary>
 public sealed record ShipmentDto(
     long Id,
@@ -66,12 +69,13 @@ public sealed record ShipmentDto(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? CreatedAt = null,
     string? CreatedBy = null,
-    string? UpdatedBy = null);
+    string? UpdatedBy = null,
+    bool InvoiceHasPayments = false);
 
 /// <summary>
 /// One line. ShipPrc, DcCd, DcRate and TaxCodeId come from the order or invoice line (SD-BR-167, SD-BR-175), or as entered for a
 /// direct line (SD-BR-173). BilledQty is billed (SD-BR-108). OnhandQty is the line warehouse's on-hand qty now. SoNo/SoSeq and
-/// DnNo/DnSeq name the source line.
+/// DnNo/DnSeq name the source line. RemainingQty is what the source line still has to ship; null for a direct line.
 /// </summary>
 public sealed record ShipmentLineDto(
     long Id,
@@ -96,7 +100,8 @@ public sealed record ShipmentLineDto(
     int? SoSeq,
     long? SalesInvoiceLineId,
     string? DnNo,
-    int? DnSeq);
+    int? DnSeq,
+    decimal? RemainingQty = null);
 
 /// <summary>
 /// New or changed shipment. Lines are the whole list: saved lines come back unchanged with their Id (SD-BR-171), lines left out
@@ -176,4 +181,4 @@ public sealed record UnbilledShipmentLineDto(
 public sealed record UnshippedInvoiceLineDto(
     long SalesInvoiceLineId, long SalesInvoiceId, string DnNo, int Seq, long ItemId, string? ItemCd, string? ItemName, decimal InvoicedQty,
     decimal ShippedQty, decimal CancelledQty, decimal UnshippedQty, decimal Prc, string? DcCd, decimal DcRate, long TaxCodeId,
-    string CurrencyCode, decimal ExchangeRate);
+    string CurrencyCode, decimal ExchangeRate, string? Unit = null);

@@ -2,3 +2,4 @@
 Sd.Customer.Country: US
 Sd.Customer.ShipCountry: US
 Sd.SalesOrder.ShipCountry: US
+Sd.Shipment.ShipCountry: US
