@@ -1,0 +1,32 @@
+{
+  "id": "TASK-CORE-064",
+  "project": "core",
+  "title": "찾기 대화상자 행 더블클릭 선택",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screens.md",
+    "docs/architecture/qurogrid-integration.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-063"
+  ],
+  "acceptance": [
+    "`QuroLookupDialog` 결과 그리드에서 행을 더블클릭하면 선택 버튼과 같이 그 행을 고르고 대화상자를 닫는다 (screens.md \"팝업\"). 그리드 코드 셀이 여는 대화상자도 같다",
+    "머리글·빈 곳 더블클릭은 아무 일도 하지 않는다. 선택 버튼은 키보드용으로 그대로 둔다",
+    "QuroGrid에 공개 행 더블클릭 이벤트가 없으면 앱 쪽 우회에 `TODO(QuroGrid-request)`를 달고, 보고에 Given/When/Then 요청을 쓴다",
+    "bUnit: 행 키로 고르면 선택 결과가 전달되고 대화상자가 닫힌다. 실제 브라우저에서 더블클릭을 확인한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

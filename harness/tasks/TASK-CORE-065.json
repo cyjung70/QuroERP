@@ -1,0 +1,38 @@
+{
+  "id": "TASK-CORE-065",
+  "project": "core",
+  "title": "M·MM 행 명령을 SM과 맞춤",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screens.md",
+    "docs/architecture/screen-templates.md",
+    "docs/architecture/entry-frame.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-062",
+    "TASK-CORE-064"
+  ],
+  "acceptance": [
+    "편집형 `QuroMultiGrid`·`QuroMasterMultiDetail`의 커맨드바에 행 추가·삭제 표시·행 복원을 아이콘과 함께 둔다 (screens.md \"M·MM 행 명령\", \"툴바\")",
+    "신규는 저장하지 않은 변경을 확인한 뒤 조회 조건과 그리드를 비운다. MM은 두 그리드를 비운다. 화면이 조회 조건을 비울 수 있게 공통 컴포넌트에 자리를 둔다",
+    "행 추가는 선택 행 아래에 줄을 넣고 그 줄을 선택한다. 대화상자로 고르는 화면(역할 메뉴)은 대화상자를 연다. 상위 조회가 필요한 화면은 조회 전까지 비활성이다",
+    "삭제 표시는 저장된 행에 표시를 켜고 끄며, 새 행은 바로 지운다. 행 복원은 조회 때 값으로 되돌리고, 새 행은 지운다. 선택 행이 없으면 둘 다 비활성이다",
+    "행별 삭제·되돌리기 열과 그리드 위 복원 버튼을 없앤다. 행 상태 열은 둔다. 조회형 M은 바뀌지 않는다",
+    "읽기 권한 사용자(`CanWrite=false`)는 신규·저장·행 명령이 비활성이다",
+    "bUnit: 신규·행 추가·삭제 표시·행 복원을 M·MM에서 확인하고, 없앤 버튼을 쓰던 기존 테스트를 새 명령으로 옮긴다. 기존 `data-testid` 규칙 `{화면}-toolbar-{동작}`을 따른다",
+    "PR 설명에 M·MM 화면 캡처"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
