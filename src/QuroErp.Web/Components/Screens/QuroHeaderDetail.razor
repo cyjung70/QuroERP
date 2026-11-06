@@ -148,7 +148,7 @@
         <QuroLineGrid @ref="_lineGrid" TLine="TLine" Data="_lines" Definition="_definition" CanEdit="@(CanSaveNow && !Busy)"
                       IsLineLocked="IsLineLocked" IsLineRemovable="IsLineRemovable" IsLineReadOnly="IsLineReadOnly" IsCellLocked="IsCellLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
                       OptionsFor="LineOptionsFor" AddRowOnLastEnter="AddRowOnLastEnter" FillAddedLine="FillLineOrNull" OnLinesPasted="OnLinesPasted"
-                      ShadeLockedLines="ShadeLockedLines" OnMessage="ShowWarning" OnChanged="LinesChanged" TestId="@Id("line")" />
+                      OnMessage="ShowWarning" OnChanged="LinesChanged" TestId="@Id("line")" />
     </div>
 
     @* ⑤ Audit: empty for a new document *@
@@ -214,10 +214,6 @@
     /// <summary>Runs after a paste has read its codes, with the cells that changed.</summary>
     [Parameter]
     public Func<IReadOnlyList<(int RowKey, string Field)>, Task>? OnLinesPasted { get; set; }
-
-    /// <summary>Gives the cells of locked lines the read-only background.</summary>
-    [Parameter]
-    public bool ShadeLockedLines { get; set; }
 
     /// <summary>A line was added, marked, restored or changed, e.g. to number the lines again.</summary>
     [Parameter]

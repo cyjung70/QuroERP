@@ -54,7 +54,7 @@
                       Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
                       Definition="sd.sales-order.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
                       LineOptionsFor="LineOptions" AddRowOnLastEnter="true" FillAddedLine="FillLine" OnLinesPasted="OnLinesPastedAsync"
-                      ShadeLockedLines="true" OnLinesChanged="NumberLines"
+                      OnLinesChanged="NumberLines"
                       ColumnFormats="_decimals.ColumnFormats" IsLineLocked="l => l.IsShippedOrInvoiced()"
                       CanSave="SalesOrderStatus.CanSave" CanDelete="so => _canEdit && SalesOrderStatus.CanDelete(so)"
                       Delete="DeleteAsync" DeleteText="@L["Sd.SalesOrder.Delete"]" OnPdf="SalesOrderPdfAsync"
