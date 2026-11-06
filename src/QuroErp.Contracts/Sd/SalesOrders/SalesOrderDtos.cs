@@ -37,8 +37,9 @@ public static class SalesOrderLineFileKind
     public const string Barcode = "BARCODE";
 }
 
-/// <summary>List and find conditions; all optional. SoNo matches the start of the number.</summary>
-public sealed record SalesOrderSearchQuery(string? SoNo, long? CustomerId, string? Status, DateOnly? FromDt, DateOnly? ToDt);
+/// <summary>List and find conditions; all optional. SoNo matches the start of the number, CustomerName any part of the name.</summary>
+public sealed record SalesOrderSearchQuery(
+    string? SoNo, long? CustomerId, string? Status, DateOnly? FromDt, DateOnly? ToDt, string? CustomerName = null);
 
 public sealed record SalesOrderSummaryDto(
     long Id, string SoNo, string Status, DateOnly SoDt, long CustomerId, string? CustomerName, string CurrencyCode, decimal TotSoAmt);

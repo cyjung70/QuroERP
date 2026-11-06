@@ -63,6 +63,18 @@ public partial class SalesOrderServiceTests(AuthSchemaFixture db)
             .Should().ContainSingle(s => s.Id == so.Id && s.CustomerName == "Customer " + m.Key);
     }
 
+    [DatabaseFact, Trait("Id", "SD-UC-002-T01")]
+    public async Task Search_FindsByPartOfTheCustomerName_WithoutTreatingItsWildcardsAsPatterns()
+    {
+        var m = await MastersAsync();
+        var so = await Service.CreateAsync(Request(m, Line(m.Item)), "kim", None);
+
+        (await Service.SearchAsync(new(null, null, null, null, null, "customer " + m.Key.ToLowerInvariant()), None))
+            .Should().ContainSingle(s => s.Id == so.Id);
+        (await Service.SearchAsync(new(null, null, null, null, null, "%"), None)).Should().NotContain(s => s.Id == so.Id);
+        (await Service.SearchAsync(new(null, null, null, null, null, "NO SUCH CUSTOMER"), None)).Should().BeEmpty();
+    }
+
     [DatabaseFact, Trait("Id", "SD-UT-404")]
     public async Task DiscountRates_ListsTheCodesWithTheirRates_InCodeOrder()
     {

@@ -413,7 +413,7 @@ public class SalesOrderScreenTests : BunitContext
     }
 
     [Fact, Trait("Id", "SD-UC-002-T01")]
-    public void FindDialog_SearchesByNumberPeriodAndStatus_AndNarrowsByCustomer()
+    public void FindDialog_SendsTheNumberCustomerPeriodAndStatus_ToTheServer()
     {
         var page = RenderAs("admin");
         Button(page, "search").Click();
@@ -428,7 +428,7 @@ public class SalesOrderScreenTests : BunitContext
 
         page.WaitForAssertion(() => page.LookupRows("sales-order-find").Should().BeEmpty("no order has this customer"));
         var query = _api.Requests.Last(r => r.RequestUri!.AbsolutePath == "/api/sd/sales-orders").RequestUri!.Query;
-        query.Should().Contain("soNo=so2611").And.Contain("status=RE").And.Contain("2026-11-01").And.Contain("2026-11-30");
+        query.Should().Contain("soNo=so2611").And.Contain("customerName=nobody").And.Contain("status=RE").And.Contain("2026-11-01").And.Contain("2026-11-30");
 
         page.Find("[data-testid=sales-order-find-customer]").Change("acm");
         page.Find("form.quro-search").Submit();
@@ -705,10 +705,13 @@ public class SalesOrderScreenTests : BunitContext
                 case "/api/sd/sales-orders/line-file":
                     return Json(FileResult);
                 case "/api/sd/sales-orders" when request.Method == HttpMethod.Get:
-                    return Json(new List<SalesOrderSummaryDto>
-                    {
-                        new(Order.Id, Order.SoNo, Order.Status, Order.SoDt, Order.CustomerId, Order.CustomerName, Order.CurrencyCode, Order.TotSoAmt),
-                    });
+                    // The server filters by the customer name; the screen shows what comes back
+                    return Json(string.IsNullOrEmpty(query["customerName"]) || (Order.CustomerName ?? "").Contains(query["customerName"]!, StringComparison.OrdinalIgnoreCase)
+                        ? new List<SalesOrderSummaryDto>
+                        {
+                            new(Order.Id, Order.SoNo, Order.Status, Order.SoDt, Order.CustomerId, Order.CustomerName, Order.CurrencyCode, Order.TotSoAmt),
+                        }
+                        : []);
                 case "/api/sd/sales-orders" when request.Method == HttpMethod.Post:
                 case "/api/sd/sales-orders/601" when request.Method == HttpMethod.Put:
                     Saved.Add((await request.Content!.ReadFromJsonAsync<SaveSalesOrderRequest>(cancellationToken))!);

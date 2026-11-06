@@ -46,13 +46,16 @@
     "TASK-CORE-015",
     "TASK-CORE-018",
     "TASK-CORE-019",
-    "TASK-CORE-021"
+    "TASK-CORE-021",
+    "TASK-SD-003"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
-    "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)"
+    "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)",
+    "수주 견적 가져오기 (수주 명세): `GET /api/sd/sales-orders/open-quotation-lines?customerId&currencyCode` — 같은 고객·통화의 `OP` 견적에서 남은 수량 > 0인 줄, 단가·할인·세금 코드 포함 (SD-BR-657)",
+    "수주 줄에 견적 줄 연결(마이그레이션), 수주 저장·줄 삭제·수주 삭제 때 견적 줄 전환 수량 갱신, 남은 수량 초과 차단 (SD-BR-658). 기존 수주 API 테스트가 통과한다"
   ],
   "estimateHours": 3,
   "status": "todo"
