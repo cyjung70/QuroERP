@@ -188,7 +188,7 @@ public sealed class InventoryService(
             // A price difference does not change the quantity, so there is nothing to check (MM-BR-602)
             movement.NegativeStock = !line.AmountOnly
                 && StockPolicy.CheckOnHand(mode, qty[key], movement.Qty, item.ItemCd, warehouseCode, line.SetItemCd);
-            if (movement.Qty < 0 && mode != NegativeStockMode.Allow)
+            if (movement.Qty < 0)
             {
                 // Earlier lines of this document are already in the ledger, so they count
                 var (opening, balances) = await inventory.GetDailyBalancesAsync(

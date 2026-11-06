@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Each migrated test schema holds about 600 locks in one transaction: a low thread cap keeps PostgreSQL's lock table from filling (53200) -->
+    <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\QuroErp.Infrastructure\QuroErp.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\QuroErp.Application\QuroErp.Application.csproj" />
     <ProjectReference Include="..\..\src\QuroErp.Domain\QuroErp.Domain.csproj" />

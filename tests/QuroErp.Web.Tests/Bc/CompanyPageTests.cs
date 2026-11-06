@@ -44,7 +44,8 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
         var html = WebUtility.HtmlDecode(await browser.GetStringAsync("/bc/company"));
 
         html.Should().Contain("Company Logo").And.Contain("Upload Logo").And.Contain("data:image/png;base64,");
-        html.Should().Contain("Always allow").And.Contain("Allow during the month (not at month end)").And.Contain("Do not allow");
+        html.Should().Contain("Allow during the month (not at month end)").And.Contain("Do not allow").And.NotContain("Always allow");
+        html.Should().Contain("Over-Receipt").And.Contain("Warn, and save after confirmation").And.Contain("Allow editing cost adjustment amounts");
         html.Should().Contain("value=\"Quro\"").And.Contain("Lockout minutes (1-1440)").And.NotContain("page-error");
         requests.Should().OnlyContain(r => r.Headers.Authorization!.Scheme == "Bearer" && r.Headers.Authorization.Parameter == "token-admin");
     }
@@ -86,6 +87,9 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
         var en = Keys("en");
 
         en.Should().Contain(NegativeStockModes.All.Select(m => $"Mm.InventorySetting.Mode.{m}"));
+        en.Should().Contain(OverReceiptModes.All.Select(m => $"Mm.InventorySetting.OverReceiptMode.{m}"));
+        en.Should().Contain(["Mm.InventorySetting.OverReceiptMode", "Mm.InventorySetting.AllowCostAdjustmentEdit"]);
+        en.Should().NotContain("Mm.InventorySetting.Mode.ALLOW");
         en.Should().BeEquivalentTo(Keys("ko"));
     }
 
@@ -111,7 +115,7 @@ public class CompanyPageTests(WebFactory factory) : IClassFixture<WebFactory>
         },
         "/" + InventorySettingRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = JsonContent.Create(new InventorySettingDto(NegativeStockModes.Deny, DateTimeOffset.UnixEpoch, "system")),
+            Content = JsonContent.Create(new InventorySettingDto(NegativeStockModes.Deny, OverReceiptModes.Deny, false, DateTimeOffset.UnixEpoch, "system")),
         },
         "/" + CompanyRoutes.Base => new HttpResponseMessage(HttpStatusCode.OK)
         {

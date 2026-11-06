@@ -3,11 +3,10 @@ using QuroErp.Domain.Mm.Inventory;
 
 namespace QuroErp.Domain.Tests.Mm.Inventory;
 
-/// <summary>NegativeStockMode is stored as ALLOW, ALLOW_IN_MONTH or DENY (MM-BR-003).</summary>
+/// <summary>NegativeStockMode is stored as ALLOW_IN_MONTH or DENY (MM-BR-003).</summary>
 public class NegativeStockModeTests
 {
     [Theory, Trait("Id", "MM-SET-T01")]
-    [InlineData(NegativeStockMode.Allow, "ALLOW")]
     [InlineData(NegativeStockMode.AllowInMonth, "ALLOW_IN_MONTH")]
     [InlineData(NegativeStockMode.Deny, "DENY")]
     public void ToCodeAndTryParse_RoundTrip(NegativeStockMode mode, string code)
@@ -21,7 +20,7 @@ public class NegativeStockModeTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("deny")]
-    [InlineData("Allow")]
+    [InlineData("ALLOW")]
     public void TryParse_UnknownCode_ReturnsFalse(string? code)
     {
         NegativeStockModeCode.TryParse(code, out _).Should().BeFalse();

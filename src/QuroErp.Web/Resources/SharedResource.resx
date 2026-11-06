@@ -25,9 +25,12 @@
   <data name="Bc.Company.Logo.Upload" xml:space="preserve"><value>로고 올리기</value></data>
   <data name="Mm.InventorySetting.Title" xml:space="preserve"><value>재고 설정</value></data>
   <data name="Mm.InventorySetting.NegativeStockMode" xml:space="preserve"><value>마이너스 재고</value></data>
-  <data name="Mm.InventorySetting.Mode.ALLOW" xml:space="preserve"><value>항상 허용</value></data>
   <data name="Mm.InventorySetting.Mode.ALLOW_IN_MONTH" xml:space="preserve"><value>월중 허용 (월말에는 음수 불가)</value></data>
   <data name="Mm.InventorySetting.Mode.DENY" xml:space="preserve"><value>허용 안 함</value></data>
+  <data name="Mm.InventorySetting.OverReceiptMode" xml:space="preserve"><value>초과 입고</value></data>
+  <data name="Mm.InventorySetting.OverReceiptMode.DENY" xml:space="preserve"><value>허용 안 함</value></data>
+  <data name="Mm.InventorySetting.OverReceiptMode.WARN" xml:space="preserve"><value>경고 후 확인하면 저장</value></data>
+  <data name="Mm.InventorySetting.AllowCostAdjustmentEdit" xml:space="preserve"><value>원가 조정 금액 수정 허용</value></data>
   <data name="Common-E-004" xml:space="preserve"><value>다른 사용자가 먼저 수정했습니다. 다시 조회한 뒤 저장하세요.</value></data>
   <data name="BC-E-004" xml:space="preserve"><value>로고는 PNG 또는 JPEG 파일만 올릴 수 있습니다.</value></data>
   <data name="BC-E-005" xml:space="preserve"><value>로고 파일은 {0} KB 이하여야 합니다.</value></data>
