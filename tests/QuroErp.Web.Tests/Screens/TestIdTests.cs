@@ -63,7 +63,7 @@ public class TestIdTests : ScreenContext
         page.Find("[data-testid=multi-toolbar-save]").Click();
         page.Find("[data-testid=multi-message]").GetAttribute("data-level").Should().Be("info");
 
-        page.Find("[data-testid=multi-toolbar-new]").Click();
+        page.Find("[data-testid=multi-toolbar-add-row]").Click();
         page.Find("[data-testid=multi-toolbar-save]").Click();
         page.FindAll("[data-testid=multi-message]").Should().ContainSingle()
             .Which.GetAttribute("data-level").Should().Be("error");

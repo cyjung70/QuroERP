@@ -13,7 +13,7 @@
 
 <QuroMultiGrid @ref="_grid" TRow="WarehouseRow" Title="@L["Mm.Warehouse.Title"]" TestId="warehouse" Path="@L["Menu.G1BA"]" LoadOnStart="true"
                Definition="mm.warehouse.list" UpperCaseFields="UpperCaseFields" Load="LoadAsync" Save="SaveAsync" CreateRow="() => new WarehouseRow()"
-               CanWrite="_canEdit" OnCellChanged="OnCellChanged">
+               CanWrite="_canEdit" OnCellChanged="OnCellChanged" OnReset="() => _includeInactive = false">
     <SearchContent>
         <QuroCheckbox Label="@L["Mm.Warehouse.IncludeInactive"]" @bind-Value="_includeInactive" TestId="warehouse-search-include-inactive" />
     </SearchContent>

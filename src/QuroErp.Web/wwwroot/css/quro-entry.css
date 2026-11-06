@@ -42,7 +42,6 @@
    yellow from the grid's own style (GridColors). Error, warning and highlight marks keep their colors */
 .quro-grid-entry .quro-body-cell:not(.quro-mark-error, .quro-mark-warning, .quro-tone-highlight) { background: var(--q-field-input); }
 .quro-grid-entry .quro-body-cell[aria-readonly=true]:not(.quro-mark-error, .quro-mark-warning, .quro-tone-highlight) { background: var(--q-surface-2); }
-.quro-grid-commands { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 4px; }
 .quro-span-2 { grid-column: span 2; }
 .quro-span-4 { grid-column: span 4; }
 

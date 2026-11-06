@@ -1,5 +1,5 @@
-@* Command bar of the S, M and MM screens in a fixed order: search, previous, next, new, save, delete, print, Excel export
-   (screens.md "툴바"), then the screen's own commands after a separator (screen-templates.md 0).
+@* Command bar of the S, M and MM screens in a fixed order: search, previous, next, new, save, the row commands of an editable
+   M or MM screen, delete, print, Excel export (screens.md "툴바"), then the screen's own commands after a separator (screen-templates.md 0).
    A button appears only when the screen handles it; a button blocked by state or permission is disabled, never hidden.
    The screen's own commands sit in a fieldset that is disabled while busy, so the screen need not block them itself. *@
 @inject IStringLocalizer<SharedResource> L
@@ -11,10 +11,27 @@
         @Button(OnNext, "Common.Next", "next", !CanMove)
         @Button(OnNew, "Common.New", "new", !CanNew)
         @Button(OnSave, "Common.Save", "save", !CanSave, "quro-primary")
-        @Button(OnDelete, "Common.Delete", "delete", !CanDelete, "quro-danger-text")
-        @Button(OnPrint, "Common.Print", "print")
-        @Button(OnExport, "Common.ExportExcel", "export", icon: "excel")
+        @if (!HasRowCommands)
+        {
+            @OutputButtons
+        }
     </div>
+    @if (HasRowCommands)
+    {
+        <span class="quro-commandbar-sep" aria-hidden="true"></span>
+        <div class="quro-commandbar-group" data-group="rows">
+            @Button(OnAddRow, "Common.AddRow", "add-row", !CanAddRow)
+            @Button(OnMarkDelete, "Common.MarkDelete", "mark-delete", !CanMarkDelete, pressed: MarkDeletePressed ? "true" : "false")
+            @Button(OnRestoreRow, "Common.RestoreLine", "restore-row", !CanRestoreRow, icon: "restore-line")
+        </div>
+        @if (OnDelete.HasDelegate || OnPrint.HasDelegate || OnExport.HasDelegate)
+        {
+            <span class="quro-commandbar-sep" aria-hidden="true"></span>
+            <div class="quro-commandbar-group" data-group="output">
+                @OutputButtons
+            </div>
+        }
+    }
     @if (CanShowAllFields)
     {
         @* Admin "show all fields" (BC-BR-435): hidden fields read-only with a marker; nothing saved changes *@
@@ -81,6 +98,34 @@
     [Parameter]
     public bool CanDelete { get; set; } = true;
 
+    /// <summary>Adds a row below the selected one (editable M and MM screens, screens.md "M·MM 행 명령").</summary>
+    [Parameter]
+    public EventCallback OnAddRow { get; set; }
+
+    /// <summary>False while a row can't be added, e.g. before the parent record is searched.</summary>
+    [Parameter]
+    public bool CanAddRow { get; set; } = true;
+
+    /// <summary>Marks the selected row for deletion, or takes the mark off.</summary>
+    [Parameter]
+    public EventCallback OnMarkDelete { get; set; }
+
+    /// <summary>False while no row is selected or the user may only read.</summary>
+    [Parameter]
+    public bool CanMarkDelete { get; set; } = true;
+
+    /// <summary>The selected row is marked for deletion.</summary>
+    [Parameter]
+    public bool MarkDeletePressed { get; set; }
+
+    /// <summary>Returns the selected row to its loaded values; a new row goes away.</summary>
+    [Parameter]
+    public EventCallback OnRestoreRow { get; set; }
+
+    /// <summary>False while the selected row has no change to restore.</summary>
+    [Parameter]
+    public bool CanRestoreRow { get; set; } = true;
+
     [Parameter]
     public EventCallback OnPrint { get; set; }
 
@@ -97,9 +142,18 @@
     [Parameter]
     public string? TestId { get; set; }
 
-    private RenderFragment? Button(EventCallback handler, string label, string id, bool disabled = false, string? css = null, string? icon = null) =>
+    private bool HasRowCommands => OnAddRow.HasDelegate;
+
+    private RenderFragment OutputButtons =>
+        @<text>
+            @Button(OnDelete, "Common.Delete", "delete", !CanDelete, "quro-danger-text")
+            @Button(OnPrint, "Common.Print", "print")
+            @Button(OnExport, "Common.ExportExcel", "export", icon: "excel")
+        </text>;
+
+    private RenderFragment? Button(EventCallback handler, string label, string id, bool disabled = false, string? css = null, string? icon = null, string? pressed = null) =>
         handler.HasDelegate
-            ? @<button type="button" class="@css" disabled="@(Busy || disabled)" data-testid="@(TestId is null ? null : $"{TestId}-toolbar-{id}")"
+            ? @<button type="button" class="@css" disabled="@(Busy || disabled)" aria-pressed="@pressed" data-testid="@(TestId is null ? null : $"{TestId}-toolbar-{id}")"
                        @onclick="handler"><QuroCommandIcon Name="@(icon ?? id)" />@L[label]</button>
             : null;
 }

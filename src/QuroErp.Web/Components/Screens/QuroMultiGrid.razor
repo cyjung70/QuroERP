@@ -15,21 +15,16 @@
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice" Policies="Policies">
     <Toolbar>
         <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanShowAllFields="CanShowAllFields" ShowAllFields="Policies.ShowAllFields" OnToggleShowAllFields="ToggleShowAllFields" CanNew="CanWrite" CanSave="CanWrite"
-                     OnNew="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)"
+                     OnNew="@(Editable ? EventCallback.Factory.Create(this, NewAsync) : default)"
                      OnSave="@(Editable ? EventCallback.Factory.Create(this, SaveAsync) : default)"
+                     OnAddRow="@(Editable ? EventCallback.Factory.Create(this, AddRow) : default)" CanAddRow="CanAddNow"
+                     OnMarkDelete="@(Editable ? EventCallback.Factory.Create(this, MarkDelete) : default)" CanMarkDelete="CanMarkCurrent" MarkDeletePressed="CurrentIsDeleted"
+                     OnRestoreRow="@(Editable ? EventCallback.Factory.Create(this, RestoreRow) : default)" CanRestoreRow="CanRestoreCurrent"
                      OnPrint="OnPrint" OnExport="ExportAsync" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
         @if (_definition is not null)
         {
-            @* The package ignores button cells of a deleted row, so the selected deleted row is restored from here (TODO(QuroGrid-request)) *@
-            @if (Editable)
-            {
-                <div class="quro-grid-commands">
-                    <button type="button" disabled="@(Busy || !CanWrite || !CurrentIsDeleted)" data-testid="@Id("grid-restore-row")"
-                            @onclick="RestoreCurrent">@L["Common.RestoreRow"]</button>
-                </div>
-            }
             @* The package rows take no test id or row index yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
             @* Cell colors of an editable grid; the required columns get their color from this grid's style (TODO(QuroGrid-R5)) *@
             <div class="@(CanEdit ? "quro-grid-host quro-grid-entry" : "quro-grid-host")" id="@_hostId" data-testid="@Id("grid")">
@@ -42,14 +37,12 @@
                           ItemsProvider="LoadPage" PageSize="@(_definition.PageSize > 0 ? _definition.PageSize : 100)"
                           OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged"
                           OnRowAdded="OnRowAdded" OnRowDeleting="OnRowDeleting" OnPasting="OnPasting" OnPasted="OnPasted"
-                          OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick">
-                    @* The package puts declared columns after the definition's: the screen's own, then row state, delete and undo *@
+                          OnPopupRequested="OnPopupRequested">
+                    @* The package puts declared columns after the definition's: the screen's own, then row state *@
                     @Columns
                     @if (Editable)
                     {
                         <Quro.Grid.QuroColumn Field="@StateField" HeaderKey="Common.RowState" Width="60" Compute="StateOf" />
-                        <Quro.Grid.QuroColumn Field="@DeleteField" HeaderKey="Common.Delete" Type="CellType.Button" TextKey="Common.DeleteRow" Width="70" />
-                        <Quro.Grid.QuroColumn Field="@UndoField" HeaderKey="Common.UndoRow" Type="CellType.Button" TextKey="Common.UndoRow" Width="80" />
                     }
                 </QuroGrid>
             </div>
@@ -72,8 +65,6 @@
 
 @code {
     private const string StateField = "rowState";
-    private const string DeleteField = "deleteRow";
-    private const string UndoField = "undoRow";
 
     private readonly Dictionary<string, IReadOnlyList<ComboOption>> _options = [];
     private QuroDataSet<TRow> _data = new();
@@ -136,18 +127,26 @@
     public Func<TRow>? CreateRow { get; set; }
 
     /// <summary>
-    /// New and add-row ask the screen for rows instead of adding an empty one, for example from a lookup dialog
+    /// Add-row asks the screen for rows instead of adding an empty one, for example from a lookup dialog
     /// of what can still be added. The screen adds the picked rows with <see cref="AddRows"/>.
     /// </summary>
     [Parameter]
     public EventCallback OnAddRequested { get; set; }
+
+    /// <summary>False while a row can't be added, e.g. a screen that saves under a parent record not searched yet.</summary>
+    [Parameter]
+    public Func<bool>? CanAddRow { get; set; }
+
+    /// <summary>New has emptied the grid: the screen clears its search conditions.</summary>
+    [Parameter]
+    public EventCallback OnReset { get; set; }
 
     /// <summary>Saves the changed rows. Without it the grid is view only.</summary>
     [Parameter]
     public Func<BatchChanges<TRow>, Task>? Save { get; set; }
 
     /// <summary>
-    /// Permission: false for a user without Full Access (BC-BR-214). New, save and the grid are disabled, not hidden.
+    /// Permission: false for a user without Full Access (BC-BR-214). New, save, the row commands and the grid are disabled, not hidden.
     /// Whether the grid edits at all stays the screen's function (a list without save has no new or save at all).
     /// </summary>
     [Parameter]
@@ -233,11 +232,59 @@
     private bool CurrentIsDeleted =>
         _data.CurrentRowKey is { } key && _data.GetState(key) == Quro.Grid.Data.RowState.Deleted;
 
-    private void RestoreCurrent()
+    private bool CanAddNow => CanWrite && (CanAddRow?.Invoke() ?? true);
+
+    private bool CanMarkCurrent => CanWrite && _data.CurrentRowKey is not null;
+
+    private bool CanRestoreCurrent =>
+        CanWrite && _data.CurrentRowKey is { } key && _data.GetState(key) != Quro.Grid.Data.RowState.Normal;
+
+    // New empties the screen, as on an entry screen; rows come from search or add-row
+    private async Task NewAsync()
     {
-        if (CanWrite && CurrentIsDeleted)
+        if (!CanWrite || !await ConfirmDiscardAsync())
         {
-            _data.RevertRow(_data.CurrentRowKey!.Value);
+            return;
+        }
+        Error = null;
+        Notice = null;
+        _data.Load([]);
+        _dataGrid?.ApplyLayout(_dataGrid.GetLayout());
+        await OnReset.InvokeAsync();
+    }
+
+    // Toggle as on an entry screen: a saved row is marked (and unmarked with its loaded values), a new row is removed at once
+    private void MarkDelete()
+    {
+        if (!CanMarkCurrent)
+        {
+            return;
+        }
+        var key = _data.CurrentRowKey!.Value;
+        if (_data.GetState(key) == Quro.Grid.Data.RowState.Deleted)
+        {
+            _data.RevertRow(key);
+        }
+        else
+        {
+            _data.DeleteRow(key);
+        }
+    }
+
+    private void RestoreRow()
+    {
+        if (!CanRestoreCurrent)
+        {
+            return;
+        }
+        var key = _data.CurrentRowKey!.Value;
+        if (_data.GetState(key) == Quro.Grid.Data.RowState.Inserted)
+        {
+            _data.DeleteRow(key);
+        }
+        else
+        {
+            _data.RevertRow(key);
         }
     }
 
@@ -335,7 +382,7 @@
 
     private async Task AddRow()
     {
-        if (!CanWrite)
+        if (!CanAddNow)
         {
             return;
         }
@@ -344,7 +391,8 @@
             await OnAddRequested.InvokeAsync();
             return;
         }
-        Add(CreateRow!());
+        // A new row goes below the selected row and becomes the selected row
+        _data.MoveTo(_data.AddRow(CreateRow!(), _data.CurrentRowKey));
     }
 
     private async Task SaveAsync()
@@ -571,25 +619,6 @@
         {
             Notice = L["Common.PasteSkipped", args.Skipped.Count];
         }
-    }
-
-    // Delete marks a loaded row (a new row goes away); undo restores the row's loaded values, also of a deleted row
-    private void OnCellButtonClick(CellButtonClickArgs<TRow> args)
-    {
-        if (!CanEdit || Busy)
-        {
-            return;
-        }
-        var state = _data.GetState(args.RowKey);
-        if (args.Field == DeleteField && state != Quro.Grid.Data.RowState.Deleted)
-        {
-            _data.DeleteRow(args.RowKey);
-        }
-        else if (args.Field == UndoField && state is Quro.Grid.Data.RowState.Updated or Quro.Grid.Data.RowState.Deleted)
-        {
-            _data.RevertRow(args.RowKey);
-        }
-        StateHasChanged();
     }
 
     private sealed record Popup(LookupDef Lookup, string? Text)
