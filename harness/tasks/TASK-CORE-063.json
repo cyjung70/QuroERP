@@ -1,0 +1,31 @@
+{
+  "id": "TASK-CORE-063",
+  "project": "core",
+  "title": "찾기 버튼 높이를 입력 칸에 맞춤",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screens.md",
+    "docs/architecture/entry-frame.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-grid",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-062"
+  ],
+  "acceptance": [
+    "코드 입력 칸 옆 찾기 버튼(`…`)의 높이가 왼쪽 입력 칸과 같다 (screens.md \"팝업\"). 조회 조건과 헤더의 찾기 버튼 모두 공통 CSS 한 곳에서 맞춘다",
+    "입력 칸과 버튼의 위·아래 끝이 맞는다. 라이트·다크, en·ko에서 같다",
+    "그리드 코드 셀의 찾기 버튼을 브라우저에서 확인한다. 앱 CSS로 맞출 수 없으면 QuroGrid 파일을 고치지 않고 보고에 Given/When/Then 요청을 쓴다",
+    "PR 설명에 고객·품목 찾기 버튼 캡처"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

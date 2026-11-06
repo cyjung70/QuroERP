@@ -132,11 +132,11 @@
     },
     {
       "path": "docs/architecture/screen-templates.md",
-      "sha256": "6437ed27bc1d3caa4a7f7cdda518f67bf36c93d8cd16d80d108964aee28d0982"
+      "sha256": "17d1862b5713baba77409eed27ec5b13e685fb72fc5b99bab6bd33bc6b861138"
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "64cf7781950de46e4db7d903325d678c8b74a0449d8b01be4d43e0b4c5c6cd5a"
+      "sha256": "f1b3354bc746b95677528f88df47ba4726e80c043d6356035d9da6daba4c400a"
     },
     {
       "path": "docs/architecture/security.md",
@@ -1296,7 +1296,19 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-062.json",
-      "sha256": "b53af9bb8904db8262b5521f9489e2d149bc2e7ad38ed51e524d3a94feba29f6"
+      "sha256": "69a9f19f480f8b4c86cb94c0b4c583e3204fb82aeb0fd7e6c9119755c3715671"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-063.json",
+      "sha256": "63aa3de80b60408b78363cdf184023f33cf6f27cffac08bcf5536935f401a858"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-064.json",
+      "sha256": "c2a97f379ab7b44a6c8b215c8a14e08aaa9aec3372096a0d57d86299a8a98238"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-065.json",
+      "sha256": "9bb4996e62a382a29fff05b38930317b5221e6674116a71ff263a2c003ad4214"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
