@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/architecture/entry-frame.md",
-      "sha256": "2f120addf16d6c8b489778fabae7a78339c49fadfd64eec832098256a1a002cd"
+      "sha256": "efe648fa28e17bc843860a9b82f0af27441f3c4a0198c0940fb9a5ab5c406da0"
     },
     {
       "path": "docs/architecture/field-policy.md",
@@ -136,7 +136,7 @@
     },
     {
       "path": "docs/architecture/screens.md",
-      "sha256": "b67b0379384d2a4ae998eb113cde0ffeb9d59c59e7bc3cdbb3db87fb2bbe3a22"
+      "sha256": "64cf7781950de46e4db7d903325d678c8b74a0449d8b01be4d43e0b4c5c6cd5a"
     },
     {
       "path": "docs/architecture/security.md",
@@ -804,7 +804,7 @@
     },
     {
       "path": "docs/specifications/SD/shipment.md",
-      "sha256": "87421732c8e61421db1d72f070a1ebe219a07872040abf3781b3077d8e1a3730"
+      "sha256": "8350741ecb178975ce7e3e638850a8a30b2b6870b074b29bcbf545d1ba379d14"
     },
     {
       "path": "GEMINI.md",
@@ -1293,6 +1293,10 @@
     {
       "path": "harness/tasks/TASK-CORE-061.json",
       "sha256": "17279bf5cc8b6ebb4d5e67720d642308ba3583c63a255f52a05866ea477aee72"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-062.json",
+      "sha256": "b53af9bb8904db8262b5521f9489e2d149bc2e7ad38ed51e524d3a94feba29f6"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
