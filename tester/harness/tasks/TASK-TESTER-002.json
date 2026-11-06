@@ -47,7 +47,8 @@
     "TASK-SD-001",
     "TASK-SD-005",
     "TASK-BC-017",
-    "TASK-SD-063"
+    "TASK-SD-063",
+    "TASK-CORE-025"
   ],
   "acceptance": [
     "tests/scenario/MM/test_purchase_to_issue.py: MM-TS-001(2개 모드, serial), MM-TS-002(초과 입고 DENY·WARN, serial), MM-TS-003(2개 모드, serial)",

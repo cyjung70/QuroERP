@@ -1644,7 +1644,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-038.json",
-      "sha256": "55b4202772a222e6e11669e04507831ac77026b4884d6c444d00ce194f69e496"
+      "sha256": "bb97078bc1939238bb0737ab8538caad92cbf363a663bab53ecd5933794afb11"
     },
     {
       "path": "harness/tasks/TASK-SD-039.json",
@@ -1652,7 +1652,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-040.json",
-      "sha256": "70b39cb45be170ce3bfcf181b1871cf86c44e15979e9c3b71f266d7fd2a322a2"
+      "sha256": "a9cf532dd352d02f4ced9ed34c563e04a99bdb406d20f9855a9b231027cf476f"
     },
     {
       "path": "harness/tasks/TASK-SD-041.json",
@@ -1752,7 +1752,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-065.json",
-      "sha256": "1a08456adc1928c57f1300c49571209f9ced41800a1ba805177c27884e7e2fed"
+      "sha256": "5b7eba06737355a0cb97d8d8b83af671597c1d75f18431a7d8f4f9ca9fb07d87"
     },
     {
       "path": "harness/tasks/TASK-SD-066.json",
@@ -1792,7 +1792,7 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "39e455c93eaab09fe461c089428858249e9b1d6c0ecf6fd2672b1e20e1cd893e"
+      "sha256": "b7419f6d3987331a7645a2c3a5569d038336e469ed9ca142e33d50d487956f88"
     },
     {
       "path": "tester/docs/INDEX.md",
@@ -1840,7 +1840,7 @@
     },
     {
       "path": "tester/docs/scenarios/BC/BC-TS-006.md",
-      "sha256": "c9b6fcd2a218f50a16e9185fa8f7c425c3d775af7032310c7e1e751fa7d6acc0"
+      "sha256": "72f84b0c453e8ce7e15836e2604a17aba930b7dc1e137462ef4e87c3df4b31ef"
     },
     {
       "path": "tester/docs/scenarios/BC/BC-TS-007.md",
@@ -2056,7 +2056,7 @@
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-002.json",
-      "sha256": "26c02e4edb4b029110abe787f7552575933ef720bd7ae6bf042d9004770e2de2"
+      "sha256": "0606085b4bde691993f7e9e881f2c81a96ace96d7161c9dd62f3b85d8031e488"
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-003.json",
