@@ -256,9 +256,11 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
     [DatabaseFact, Trait("Id", "SD-UT-161"), Trait("Id", "SD-UT-170"), Trait("Id", "SD-UT-163"), Trait("Id", "MM-UT-710")]
     public async Task Create_RefusesBadLines_AnotherCurrency_AZeroCost_AndTheConsignmentWarehouse()
     {
-        await ModeAsync("ALLOW");
+        await ModeAsync("ALLOW_IN_MONTH");
         var m = await MastersAsync(ShipAndBill);
         await ReceiveAsync(m.Item, m.Main, 20m);
+        // In stock at a moving average cost of 0, so only the cost check refuses it (SD-BR-163)
+        await ReceiveAsync(m.NoCostItem, m.Main, 5m, price: 0m);
         var euro = await OrderAsync(m, ShipAndBill, (m.Item, 5m, 100m, 0m, m.NoTax));
         await ExecuteAsync("UPDATE sd_sales_order SET currency_code = 'EUR', exchange_rate = 1.1 WHERE id = @Id", euro.Id);
 
@@ -587,10 +589,10 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
     }
 
     // Receives stock at a cost of 50 on the ship date (or the date given)
-    private async Task ReceiveAsync(long item, long warehouse, decimal qty, string? lotNo = null, DateOnly? date = null)
+    private async Task ReceiveAsync(long item, long warehouse, decimal qty, string? lotNo = null, DateOnly? date = null, decimal price = 50m)
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
-        await Inventory.PostAsync([new StockMovementRequest("GR", date ?? ShipDt, item, warehouse, qty, 50m, "GR-TEST", 1, LotNo: lotNo)], "kim", uow.Transaction, None);
+        await Inventory.PostAsync([new StockMovementRequest("GR", date ?? ShipDt, item, warehouse, qty, price, "GR-TEST", 1, LotNo: lotNo)], "kim", uow.Transaction, None);
         await uow.CommitAsync(None);
     }
 
