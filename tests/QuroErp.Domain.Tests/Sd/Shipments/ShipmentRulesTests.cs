@@ -24,6 +24,12 @@ public class ShipmentRulesTests
     private static readonly IReadOnlySet<long> Warehouses = new HashSet<long> { Main, Consignment };
     private static readonly IReadOnlySet<long> TaxCodes = new HashSet<long> { Vat10, NoTax };
 
+    private static readonly IDecimalPolicy Decimals = new DecimalPolicy(
+        "US",
+        [new DecimalSetting(DecimalModule.Sd, 0, RoundingMode.HalfUp)],
+        [new CountryDecimal("US", DecimalModule.Sd, 2), new CountryDecimal("KR", DecimalModule.Sd, 0)],
+        new Dictionary<string, string?> { ["USD"] = "US", ["KRW"] = "KR" });
+
     private static readonly ShipmentOrderLine OrderLine = new(
         50, 5, "SO2611000001", 1, Customer, ShipAndBill, "USD", 1m, Item, "Bolt", 10m, 4m, 100m, "A", -10m, Vat10);
 
@@ -74,7 +80,7 @@ public class ShipmentRulesTests
     {
         var other = new Dictionary<long, ShipmentOrderLine> { [OrderLine.Id] = OrderLine with { CustomerId = 8 } };
         var customer = () => ShipmentRules.Lines(
-            [Direct() with { SalesOrderLineId = OrderLine.Id }], 1, ShipAndBill, Customer, other, Invoices(), Items, Warehouses, TaxCodes, Consignment);
+            [Direct() with { SalesOrderLineId = OrderLine.Id }], 1, ShipAndBill, Customer, other, Invoices(), Items, Warehouses, TaxCodes, Consignment, "USD", Decimals);
         var item = () => Lines(ShipAndBill, Direct() with { ItemId = 99 });
         var warehouse = () => Lines(ShipAndBill, Direct() with { WarehouseId = 5 });
         var tax = () => Lines(ShipAndBill, Direct() with { TaxCodeId = 0 });
@@ -224,8 +230,36 @@ public class ShipmentRulesTests
         totals.Should().Be(new ShipmentInvoiceTotals(600m, 36m, 636m, 636m));
     }
 
+    [Theory, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423"), Trait("Rule", "BC-BR-429")]
+    [InlineData("USD", 1.5, 100, "shipQty", 0)]
+    [InlineData("USD", 1, 12.345, "shipPrc", 2)]
+    [InlineData("KRW", 1, 100.5, "shipPrc", 0)]
+    public void TooManyDecimals_AreRefused_ByTheDocumentCurrency(string currency, double qty, double price, string field, int allowed)
+    {
+        var act = () => ShipmentRules.Lines(
+            [Direct((decimal)qty, (decimal)price)], 1, ShipAndBill, Customer, Orders(), Invoices(), Items, Warehouses, TaxCodes, Consignment, currency, Decimals);
+
+        var error = act.Should().Throw<DomainException>().Which;
+        error.Code.Should().Be("BC-E-423");
+        error.Args.Should().Equal(field, allowed);
+    }
+
+    [Fact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423")]
+    public void AnImportedLine_KeepsItsSourcePrice_ButItsQtyIsChecked()
+    {
+        var oldOrder = new Dictionary<long, ShipmentOrderLine> { [OrderLine.Id] = OrderLine with { SoPrc = 12.345m } };
+        var imported = Direct() with { SalesOrderLineId = OrderLine.Id };
+
+        ShipmentRules.Lines([imported], 1, ShipAndBill, Customer, oldOrder, Invoices(), Items, Warehouses, TaxCodes, Consignment, "USD", Decimals)
+            .Should().ContainSingle().Which.ShipPrc.Should().Be(12.345m);
+
+        var act = () => ShipmentRules.Lines(
+            [imported with { ShipQty = 1.5m }], 1, ShipAndBill, Customer, oldOrder, Invoices(), Items, Warehouses, TaxCodes, Consignment, "USD", Decimals);
+        act.Should().Throw<DomainException>().Which.Args.Should().Equal("shipQty", 0);
+    }
+
     private static IReadOnlyList<ShipmentLine> Lines(string billingFlow, params ShipmentLineInput[] added) =>
-        ShipmentRules.Lines(added, 3, billingFlow, Customer, Orders(), Invoices(), Items, Warehouses, TaxCodes, Consignment);
+        ShipmentRules.Lines(added, 3, billingFlow, Customer, Orders(), Invoices(), Items, Warehouses, TaxCodes, Consignment, "USD", Decimals);
 
     private static ShipmentLineInput Direct(decimal qty = 1m, decimal price = 100m) =>
         new(null, Item, null, Main, qty, price, NoTax, null, null, null, null);

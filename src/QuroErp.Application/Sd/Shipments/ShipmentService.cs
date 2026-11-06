@@ -293,11 +293,18 @@ public sealed class ShipmentService(
         var company = await localization.FindCompanyAsync(transaction, cancellationToken);
         var baseCurrency = company?.BaseCurrencyCode ?? CountryProfiles.Get(CountryProfiles.Us).BaseCurrencyCode;
         // BC-BR-424: amounts and tax use the SD module rounding mode; HALF_UP when the setting row is missing
-        var sd = (await localization.FindDecimalSettingsAsync(transaction, cancellationToken)).FirstOrDefault(d => d.Module == DecimalModule.Sd);
+        var decimalSettings = await localization.FindDecimalSettingsAsync(transaction, cancellationToken);
+        var sd = decimalSettings.FirstOrDefault(d => d.Module == DecimalModule.Sd);
         var settings = new ShipmentSettings(
             baseCurrency, company?.TaxCalcMode ?? TaxCalcMode.Document, sd is null ? RoundingMode.HalfUp : Rounding.ParseMode(sd.RoundingMode));
-        var rounder = new AmountRounder(
-            (await localization.FindCurrenciesAsync(transaction, cancellationToken)).Where(c => c.UseYn).Select(c => new Currency(c.CurrencyCode, c.Decimals)));
+        var currencies = await localization.FindCurrenciesAsync(transaction, cancellationToken);
+        var rounder = new AmountRounder(currencies.Where(c => c.UseYn).Select(c => new Currency(c.CurrencyCode, c.Decimals)));
+        // BC-BR-423, BC-BR-429: the document currency's country decides the unit price decimals
+        var decimalPolicy = new DecimalPolicy(
+            company?.CountryCode ?? CountryProfiles.Us,
+            decimalSettings.Select(d => new DecimalSetting(d.Module, d.QtyDecimals, Rounding.ParseMode(d.RoundingMode))),
+            (await localization.FindCountryDecimalsAsync(transaction, cancellationToken)).Select(d => new CountryDecimal(d.CountryCode, d.Module, d.UnitPriceDecimals)),
+            currencies.ToDictionary(c => c.CurrencyCode, c => c.CountryCode));
 
         // SD-BR-171: saved lines come back unchanged with their id; the ones left out are deleted
         var storedById = storedLines.ToDictionary(l => l.Id);
@@ -369,7 +376,7 @@ public sealed class ShipmentService(
         var nextSeq = storedLines.Count == 0 ? 1 : storedLines.Max(l => l.Seq) + 1;
         var lines = ShipmentRules.Lines(
             added, nextSeq, billingFlow, request.CustomerId, orderLines, invoiceLines, itemCodes.Keys.ToHashSet(), usable, rates.Keys.ToHashSet(),
-            consignment?.Id);
+            consignment?.Id, currencyCode, decimalPolicy);
         ShipmentRules.EnsureRemaining(lines, deleted, orderLines);
         ShipmentRules.EnsureUnshipped(lines, deleted, invoiceLines, ShipmentStatus.Void);
 
