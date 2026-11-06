@@ -22,6 +22,7 @@ internal sealed class SalesOrderRepository : ISalesOrderRepository
         FROM sd_sales_order o LEFT JOIN bc_customer c ON c.id = o.customer_id
         WHERE (@SoNo::varchar IS NULL OR starts_with(o.so_no, @SoNo))
           AND (@CustomerId::bigint IS NULL OR o.customer_id = @CustomerId)
+          AND (@CustomerNamePattern::text IS NULL OR c.c_name ILIKE @CustomerNamePattern ESCAPE '\')
           AND (@Status::varchar IS NULL OR coalesce(o.status, 'SO') = @Status)
           AND (@FromDt::date IS NULL OR o.so_dt >= @FromDt)
           AND (@ToDt::date IS NULL OR o.so_dt <= @ToDt)
@@ -162,12 +163,15 @@ internal sealed class SalesOrderRepository : ISalesOrderRepository
             {
                 SoNo = string.IsNullOrWhiteSpace(query.SoNo) ? null : query.SoNo.Trim().ToUpperInvariant(),
                 query.CustomerId,
+                CustomerNamePattern = string.IsNullOrWhiteSpace(query.CustomerName) ? null : "%" + EscapeLike(query.CustomerName.Trim()) + "%",
                 Status = string.IsNullOrWhiteSpace(query.Status) ? null : query.Status,
                 query.FromDt,
                 query.ToDt,
                 Limit = limit,
             },
             transaction, cancellationToken: cancellationToken))).Select(r => r.ToSalesOrderRow())];
+
+    private static string EscapeLike(string value) => value.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
 
     public async Task<SalesOrderRow?> FindAsync(long id, bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken)
     {

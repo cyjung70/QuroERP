@@ -303,12 +303,10 @@
     private async Task<IReadOnlyList<SalesOrderHeader>> FindAsync(string? keyword)
     {
         var number = keyword?.Trim();
-        var customer = _findCustomer?.Trim();
         var orders = await Api.SearchAsync(
-            new SalesOrderSearchQuery(string.IsNullOrEmpty(number) ? null : number, null, _findStatus, _findFrom, _findTo), CancellationToken.None);
-        return [.. orders
-            .Where(o => string.IsNullOrEmpty(customer) || (o.CustomerName?.Contains(customer, StringComparison.OrdinalIgnoreCase) ?? false))
-            .Select(SalesOrderHeader.From)];
+            new SalesOrderSearchQuery(string.IsNullOrEmpty(number) ? null : number, null, _findStatus, _findFrom, _findTo, _findCustomer?.Trim()),
+            CancellationToken.None);
+        return [.. orders.Select(SalesOrderHeader.From)];
     }
 
     private string FindTotal(SalesOrderHeader so) =>
