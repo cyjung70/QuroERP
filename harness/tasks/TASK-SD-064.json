@@ -81,5 +81,5 @@
     "로트 관리 품목 줄의 로트 열: 늘리는 줄 입력(빈 값 = 자동), 줄이는 줄 로트 찾기 (MM-BR-353·355·362)"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

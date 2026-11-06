@@ -4,6 +4,7 @@ Sd.Customer.State: REQUIRED
 Sd.Customer.ZipCode: REQUIRED
 Sd.Customer.ShipState: OPTIONAL
 Sd.SalesOrder.ShipState: OPTIONAL
+Sd.Shipment.ShipState: OPTIONAL
 Sd.Customer.BusinessRegNo: HIDDEN
 Sd.Customer.CeoName: HIDDEN
 Sd.Customer.BusinessType: HIDDEN

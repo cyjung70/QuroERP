@@ -866,6 +866,71 @@
   <data name="Sd.SalesOrder.FileError.QTY" xml:space="preserve"><value>Qty is not a number above 0</value></data>
   <data name="Sd.SalesOrder.FileError.NOT_FOUND" xml:space="preserve"><value>Item not found</value></data>
   <data name="Sd.SalesOrder.FileError.NOT_IN_USE" xml:space="preserve"><value>Item not in use</value></data>
+  <data name="SD-E-104" xml:space="preserve"><value>Invoice {0} has a receipt or credit applied, so it can't be changed or voided.</value></data>
+  <data name="SD-E-107" xml:space="preserve"><value>Saved line {0} can't be changed. Delete the line and add it again.</value></data>
+  <data name="SD-E-114" xml:space="preserve"><value>Item {0} has a moving average cost of 0, so it can't be shipped.</value></data>
+  <data name="SD-E-161" xml:space="preserve"><value>Line {0}: the quantity must be above 0 and the price can't be 0.</value></data>
+  <data name="SD-E-162" xml:space="preserve"><value>Order {0} line {1} has {2} left to ship. Ship that much or less.</value></data>
+  <data name="SD-E-168" xml:space="preserve"><value>Line {1} of shipment {0} is billed, so it can't be deleted or voided.</value></data>
+  <data name="SD-E-170" xml:space="preserve"><value>The shipment currency {0} differs from the order or invoice currency {1}.</value></data>
+  <data name="SD-E-174" xml:space="preserve"><value>Order {0} bills before shipping, so ship it with Import invoice only.</value></data>
+  <data name="SD-E-175" xml:space="preserve"><value>A bill-first shipment takes only lines from Import invoice and can't mix them with other lines (invoice {0}, line {1}, unshipped {2}).</value></data>
+  <data name="Menu.G3SD03" xml:space="preserve"><value>Shipments</value></data>
+  <data name="Sd.Shipment.FindFrom" xml:space="preserve"><value>Ship date from</value></data>
+  <data name="Sd.Shipment.FindTo" xml:space="preserve"><value>Ship date to</value></data>
+  <data name="Sd.Shipment.ShipTo" xml:space="preserve"><value>Ship-to</value></data>
+  <data name="Sd.Shipment.TotalQty" xml:space="preserve"><value>Total qty</value></data>
+  <data name="Sd.Shipment.RemainingQty" xml:space="preserve"><value>Remaining qty</value></data>
+  <data name="Sd.Shipment.ImportLines" xml:space="preserve"><value>Import</value></data>
+  <data name="Sd.Shipment.Path" xml:space="preserve"><value>SD &gt; Sales</value></data>
+  <data name="Sd.Shipment.Title" xml:space="preserve"><value>Shipment</value></data>
+  <data name="Sd.Shipment.ShipNo" xml:space="preserve"><value>Ship no.</value></data>
+  <data name="Sd.Shipment.ShipDt" xml:space="preserve"><value>Ship date</value></data>
+  <data name="Sd.Shipment.CustomerId" xml:space="preserve"><value>Customer</value></data>
+  <data name="Sd.Shipment.FindCustomer" xml:space="preserve"><value>Find customer</value></data>
+  <data name="Sd.Shipment.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Sd.Shipment.Status.OP" xml:space="preserve"><value>Open</value></data>
+  <data name="Sd.Shipment.Status.PB" xml:space="preserve"><value>Partly billed</value></data>
+  <data name="Sd.Shipment.Status.BL" xml:space="preserve"><value>Billed</value></data>
+  <data name="Sd.Shipment.Status.VO" xml:space="preserve"><value>Void</value></data>
+  <data name="Sd.Shipment.WarehouseId" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Sd.Shipment.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Sd.Shipment.ExchangeRate" xml:space="preserve"><value>Exchange rate</value></data>
+  <data name="Sd.Shipment.ShipVia" xml:space="preserve"><value>Ship via</value></data>
+  <data name="Sd.Shipment.BillingFlow" xml:space="preserve"><value>Billing flow</value></data>
+  <data name="Sd.Shipment.SalesInvoiceNo" xml:space="preserve"><value>Invoice no.</value></data>
+  <data name="Sd.Shipment.ShipName" xml:space="preserve"><value>Ship-to name</value></data>
+  <data name="Sd.Shipment.ShipAddr1" xml:space="preserve"><value>Ship-to address 1</value></data>
+  <data name="Sd.Shipment.ShipAddr2" xml:space="preserve"><value>Ship-to address 2</value></data>
+  <data name="Sd.Shipment.ShipCity" xml:space="preserve"><value>Ship-to city</value></data>
+  <data name="Sd.Shipment.ShipState" xml:space="preserve"><value>Ship-to state</value></data>
+  <data name="Sd.Shipment.ShipZipCode" xml:space="preserve"><value>Ship-to ZIP code</value></data>
+  <data name="Sd.Shipment.ShipCountry" xml:space="preserve"><value>Ship-to country</value></data>
+  <data name="Sd.Shipment.ShipPhone" xml:space="preserve"><value>Ship-to phone</value></data>
+  <data name="Sd.Shipment.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Sd.Shipment.ImportOrder" xml:space="preserve"><value>Import order</value></data>
+  <data name="Sd.Shipment.ImportInvoice" xml:space="preserve"><value>Import invoice</value></data>
+  <data name="Sd.Shipment.Void" xml:space="preserve"><value>Void shipment</value></data>
+  <data name="Sd.Shipment.ConfirmVoid" xml:space="preserve"><value>Void this shipment? The issued stock comes back, and an invoice made with the shipment is voided too.</value></data>
+  <data name="Sd.Shipment.LinesAdded" xml:space="preserve"><value>Added {0} lines. Save to issue the stock.</value></data>
+  <data name="Sd.Shipment.SoNo" xml:space="preserve"><value>SO no.</value></data>
+  <data name="Sd.Shipment.DnNo" xml:space="preserve"><value>Invoice no.</value></data>
+  <data name="Sd.Shipment.LineCount" xml:space="preserve"><value>Lines</value></data>
+  <data name="Sd.Shipment.Seq" xml:space="preserve"><value>No.</value></data>
+  <data name="Sd.Shipment.ItemCd" xml:space="preserve"><value>Item code</value></data>
+  <data name="Sd.Shipment.ItemName" xml:space="preserve"><value>Item name</value></data>
+  <data name="Sd.Shipment.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Sd.Shipment.LineWarehouseId" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Sd.Shipment.WarehouseName" xml:space="preserve"><value>Warehouse name</value></data>
+  <data name="Sd.Shipment.FindWarehouse" xml:space="preserve"><value>Find warehouse</value></data>
+  <data name="Sd.Shipment.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Sd.Shipment.FindLot" xml:space="preserve"><value>Find lot</value></data>
+  <data name="Sd.Shipment.LotOnhandQty" xml:space="preserve"><value>Lot on hand</value></data>
+  <data name="Sd.Shipment.ShipQty" xml:space="preserve"><value>Ship qty</value></data>
+  <data name="Sd.Shipment.ShipPrc" xml:space="preserve"><value>Unit price</value></data>
+  <data name="Sd.Shipment.ShipAmt" xml:space="preserve"><value>Shipment amount</value></data>
+  <data name="Sd.Shipment.BilledQty" xml:space="preserve"><value>Billed qty</value></data>
+  <data name="Sd.Shipment.OnhandQty" xml:space="preserve"><value>On hand</value></data>
   <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>Goods Receipt</value></data>
   <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>GR No.</value></data>
   <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>Status</value></data>

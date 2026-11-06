@@ -52,6 +52,13 @@
 .quro-field-section-toggle[aria-expanded=true]::before { content: "▾"; }
 .quro-field-section-body { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-content: start; margin-top: 4px; }
 .quro-field-section-body[hidden] { display: none; }
+.quro-lookup-name { flex: 1 1 0; min-width: 0; align-self: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--q-ink-muted); }
+.quro-line-import { width: min(960px, 94vw); }
+.quro-line-import-rows { max-height: 50vh; overflow: auto; margin: 8px 0; }
+.quro-line-import-rows table { width: 100%; border-collapse: collapse; }
+.quro-line-import-rows th, .quro-line-import-rows td { padding: 4px 8px; border-bottom: 1px solid var(--q-line); text-align: left; }
+.quro-line-import-number { text-align: right; font-family: var(--q-font-mono); }
+.quro-line-import-qty { width: 120px; }
 
 /* S screens: 4-column field grid, tabs, read-only sub-grid and radio cards (screen-templates.md 1) */
 .quro-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-items: end; align-content: start; }

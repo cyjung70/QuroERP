@@ -67,4 +67,12 @@
   <data name="Print.SetComponentList.Component" xml:space="preserve"><value>구성품</value></data>
   <data name="Print.SetComponentList.ComponentQty" xml:space="preserve"><value>구성품 수량</value></data>
   <data name="Print.SetComponentList.None" xml:space="preserve"><value>세트 품목 줄이 없습니다.</value></data>
+  <data name="Print.DeliveryNote.Title" xml:space="preserve"><value>납품서</value></data>
+  <data name="Print.DeliveryNote.ShipDt" xml:space="preserve"><value>출하일</value></data>
+  <data name="Print.DeliveryNote.SoNo" xml:space="preserve"><value>수주 번호</value></data>
+  <data name="Print.DeliveryNote.InvoiceNo" xml:space="preserve"><value>송장 번호</value></data>
+  <data name="Print.DeliveryNote.Warehouse" xml:space="preserve"><value>창고</value></data>
+  <data name="Print.DeliveryNote.LotNo" xml:space="preserve"><value>로트</value></data>
+  <data name="Print.DeliveryNote.ReceivedBy" xml:space="preserve"><value>인수자</value></data>
+  <data name="Print.DeliveryNote.ReceivedDt" xml:space="preserve"><value>인수일</value></data>
 </root>

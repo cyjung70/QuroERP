@@ -98,5 +98,5 @@
     "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

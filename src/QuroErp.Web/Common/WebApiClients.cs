@@ -18,6 +18,7 @@ using QuroErp.Web.Mm.PurchaseOrders;
 using QuroErp.Web.Mm.Vendors;
 using QuroErp.Web.Sd.Customers;
 using QuroErp.Web.Sd.SalesOrders;
+using QuroErp.Web.Sd.Shipments;
 using QuroErp.Web.Mm.Warehouses;
 
 namespace QuroErp.Web.Common;
@@ -51,6 +52,8 @@ public static class WebApiClients
         services.AddHttpClient<VendorApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<CustomerApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<SalesOrderApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<ShipmentApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<LotApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<PurchaseOrderApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<GoodsReceiptApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<LotApiClient>(http => http.BaseAddress = apiBaseUrl);

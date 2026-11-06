@@ -18,6 +18,9 @@ public sealed record DocumentNumberFormat(string Prefix, int Digits, bool Restar
     /// <summary>SD-BR-106: DN + 7 digits, no month.</summary>
     public static readonly DocumentNumberFormat SalesInvoice = new("DN", 7, RestartsMonthly: false);
 
+    /// <summary>SD-BR-164: SH + 7 digits, no month. Migrated shipments took their invoice number digits.</summary>
+    public static readonly DocumentNumberFormat Shipment = new("SH", 7, RestartsMonthly: false);
+
     /// <summary>SD-BR-206: CM + yymm + 5 digits.</summary>
     public static readonly DocumentNumberFormat CreditMemo = new("CM", 5, RestartsMonthly: true);
 

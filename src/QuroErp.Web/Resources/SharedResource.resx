@@ -866,6 +866,71 @@
   <data name="Sd.SalesOrder.FileError.QTY" xml:space="preserve"><value>수량이 0보다 큰 숫자가 아님</value></data>
   <data name="Sd.SalesOrder.FileError.NOT_FOUND" xml:space="preserve"><value>품목 없음</value></data>
   <data name="Sd.SalesOrder.FileError.NOT_IN_USE" xml:space="preserve"><value>사용 안 함 품목</value></data>
+  <data name="SD-E-104" xml:space="preserve"><value>송장 {0}에 입금 또는 Credit 적용이 있어 고치거나 Void할 수 없습니다.</value></data>
+  <data name="SD-E-107" xml:space="preserve"><value>저장한 줄 {0}은(는) 고칠 수 없습니다. 줄을 지우고 다시 넣으세요.</value></data>
+  <data name="SD-E-114" xml:space="preserve"><value>품목 {0}의 이동평균원가가 0이라 출고할 수 없습니다.</value></data>
+  <data name="SD-E-161" xml:space="preserve"><value>줄 {0}: 수량은 0보다 커야 하고 단가는 0일 수 없습니다.</value></data>
+  <data name="SD-E-162" xml:space="preserve"><value>수주 {0} 줄 {1}의 남은 수량은 {2}입니다. 그 이하로 출하하세요.</value></data>
+  <data name="SD-E-168" xml:space="preserve"><value>출하 {0}의 줄 {1}은(는) 청구되어 지우거나 Void할 수 없습니다.</value></data>
+  <data name="SD-E-170" xml:space="preserve"><value>출하 통화 {0}이(가) 수주·송장 통화 {1}와(과) 다릅니다.</value></data>
+  <data name="SD-E-174" xml:space="preserve"><value>수주 {0}은(는) 선청구 수주라 송장 가져오기로만 출하할 수 있습니다.</value></data>
+  <data name="SD-E-175" xml:space="preserve"><value>선청구 출하는 송장 가져오기 줄만 받고 다른 줄과 섞을 수 없습니다 (송장 {0}, 줄 {1}, 미출하 수량 {2}).</value></data>
+  <data name="Menu.G3SD03" xml:space="preserve"><value>출하</value></data>
+  <data name="Sd.Shipment.FindFrom" xml:space="preserve"><value>출하일 시작</value></data>
+  <data name="Sd.Shipment.FindTo" xml:space="preserve"><value>출하일 끝</value></data>
+  <data name="Sd.Shipment.ShipTo" xml:space="preserve"><value>배송지</value></data>
+  <data name="Sd.Shipment.TotalQty" xml:space="preserve"><value>총 수량</value></data>
+  <data name="Sd.Shipment.RemainingQty" xml:space="preserve"><value>남은 수량</value></data>
+  <data name="Sd.Shipment.ImportLines" xml:space="preserve"><value>가져오기</value></data>
+  <data name="Sd.Shipment.Path" xml:space="preserve"><value>SD &gt; 판매</value></data>
+  <data name="Sd.Shipment.Title" xml:space="preserve"><value>출하</value></data>
+  <data name="Sd.Shipment.ShipNo" xml:space="preserve"><value>출하 번호</value></data>
+  <data name="Sd.Shipment.ShipDt" xml:space="preserve"><value>출하일</value></data>
+  <data name="Sd.Shipment.CustomerId" xml:space="preserve"><value>고객</value></data>
+  <data name="Sd.Shipment.FindCustomer" xml:space="preserve"><value>고객 찾기</value></data>
+  <data name="Sd.Shipment.Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Sd.Shipment.Status.OP" xml:space="preserve"><value>미청구</value></data>
+  <data name="Sd.Shipment.Status.PB" xml:space="preserve"><value>부분 청구</value></data>
+  <data name="Sd.Shipment.Status.BL" xml:space="preserve"><value>청구 완료</value></data>
+  <data name="Sd.Shipment.Status.VO" xml:space="preserve"><value>취소</value></data>
+  <data name="Sd.Shipment.WarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Sd.Shipment.CurrencyCode" xml:space="preserve"><value>통화</value></data>
+  <data name="Sd.Shipment.ExchangeRate" xml:space="preserve"><value>환율</value></data>
+  <data name="Sd.Shipment.ShipVia" xml:space="preserve"><value>배송 방법</value></data>
+  <data name="Sd.Shipment.BillingFlow" xml:space="preserve"><value>청구 흐름</value></data>
+  <data name="Sd.Shipment.SalesInvoiceNo" xml:space="preserve"><value>송장 번호</value></data>
+  <data name="Sd.Shipment.ShipName" xml:space="preserve"><value>배송지 이름</value></data>
+  <data name="Sd.Shipment.ShipAddr1" xml:space="preserve"><value>배송지 주소 1</value></data>
+  <data name="Sd.Shipment.ShipAddr2" xml:space="preserve"><value>배송지 주소 2</value></data>
+  <data name="Sd.Shipment.ShipCity" xml:space="preserve"><value>배송지 도시</value></data>
+  <data name="Sd.Shipment.ShipState" xml:space="preserve"><value>배송지 주</value></data>
+  <data name="Sd.Shipment.ShipZipCode" xml:space="preserve"><value>배송지 우편번호</value></data>
+  <data name="Sd.Shipment.ShipCountry" xml:space="preserve"><value>배송지 국가</value></data>
+  <data name="Sd.Shipment.ShipPhone" xml:space="preserve"><value>배송지 전화</value></data>
+  <data name="Sd.Shipment.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Sd.Shipment.ImportOrder" xml:space="preserve"><value>수주 가져오기</value></data>
+  <data name="Sd.Shipment.ImportInvoice" xml:space="preserve"><value>송장 가져오기</value></data>
+  <data name="Sd.Shipment.Void" xml:space="preserve"><value>출하 취소</value></data>
+  <data name="Sd.Shipment.ConfirmVoid" xml:space="preserve"><value>출하를 취소할까요? 출고한 재고가 돌아오고, 출하와 함께 만든 송장도 취소됩니다.</value></data>
+  <data name="Sd.Shipment.LinesAdded" xml:space="preserve"><value>줄 {0}개를 더했습니다. 저장하면 출고합니다.</value></data>
+  <data name="Sd.Shipment.SoNo" xml:space="preserve"><value>수주 번호</value></data>
+  <data name="Sd.Shipment.DnNo" xml:space="preserve"><value>송장 번호</value></data>
+  <data name="Sd.Shipment.LineCount" xml:space="preserve"><value>줄 수</value></data>
+  <data name="Sd.Shipment.Seq" xml:space="preserve"><value>번호</value></data>
+  <data name="Sd.Shipment.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Sd.Shipment.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Sd.Shipment.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Sd.Shipment.LineWarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Sd.Shipment.WarehouseName" xml:space="preserve"><value>창고명</value></data>
+  <data name="Sd.Shipment.FindWarehouse" xml:space="preserve"><value>창고 찾기</value></data>
+  <data name="Sd.Shipment.LotNo" xml:space="preserve"><value>로트</value></data>
+  <data name="Sd.Shipment.FindLot" xml:space="preserve"><value>로트 찾기</value></data>
+  <data name="Sd.Shipment.LotOnhandQty" xml:space="preserve"><value>로트 재고</value></data>
+  <data name="Sd.Shipment.ShipQty" xml:space="preserve"><value>출하 수량</value></data>
+  <data name="Sd.Shipment.ShipPrc" xml:space="preserve"><value>단가</value></data>
+  <data name="Sd.Shipment.ShipAmt" xml:space="preserve"><value>출하 금액</value></data>
+  <data name="Sd.Shipment.BilledQty" xml:space="preserve"><value>청구 수량</value></data>
+  <data name="Sd.Shipment.OnhandQty" xml:space="preserve"><value>현재고</value></data>
   <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>입고 등록</value></data>
   <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>입고 번호</value></data>
   <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>상태</value></data>

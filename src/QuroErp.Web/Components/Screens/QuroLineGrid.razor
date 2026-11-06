@@ -73,9 +73,20 @@
     [Parameter]
     public Func<TLine, bool>? IsLineLocked { get; set; }
 
+    /// <summary>
+    /// A line that may be deleted. Without it a line may be deleted unless it is locked; with it a locked line can still be
+    /// deleted, e.g. a saved shipment line that is deleted and added again instead of changed.
+    /// </summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineRemovable { get; set; }
+
     /// <summary>A line whose cells may not be changed but which may be deleted, e.g. a saved receipt line (delete and re-enter).</summary>
     [Parameter]
     public Func<TLine, bool>? IsLineReadOnly { get; set; }
+
+    /// <summary>One cell of a line that may not be changed, e.g. the item code of a line imported from an order.</summary>
+    [Parameter]
+    public Func<TLine, string, bool>? IsCellLocked { get; set; }
 
     /// <summary>Reads the lookups of the code columns. Without it a code column is plain text.</summary>
     [Parameter]
@@ -221,7 +232,7 @@
 
     private void OnCellValueChanging(CellValueChangingArgs<TLine> args)
     {
-        if (!CanEdit || CellsLocked(args.Item))
+        if (!CanEdit || CellsLocked(args.Item) || IsCellLocked?.Invoke(args.Item, args.Field) == true)
         {
             args.Cancel = true;
             return;
@@ -316,7 +327,9 @@
         await OnChanged.InvokeAsync();
     }
 
-    private void OnRowDeleting(RowDeletingArgs<TLine> args) => args.Cancel |= !CanEdit || Locked(args.Item);
+    private void OnRowDeleting(RowDeletingArgs<TLine> args) => args.Cancel |= !CanEdit || !Removable(args.Item);
+
+    private bool Removable(TLine item) => IsLineRemovable?.Invoke(item) ?? !Locked(item);
 
     private Task OnRowDeleted() => OnChanged.InvokeAsync();
 
@@ -351,7 +364,8 @@
     // Several matches or F4: the lookup's dialog opens and the grid waits for the picked code (null keeps the cell as it is)
     private async Task OnPopupRequested(PopupRequestedArgs<TLine> args)
     {
-        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || CellsLocked(args.Item))
+        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || CellsLocked(args.Item)
+            || IsCellLocked?.Invoke(args.Item, args.Field) == true)
         {
             return;
         }

@@ -41,6 +41,11 @@ public static class FieldCatalog
                 required: ["ShipZipCode"],
                 optional: ["ShipName", "ShipAddr1", "ShipAddr2", "ShipCity", "ShipState", "ShipCountry", "ShipPhone", "ShipFax"],
                 countries: ["ShipCountry"]),
+            // SD shipment.md "화면 항목": the ship-to fields
+            ["Sd.Shipment"] = Screen("Sd.Shipment",
+                required: ["ShipZipCode"],
+                optional: ["ShipName", "ShipAddr1", "ShipAddr2", "ShipCity", "ShipState", "ShipCountry", "ShipPhone"],
+                countries: ["ShipCountry"]),
             // MM vendor.md "화면 필드"
             ["Mm.Vendor"] = Screen("Mm.Vendor",
                 required: ["VName", "Phone1", "ZipCode"],

@@ -5,7 +5,7 @@ using QuroErp.Web.Common;
 
 namespace QuroErp.Web.Mm.Lots;
 
-/// <summary>Lot search of the stock document lines (api/mm/lots, MM-BR-362).</summary>
+/// <summary>Lot search of a stock document line (api/mm/lots, MM-BR-362).</summary>
 public sealed class LotApiClient(HttpClient http, AccessTokenProvider tokens)
 {
     /// <summary>Lots of the item in the warehouse with a balance above zero at the end of the date, in lot number order.</summary>
