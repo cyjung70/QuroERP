@@ -1,3 +1,4 @@
+using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Sd.Customers;
 using QuroErp.Domain.Sd.SalesOrders;
@@ -190,14 +191,17 @@ public static class ShipmentRules
     /// <param name="usableWarehouseIds">Warehouses in use among the line warehouses.</param>
     /// <param name="taxCodeIds">Tax codes in use.</param>
     /// <param name="consignmentWarehouseId">The consignment warehouse, required for BILL_THEN_SHIP lines.</param>
+    /// <param name="currencyCode">The document currency, whose country decides the unit price decimals (BC-BR-429).</param>
+    /// <param name="decimals">The quantity and unit price decimals (BC-BR-423).</param>
     /// <exception cref="DomainException">
-    /// SD-E-161, SD-E-004 for an unknown item, MM-E-703 without a warehouse, Common-E-006 for a warehouse not in use, Common-E-005 without a tax code, Common-E-006 for a
+    /// BC-E-423 for a quantity or a directly entered price with too many decimals, SD-E-161, SD-E-004 for an unknown item, MM-E-703 without a warehouse, Common-E-006 for a warehouse not in use, Common-E-005 without a tax code, Common-E-006 for a
     /// source line of another customer or one that does not exist.
     /// </exception>
     public static IReadOnlyList<ShipmentLine> Lines(
         IReadOnlyList<ShipmentLineInput> added, int firstSeq, string billingFlow, long customerId,
         IReadOnlyDictionary<long, ShipmentOrderLine> orderLines, IReadOnlyDictionary<long, ShipmentInvoiceLine> invoiceLines,
-        IReadOnlySet<long> itemIds, IReadOnlySet<long> usableWarehouseIds, IReadOnlySet<long> taxCodeIds, long? consignmentWarehouseId)
+        IReadOnlySet<long> itemIds, IReadOnlySet<long> usableWarehouseIds, IReadOnlySet<long> taxCodeIds, long? consignmentWarehouseId,
+        string currencyCode, IDecimalPolicy decimals)
     {
         var lines = new List<ShipmentLine>(added.Count);
         foreach (var (input, i) in added.Select((l, i) => (l, i)))
@@ -217,6 +221,12 @@ public static class ShipmentRules
             if (line.ShipQty <= 0 || line.ShipPrc == 0)
             {
                 throw new DomainException(QtyPriceCode, seq);
+            }
+            decimals.EnsureQty(DecimalModule.Sd, line.ShipQty, "shipQty");
+            // An imported line copies its source line's price (SD-BR-167, SD-BR-175), so an older document can't block its shipment
+            if (input.SalesOrderLineId is null && input.SalesInvoiceLineId is null)
+            {
+                decimals.EnsureUnitPrice(DecimalModule.Sd, currencyCode, line.ShipPrc, "shipPrc");
             }
             if (line.WarehouseId <= 0)
             {

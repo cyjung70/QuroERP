@@ -886,6 +886,7 @@
   <data name="Sd.Shipment.Title" xml:space="preserve"><value>Shipment</value></data>
   <data name="Sd.Shipment.ShipNo" xml:space="preserve"><value>Ship no.</value></data>
   <data name="Sd.Shipment.ShipDt" xml:space="preserve"><value>Ship date</value></data>
+  <data name="Sd.Shipment.CheckThisCell" xml:space="preserve"><value>Check the value in this cell.</value></data>
   <data name="Sd.Shipment.CustomerId" xml:space="preserve"><value>Customer</value></data>
   <data name="Sd.Shipment.FindCustomer" xml:space="preserve"><value>Find customer</value></data>
   <data name="Sd.Shipment.Status" xml:space="preserve"><value>Status</value></data>

@@ -279,6 +279,39 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await OnHandAsync(m.Item, m.Main)).Should().Be(19m, "every refused save rolled back");
     }
 
+    [DatabaseFact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423"), Trait("Rule", "BC-BR-429")]
+    public async Task Save_RefusesTooManyDecimals_ByTheDocumentCurrency_AndIssuesNoStock()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipAndBill);
+        await ReceiveAsync(m.Item, m.Main, 20m);
+
+        var usd = () => Service.CreateAsync(Request(m, Direct(m.Item, 1m, 12.345m)), "kim", None);
+        var krw = () => Service.CreateAsync(
+            Request(m, Direct(m.Item, 1m, 100.5m)) with { CurrencyCode = "KRW", ExchangeRate = 0.00075m }, "kim", None);
+
+        var usdError = (await usd.Should().ThrowAsync<DomainException>()).Which;
+        (usdError.Code, usdError.Args[0], usdError.Args[1]).Should().Be(("BC-E-423", (object)"shipPrc", (object)2));
+        var krwError = (await krw.Should().ThrowAsync<DomainException>()).Which;
+        (krwError.Code, krwError.Args[0], krwError.Args[1]).Should().Be(("BC-E-423", (object)"shipPrc", (object)0));
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(20m);
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423"), Trait("Rule", "SD-BR-172")]
+    public async Task Save_AcceptsAValidDirectLine_AndAnOrderLineWithAnOlderPrice()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipAndBill);
+        await ReceiveAsync(m.Item, m.Main, 20m);
+        var order = await OrderAsync(m, ShipAndBill, (m.Item, 5m, 12.345m, 0m, m.NoTax));
+
+        var direct = await Service.CreateAsync(Request(m, Direct(m.Item, 1m, 12.34m)), "kim", None);
+        var imported = await Service.CreateAsync(Request(m, OrderLine(order.Lines[0], m.Item, 1m)), "kim", None);
+
+        direct.Lines.Should().ContainSingle().Which.ShipPrc.Should().Be(12.34m);
+        imported.Lines.Should().ContainSingle().Which.ShipPrc.Should().Be(12.345m);
+    }
+
     [DatabaseFact, Trait("Id", "SD-UT-309")]
     public async Task CreditLimit_IsAskedUntilConfirmed()
     {

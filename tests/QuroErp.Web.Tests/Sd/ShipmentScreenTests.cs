@@ -6,6 +6,7 @@ using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Quro.Grid.Data;
 using QuroErp.Contracts.Bc.FieldPolicies;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Contracts.Bc.Localization;
@@ -519,6 +520,64 @@ public class ShipmentScreenTests : BunitContext
 
         page.WaitForAssertion(() => page.Find("[data-testid=shipment-message]").GetAttribute("data-level").Should().Be("error"));
         _api.Saved.Should().ContainSingle("no answer means no second save");
+    }
+
+    [Theory, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423")]
+    [InlineData("shipPrc", "12.345", "단가")]
+    [InlineData("shipQty", "1.234", "출하 수량")]
+    public async Task TooManyDecimals_MarkTheCell_AndTheSaveNamesTheColumn_WithoutCallingTheApi(string field, string value, string label)
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        var lines = Lines(page);
+        Button(page, "add-row").Click();
+        (await lines.EditAsync(0, "itemCd", "panel")).Should().BeTrue();
+        var key = lines.KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(key).ShipPrc.Should().Be(22m));
+
+        (await lines.EditAsync(0, field, value)).Should().BeTrue();
+
+        Frame(page).Lines.GetCellMark(key, field)!.Level.Should().Be(CellMarkLevel.Warning);
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=shipment-message]").TextContent.Should().StartWith(label));
+        _api.Saved.Should().BeEmpty("the API is not called");
+    }
+
+    [Fact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423")]
+    public async Task FixingTheValue_ClearsTheMark()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        var lines = Lines(page);
+        Button(page, "add-row").Click();
+        (await lines.EditAsync(0, "itemCd", "panel")).Should().BeTrue();
+        var key = lines.KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(key).ShipPrc.Should().Be(22m));
+        (await lines.EditAsync(0, "shipPrc", "12.345")).Should().BeTrue();
+
+        (await lines.EditAsync(0, "shipPrc", "12.34")).Should().BeTrue();
+
+        Frame(page).Lines.GetCellMark(key, "shipPrc").Should().BeNull();
+    }
+
+    [Fact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423"), Trait("Rule", "SD-BR-172")]
+    public void AnImportedLine_IsNotStoppedByItsSourcePrice()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        ImportAllOrderLines(page);
+        var lines = Lines(page);
+        page.WaitForAssertion(() => lines.Rows.Should().NotBeEmpty());
+        Frame(page).Lines.GetItem(lines.KeyOf(0)).ShipPrc = 12.345m;
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => _api.Saved.Should().NotBeEmpty());
     }
 
     [Fact, Trait("Id", "SD-UC-051-T01")]

@@ -181,6 +181,8 @@
     private const string NormalWarehouse = "NORMAL";
     private const string ConsignmentWarehouse = "CONSIGNMENT";
     private const string CreditLimitField = "confirmCreditLimit";
+    private const string TooManyDecimalsCode = "BC-E-423";
+    private const string CheckCellKey = "Sd.Shipment.CheckThisCell";
     private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "lotNo"];
 
     private QuroHeaderDetail<ShipmentHeader, ShipmentLine>? _frame;
@@ -325,6 +327,7 @@
     private async Task<HeaderLines<ShipmentHeader, ShipmentLine>> SaveAsync(ShipmentHeader s, bool isNew, BatchChanges<ShipmentLine> changes)
     {
         var lines = ActiveLines();
+        CheckLineDecimals();
         var warehouseId = WarehouseOf(s.WarehouseCode)?.Id;
         bool? confirmCreditLimit = null;
         while (true)
@@ -347,6 +350,45 @@
             }
         }
     }
+
+    // BC-BR-423: the API refuses these too; here the message names the column and the cell is marked before anything is sent.
+    // Saved lines don't change, and an imported line copies its source line's price
+    private void CheckLineDecimals()
+    {
+        var lines = _frame!.Lines;
+        foreach (var key in lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted))
+        {
+            var line = lines.GetItem(key);
+            if (line.IsSaved)
+            {
+                continue;
+            }
+            if (HasTooManyDecimals(line.ShipQty, _decimals.Qty))
+            {
+                throw TooManyDecimals(key, nameof(ShipmentLine.ShipQty), "Sd.Shipment.ShipQty", _decimals.Qty);
+            }
+            if (IsPriceEntered(line) && HasTooManyDecimals(line.ShipPrc, _decimals.Price))
+            {
+                throw TooManyDecimals(key, nameof(ShipmentLine.ShipPrc), "Sd.Shipment.ShipPrc", _decimals.Price);
+            }
+        }
+    }
+
+    private ApiProblemException TooManyDecimals(int rowKey, string field, string labelKey, int decimals)
+    {
+        MarkCell(rowKey, field, true);
+        return new ApiProblemException(new ApiProblem(422, TooManyDecimalsCode,
+            [L[labelKey].Value, decimals.ToString(CultureInfo.InvariantCulture)]));
+    }
+
+    private static bool IsPriceEntered(ShipmentLine line) => line.SalesOrderLineId is null && line.SalesInvoiceLineId is null;
+
+    private static bool HasTooManyDecimals(decimal? value, int decimals) =>
+        value is { } number && decimal.Round(number, decimals) != number;
+
+    // A warning, so it shows the cell without stopping the next save; the API decides again then
+    private void MarkCell(int rowKey, string field, bool marked) =>
+        _frame!.Lines.SetCellMark(rowKey, field, marked ? new CellMark(CellMarkLevel.Warning, CheckCellKey) : null);
 
     // SD-BR-169: void issues the stock back and voids a ship-and-bill invoice, after a question
     private Task VoidAsync() => _frame!.RunStatusAsync(
@@ -648,6 +690,14 @@
             return;
         }
         var line = lines.GetItem(e.RowKey);
+        if (!line.IsSaved && Is(e.Field, nameof(ShipmentLine.ShipQty)))
+        {
+            MarkCell(e.RowKey, nameof(ShipmentLine.ShipQty), HasTooManyDecimals(line.ShipQty, _decimals.Qty));
+        }
+        else if (!line.IsSaved && IsPriceEntered(line) && Is(e.Field, nameof(ShipmentLine.ShipPrc)))
+        {
+            MarkCell(e.RowKey, nameof(ShipmentLine.ShipPrc), HasTooManyDecimals(line.ShipPrc, _decimals.Price));
+        }
         if (Is(e.Field, nameof(ShipmentLine.ItemCd)))
         {
             long? itemId = line.ItemCd is { } code && _itemIds.TryGetValue(code, out var id) ? id : null;
