@@ -660,15 +660,15 @@ public class SalesOrderScreenTests : BunitContext
     [Theory, Trait("Rule", "SD-BR-003")]
     [InlineData(5, true)]
     [InlineData(0, false)]
-    public void ALockedLine_IsGray(decimal invoiced, bool gray)
+    public void ALockedLine_IsReadOnly_AndGray(decimal invoiced, bool locked)
     {
         _api.Order = Order(invoiced: invoiced);
 
         var page = Open();
 
-        var selector = $".quro-row[data-row=\"{Lines(page).KeyOf(0)}\"]";
-        page.FindAll("[data-testid=sales-order-line] style").Any(s => s.TextContent.Contains(selector, StringComparison.Ordinal))
-            .Should().Be(gray);
+        // quro-entry.css grays an aria-readonly cell of an editable grid
+        Lines(page).IsReadOnly(0, "soQty").Should().Be(locked);
+        Lines(page).Rows[0].ClassList.Contains("quro-row-readonly").Should().Be(locked);
     }
 
     [Fact]

@@ -17,16 +17,12 @@
     {
         <style>@requiredStyle</style>
     }
-    @if (ShadeLockedLines && CanEdit && GridColors.LockedRowsStyle(_hostId, LockedRowKeys) is { } lockedStyle)
-    {
-        <style>@lockedStyle</style>
-    }
     <QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
                         ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor" OptionsFor="OptionsFor"
                         AddRowOnLastEnter="@(AddRowOnLastEnter && CanEdit)" OnRowAdding="OnRowAdding"
                         OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged" OnRowAdded="OnRowAdded"
                         OnRowDeleting="OnRowDeleting" OnRowDeleted="OnRowDeleted" OnPasting="OnPasting" OnPasted="OnPasted"
-                        OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick">
+                        OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick" RowReadOnly="IsRowReadOnly">
         @ChildContent
     </QuroGrid>
 </div>
@@ -116,10 +112,6 @@
     [Parameter]
     public Func<IReadOnlyList<(int RowKey, string Field)>, Task>? OnLinesPasted { get; set; }
 
-    /// <summary>Gives the cells of locked lines the read-only background.</summary>
-    [Parameter]
-    public bool ShadeLockedLines { get; set; }
-
     /// <summary>Shows a warning of the grid in the frame's message line, or clears it (null).</summary>
     [Parameter]
     public Action<string?>? OnMessage { get; set; }
@@ -143,8 +135,6 @@
 
     /// <summary>A paste is writing its cells; its codes are not read yet.</summary>
     public bool IsPasting => _pasting;
-
-    private List<int> LockedRowKeys => [.. Data.RowKeys.Where(k => CellsLocked(Data.GetItem(k)))];
 
     /// <summary>The screen's field policies, cascaded by the screen type component; applied to the columns by their label key.</summary>
     [CascadingParameter]
@@ -224,6 +214,8 @@
     private bool Locked(TLine item) => IsLineLocked?.Invoke(item) == true;
 
     private bool CellsLocked(TLine item) => Locked(item) || IsLineReadOnly?.Invoke(item) == true;
+
+    private bool IsRowReadOnly(object item) => CellsLocked((TLine)item);
 
     // validate "requires {field}": the column waits for a header field, e.g. the vendor before item codes (screens.md "SM")
     private ValidateDef? MissingRequirement(string field) => Definition.Validate.FirstOrDefault(v =>
