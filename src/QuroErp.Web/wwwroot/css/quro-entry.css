@@ -128,17 +128,32 @@
 .quro-entry-message[data-level=warn] { color: var(--q-warn); }
 .quro-entry-message[data-level=info] { color: var(--q-ok); }
 
-/* Command bar: File | Rows | Status | Output (2) */
-.quro-commandbar { display: flex; align-items: center; gap: 8px; min-height: var(--q-commandbar-h); box-sizing: border-box; padding: 0 16px;
+/* Command bar: File | Rows | Status | Output (2). One line: a narrow window grows the panel around its buttons and the page scrolls */
+.quro-commandbar { display: flex; align-items: center; gap: 8px; min-width: max-content; min-height: var(--q-commandbar-h); box-sizing: border-box; padding: 0 16px;
     background: var(--q-surface-1); border: 1px solid var(--q-line); border-radius: var(--q-radius-panel); }
 .quro-commandbar-group { display: flex; align-items: center; gap: 8px; }
 fieldset.quro-commandbar-group { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .quro-commandbar-sep { width: 1px; align-self: stretch; margin: 10px 4px; background: var(--q-line); }
-.quro-commandbar button { height: var(--q-control-h); padding: 0 12px; border: 1px solid var(--q-line); border-radius: var(--q-radius-button);
+.quro-commandbar button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: var(--q-control-h); padding: 0 12px; border: 1px solid var(--q-line); border-radius: var(--q-radius-button);
     background: var(--q-surface-1); color: var(--q-ink); font: 500 13px/20px var(--q-font-sans); white-space: nowrap; cursor: pointer; }
 .quro-commandbar button.quro-primary { background: var(--q-brand); border-color: var(--q-brand); color: var(--q-on-brand); }
 .quro-commandbar button.quro-danger-text { color: var(--q-danger); }
 .quro-commandbar button:disabled { opacity: .45; cursor: not-allowed; }
+/* Standard command icons (screens.md "버튼 아이콘"): disabled gray, normal color, hover or pressed with a shadow */
+.quro-command-icon { display: inline-flex; flex: none; width: 20px; height: 20px; }
+.quro-command-icon img { display: none; width: 20px; height: 20px; }
+button:disabled .quro-command-icon img[data-state="disabled"],
+button:enabled .quro-command-icon img[data-state="normal"],
+button:enabled .quro-command-icon[data-icon="save"] img[data-state="outline"] { display: block; }
+button:enabled:is(:hover, :active, [aria-pressed="true"]) .quro-command-icon img[data-state="normal"] { display: none; }
+button:enabled:is(:hover, :active, [aria-pressed="true"]) .quro-command-icon img[data-state="hover"] { display: block; }
+/* Dark mode: the restore icon's dark "1" nearly disappears, so it uses the white outline in every state */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) button .quro-command-icon[data-icon="restore-line"] img { display: none; }
+    :root:not([data-theme="light"]) button .quro-command-icon[data-icon="restore-line"] img[data-state="outline"] { display: block; }
+}
+:root[data-theme="dark"] button .quro-command-icon[data-icon="restore-line"] img { display: none; }
+:root[data-theme="dark"] button .quro-command-icon[data-icon="restore-line"] img[data-state="outline"] { display: block; }
 /* A file command: a label that looks like a command button around a hidden file input (e.g. upload a line file) */
 .quro-commandbar .quro-file-command { position: relative; display: inline-flex; align-items: center; height: var(--q-control-h); padding: 0 12px;
     box-sizing: border-box; border: 1px solid var(--q-line); border-radius: var(--q-radius-button); background: var(--q-surface-1); color: var(--q-ink);

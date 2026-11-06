@@ -295,6 +295,15 @@ public class PurchaseOrderScreenTests : BunitContext
         page.Find("[data-testid=purchase-order-totals-total]").TextContent.Should().Contain("13,750.00");
     }
 
+    [Fact]
+    public void Pdf_SharesThePrintIcon_AndExcelHasItsOwn()
+    {
+        var page = Open();
+
+        page.Find("[data-testid=purchase-order-toolbar-pdf] .quro-command-icon").GetAttribute("data-icon").Should().Be("print");
+        page.Find("[data-testid=purchase-order-toolbar-export] .quro-command-icon").GetAttribute("data-icon").Should().Be("excel");
+    }
+
     private IRenderedComponent<PurchaseOrder> RenderAs(string role, string? poNo = null)
     {
         var store = Services.GetRequiredService<AccessTokenStore>();

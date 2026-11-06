@@ -69,19 +69,19 @@
     @* ② Command bar: fixed groups in a fixed order. Blocked commands are disabled, never hidden *@
     <div class="quro-commandbar" role="toolbar" aria-label="@L["Common.Toolbar"]" data-testid="@Id("toolbar")">
         <div class="quro-commandbar-group" data-group="file">
-            <button type="button" disabled="@Busy" aria-keyshortcuts="F3" data-testid="@Id("toolbar-search")" @onclick="OpenFindAsync">@L["Common.Search"]</button>
-            <button type="button" disabled="@Busy" data-testid="@Id("toolbar-new")" @onclick="NewAsync">@L["Common.New"]</button>
+            <button type="button" disabled="@Busy" aria-keyshortcuts="F3" data-testid="@Id("toolbar-search")" @onclick="OpenFindAsync"><QuroCommandIcon Name="search" />@L["Common.Search"]</button>
+            <button type="button" disabled="@Busy" data-testid="@Id("toolbar-new")" @onclick="NewAsync"><QuroCommandIcon Name="new" />@L["Common.New"]</button>
             <button type="button" class="quro-primary" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+S"
-                    data-testid="@Id("toolbar-save")" @onclick="SaveAsync">@L["Common.Save"]</button>
+                    data-testid="@Id("toolbar-save")" @onclick="SaveAsync"><QuroCommandIcon Name="save" />@L["Common.Save"]</button>
         </div>
         <span class="quro-commandbar-sep" aria-hidden="true"></span>
         <div class="quro-commandbar-group" data-group="rows">
             <button type="button" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+Insert"
-                    data-testid="@Id("toolbar-add-row")" @onclick="AddLine">@L["Common.AddRow"]</button>
+                    data-testid="@Id("toolbar-add-row")" @onclick="AddLine"><QuroCommandIcon Name="add-row" />@L["Common.AddRow"]</button>
             <button type="button" disabled="@(Busy || !CanMarkSelected)" aria-keyshortcuts="Control+Delete"
                     aria-pressed="@(SelectedIsDeleted ? "true" : "false")"
-                    data-testid="@Id("toolbar-mark-delete")" @onclick="MarkDelete">@L["Common.MarkDelete"]</button>
-            <button type="button" disabled="@(Busy || !CanRestoreSelected)" data-testid="@Id("toolbar-restore-row")" @onclick="RestoreLine">@L["Common.RestoreLine"]</button>
+                    data-testid="@Id("toolbar-mark-delete")" @onclick="MarkDelete"><QuroCommandIcon Name="mark-delete" />@L["Common.MarkDelete"]</button>
+            <button type="button" disabled="@(Busy || !CanRestoreSelected)" data-testid="@Id("toolbar-restore-row")" @onclick="RestoreLine"><QuroCommandIcon Name="restore-line" />@L["Common.RestoreLine"]</button>
             @RowCommands?.Invoke(_header)
         </div>
         @if (StatusCommands is not null)
@@ -96,15 +96,15 @@
             @if (Delete is not null)
             {
                 <button type="button" class="quro-danger-text" disabled="@(Busy || _form.IsNew || CanDelete?.Invoke(_header) == false)"
-                        data-testid="@Id("toolbar-delete")" @onclick="DeleteAsync">@(DeleteText ?? L["Common.Delete"])</button>
+                        data-testid="@Id("toolbar-delete")" @onclick="DeleteAsync"><QuroCommandIcon Name="delete" />@(DeleteText ?? L["Common.Delete"])</button>
             }
             @if (OnPdf.HasDelegate)
             {
-                <button type="button" disabled="@(Busy || _form.IsNew)" data-testid="@Id("toolbar-pdf")" @onclick="OnPdf">@L["Common.Pdf"]</button>
+                <button type="button" disabled="@(Busy || _form.IsNew)" data-testid="@Id("toolbar-pdf")" @onclick="OnPdf"><QuroCommandIcon Name="print" />@L["Common.Pdf"]</button>
             }
             @if (OnExport.HasDelegate)
             {
-                <button type="button" disabled="@(Busy || _form.IsNew || _lines.RowKeys.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport">@L["Common.ExportExcel"]</button>
+                <button type="button" disabled="@(Busy || _form.IsNew || _lines.RowKeys.Count == 0)" data-testid="@Id("toolbar-export")" @onclick="OnExport"><QuroCommandIcon Name="excel" />@L["Common.ExportExcel"]</button>
             }
             @OutputCommands?.Invoke(_header)
         </div>

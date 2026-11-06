@@ -1,0 +1,29 @@
+@* Decorative icon before a standard command's text (screens.md "버튼 아이콘"). The image paths live only here.
+   One image per state so hover doesn't wait for a download; quro-entry.css shows the one that fits the button. *@
+
+<span class="quro-command-icon" data-icon="@Name">
+    @foreach (var state in StatesOf(Name))
+    {
+        <img src="@Assets[$"img/commands/{Name}-{state}.png"]" alt="" width="20" height="20" data-state="@state" />
+    }
+</span>
+
+@code {
+    private static readonly string[] Standard = ["disabled", "normal", "hover"];
+    private static readonly string[] SaveStates = ["disabled", "outline"];
+    private static readonly string[] RestoreLineStates = ["disabled", "normal", "hover", "outline"];
+
+    /// <summary>
+    /// File name stem in wwwroot/img/commands: search, new, save, delete, add-row, mark-delete, restore-line, next,
+    /// previous, excel or print.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = "";
+
+    private static string[] StatesOf(string name) => name switch
+    {
+        "save" => SaveStates,
+        "restore-line" => RestoreLineStates,
+        _ => Standard,
+    };
+}

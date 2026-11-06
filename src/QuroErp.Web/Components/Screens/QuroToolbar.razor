@@ -13,7 +13,7 @@
         @Button(OnSave, "Common.Save", "save", !CanSave, "quro-primary")
         @Button(OnDelete, "Common.Delete", "delete", !CanDelete, "quro-danger-text")
         @Button(OnPrint, "Common.Print", "print")
-        @Button(OnExport, "Common.ExportExcel", "export")
+        @Button(OnExport, "Common.ExportExcel", "export", icon: "excel")
     </div>
     @if (CanShowAllFields)
     {
@@ -97,9 +97,9 @@
     [Parameter]
     public string? TestId { get; set; }
 
-    private RenderFragment? Button(EventCallback handler, string label, string id, bool disabled = false, string? css = null) =>
+    private RenderFragment? Button(EventCallback handler, string label, string id, bool disabled = false, string? css = null, string? icon = null) =>
         handler.HasDelegate
             ? @<button type="button" class="@css" disabled="@(Busy || disabled)" data-testid="@(TestId is null ? null : $"{TestId}-toolbar-{id}")"
-                       @onclick="handler">@L[label]</button>
+                       @onclick="handler"><QuroCommandIcon Name="@(icon ?? id)" />@L[label]</button>
             : null;
 }
