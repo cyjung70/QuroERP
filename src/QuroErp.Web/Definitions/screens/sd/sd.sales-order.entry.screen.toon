@@ -32,22 +32,20 @@ grids[1]:
     bind: lines
     rowKey: id
     deletedRows: strike
-    columns[15]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+    columns[13]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
       seq,Sd.SalesOrder.Seq,number,50,false,false,N0,"",false,false
       itemCd,Sd.SalesOrder.ItemCd,text,130,true,true,"",sdSoItem,false,false
-      itemName,Sd.SalesOrder.ItemName,text,220,true,false,"","",false,false
+      itemName,Sd.SalesOrder.ItemName,text,220,false,false,"","",false,false
       unit,Sd.SalesOrder.Unit,text,60,false,false,"","",false,false
       soQty,Sd.SalesOrder.SoQty,number,90,true,true,N2,"",false,false
       soPrc,Sd.SalesOrder.SoPrc,number,110,true,true,N2,"",false,false
-      soAmt,Sd.SalesOrder.SoAmt,number,120,false,false,N2,"",false,false
       dcCd,Sd.SalesOrder.DcCd,text,90,true,false,"",sdSoDiscount,false,false
       dcRate,Sd.SalesOrder.DcRate,number,80,false,false,N2,"",false,false
-      stdPrc,Sd.SalesOrder.StdPrc,number,110,false,false,N2,"",false,false
+      soAmt,Sd.SalesOrder.SoAmt,number,120,false,false,N2,"",false,false
       taxCode,Sd.SalesOrder.LineTaxCode,text,90,true,false,"",sdSoTaxCode,false,false
       taxAmt,Sd.SalesOrder.TaxAmt,number,100,false,false,N2,"",false,false
       shipQty,Sd.SalesOrder.ShipQty,number,90,false,false,N2,"",false,false
       dnQty,Sd.SalesOrder.DnQty,number,90,false,false,N2,"",false,false
-      invNo,Sd.SalesOrder.InvNo,text,120,false,false,"","",false,false
     rules[3]{on,action,target,expr}:
       itemCd.change,lookup,"itemName|unit","sdSoItem.all()"
       dcCd.change,lookup,"dcRate","sdSoDiscount.all()"

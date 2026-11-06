@@ -46,6 +46,13 @@
 .quro-span-2 { grid-column: span 2; }
 .quro-span-4 { grid-column: span 4; }
 
+/* A collapsible group of header fields, e.g. the ship-to */
+.quro-field-section-toggle { background: none; border: 0; padding: 2px 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; }
+.quro-field-section-toggle::before { content: "▸"; display: inline-block; width: 16px; }
+.quro-field-section-toggle[aria-expanded=true]::before { content: "▾"; }
+.quro-field-section-body { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-content: start; margin-top: 4px; }
+.quro-field-section-body[hidden] { display: none; }
+
 /* S screens: 4-column field grid, tabs, read-only sub-grid and radio cards (screen-templates.md 1) */
 .quro-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-items: end; align-content: start; }
 .quro-form[hidden], .quro-tab-panel[hidden] { display: none; }

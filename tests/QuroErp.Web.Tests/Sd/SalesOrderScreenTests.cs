@@ -8,6 +8,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Quro.Grid.Data;
+using QuroErp.Contracts.Bc.FieldPolicies;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Contracts.Bc.Localization;
 using QuroErp.Contracts.Bc.Tax;
@@ -56,6 +57,8 @@ public class SalesOrderScreenTests : BunitContext
         Services.AddHttpClient<LocalizationApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<TaxCodeApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<CodeApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
+        Services.AddHttpClient<FieldPolicyApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
+        Services.AddScoped<FieldPolicyCache>();
         _auth = AddAuthorization();
     }
 
@@ -140,8 +143,8 @@ public class SalesOrderScreenTests : BunitContext
         line.ToRequest().DcCd.Should().Be("", "an empty code is no discount, not the customer's default");
     }
 
-    [Theory, Trait("Id", "SD-UT-003"), Trait("Rule", "SD-BR-003"), Trait("Rule", "SD-BR-012")]
-    [InlineData("SO", 0, "brand", "save,add-row,mark-delete,delete,pdf,picking-list,set-component-list")]
+    [Theory, Trait("Id", "SD-UT-003"), Trait("Id", "SD-UC-002-T07"), Trait("Rule", "SD-BR-003"), Trait("Rule", "SD-BR-012")]
+    [InlineData("SO", 0, "neutral", "save,add-row,mark-delete,delete,pdf,picking-list,set-component-list")]
     [InlineData("RE", 4, "warn", "pdf,picking-list,set-component-list")]
     [InlineData("CL", 10, "ok", "pdf,picking-list,set-component-list")]
     public void Status_SetsTheChipAndTheEnabledButtons(string status, int shipped, string chip, string enabled)
@@ -293,10 +296,258 @@ public class SalesOrderScreenTests : BunitContext
 
         var page = Open();
 
-        page.Find("[data-testid=sales-order-title] h1").TextContent.Should().Be("Sales order");
+        page.Find("[data-testid=sales-order-title] h1").TextContent.Should().Be("Sales Order");
+        page.Find(".quro-entry-path").TextContent.Should().Be("SD > Sales");
         Button(page, "picking-list").TextContent.Should().Be("Picking list");
-        Lines(page).Headers.Select(h => h.Title).Should().Contain(["Item code", "Unit price", "Discount", "Std price", "Inv no."]);
+        Lines(page).Headers.Select(h => h.Title).Should().Contain(["Item code", "Unit price", "Discount code", "Discount %", "Billed qty"]);
+        page.Find("[data-testid=sales-order-totals-subtotal]").TextContent.Should().Contain("Supply amount");
+        page.Find("[data-testid=sales-order-totals-tax]").TextContent.Should().Contain("Tax (estimated)");
         page.Find("[data-testid=sales-order-totals-total]").TextContent.Should().Contain("990.00");
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T01")]
+    public void Labels_AreTheKoreanResources_InKorean()
+    {
+        var page = Open();
+
+        page.Find("[data-testid=sales-order-title] h1").TextContent.Should().Be("수주 등록");
+        page.Find(".quro-entry-path").TextContent.Should().Be("SD > 판매");
+        page.Find("[data-testid=sales-order-totals-subtotal]").TextContent.Should().Contain("공급가액");
+        page.Find("[data-testid=sales-order-totals-tax]").TextContent.Should().Contain("세액(예상)");
+        Lines(page).Headers.Select(h => h.Title).Should().Contain(["할인 코드", "할인율 %", "청구 수량"]);
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T01")]
+    public void Header_FollowsTheOrderOfTheScreenItems_WithTheBaseTotalForAForeignDocument()
+    {
+        _api.Localization = KoreanCompany;
+        _api.Order = Order() with { ExchangeRate = 1382.5m };
+
+        var page = Open();
+
+        page.WaitForAssertion(() => page.FindAll("[data-testid=sales-order-header-tot-base-amt]").Should().ContainSingle());
+        var fields = page.FindAll("[data-testid^=sales-order-header-]").Select(e => e.GetAttribute("data-testid")!.Replace("sales-order-header-", ""));
+        fields.Except(["customer-lookup", "ship-to-toggle"]).Should().Equal(
+            "customer-name", "so-dt", "exp-ship-dt",
+            "currency-code", "exchange-rate", "due-dt", "billing-flow",
+            "tax-code", "rep", "terms", "dc-status",
+            "ship-via", "freight-charge", "tot-base-amt",
+            "ship-to", "ship-name", "ship-addr1", "ship-addr2", "ship-city", "ship-state", "ship-zip-code", "ship-country", "ship-phone", "ship-fax",
+            "remarks");
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T01")]
+    public void LineGrid_HasTheColumnsOfTheScreenItems_WithTheItemNameReadOnly()
+    {
+        var page = Open();
+
+        Lines(page).Headers.Select(h => h.Field).Should().Equal(
+            "seq", "itemCd", "itemName", "unit", "soQty", "soPrc", "dcCd", "dcRate", "soAmt", "taxCode", "taxAmt", "shipQty", "dnQty");
+        Lines(page).IsReadOnly(0, "itemName").Should().BeTrue();
+        Lines(page).IsReadOnly(0, "unit").Should().BeTrue();
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T01"), Trait("Rule", "SD-BR-009")]
+    public void ShipTo_StartsCollapsed_TogglesOpen_AndStaysOpenWhileThePickedCustomerLeavesTheZipCodeEmpty()
+    {
+        var page = RenderAs("admin");
+        ShipToBody(page).HasAttribute("hidden").Should().BeTrue();
+
+        page.Find("[data-testid=sales-order-header-ship-to-toggle]").Click();
+        ShipToBody(page).HasAttribute("hidden").Should().BeFalse();
+        page.Find("[data-testid=sales-order-header-ship-to-toggle]").Click();
+        ShipToBody(page).HasAttribute("hidden").Should().BeTrue();
+
+        _api.Customer = _api.Customer with { ShipZipCode = null };
+        PickCustomer(page);
+
+        page.WaitForAssertion(() => ShipToBody(page).HasAttribute("hidden").Should().BeFalse());
+    }
+
+    [Fact, Trait("Id", "SD-UT-405"), Trait("Rule", "SD-BR-016"), Trait("Rule", "SD-BR-405"), Trait("Rule", "BC-BR-542")]
+    public void AddRow_CopiesTheHeaderDefaults_AndNumbersTheLine()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => page.Field("sales-order-header-tax-code").Selected.Should().BeEquivalentTo("ST10"));
+
+        Button(page, "add-row").Click();
+
+        page.WaitForAssertion(() => Lines(page).Rows.Should().ContainSingle());
+        var line = Frame(page).Lines.GetItem(Lines(page).KeyOf(0));
+        (line.Seq, line.SoQty, line.TaxCode, line.TaxCodeId, line.DcCd, line.DcRate).Should().Be((1, 1m, "ST10", 1L, "D10", -10m));
+    }
+
+    [Fact, Trait("Id", "SD-UT-405"), Trait("Rule", "SD-BR-405"), Trait("Rule", "BC-BR-542")]
+    public async Task PickingAnItem_KeepsTheHeaderDefaultsTheUserChanged()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        page.Field("sales-order-header-tax-code").Change("NONE");
+        page.Field("sales-order-header-dc-status").Change("D5");
+        Button(page, "add-row").Click();
+
+        (await Lines(page).EditAsync(0, "itemCd", "bolt")).Should().BeTrue();
+
+        var key = Lines(page).KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(key).SoPrc.Should().Be(9.5m));
+        var line = Frame(page).Lines.GetItem(key);
+        (line.TaxCode, line.TaxCodeId, line.DcCd, line.DcRate).Should().Be(("NONE", 2L, "D5", -5m));
+    }
+
+    [Fact, Trait("Id", "BC-UT-542"), Trait("Rule", "BC-BR-542"), Trait("Rule", "SD-BR-033")]
+    public async Task PickingAnItem_TakesTheCodeTheApiChoseForIt_OverTheHeaderDefault()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        page.Field("sales-order-header-ship-state").Change("NY");
+        Button(page, "add-row").Click();
+
+        (await Lines(page).EditAsync(0, "itemCd", "bolt")).Should().BeTrue();
+
+        var key = Lines(page).KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(key).TaxCode.Should().Be("NONE"));
+        page.Field("sales-order-header-tax-code").Selected.Should().BeEquivalentTo("ST10");
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T01")]
+    public void FindDialog_SearchesByNumberPeriodAndStatus_AndNarrowsByCustomer()
+    {
+        var page = RenderAs("admin");
+        Button(page, "search").Click();
+        page.WaitForAssertion(() => page.LookupRows("sales-order-find").Should().ContainSingle());
+
+        page.Find("[data-testid=sales-order-find-keyword]").Change("so2611");
+        page.Find("[data-testid=sales-order-find-from]").Change("2026-11-01");
+        page.Find("[data-testid=sales-order-find-to]").Change("2026-11-30");
+        page.Find("[data-testid=sales-order-find-status]").Change("RE");
+        page.Find("[data-testid=sales-order-find-customer]").Change("nobody");
+        page.Find("form.quro-search").Submit();
+
+        page.WaitForAssertion(() => page.LookupRows("sales-order-find").Should().BeEmpty("no order has this customer"));
+        var query = _api.Requests.Last(r => r.RequestUri!.AbsolutePath == "/api/sd/sales-orders").RequestUri!.Query;
+        query.Should().Contain("soNo=so2611").And.Contain("status=RE").And.Contain("2026-11-01").And.Contain("2026-11-30");
+
+        page.Find("[data-testid=sales-order-find-customer]").Change("acm");
+        page.Find("form.quro-search").Submit();
+
+        page.WaitForAssertion(() => page.LookupRows("sales-order-find").Should().ContainSingle());
+    }
+
+    [Theory, Trait("Id", "SD-UC-002-T05"), Trait("Rule", "SD-BR-005"), Trait("Rule", "SD-BR-007"), Trait("Rule", "SD-BR-034"), Trait("Rule", "BC-BR-413")]
+    [InlineData("LINE")]
+    [InlineData("DOCUMENT")]
+    public void UsdOrderInAKoreanCompany_ShowsTheTotalsWithoutTheLineMarkedForDelete(string taxCalcMode)
+    {
+        _api.Localization = KoreanCompany with { TaxCalcMode = taxCalcMode };
+        _api.Order = Order() with
+        {
+            ExchangeRate = 1382.5m,
+            Lines =
+            [
+                OrderLine(9001, 1, 10m, 1250m, null, 0m),
+                OrderLine(9002, 2, 5m, 280.5m, "D5", -5m),
+                OrderLine(9003, 3, 20m, 45m, null, 0m),
+            ],
+        };
+        var page = Open(lineCount: 3);
+
+        Lines(page).Select(2);
+        Button(page, "mark-delete").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=sales-order-totals-subtotal]").TextContent.Should().Contain("13,832.38"));
+        page.Find("[data-testid=sales-order-totals-tax]").TextContent.Should().Contain("1,383.24");
+        page.Find("[data-testid=sales-order-totals-total]").TextContent.Should().Contain("15,215.62").And.Contain("USD");
+        page.FindAll("[data-testid=sales-order-totals-discount]").Should().BeEmpty("the line amounts already take the discount");
+        page.Field("sales-order-header-tot-base-amt").Value.Should().Be("21035595");
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T06"), Trait("Rule", "BC-BR-421")]
+    public void KrwOrder_ShowsAmountsWithoutDecimals_AndNoBaseTotal()
+    {
+        _api.Localization = KoreanCompany;
+        _api.Order = Order() with { CurrencyCode = "KRW", Lines = [OrderLine(9001, 1, 3m, 333m, null, 0m)] };
+
+        var page = Open();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=sales-order-totals-subtotal]").TextContent.Should().Contain("999"));
+        page.Find("[data-testid=sales-order-totals-tax]").TextContent.Should().Contain("100");
+        page.Find("[data-testid=sales-order-totals-total]").TextContent.Should().Contain("1,099").And.Contain("KRW");
+        page.FindAll("[data-testid=sales-order-header-tot-base-amt]").Should().BeEmpty();
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T07"), Trait("Rule", "SD-BR-003")]
+    public async Task PartlyShippedOrder_TakesNoLineEdits()
+    {
+        _api.Order = Order("RE", 4);
+
+        var page = Open();
+
+        (await Lines(page).EditAsync(0, "soQty", "5")).Should().BeFalse();
+        Frame(page).Lines.GetItem(Lines(page).KeyOf(0)).SoQty.Should().Be(10m);
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T08")]
+    public async Task RestoringALine_KeepsTheHeaderChange_AndTheUnsavedMark()
+    {
+        var page = Open();
+        var lines = Lines(page);
+        page.Field("sales-order-header-remarks").Change("Changed remarks");
+        await lines.EditAsync(0, "soQty", "12");
+        var key = lines.KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(key).SoQty.Should().Be(12m));
+
+        lines.Select(0);
+        Button(page, "restore-row").Click();
+
+        Frame(page).Lines.GetItem(key).SoQty.Should().Be(10m);
+        Frame(page).Lines.GetState(key).Should().Be(RowState.Normal);
+        Frame(page).IsDirty.Should().BeTrue("the header change is not saved");
+        Button(page, "save").HasAttribute("disabled").Should().BeFalse();
+        page.Field("sales-order-header-remarks").Value.Should().Be("Changed remarks");
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T09"), Trait("Rule", "BC-BR-432")]
+    public void KoreanCompany_HidesTheShipToState_AndDefaultsTheCountry()
+    {
+        _api.Localization = KoreanCompany;
+        _api.Policies = [new("Sd.SalesOrder.ShipState", FieldPolicyStates.Hidden, null, "Sd.SalesOrder.ShipState", "CountryPack")];
+
+        var page = RenderAs("admin");
+
+        page.WaitForAssertion(() => page.FindAll("[data-testid=sales-order-header-ship-state]").Should().BeEmpty());
+        page.Field("sales-order-header-ship-country").Value.Should().Be("KR");
+        _api.Requests.Should().Contain(r => r.RequestUri!.ToString().Contains("Sd.SalesOrder", StringComparison.Ordinal));
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T09")]
+    public void WhileThePoliciesAreLoading_TheScreenDrawsANewDocument_AndAppliesThemWhenTheyArrive()
+    {
+        var answer = new TaskCompletionSource();
+        _api.PoliciesArrive = answer.Task;
+        _api.Policies = [new("Sd.SalesOrder.ShipState", FieldPolicyStates.Hidden, null, "Sd.SalesOrder.ShipState", "CountryPack")];
+
+        var page = RenderAs("admin");
+
+        page.Find("[data-testid=sales-order-doc-no]").TextContent.Should().Be("새 문서");
+        page.FindAll("[data-testid=sales-order-header-ship-state]").Should().ContainSingle();
+
+        answer.SetResult();
+
+        // The late answer travels the HTTP pipeline on the thread pool, which is slow while the whole solution's tests run
+        page.WaitForAssertion(() => page.FindAll("[data-testid=sales-order-header-ship-state]").Should().BeEmpty(), TimeSpan.FromSeconds(15));
+        page.Find("[data-testid=sales-order-doc-no]").TextContent.Should().Be("새 문서");
+    }
+
+    [Fact, Trait("Id", "SD-UC-002-T09")]
+    public void UsCompany_ShowsTheShipToState_AndDefaultsTheCountry()
+    {
+        var page = RenderAs("admin");
+
+        page.FindAll("[data-testid=sales-order-header-ship-state]").Should().ContainSingle();
+        page.Field("sales-order-header-ship-country").Value.Should().Be("US");
     }
 
     private IRenderedComponent<SalesOrder> RenderAs(string role, string? soNo = null)
@@ -311,13 +562,16 @@ public class SalesOrderScreenTests : BunitContext
         return page;
     }
 
-    private IRenderedComponent<SalesOrder> Open()
+    private IRenderedComponent<SalesOrder> Open(int lineCount = 1)
     {
         var page = RenderAs("admin", "SO2611000001");
         page.WaitForAssertion(() => page.Find("[data-testid=sales-order-doc-no]").TextContent.Should().Be("SO2611000001"));
-        page.WaitForAssertion(() => Lines(page).Rows.Should().HaveCount(1));
+        page.WaitForAssertion(() => Lines(page).Rows.Should().HaveCount(lineCount));
         return page;
     }
+
+    private static AngleSharp.Dom.IElement ShipToBody(IRenderedComponent<SalesOrder> page) =>
+        page.Find("[data-testid=sales-order-header-ship-to] .quro-field-section-body");
 
     private static void PickCustomer(IRenderedComponent<SalesOrder> page)
     {
@@ -339,9 +593,24 @@ public class SalesOrderScreenTests : BunitContext
         page.Find($"[data-testid={Screen}-toolbar-{action}]");
 
     private static IReadOnlyList<string> Enabled(IRenderedComponent<SalesOrder> page) =>
-        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", ""))];
+        [.. page.FindAll("[role=toolbar] button:not([disabled])")
+            .Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", ""))
+            .Where(b => b != "show-all-fields")];
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
+
+    private static readonly LocalizationDto UsCompany = new("US", "USD", "en", "America/New_York", "SALES_TAX", "MM/dd/yyyy", "LINE", [],
+        [new CurrencyDto("USD", "US Dollar", 2, "US"), new CurrencyDto("EUR", "Euro", 2, "DE")],
+        [new CountryDecimalDto("US", "SD", 2)],
+        [new DecimalSettingDto("SD", 2, "HALF_UP")]);
+
+    private static readonly LocalizationDto KoreanCompany = new("KR", "KRW", "ko", "Asia/Seoul", "VAT", "yyyy-MM-dd", "LINE", [],
+        [new CurrencyDto("KRW", "Won", 0, "KR"), new CurrencyDto("USD", "US Dollar", 2, "US")],
+        [new CountryDecimalDto("KR", "SD", 0), new CountryDecimalDto("US", "SD", 2)],
+        [new DecimalSettingDto("SD", 2, "HALF_UP")]);
+
+    private static SalesOrderLineDto OrderLine(long id, int seq, decimal qty, decimal price, string? dcCd, decimal dcRate) => new(
+        id, seq, 11, "BOLT", "Hex Bolt", qty, price, 0m, dcCd, dcRate, 12m, 1, 0m, 0m, 0m, 0m, null, "EA");
 
     private static SalesOrderDto Order(string status = "SO", decimal shipped = 0, decimal invoiced = 0, bool billingFlowLocked = false) => new(
         Id: 601, SoNo: "SO2611000001", Status: status, CustomerId: 801, CustomerName: "ACME", SoDt: new DateOnly(2026, 11, 4),
@@ -384,6 +653,15 @@ public class SalesOrderScreenTests : BunitContext
 
         public SalesOrderLineFileResult FileResult { get; set; } = new([], []);
 
+        public LocalizationDto Localization { get; set; } = UsCompany;
+
+        public CustomerDto Customer { get; set; } = Acme;
+
+        public IReadOnlyList<FieldPolicyDto> Policies { get; set; } = [];
+
+        /// <summary>Holds the policy answer back, as a real API does while the page draws.</summary>
+        public Task PoliciesArrive { get; set; } = Task.CompletedTask;
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Requests.Add(request);
@@ -393,13 +671,17 @@ public class SalesOrderScreenTests : BunitContext
             {
                 return Json(Codes(path["/api/codes/".Length..]));
             }
+            if (path.StartsWith("/" + FieldPolicyRoutes.Base, StringComparison.Ordinal))
+            {
+                await PoliciesArrive;
+                return Json(Policies);
+            }
             switch (path)
             {
                 case "/" + LocalizationRoutes.Base:
-                    return Json(new LocalizationDto("US", "USD", "en", "America/New_York", "SALES_TAX", "MM/dd/yyyy", "LINE", [],
-                        [new CurrencyDto("USD", "US Dollar", 2, "US"), new CurrencyDto("EUR", "Euro", 2, "DE")],
-                        [new CountryDecimalDto("US", "SD", 2)],
-                        [new DecimalSettingDto("SD", 2, "HALF_UP")]));
+                    return Json(Localization);
+                case "/api/sd/customers/801":
+                    return Json(Customer);
                 case "/" + TaxCodeRoutes.Base:
                     return Json(new List<TaxCodeDto>
                     {
@@ -409,7 +691,7 @@ public class SalesOrderScreenTests : BunitContext
                 case "/api/sd/sales-orders/discount-rates":
                     return Json(new List<SalesOrderDiscountRateDto> { new("D10", -10m), new("D5", -5m) });
                 case "/api/sd/customers":
-                    return Json(new CustomerListDto([Acme], 1));
+                    return Json(new CustomerListDto([Customer], 1));
                 case "/" + ItemRoutes.Base:
                     var code = query["itemCd"];
                     var name = query["itemName"];

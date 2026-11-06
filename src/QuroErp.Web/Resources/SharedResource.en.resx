@@ -795,7 +795,14 @@
   <data name="SD-W-010" xml:space="preserve"><value>The price of these items differs from the standard price and the price level price: {0}. Update the price level too?</value></data>
   <data name="SD-W-309" xml:space="preserve"><value>After this save the customer balance of {1} exceeds the credit limit of {0}. Save anyway?</value></data>
   <data name="Menu.G3SD02" xml:space="preserve"><value>Sales orders</value></data>
-  <data name="Sd.SalesOrder.Title" xml:space="preserve"><value>Sales order</value></data>
+  <data name="Sd.SalesOrder.Path" xml:space="preserve"><value>SD &gt; Sales</value></data>
+  <data name="Sd.SalesOrder.TaxCode" xml:space="preserve"><value>Default tax code</value></data>
+  <data name="Sd.SalesOrder.ShipTo" xml:space="preserve"><value>Ship-to</value></data>
+  <data name="Sd.SalesOrder.SupplyAmt" xml:space="preserve"><value>Supply amount</value></data>
+  <data name="Sd.SalesOrder.TaxEstimate" xml:space="preserve"><value>Tax (estimated)</value></data>
+  <data name="Sd.SalesOrder.FindFrom" xml:space="preserve"><value>Order date from</value></data>
+  <data name="Sd.SalesOrder.FindTo" xml:space="preserve"><value>Order date to</value></data>
+  <data name="Sd.SalesOrder.Title" xml:space="preserve"><value>Sales Order</value></data>
   <data name="Sd.SalesOrder.SoNo" xml:space="preserve"><value>SO no.</value></data>
   <data name="Sd.SalesOrder.Status" xml:space="preserve"><value>Status</value></data>
   <data name="Sd.SalesOrder.CustomerId" xml:space="preserve"><value>Customer</value></data>
@@ -823,22 +830,22 @@
   <data name="Sd.SalesOrder.Remarks" xml:space="preserve"><value>Remarks</value></data>
   <data name="Sd.SalesOrder.TotSoAmt" xml:space="preserve"><value>Order total</value></data>
   <data name="Sd.SalesOrder.TotBaseAmt" xml:space="preserve"><value>Total in base currency</value></data>
-  <data name="Sd.SalesOrder.Seq" xml:space="preserve"><value>No.</value></data>
+  <data name="Sd.SalesOrder.Seq" xml:space="preserve"><value>No</value></data>
   <data name="Sd.SalesOrder.ItemCd" xml:space="preserve"><value>Item code</value></data>
   <data name="Sd.SalesOrder.ItemName" xml:space="preserve"><value>Item name</value></data>
   <data name="Sd.SalesOrder.Unit" xml:space="preserve"><value>Unit</value></data>
   <data name="Sd.SalesOrder.SoQty" xml:space="preserve"><value>Qty</value></data>
   <data name="Sd.SalesOrder.SoPrc" xml:space="preserve"><value>Unit price</value></data>
   <data name="Sd.SalesOrder.SoAmt" xml:space="preserve"><value>Amount</value></data>
-  <data name="Sd.SalesOrder.DcCd" xml:space="preserve"><value>Discount</value></data>
-  <data name="Sd.SalesOrder.DcRate" xml:space="preserve"><value>D/C rate</value></data>
+  <data name="Sd.SalesOrder.DcCd" xml:space="preserve"><value>Discount code</value></data>
+  <data name="Sd.SalesOrder.DcRate" xml:space="preserve"><value>Discount %</value></data>
   <data name="Sd.SalesOrder.StdPrc" xml:space="preserve"><value>Std price</value></data>
   <data name="Sd.SalesOrder.LineTaxCode" xml:space="preserve"><value>Tax code</value></data>
   <data name="Sd.SalesOrder.TaxCodeName" xml:space="preserve"><value>Tax code name</value></data>
   <data name="Sd.SalesOrder.TaxRate" xml:space="preserve"><value>Tax rate</value></data>
   <data name="Sd.SalesOrder.TaxAmt" xml:space="preserve"><value>Tax</value></data>
   <data name="Sd.SalesOrder.ShipQty" xml:space="preserve"><value>Shipped qty</value></data>
-  <data name="Sd.SalesOrder.DnQty" xml:space="preserve"><value>Inv qty</value></data>
+  <data name="Sd.SalesOrder.DnQty" xml:space="preserve"><value>Billed qty</value></data>
   <data name="Sd.SalesOrder.InvNo" xml:space="preserve"><value>Inv no.</value></data>
   <data name="Sd.SalesOrder.FindItem" xml:space="preserve"><value>Find item</value></data>
   <data name="Sd.SalesOrder.FindDiscount" xml:space="preserve"><value>Find discount code</value></data>

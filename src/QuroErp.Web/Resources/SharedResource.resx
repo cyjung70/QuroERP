@@ -795,20 +795,27 @@
   <data name="SD-W-010" xml:space="preserve"><value>단가가 표준가와도, 가격 레벨 단가와도 다른 품목이 있습니다: {0}. 가격 레벨 단가도 바꿀까요?</value></data>
   <data name="SD-W-309" xml:space="preserve"><value>저장하면 고객 잔액이 {1}(으)로 신용 한도 {0}을(를) 넘습니다. 그래도 저장할까요?</value></data>
   <data name="Menu.G3SD02" xml:space="preserve"><value>수주</value></data>
-  <data name="Sd.SalesOrder.Title" xml:space="preserve"><value>수주</value></data>
+  <data name="Sd.SalesOrder.Path" xml:space="preserve"><value>SD &gt; 판매</value></data>
+  <data name="Sd.SalesOrder.TaxCode" xml:space="preserve"><value>기본 세금 코드</value></data>
+  <data name="Sd.SalesOrder.ShipTo" xml:space="preserve"><value>배송지</value></data>
+  <data name="Sd.SalesOrder.SupplyAmt" xml:space="preserve"><value>공급가액</value></data>
+  <data name="Sd.SalesOrder.TaxEstimate" xml:space="preserve"><value>세액(예상)</value></data>
+  <data name="Sd.SalesOrder.FindFrom" xml:space="preserve"><value>수주일 시작</value></data>
+  <data name="Sd.SalesOrder.FindTo" xml:space="preserve"><value>수주일 끝</value></data>
+  <data name="Sd.SalesOrder.Title" xml:space="preserve"><value>수주 등록</value></data>
   <data name="Sd.SalesOrder.SoNo" xml:space="preserve"><value>수주 번호</value></data>
   <data name="Sd.SalesOrder.Status" xml:space="preserve"><value>상태</value></data>
   <data name="Sd.SalesOrder.CustomerId" xml:space="preserve"><value>고객</value></data>
   <data name="Sd.SalesOrder.FindCustomer" xml:space="preserve"><value>고객 찾기</value></data>
-  <data name="Sd.SalesOrder.SoDt" xml:space="preserve"><value>수주 일자</value></data>
+  <data name="Sd.SalesOrder.SoDt" xml:space="preserve"><value>수주일</value></data>
   <data name="Sd.SalesOrder.ExpShipDt" xml:space="preserve"><value>출하 예정일</value></data>
   <data name="Sd.SalesOrder.DueDt" xml:space="preserve"><value>결제 예정일</value></data>
   <data name="Sd.SalesOrder.CurrencyCode" xml:space="preserve"><value>통화</value></data>
   <data name="Sd.SalesOrder.ExchangeRate" xml:space="preserve"><value>환율</value></data>
   <data name="Sd.SalesOrder.BillingFlow" xml:space="preserve"><value>청구 흐름</value></data>
-  <data name="Sd.SalesOrder.Rep" xml:space="preserve"><value>영업 담당자</value></data>
+  <data name="Sd.SalesOrder.Rep" xml:space="preserve"><value>영업 담당</value></data>
   <data name="Sd.SalesOrder.Terms" xml:space="preserve"><value>결제 조건</value></data>
-  <data name="Sd.SalesOrder.ShipVia" xml:space="preserve"><value>운송 수단</value></data>
+  <data name="Sd.SalesOrder.ShipVia" xml:space="preserve"><value>운송 방법</value></data>
   <data name="Sd.SalesOrder.FreightCharge" xml:space="preserve"><value>운송비</value></data>
   <data name="Sd.SalesOrder.DcStatus" xml:space="preserve"><value>할인 상태</value></data>
   <data name="Sd.SalesOrder.ShipName" xml:space="preserve"><value>배송지 이름</value></data>
@@ -823,22 +830,22 @@
   <data name="Sd.SalesOrder.Remarks" xml:space="preserve"><value>비고</value></data>
   <data name="Sd.SalesOrder.TotSoAmt" xml:space="preserve"><value>수주 합계</value></data>
   <data name="Sd.SalesOrder.TotBaseAmt" xml:space="preserve"><value>기준 통화 합계</value></data>
-  <data name="Sd.SalesOrder.Seq" xml:space="preserve"><value>순번</value></data>
+  <data name="Sd.SalesOrder.Seq" xml:space="preserve"><value>No</value></data>
   <data name="Sd.SalesOrder.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
   <data name="Sd.SalesOrder.ItemName" xml:space="preserve"><value>품목명</value></data>
   <data name="Sd.SalesOrder.Unit" xml:space="preserve"><value>단위</value></data>
   <data name="Sd.SalesOrder.SoQty" xml:space="preserve"><value>수량</value></data>
   <data name="Sd.SalesOrder.SoPrc" xml:space="preserve"><value>단가</value></data>
   <data name="Sd.SalesOrder.SoAmt" xml:space="preserve"><value>금액</value></data>
-  <data name="Sd.SalesOrder.DcCd" xml:space="preserve"><value>할인</value></data>
-  <data name="Sd.SalesOrder.DcRate" xml:space="preserve"><value>할인율</value></data>
+  <data name="Sd.SalesOrder.DcCd" xml:space="preserve"><value>할인 코드</value></data>
+  <data name="Sd.SalesOrder.DcRate" xml:space="preserve"><value>할인율 %</value></data>
   <data name="Sd.SalesOrder.StdPrc" xml:space="preserve"><value>표준 단가</value></data>
   <data name="Sd.SalesOrder.LineTaxCode" xml:space="preserve"><value>세금 코드</value></data>
   <data name="Sd.SalesOrder.TaxCodeName" xml:space="preserve"><value>세금 코드명</value></data>
   <data name="Sd.SalesOrder.TaxRate" xml:space="preserve"><value>세율</value></data>
   <data name="Sd.SalesOrder.TaxAmt" xml:space="preserve"><value>세액</value></data>
   <data name="Sd.SalesOrder.ShipQty" xml:space="preserve"><value>출하 수량</value></data>
-  <data name="Sd.SalesOrder.DnQty" xml:space="preserve"><value>송장 수량</value></data>
+  <data name="Sd.SalesOrder.DnQty" xml:space="preserve"><value>청구 수량</value></data>
   <data name="Sd.SalesOrder.InvNo" xml:space="preserve"><value>송장 번호</value></data>
   <data name="Sd.SalesOrder.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
   <data name="Sd.SalesOrder.FindDiscount" xml:space="preserve"><value>할인 코드 찾기</value></data>

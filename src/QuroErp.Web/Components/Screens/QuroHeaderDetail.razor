@@ -156,7 +156,7 @@
 </section>
 
 <QuroLookupDialog TItem="THeader" Title="@L["Common.FindDocument"]" TestId="@Id("find")" @bind-Visible="_findOpen"
-                  Search="Find" Columns="FindColumns" OnSelected="OpenAsync" />
+                  Search="Find" Columns="FindColumns" OnSelected="OpenAsync" KeywordLabel="@FindKeywordLabel" Filters="FindFilters" />
 
 @code {
     private readonly QuroFormContext _form = new();
@@ -216,6 +216,14 @@
     /// <summary>QuroColumn declarations of the search dialog (TRow = THeader), e.g. number, date, partner, status.</summary>
     [Parameter, EditorRequired]
     public RenderFragment FindColumns { get; set; } = default!;
+
+    /// <summary>What the search dialog's keyword searches, e.g. the document number. Defaults to Common.Keyword.</summary>
+    [Parameter]
+    public string? FindKeywordLabel { get; set; }
+
+    /// <summary>More conditions of the search dialog, e.g. partner, period and status. The screen reads them in <see cref="Find"/>.</summary>
+    [Parameter]
+    public RenderFragment? FindFilters { get; set; }
 
     /// <summary>Reads the document picked in the search dialog; null when it no longer exists.</summary>
     [Parameter, EditorRequired]
@@ -467,8 +475,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadPoliciesAsync();
+        // The page draws while the policies load, so the header record has to exist first
         StartNew();
+        await LoadPoliciesAsync();
         if (Initial is not null)
         {
             await RunAsync(async () =>
