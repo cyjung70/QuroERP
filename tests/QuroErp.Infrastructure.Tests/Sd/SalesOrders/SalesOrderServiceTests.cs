@@ -75,6 +75,32 @@ public partial class SalesOrderServiceTests(AuthSchemaFixture db)
         (await Service.SearchAsync(new(null, null, null, null, null, "NO SUCH CUSTOMER"), None)).Should().BeEmpty();
     }
 
+    [DatabaseFact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423")]
+    public async Task Save_RejectsAPriceWithTooManyDecimals_AndSavesNothing()
+    {
+        var m = await MastersAsync();
+
+        var act = () => Service.CreateAsync(Request(m, Line(m.Item, price: 12.345m)), "kim", None);
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("BC-E-423");
+        error.Args.Should().Equal("soPrc", 2);
+        (await Service.SearchAsync(new(null, m.Customer, null, null, null), None)).Should().BeEmpty();
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423"), Trait("Rule", "BC-BR-429")]
+    public async Task Save_UsesTheDocumentCurrencyCountry_ForThePriceDecimals()
+    {
+        var m = await MastersAsync();
+        var krw = Request(m, Line(m.Item, price: 100.5m)) with { CurrencyCode = "KRW", ExchangeRate = 0.00075m };
+
+        var act = () => Service.CreateAsync(krw, "kim", None);
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("BC-E-423");
+        error.Args.Should().Equal("soPrc", 0);
+    }
+
     [DatabaseFact, Trait("Id", "SD-UT-404")]
     public async Task DiscountRates_ListsTheCodesWithTheirRates_InCodeOrder()
     {

@@ -57,7 +57,7 @@ public sealed class SalesOrderService(
     }
 
     /// <summary>Saves a new SO order with the next number of the order date's month (SD-BR-006).</summary>
-    /// <exception cref="DomainException">SD-E-001, 002, 004, 006, 031, 035, 404; Common-E-002 for a code value not in use; Common-E-005, Common-E-006; BC-E-412, BC-E-423.</exception>
+    /// <exception cref="DomainException">SD-E-001, 002, 004, 006, 031, 035, 404; Common-E-002 for a code value not in use; Common-E-005, Common-E-006; BC-E-412; BC-E-423 for a quantity, price or rate with too many decimals.</exception>
     /// <exception cref="ConfirmationRequiredException">SD-W-009, SD-W-010 or SD-W-309 when that question is not answered yet.</exception>
     /// <exception cref="BadRequestException">400 BC-E-321 when there is no default business place.</exception>
     public async Task<SalesOrderDto> CreateAsync(SaveSalesOrderRequest request, string user, CancellationToken cancellationToken)
@@ -228,7 +228,8 @@ public sealed class SalesOrderService(
         var company = await localization.FindCompanyAsync(transaction, cancellationToken);
         var baseCurrency = company?.BaseCurrencyCode ?? CountryProfiles.Get(CountryProfiles.Us).BaseCurrencyCode;
         // BC-BR-424: amounts and tax use the SD module rounding mode; HALF_UP when the setting row is missing
-        var sd = (await localization.FindDecimalSettingsAsync(transaction, cancellationToken)).FirstOrDefault(d => d.Module == DecimalModule.Sd);
+        var decimalSettings = await localization.FindDecimalSettingsAsync(transaction, cancellationToken);
+        var sd = decimalSettings.FirstOrDefault(d => d.Module == DecimalModule.Sd);
         var settings = new SalesOrderSettings(
             baseCurrency, company?.TaxCalcMode ?? TaxCalcMode.Document, sd is null ? RoundingMode.HalfUp : Rounding.ParseMode(sd.RoundingMode));
 
@@ -257,16 +258,22 @@ public sealed class SalesOrderService(
                 l.TaxCodeId ?? (item is null ? context.CustomerTaxCodeId : context.TaxDefault(item).TaxCodeId) ?? 0);
         }).ToList();
 
-        var currencies = (await localization.FindCurrenciesAsync(transaction, cancellationToken)).Where(x => x.UseYn);
+        var currencies = await localization.FindCurrenciesAsync(transaction, cancellationToken);
         var rates = new Dictionary<long, TaxCodeRate>();
         foreach (var code in (await taxes.FindTaxCodesAsync([.. lines.Select(l => l.TaxCodeId).Distinct()], transaction, cancellationToken)).Where(x => x.UseYn))
         {
             rates[code.Id] = await taxRates.GetRateAsync(code, request.SoDt, transaction, cancellationToken);
         }
-        var rounder = new AmountRounder(currencies.Select(x => new Currency(x.CurrencyCode, x.Decimals)));
+        var rounder = new AmountRounder(currencies.Where(x => x.UseYn).Select(x => new Currency(x.CurrencyCode, x.Decimals)));
+        // BC-BR-423, BC-BR-429: the document currency's country decides the unit price decimals
+        var decimalPolicy = new DecimalPolicy(
+            company?.CountryCode ?? CountryProfiles.Us,
+            decimalSettings.Select(s => new DecimalSetting(s.Module, s.QtyDecimals, Rounding.ParseMode(s.RoundingMode))),
+            (await localization.FindCountryDecimalsAsync(transaction, cancellationToken)).Select(d => new CountryDecimal(d.CountryCode, d.Module, d.UnitPriceDecimals)),
+            currencies.ToDictionary(x => x.CurrencyCode, x => x.CountryCode));
         var masters = new SalesOrderMasters(items.ToDictionary(i => i.Key, i => i.Value.ItemType ?? string.Empty), context.DiscountRates, rates);
         var (computed, totals) = SalesOrderEntryRules.Calculate(
-            header, lines, storedLines.Count > 0 ? stored?.CurrencyCode : null, masters, settings, rounder);
+            header, lines, storedLines.Count > 0 ? stored?.CurrencyCode : null, masters, settings, rounder, decimalPolicy);
 
         await AskAsync(request, customer, header, computed, totals, stored, storedLines, items, baseCurrency, user, transaction, cancellationToken);
         return new SalesOrderWrite(header, totals, computed);

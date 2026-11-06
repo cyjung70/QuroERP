@@ -17,8 +17,13 @@
     {
         <style>@requiredStyle</style>
     }
+    @if (ShadeLockedLines && CanEdit && GridColors.LockedRowsStyle(_hostId, LockedRowKeys) is { } lockedStyle)
+    {
+        <style>@lockedStyle</style>
+    }
     <QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
-                        ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor"
+                        ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor" OptionsFor="OptionsFor"
+                        AddRowOnLastEnter="@(AddRowOnLastEnter && CanEdit)" OnRowAdding="OnRowAdding"
                         OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged" OnRowAdded="OnRowAdded"
                         OnRowDeleting="OnRowDeleting" OnRowDeleted="OnRowDeleted" OnPasting="OnPasting" OnPasted="OnPasted"
                         OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick">
@@ -95,6 +100,26 @@
     [Parameter]
     public IReadOnlyCollection<string>? UpperCaseFields { get; set; }
 
+    /// <summary>The options of a select column by its source. Keep the same delegate: a new one reads the lists again.</summary>
+    [Parameter]
+    public Func<string, IReadOnlyList<ComboOption>?>? OptionsFor { get; set; }
+
+    /// <summary>Enter on the last cell of the last line adds a line.</summary>
+    [Parameter]
+    public bool AddRowOnLastEnter { get; set; }
+
+    /// <summary>Fills a line the grid itself adds (paste, last Enter) as Add Row would.</summary>
+    [Parameter]
+    public Action<TLine>? FillAddedLine { get; set; }
+
+    /// <summary>Runs after a paste has read its codes, with the cells that changed.</summary>
+    [Parameter]
+    public Func<IReadOnlyList<(int RowKey, string Field)>, Task>? OnLinesPasted { get; set; }
+
+    /// <summary>Gives the cells of locked lines the read-only background.</summary>
+    [Parameter]
+    public bool ShadeLockedLines { get; set; }
+
     /// <summary>Shows a warning of the grid in the frame's message line, or clears it (null).</summary>
     [Parameter]
     public Action<string?>? OnMessage { get; set; }
@@ -115,6 +140,11 @@
 
     /// <summary>The package grid, e.g. for tests that edit through its entry points.</summary>
     public QuroGrid<TLine>? Grid => _grid;
+
+    /// <summary>A paste is writing its cells; its codes are not read yet.</summary>
+    public bool IsPasting => _pasting;
+
+    private List<int> LockedRowKeys => [.. Data.RowKeys.Where(k => CellsLocked(Data.GetItem(k)))];
 
     /// <summary>The screen's field policies, cascaded by the screen type component; applied to the columns by their label key.</summary>
     [CascadingParameter]
@@ -278,6 +308,15 @@
 
     private Task<IReadOnlyList<string>> LookupFor(string lookupId, string text) => GridLookups.CodesAsync(Lookup, lookupId, text);
 
+    // A copied row keeps the values it was copied with
+    private void OnRowAdding(RowAddingArgs<TLine> args)
+    {
+        if (args.SourceRowKey is null)
+        {
+            FillAddedLine?.Invoke(args.Item);
+        }
+    }
+
     // A frame row added by the grid itself (paste, last Enter) is taken out again while the lines are locked (TODO(QuroGrid-R4))
     private async Task OnRowAdded(RowAddedArgs<TLine> args)
     {
@@ -310,6 +349,11 @@
         var changes = _pasted.ToList();
         _pasted.Clear();
         await AfterChangeAsync(changes);
+        if (OnLinesPasted is not null)
+        {
+            await OnLinesPasted(changes);
+            await OnChanged.InvokeAsync();
+        }
         // Cells skipped as read-only, invalid or cancelled are told in the message line (screens.md "그리드 붙여 넣기")
         if (args.Skipped.Count > 0)
         {

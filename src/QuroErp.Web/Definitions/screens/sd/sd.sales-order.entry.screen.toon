@@ -1,4 +1,5 @@
-# SD-UC-002 sales order (TASK-SD-004), screen type SM on the entry frame. The item, discount and tax code columns are lookups;
+# SD-UC-002 sales order (TASK-SD-004), screen type SM on the entry frame. The item code column is a lookup, the discount and tax
+# code columns are combos the page fills (their lookup definitions name the lists);
 # a picked item takes the line defaults from the API (qty 1, customer price, discount code, tax code: SD-BR-016, 033, 401, 405)
 # and the page keeps the ids of the picked codes. Amounts and tax are display values the page calculates with the document
 # decimals; the API calculates the stored ones. Shipped or invoiced lines are locked (SD-BR-003).
@@ -32,23 +33,21 @@ grids[1]:
     bind: lines
     rowKey: id
     deletedRows: strike
-    columns[13]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
-      seq,Sd.SalesOrder.Seq,number,50,false,false,N0,"",false,false
-      itemCd,Sd.SalesOrder.ItemCd,text,130,true,true,"",sdSoItem,false,false
-      itemName,Sd.SalesOrder.ItemName,text,220,false,false,"","",false,false
-      unit,Sd.SalesOrder.Unit,text,60,false,false,"","",false,false
-      soQty,Sd.SalesOrder.SoQty,number,90,true,true,N2,"",false,false
-      soPrc,Sd.SalesOrder.SoPrc,number,110,true,true,N2,"",false,false
-      dcCd,Sd.SalesOrder.DcCd,text,90,true,false,"",sdSoDiscount,false,false
-      dcRate,Sd.SalesOrder.DcRate,number,80,false,false,N2,"",false,false
-      soAmt,Sd.SalesOrder.SoAmt,number,120,false,false,N2,"",false,false
-      taxCode,Sd.SalesOrder.LineTaxCode,text,90,true,false,"",sdSoTaxCode,false,false
-      taxAmt,Sd.SalesOrder.TaxAmt,number,100,false,false,N2,"",false,false
-      shipQty,Sd.SalesOrder.ShipQty,number,90,false,false,N2,"",false,false
-      dnQty,Sd.SalesOrder.DnQty,number,90,false,false,N2,"",false,false
-    rules[3]{on,action,target,expr}:
+    columns[13]{id,label,type,width,edit,req,fmt,lookup,source,sum,hidden}:
+      seq,Sd.SalesOrder.Seq,number,50,false,false,N0,"","",false,false
+      itemCd,Sd.SalesOrder.ItemCd,text,130,true,true,"",sdSoItem,"",false,false
+      itemName,Sd.SalesOrder.ItemName,text,220,false,false,"","","",false,false
+      unit,Sd.SalesOrder.Unit,text,60,false,false,"","","",false,false
+      soQty,Sd.SalesOrder.SoQty,number,90,true,true,N2,"","",false,false
+      soPrc,Sd.SalesOrder.SoPrc,number,110,true,true,N2,"","",false,false
+      dcCd,Sd.SalesOrder.DcCd,select,120,true,false,"","","lookup:sdSoDiscount",false,false
+      dcRate,Sd.SalesOrder.DcRate,number,80,false,false,N2,"","",false,false
+      soAmt,Sd.SalesOrder.SoAmt,number,120,false,false,N2,"","",false,false
+      taxCode,Sd.SalesOrder.LineTaxCode,select,180,true,false,"","","lookup:sdSoTaxCode",false,false
+      taxAmt,Sd.SalesOrder.TaxAmt,number,100,false,false,N2,"","",false,false
+      shipQty,Sd.SalesOrder.ShipQty,number,90,false,false,N2,"","",false,false
+      dnQty,Sd.SalesOrder.DnQty,number,90,false,false,N2,"","",false,false
+    rules[1]{on,action,target,expr}:
       itemCd.change,lookup,"itemName|unit","sdSoItem.all()"
-      dcCd.change,lookup,"dcRate","sdSoDiscount.all()"
-      taxCode.change,lookup,"","sdSoTaxCode.all()"
     validate[1]{target,rule,msg}:
       itemCd,requires customerId,Common.SelectPartnerFirst

@@ -855,6 +855,7 @@
   <data name="Sd.SalesOrder.BarcodeFile" xml:space="preserve"><value>바코드 파일 올리기</value></data>
   <data name="Sd.SalesOrder.PickingList" xml:space="preserve"><value>피킹 리스트</value></data>
   <data name="Sd.SalesOrder.SetComponentList" xml:space="preserve"><value>세트 구성품 목록</value></data>
+  <data name="Sd.SalesOrder.CheckThisCell" xml:space="preserve"><value>이 칸의 값을 확인하세요.</value></data>
   <data name="Sd.SalesOrder.LinesAdded" xml:space="preserve"><value>파일에서 줄 {0}개를 넣었습니다. 저장해야 반영됩니다.</value></data>
   <data name="Sd.SalesOrder.ConfirmRefillTax" xml:space="preserve"><value>배송지 주가 바뀌었습니다. 줄 세금 코드를 다시 채울까요?</value></data>
   <data name="Sd.SalesOrder.FileErrorRow" xml:space="preserve"><value>{0}행 '{1}': {2}</value></data>

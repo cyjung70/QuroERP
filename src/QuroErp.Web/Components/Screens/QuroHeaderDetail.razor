@@ -147,7 +147,8 @@
         @* Add row, mark delete and restore act on the current line from the command bar (entry-frame.md 5) *@
         <QuroLineGrid @ref="_lineGrid" TLine="TLine" Data="_lines" Definition="_definition" CanEdit="@(CanSaveNow && !Busy)"
                       IsLineLocked="IsLineLocked" IsLineRemovable="IsLineRemovable" IsLineReadOnly="IsLineReadOnly" IsCellLocked="IsCellLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
-                      OnMessage="ShowWarning" OnChanged="StateHasChanged" TestId="@Id("line")" />
+                      OptionsFor="LineOptionsFor" AddRowOnLastEnter="AddRowOnLastEnter" FillAddedLine="FillLineOrNull" OnLinesPasted="OnLinesPasted"
+                      ShadeLockedLines="ShadeLockedLines" OnMessage="ShowWarning" OnChanged="LinesChanged" TestId="@Id("line")" />
     </div>
 
     @* ⑤ Audit: empty for a new document *@
@@ -197,6 +198,30 @@
     /// <summary>Line text fields whose typed value is kept in upper case (a column has no case setting).</summary>
     [Parameter]
     public IReadOnlyCollection<string>? UpperCaseFields { get; set; }
+
+    /// <summary>The options of a select line column by its source. Keep the same delegate: a new one reads the lists again.</summary>
+    [Parameter]
+    public Func<string, IReadOnlyList<Quro.Grid.ComboOption>?>? LineOptionsFor { get; set; }
+
+    /// <summary>Enter on the last cell of the last line adds a line.</summary>
+    [Parameter]
+    public bool AddRowOnLastEnter { get; set; }
+
+    /// <summary>Fills a line the grid itself adds (paste, last Enter) as <see cref="CreateLine"/> fills one for Add Row.</summary>
+    [Parameter]
+    public Action<THeader, TLine>? FillAddedLine { get; set; }
+
+    /// <summary>Runs after a paste has read its codes, with the cells that changed.</summary>
+    [Parameter]
+    public Func<IReadOnlyList<(int RowKey, string Field)>, Task>? OnLinesPasted { get; set; }
+
+    /// <summary>Gives the cells of locked lines the read-only background.</summary>
+    [Parameter]
+    public bool ShadeLockedLines { get; set; }
+
+    /// <summary>A line was added, marked, restored or changed, e.g. to number the lines again.</summary>
+    [Parameter]
+    public Action? OnLinesChanged { get; set; }
 
     /// <summary>A header field changed (the field name), e.g. to fill the vendor name with <see cref="SetHeaderValue"/>.</summary>
     [Parameter]
@@ -335,6 +360,16 @@
 
     private THeader _header => _headerData.Item;
 
+    private Action<TLine>? FillLineOrNull => FillAddedLine is null ? null : FillLine;
+
+    private void FillLine(TLine line) => FillAddedLine!(_header, line);
+
+    private void LinesChanged()
+    {
+        OnLinesChanged?.Invoke();
+        StateHasChanged();
+    }
+
     private bool CanSaveNow => !ReadOnly && (_form.IsNew || CanSave?.Invoke(_header) != false);
 
     private int? SelectedKey => _lines.CurrentRowKey;
@@ -377,7 +412,7 @@
         {
             _lines.MoveTo(key);
         }
-        StateHasChanged();
+        LinesChanged();
     }
 
     /// <summary>Shows a screen message: an error (alert) or, when <paramref name="isError"/> is false, a notice.</summary>
@@ -579,6 +614,7 @@
     {
         _warning = null;
         _lines.MoveTo(_lines.AddRow(CreateLine(_header), SelectedKey));
+        OnLinesChanged?.Invoke();
     }
 
     // Toggle: a saved line is marked (and unmarked with its loaded values), a new line is removed at once
@@ -594,6 +630,7 @@
         {
             _lines.DeleteRow(key);
         }
+        OnLinesChanged?.Invoke();
     }
 
     // Loaded values back; a new line is removed
@@ -609,6 +646,7 @@
         {
             _lines.RevertRow(key);
         }
+        OnLinesChanged?.Invoke();
     }
 
     private async Task SaveAsync()
