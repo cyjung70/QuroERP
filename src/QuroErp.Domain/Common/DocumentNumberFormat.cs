@@ -12,8 +12,8 @@ public sealed record DocumentNumberFormat(string Prefix, int Digits, bool Restar
     /// <summary>The sequence has no more digits. Numbers are never reused (SD-BR-006).</summary>
     public const string Exhausted = "SD-E-006";
 
-    /// <summary>SD-BR-006: SO + yymm + 5 digits.</summary>
-    public static readonly DocumentNumberFormat SalesOrder = new("SO", 5, RestartsMonthly: true);
+    /// <summary>SD-BR-006: SO + yymm + 6 digits. Migrated orders keep their 5-digit numbers and the counter continues after them.</summary>
+    public static readonly DocumentNumberFormat SalesOrder = new("SO", 6, RestartsMonthly: true);
 
     /// <summary>SD-BR-106: DN + 7 digits, no month.</summary>
     public static readonly DocumentNumberFormat SalesInvoice = new("DN", 7, RestartsMonthly: false);

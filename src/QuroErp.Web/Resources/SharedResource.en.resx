@@ -180,7 +180,7 @@
   <data name="BC-E-513" xml:space="preserve"><value>Tax code '{0}' has no rate valid on {1}. Add a tax area rate starting on or before that date.</value></data>
   <data name="BC-E-521" xml:space="preserve"><value>Business registration number '{0}' is not valid. It must be 10 digits with a correct check digit.</value></data>
   <data name="BC-E-522" xml:space="preserve"><value>A business party needs {0}.</value></data>
-  <data name="BC-W-522" xml:space="preserve"><value>Other vendors have the same business registration number: {0}. The vendor was saved.</value></data>
+  <data name="BC-W-522" xml:space="preserve"><value>Other parties have the same business registration number: {0}. It was saved.</value></data>
   <data name="BC-E-523" xml:space="preserve"><value>Tax code {0} does not exist or is not in use.</value></data>
   <data name="BC-W-525" xml:space="preserve"><value>The exemption certificate for this state has expired, so the customer's default tax code is used.</value></data>
   <data name="quro.validation.minExclusive" xml:space="preserve"><value>Enter a value greater than the minimum.</value></data>
@@ -233,6 +233,16 @@
   <data name="MM-E-901" xml:space="preserve"><value>Price group {0} / item {1}: a price group is up to 5 uppercase characters, and each item appears once in it.</value></data>
   <data name="MM-E-902" xml:space="preserve"><value>Item {0} does not exist, is not an inventory item, or is not in use.</value></data>
   <data name="MM-E-903" xml:space="preserve"><value>The purchase price of item {0} must be above 0.</value></data>
+  <data name="SD-E-301" xml:space="preserve"><value>Enter the required field {0}.</value></data>
+  <data name="SD-E-302" xml:space="preserve"><value>Customer name '{0}' already exists.</value></data>
+  <data name="SD-E-303" xml:space="preserve"><value>Enter the ship zip code when you enter a ship address.</value></data>
+  <data name="SD-E-307" xml:space="preserve"><value>Customer {0} has sales orders, shipments, invoices, Credit Memos or receipts and cannot be deleted. Set it to not in use instead.</value></data>
+  <data name="SD-E-314" xml:space="preserve"><value>Enter {0} in the right form, up to {1} characters.</value></data>
+  <data name="SD-E-331" xml:space="preserve"><value>A US customer needs its ship-to tax code ({0}).</value></data>
+  <data name="SD-E-332" xml:space="preserve"><value>The {0} of a KR customer is not valid. The party type is BUSINESS or INDIVIDUAL, zip codes have 5 digits and the state stays empty.</value></data>
+  <data name="SD-E-333" xml:space="preserve"><value>Exemption certificate {0} is not a certificate of this customer. Search again.</value></data>
+  <data name="SD-E-335" xml:space="preserve"><value>Billing flow '{0}' must be SHIP_AND_BILL, SHIP_THEN_BILL or BILL_THEN_SHIP.</value></data>
+  <data name="BC-E-524" xml:space="preserve"><value>The exemption certificate value {0} is not valid. A certificate needs its number and state, and one state has one valid certificate.</value></data>
   <data name="SD-E-501" xml:space="preserve"><value>Item {0} is not a set item. Only an item of type Set that is in use can have components.</value></data>
   <data name="SD-E-502" xml:space="preserve"><value>Item {0} cannot be a component. A component must be an inventory item in use.</value></data>
   <data name="SD-E-503" xml:space="preserve"><value>The quantity of component {0} must be above 0.</value></data>
@@ -528,6 +538,7 @@
   <data name="Menu.G1BA" xml:space="preserve"><value>Master Data</value></data>
   <data name="Menu.G2MM" xml:space="preserve"><value>Purchasing &amp; Inventory</value></data>
   <data name="Menu.G3SD" xml:space="preserve"><value>Sales</value></data>
+  <data name="Menu.G3SD01" xml:space="preserve"><value>Customers</value></data>
   <data name="Menu.G4RP" xml:space="preserve"><value>Reports</value></data>
   <data name="Menu.G5AD" xml:space="preserve"><value>Administration</value></data>
   <data name="Menu.G1BA01" xml:space="preserve"><value>Items</value></data>
@@ -620,6 +631,51 @@
   <data name="Sd.Customer.BusinessType" xml:space="preserve"><value>Business type</value></data>
   <data name="Sd.Customer.BusinessItem" xml:space="preserve"><value>Business item</value></data>
   <data name="Sd.Customer.TaxExemptions" xml:space="preserve"><value>Tax exemption certificates</value></data>
+  <data name="Sd.Customer.Title" xml:space="preserve"><value>Customers</value></data>
+  <data name="Sd.Customer.FindCustomer" xml:space="preserve"><value>Find customer</value></data>
+  <data name="Sd.Customer.CName" xml:space="preserve"><value>Customer name</value></data>
+  <data name="Sd.Customer.ShipName" xml:space="preserve"><value>Ship-to name</value></data>
+  <data name="Sd.Customer.Contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="Sd.Customer.Contact2" xml:space="preserve"><value>Contact 2</value></data>
+  <data name="Sd.Customer.Phone1" xml:space="preserve"><value>Phone 1</value></data>
+  <data name="Sd.Customer.Phone2" xml:space="preserve"><value>Phone 2</value></data>
+  <data name="Sd.Customer.Phone3" xml:space="preserve"><value>Phone 3</value></data>
+  <data name="Sd.Customer.FaxNo" xml:space="preserve"><value>Fax</value></data>
+  <data name="Sd.Customer.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Sd.Customer.Rep" xml:space="preserve"><value>Sales rep</value></data>
+  <data name="Sd.Customer.PriceLevel" xml:space="preserve"><value>Price level</value></data>
+  <data name="Sd.Customer.FreightCharge" xml:space="preserve"><value>Freight charge</value></data>
+  <data name="Sd.Customer.BalAmt" xml:space="preserve"><value>Balance</value></data>
+  <data name="Sd.Customer.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Sd.Customer.Memo2" xml:space="preserve"><value>Memo 2</value></data>
+  <data name="Sd.Customer.Memo3" xml:space="preserve"><value>Memo 3</value></data>
+  <data name="Sd.Customer.Terms" xml:space="preserve"><value>Payment terms</value></data>
+  <data name="Sd.Customer.ValidFlag" xml:space="preserve"><value>Active</value></data>
+  <data name="Sd.Customer.Addr1" xml:space="preserve"><value>Address 1</value></data>
+  <data name="Sd.Customer.Addr2" xml:space="preserve"><value>Address 2</value></data>
+  <data name="Sd.Customer.City" xml:space="preserve"><value>City</value></data>
+  <data name="Sd.Customer.ShipAddr1" xml:space="preserve"><value>Ship-to address 1</value></data>
+  <data name="Sd.Customer.ShipAddr2" xml:space="preserve"><value>Ship-to address 2</value></data>
+  <data name="Sd.Customer.ShipCity" xml:space="preserve"><value>Ship-to city</value></data>
+  <data name="Sd.Customer.ShipZipCode" xml:space="preserve"><value>Ship-to ZIP code</value></data>
+  <data name="Sd.Customer.ShipPhone" xml:space="preserve"><value>Ship-to phone</value></data>
+  <data name="Sd.Customer.ShipFax" xml:space="preserve"><value>Ship-to fax</value></data>
+  <data name="Sd.Customer.CreditLimit" xml:space="preserve"><value>Credit limit</value></data>
+  <data name="Sd.Customer.DcStatus" xml:space="preserve"><value>Discount status</value></data>
+  <data name="Sd.Customer.StartDt" xml:space="preserve"><value>Start date</value></data>
+  <data name="Sd.Customer.BillingFlow" xml:space="preserve"><value>Billing flow</value></data>
+  <data name="Sd.Customer.BillingFlow.SHIP_AND_BILL" xml:space="preserve"><value>Ship and bill</value></data>
+  <data name="Sd.Customer.BillingFlow.SHIP_THEN_BILL" xml:space="preserve"><value>Ship, then bill</value></data>
+  <data name="Sd.Customer.BillingFlow.BILL_THEN_SHIP" xml:space="preserve"><value>Bill, then ship</value></data>
+  <data name="Sd.Customer.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Sd.Customer.TaxCode" xml:space="preserve"><value>Tax code</value></data>
+  <data name="Sd.Customer.TaxCodeId" xml:space="preserve"><value>Tax code</value></data>
+  <data name="Sd.Customer.TaxPartyType" xml:space="preserve"><value>Tax party type</value></data>
+  <data name="Sd.Customer.TaxPartyType.BUSINESS" xml:space="preserve"><value>Business</value></data>
+  <data name="Sd.Customer.TaxPartyType.INDIVIDUAL" xml:space="preserve"><value>Individual</value></data>
+  <data name="Sd.Customer.CertificateNo" xml:space="preserve"><value>Certificate no.</value></data>
+  <data name="Sd.Customer.StateCode" xml:space="preserve"><value>Exempt state</value></data>
+  <data name="Sd.Customer.ValidTo" xml:space="preserve"><value>Valid to</value></data>
   <data name="Mm.Vendor.State" xml:space="preserve"><value>State</value></data>
   <data name="Mm.Vendor.ZipCode" xml:space="preserve"><value>ZIP code</value></data>
   <data name="Mm.Vendor.BusinessRegNo" xml:space="preserve"><value>Business registration number</value></data>
@@ -728,6 +784,88 @@
   <data name="Mm.PurchaseOrder.FindItem" xml:space="preserve"><value>Find item</value></data>
   <data name="Mm.PurchaseOrder.FindWarehouse" xml:space="preserve"><value>Find warehouse</value></data>
   <data name="Mm.PurchaseOrder.FindTaxCode" xml:space="preserve"><value>Find tax code</value></data>
+  <data name="SD-E-001" xml:space="preserve"><value>The quantity on line {0} must be greater than 0.</value></data>
+  <data name="SD-E-002" xml:space="preserve"><value>The unit price on line {0} cannot be 0.</value></data>
+  <data name="SD-E-003" xml:space="preserve"><value>Sales order {0} is not in entered (SO) status or has a shipment or invoice, so it cannot be changed or deleted.</value></data>
+  <data name="SD-E-004" xml:space="preserve"><value>The item on line {0} is not in the item master.</value></data>
+  <data name="SD-E-017" xml:space="preserve"><value>The line file must be at most {0} bytes and {1} lines.</value></data>
+  <data name="SD-E-019" xml:space="preserve"><value>The file has {0} rows that cannot be used, so no lines were added.</value></data>
+  <data name="SD-E-023" xml:space="preserve"><value>The customer of a saved sales order cannot be changed. Delete the order and create a new one.</value></data>
+  <data name="SD-E-031" xml:space="preserve"><value>The exchange rate {1} for currency {0} is not valid, or the currency cannot change because the order has lines.</value></data>
+  <data name="SD-E-035" xml:space="preserve"><value>The billing flow '{0}' is not valid, or it cannot change because a shipment or invoice exists.</value></data>
+  <data name="SD-E-404" xml:space="preserve"><value>The discount code '{1}' on line {0} does not exist.</value></data>
+  <data name="SD-W-009" xml:space="preserve"><value>The ship-to or freight differs from the customer master. Update the customer's ship-to too?</value></data>
+  <data name="SD-W-010" xml:space="preserve"><value>The price of these items differs from the standard price and the price level price: {0}. Update the price level too?</value></data>
+  <data name="SD-W-309" xml:space="preserve"><value>After this save the customer balance of {1} exceeds the credit limit of {0}. Save anyway?</value></data>
+  <data name="Menu.G3SD02" xml:space="preserve"><value>Sales orders</value></data>
+  <data name="Sd.SalesOrder.Path" xml:space="preserve"><value>SD &gt; Sales</value></data>
+  <data name="Sd.SalesOrder.TaxCode" xml:space="preserve"><value>Default tax code</value></data>
+  <data name="Sd.SalesOrder.ShipTo" xml:space="preserve"><value>Ship-to</value></data>
+  <data name="Sd.SalesOrder.SupplyAmt" xml:space="preserve"><value>Supply amount</value></data>
+  <data name="Sd.SalesOrder.TaxEstimate" xml:space="preserve"><value>Tax (estimated)</value></data>
+  <data name="Sd.SalesOrder.FindFrom" xml:space="preserve"><value>Order date from</value></data>
+  <data name="Sd.SalesOrder.FindTo" xml:space="preserve"><value>Order date to</value></data>
+  <data name="Sd.SalesOrder.Title" xml:space="preserve"><value>Sales Order</value></data>
+  <data name="Sd.SalesOrder.SoNo" xml:space="preserve"><value>SO no.</value></data>
+  <data name="Sd.SalesOrder.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Sd.SalesOrder.CustomerId" xml:space="preserve"><value>Customer</value></data>
+  <data name="Sd.SalesOrder.FindCustomer" xml:space="preserve"><value>Find customer</value></data>
+  <data name="Sd.SalesOrder.SoDt" xml:space="preserve"><value>Order date</value></data>
+  <data name="Sd.SalesOrder.ExpShipDt" xml:space="preserve"><value>Expected ship date</value></data>
+  <data name="Sd.SalesOrder.DueDt" xml:space="preserve"><value>Due date</value></data>
+  <data name="Sd.SalesOrder.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Sd.SalesOrder.ExchangeRate" xml:space="preserve"><value>Exchange rate</value></data>
+  <data name="Sd.SalesOrder.BillingFlow" xml:space="preserve"><value>Billing flow</value></data>
+  <data name="Sd.SalesOrder.Rep" xml:space="preserve"><value>Sales rep</value></data>
+  <data name="Sd.SalesOrder.Terms" xml:space="preserve"><value>Terms</value></data>
+  <data name="Sd.SalesOrder.ShipVia" xml:space="preserve"><value>Ship via</value></data>
+  <data name="Sd.SalesOrder.FreightCharge" xml:space="preserve"><value>Freight charge</value></data>
+  <data name="Sd.SalesOrder.DcStatus" xml:space="preserve"><value>Discount status</value></data>
+  <data name="Sd.SalesOrder.ShipName" xml:space="preserve"><value>Ship-to name</value></data>
+  <data name="Sd.SalesOrder.ShipAddr1" xml:space="preserve"><value>Ship-to address 1</value></data>
+  <data name="Sd.SalesOrder.ShipAddr2" xml:space="preserve"><value>Ship-to address 2</value></data>
+  <data name="Sd.SalesOrder.ShipCity" xml:space="preserve"><value>Ship-to city</value></data>
+  <data name="Sd.SalesOrder.ShipState" xml:space="preserve"><value>Ship-to state</value></data>
+  <data name="Sd.SalesOrder.ShipZipCode" xml:space="preserve"><value>Ship-to ZIP code</value></data>
+  <data name="Sd.SalesOrder.ShipCountry" xml:space="preserve"><value>Ship-to country</value></data>
+  <data name="Sd.SalesOrder.ShipPhone" xml:space="preserve"><value>Ship-to phone</value></data>
+  <data name="Sd.SalesOrder.ShipFax" xml:space="preserve"><value>Ship-to fax</value></data>
+  <data name="Sd.SalesOrder.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Sd.SalesOrder.TotSoAmt" xml:space="preserve"><value>Order total</value></data>
+  <data name="Sd.SalesOrder.TotBaseAmt" xml:space="preserve"><value>Total in base currency</value></data>
+  <data name="Sd.SalesOrder.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Sd.SalesOrder.ItemCd" xml:space="preserve"><value>Item code</value></data>
+  <data name="Sd.SalesOrder.ItemName" xml:space="preserve"><value>Item name</value></data>
+  <data name="Sd.SalesOrder.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Sd.SalesOrder.SoQty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Sd.SalesOrder.SoPrc" xml:space="preserve"><value>Unit price</value></data>
+  <data name="Sd.SalesOrder.SoAmt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Sd.SalesOrder.DcCd" xml:space="preserve"><value>Discount code</value></data>
+  <data name="Sd.SalesOrder.DcRate" xml:space="preserve"><value>Discount %</value></data>
+  <data name="Sd.SalesOrder.StdPrc" xml:space="preserve"><value>Std price</value></data>
+  <data name="Sd.SalesOrder.LineTaxCode" xml:space="preserve"><value>Tax code</value></data>
+  <data name="Sd.SalesOrder.TaxCodeName" xml:space="preserve"><value>Tax code name</value></data>
+  <data name="Sd.SalesOrder.TaxRate" xml:space="preserve"><value>Tax rate</value></data>
+  <data name="Sd.SalesOrder.TaxAmt" xml:space="preserve"><value>Tax</value></data>
+  <data name="Sd.SalesOrder.ShipQty" xml:space="preserve"><value>Shipped qty</value></data>
+  <data name="Sd.SalesOrder.DnQty" xml:space="preserve"><value>Billed qty</value></data>
+  <data name="Sd.SalesOrder.InvNo" xml:space="preserve"><value>Inv no.</value></data>
+  <data name="Sd.SalesOrder.FindItem" xml:space="preserve"><value>Find item</value></data>
+  <data name="Sd.SalesOrder.FindDiscount" xml:space="preserve"><value>Find discount code</value></data>
+  <data name="Sd.SalesOrder.FindTaxCode" xml:space="preserve"><value>Find tax code</value></data>
+  <data name="Sd.SalesOrder.Delete" xml:space="preserve"><value>Delete SO</value></data>
+  <data name="Sd.SalesOrder.LineFile" xml:space="preserve"><value>Upload line file</value></data>
+  <data name="Sd.SalesOrder.BarcodeFile" xml:space="preserve"><value>Upload barcode file</value></data>
+  <data name="Sd.SalesOrder.PickingList" xml:space="preserve"><value>Picking list</value></data>
+  <data name="Sd.SalesOrder.SetComponentList" xml:space="preserve"><value>Set component list</value></data>
+  <data name="Sd.SalesOrder.CheckThisCell" xml:space="preserve"><value>Check the value in this cell.</value></data>
+  <data name="Sd.SalesOrder.LinesAdded" xml:space="preserve"><value>{0} lines were added from the file. Save to keep them.</value></data>
+  <data name="Sd.SalesOrder.ConfirmRefillTax" xml:space="preserve"><value>The ship-to state changed. Fill the line tax codes again?</value></data>
+  <data name="Sd.SalesOrder.FileErrorRow" xml:space="preserve"><value>Row {0} '{1}': {2}</value></data>
+  <data name="Sd.SalesOrder.FileError.FORMAT" xml:space="preserve"><value>Wrong format (code,qty)</value></data>
+  <data name="Sd.SalesOrder.FileError.QTY" xml:space="preserve"><value>Qty is not a number above 0</value></data>
+  <data name="Sd.SalesOrder.FileError.NOT_FOUND" xml:space="preserve"><value>Item not found</value></data>
+  <data name="Sd.SalesOrder.FileError.NOT_IN_USE" xml:space="preserve"><value>Item not in use</value></data>
   <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>Goods Receipt</value></data>
   <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>GR No.</value></data>
   <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>Status</value></data>

@@ -9,10 +9,13 @@ public class DocumentNumberFormatTests
     private static readonly DateOnly Day = new(2026, 10, 27);
 
     [Theory, Trait("Id", "SD-UT-006"), Trait("Rule", "SD-BR-006")]
-    [InlineData(null, "SO261000001")]
-    [InlineData("SO261000041", "SO261000042")]
-    [InlineData("OLD-7", "SO261000001")]
-    public void Next_SalesOrder_IsSoYymmFiveDigits(string? last, string expected)
+    [InlineData(null, "SO2610000001")]
+    [InlineData("SO2610000041", "SO2610000042")]
+    [InlineData("SO261000041", "SO2610000042")]
+    [InlineData("SO261099999", "SO2610100000")]
+    [InlineData("SO2609000041", "SO2610000001")]
+    [InlineData("OLD-7", "SO2610000001")]
+    public void Next_SalesOrder_IsSoYymmSixDigits_AndContinuesAfterLegacyFiveDigitNumbers(string? last, string expected)
     {
         DocumentNumberFormat.SalesOrder.Next(Day, last).Should().Be(expected);
         DocumentNumberFormat.SalesOrder.Period(Day).Should().Be("2610");
@@ -21,7 +24,7 @@ public class DocumentNumberFormatTests
     [Fact, Trait("Id", "SD-UT-006"), Trait("Rule", "SD-BR-006")]
     public void Next_SequenceOutOfDigits_ThrowsSdE006InsteadOfReusingNumbers()
     {
-        var act = () => DocumentNumberFormat.SalesOrder.Next(Day, "SO261099999");
+        var act = () => DocumentNumberFormat.SalesOrder.Next(Day, "SO2610999999");
 
         var error = act.Should().Throw<DomainException>().Which;
         error.Code.Should().Be("SD-E-006");

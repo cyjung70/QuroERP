@@ -34,4 +34,21 @@ public static class GridColors
         css.Append(" { background: var(--q-field-required-bg); }");
         return css.ToString();
     }
+
+    /// <summary>
+    /// CSS that gives the cells of locked lines the read-only background, or null when no line is locked. The package has no
+    /// per-row read-only state, so these cells are not aria-readonly. TODO(QuroGrid-R6): drop the style once it has one.
+    /// </summary>
+    public static string? LockedRowsStyle(string hostId, IReadOnlyCollection<int> rowKeys)
+    {
+        if (rowKeys.Count == 0)
+        {
+            return null;
+        }
+        var css = new StringBuilder();
+        css.AppendJoin(", ", rowKeys.Select(k =>
+            $"#{hostId} .quro-row[data-row=\"{k}\"] .quro-body-cell:not(.quro-mark-error, .quro-mark-warning)"));
+        css.Append(" { background: var(--q-surface-2); }");
+        return css.ToString();
+    }
 }

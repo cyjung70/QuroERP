@@ -137,7 +137,7 @@ public class VendorScreenTests : BunitContext
         page.Find("[data-testid=vendor-toolbar-save]").Click();
 
         page.WaitForAssertion(() => page.Find("[data-testid=vendor-message]").TextContent
-            .Should().Be("저장했습니다. 같은 사업자등록번호를 쓰는 공급자가 있습니다: BETA. 저장은 했습니다."));
+            .Should().Be("저장했습니다. 같은 사업자등록번호를 쓰는 거래처가 있습니다: BETA. 저장은 했습니다."));
     }
 
     [Fact, Trait("Id", "MM-UC-001-T03")]

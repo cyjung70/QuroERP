@@ -24,7 +24,9 @@ using QuroErp.Application.Mm.GoodsReceipts;
 using QuroErp.Application.Mm.SupplierInvoices;
 using QuroErp.Application.Mm.PurchaseOrders;
 using QuroErp.Application.Mm.Vendors;
+using QuroErp.Application.Sd.Customers;
 using QuroErp.Application.Mm.Warehouses;
+using QuroErp.Application.Sd.SalesOrders;
 
 namespace QuroErp.Application;
 
@@ -64,6 +66,9 @@ public static class DependencyInjection
         services.AddScoped<AlternateItemGroupService>();
         services.AddScoped<WarehouseService>();
         services.AddScoped<VendorService>();
+        services.AddScoped<CustomerService>();
+        services.AddScoped<SalesOrderService>();
+        services.AddScoped<SalesOrderPrintService>();
         services.AddScoped<PurchaseOrderService>();
         services.AddScoped<GoodsReceiptService>();
         services.AddScoped<SupplierInvoiceService>();

@@ -1,0 +1,115 @@
+@* Sales order form (print-documents.md "sales-order"): bill-to, ship-to, header, lines with item name, unit price and amount,
+   the stored totals and the customer's discount status. Values use Razor output only. *@
+@using QuroErp.Application.Sd.SalesOrders
+
+<PrintLayout Company="Order.Company" Title="@T("Print.SalesOrder.Title")" DocumentNo="@Order.Order.SoNo" Culture="Culture">
+    <section class="parties">
+        <div class="party">
+            <div class="label">@T("Print.SalesOrder.BillTo")</div>
+            <div class="name">@Order.BillTo.Name</div>
+            @foreach (var line in Order.BillTo.AddressLines)
+            {
+                <div>@line</div>
+            }
+        </div>
+        <div class="party">
+            <div class="label">@T("Print.SalesOrder.ShipTo")</div>
+            <div class="name">@Order.ShipTo.Name</div>
+            @foreach (var line in Order.ShipTo.AddressLines)
+            {
+                <div>@line</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Order.ShipTo.Phone))
+            {
+                <div>@T("Print.Phone") @Order.ShipTo.Phone</div>
+            }
+        </div>
+        <table class="fields">
+            <tbody>
+                <tr><th>@T("Print.SalesOrder.SoDt")</th><td>@Date(Order.Order.SoDt)</td></tr>
+                <tr><th>@T("Print.SalesOrder.ExpShipDt")</th><td>@Date(Order.Order.ExpShipDt)</td></tr>
+                <tr><th>@T("Print.SalesOrder.Rep")</th><td>@Order.Order.Rep</td></tr>
+                <tr><th>@T("Print.SalesOrder.ShipVia")</th><td>@Order.Order.ShipVia</td></tr>
+                <tr><th>@T("Print.SalesOrder.Terms")</th><td>@Order.Order.Terms</td></tr>
+                <tr><th>@T("Print.SalesOrder.DueDt")</th><td>@Date(Order.Order.DueDt)</td></tr>
+                <tr><th>@T("Print.SalesOrder.Currency")</th><td>@Order.Order.CurrencyCode</td></tr>
+                <tr><th>@T("Print.SalesOrder.DcStatus")</th><td>@Order.Order.DcStatus</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <table class="lines">
+        <thead>
+            <tr>
+                <th class="num">@T("Print.SalesOrder.Seq")</th>
+                <th>@T("Print.SalesOrder.ItemCode")</th>
+                <th>@T("Print.SalesOrder.ItemName")</th>
+                <th>@T("Print.SalesOrder.Unit")</th>
+                <th class="num">@T("Print.SalesOrder.Qty")</th>
+                <th class="num">@T("Print.SalesOrder.UnitPrice")</th>
+                <th class="num">@T("Print.SalesOrder.DcRate")</th>
+                <th class="num">@T("Print.SalesOrder.Amount")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in Order.Order.Lines.OrderBy(l => l.Seq))
+            {
+                <tr>
+                    <td class="num">@line.Seq</td>
+                    <td class="mono">@line.ItemCd</td>
+                    <td>@line.ItemName</td>
+                    <td>@line.Unit</td>
+                    <td class="num">@N(line.SoQty, Order.QtyDecimals)</td>
+                    <td class="num">@N(line.SoPrc, Order.PriceDecimals)</td>
+                    <td class="num">@(line.DcRate == 0 ? "" : N(line.DcRate, 2))</td>
+                    <td class="num">@N(line.SoAmt, Order.AmountDecimals)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tbody>
+            <tr><th>@T("Print.SalesOrder.Subtotal")</th><td class="num">@N(Order.Order.SupplyAmt, Order.AmountDecimals)</td></tr>
+            <tr><th>@T("Print.SalesOrder.Tax")</th><td class="num">@N(Order.Order.TaxAmt, Order.AmountDecimals)</td></tr>
+            <tr class="total"><th>@T("Print.SalesOrder.Total") (@Order.Order.CurrencyCode)</th><td class="num">@N(Order.Order.TotSoAmt, Order.AmountDecimals)</td></tr>
+        </tbody>
+    </table>
+
+    @if (!string.IsNullOrWhiteSpace(Order.Order.Remarks))
+    {
+        <section class="remarks">
+            <div class="label">@T("Print.SalesOrder.Remarks")</div>
+            <div class="text">@Order.Order.Remarks</div>
+        </section>
+    }
+
+    <style>
+        .parties { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 12px; }
+        .parties .label, .remarks .label { font-size: 8.5pt; color: #555; }
+        .parties .name { font-weight: 700; font-size: 11pt; }
+        table.fields { width: auto; }
+        table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+        table.totals { width: 45%; margin: 12px 0 0 auto; }
+        table.totals th { background: none; text-align: right; }
+        table.totals tr.total th, table.totals tr.total td { font-weight: 700; border-top: 2px solid #333; }
+        .remarks { margin-top: 16px; }
+        .remarks .text { white-space: pre-wrap; }
+        .packing { margin-top: 24px; display: flex; gap: 32px; }
+        .packing div { border-bottom: 1px solid #333; min-width: 160px; padding-top: 18px; }
+    </style>
+</PrintLayout>
+
+@code {
+    [Parameter, EditorRequired] public SalesOrderPrint Print { get; set; } = default!;
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+    private SalesOrderPrint Order => Print;
+
+    private string T(string key) => PrintText.Get(key, Culture);
+
+    private string N(decimal value, int decimals) => value.ToString("N" + decimals, Culture);
+
+    private string? Date(DateOnly? value) => value?.ToString("d", Culture);
+}

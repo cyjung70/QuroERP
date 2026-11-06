@@ -46,6 +46,13 @@
 .quro-span-2 { grid-column: span 2; }
 .quro-span-4 { grid-column: span 4; }
 
+/* A collapsible group of header fields, e.g. the ship-to */
+.quro-field-section-toggle { background: none; border: 0; padding: 2px 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; }
+.quro-field-section-toggle::before { content: "▸"; display: inline-block; width: 16px; }
+.quro-field-section-toggle[aria-expanded=true]::before { content: "▾"; }
+.quro-field-section-body { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-content: start; margin-top: 4px; }
+.quro-field-section-body[hidden] { display: none; }
+
 /* S screens: 4-column field grid, tabs, read-only sub-grid and radio cards (screen-templates.md 1) */
 .quro-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-items: end; align-content: start; }
 .quro-form[hidden], .quro-tab-panel[hidden] { display: none; }
@@ -125,6 +132,14 @@ fieldset.quro-commandbar-group { min-inline-size: 0; margin: 0; padding: 0; bord
 .quro-commandbar button.quro-primary { background: var(--q-brand); border-color: var(--q-brand); color: var(--q-on-brand); }
 .quro-commandbar button.quro-danger-text { color: var(--q-danger); }
 .quro-commandbar button:disabled { opacity: .45; cursor: not-allowed; }
+/* A file command: a label that looks like a command button around a hidden file input (e.g. upload a line file) */
+.quro-commandbar .quro-file-command { position: relative; display: inline-flex; align-items: center; height: var(--q-control-h); padding: 0 12px;
+    box-sizing: border-box; border: 1px solid var(--q-line); border-radius: var(--q-radius-button); background: var(--q-surface-1); color: var(--q-ink);
+    font: 500 13px/20px var(--q-font-sans); white-space: nowrap; cursor: pointer; }
+.quro-commandbar .quro-file-command input[type=file] { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.quro-commandbar .quro-file-command[aria-disabled=true] { opacity: .45; cursor: not-allowed; }
+.quro-commandbar .quro-file-command[aria-disabled=true] input[type=file] { cursor: not-allowed; }
+.quro-commandbar .quro-file-command:focus-within { outline: 2px solid var(--q-brand); outline-offset: 1px; }
 
 /* Header panel: 4-column field grid + 320px totals panel (3, 4) */
 .quro-entry-top { display: flex; gap: var(--q-panel-gap); align-items: stretch; }
