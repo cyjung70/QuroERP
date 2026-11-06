@@ -93,10 +93,4 @@ public class PointInTimeStockTests
     {
         Check(mode, D(10, 5), 3, -100, B(10, 1, -50)).Should().BeFalse();
     }
-
-    [Fact, Trait("Id", "MM-UT-002")]
-    public void Allow_IsNotChecked()
-    {
-        Check(NegativeStockMode.Allow, D(10, 5), -3, 0, B(10, 1, 0, monthEnd: true)).Should().BeFalse();
-    }
 }

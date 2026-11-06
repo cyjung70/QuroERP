@@ -244,6 +244,31 @@ public class CompanyScreenTests : BunitContext
         page.FindAll("[data-testid=company-logo-delete], [data-testid=company-logo-upload], [data-testid=company-security-save], [data-testid=company-inventory-save], [data-testid=company-business-place-save]")
             .Should().BeEmpty();
         page.Field("company-business-place-business-place-name").IsReadOnly.Should().BeTrue();
+        page.FindAll("[data-testid^=company-inventory-mode-], [data-testid^=company-inventory-over-receipt-]").Should().BeEmpty();
+        page.Find("[data-testid=company-inventory-allow-cost-adjustment-edit]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[aria-labelledby=inventory-setting-title]").TextContent.Should().Contain("초과 입고").And.Contain("허용 안 함");
+    }
+
+    [Fact, Trait("Id", "MM-UT-102"), Trait("Id", "MM-UT-420")]
+    public void InventorySettings_SaveAnyChangedValue_AndOnlyWhenChanged()
+    {
+        var page = RenderAs("admin");
+        page.Find("[data-testid=company-inventory-save]").HasAttribute("disabled").Should().BeTrue();
+
+        page.Find("[data-testid=company-inventory-mode-allow_in_month]").Change(NegativeStockModes.AllowInMonth);
+        page.Find("[data-testid=company-inventory-save]").HasAttribute("disabled").Should().BeFalse();
+        page.Find("[data-testid=company-inventory-mode-deny]").Change(NegativeStockModes.Deny);
+        page.Find("[data-testid=company-inventory-save]").HasAttribute("disabled").Should().BeTrue();
+
+        page.Find("[data-testid=company-inventory-over-receipt-warn]").Change(OverReceiptModes.Warn);
+        Form(page).IsDirty.Should().BeTrue();
+        page.Find("[data-testid=company-inventory-allow-cost-adjustment-edit]").Change(true);
+        page.Find("[data-testid=company-inventory-save]").Click();
+
+        page.WaitForAssertion(() => _api.SettingUpdates.Should().ContainSingle().Which.Should().Be(
+            new UpdateInventorySettingRequest(NegativeStockModes.Deny, OverReceiptModes.Warn, true, DateTimeOffset.UnixEpoch)));
+        page.WaitForAssertion(() => page.Find("[data-testid=company-inventory-save]").HasAttribute("disabled").Should().BeTrue());
+        Form(page).IsDirty.Should().BeFalse();
     }
 
     [Fact, Trait("Id", "BC-UT-306")]
@@ -344,13 +369,13 @@ public class CompanyScreenTests : BunitContext
     public void Search_WithAnUnsavedSection_AsksFirst_AndReadsTheSectionsAgain()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=company-inventory-mode-allow]").Change(NegativeStockModes.Allow);
+        page.Find("[data-testid=company-inventory-mode-allow_in_month]").Change(NegativeStockModes.AllowInMonth);
         _confirm.Answer = false;
 
         page.Find("[data-testid=company-toolbar-search]").Click();
 
         _confirm.Questions.Should().ContainSingle().Which.Should().StartWith("저장하지 않은 변경 내용이 있습니다.");
-        page.Find("[data-testid=company-inventory-mode-allow]").HasAttribute("checked").Should().BeTrue();
+        page.Find("[data-testid=company-inventory-mode-allow_in_month]").HasAttribute("checked").Should().BeTrue();
 
         _confirm.Answer = true;
         page.Find("[data-testid=company-toolbar-search]").Click();
@@ -411,6 +436,8 @@ public class CompanyScreenTests : BunitContext
 
         public List<UpdateBusinessPlaceRequest> PlaceUpdates { get; } = [];
 
+        public List<UpdateInventorySettingRequest> SettingUpdates { get; } = [];
+
         public string CountryCode { get; set; } = "US";
 
         public (HttpStatusCode Status, string Body)? UpdateProblem { get; set; }
@@ -456,8 +483,13 @@ public class CompanyScreenTests : BunitContext
                     var place = (await request.Content!.ReadFromJsonAsync<UpdateBusinessPlaceRequest>(Web, cancellationToken))!;
                     PlaceUpdates.Add(place);
                     return Json(Place with { CeoName = place.CeoName, UpdatedAt = DateTimeOffset.UnixEpoch.AddDays(1) });
+                case "/" + InventorySettingRoutes.Base when request.Method == HttpMethod.Put:
+                    var setting = (await request.Content!.ReadFromJsonAsync<UpdateInventorySettingRequest>(Web, cancellationToken))!;
+                    SettingUpdates.Add(setting);
+                    return Json(new InventorySettingDto(
+                        setting.NegativeStockMode, setting.OverReceiptMode, setting.AllowCostAdjustmentEdit, DateTimeOffset.UnixEpoch.AddDays(1), "kim"));
                 case "/" + InventorySettingRoutes.Base:
-                    return Json(new InventorySettingDto(NegativeStockModes.Deny, DateTimeOffset.UnixEpoch, "system"));
+                    return Json(new InventorySettingDto(NegativeStockModes.Deny, OverReceiptModes.Deny, false, DateTimeOffset.UnixEpoch, "system"));
                 case "/" + AuthSettingRoutes.Base when request.Method == HttpMethod.Put:
                     var security = (await request.Content!.ReadFromJsonAsync<AuthSettingDto>(Web, cancellationToken))!;
                     SecurityUpdates.Add(security);
