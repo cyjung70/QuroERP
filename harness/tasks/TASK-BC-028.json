@@ -4,6 +4,8 @@
   "title": "판매 단가 화면 (M)",
   "module": "BC",
   "layer": [
+    "Domain",
+    "Infrastructure",
     "Blazor"
   ],
   "screenType": "M",
@@ -14,9 +16,12 @@
     "SD-BR-403",
     "SD-BR-407",
     "SD-BR-408",
-    "SD-BR-409"
+    "SD-BR-409",
+    "BC-BR-423",
+    "SD-BR-304"
   ],
   "skills": [
+    "quro-dapper",
     "quro-blazor",
     "quro-unit-test",
     "quro-code-review"
@@ -29,8 +34,12 @@
     "화면유형 공통 컴포넌트 사용",
     "명세 화면 필드 반영",
     "ko·en 리소스",
-    "라인은 `.toon` 정의(`bc.sales-price`)로 그린다. 조회 조건은 가격 레벨(필수, 대문자 5자 이하). 품목 열은 사용 중인 Inventory 품목 찾기, 표준 판매가 열은 읽기 전용이다 (SD-BR-408·409). 메뉴 시드는 이미 있으므로 더하지 않는다"
+    "라인은 `.toon` 정의(`bc.sales-price`)로 그린다. 조회 조건은 가격 레벨(필수, 대문자, 100자 이하 — 고객 가격 레벨과 같은 값). 품목 열은 사용 중인 Inventory 품목 찾기, 표준 판매가 열은 읽기 전용이다 (SD-BR-408·409). 메뉴 시드는 이미 있으므로 더하지 않는다",
+    "SD-BR-409 변경: Domain `SalesPriceRules.LevelMaxLength`를 5에서 100으로(고객 가격 레벨 길이와 같다). 조회·일괄 저장 API가 100자까지 받는다. 단위 테스트: 6자 이상 레벨 통과, 101자 SD-E-403, 빈 레벨 Common-E-005",
+    "SD-BR-304 변경: 고객 저장 때 입력한 가격 레벨을 trim·대문자로 저장한다 (이름 기본값은 이미 대문자). 단위 테스트: 소문자가 섞인 입력이 대문자로 저장된다",
+    "새 마이그레이션 스크립트: 기존 `bc_customer.price_level`과 `bc_sales_price.price_level`을 trim·대문자로 맞춘다. 대문자로 바꾸면 겹치는 단가 행이 있으면 이미 대문자인 행을 남긴다",
+    "확인: 시연 고객 BLUE RIVER MARKET의 가격 레벨(고객 이름)로 조회·수정되고, 수주의 기본 단가(SD-BR-401)가 바뀐 단가를 쓴다"
   ],
-  "estimateHours": 2,
+  "estimateHours": 3,
   "status": "todo"
 }
