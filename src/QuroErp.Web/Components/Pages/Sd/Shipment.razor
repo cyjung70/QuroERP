@@ -81,9 +81,9 @@
         </StatusChip>
         <RowCommands Context="s">
             @* SD-BR-172, SD-BR-175: the lines of an order or bill-first invoice are added to the grid, not saved *@
-            <button type="button" disabled="@(!CanImport(s))" data-testid="shipment-toolbar-import-order"
+            <button type="button" disabled="@(!CanImport(s))" data-testid="shipment-line-import-order"
                     @onclick="() => _orderImportOpen = true">@L["Sd.Shipment.ImportOrder"]</button>
-            <button type="button" disabled="@(!CanImport(s))" data-testid="shipment-toolbar-import-invoice"
+            <button type="button" disabled="@(!CanImport(s))" data-testid="shipment-line-import-invoice"
                     @onclick="() => _invoiceImportOpen = true">@L["Sd.Shipment.ImportInvoice"]</button>
         </RowCommands>
         <OutputCommands Context="s">

@@ -878,14 +878,14 @@ public class SalesOrderScreenTests : BunitContext
         page.FindComponent<QuroHeaderDetail<SalesOrderHeader, SalesOrderLine>>().Instance;
 
     private static AngleSharp.Dom.IElement Button(IRenderedComponent<SalesOrder> page, string action) =>
-        page.Find($"[data-testid={Screen}-toolbar-{action}]");
+        page.Find($"[data-testid={Screen}-toolbar-{action}], [data-testid={Screen}-line-{action}]");
 
     private static AngleSharp.Dom.IElement FileInput(IRenderedComponent<SalesOrder> page, string action) =>
-        page.Find($"[data-testid={Screen}-toolbar-{action}]");
+        page.Find($"[data-testid={Screen}-toolbar-{action}], [data-testid={Screen}-line-{action}]");
 
     private static IReadOnlyList<string> Enabled(IRenderedComponent<SalesOrder> page) =>
         [.. page.FindAll("[role=toolbar] button:not([disabled])")
-            .Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", ""))
+            .Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", "").Replace($"{Screen}-line-", ""))
             .Where(b => b != "show-all-fields")];
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");

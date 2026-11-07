@@ -79,12 +79,12 @@
             @* SD-BR-017~022: the lines of a file are added to the grid, not saved; a customer comes first *@
             <label class="quro-file-command" aria-disabled="@(!CanReadFile(so) ? "true" : "false")">
                 @L["Sd.SalesOrder.LineFile"]
-                <InputFile accept=".csv,.txt,text/plain" disabled="@(!CanReadFile(so))" data-testid="sales-order-toolbar-line-file"
+                <InputFile accept=".csv,.txt,text/plain" disabled="@(!CanReadFile(so))" data-testid="sales-order-line-line-file"
                            OnChange="e => ReadFileAsync(e, SalesOrderLineFileKind.Item)" />
             </label>
             <label class="quro-file-command" aria-disabled="@(!CanReadFile(so) ? "true" : "false")">
                 @L["Sd.SalesOrder.BarcodeFile"]
-                <InputFile accept=".csv,.txt,text/plain" disabled="@(!CanReadFile(so))" data-testid="sales-order-toolbar-barcode-file"
+                <InputFile accept=".csv,.txt,text/plain" disabled="@(!CanReadFile(so))" data-testid="sales-order-line-barcode-file"
                            OnChange="e => ReadFileAsync(e, SalesOrderLineFileKind.Barcode)" />
             </label>
         </RowCommands>

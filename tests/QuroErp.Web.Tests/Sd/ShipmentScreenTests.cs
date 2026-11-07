@@ -695,11 +695,21 @@ public class ShipmentScreenTests : BunitContext
     private static QuroHeaderDetail<ShipmentHeader, ShipmentLine> Frame(IRenderedComponent<Shipment> page) =>
         page.FindComponent<QuroHeaderDetail<ShipmentHeader, ShipmentLine>>().Instance;
 
+    [Fact]
+    public void ScreenRowCommands_FollowRestoreRow_InTheLinesTitleRow()
+    {
+        var page = Render<Shipment>();
+
+        page.FindAll($"[data-testid={Screen}-line-commands] button").Select(b => b.GetAttribute("data-testid")).Should().Equal(
+            $"{Screen}-line-add-row", $"{Screen}-line-mark-delete", $"{Screen}-line-restore-row",
+            $"{Screen}-line-import-order", $"{Screen}-line-import-invoice");
+    }
+
     private static AngleSharp.Dom.IElement Button(IRenderedComponent<Shipment> page, string action) =>
-        page.Find($"[data-testid={Screen}-toolbar-{action}]");
+        page.Find($"[data-testid={Screen}-toolbar-{action}], [data-testid={Screen}-line-{action}]");
 
     private static IReadOnlyList<string> Enabled(IRenderedComponent<Shipment> page) =>
-        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", ""))
+        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", "").Replace($"{Screen}-line-", ""))
             .Where(b => b != "show-all-fields")];
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");

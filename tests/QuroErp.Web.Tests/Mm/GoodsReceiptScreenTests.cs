@@ -204,7 +204,7 @@ public class GoodsReceiptScreenTests : BunitContext
         page.Find("[data-testid=goods-receipt-status-chip]").TextContent.Should().Be(text);
         Enabled(page).Except(["search", "new"]).Should().BeEquivalentTo(enabled.Split(',', StringSplitOptions.RemoveEmptyEntries));
         page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
-            .Should().Contain(["goods-receipt-toolbar-import-po", "goods-receipt-toolbar-delete"], "disabled buttons stay");
+            .Should().Contain(["goods-receipt-line-import-po", "goods-receipt-toolbar-delete"], "disabled buttons stay");
     }
 
     [Fact, Trait("Id", "MM-UT-353"), Trait("Rule", "MM-BR-353"), Trait("Rule", "MM-BR-362")]
@@ -339,10 +339,10 @@ public class GoodsReceiptScreenTests : BunitContext
         page.FindComponent<QuroHeaderDetail<GoodsReceiptHeader, GoodsReceiptLine>>().Instance;
 
     private static AngleSharp.Dom.IElement Button(IRenderedComponent<GoodsReceipt> page, string action) =>
-        page.Find($"[data-testid={Screen}-toolbar-{action}]");
+        page.Find($"[data-testid={Screen}-toolbar-{action}], [data-testid={Screen}-line-{action}]");
 
     private static IReadOnlyList<string> Enabled(IRenderedComponent<GoodsReceipt> page) =>
-        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", ""))];
+        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", "").Replace($"{Screen}-line-", ""))];
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
 

@@ -244,8 +244,8 @@ public class SampleScreenTests : ScreenContext
         page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
 
         lines.Select(0);
-        page.Find("[data-testid=header-detail-toolbar-mark-delete]").Click();
-        page.Find("[data-testid=header-detail-toolbar-add-row]").Click();
+        page.Find("[data-testid=header-detail-line-mark-delete]").Click();
+        page.Find("[data-testid=header-detail-line-add-row]").Click();
         lines.Edit(1, "itemCode", "c300").Should().BeFalse("C300 is not an item, so the popup cell stays in edit");
         lines.Edit(1, "itemCode", "b2").Should().BeTrue("one item matches and is taken");
         page.Find("[data-testid=header-detail-toolbar-save]").Click();
@@ -308,7 +308,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code] input").Change("v0001");
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
         var lines = PoLines(page);
 
         lines.Edit(0, "itemCode", "kbd").Should().BeTrue("one item matches the typed text");
@@ -326,7 +326,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code] input").Change("v0001");
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
         var lines = PoLines(page);
 
         var commit = lines.EditAsync(0, "itemCode", "mo");
@@ -345,7 +345,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code] input").Change("v0001");
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
         var lines = PoLines(page);
 
         var popup = lines.F4Async(0, "itemCode", "KBD10001");
@@ -361,7 +361,7 @@ public class SampleScreenTests : ScreenContext
     public void PoEntry_ItemCode_WaitsForTheVendor()
     {
         var page = Render<SamplePoEntry>();
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
 
         PoLines(page).Edit(0, "itemCode", "KBD10001").Should().BeFalse();
 
@@ -408,11 +408,11 @@ public class SampleScreenTests : ScreenContext
         PoFrame(page).Lines.GetState(lines.KeyOf(0)).Should().Be(Quro.Grid.Data.RowState.Updated);
 
         lines.Select(0);
-        page.Find("[data-testid=po-entry-toolbar-restore-row]").Click();
+        page.Find("[data-testid=po-entry-line-restore-row]").Click();
 
         lines.Text(0, "qty").Should().Be("2.00");
         PoFrame(page).Lines.HasChanges.Should().BeFalse();
-        page.Find("[data-testid=po-entry-toolbar-restore-row]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=po-entry-line-restore-row]").HasAttribute("disabled").Should().BeTrue();
     }
 
     [Fact]
@@ -422,11 +422,11 @@ public class SampleScreenTests : ScreenContext
         var lines = PoLines(page);
         lines.Select(0);
 
-        page.Find("[data-testid=po-entry-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=po-entry-line-mark-delete]").Click();
 
         page.Find("[data-testid=po-entry-totals-total] b").TextContent.Should().Be("125.00");
         lines.Rows[0].ClassList.Should().Contain("quro-deleted");
-        page.Find("[data-testid=po-entry-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=po-entry-line-mark-delete]").Click();
         page.Find("[data-testid=po-entry-totals-total] b").TextContent.Should().Be("1,825.00");
         PoFrame(page).Lines.HasChanges.Should().BeFalse();
     }
@@ -447,7 +447,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code] input").Change("v0003");
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
         var lines = PoLines(page);
         lines.Edit(0, "itemCode", "MOU10001");
         lines.Edit(0, "qty", "3");
