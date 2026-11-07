@@ -208,7 +208,7 @@
     },
     {
       "path": "docs/business-rules/MM/inventory-report.md",
-      "sha256": "b885c6285d321e794c873bce08a02fa6742916190654e722c81af061cee1c7b5"
+      "sha256": "88ecde215d6493f6f4c1505e7fd8e646e32e0c4eed1379c98dce79cdf33bcbe4"
     },
     {
       "path": "docs/business-rules/MM/inventory.md",
@@ -464,7 +464,7 @@
     },
     {
       "path": "docs/specifications/MM/ap-payment.md",
-      "sha256": "0dad2aee758964290676067a22ffb99de2f5b486ae75e7eec5d4d014c585bc96"
+      "sha256": "d4bcfd0384bfad74e29c53fe634a67a7adc0bb3661708bd5d0302526a5854cec"
     },
     {
       "path": "docs/specifications/MM/back-order-list.md",
@@ -1400,7 +1400,7 @@
     },
     {
       "path": "harness/tasks/TASK-MM-022.json",
-      "sha256": "2d5467a76d60341b5780989a27869477a5753ce312c7406e6703eff4fbbafde7"
+      "sha256": "d87cf51621e46e19e891ce959e71dcf4f1d02f05c55f52c69a36f6fcedfb792b"
     },
     {
       "path": "harness/tasks/TASK-MM-023.json",
@@ -1432,11 +1432,11 @@
     },
     {
       "path": "harness/tasks/TASK-MM-030.json",
-      "sha256": "435d62825b0d22f2fe718057ea213e096024d74c426634b696d32277cdaf7f3e"
+      "sha256": "bf831f0efeb8f1d33170486ffb70fce067b7ca2722a85ac57c843c7db7754891"
     },
     {
       "path": "harness/tasks/TASK-MM-031.json",
-      "sha256": "bc0b4e7fc19fff29a133471a8dc3437bfa7e57b721cabcc494fae2566151586e"
+      "sha256": "5be2556e596137a6c4412441c5bf3880e8941266f5fd3e376daa37c137b38ed7"
     },
     {
       "path": "harness/tasks/TASK-MM-032.json",
@@ -1980,7 +1980,7 @@
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-022.md",
-      "sha256": "d71afcf1ab8eb27d3229d9f48267086046bd43a3cefd26b32c3945d5f6e65c4e"
+      "sha256": "1623308a7bc142983800ad3a2b31bc0fac453cc9ef2a4f5862f35c473ca6952d"
     },
     {
       "path": "tester/docs/scenarios/MM/MM-TS-023.md",
@@ -2160,7 +2160,7 @@
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-022.json",
-      "sha256": "39a8abde0f9c604ba6734540a67b83dec1cb1a6f3017df2b8e31acf194904a45"
+      "sha256": "c0c55f3b7ba72241ff5f3fdbc8acd007f3d27a6d2fcd416bdb71236c45645412"
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-023.json",
