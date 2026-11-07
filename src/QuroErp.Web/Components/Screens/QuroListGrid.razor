@@ -4,12 +4,14 @@
 @using Quro.Grid
 @using Quro.Grid.Data
 @using QuroErp.Web.Common
+@implements IAsyncDisposable
 @inject IStringLocalizer<SharedResource> L
+@inject IJSRuntime JS
 
 <CascadingValue Value="_columns" IsFixed="true">@Columns</CascadingValue>
 
 @* The package rows take no test id yet: the id is on this element and rows are found by data-row (TODO(QuroGrid-R3)) *@
-<div class="quro-grid-host" data-testid="@TestId" aria-busy="@(Busy ? "true" : null)">
+<div @ref="_host" class="quro-grid-host" data-testid="@TestId" aria-busy="@(Busy ? "true" : null)">
     @if (_columns.Items.Count > 0)
     {
         @* Columns carry translated titles; the localizer returns a title that is not a key as it is (TODO(QuroGrid-request)) *@
@@ -51,6 +53,10 @@
     private readonly QuroDataSet<TRow> _data = new();
     private IReadOnlyList<TRow>? _shown;
     private int _drawnColumns;
+    private ElementReference _host;
+    private DotNetObjectReference<QuroListGrid<TRow>>? _self;
+    private IJSObjectReference? _rowDoubleClick;
+    private bool _selecting;
 
     [Parameter, EditorRequired]
     public IReadOnlyList<TRow> Items { get; set; } = [];
@@ -93,6 +99,53 @@
             _drawnColumns = _columns.Items.Count;
             StateHasChanged();
         }
+    }
+
+    // TODO(QuroGrid-request): the package has no public row double-click event, so quro.js reads the row key from data-row
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && OnSelect.HasDelegate)
+        {
+            _self = DotNetObjectReference.Create(this);
+            _rowDoubleClick = await JS.InvokeAsync<IJSObjectReference?>("quroListRowDoubleClick", _host, _self);
+        }
+    }
+
+    /// <summary>A row double-click from quro.js picks the row as its select button does (screens.md "팝업").</summary>
+    [JSInvokable]
+    public async Task OnRowDoubleClick(int rowKey)
+    {
+        // A second double-click can arrive while the first is still selecting
+        if (Busy || _selecting || !_data.RowKeys.Contains(rowKey))
+        {
+            return;
+        }
+        _selecting = true;
+        try
+        {
+            await OnSelect.InvokeAsync(_data.GetItem(rowKey));
+        }
+        finally
+        {
+            _selecting = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_rowDoubleClick is not null)
+        {
+            try
+            {
+                await _rowDoubleClick.InvokeVoidAsync("dispose");
+                await _rowDoubleClick.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // The circuit is gone, and the listener with the page
+            }
+        }
+        _self?.Dispose();
     }
 
     private async Task OnCellButtonClick(CellButtonClickArgs<TRow> args)
