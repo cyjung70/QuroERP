@@ -53,6 +53,10 @@
 .quro-field-section-body { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--q-field-gap) 16px; align-content: start; margin-top: 4px; }
 .quro-field-section-body[hidden] { display: none; }
 .quro-lookup-name { flex: 1 1 0; min-width: 0; align-self: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--q-ink-muted); }
+/* Find button next to a code field: as high as the text box to its left (screens.md "팝업") */
+.quro-lookup-field > button { flex: none; box-sizing: border-box; width: var(--q-control-h); height: var(--q-control-h); padding: 0; border: 1px solid var(--q-line); border-radius: var(--q-radius-button);
+    background: var(--q-surface-1); color: var(--q-ink); font: 500 13px/20px var(--q-font-sans); cursor: pointer; }
+.quro-lookup-field > button:disabled { opacity: .45; cursor: not-allowed; }
 .quro-line-import { width: min(960px, 94vw); }
 .quro-line-import-rows { max-height: 50vh; overflow: auto; margin: 8px 0; }
 .quro-line-import-rows table { width: 100%; border-collapse: collapse; }
