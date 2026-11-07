@@ -345,4 +345,14 @@ public class EntryPartsTests : ScreenContext
         chip.Find("span").GetAttribute("data-status").Should().Be("DR");
         chip.Find("span").TextContent.Should().Be("Draft");
     }
+
+    // bUnit has no Blazor JS wrapping. A function that wraps its result itself is wrapped again, so calling dispose on it
+    // throws when the frame goes, which ends the circuit. Only a browser shows the failure; this keeps the pattern out.
+    [Fact]
+    public void JsFunctions_ReturnPlainObjects_ForIJSObjectReferenceCallers()
+    {
+        var js = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "QuroErp.Web", "wwwroot", "js", "quro.js"));
+
+        js.Should().NotContain("DotNet.createJSObjectReference");
+    }
 }
