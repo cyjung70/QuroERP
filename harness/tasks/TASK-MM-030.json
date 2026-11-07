@@ -64,5 +64,5 @@
     "새 Seed 스크립트로 `AP_PAYMENT_METHOD` Minor `CASH`·`MONEY_ORDER`·`CREDIT_CARD`·`CHECK`·`WIRE_TRANSFER`(정렬 10~50)와 ko·en 이름을 넣는다 (MM-BR-952). 이관 데이터와 같은 코드라 이관 적재 때 겹치지 않는다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
