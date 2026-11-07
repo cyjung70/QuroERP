@@ -28,5 +28,5 @@
     "bUnit: 행 키로 고르면 선택 결과가 전달되고 대화상자가 닫힌다. 실제 브라우저에서 더블클릭을 확인한다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

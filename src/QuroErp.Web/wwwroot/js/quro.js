@@ -372,3 +372,16 @@ window.quroEntryShortcuts = (frame, root) => {
     // A plain object: the caller asks for an IJSObjectReference, so Blazor makes the reference itself
     return { dispose: () => document.removeEventListener("keydown", onKeyDown) };
 };
+
+// Row double-click on a list grid (screens.md "팝업"). Only a body row counts, so a header or empty space does nothing.
+// TODO(QuroGrid-request): replace with a public row double-click event of the package.
+window.quroListRowDoubleClick = (host, list) => {
+    const onDoubleClick = (e) => {
+        const row = e.target.closest?.(".quro-body [role=row][data-row]");
+        // The reference is gone when the dialog closed between two double-clicks
+        if (row && host.contains(row)) list.invokeMethodAsync("OnRowDoubleClick", Number(row.dataset.row)).catch(() => { });
+    };
+    host.addEventListener("dblclick", onDoubleClick);
+    // A plain object: the caller asks for an IJSObjectReference, so Blazor makes the reference itself
+    return { dispose: () => host.removeEventListener("dblclick", onDoubleClick) };
+};
