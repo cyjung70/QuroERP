@@ -34,7 +34,7 @@
 | 10 | `POST /api/mm/vendor-returns/{R2}/void` | updatedAt |
 | 11 | `DELETE /api/mm/goods-receipts/{G}` | — |
 | 12 | `POST /api/mm/ap-payments` | V, 지급액 10, 줄: S1 지급 금액 20 |
-| 13 | `GET /api/mm/reports/inventory-statement?조건` | 기준일 오늘, 상세 보기, I의 품목군, 품목 코드 I |
+| 13 | `GET /api/mm/reports/inventory-statement-detail` | 기준일 오늘, I의 품목군, 품목 코드 I |
 
 ## 기대 결과
 

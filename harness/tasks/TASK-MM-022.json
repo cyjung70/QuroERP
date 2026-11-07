@@ -40,6 +40,7 @@
     "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)",
     "창고 조건 (전체 또는 창고 하나), 수량은 품목+창고 기준",
     "'상세 보기' 토글: 켜면 상세 리포트의 열·합계·정렬·PDF와 같다. 합쳐진 상세 태스크의 명세 테스트 시나리오 포함",
+    "매출액 열은 `sd_sales_invoice`를 읽는다. 매출 송장 API(TASK-SD-005)보다 먼저 만들므로 통합 테스트는 테스트 데이터로 송장 행을 넣어 확인한다",
     "첫 리포트 화면이다. 화면 경로 상수 `ScreenPaths.InventoryStatementReport` = `/mm/report-inventory-statement`로 API 권한을 걸고, 화면 메뉴를 새 Seed 스크립트로 더한다. 조회 조건은 MM-BR-657의 기준일·품목 유형·품목군·사용 여부·창고다",
     "통합 테스트: 공급자 반품 `VR` 이동이 기타 증감에 들어가고, 기준일이 오늘이면 기말 = 현재고다 (MM-BR-657·659)"
   ],
