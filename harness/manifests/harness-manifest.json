@@ -1532,7 +1532,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-005.json",
-      "sha256": "09b181bcb43376f60461e166fb4fa21de314cc0e14cc4d4244c4d193caefb9f8"
+      "sha256": "521f27cdeab870a660fc545daea69a3f38f699f38bebe1d83c3fff3e143c00ee"
     },
     {
       "path": "harness/tasks/TASK-SD-006.json",
