@@ -226,7 +226,8 @@ public class EntryFrameTests : ScreenContext
     public async Task Shortcuts_RunEnabledCommands_AndIgnoreDisabledOnes()
     {
         var page = Open();
-        JSInterop.VerifyInvoke("quroEntryShortcuts");
+        // The browser ignores a key for a frame whose root is hidden; bUnit runs no JavaScript, so this only checks it gets the root
+        JSInterop.VerifyInvoke("quroEntryShortcuts").Arguments[1].Should().BeOfType<ElementReference>();
 
         await Shortcut(page, "add-row");
         Lines(page).Rows.Should().HaveCount(3);

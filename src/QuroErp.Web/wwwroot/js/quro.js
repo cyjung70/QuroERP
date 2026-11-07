@@ -343,8 +343,10 @@ window.quroShellTabs = (() => {
 })();
 
 // Entry frame shortcuts (entry-frame.md 2): F3 search, Ctrl+S save, Ctrl+Insert add row, Ctrl+Delete mark delete.
-// One entry frame is on a page; it registers while mounted and disposes the returned reference when it goes.
-window.quroEntryShortcuts = (frame) => {
+// Tabs keep hidden frames mounted (app-shell.md 3.3), so every frame listens and only a visible one acts.
+// A frame registers while mounted and disposes the returned reference when it goes.
+window.quroEntryShortcuts = (frame, root) => {
+    const isVisible = (element) => element.getClientRects().length > 0;
     const commands = (e) => {
         if (e.key === "F3" && !e.ctrlKey && !e.altKey) return "search";
         if (!e.ctrlKey || e.altKey || e.shiftKey) return null;
@@ -355,7 +357,9 @@ window.quroEntryShortcuts = (frame) => {
     };
     const onKeyDown = (e) => {
         const command = commands(e);
-        if (!command || document.querySelector(".quro-dialog-backdrop")) return;
+        if (!command || !isVisible(root)) return;
+        // A dialog left open in a hidden tab does not block this one
+        if ([...document.querySelectorAll(".quro-dialog-backdrop")].some(isVisible)) return;
         e.preventDefault();
         // An edited input commits its value on change, so let it fire before the command runs
         const input = document.activeElement;
