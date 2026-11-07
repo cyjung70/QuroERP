@@ -12,7 +12,7 @@
 @using QuroErp.Web.Common
 @inject IJSRuntime Js
 
-<section class="quro-entry" data-testid="@TestId">
+<section class="quro-entry" data-testid="@TestId" @ref="_root">
 <CascadingValue Value="Policies" IsFixed="true">
     @* In a screen tab, switching tabs keeps the screen, so only closing the tab asks (the tab bar does); outside the tabs
        leaving the screen asks here (app-shell.md 3.3) *@
@@ -169,6 +169,7 @@
     private string _snapshot = "";
     private string? _warning;
     private bool _findOpen;
+    private ElementReference _root;
     private DotNetObjectReference<QuroHeaderDetail<THeader, TLine>>? _self;
     private IJSObjectReference? _shortcuts;
 
@@ -547,7 +548,7 @@
         if (firstRender)
         {
             _self = DotNetObjectReference.Create(this);
-            _shortcuts = await Js.InvokeAsync<IJSObjectReference?>("quroEntryShortcuts", _self);
+            _shortcuts = await Js.InvokeAsync<IJSObjectReference?>("quroEntryShortcuts", _self, _root);
         }
     }
 
