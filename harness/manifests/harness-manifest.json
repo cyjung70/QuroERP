@@ -568,7 +568,7 @@
     },
     {
       "path": "docs/specifications/MM/supplier-invoice.md",
-      "sha256": "a7f2dcb40b53eaa2d4ac7f59d6b0faea7e5e467b5da24c6d54af87ef70dbee9b"
+      "sha256": "bb210dea7a05b31295531c60f36832cd1173f9de7c06b5e76480dc1adadbaa1d"
     },
     {
       "path": "docs/specifications/MM/unplanned-receipt-line-upload.md",
@@ -1504,7 +1504,7 @@
     },
     {
       "path": "harness/tasks/TASK-MM-048.json",
-      "sha256": "aa9a378201683c8a5d0c3b25540f18c78257a473cdb07d6eb2d24ee1ba1fa832"
+      "sha256": "9cbc32681aac27d2a283568260e8c291e8642ea6038c47f4975e19e4b61cad70"
     },
     {
       "path": "harness/tasks/TASK-MM-049.json",
