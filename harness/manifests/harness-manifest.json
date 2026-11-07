@@ -8,7 +8,7 @@
     },
     {
       "path": ".agents/skills/quro-blazor/SKILL.md",
-      "sha256": "89da2e2f30f2d8b1d0b8b85ccc32bd2200bc88e650f2f95704df4932aa2d41a8"
+      "sha256": "9465c74792bf7b857cc96ca781d29278565b894451d62f51c7ff583db0ade837"
     },
     {
       "path": ".agents/skills/quro-code-review/SKILL.md",
@@ -36,7 +36,7 @@
     },
     {
       "path": ".claude/skills/quro-blazor/SKILL.md",
-      "sha256": "89da2e2f30f2d8b1d0b8b85ccc32bd2200bc88e650f2f95704df4932aa2d41a8"
+      "sha256": "9465c74792bf7b857cc96ca781d29278565b894451d62f51c7ff583db0ade837"
     },
     {
       "path": ".claude/skills/quro-code-review/SKILL.md",
@@ -124,7 +124,7 @@
     },
     {
       "path": "docs/architecture/qurogrid-integration.md",
-      "sha256": "35d2ac36a180731cf980479201e19cb13eb885ceabccbb7fa704bb5a8fcb64b0"
+      "sha256": "869b3fedf338cceab703652235ebf4f06f2cd1b47b4df114f0470fc88973ccc0"
     },
     {
       "path": "docs/architecture/reports.md",
@@ -1268,11 +1268,11 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-055.json",
-      "sha256": "6dd1bf4ecee33aa43c4f75ef7d896892ef163de9d9f2ed09cec268d770137138"
+      "sha256": "0e2899e89acea7c4829b540900ae73d814d068d9430d6de71afb692a05bc1cc1"
     },
     {
       "path": "harness/tasks/TASK-CORE-056.json",
-      "sha256": "1f46905e41af45dc7a14873ed443ce77cc2fadc4f9fa550129ba6c55326adf69"
+      "sha256": "9bbbb34bfc3583f37c9b9dc45559e9373e9843662eeb85ca89657a417e055a6a"
     },
     {
       "path": "harness/tasks/TASK-CORE-057.json",
@@ -1292,7 +1292,7 @@
     },
     {
       "path": "harness/tasks/TASK-CORE-061.json",
-      "sha256": "17279bf5cc8b6ebb4d5e67720d642308ba3583c63a255f52a05866ea477aee72"
+      "sha256": "5d676251b1bd95e183433efda10cb2f9a97eb6216ecf49ca9d6e742f25786a01"
     },
     {
       "path": "harness/tasks/TASK-CORE-062.json",
@@ -1812,7 +1812,7 @@
     },
     {
       "path": "tester/docs/architecture.md",
-      "sha256": "b7419f6d3987331a7645a2c3a5569d038336e469ed9ca142e33d50d487956f88"
+      "sha256": "16c24a7843524e9fa324212de248cc2bd07928385c366d34cc187ada3f82acb5"
     },
     {
       "path": "tester/docs/INDEX.md",
@@ -2172,7 +2172,7 @@
     },
     {
       "path": "tester/harness/tasks/TASK-TESTER-025.json",
-      "sha256": "43345b8cba2bb36c0a57dab5e0315ce40a32c09f6a294d10e6f8ec6e24e42c60"
+      "sha256": "c58a9f5bc3a47b8b3bd6dec85090dd8247f7ebafd37ed31307fe49493a26de45"
     },
     {
       "path": "tester/src/.gitkeep",

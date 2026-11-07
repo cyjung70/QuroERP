@@ -59,7 +59,7 @@ description: QuroERP Blazor 화면을 만들 때 쓴다. 화면유형(S/M/SM/MM/
    - 이름: `{화면}-{영역}-{필드}`, 모두 kebab-case. 화면은 메뉴 경로의 마지막 부분이다 (`sales-order`).
    - 영역: `header`, `line`, `search`, `grid`, `toolbar`, `message`. SM은 `title`, `doc-no`, `status-chip`, `totals`, `audit`도 있다 (엔트리 프레임 8장). 필드는 DTO 속성 이름의 kebab-case (`so-dt`), 버튼은 동작 (`save`, `delete`).
    - 예: `sales-order-header-so-dt`, `sales-order-line-so-qty`, `sales-order-toolbar-save`, `sales-order-message`.
-   - 공통 컴포넌트는 `TestId` 매개변수를 받아 실제 입력 요소에 붙인다. 그리드 줄 안의 칸은 줄 번호를 붙이지 않고 줄 요소에 `data-row-index`를 둔다.
+   - 공통 컴포넌트는 `TestId` 매개변수를 받아 실제 입력 요소에 붙인다. 그리드 줄 안의 칸은 줄 번호를 붙이지 않고 줄 요소에 `data-row-index`를 둔다. 패키지 그리드는 이 속성을 지원하기(R3) 전까지 줄 요소의 `data-row`(행 키)로 찾는다.
 
 ## 코드 예시
 
