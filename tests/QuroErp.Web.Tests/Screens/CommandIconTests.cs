@@ -66,7 +66,7 @@ public class CommandIconTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
 
-        Icon(page.Find($"[data-testid=po-entry-toolbar-{id}]")).GetAttribute("data-icon").Should().Be(icon);
+        Icon(page.Find($"[data-testid=po-entry-toolbar-{id}], [data-testid=po-entry-line-{id}]")).GetAttribute("data-icon").Should().Be(icon);
     }
 
     [Fact]

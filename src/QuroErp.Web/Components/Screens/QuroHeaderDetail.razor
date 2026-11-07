@@ -1,4 +1,4 @@
-@* Screen type SM: the entry frame (entry-frame.md) — title bar → command bar (File | Rows | Status | Output) →
+@* Screen type SM: the entry frame (entry-frame.md) — title bar → command bar (File | Status | Output) →
    4-column header + totals panel → line grid → audit. Header and lines are saved together (screens.md).
    There is no search area: Search (F3) opens a document search dialog.
    The header is a one-row data set under the Quro.UI input wrappers and the lines are the QuroGrid package over the
@@ -74,16 +74,6 @@
             <button type="button" class="quro-primary" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+S"
                     data-testid="@Id("toolbar-save")" @onclick="SaveAsync"><QuroCommandIcon Name="save" />@L["Common.Save"]</button>
         </div>
-        <span class="quro-commandbar-sep" aria-hidden="true"></span>
-        <div class="quro-commandbar-group" data-group="rows">
-            <button type="button" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+Insert"
-                    data-testid="@Id("toolbar-add-row")" @onclick="AddLine"><QuroCommandIcon Name="add-row" />@L["Common.AddRow"]</button>
-            <button type="button" disabled="@(Busy || !CanMarkSelected)" aria-keyshortcuts="Control+Delete"
-                    aria-pressed="@(SelectedIsDeleted ? "true" : "false")"
-                    data-testid="@Id("toolbar-mark-delete")" @onclick="MarkDelete"><QuroCommandIcon Name="mark-delete" />@L["Common.MarkDelete"]</button>
-            <button type="button" disabled="@(Busy || !CanRestoreSelected)" data-testid="@Id("toolbar-restore-row")" @onclick="RestoreLine"><QuroCommandIcon Name="restore-line" />@L["Common.RestoreLine"]</button>
-            @RowCommands?.Invoke(_header)
-        </div>
         @if (StatusCommands is not null)
         {
             <span class="quro-commandbar-sep" aria-hidden="true"></span>
@@ -139,12 +129,21 @@
         <div class="quro-entry-lines-head">
             <h2>@L["Common.Lines"]</h2>
             <span data-testid="@Id("line-count")">@L["Common.LineCount", ActiveLines.Count]</span>
+            @* Row commands act on the current line (entry-frame.md 2). The hint follows, so the buttons stay put when it appears *@
+            <div class="quro-entry-line-commands" role="toolbar" aria-label="@L["Common.Lines"]" data-testid="@Id("line-commands")">
+                <button type="button" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+Insert"
+                        data-testid="@Id("line-add-row")" @onclick="AddLine"><QuroCommandIcon Name="add-row" />@L["Common.AddRow"]</button>
+                <button type="button" disabled="@(Busy || !CanMarkSelected)" aria-keyshortcuts="Control+Delete"
+                        aria-pressed="@(SelectedIsDeleted ? "true" : "false")"
+                        data-testid="@Id("line-mark-delete")" @onclick="MarkDelete"><QuroCommandIcon Name="mark-delete" />@L["Common.MarkDelete"]</button>
+                <button type="button" disabled="@(Busy || !CanRestoreSelected)" data-testid="@Id("line-restore-row")" @onclick="RestoreLine"><QuroCommandIcon Name="restore-line" />@L["Common.RestoreLine"]</button>
+                @RowCommands?.Invoke(_header)
+            </div>
             @if (LinesHint?.Invoke(_header) is { } hint)
             {
                 <span class="quro-hint">@hint</span>
             }
         </div>
-        @* Add row, mark delete and restore act on the current line from the command bar (entry-frame.md 5) *@
         <QuroLineGrid @ref="_lineGrid" TLine="TLine" Data="_lines" Definition="_definition" CanEdit="@(CanSaveNow && !Busy)"
                       IsLineLocked="IsLineLocked" IsLineRemovable="IsLineRemovable" IsLineReadOnly="IsLineReadOnly" IsCellLocked="IsCellLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
                       OptionsFor="LineOptionsFor" AddRowOnLastEnter="AddRowOnLastEnter" FillAddedLine="FillLineOrNull" OnLinesPasted="OnLinesPasted"
@@ -288,7 +287,7 @@
     [Parameter]
     public RenderFragment<THeader>? StatusChip { get; set; }
 
-    /// <summary>Screen line commands at the end of the Rows group (e.g. import cart). They add lines and never remove them.</summary>
+    /// <summary>Screen line commands after the row commands in the Lines title row (e.g. import cart). They add lines and never remove them.</summary>
     [Parameter]
     public RenderFragment<THeader>? RowCommands { get; set; }
     /// <summary>More output commands after PDF and Excel (e.g. other print forms). Disable them for a new document.</summary>

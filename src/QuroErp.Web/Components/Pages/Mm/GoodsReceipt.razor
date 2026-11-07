@@ -68,7 +68,7 @@
             <QuroStatusChip Code="@(gr.Status ?? "")" Kind="GoodsReceiptStatus.ChipOf(gr.Status)" Text="@StatusText(gr.Status)" />
         </StatusChip>
         <RowCommands Context="gr">
-            <button type="button" disabled="@(!CanImport(gr))" data-testid="goods-receipt-toolbar-import-po"
+            <button type="button" disabled="@(!CanImport(gr))" data-testid="goods-receipt-line-import-po"
                     @onclick="() => _importOpen = true">@L["Mm.GoodsReceipt.ImportPo"]</button>
         </RowCommands>
         <HeaderFields Context="gr">
