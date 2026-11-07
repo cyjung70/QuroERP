@@ -1396,7 +1396,7 @@
     },
     {
       "path": "harness/tasks/TASK-MM-021.json",
-      "sha256": "20bbafd9cbde888dbce7109507f24d4a5795683a135fb7c461574234ab133f5a"
+      "sha256": "c2573fdf96eae2c3dcb983c31bbbe0e02b4d3e4f62a2322cc6f7f9cf77e3fe05"
     },
     {
       "path": "harness/tasks/TASK-MM-022.json",
@@ -1404,7 +1404,7 @@
     },
     {
       "path": "harness/tasks/TASK-MM-023.json",
-      "sha256": "2389fb1dec774f2ad86b7161bd2c12228d0a144907e58c955e786638ef59dee9"
+      "sha256": "8efa46cbca8a02f206364a80ac9ab0e64293a5a0d02cda477ef90688e19131a3"
     },
     {
       "path": "harness/tasks/TASK-MM-024.json",
@@ -1448,7 +1448,7 @@
     },
     {
       "path": "harness/tasks/TASK-MM-034.json",
-      "sha256": "1589c92518f2c9510de357ae3c0ad1dbe98b43049c69c991b00049330e3aac60"
+      "sha256": "ba490005ccf44c4ffba19fd68c465467917c6d17a4f1cf375473c19a4b9f9245"
     },
     {
       "path": "harness/tasks/TASK-MM-035.json",
@@ -1560,7 +1560,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-012.json",
-      "sha256": "1522f11f8ede8c3bf55e7ea6981574729586890c714e1ae7e4d0eb25d2e984f7"
+      "sha256": "95418006f989d64545ee3f48907180b10d0387b689c1089e1798034df3bfdf14"
     },
     {
       "path": "harness/tasks/TASK-SD-013.json",
@@ -1568,7 +1568,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-014.json",
-      "sha256": "7366479d5265b4bd3a6da68f1a48a7957aad6504b1d0304eb5b5e9dbf89f221f"
+      "sha256": "12e35cd1e4c109ba3f8ce88ff9b8e8aa3c4ed80881b4c0c5c35efe481e7a5d79"
     },
     {
       "path": "harness/tasks/TASK-SD-015.json",
@@ -1580,31 +1580,31 @@
     },
     {
       "path": "harness/tasks/TASK-SD-017.json",
-      "sha256": "55028045f2a394d7c485e03d4d8f1c2f72713da4717f878d1380e63c2c4ef029"
+      "sha256": "daa9918f19082233d59235cfdc41cbae6f88f9be0a22fe0b553daf3a60d38762"
     },
     {
       "path": "harness/tasks/TASK-SD-018.json",
-      "sha256": "5b35baf131fefe245aa97b98e4a8740e434eec45771c7ea512667411f65c39ca"
+      "sha256": "9222e12a02d76bcf8d3556b7ca1dac3b47b4e13f830f2018fbd313bf3c4d5a0a"
     },
     {
       "path": "harness/tasks/TASK-SD-019.json",
-      "sha256": "04ebafe182b79315252d60b4a03e680b48d3acc31442ff8d51b5aabd9d0fcb40"
+      "sha256": "83c33f08776c4e4198c5ed757f499f5c1c78ba08380d6e4314cfda95c10969b3"
     },
     {
       "path": "harness/tasks/TASK-SD-020.json",
-      "sha256": "f4a01f0e93b6f74fe22e8d4bde137d6636fd93cc4ad1379dc1c63f35bb7701dc"
+      "sha256": "f195beaf586c4dcfd4ab7d51d02bfba0d7837c49a4c97da3225777cb69177136"
     },
     {
       "path": "harness/tasks/TASK-SD-021.json",
-      "sha256": "a333a795f40506af348776fe752123aaf7d03c52bf1ed47481a53361fe9910a7"
+      "sha256": "074bc2f04bdcbe0f3e9ef1fe061244c13ae531dde17351b4990b1e37684ed63f"
     },
     {
       "path": "harness/tasks/TASK-SD-022.json",
-      "sha256": "8502196ad5cdf27b6c781e0165945d31314a63db079cdbd200b9f7546de79d5a"
+      "sha256": "7b14e241bf2b8bf12c405bc0870e63c140548e3a5509698b773fff5042859561"
     },
     {
       "path": "harness/tasks/TASK-SD-023.json",
-      "sha256": "7ce706b97b37ddf832fb46166eafe42807834f713264d267aab832434b4a253f"
+      "sha256": "778b4c3a5bd4912f16030dbe6bab38472e0b579357d6ae7f74ab70357da0073d"
     },
     {
       "path": "harness/tasks/TASK-SD-024.json",
@@ -1612,15 +1612,15 @@
     },
     {
       "path": "harness/tasks/TASK-SD-025.json",
-      "sha256": "961f1a8fbf0b48bcfe43fe986edaa80f9c17f6a0d7843574e51ab6fa5519d570"
+      "sha256": "d10f6bf08c6ebc61cc5030611079d5a1d1dd083fa9245a4aaa9693406cb02a9e"
     },
     {
       "path": "harness/tasks/TASK-SD-026.json",
-      "sha256": "4f9307169a48e54038ffe67430e71080a5944a6f4496ea8c4cd02c24e6ad1cbe"
+      "sha256": "f56886a2a54ad8243dee0ed19cab116bb9ad22c908dba6a02317320a4e35374d"
     },
     {
       "path": "harness/tasks/TASK-SD-027.json",
-      "sha256": "15567698b1a5a655aad81eab5ef1733dfbf75a71bcb18ef2dda5aa8e37a978f0"
+      "sha256": "c2814d2251aa4eec619a08752ce3ed10cea9fb113b4ac133cb0ea965edcc5d06"
     },
     {
       "path": "harness/tasks/TASK-SD-028.json",
@@ -1628,19 +1628,19 @@
     },
     {
       "path": "harness/tasks/TASK-SD-029.json",
-      "sha256": "b553d7da445315a71c05b8b6f58db32d68c8008ec1311219ff628a8882a9e94e"
+      "sha256": "1e6981ea523b1df57e365fe6c7bc065f7979bfc30bbbf43f07aabcbddf24ffad"
     },
     {
       "path": "harness/tasks/TASK-SD-030.json",
-      "sha256": "772d84ecc8b06c7f0ee0ed8166a8e7896a385724f48ee6d1c523463ac74e70bb"
+      "sha256": "41cee71929aeac2e328eb05094994c52f135cb7ea6debdafdc3eaf16560f6112"
     },
     {
       "path": "harness/tasks/TASK-SD-031.json",
-      "sha256": "c00617ae12c321211aeecca4ac046f6bac4d7ee99e91462bc57d2a215a765367"
+      "sha256": "e2cb04ec8eb92c0f613eb9e6ada1810c5ad18d82be9d35f819b197879a59722a"
     },
     {
       "path": "harness/tasks/TASK-SD-032.json",
-      "sha256": "c5edcbd5c4e6394dbd7612e2a27ad7e1a8555e7c368a5c4551f79fcde7f16d2d"
+      "sha256": "489ec6e86322c89ea228b2dd05854a11d7be13adb20257441ee2c2c3111fc838"
     },
     {
       "path": "harness/tasks/TASK-SD-033.json",
@@ -1680,7 +1680,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-042.json",
-      "sha256": "a665926d83b1e8db503f46ba0ffb19adb6dd063fad06bad17809223da521c1c3"
+      "sha256": "f2f88bf5c90a5da2ea2d07bbf154d99edada3101ac5d764228dfca17905e1383"
     },
     {
       "path": "harness/tasks/TASK-SD-043.json",
@@ -1692,7 +1692,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-045.json",
-      "sha256": "877a06600f0d58b5377b8de33fcee420b2eb5bdce1a0b4b6d1321078af0691ca"
+      "sha256": "57dc5953bb84038c8a8a22d164ee2b6bbb22dfde74e0d31387ce02f94236f43c"
     },
     {
       "path": "harness/tasks/TASK-SD-046.json",
@@ -1704,7 +1704,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-048.json",
-      "sha256": "f8129b679c9347fcaca84a8cd36fc09dc47cd210a7d4b7b48666f114b1192588"
+      "sha256": "21582e99b11b546e628df0556cf7f53da5a908e2acd783bbe97916e8dea77ac3"
     },
     {
       "path": "harness/tasks/TASK-SD-049.json",
