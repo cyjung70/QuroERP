@@ -365,5 +365,6 @@ window.quroEntryShortcuts = (frame) => {
         frame.invokeMethodAsync("OnShortcut", command);
     };
     document.addEventListener("keydown", onKeyDown);
-    return DotNet.createJSObjectReference({ dispose: () => document.removeEventListener("keydown", onKeyDown) });
+    // A plain object: the caller asks for an IJSObjectReference, so Blazor makes the reference itself
+    return { dispose: () => document.removeEventListener("keydown", onKeyDown) };
 };
