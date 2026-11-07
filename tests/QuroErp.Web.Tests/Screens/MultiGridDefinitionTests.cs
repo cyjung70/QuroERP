@@ -23,18 +23,19 @@ public class MultiGridDefinitionTests : ScreenContext
     }
 
     [Fact]
-    public async Task Undo_RestoresAnEditedRow_AndRestore_TheSelectedDeletedRow()
+    public void Restore_ReturnsAnEditedRow_AndAMarkedRow_ToTheirLoadedValues()
     {
         var page = Render<SampleMulti>();
         var grid = Loaded(page);
         grid.Edit(0, "name", "Apricot");
-        grid.Click(1, "deleteRow");
-        page.Find("[data-testid=multi-grid-restore-row]").HasAttribute("disabled").Should().BeTrue();
+        grid.Select(1);
+        page.Find("[data-testid=multi-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=multi-toolbar-restore-row]").HasAttribute("disabled").Should().BeFalse();
 
-        grid.Click(0, "undoRow");
-        var cut = page.FindComponent<QuroGrid<SampleItem>>();
-        await cut.InvokeAsync(() => cut.Instance.SelectionChanged(grid.KeyOf(1)));
-        page.Find("[data-testid=multi-grid-restore-row]").Click();
+        grid.Select(0);
+        page.Find("[data-testid=multi-toolbar-restore-row]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=multi-toolbar-restore-row]").Click();
 
         grid.Column("name").Should().Equal("Apple", "Banana");
         grid.Column("rowState").Should().OnlyContain(s => s.Length == 0);
@@ -47,9 +48,11 @@ public class MultiGridDefinitionTests : ScreenContext
     {
         var page = Render<SampleMulti>();
         var grid = Loaded(page);
-        page.Find("[data-testid=multi-toolbar-new]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=multi-toolbar-add-row]").Click();
 
-        grid.Click(2, "deleteRow");
+        grid.Select(2);
+        page.Find("[data-testid=multi-toolbar-mark-delete]").Click();
 
         grid.Rows.Should().HaveCount(2);
     }
@@ -59,7 +62,8 @@ public class MultiGridDefinitionTests : ScreenContext
     {
         var page = Render<SampleMulti>();
         var grid = Loaded(page);
-        page.Find("[data-testid=multi-toolbar-new]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=multi-toolbar-add-row]").Click();
 
         grid.Edit(2, "code", "c300");
         grid.Text(2, "code").Should().Be("C300");
