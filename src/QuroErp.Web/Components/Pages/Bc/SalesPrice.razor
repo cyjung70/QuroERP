@@ -1,0 +1,162 @@
+@page "/bc/sales-price"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Definition
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Common
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.SalesPrices
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject SalesPriceApiClient Api
+@inject ItemApiClient Items
+@inject LocalizationApiClient LocalizationApi
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-014 sales prices, screen type M. Search a price level, then add, change or delete its item prices and save them
+   together (SD-BR-409). Each row shows the item's standard sales price read only. The item lookup offers only Inventory items
+   in use; the API checks every rule again (SD-BR-403, 407, 408, BC-BR-423). *@
+
+<PageTitle>@L["Bc.SalesPrice.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="sales-price-load-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="SalesPriceRow" Title="@L["Bc.SalesPrice.Title"]" TestId="sales-price" Path="@L["Menu.G1BA"]"
+                   Definition="bc.sales-price" Adjust="WithPriceFormat" Lookup="LookupItemsAsync" UpperCaseFields="UpperCaseFields"
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="() => new SalesPriceRow()" CanWrite="_canEdit" OnReset="ResetSearch"
+                   CanAddRow="() => _loadedLevel is not null">
+        <SearchContent>
+            <QuroText Label="@L["Bc.SalesPrice.PriceLevel"]" @bind-Value="_priceLevel" Required TextCase="TextCase.Upper"
+                      MaxLength="LevelMaxLength" TestId="sales-price-search-price-level" />
+        </SearchContent>
+    </QuroMultiGrid>
+}
+
+@code {
+    private const string SdModule = "SD";
+    private const string InventoryType = "INVENTORY";
+    private const string NotInUse = "N";
+    private const string RequiredCode = "Common-E-005";
+    private const string UnavailableCode = "BC-E-003";
+    // Same as the customer price level length; the API checks it again (SD-BR-409)
+    private const int LevelMaxLength = 100;
+    private static readonly string[] UpperCaseFields = ["itemCd"];
+    private static readonly string[] PriceColumns = ["salesPrc", "stdPrc"];
+
+    private QuroMultiGrid<SalesPriceRow>? _grid;
+    private string? _priceLevel;
+    private string? _loadedLevel;
+    private string? _priceFormat;
+    private bool _canEdit;
+    private bool _ready;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Screens still give write access to the admin role only; the API checks the screen policy (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        try
+        {
+            var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+            _priceFormat = localization.UnitPrice(SdModule) is { } decimals ? $"N{decimals.ToString(CultureInfo.InvariantCulture)}" : null;
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // The prices show the SD unit price decimals, which the API checks on save (BC-BR-423)
+    private GridDef WithPriceFormat(GridDef grid) => _priceFormat is null ? grid : grid with
+    {
+        Columns = [.. grid.Columns.Select(c => PriceColumns.Contains(c.Id) ? c with { Fmt = _priceFormat } : c)],
+    };
+
+    // New clears the level; Add Row waits for the next search
+    private void ResetSearch() => _priceLevel = _loadedLevel = null;
+
+    // SD-BR-409: the level comes first; its rows are shown in item code order. The level is the customer's price level
+    // (SD-BR-304), so it is matched in upper case
+    private async Task<IReadOnlyList<SalesPriceRow>> LoadAsync()
+    {
+        _loadedLevel = null;
+        var level = _priceLevel?.Trim().ToUpperInvariant();
+        if (string.IsNullOrEmpty(level))
+        {
+            throw new ApiProblemException(new ApiProblem(400, RequiredCode, [L["Bc.SalesPrice.PriceLevel"]]));
+        }
+        var rows = await Api.SearchAsync(level, CancellationToken.None);
+        _loadedLevel = level;
+        _priceLevel = level;
+        return [.. rows.Select(SalesPriceRow.From)];
+    }
+
+    // Saves for the level the rows were read for, even if the search box changed since. A rejected row is selected (SD-BR-409)
+    private async Task SaveAsync(BatchChanges<SalesPriceRow> changes)
+    {
+        try
+        {
+            await Api.SaveAsync(_loadedLevel!, SalesPriceRow.ToRequest(changes), CancellationToken.None);
+        }
+        catch (ApiProblemException e) when (e.Problem.Args.Count > 0)
+        {
+            // SD-E-403 names the level first and the item second; the other codes name the item first
+            SelectRow(e.Problem is { Code: "SD-E-403", Args: [_, var item, ..] } ? item : e.Problem.Args[0]);
+            throw;
+        }
+    }
+
+    private void SelectRow(string itemCd)
+    {
+        var data = _grid!.Data;
+        foreach (var key in data.RowKeys)
+        {
+            if (string.Equals(data.GetItem(key).ItemCd?.Trim(), itemCd, StringComparison.OrdinalIgnoreCase))
+            {
+                data.MoveTo(key);
+                return;
+            }
+        }
+    }
+
+    // SD-BR-408: price rows are Inventory items in use. Typed or pasted codes are read exactly; a code that is not one is marked
+    // as not found
+    private async Task<IReadOnlyList<LookupRow>> LookupItemsAsync(LookupQuery query)
+    {
+        IEnumerable<ItemDto> items;
+        if (query.Codes is { } codes)
+        {
+            var found = new List<ItemDto>();
+            foreach (var code in codes)
+            {
+                if (await Items.FindByCodeAsync(code.Trim(), CancellationToken.None) is { } item)
+                {
+                    found.Add(item);
+                }
+            }
+            items = found;
+        }
+        else
+        {
+            items = await Items.LookupAsync(query.Keyword?.Trim(), CancellationToken.None);
+        }
+        return [.. items.Where(IsPriced).Select(i => LookupRow.Of(("itemCd", i.ItemCd), ("itemName", i.ItemName), ("stdPrc", i.SoUsdPrc)))];
+    }
+
+    private static bool IsPriced(ItemDto item) => item.ItemType == InventoryType && item.ValidFlag != NotInUse;
+}

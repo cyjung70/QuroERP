@@ -298,6 +298,13 @@
   <data name="Bc.SetItem.FindSet" xml:space="preserve"><value>Find Set Item</value></data>
   <data name="Bc.SetItem.FindItem" xml:space="preserve"><value>Find Component</value></data>
   <data name="Bc.SetItem.CopySet" xml:space="preserve"><value>Copy Set</value></data>
+  <data name="Bc.SalesPrice.Title" xml:space="preserve"><value>Sales Prices</value></data>
+  <data name="Bc.SalesPrice.PriceLevel" xml:space="preserve"><value>Price level</value></data>
+  <data name="Bc.SalesPrice.ItemCd" xml:space="preserve"><value>Item code</value></data>
+  <data name="Bc.SalesPrice.ItemName" xml:space="preserve"><value>Item name</value></data>
+  <data name="Bc.SalesPrice.SalesPrc" xml:space="preserve"><value>Sales price</value></data>
+  <data name="Bc.SalesPrice.StdPrc" xml:space="preserve"><value>Standard price</value></data>
+  <data name="Bc.SalesPrice.FindItem" xml:space="preserve"><value>Find item</value></data>
   <data name="Bc.ItemBarcode.ItemClass" xml:space="preserve"><value>Item Class</value></data>
   <data name="Bc.ItemBarcode.ValidFlag" xml:space="preserve"><value>Valid Flag</value></data>
   <data name="Bc.ItemBarcode.StartNo" xml:space="preserve"><value>Start No.</value></data>

@@ -41,5 +41,5 @@
     "확인: 시연 고객 BLUE RIVER MARKET의 가격 레벨(고객 이름)로 조회·수정되고, 수주의 기본 단가(SD-BR-401)가 바뀐 단가를 쓴다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

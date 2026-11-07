@@ -2,6 +2,7 @@ using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Domain.Sd.Customers;
 
 namespace QuroErp.Domain.Bc.SalesPrices;
 
@@ -14,9 +15,10 @@ public sealed record SalesPriceItem(long Id, string ItemCd, string? ItemType, st
 /// </summary>
 public static class SalesPriceRules
 {
-    public const int LevelMaxLength = 5;
+    /// <summary>The customer price level length, since a level is a customer's price level (SD-BR-304, SD-BR-409).</summary>
+    public const int LevelMaxLength = Customer.NameMaxLength;
 
-    /// <summary>Price level longer than 5 characters, or an item twice in the level. Args: price level, item code.</summary>
+    /// <summary>Price level longer than <see cref="LevelMaxLength"/>, or an item twice in the level. Args: price level, item code.</summary>
     public const string KeyCode = "SD-E-403";
 
     /// <summary>The item does not exist, is not an inventory item, or is not in use. Arg: item code.</summary>
@@ -28,8 +30,8 @@ public static class SalesPriceRules
     /// <summary>A required field is empty. Arg: field name.</summary>
     public const string RequiredCode = "Common-E-005";
 
-    /// <summary>The price level as stored: trimmed, upper case, 1 to 5 characters (SD-BR-403).</summary>
-    /// <exception cref="DomainException">Common-E-005 when empty, SD-E-403 when longer than 5 characters.</exception>
+    /// <summary>The price level as stored: trimmed, upper case, 1 to <see cref="LevelMaxLength"/> characters (SD-BR-409).</summary>
+    /// <exception cref="DomainException">Common-E-005 when empty, SD-E-403 when longer than <see cref="LevelMaxLength"/>.</exception>
     public static string NormalizeLevel(string? priceLevel)
     {
         var level = priceLevel?.Trim().ToUpperInvariant() ?? "";
