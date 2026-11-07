@@ -57,7 +57,7 @@ public class LoginScreenTests(WebFactory factory) : IClassFixture<WebFactory>
         var panel = html.IndexOf("data-testid=\"login-panel\"", StringComparison.Ordinal);
         brand.Should().BeGreaterThanOrEqualTo(0).And.BeLessThan(panel);
         html[brand..panel].Should().Contain("img/quro-logo-white").And.Contain("alt=\"QuroERP\"")
-            .And.Contain("오픈소스 ERP 플랫폼").And.Contain("Community Edition").And.NotContain("<input");
+            .And.Contain("오픈소스ERP 플랫폼").And.Contain("Community Edition").And.NotContain("<input");
         FormPanelOrder.Select(id => html.IndexOf($"data-testid=\"{id}\"", StringComparison.Ordinal))
             .Should().OnlyContain(i => i > panel).And.BeInAscendingOrder();
         html.Should().Contain("img/quro-logo").And.NotContain("login-scene");
