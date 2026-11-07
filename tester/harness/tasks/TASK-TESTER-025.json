@@ -33,6 +33,7 @@
   "acceptance": [
     "tests/e2e/SD/test_sales_flow_screens.py: SD-TS-021 (단계 1~10 country(\"US\"), 단계 11~12 country(\"KR\"))",
     "SM Page Object(pages/single_multi.py)로 엔트리 프레임 영역·상태 칩·버튼 활성·합계 패널·메시지를 읽는다. 화면별 차이만 화면 Page Object에 둔다",
+    "Page Object는 패키지 QuroGrid DOM 기준이다: 그리드는 래퍼의 data-testid, 행은 data-row(행 키)로 찾는다. 화면 이동은 상단바 모듈 메뉴 → 사이드 메뉴 → 화면 탭으로 한다 (tester/docs/architecture.md)",
     "사전 데이터는 API로 만들고 업무 키에 run_id를 붙인다",
     "테스트마다 ts·br 마커와 e2e 마커",
     "uv run pytest -m e2e -k SD 통과 (QURO_COUNTRY=US, KR 각각), uv run ruff check 통과"

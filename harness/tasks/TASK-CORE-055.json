@@ -25,11 +25,11 @@
   "acceptance": [
     "`QuroMultiGrid`이 앱 `QuroGrid.razor` 대신 패키지 `<Quro.Grid.QuroGrid DataSet Definition>`을 쓴다. 열·검증 규칙은 `src/QuroErp.Web/Definitions/screens/<module>/*.screen.toon` (qurogrid-integration.md 5장), 정의 검증 카탈로그 `ErpDefinitionCatalog`",
     "샘플 `/samples/multi`의 `.toon`을 만들고 `quro-deflint`·`Category=ScreenDefinition` 테스트가 통과한다",
-    "행 추가·삭제 표시·복원·행 상태 표시는 틀이 그린다. TASK-CORE-051이 만든 `CanWrite` 동작(막힌 버튼 비활성화, 그리드 편집 잠금, 조회 가능)과 그 bUnit 테스트는 바뀌지 않고 통과한다. 그리드 편집 잠금은 패키지 지원(R4) 전까지 열 `ReadOnly` 일괄 + `OnCellValueChanging`·`OnRowAdding`·`OnRowDeleting`·`OnPasting` 취소로 하고 `TODO(QuroGrid-R4)`",
+    "행 추가·삭제 표시·복원·행 상태 표시는 틀이 그린다. TASK-CORE-051이 만든 `CanWrite` 동작(막힌 버튼 비활성화, 그리드 편집 잠금, 조회 가능)과 그 bUnit 테스트는 바뀌지 않고 통과한다. 그리드 편집 잠금은 패키지 지원(R4) 전까지 열 `ReadOnly` 일괄 + `OnCellValueChanging`·`OnRowDeleting`·`OnPasting` 취소, 추가된 행은 `OnRowAdded`에서 다시 빼는 방식으로 하고 `TODO(QuroGrid-R4)`",
     "조회형(`ReadOnly`)·필터 행·정렬·엑셀은 지금 동작과 같다. 큰 목록은 `ItemsProvider`(서버 페이징, `request.Filters` 반영), 작은 목록은 메모리 모드",
-    "그리드 `data-testid`·`data-row-index`는 패키지 지원(R3) 전까지 틀의 래퍼 요소에 단다. 기존 bUnit·Tester M Page Object를 새 DOM에 맞춘다",
-    "Combo 열은 코드 DataSet `OptionsSource`(연동 콤보 `FilterField`·`ParentField`)"
+    "그리드 `data-testid`는 패키지 지원(R3) 전까지 틀의 래퍼 요소에 달고, 행은 패키지가 그리는 `data-row`(행 키)로 찾는다. 기존 bUnit을 새 DOM에 맞춘다 (Tester Page Object는 TASK-TESTER-025)",
+    "Combo 열은 정의의 `code:<Major>` 데이터 소스를 코드 DataSet에서 읽어 `OptionsFor`로 넘긴다. 연동 콤보는 필요한 화면의 태스크에서 만든다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
