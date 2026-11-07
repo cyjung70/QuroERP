@@ -298,6 +298,13 @@
   <data name="Bc.SetItem.FindSet" xml:space="preserve"><value>세트 품목 찾기</value></data>
   <data name="Bc.SetItem.FindItem" xml:space="preserve"><value>구성품 찾기</value></data>
   <data name="Bc.SetItem.CopySet" xml:space="preserve"><value>세트 구성 복사</value></data>
+  <data name="Bc.SalesPrice.Title" xml:space="preserve"><value>판매 단가</value></data>
+  <data name="Bc.SalesPrice.PriceLevel" xml:space="preserve"><value>가격 레벨</value></data>
+  <data name="Bc.SalesPrice.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Bc.SalesPrice.ItemName" xml:space="preserve"><value>품목 이름</value></data>
+  <data name="Bc.SalesPrice.SalesPrc" xml:space="preserve"><value>판매 단가</value></data>
+  <data name="Bc.SalesPrice.StdPrc" xml:space="preserve"><value>표준 판매가</value></data>
+  <data name="Bc.SalesPrice.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
   <data name="Bc.ItemBarcode.ItemClass" xml:space="preserve"><value>품목군</value></data>
   <data name="Bc.ItemBarcode.ValidFlag" xml:space="preserve"><value>사용 여부</value></data>
   <data name="Bc.ItemBarcode.StartNo" xml:space="preserve"><value>시작 번호</value></data>
