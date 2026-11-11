@@ -232,7 +232,7 @@
     },
     {
       "path": "docs/business-rules/MM/purchase-price.md",
-      "sha256": "7f5ac59b3f48caa8e156cabbe01114c22f2bbe77efda39704acd05746fc0cc5f"
+      "sha256": "e36f361e3bb7756d0edd491186266d13d2d6f9d6d65490742a0f0142e3220a38"
     },
     {
       "path": "docs/business-rules/MM/purchase-request.md",
@@ -304,7 +304,7 @@
     },
     {
       "path": "docs/business-rules/SD/pricing.md",
-      "sha256": "98108fb1d9ed40b5776e1457183cad164bbb1c4fe7869764d686fa3b991790b6"
+      "sha256": "784fff4d44b68412fe6a06ccdb86b34aad63b913076bf3dfd7495da5c41987c9"
     },
     {
       "path": "docs/business-rules/SD/quotation.md",
@@ -936,7 +936,7 @@
     },
     {
       "path": "harness/tasks/TASK-BC-030.json",
-      "sha256": "2d657da380108cab936c555b4d093811dc2d2b364e3168363353a440c58e242a"
+      "sha256": "e4f2748fc813be8b3e580eda1c258dc726a8c64ff79b38835c2b99d99a6a0fce"
     },
     {
       "path": "harness/tasks/TASK-BC-031.json",
