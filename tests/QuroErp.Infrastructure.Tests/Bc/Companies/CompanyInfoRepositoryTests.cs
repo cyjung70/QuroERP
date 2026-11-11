@@ -105,8 +105,9 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
         await connection.ExecuteAsync(
             """
             WITH i AS (INSERT INTO bc_item (item_cd, created_by, updated_by) VALUES ('ZI1', 't', 't') RETURNING id)
-            INSERT INTO sd_shipment_line (shipment_id, seq, item_id, warehouse_id, ship_qty, ship_prc, billed_qty, created_by, updated_by)
-            SELECT @shipment, 1, i.id, s.warehouse_id, 5, 1, 5, 't', 't' FROM i, sd_shipment s WHERE s.id = @shipment
+            INSERT INTO sd_shipment_line (shipment_id, seq, item_id, warehouse_id, ship_qty, ship_prc, billed_qty, tax_code_id, created_by, updated_by)
+            SELECT @shipment, 1, i.id, s.warehouse_id, 5, 1, 5, (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 't', 't'
+            FROM i, sd_shipment s WHERE s.id = @shipment
             """,
             new { shipment }, uow.Transaction);
         var allBilled = await companies.HasUnbilledShipmentsAsync(uow.Transaction, None);

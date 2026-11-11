@@ -15,7 +15,7 @@ public class InventorySettingServiceTests
     private static readonly DateTimeOffset Saved = new(2026, 10, 25, 9, 0, 0, TimeSpan.Zero);
 
     private readonly FakeUnitOfWorkFactory _unitOfWork = new();
-    private readonly FakeInventorySettingRepository _settings = new(new InventorySettingRow("DENY", Saved, "system"));
+    private readonly FakeInventorySettingRepository _settings = new(new InventorySettingRow("DENY", "DENY", false, Saved, "system"));
 
     private InventorySettingService Service => new(_settings, _unitOfWork);
 
@@ -24,15 +24,17 @@ public class InventorySettingServiceTests
     {
         var dto = await Service.GetAsync(CancellationToken.None);
 
-        dto.Should().Be(new InventorySettingDto("DENY", Saved, "system"));
+        dto.Should().Be(new InventorySettingDto("DENY", "DENY", false, Saved, "system"));
     }
 
     [Fact, Trait("Id", "MM-SET-T11")]
     public async Task UpdateAsync_CurrentUpdatedAt_SavesAndReturnsNewSetting()
     {
-        var dto = await Service.UpdateAsync(new UpdateInventorySettingRequest("ALLOW_IN_MONTH", Saved), "kim", CancellationToken.None);
+        var dto = await Service.UpdateAsync(new UpdateInventorySettingRequest("ALLOW_IN_MONTH", "WARN", true, Saved), "kim", CancellationToken.None);
 
         dto.NegativeStockMode.Should().Be("ALLOW_IN_MONTH");
+        dto.OverReceiptMode.Should().Be("WARN");
+        dto.AllowCostAdjustmentEdit.Should().BeTrue();
         dto.UpdatedBy.Should().Be("kim");
         dto.UpdatedAt.Should().BeAfter(Saved);
         _unitOfWork.Commits.Should().Be(1);
@@ -41,7 +43,7 @@ public class InventorySettingServiceTests
     [Fact, Trait("Id", "MM-SET-T12")]
     public async Task UpdateAsync_StaleUpdatedAt_ThrowsConcurrencyAndKeepsSetting()
     {
-        var act = () => Service.UpdateAsync(new UpdateInventorySettingRequest("ALLOW", Saved.AddSeconds(-1)), "kim", CancellationToken.None);
+        var act = () => Service.UpdateAsync(new UpdateInventorySettingRequest("ALLOW_IN_MONTH", "DENY", false, Saved.AddSeconds(-1)), "kim", CancellationToken.None);
 
         await act.Should().ThrowAsync<ConcurrencyException>();
         _settings.Row.NegativeStockMode.Should().Be("DENY");
@@ -53,7 +55,7 @@ public class InventorySettingServiceTests
     {
         _settings.FailNextUpdate = true;
 
-        var act = () => Service.UpdateAsync(new UpdateInventorySettingRequest("ALLOW", Saved), "kim", CancellationToken.None);
+        var act = () => Service.UpdateAsync(new UpdateInventorySettingRequest("ALLOW_IN_MONTH", "DENY", false, Saved), "kim", CancellationToken.None);
 
         await act.Should().ThrowAsync<ConcurrencyException>();
         _unitOfWork.Commits.Should().Be(0);
@@ -62,9 +64,10 @@ public class InventorySettingServiceTests
     [Theory, Trait("Id", "MM-SET-T14")]
     [InlineData("MAYBE")]
     [InlineData("deny")]
+    [InlineData("ALLOW")]
     public async Task UpdateAsync_UnknownMode_ThrowsCommonE002(string mode)
     {
-        var act = () => Service.UpdateAsync(new UpdateInventorySettingRequest(mode, Saved), "kim", CancellationToken.None);
+        var act = () => Service.UpdateAsync(new UpdateInventorySettingRequest(mode, "DENY", false, Saved), "kim", CancellationToken.None);
 
         var e = (await act.Should().ThrowAsync<DomainException>()).Which;
         e.Code.Should().Be(CodeMessages.InvalidCode);
@@ -75,6 +78,19 @@ public class InventorySettingServiceTests
     public void ContractValues_MatchDomainCodes()
     {
         NegativeStockModes.All.Should().Equal(Enum.GetValues<NegativeStockMode>().Select(m => m.ToCode()));
+        OverReceiptModes.All.Should().Equal(QuroErp.Domain.Mm.GoodsReceipts.OverReceiptModes.All);
+    }
+
+    [Theory, Trait("Id", "MM-SET-T16"), Trait("Rule", "MM-BR-102")]
+    [InlineData("ALLOW")]
+    [InlineData("warn")]
+    public async Task UpdateAsync_UnknownOverReceiptMode_ThrowsCommonE002(string mode)
+    {
+        var act = () => Service.UpdateAsync(new UpdateInventorySettingRequest("DENY", mode, false, Saved), "kim", CancellationToken.None);
+
+        var e = (await act.Should().ThrowAsync<DomainException>()).Which;
+        e.Code.Should().Be(CodeMessages.InvalidCode);
+        e.Args.Should().Equal(InventorySettingService.OverReceiptModeName, mode);
     }
 
     private sealed class FakeInventorySettingRepository(InventorySettingRow row) : IInventorySettingRepository
@@ -87,13 +103,14 @@ public class InventorySettingServiceTests
             Task.FromResult<InventorySettingRow?>(Row);
 
         public Task<InventorySettingRow?> UpdateAsync(
-            string negativeStockMode, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+            string negativeStockMode, string overReceiptMode, bool allowCostAdjustmentEdit, DateTimeOffset expectedUpdatedAt, string updatedBy,
+            IDbTransaction transaction, CancellationToken cancellationToken)
         {
             if (FailNextUpdate || expectedUpdatedAt != Row.UpdatedAt)
             {
                 return Task.FromResult<InventorySettingRow?>(null);
             }
-            Row = new InventorySettingRow(negativeStockMode, Row.UpdatedAt.AddMinutes(1), updatedBy);
+            Row = new InventorySettingRow(negativeStockMode, overReceiptMode, allowCostAdjustmentEdit, Row.UpdatedAt.AddMinutes(1), updatedBy);
             return Task.FromResult<InventorySettingRow?>(Row);
         }
     }

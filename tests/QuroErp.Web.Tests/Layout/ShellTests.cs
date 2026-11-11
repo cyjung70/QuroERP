@@ -8,7 +8,7 @@ using QuroErp.Web.Components.Layout;
 
 namespace QuroErp.Web.Tests.Layout;
 
-/// <summary>App shell top bar and side menu (TASK-CORE-037, app-shell.md 2, 3).</summary>
+/// <summary>App shell top bar and side menu (TASK-CORE-037, TASK-CORE-061 modules, app-shell.md 2, 3).</summary>
 public class ShellTests : BunitContext
 {
     private static readonly AuthMenu[] AdminMenus =
@@ -101,7 +101,8 @@ public class ShellTests : BunitContext
 
         top.FindAll("[data-testid]").Select(e => e.GetAttribute("data-testid"))
             .Where(id => id!.StartsWith("shell-", StringComparison.Ordinal) && id != "shell-top" || id == "user-menu")
-            .Should().Equal("shell-menu-toggle", "shell-logo", "shell-company", "shell-language", "shell-role", "user-menu", "shell-logout");
+            .Should().Equal("shell-menu-toggle", "shell-logo", "shell-modules", "shell-module-g1ba", "shell-module-g5ad", "shell-company",
+                "shell-language", "shell-role", "user-menu", "shell-logout");
         top.Find("[data-testid=shell-company]").TextContent.Should().Be("Quro Co.");
         top.Find("[data-testid=shell-role]").TextContent.Should().Be("관리자");
         var language = top.Find("[data-testid=shell-language]");
@@ -152,6 +153,59 @@ public class ShellTests : BunitContext
 
         top.FindAll("[data-testid=shell-role]").Should().BeEmpty();
         top.FindAll("[data-testid=user-menu-role]").Should().BeEmpty();
+    }
+
+    private static readonly AuthMenu[] ModuleMenus =
+    [
+        .. AdminMenus,
+        new("G2MM", "Purchasing", null, "mm", null, null, "M"),
+        new("G2MM01", "Orders", "/mm/purchase-order", "mm", "G2MM", "Y", "P"),
+        new("G2MM10", "Stock", null, "mm", "G2MM", null, "M"),
+        new("G2MM11", "Receipts", "/mm/goods-receipt", "mm", "G2MM10", "Y", "P"),
+        new("G3SD", "Sales", null, "sd", null, null, "M"),
+    ];
+
+    [Fact, Trait("Id", "CORE-061-WT-01")]
+    public void TopBar_Modules_AreTheTopGroupsWithScreens_AndTheCurrentScreensModuleIsPicked()
+    {
+        var top = Render<ShellTopBar>(p => p.Add(x => x.Profile, Profile(ModuleMenus)).Add(x => x.CurrentPath, "/mm/purchase-order/12"));
+
+        top.Find("[data-testid=shell-modules]").GetAttribute("aria-label").Should().Be("모듈");
+        top.FindAll("[data-testid^=shell-module-]").Select(b => (b.GetAttribute("data-testid"), b.TextContent))
+            .Should().Equal(("shell-module-g1ba", "기준정보"), ("shell-module-g2mm", "구매·재고"), ("shell-module-g5ad", "관리"));
+        top.FindAll("[data-testid^=shell-module-][aria-current=true]").Should().ContainSingle()
+            .Which.GetAttribute("data-shell-module-pick").Should().Be("G2MM");
+        top.FindAll("[data-testid=shell-module-g3sd]").Should().BeEmpty("a module with no screen is hidden");
+    }
+
+    [Theory, Trait("Id", "CORE-061-WT-02")]
+    [InlineData("/", "G1BA")]
+    [InlineData("/mm/goods-receipt", "G2MM")]
+    [InlineData("/bc/currency", "G5AD")]
+    public void Nav_ShowsOnlyThePickedModule_ItsLinksThenItsSubheadings(string path, string module)
+    {
+        var nav = Render<ShellNav>(p => p.Add(x => x.Profile, Profile(ModuleMenus)).Add(x => x.CurrentPath, path));
+
+        nav.FindAll("[data-shell-module]").Where(m => !m.HasAttribute("hidden")).Should().ContainSingle()
+            .Which.GetAttribute("data-shell-module").Should().Be(module, "the current screen's module, else the first");
+        nav.FindAll("[data-shell-module=G2MM] [data-testid^=shell-nav-group-]").Select(g => g.GetAttribute("data-testid"))
+            .Should().Equal("shell-nav-group-g2mm", "shell-nav-group-g2mm10");
+        nav.Find("[data-testid=shell-nav-group-g2mm10] .shell-nav-label").TextContent.Should().Be("Stock");
+        nav.Find("[data-testid=shell-nav-group-g2mm10] [data-testid=shell-nav-item-g2mm11]").GetAttribute("href").Should().Be("/mm/goods-receipt");
+    }
+
+    [Fact, Trait("Id", "CORE-061-WT-03")]
+    public void Nav_HasTheModuleListForTheNarrowOverlay()
+    {
+        UseCulture("en");
+
+        var nav = Render<ShellNav>(p => p.Add(x => x.Profile, Profile(ModuleMenus)).Add(x => x.CurrentPath, "/bc/currency"));
+
+        var list = nav.Find("[data-testid=shell-nav-modules]");
+        list.GetAttribute("aria-label").Should().Be("Modules");
+        list.QuerySelectorAll("button").Select(b => (b.GetAttribute("data-shell-module-pick"), b.TextContent.Trim()))
+            .Should().Equal(("G1BA", "Master Data"), ("G2MM", "Purchasing & Inventory"), ("G5AD", "Administration"));
+        nav.Find("[data-testid=shell-nav-module-g5ad]").GetAttribute("aria-current").Should().Be("true");
     }
 
     [Fact, Trait("Id", "CORE-037-WT-08")]

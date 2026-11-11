@@ -67,7 +67,7 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             """);
 
         Query<long>("SELECT count(*) FROM sys_code_major").Single().Should().Be(24);
-        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(125);
+        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(127);
         majorsWithout.Should().BeEmpty();
         minorsWithout.Should().BeEmpty();
     }
@@ -80,6 +80,11 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
             WHERE m.major_code = 'SO_STATUS' ORDER BY n.sort_order
             """).Should().Equal("SO", "RE", "CL");
+        // inventory.md movement types, PV and VR last (TASK-CORE-028)
+        Query<string>("""
+            SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
+            WHERE m.major_code = 'MOVEMENT_TYPE' ORDER BY n.sort_order
+            """).Should().EndWith(["TR", "PV", "VR"]).And.HaveCount(10);
         Query<string>("SELECT role_code FROM sys_role ORDER BY role_code")
             .Should().Equal("admin", "manager", "poweruser", "salesman", "srep");
     }
@@ -134,6 +139,25 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             "mm_purchase_order_line.due_dt YES -", "mm_purchase_order_line.warehouse_id YES -",
             "mm_purchase_order_line.purchase_request_line_id YES -");
         foreignKeys.Should().BeEquivalentTo("fk_mm_purchase_order_warehouse_id", "fk_mm_purchase_order_line_warehouse_id");
+    }
+
+    [DatabaseFact, Trait("Id", "DB-IT-10"), Trait("Rule", "MM-BR-019")]
+    public void Seed_PoStatusHasTheSixStatusesWithTheirNames()
+    {
+        // purchase-order business rules, status name table; legacy names (PO Entry, Released) are gone
+        var names = Query<string>("""
+            SELECT n.minor_code || ' ' || n.sort_order || ' ' || en.name || ' / ' || ko.name
+            FROM sys_code_minor n
+            JOIN sys_code_major m ON m.id = n.major_id
+            JOIN sys_code_minor_translation en ON en.minor_id = n.id AND en.lang_code = 'en'
+            JOIN sys_code_minor_translation ko ON ko.minor_id = n.id AND ko.lang_code = 'ko'
+            WHERE m.major_code = 'PO_STATUS'
+            ORDER BY n.sort_order
+            """);
+
+        names.Should().Equal(
+            "DR 5 Draft / 작성중", "PO 10 Approved / 승인", "RE 20 Partially Received / 부분 입고", "CL 30 Received / 입고 완료",
+            "MC 40 Closed / 마감", "CN 50 Cancelled / 취소");
     }
 
     /// <summary>database-tables.md의 "목록"과 "새 테이블" 표에 있는 테이블 이름.</summary>

@@ -92,14 +92,15 @@ public abstract class QuroInputBase<TValue> : ComponentBase, IQuroField, IDispos
     bool IQuroField.IsExcluded => IsPolicyHidden;
 
     /// <summary>
-    /// Field color by state (entry-frame.md 3): editable yellow, locked gray, required amber marker. Screens never set colors.
+    /// Field color by state (entry-frame.md 3): required light yellow with the amber marker, other input white, locked gray.
+    /// Required includes a field made required by its lock mode or the field policy. Screens never set colors.
     /// A hidden field shown by "show all fields" gets the policy marker.
     /// </summary>
     protected string FieldClass(string? extra = null) => string.Join(' ', new[]
     {
         "quro-field",
         extra,
-        IsLocked ? "quro-field-readonly" : "quro-field-editable",
+        IsLocked ? "quro-field-readonly" : "quro-field-input",
         IsRequiredNow ? "quro-field-required" : null,
         IsPolicyHidden ? "quro-field-policy-hidden" : null,
         Span is 2 or 4 ? $"quro-span-{Span}" : null,

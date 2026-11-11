@@ -39,6 +39,12 @@ public sealed class ItemModel
     public bool Taxable { get; set; } = true;
     public string? VatKind { get; set; } = VatTaxable;
 
+    /// <summary>Stock per lot (MM-BR-351); the server checks when it can be turned on or off.</summary>
+    public bool LotManaged { get; set; }
+
+    /// <summary>Read only: the day lot management was turned on.</summary>
+    public DateOnly? LotManagedFrom { get; set; }
+
     // Read only: set by the server (MM-BR-804, 808)
     public decimal? MvgCost { get; set; } = 0m;
     public decimal? OnhandQty { get; set; } = 0m;
@@ -72,6 +78,8 @@ public sealed class ItemModel
         ItemGrade = dto.ItemGrade,
         Taxable = dto.Taxable,
         VatKind = dto.VatKind,
+        LotManaged = dto.LotManaged,
+        LotManagedFrom = dto.LotManagedFrom,
         MvgCost = dto.MvgCost,
         OnhandQty = dto.OnhandQty,
         StkVal = dto.StkVal,
@@ -102,6 +110,7 @@ public sealed class ItemModel
         ItemGrade = ItemGrade,
         Taxable = Taxable,
         VatKind = VatKind,
+        LotManaged = LotManaged,
     };
 
     public UpdateItemRequest ToUpdateRequest() => new()
@@ -126,6 +135,7 @@ public sealed class ItemModel
         ItemGrade = ItemGrade,
         Taxable = Taxable,
         VatKind = VatKind,
+        LotManaged = LotManaged,
         UpdatedAt = UpdatedAt,
     };
 }

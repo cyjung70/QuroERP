@@ -5,18 +5,20 @@ using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
+using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Mm.PurchaseOrders;
 using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.PurchaseOrders;
+using QuroErp.Domain.Mm.Warehouses;
 
 namespace QuroErp.Application.Mm.PurchaseOrders;
 
 /// <summary>
 /// Purchase orders (MM-UC-003): list, find, save, delete, approve, close and cancel. Every write locks the header row and
-/// checks updatedAt (409). The vendor price question (MM-BR-016), request import (MM-BR-554) and printing come later.
+/// checks updatedAt (409). Saves ask the vendor price question (MM-BR-016). Request import (MM-BR-554) and printing come later.
 /// </summary>
 public sealed class PurchaseOrderService(
     IPurchaseOrderRepository orders,
@@ -25,6 +27,7 @@ public sealed class PurchaseOrderService(
     ILocalizationRepository localization,
     IBusinessPlaceRepository businessPlaces,
     DocumentNumberService numbers,
+    IWarehouseRepository warehouseMasters,
     IUnitOfWorkFactory unitOfWork)
 {
     /// <summary>The purchase order does not exist. Arg: id.</summary>
@@ -49,12 +52,14 @@ public sealed class PurchaseOrderService(
     }
 
     /// <summary>Saves a new draft with the next PO number of the order date's month (MM-BR-017, MM-BR-019).</summary>
-    /// <exception cref="DomainException">MM-E-011, 012, 014, 025, 026, 027, 031; Common-E-005, Common-E-006; BC-E-412, BC-E-513.</exception>
+    /// <exception cref="DomainException">MM-E-011, 012, 014, 025, 026, 027, 031, MM-E-710; Common-E-005, Common-E-006; BC-E-412, BC-E-513.</exception>
+    /// <exception cref="ConfirmationRequiredException">MM-W-016 when the vendor price question is not answered yet (MM-BR-016).</exception>
     /// <exception cref="BadRequestException">400 BC-E-321 when there is no default business place.</exception>
     public async Task<PurchaseOrderDto> CreateAsync(SavePurchaseOrderRequest request, string user, CancellationToken cancellationToken)
     {
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
-        var write = await PrepareAsync(request, previousCurrencyCode: null, PoStatus.Draft, revisionNo: 0, uow.Transaction, cancellationToken);
+        var write = await PrepareAsync(
+            request, previousCurrencyCode: null, PoStatus.Draft, revisionNo: 0, stored: null, user, uow.Transaction, cancellationToken);
         // BC-BR-321: a new document belongs to the default business place; the screen does not choose it
         var businessPlaceId = await businessPlaces.FindDefaultIdAsync(uow.Transaction, cancellationToken)
             ?? throw new BadRequestException(BusinessPlaceRules.NotFoundCode);
@@ -78,7 +83,7 @@ public sealed class PurchaseOrderService(
         PoStatusRules.EnsureEditable(po);
         var write = await PrepareAsync(
             request, lines.Count > 0 ? row.CurrencyCode : null, po.Status, PoEntryRules.RevisionAfterSave(po.Status, row.RevisionNo),
-            uow.Transaction, cancellationToken);
+            new StoredWarehouses(row.WarehouseId, lines.ToDictionary(l => l.Id, l => l.WarehouseId)), user, uow.Transaction, cancellationToken);
         if (!await orders.UpdateAsync(id, write, row.UpdatedAt, user, uow.Transaction, cancellationToken))
         {
             throw new ConcurrencyException();
@@ -153,10 +158,11 @@ public sealed class PurchaseOrderService(
         return new PurchaseOrder(row.PoNo, status, [.. lines.Select(l => new PoLine(l.Seq, l.PoQty, l.PoPrc, l.DcRate, l.ReceivedQty))]);
     }
 
-    // Applies the defaults (MM-BR-026, MM-BR-031, BC-BR-542), reads the masters and lets the Domain check and compute
+    // Applies the defaults (MM-BR-026, MM-BR-031, BC-BR-542), reads the masters, lets the Domain check and compute, and
+    // answers the vendor price question (MM-BR-016)
     private async Task<PurchaseOrderWrite> PrepareAsync(
-        SavePurchaseOrderRequest request, string? previousCurrencyCode, PoStatus status, int revisionNo, IDbTransaction transaction,
-        CancellationToken cancellationToken)
+        SavePurchaseOrderRequest request, string? previousCurrencyCode, PoStatus status, int revisionNo, StoredWarehouses? stored,
+        string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var vendor = await orders.FindVendorAsync(request.VendorId, transaction, cancellationToken)
             ?? throw new DomainException(PoEntryRules.NotFoundCode, request.VendorId);
@@ -178,6 +184,9 @@ public sealed class PurchaseOrderService(
 
         var itemTypes = await orders.FindItemTypesAsync([.. lines.Select(l => l.ItemId).Distinct()], transaction, cancellationToken);
         var warehouseIds = lines.Select(l => l.WarehouseId).Append(header.WarehouseId).OfType<long>().Distinct().ToList();
+        // MM-BR-710: the PO warehouse becomes the receipt warehouse, so users cannot pick the consignment warehouse
+        WarehouseRules.EnsureUserSelectable(
+            warehouseIds.Select(id => (long?)id), await warehouseMasters.FindConsignmentAsync(transaction, cancellationToken));
         var warehouses = await orders.FindUsableWarehousesAsync(warehouseIds, transaction, cancellationToken);
         var taxCodes = await taxes.FindTaxCodesAsync([.. lines.Select(l => l.TaxCodeId).Distinct()], transaction, cancellationToken);
         var rates = new Dictionary<long, TaxCodeRate>();
@@ -188,8 +197,35 @@ public sealed class PurchaseOrderService(
 
         var rounder = new AmountRounder(currencies.Select(c => new Currency(c.CurrencyCode, c.Decimals)));
         var (computed, totals) = PoEntryRules.Calculate(
-            header, lines, previousCurrencyCode, new PurchaseOrderMasters(itemTypes, warehouses, rates), settings, rounder);
+            header, lines, previousCurrencyCode, new PurchaseOrderMasters(itemTypes, warehouses, rates, stored), settings, rounder);
+        await AnswerVendorPriceQuestionAsync(request.UpdateVendorPrice, vendor.VendorPrice, header.CurrencyCode, baseCurrency, computed, user,
+            transaction, cancellationToken);
         return new PurchaseOrderWrite(header, totals, computed, status, revisionNo);
+    }
+
+    // MM-BR-016: unanswered → 422 MM-W-016 without saving; yes → the prices go to the vendor's group in this transaction
+    private async Task AnswerVendorPriceQuestionAsync(
+        bool? updateVendorPrice, string? vendorPrice, string currencyCode, string baseCurrency, IReadOnlyList<PurchaseOrderLine> lines,
+        string user, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (updateVendorPrice == false || string.IsNullOrWhiteSpace(vendorPrice) || currencyCode != baseCurrency || lines.Count == 0)
+        {
+            return;
+        }
+        var references = await orders.FindVendorPricesAsync(
+            vendorPrice, [.. lines.Select(l => l.ItemId).Distinct()], transaction, cancellationToken);
+        var changes = PoEntryRules.VendorPriceChanges(
+            lines, vendorPrice, currencyCode, baseCurrency, references.ToDictionary(r => r.ItemId));
+        if (changes.Count == 0)
+        {
+            return;
+        }
+        if (updateVendorPrice is null)
+        {
+            throw new ConfirmationRequiredException(
+                PoEntryRules.VendorPriceWarningCode, PoEntryRules.UpdateVendorPriceField, string.Join(", ", changes.Select(c => c.ItemCd)));
+        }
+        await orders.UpsertVendorPricesAsync(vendorPrice, changes, user, transaction, cancellationToken);
     }
 
     private async Task<PurchaseOrderDto> ReadAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -202,8 +238,8 @@ public sealed class PurchaseOrderService(
             r.TotBaseAmt, r.RevisionNo, r.ApprovedAt, r.ApprovedBy, r.ClosedAt, r.ClosedBy, r.CancelledAt, r.CancelledBy, r.ReceivedQty,
             lines.Select(l => new PurchaseOrderLineDto(
                 l.Id, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.PoQty, l.PoPrc, l.GrossAmt, l.DcRate, l.DcAmt, l.PoAmt, l.TaxCodeId,
-                l.SupplyAmt, l.TaxAmt, l.DueDt, l.WarehouseId, l.ReceivedQty)).ToList(),
-            r.UpdatedAt);
+                l.SupplyAmt, l.TaxAmt, l.DueDt, l.WarehouseId, l.ReceivedQty, l.Unit)).ToList(),
+            r.UpdatedAt, r.CreatedAt, r.CreatedBy, r.UpdatedBy);
     }
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

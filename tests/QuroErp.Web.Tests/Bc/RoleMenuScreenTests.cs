@@ -70,13 +70,14 @@ public class RoleMenuScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        page.Find("[data-testid=role-menu-toolbar-new]").Click();
+        page.Find("[data-testid=role-menu-toolbar-add-row]").Click();
         page.WaitForAssertion(() => page.LookupRows("role-menu-menu-lookup").Should().ContainSingle());
         page.PickLookupRow<MenuOptionDto, RoleMenu>("role-menu-menu-lookup", 0);
         page.WaitForAssertion(() => MenuCodes(page).Should().Equal("ITEM", "ROLEMENU", "USER"));
         Grid(page).Toggle(2, "fullAccess");
         Grid(page).Toggle(0, "fullAccess");
-        Grid(page).Click(1, "deleteRow");
+        Grid(page).Select(1);
+        page.Find("[data-testid=role-menu-toolbar-mark-delete]").Click();
 
         page.Find("[data-testid=role-menu-toolbar-save]").Click();
 
@@ -92,11 +93,11 @@ public class RoleMenuScreenTests : BunitContext
     public void AddDialog_LeavesOutMenusAlreadyOnTheGrid()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=role-menu-toolbar-new]").Click();
+        page.Find("[data-testid=role-menu-toolbar-add-row]").Click();
         page.WaitForAssertion(() => page.LookupRows("role-menu-menu-lookup").Should().NotBeEmpty());
         page.PickLookupRow<MenuOptionDto, RoleMenu>("role-menu-menu-lookup", 0);
 
-        page.Find("[data-testid=role-menu-toolbar-new]").Click();
+        page.Find("[data-testid=role-menu-toolbar-add-row]").Click();
 
         page.WaitForAssertion(() => page.LookupRows("role-menu-menu-lookup").Should().BeEmpty());
     }
@@ -152,12 +153,27 @@ public class RoleMenuScreenTests : BunitContext
 
         // The handlers do nothing either
         Grid(page).Toggle(0, "fullAccess").Should().BeFalse();
-        page.Find("[data-testid=role-menu-toolbar-new]").Click();
-        Grid(page).Click(0, "deleteRow");
+        page.Find("[data-testid=role-menu-toolbar-add-row]").Click();
+        Grid(page).Select(0);
+        page.Find("[data-testid=role-menu-toolbar-mark-delete]").Click();
         page.Find("[data-testid=role-menu-toolbar-save]").Click();
         Grid(page).Rows.Should().HaveCount(rows);
         Grid(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);
         _api.Saved.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void New_ClearsTheRoleAndTheGrid_AndAddRowWaitsForTheNextSearch()
+    {
+        var page = RenderAs("admin");
+        page.Find("[data-testid=role-menu-search-role]").GetAttribute("value").Should().NotBeNullOrEmpty();
+        page.Find("[data-testid=role-menu-toolbar-add-row]").HasAttribute("disabled").Should().BeFalse();
+
+        page.Find("[data-testid=role-menu-toolbar-new]").Click();
+
+        Grid(page).Rows.Should().BeEmpty();
+        page.Find("[data-testid=role-menu-search-role]").GetAttribute("value").Should().BeNullOrEmpty();
+        page.Find("[data-testid=role-menu-toolbar-add-row]").HasAttribute("disabled").Should().BeTrue();
     }
 
     private IRenderedComponent<RoleMenu> RenderAs(string role)

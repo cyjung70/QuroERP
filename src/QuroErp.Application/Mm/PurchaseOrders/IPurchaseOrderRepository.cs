@@ -10,16 +10,21 @@ public sealed record PurchaseOrderRow(
     string? Incoterms, DateOnly? DueDt, long? WarehouseId, string? PaymentTerms, string? Buyer, string? Remarks, decimal SupplyAmt,
     decimal TaxAmt, decimal TotPoAmt, decimal TotBaseAmt, int RevisionNo, DateTimeOffset? ApprovedAt, string? ApprovedBy,
     DateTimeOffset? ClosedAt, string? ClosedBy, DateTimeOffset? CancelledAt, string? CancelledBy, decimal ReceivedQty,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt, DateTimeOffset? CreatedAt, string? CreatedBy, string? UpdatedBy);
 
-/// <summary>mm_purchase_order_line row with the item code and its received quantity (mm_goods_receipt_line.gr_qty).</summary>
+/// <summary>mm_purchase_order_line row with the item code and unit and its received quantity (mm_goods_receipt_line.gr_qty).</summary>
 public sealed record PurchaseOrderLineRow(
     long Id, int Seq, long ItemId, string? ItemCd, string? ItemName, decimal PoQty, decimal PoPrc, decimal GrossAmt, decimal DcRate,
     decimal DcAmt, decimal PoAmt, long TaxCodeId, decimal SupplyAmt, decimal TaxAmt, DateOnly? DueDt, long? WarehouseId,
-    decimal ReceivedQty);
+    decimal ReceivedQty, string? Unit);
 
-/// <summary>The vendor fields a purchase order defaults from (MM-BR-031, BC-BR-542).</summary>
-public sealed record PurchaseOrderVendorRow(long Id, string? VName, string? CurrencyCode, long? TaxCodeId);
+/// <summary>Vendor address and contacts for the purchase order form (bc_vendor, print-documents.md).</summary>
+public sealed record PurchaseOrderPrintVendorRow(
+    string VName, string? Addr1, string? Addr2, string? City, string? State, string? ZipCode, string? Country, string? Contact,
+    string? Phone1, string? FaxNo, string? Email);
+
+/// <summary>The vendor fields a purchase order defaults from (MM-BR-031, BC-BR-542) and its price group (MM-BR-016).</summary>
+public sealed record PurchaseOrderVendorRow(long Id, string? VName, string? CurrencyCode, long? TaxCodeId, string? VendorPrice);
 
 /// <summary>A purchase order to insert or update: header fields, computed totals, status and revision.</summary>
 public sealed record PurchaseOrderWrite(
@@ -40,9 +45,19 @@ public interface IPurchaseOrderRepository
 
     Task<PurchaseOrderVendorRow?> FindVendorAsync(long vendorId, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    Task<PurchaseOrderPrintVendorRow?> FindPrintVendorAsync(long vendorId, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <summary>bc_item.item_type of the items that exist.</summary>
     Task<IReadOnlyDictionary<long, string>> FindItemTypesAsync(
         IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Items that exist with their standard purchase price and price in <paramref name="vendorPrice"/> (MM-BR-016).</summary>
+    Task<IReadOnlyList<VendorPriceReference>> FindVendorPricesAsync(
+        string vendorPrice, IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Adds or changes the prices of the price group (bc_purchase_price, MM-BR-016).</summary>
+    Task UpsertVendorPricesAsync(
+        string vendorPrice, IReadOnlyList<VendorPriceChange> prices, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>The warehouses among <paramref name="warehouseIds"/> that are in use.</summary>
     Task<IReadOnlySet<long>> FindUsableWarehousesAsync(

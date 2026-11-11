@@ -31,9 +31,13 @@ public class InventorySettingRepositoryTests(AuthSchemaFixture db)
             transaction: uow.Transaction);
 
         row!.NegativeStockMode.Should().Be("DENY");
+        row.OverReceiptMode.Should().Be("DENY");
+        row.AllowCostAdjustmentEdit.Should().BeFalse();
         row.UpdatedBy.Should().Be("system");
         count.Should().Be(1);
-        columns.Should().BeEquivalentTo("id", "negative_stock_mode", "created_at", "created_by", "updated_at", "updated_by");
+        // over_receipt_mode: 0407 (MM-BR-102), allow_cost_adjustment_edit: 0415 (MM-BR-420)
+        columns.Should().BeEquivalentTo(
+            "id", "negative_stock_mode", "over_receipt_mode", "allow_cost_adjustment_edit", "created_at", "created_by", "updated_at", "updated_by");
     }
 
     [DatabaseFact, Trait("Id", "MM-SET-IT-02")]
@@ -43,11 +47,13 @@ public class InventorySettingRepositoryTests(AuthSchemaFixture db)
         var settings = db.Get<IInventorySettingRepository>();
         var current = await settings.GetAsync(uow.Transaction, CancellationToken.None);
 
-        var updated = await settings.UpdateAsync("ALLOW_IN_MONTH", current!.UpdatedAt, "kim", uow.Transaction, CancellationToken.None);
+        var updated = await settings.UpdateAsync("ALLOW_IN_MONTH", "WARN", true, current!.UpdatedAt, "kim", uow.Transaction, CancellationToken.None);
         var reread = await settings.GetAsync(uow.Transaction, CancellationToken.None);
 
         updated.Should().NotBeNull();
         updated!.NegativeStockMode.Should().Be("ALLOW_IN_MONTH");
+        updated.OverReceiptMode.Should().Be("WARN");
+        updated.AllowCostAdjustmentEdit.Should().BeTrue();
         updated.UpdatedBy.Should().Be("kim");
         updated.UpdatedAt.Should().BeAfter(current.UpdatedAt);
         reread.Should().Be(updated);
@@ -60,7 +66,7 @@ public class InventorySettingRepositoryTests(AuthSchemaFixture db)
         var settings = db.Get<IInventorySettingRepository>();
         var current = await settings.GetAsync(uow.Transaction, CancellationToken.None);
 
-        var updated = await settings.UpdateAsync("ALLOW", current!.UpdatedAt.AddSeconds(-1), "kim", uow.Transaction, CancellationToken.None);
+        var updated = await settings.UpdateAsync("ALLOW_IN_MONTH", "WARN", true, current!.UpdatedAt.AddSeconds(-1), "kim", uow.Transaction, CancellationToken.None);
         var reread = await settings.GetAsync(uow.Transaction, CancellationToken.None);
 
         updated.Should().BeNull();
@@ -73,7 +79,7 @@ public class InventorySettingRepositoryTests(AuthSchemaFixture db)
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
 
         var act = () => uow.Transaction.Connection!.ExecuteAsync(
-            "INSERT INTO mm_inventory_setting (negative_stock_mode, created_by, updated_by) VALUES ('ALLOW', 's', 's')",
+            "INSERT INTO mm_inventory_setting (negative_stock_mode, created_by, updated_by) VALUES ('ALLOW_IN_MONTH', 's', 's')",
             transaction: uow.Transaction);
 
         (await act.Should().ThrowAsync<PostgresException>()).Which.SqlState.Should().Be(PostgresErrorCodes.UniqueViolation);

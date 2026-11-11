@@ -21,15 +21,28 @@ public sealed record PurchaseOrderLine(
 /// <summary>Header totals: gross and discount for the totals panel (MM-BR-025), supply, tax and total (BC-BR-541).</summary>
 public sealed record PurchaseOrderTotals(decimal GrossAmt, decimal DcAmt, decimal SupplyAmt, decimal TaxAmt, decimal TotPoAmt, decimal TotBaseAmt);
 
-/// <summary>What the entry rules need from masters: item types, usable warehouses and tax code rates.</summary>
+/// <summary>
+/// What the entry rules need from masters: item types, usable warehouses and tax code rates. Stored holds the warehouses of
+/// the saved order, which the header and its lines may keep after the warehouse is set not in use (MM-BR-704).
+/// </summary>
 public sealed record PurchaseOrderMasters(
-    IReadOnlyDictionary<long, string> ItemTypes, IReadOnlySet<long> UsableWarehouses, IReadOnlyDictionary<long, TaxCodeRate> TaxRates);
+    IReadOnlyDictionary<long, string> ItemTypes, IReadOnlySet<long> UsableWarehouses, IReadOnlyDictionary<long, TaxCodeRate> TaxRates,
+    StoredWarehouses? Stored = null);
+
+/// <summary>Warehouses of a saved order: the header's and each line's by line id.</summary>
+public sealed record StoredWarehouses(long? Header, IReadOnlyDictionary<long, long?> Lines);
 
 /// <summary>
 /// Company settings for amounts: base currency, tax unit (BC-BR-543) and the MM module rounding mode, which rounds every
 /// calculated amount and the tax (BC-BR-424, BC-BR-545).
 /// </summary>
 public sealed record PurchaseOrderSettings(string BaseCurrencyCode, string TaxCalcMode, RoundingMode RoundingMode = RoundingMode.HalfUp);
+
+/// <summary>An item with its type, standard purchase price and price in the vendor's price group, null when missing (MM-BR-016).</summary>
+public sealed record VendorPriceReference(long ItemId, string ItemCd, string ItemType, decimal? StdPrc, decimal? GroupPrc);
+
+/// <summary>A price the save would add to or change in the vendor's price group (MM-BR-016).</summary>
+public sealed record VendorPriceChange(long ItemId, string ItemCd, decimal PurchasePrc);
 
 /// <summary>
 /// Purchase order input checked on the server before save (MM-UC-003, docs/business-rules/MM/purchase-order.md). Line amounts
@@ -44,6 +57,12 @@ public static class PoEntryRules
     public const string DueDateCode = "MM-E-026";
     public const string IncotermsCode = "MM-E-027";
     public const string CurrencyCode = "MM-E-031";
+
+    /// <summary>Some prices differ from the standard and the vendor's group price (MM-BR-016). Arg: item codes.</summary>
+    public const string VendorPriceWarningCode = "MM-W-016";
+
+    /// <summary>Request field that answers <see cref="VendorPriceWarningCode"/>.</summary>
+    public const string UpdateVendorPriceField = "updateVendorPrice";
 
     /// <summary>A vendor, warehouse or other master row does not exist or is not in use. Arg: id.</summary>
     public const string NotFoundCode = "Common-E-006";
@@ -93,6 +112,25 @@ public static class PoEntryRules
         return (computed, totals);
     }
 
+    /// <summary>
+    /// Items whose price differs from both the standard purchase price and the vendor's group price (MM-BR-016), in line order.
+    /// Service items, vendors without a price group and orders outside the base currency are left out: the prices have no
+    /// currency. When an item is on several lines, its last line gives the price.
+    /// </summary>
+    public static IReadOnlyList<VendorPriceChange> VendorPriceChanges(
+        IReadOnlyList<PurchaseOrderLine> lines, string? vendorPriceGroup, string currencyCode, string baseCurrencyCode,
+        IReadOnlyDictionary<long, VendorPriceReference> references)
+    {
+        if (string.IsNullOrWhiteSpace(vendorPriceGroup) || currencyCode != baseCurrencyCode)
+        {
+            return [];
+        }
+        return [.. lines.GroupBy(l => l.ItemId)
+            .Select(g => (Reference: references.GetValueOrDefault(g.Key), Price: g.Last().PoPrc))
+            .Where(x => x.Reference is { } r && r.ItemType != "SERVICE" && x.Price != r.StdPrc && x.Price != r.GroupPrc)
+            .Select(x => new VendorPriceChange(x.Reference!.ItemId, x.Reference.ItemCd, x.Price))];
+    }
+
     /// <summary>Saving an approved order keeps it approved and counts a revision; drafts stay at 0 (MM-BR-021).</summary>
     public static int RevisionAfterSave(PoStatus status, int revisionNo) => status == PoStatus.Approved ? revisionNo + 1 : revisionNo;
 
@@ -121,7 +159,7 @@ public static class PoEntryRules
         {
             throw new DomainException(DueDateCode, 0, header.DueDt!.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
         }
-        CheckWarehouse(header.WarehouseId, masters);
+        CheckWarehouse(header.WarehouseId, masters.Stored?.Header, masters);
     }
 
     private static void CheckLine(PurchaseOrderLineInput line, int seq, PurchaseOrderHeader header, PurchaseOrderMasters masters)
@@ -146,17 +184,17 @@ public static class PoEntryRules
         {
             throw new DomainException(DueDateCode, seq, line.DueDt!.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
         }
-        CheckWarehouse(line.WarehouseId, masters);
+        CheckWarehouse(line.WarehouseId, line.Id is { } lineId ? masters.Stored?.Lines.GetValueOrDefault(lineId) : null, masters);
         if (!masters.TaxRates.ContainsKey(line.TaxCodeId))
         {
             throw new DomainException(RequiredCode, nameof(PurchaseOrderLineInput.TaxCodeId));
         }
     }
 
-    // MM-BR-026: a warehouse in use
-    private static void CheckWarehouse(long? warehouseId, PurchaseOrderMasters masters)
+    // MM-BR-026: a warehouse in use. MM-BR-704: a saved header or line may keep its warehouse after it is set not in use
+    private static void CheckWarehouse(long? warehouseId, long? storedWarehouseId, PurchaseOrderMasters masters)
     {
-        if (warehouseId is { } id && !masters.UsableWarehouses.Contains(id))
+        if (warehouseId is { } id && id != storedWarehouseId && !masters.UsableWarehouses.Contains(id))
         {
             throw new DomainException(NotFoundCode, id);
         }

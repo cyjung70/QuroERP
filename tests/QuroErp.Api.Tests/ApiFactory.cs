@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Collections.Concurrent;
 using System.Data;
 using Microsoft.AspNetCore.Hosting;
@@ -15,6 +16,7 @@ using QuroErp.Domain.Bc.FieldPolicies;
 using QuroErp.Contracts.Bc.BusinessPlaces;
 using QuroErp.Contracts.Bc.Companies;
 using QuroErp.Application.Bc.Items;
+using QuroErp.Api.Tests.Bc.Items;
 using QuroErp.Api.Tests.Bc.Localization;
 using QuroErp.Api.Tests.Bc.Tax;
 using QuroErp.Application.Bc.Localization;
@@ -32,7 +34,9 @@ using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Bc.Menus;
 using QuroErp.Application.Bc.Roles;
 using QuroErp.Application.Bc.Tax;
+using QuroErp.Application.Mm.Vendors;
 using QuroErp.Application.Mm.Warehouses;
+using QuroErp.Api.Tests.Mm.Vendors;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Contracts.Mm.Warehouses;
@@ -40,6 +44,7 @@ using QuroErp.Domain.Bc.Companies;
 using QuroErp.Domain.Bc.Items;
 using QuroErp.Domain.Bc.UserProfiles;
 using QuroErp.Domain.Common.Auth;
+using QuroErp.Domain.Mm.Warehouses;
 
 namespace QuroErp.Api.Tests;
 
@@ -105,7 +110,17 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public InMemoryItemRepository Items { get; } = new();
 
     /// <summary>Warehouse choice list the API returns as is (the repository filters and sorts).</summary>
-    public List<WarehouseOptionDto> WarehouseOptions { get; } = [new(1, "MAIN", "Main"), new(2, "W02", "Second")];
+    public List<WarehouseOptionDto> WarehouseOptions { get; } =
+        [new(1, "MAIN", "Main", "NORMAL", true), new(2, "W02", "Second", "NORMAL", true), new(3, "CONSIGN", "Consignment", "CONSIGNMENT", true),
+         new(4, "OLD", "Closed", "NORMAL", false)];
+
+    /// <summary>Stored warehouses the master API reads (MM-UC-017): MAIN is the default, OLD is not in use.</summary>
+    public List<WarehouseRow> Warehouses { get; } =
+    [
+        new(1, "MAIN", "Main", true, true, "NORMAL", null, new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+        new(3, "CONSIGN", "Consignment", false, true, "CONSIGNMENT", null, new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+        new(4, "OLD", "Closed", false, false, "NORMAL", null, new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+    ];
 
     /// <summary>Roles, menus and role menu assignments (BC-UC-005).</summary>
     public InMemoryRoleRepository Roles { get; } = new();
@@ -128,6 +143,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public InMemoryTaxAreaRepository TaxAreas { get; } = new();
 
+    public InMemoryAlternateItemRepository AlternateItems { get; } = new();
+
+    public InMemoryAlternateItemGroupRepository AlternateItemGroups { get; } = new();
+
+    /// <summary>Vendors ACME (in use) and BETA (KR business number) (MM-UC-001).</summary>
+    public InMemoryVendorRepository Vendors { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -136,6 +158,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     /// <summary>Inventory setting state; DENY at start.</summary>
     public InMemoryInventorySettingRepository InventorySettings { get; } = new();
+
+    /// <summary>Status /health reports in these tests.</summary>
+    public HealthStatus Health { get; set; } = HealthStatus.Healthy;
+
+    private sealed class DelegateHealthCheck(Func<HealthCheckResult> result) : IHealthCheck
+    {
+        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) =>
+            Task.FromResult(result());
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -182,7 +213,17 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IExchangeRateRepository>(ExchangeRates);
             services.AddSingleton<ITaxCodeRepository>(TaxCodes);
             services.AddSingleton<ITaxAreaRepository>(TaxAreas);
+            services.AddSingleton<IAlternateItemRepository>(AlternateItems);
+            services.AddSingleton<IAlternateItemGroupRepository>(AlternateItemGroups);
+            services.AddSingleton<IVendorRepository>(Vendors);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
+            // /health without PostgreSQL or Chromium: one check whose status the test sets
+            services.Configure<HealthCheckServiceOptions>(o =>
+            {
+                o.Registrations.Clear();
+                o.Registrations.Add(new HealthCheckRegistration(
+                    "test", _ => new DelegateHealthCheck(() => new HealthCheckResult(Health)), null, null));
+            });
             services.AddSingleton<IUserRepository>(Users);
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddSingleton<IApiClientRepository>(new FakeApiClientRepository(new Dictionary<string, ApiClient>
@@ -259,8 +300,36 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     private sealed class FakeWarehouseRepository(ApiFactory factory) : IWarehouseRepository
     {
-        public Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<WarehouseOptionDto>>(factory.WarehouseOptions);
+        public Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(
+            bool includeConsignment, bool includeInactive, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<WarehouseOptionDto>>(
+                [.. factory.WarehouseOptions.Where(w => (includeConsignment || w.WarehouseType != WarehouseTypes.Consignment) && (includeInactive || w.UseYn))]);
+
+        public Task<ConsignmentWarehouse?> FindConsignmentAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<ConsignmentWarehouse?>(new ConsignmentWarehouse(3, "CONSIGN"));
+
+        public Task<IReadOnlyList<WarehouseRow>> FindAllAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<WarehouseRow>>([.. factory.Warehouses]);
+
+        public Task<IReadOnlyDictionary<long, string>> FindInactivationBlockersAsync(
+            IReadOnlyCollection<long> warehouseIds, DateOnly today, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<long, string>>(new Dictionary<long, string>());
+
+        public Task<IReadOnlyDictionary<long, string>> FindDeleteBlockersAsync(
+            IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<long, string>>(new Dictionary<long, string>());
+
+        public Task ClearDefaultAsync(string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<long> InsertAsync(WarehouseState warehouse, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task UpdateAsync(WarehouseState warehouse, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task DeleteAsync(IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            warehouseIds.Count == 0 ? Task.CompletedTask : throw new NotSupportedException();
     }
 
     private sealed class FakeAuthSettingRepository(ApiFactory factory) : IAuthSettingRepository
@@ -372,7 +441,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
     }
 
-    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE, DISPLAY_OPTIONS.</summary>
+    /// <summary>VALID_FLAG = Y, N, S (S has no translation). Item codes: ITEM_TYPE, UNIT, ITEM_CLASS, GRADE, DISPLAY_OPTIONS; STATE, TERMS.</summary>
     private sealed class FakeCodeRepository : ICodeRepository
     {
         private static readonly List<CodeMinorRow> ValidFlag = [new(1, "Y", 10), new(2, "N", 20), new(3, "S", 30)];
@@ -385,6 +454,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             ["GRADE"] = ["A01"],
             ["DISPLAY_OPTIONS"] = ["Y", "N", "ALL"],
             ["STATE"] = ["CA", "NY"],
+            ["TERMS"] = ["NET_30", "NET_60"],
         };
 
         public Task<IReadOnlyList<CodeMinorRow>?> FindActiveMinorsAsync(
@@ -645,19 +715,20 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public sealed class InMemoryInventorySettingRepository : IInventorySettingRepository
     {
-        public InventorySettingRow Row { get; private set; } = new("DENY", new DateTimeOffset(2026, 10, 25, 0, 0, 0, TimeSpan.Zero), "system");
+        public InventorySettingRow Row { get; private set; } = new("DENY", "DENY", false, new DateTimeOffset(2026, 10, 25, 0, 0, 0, TimeSpan.Zero), "system");
 
         public Task<InventorySettingRow?> GetAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<InventorySettingRow?>(Row);
 
         public Task<InventorySettingRow?> UpdateAsync(
-            string negativeStockMode, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+            string negativeStockMode, string overReceiptMode, bool allowCostAdjustmentEdit, DateTimeOffset expectedUpdatedAt, string updatedBy,
+            IDbTransaction transaction, CancellationToken cancellationToken)
         {
             if (expectedUpdatedAt != Row.UpdatedAt)
             {
                 return Task.FromResult<InventorySettingRow?>(null);
             }
-            Row = new InventorySettingRow(negativeStockMode, Row.UpdatedAt.AddSeconds(1), updatedBy);
+            Row = new InventorySettingRow(negativeStockMode, overReceiptMode, allowCostAdjustmentEdit, Row.UpdatedAt.AddSeconds(1), updatedBy);
             return Task.FromResult<InventorySettingRow?>(Row);
         }
     }

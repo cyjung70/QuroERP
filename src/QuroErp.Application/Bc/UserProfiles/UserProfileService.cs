@@ -1,16 +1,18 @@
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.Auth;
 using QuroErp.Application.Common.Persistence;
+using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Bc.UserProfiles;
 using QuroErp.Domain.Bc.UserProfiles;
 using QuroErp.Domain.Common;
+using QuroErp.Domain.Mm.Warehouses;
 
 namespace QuroErp.Application.Bc.UserProfiles;
 
 /// <summary>My info (BC-UC-003). Every method works on the signed-in user the caller passes in, never on an ID from the request (BC-BR-101).</summary>
 public sealed class UserProfileService(
-    IUserProfileRepository profiles, IAppUserRepository users, IAutoLoginTokenRepository autoLoginTokens, IUnitOfWorkFactory unitOfWork,
-    TimeProvider clock)
+    IUserProfileRepository profiles, IAppUserRepository users, IAutoLoginTokenRepository autoLoginTokens, IWarehouseRepository warehouses,
+    IUnitOfWorkFactory unitOfWork, TimeProvider clock)
 {
     /// <summary>The user row is gone. Arg: id.</summary>
     public const string NotFoundCode = "Common-E-006";
@@ -25,7 +27,9 @@ public sealed class UserProfileService(
         return ToDto(row);
     }
 
-    /// <exception cref="DomainException">BC-E-102 with the property name, BC-E-405 for a language not in use.</exception>
+    /// <exception cref="DomainException">
+    /// BC-E-102 with the property name, BC-E-405 for a language not in use, MM-E-710 for the consignment warehouse (MM-BR-710).
+    /// </exception>
     /// <exception cref="ConcurrencyException">updatedAt differs from the stored row (BC-BR-105).</exception>
     /// <exception cref="NotFoundException">Common-E-006.</exception>
     public async Task<UserProfileDto> UpdateAsync(
@@ -49,6 +53,7 @@ public sealed class UserProfileService(
         {
             throw new DomainException(UserProfile.InvalidFieldCode, nameof(UserProfileFields.DefaultWarehouseId));
         }
+        WarehouseRules.EnsureUserSelectable([fields.DefaultWarehouseId], await warehouses.FindConsignmentAsync(uow.Transaction, cancellationToken));
 
         if (!await profiles.UpdateAsync(appUserId, fields, request.UpdatedAt, updatedBy, uow.Transaction, cancellationToken))
         {

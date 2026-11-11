@@ -1,0 +1,15 @@
+# Issuing warehouses of a shipment line (TASK-SD-064): general warehouses in use (MM-BR-703). Bill-first lines ship from the
+# consignment warehouse, which the page sets (SD-BR-176). The shipment screen answers it from the warehouse options API.
+lookup:
+  id: sdShipWarehouse
+  title: Sd.Shipment.FindWarehouse
+  version: 1
+  api: /api/mm/warehouses/options
+  key: warehouseCode
+  text: warehouseName
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[2]{id,label,type,width,fmt}:
+  warehouseCode,Sd.Shipment.LineWarehouseId,text,110,""
+  warehouseName,Sd.Shipment.WarehouseName,text,200,""

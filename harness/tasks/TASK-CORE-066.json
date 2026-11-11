@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-066",
+  "project": "core",
+  "title": "SM 행 명령을 라인 패널 제목 줄로 옮김",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/entry-frame.md",
+    "docs/architecture/screens.md",
+    "docs/architecture/screen-templates.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-062"
+  ],
+  "acceptance": [
+    "`QuroHeaderDetail`의 행 추가·삭제 표시·행 복원과 `RowCommands`를 커맨드바에서 라인 패널 제목 줄로 옮긴다. 순서는 제목, 줄 수, 행 명령, 안내 문구다 (entry-frame.md 2장). 커맨드바는 File·Status·Output이다",
+    "버튼의 동작, 아이콘, 비활성 규칙, `aria-pressed`, 단축키(Ctrl+Insert, Ctrl+Delete)는 바뀌지 않는다. 옮긴 버튼과 파일 올리기 버튼의 모양은 커맨드바 버튼과 같다",
+    "`data-testid`를 `{화면}-line-{동작}`으로 바꾼다 (`line-add-row`, `line-mark-delete`, `line-restore-row`, 화면별 줄 가져오기). 이 버튼을 쓰는 테스트도 함께 고친다",
+    "M·MM은 바뀌지 않는다 (screens.md \"M·MM 행 명령\")",
+    "최소 폭 1280px에서 수주·입고·출하·발주 제목 줄의 버튼이 겹치거나 잘리지 않는다. 라이트·다크, en·ko에서 확인한다",
+    "bUnit: 커맨드바에 행 명령이 없고 제목 줄에 순서대로 있으며, `RowCommands`가 행 복원 뒤에 있다. 기존 bUnit이 통과한다",
+    "PR 설명에 PO Entry와 수주 화면 캡처"
+  ],
+  "estimateHours": 3,
+  "status": "done"
+}

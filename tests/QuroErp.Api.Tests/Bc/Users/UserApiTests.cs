@@ -2,6 +2,9 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using QuroErp.Api.Tests.Bc.Roles;
+using QuroErp.Application.Bc.Roles;
 using QuroErp.Contracts.Bc.Users;
 using QuroErp.Contracts.Common.Auth;
 
@@ -15,12 +18,40 @@ public class UserApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     private static string Path(long id, string? action = null) =>
         action is null ? $"{UserRoutes.Base}/{id}" : $"{UserRoutes.Base}/{id}/{action}";
 
+    [Fact, Trait("Id", "BC-UT-214")]
+    public async Task WithoutTheUserMenu_ReadsAre403()
+    {
+        var client = await SignInAsync(ApiFactory.ProfileUserId);
+
+        using var list = await client.GetAsync(UserRoutes.Base);
+        using var get = await client.GetAsync(Path(InMemoryUserRepository.TargetId));
+
+        list.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        get.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
     [Fact, Trait("Id", "BC-UT-132")]
-    public async Task NonAdminUser_CanRead_ButGets403OnChanges()
+    public async Task WithTheUserMenuReadOnly_ReadsWork_ButChangesAre403()
     {
         var client = await SignInAsync(ApiFactory.ProfileUserId);
         var target = InMemoryUserRepository.TargetId;
+        var key = (InMemoryRoleRepository.UserRoleId, InMemoryRoleRepository.UserMenuId);
+        var permissions = factory.Services.GetRequiredService<MenuPermissionService>();
+        factory.Roles.Assignments[key] = (false, DateTimeOffset.UtcNow);
+        permissions.Invalidate("user");
+        try
+        {
+            await AssertReadOnlyAsync(client, target);
+        }
+        finally
+        {
+            factory.Roles.Assignments.Remove(key);
+            permissions.Invalidate("user");
+        }
+    }
 
+    private static async Task AssertReadOnlyAsync(HttpClient client, long target)
+    {
         using var list = await client.GetAsync(UserRoutes.Base);
         using var get = await client.GetAsync(Path(target));
         using var create = await client.PostAsJsonAsync(UserRoutes.Base, new CreateUserRequest(

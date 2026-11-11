@@ -15,6 +15,7 @@ public class InventorySettingApiTests(ApiFactory factory) : IClassFixture<ApiFac
         var setting = await factory.NonAdmin().GetFromJsonAsync<InventorySettingDto>(InventorySettingRoutes.Base);
 
         setting!.NegativeStockMode.Should().BeOneOf(NegativeStockModes.All);
+        setting.OverReceiptMode.Should().BeOneOf(OverReceiptModes.All);
     }
 
     [Fact, Trait("Id", "MM-SET-IT-11")]
@@ -24,11 +25,13 @@ public class InventorySettingApiTests(ApiFactory factory) : IClassFixture<ApiFac
         var current = await client.GetFromJsonAsync<InventorySettingDto>(InventorySettingRoutes.Base);
 
         using var response = await client.PutAsJsonAsync(
-            InventorySettingRoutes.Base, new UpdateInventorySettingRequest(NegativeStockModes.AllowInMonth, current!.UpdatedAt));
+            InventorySettingRoutes.Base, new UpdateInventorySettingRequest(NegativeStockModes.AllowInMonth, OverReceiptModes.Warn, true, current!.UpdatedAt));
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var saved = await response.Content.ReadFromJsonAsync<InventorySettingDto>();
         saved!.NegativeStockMode.Should().Be(NegativeStockModes.AllowInMonth);
+        saved.OverReceiptMode.Should().Be(OverReceiptModes.Warn);
+        saved.AllowCostAdjustmentEdit.Should().BeTrue();
         saved.UpdatedBy.Should().Be(ApiFactory.UserId);
         saved.UpdatedAt.Should().BeAfter(current.UpdatedAt);
     }
@@ -39,19 +42,22 @@ public class InventorySettingApiTests(ApiFactory factory) : IClassFixture<ApiFac
         var client = await factory.AdminAsync();
 
         using var response = await client.PutAsJsonAsync(
-            InventorySettingRoutes.Base, new UpdateInventorySettingRequest(NegativeStockModes.Allow, DateTimeOffset.UnixEpoch));
+            InventorySettingRoutes.Base, new UpdateInventorySettingRequest(NegativeStockModes.Deny, OverReceiptModes.Deny, false, DateTimeOffset.UnixEpoch));
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
         (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be(ConcurrencyException.Code);
     }
 
-    [Fact, Trait("Id", "MM-SET-IT-13")]
-    public async Task Put_UnknownMode_Returns400()
+    [Theory, Trait("Id", "MM-SET-IT-13")]
+    [InlineData("MAYBE", OverReceiptModes.Deny)]
+    [InlineData("ALLOW", OverReceiptModes.Deny)]
+    [InlineData(NegativeStockModes.Deny, "ALLOW")]
+    public async Task Put_UnknownMode_Returns400(string negativeStockMode, string overReceiptMode)
     {
         var client = await factory.AdminAsync();
 
         using var response = await client.PutAsJsonAsync(
-            InventorySettingRoutes.Base, new UpdateInventorySettingRequest("MAYBE", DateTimeOffset.UnixEpoch));
+            InventorySettingRoutes.Base, new UpdateInventorySettingRequest(negativeStockMode, overReceiptMode, false, DateTimeOffset.UnixEpoch));
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -60,7 +66,7 @@ public class InventorySettingApiTests(ApiFactory factory) : IClassFixture<ApiFac
     public async Task Put_NonAdmin_Returns403()
     {
         using var response = await factory.NonAdmin().PutAsJsonAsync(
-            InventorySettingRoutes.Base, new UpdateInventorySettingRequest(NegativeStockModes.Allow, DateTimeOffset.UnixEpoch));
+            InventorySettingRoutes.Base, new UpdateInventorySettingRequest(NegativeStockModes.Deny, OverReceiptModes.Deny, false, DateTimeOffset.UnixEpoch));
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }

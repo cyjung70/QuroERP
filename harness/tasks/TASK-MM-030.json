@@ -61,8 +61,9 @@
     "관련 BR마다 테스트",
     "마이그레이션: `mm_ap_clear.goods_receipt_id` → `supplier_invoice_id`(→ `mm_supplier_invoice.id`), UNIQUE (`ap_payment_id`, `supplier_invoice_id`) (MM-BR-953)",
     "Debit Memo 줄은 음수 지급 금액, 지급 합계 ≥ 0 MM-E-957, 잔액 부호가 바뀌면 MM-E-955 (MM-BR-954·955·957)",
-    "새 Seed 스크립트로 `AP_PAYMENT_METHOD` Minor `CASH`·`MONEY_ORDER`·`CREDIT_CARD`·`CHECK`·`WIRE_TRANSFER`(정렬 10~50)와 ko·en 이름을 넣는다 (MM-BR-952). 이관 데이터와 같은 코드라 이관 적재 때 겹치지 않는다"
+    "새 Seed 스크립트로 `AP_PAYMENT_METHOD` Minor `CASH`·`MONEY_ORDER`·`CREDIT_CARD`·`CHECK`·`WIRE_TRANSFER`(정렬 10~50)와 ko·en 이름을 넣는다 (MM-BR-952). 이관 데이터와 같은 코드라 이관 적재 때 겹치지 않는다",
+    "화면 경로 상수 `ScreenPaths.ApPayment` = `/mm/ap-payment`로 API 권한을 걸고, 화면 메뉴를 새 Seed 스크립트로 더한다 (공급자 송장 메뉴 시드와 같은 방식)"
   ],
   "estimateHours": 3,
-  "status": "done"
+  "status": "todo"
 }

@@ -35,5 +35,5 @@
     "샘플 PDF 1종(회사 머리·한글·표·쪽 번호)으로 통합 테스트: PDF 텍스트에 한글·문서 번호가 있고, `<script>` 값은 글자로 찍히며, 외부 요청이 0건"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

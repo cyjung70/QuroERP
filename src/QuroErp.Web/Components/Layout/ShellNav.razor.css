@@ -21,6 +21,32 @@
     padding: 0.5rem 0;
 }
 
+    .shell-nav-groups[hidden] {
+        display: none;
+    }
+
+/* The module list is in the top bar; below 768px it moves to the top of the overlay (app-shell.md 1) */
+.shell-nav-modules {
+    display: none;
+}
+
+.shell-nav-module-pick {
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--q-line);
+    border-radius: var(--q-radius-chip);
+    background: var(--q-surface-0);
+    color: var(--q-ink);
+    font: inherit;
+    cursor: pointer;
+}
+
+    .shell-nav-module-pick[aria-current="true"] {
+        border-color: var(--q-brand);
+        background: var(--q-brand-tint);
+        color: var(--q-brand-strong);
+        font-weight: 600;
+    }
+
 .shell-nav-group-title {
     display: flex;
     align-items: center;
@@ -167,6 +193,14 @@
 
     .shell-nav-collapse {
         display: none;
+    }
+
+    .shell-nav-modules {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--q-line);
     }
 
     [data-shell-open] .shell-nav {

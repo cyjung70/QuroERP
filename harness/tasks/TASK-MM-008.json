@@ -91,5 +91,5 @@
     "화면에 잔액·지급 누계가 없다. 상태 열은 대사 상태(`OP`·`PA`·`CL`·`VO`)다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

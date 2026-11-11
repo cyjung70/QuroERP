@@ -1,0 +1,97 @@
+@* Delivery note of a shipment: the lines shipped with warehouse, lot and quantity, and a box for the receiver's signature. No
+   amounts, like the picking list. Values use Razor output only. *@
+@using QuroErp.Application.Sd.Shipments
+
+<PrintLayout Company="Print.Company" Title="@T("Print.DeliveryNote.Title")" DocumentNo="@Print.Shipment.ShipNo" Culture="Culture">
+    <section class="parties">
+        <div class="party">
+            <div class="label">@T("Print.SalesOrder.BillTo")</div>
+            <div class="name">@Print.BillTo.Name</div>
+            @foreach (var line in Print.BillTo.AddressLines)
+            {
+                <div>@line</div>
+            }
+        </div>
+        <div class="party">
+            <div class="label">@T("Print.SalesOrder.ShipTo")</div>
+            <div class="name">@Print.ShipTo.Name</div>
+            @foreach (var line in Print.ShipTo.AddressLines)
+            {
+                <div>@line</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Print.ShipTo.Phone))
+            {
+                <div>@T("Print.Phone") @Print.ShipTo.Phone</div>
+            }
+        </div>
+        <table class="fields">
+            <tbody>
+                <tr><th>@T("Print.DeliveryNote.ShipDt")</th><td>@Print.Shipment.ShipDt.ToString("d", Culture)</td></tr>
+                <tr><th>@T("Print.DeliveryNote.SoNo")</th><td>@Print.Shipment.SoNo</td></tr>
+                <tr><th>@T("Print.DeliveryNote.InvoiceNo")</th><td>@Print.Shipment.SalesInvoiceNo</td></tr>
+                <tr><th>@T("Print.SalesOrder.ShipVia")</th><td>@Print.Shipment.ShipVia</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <table class="lines">
+        <thead>
+            <tr>
+                <th class="num">@T("Print.SalesOrder.Seq")</th>
+                <th>@T("Print.SalesOrder.ItemCode")</th>
+                <th>@T("Print.SalesOrder.ItemName")</th>
+                <th>@T("Print.SalesOrder.Unit")</th>
+                <th>@T("Print.DeliveryNote.Warehouse")</th>
+                <th>@T("Print.DeliveryNote.LotNo")</th>
+                <th class="num">@T("Print.SalesOrder.Qty")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in Print.Lines)
+            {
+                <tr>
+                    <td class="num">@line.Seq</td>
+                    <td class="mono">@line.ItemCd</td>
+                    <td>@line.ItemName</td>
+                    <td>@line.Unit</td>
+                    <td class="mono">@line.WarehouseCode</td>
+                    <td class="mono">@line.LotNo</td>
+                    <td class="num">@line.ShipQty.ToString("N" + Print.QtyDecimals, Culture)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (!string.IsNullOrWhiteSpace(Print.Shipment.Remarks))
+    {
+        <section class="remarks">
+            <div class="label">@T("Print.SalesOrder.Remarks")</div>
+            <div class="text">@Print.Shipment.Remarks</div>
+        </section>
+    }
+
+    <section class="received">
+        <div>@T("Print.DeliveryNote.ReceivedBy")</div>
+        <div>@T("Print.DeliveryNote.ReceivedDt")</div>
+    </section>
+
+    <style>
+        .parties { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 12px; }
+        .parties .label, .remarks .label { font-size: 8.5pt; color: #555; }
+        .parties .name { font-weight: 700; font-size: 11pt; }
+        table.fields { width: auto; }
+        table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+        .remarks { margin-top: 16px; }
+        .remarks .text { white-space: pre-wrap; }
+        .received { margin-top: 32px; display: flex; gap: 32px; }
+        .received div { border-bottom: 1px solid #333; min-width: 200px; padding-top: 18px; }
+    </style>
+</PrintLayout>
+
+@code {
+    [Parameter, EditorRequired] public ShipmentPrint Print { get; set; } = default!;
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+    private string T(string key) => PrintText.Get(key, Culture);
+}

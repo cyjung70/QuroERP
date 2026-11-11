@@ -3,6 +3,7 @@ using System.Globalization;
 using Dapper;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Domain.Mm.Lots;
 
 namespace QuroErp.Infrastructure.Mm.Inventory;
 
@@ -15,7 +16,8 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private const string LockItems = """
         SELECT id AS item_id, item_cd, type,
-               coalesce(onhand_qty, 0) AS onhand_qty, coalesce(stk_val, 0) AS stk_val, coalesce(mvg_cost, 0) AS mvg_cost
+               coalesce(onhand_qty, 0) AS onhand_qty, coalesce(stk_val, 0) AS stk_val, coalesce(mvg_cost, 0) AS mvg_cost,
+               lot_managed, lot_managed_from
         FROM bc_item
         WHERE id = ANY(@ItemIds)
         ORDER BY id
@@ -36,6 +38,14 @@ internal sealed class InventoryRepository : IInventoryRepository
         FOR UPDATE OF o
         """;
 
+    private const string SelectSellableOnHand = """
+        SELECT o.item_id, sum(o.onhand_qty) AS onhand_qty
+        FROM mm_onhand o
+        JOIN bc_warehouse w ON w.id = o.warehouse_id
+        WHERE o.item_id = ANY(@ItemIds) AND w.warehouse_type <> 'CONSIGNMENT'
+        GROUP BY o.item_id
+        """;
+
     private const string UpdateOnHand = """
         UPDATE mm_onhand
         SET onhand_qty = @OnHandQty, updated_at = now(), updated_by = @User
@@ -50,9 +60,9 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private const string InsertMovement = """
         INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, qty, prc, amount,
-                                       ref_key, ref_seq, parent_movement_id, negative_stock, set_item_id, created_by, updated_by)
+                                       ref_key, ref_seq, parent_movement_id, negative_stock, set_item_id, lot_id, created_by, updated_by)
         VALUES (@DocumentNo, @DocumentDt, @MovType, @ItemId, @WarehouseId, @Qty, @Prc, @Amount,
-                @RefKey, @RefSeq, @ParentMovementId, @NegativeStock, @SetItemId, @User, @User)
+                @RefKey, @RefSeq, @ParentMovementId, @NegativeStock, @SetItemId, @LotId, @User, @User)
         RETURNING id
         """;
 
@@ -81,12 +91,57 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private const string LockMovements = """
         SELECT m.id, m.document_no, m.document_dt, m.mov_type, m.item_id, m.warehouse_id, m.qty, m.prc,
-               m.ref_key, m.ref_seq, m.parent_movement_id, m.negative_stock, m.set_item_id,
+               m.ref_key, m.ref_seq, m.parent_movement_id, m.negative_stock, m.set_item_id, m.lot_id, m.amount,
                EXISTS (SELECT 1 FROM mm_goods_movement r WHERE r.parent_movement_id = m.id) AS reversed
         FROM mm_goods_movement m
         WHERE m.id = ANY(@MovementIds)
         ORDER BY m.id
         FOR UPDATE OF m
+        """;
+
+    private const string SelectLot = """
+        SELECT id, lot_no FROM mm_lot
+        WHERE item_id = @ItemId AND (CASE WHEN @LotId::bigint IS NULL THEN lot_no = @LotNo ELSE id = @LotId END)
+        """;
+
+    // The item row is locked by the caller, so two saves cannot create the same lot at once
+    private const string EnsureLot = """
+        INSERT INTO mm_lot (item_id, lot_no, created_by, updated_by)
+        VALUES (@ItemId, @LotNo, @User, @User)
+        ON CONFLICT (item_id, lot_no) DO NOTHING
+        """;
+
+    // MM-BR-353: yymmdd-nnn, and more digits past 999
+    private const string SelectLastAutoLotSeq = """
+        SELECT coalesce(max(substr(lot_no, length(@Prefix) + 1)::int), 0)
+        FROM mm_lot
+        WHERE item_id = @ItemId AND starts_with(lot_no, @Prefix) AND substr(lot_no, length(@Prefix) + 1) ~ '^[0-9]{1,9}$'
+        """;
+
+    private const string EnsureLotOnHand = """
+        INSERT INTO mm_lot_onhand (item_id, warehouse_id, lot_id, onhand_qty, created_by, updated_by)
+        VALUES (@ItemId, @WarehouseId, @LotId, 0, @User, @User)
+        ON CONFLICT (item_id, warehouse_id, lot_id) DO NOTHING
+        """;
+
+    private const string LockLotOnHandRow = """
+        SELECT onhand_qty FROM mm_lot_onhand
+        WHERE item_id = @ItemId AND warehouse_id = @WarehouseId AND lot_id = @LotId
+        FOR UPDATE
+        """;
+
+    private const string UpdateLotOnHand = """
+        UPDATE mm_lot_onhand
+        SET onhand_qty = @OnHandQty, updated_at = now(), updated_by = @User
+        WHERE item_id = @ItemId AND warehouse_id = @WarehouseId AND lot_id = @LotId
+        """;
+
+    private const string SelectLotDailyQty = """
+        SELECT document_dt AS date, sum(qty) AS qty
+        FROM mm_goods_movement
+        WHERE item_id = @ItemId AND warehouse_id = @WarehouseId AND lot_id = @LotId AND document_dt >= @FromDate
+        GROUP BY document_dt
+        ORDER BY document_dt
         """;
 
     public async Task<string?> GetCloseYearMonthAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -97,7 +152,16 @@ internal sealed class InventoryRepository : IInventoryRepository
     {
         var rows = await transaction.Connection!.QueryAsync<ItemRow>(
             new CommandDefinition(LockItems, new { ItemIds = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken));
-        return rows.Select(r => new ItemStock(r.ItemId, r.ItemCd, r.Type, r.OnhandQty, r.StkVal, r.MvgCost)).ToList();
+        return rows.Select(r => new ItemStock(r.ItemId, r.ItemCd, r.Type, r.OnhandQty, r.StkVal, r.MvgCost, r.LotManaged, r.LotManagedFrom)).ToList();
+    }
+
+    public async Task<IReadOnlyDictionary<long, decimal>> GetSellableOnHandAsync(
+        IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var rows = (await transaction.Connection!.QueryAsync<(long ItemId, decimal OnHandQty)>(new CommandDefinition(
+            SelectSellableOnHand, new { ItemIds = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken)))
+            .ToDictionary(r => r.ItemId, r => r.OnHandQty);
+        return itemIds.Distinct().ToDictionary(id => id, id => rows.GetValueOrDefault(id));
     }
 
     public async Task<OnHandRow> LockOnHandAsync(long itemId, long warehouseId, string user, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -142,6 +206,7 @@ internal sealed class InventoryRepository : IInventoryRepository
                 movement.ParentMovementId,
                 movement.NegativeStock,
                 movement.SetItemId,
+                movement.LotId,
                 User = user,
             },
             transaction,
@@ -176,11 +241,52 @@ internal sealed class InventoryRepository : IInventoryRepository
             new CommandDefinition(LockMovements, new { MovementIds = movementIds.ToArray() }, transaction, cancellationToken: cancellationToken));
         return rows.Select(r => new SavedMovement(
             GoodsMovement.Restore(r.Id, r.DocumentNo, r.MovType, r.DocumentDt, r.ItemId, r.WarehouseId, r.Qty, r.Prc,
-                r.RefKey, r.RefSeq, r.ParentMovementId, r.NegativeStock, r.SetItemId),
+                r.RefKey, r.RefSeq, r.ParentMovementId, r.NegativeStock, r.SetItemId, r.LotId, r.Amount),
             r.Reversed)).ToList();
     }
 
-    private sealed record ItemRow(long ItemId, string ItemCd, string? Type, decimal OnhandQty, decimal StkVal, decimal MvgCost);
+    public async Task<LotRef?> FindLotAsync(long itemId, long? lotId, string? lotNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        await transaction.Connection!.QuerySingleOrDefaultAsync<LotRef>(new CommandDefinition(
+            SelectLot, new { ItemId = itemId, LotId = lotId, LotNo = lotNo }, transaction, cancellationToken: cancellationToken));
+
+    public async Task<LotRef> EnsureLotAsync(long itemId, string lotNo, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        await transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            EnsureLot, new { ItemId = itemId, LotNo = lotNo, User = user }, transaction, cancellationToken: cancellationToken));
+        return (await FindLotAsync(itemId, null, lotNo, transaction, cancellationToken))!;
+    }
+
+    public Task<int> GetLastAutoLotSeqAsync(long itemId, string prefix, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteScalarAsync<int>(new CommandDefinition(
+            SelectLastAutoLotSeq, new { ItemId = itemId, Prefix = prefix }, transaction, cancellationToken: cancellationToken));
+
+    public async Task<decimal> LockLotOnHandAsync(
+        long itemId, long warehouseId, long lotId, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var key = new { ItemId = itemId, WarehouseId = warehouseId, LotId = lotId, User = user };
+        await transaction.Connection!.ExecuteAsync(new CommandDefinition(EnsureLotOnHand, key, transaction, cancellationToken: cancellationToken));
+        return await transaction.Connection!.QuerySingleAsync<decimal>(
+            new CommandDefinition(LockLotOnHandRow, key, transaction, cancellationToken: cancellationToken));
+    }
+
+    public Task UpdateLotOnHandAsync(
+        long itemId, long warehouseId, long lotId, decimal onHandQty, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            UpdateLotOnHand,
+            new { ItemId = itemId, WarehouseId = warehouseId, LotId = lotId, OnHandQty = onHandQty, User = user },
+            transaction,
+            cancellationToken: cancellationToken));
+
+    public async Task<IReadOnlyList<LotDailyQty>> GetLotDailyQtyAsync(
+        long itemId, long warehouseId, long lotId, DateOnly fromDate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<LotDailyQty>(new CommandDefinition(
+            SelectLotDailyQty,
+            new { ItemId = itemId, WarehouseId = warehouseId, LotId = lotId, FromDate = fromDate },
+            transaction,
+            cancellationToken: cancellationToken))).ToList();
+
+    private sealed record ItemRow(
+        long ItemId, string ItemCd, string? Type, decimal OnhandQty, decimal StkVal, decimal MvgCost, bool LotManaged, DateOnly? LotManagedFrom);
 
     private sealed record BalanceRow(decimal Opening, DateOnly? DocumentDt, decimal? Balance, bool? MonthEnd);
 
@@ -188,5 +294,6 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private sealed record MovementRow(
         long Id, string DocumentNo, DateOnly DocumentDt, string MovType, long ItemId, long WarehouseId, decimal Qty, decimal Prc,
-        string? RefKey, int? RefSeq, long? ParentMovementId, bool NegativeStock, long? SetItemId, bool Reversed);
+        string? RefKey, int? RefSeq, long? ParentMovementId, bool NegativeStock, long? SetItemId, long? LotId, decimal Amount,
+        bool Reversed);
 }

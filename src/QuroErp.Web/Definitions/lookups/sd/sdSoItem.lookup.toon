@@ -1,0 +1,17 @@
+# Items a sales order line can sell (TASK-SD-004): items in use. The sales order screen answers it from the item API, then
+# reads the line defaults (customer price, discount and tax code) for the picked item; the API checks the item again on save.
+lookup:
+  id: sdSoItem
+  title: Sd.SalesOrder.FindItem
+  version: 1
+  api: /api/bc/items
+  key: itemCd
+  text: itemName
+  minChars: 1
+queries[1]{id,params}:
+  all,""
+columns[4]{id,label,type,width,fmt}:
+  itemCd,Sd.SalesOrder.ItemCd,text,130,""
+  itemName,Sd.SalesOrder.ItemName,text,220,""
+  unit,Sd.SalesOrder.Unit,text,60,""
+  stdPrc,Sd.SalesOrder.StdPrc,number,100,""

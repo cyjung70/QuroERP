@@ -1,0 +1,15 @@
+# Lots of a shipment line (TASK-SD-064): the lots of the line's item in the line's warehouse with a balance above zero at the
+# end of the ship date (MM-BR-355, MM-BR-362). The shipment screen answers it from the lot API for the current line.
+lookup:
+  id: sdShipLot
+  title: Sd.Shipment.FindLot
+  version: 1
+  api: /api/mm/lots
+  key: lotNo
+  text: lotNo
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[2]{id,label,type,width,fmt}:
+  lotNo,Sd.Shipment.LotNo,text,140,""
+  onHandQty,Sd.Shipment.LotOnhandQty,number,110,""

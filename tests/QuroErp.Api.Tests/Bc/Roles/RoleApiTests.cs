@@ -80,18 +80,19 @@ public class RoleApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Theory, Trait("Id", "BC-UT-214")]
-    [InlineData("admin", "ROLEMENU", "POST", true)]
-    [InlineData("user", "ITEM", "GET", true)]
-    [InlineData("user", "ITEM", "HEAD", true)]
-    [InlineData("user", "ITEM", "PUT", false)]
-    [InlineData("user", "ITEM", "DELETE", false)]
-    [InlineData("user", "USER", "GET", false)]
-    [InlineData("retired", "ITEM", "GET", false)]
-    public async Task MenuPolicy_GetNeedsTheMenu_OtherMethodsNeedFullAccess(string role, string menuCode, string method, bool allowed)
+    [InlineData("admin", "/bc/role-menu", "POST", true)]
+    [InlineData("admin", "/mm/purchase-order", "DELETE", true)]
+    [InlineData("user", "/bc/item", "GET", true)]
+    [InlineData("user", "/bc/item", "HEAD", true)]
+    [InlineData("user", "/bc/item", "PUT", false)]
+    [InlineData("user", "/bc/item", "DELETE", false)]
+    [InlineData("user", "/bc/user", "GET", false)]
+    [InlineData("retired", "/bc/item", "GET", false)]
+    public async Task ScreenPolicy_GetNeedsAMenuOnThePath_OtherMethodsNeedFullAccess(string role, string screenPath, string method, bool allowed)
     {
         var policies = factory.Services.GetRequiredService<IAuthorizationPolicyProvider>();
         var authorization = factory.Services.GetRequiredService<IAuthorizationService>();
-        var policy = (await policies.GetPolicyAsync(MenuPolicy.Prefix + menuCode))!;
+        var policy = (await policies.GetPolicyAsync(ScreenPolicy.Prefix + screenPath))!;
         var user = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim(AuthClaims.Name, "someone"), new Claim(AuthClaims.Role, role), new Claim(AuthClaims.MustChangePassword, "false")], "test",
             AuthClaims.Name, AuthClaims.Role));
@@ -103,9 +104,9 @@ public class RoleApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact, Trait("Id", "BC-UT-214")]
-    public async Task MenuPolicy_ForAnUnknownMenu_IsDenied()
+    public async Task ScreenPolicy_ForAPathWithoutAMenu_IsDenied()
     {
-        var access = await factory.Services.GetRequiredService<MenuPermissionService>().GetAccessAsync("admin", "NOPE", CancellationToken.None);
+        var access = await factory.Services.GetRequiredService<MenuPermissionService>().GetAccessAsync("admin", "/zz/none", CancellationToken.None);
 
         access.Should().Be(MenuAccess.None);
     }

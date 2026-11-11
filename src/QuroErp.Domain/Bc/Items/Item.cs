@@ -1,5 +1,6 @@
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Common;
+using QuroErp.Domain.Mm.Lots;
 
 namespace QuroErp.Domain.Bc.Items;
 
@@ -27,9 +28,10 @@ public sealed record ItemFields(
     string? Memo5,
     string? ItemGrade,
     bool? Taxable,
-    string? VatKind);
+    string? VatKind,
+    bool? LotManaged = null);
 
-/// <summary>Item master (bc_item) and its rules MM-BR-801~809, 825, 831, 832.</summary>
+/// <summary>Item master (bc_item) and its rules MM-BR-801~809, 825, 831, 832, and lot management (MM-BR-351, 361).</summary>
 public sealed class Item
 {
     /// <summary>Code missing, not upper case, too long, has spaces, or already used. Arg: item code.</summary>
@@ -89,7 +91,8 @@ public sealed class Item
         (nameof(ItemFields.Memo5), f => f.Memo5, 50),
     ];
 
-    private Item(long id, string itemCd, ItemFields fields, string? plating, decimal mvgCost, decimal onhandQty, decimal stkVal)
+    private Item(
+        long id, string itemCd, ItemFields fields, string? plating, decimal mvgCost, decimal onhandQty, decimal stkVal, DateOnly? lotManagedFrom)
     {
         Id = id;
         ItemCd = itemCd;
@@ -98,6 +101,7 @@ public sealed class Item
         MvgCost = mvgCost;
         OnhandQty = onhandQty;
         StkVal = stkVal;
+        LotManagedFrom = lotManagedFrom;
     }
 
     public long Id { get; }
@@ -119,12 +123,18 @@ public sealed class Item
 
     public decimal StkVal { get; }
 
+    /// <summary>Stock is kept per lot as well (MM-BR-351).</summary>
+    public bool LotManaged => Fields.LotManaged == true;
+
+    /// <summary>The day lot management was turned on; movements before it are blocked (MM-BR-356). Null when it is off.</summary>
+    public DateOnly? LotManagedFrom { get; private set; }
+
     /// <summary>
     /// A new item. Type, unit, use flag, purchase price, taxable and VAT kind get their defaults when missing (MM-BR-802, 803, 831).
     /// The moving average cost is the purchase price; stock quantity and value are 0 (MM-BR-804).
     /// Code uniqueness and code values are checked by the caller.
     /// </summary>
-    /// <exception cref="DomainException">MM-E-801, 802, 803, 825, 831.</exception>
+    /// <exception cref="DomainException">MM-E-801, 802, 803, 825, 831; MM-E-351 for lot management on a non-Inventory item.</exception>
     public static Item Create(string? itemCd, ItemFields fields)
     {
         var code = itemCd?.Trim() ?? "";
@@ -140,29 +150,56 @@ public sealed class Item
             Unit = normalized.Unit ?? DefaultUnit,
             ValidFlag = normalized.ValidFlag ?? ValidFlagYes,
             UsdPrc = normalized.UsdPrc ?? DefaultUsdPrc,
+            LotManaged = normalized.LotManaged ?? false,
         };
         Check(normalized);
-        return new Item(0, code, normalized, DefaultPlating, normalized.UsdPrc!.Value, 0, 0);
+        CheckLot(code, normalized);
+        return new Item(0, code, normalized, DefaultPlating, normalized.UsdPrc!.Value, 0, 0, null);
     }
 
     /// <summary>An item read from the database.</summary>
-    public static Item Restore(long id, string itemCd, ItemFields fields, string? plating, decimal mvgCost, decimal onhandQty, decimal stkVal) =>
-        new(id, itemCd, Normalize(fields), plating, mvgCost, onhandQty, stkVal);
+    public static Item Restore(
+        long id, string itemCd, ItemFields fields, string? plating, decimal mvgCost, decimal onhandQty, decimal stkVal,
+        DateOnly? lotManagedFrom = null) =>
+        new(id, itemCd, Normalize(fields) with { LotManaged = fields.LotManaged ?? false }, plating, mvgCost, onhandQty, stkVal, lotManagedFrom);
 
     /// <summary>
     /// Replaces the editable values. The moving average cost stays even when the purchase price changes (MM-BR-805).
     /// </summary>
     /// <param name="typeLocked">The item has stock in any warehouse, stock movements, or set structure (MM-BR-806).</param>
-    /// <exception cref="DomainException">MM-E-802, 803, 806, 825, 831.</exception>
+    /// <remarks>A missing LotManaged keeps the current setting. Turning it on or off is finished by StartLotManagement or StopLotManagement.</remarks>
+    /// <exception cref="DomainException">MM-E-802, 803, 806, 825, 831; MM-E-351 for lot management on a non-Inventory item.</exception>
     public void Change(ItemFields fields, bool typeLocked)
     {
         var normalized = Normalize(fields);
+        normalized = normalized with { LotManaged = normalized.LotManaged ?? Fields.LotManaged ?? false };
         Check(normalized);
+        CheckLot(ItemCd, normalized);
         if (typeLocked && normalized.ItemType != Fields.ItemType)
         {
             throw new DomainException(TypeLockedCode, ItemCd);
         }
         Fields = normalized;
+    }
+
+    /// <summary>
+    /// Lot management was just turned on: it starts today, and the caller moves the stock to lot MIGRATED (MM-BR-351).
+    /// </summary>
+    /// <param name="negativeWarehouse">A warehouse of the item has stock below zero.</param>
+    /// <param name="setComponent">The item is a component of a set (MM-BR-361).</param>
+    /// <exception cref="DomainException">MM-E-351 or MM-E-361.</exception>
+    public void StartLotManagement(DateOnly today, bool negativeWarehouse, bool setComponent)
+    {
+        LotRules.EnsureCanTurnOn(ItemCd, Fields.ItemType == DefaultItemType, negativeWarehouse, setComponent);
+        LotManagedFrom = today;
+    }
+
+    /// <summary>Lot management was just turned off; every lot balance must be 0 (MM-BR-351). Lot rows stay.</summary>
+    /// <exception cref="DomainException">MM-E-351.</exception>
+    public void StopLotManagement(bool lotStockLeft)
+    {
+        LotRules.EnsureCanTurnOff(ItemCd, lotStockLeft);
+        LotManagedFrom = null;
     }
 
     /// <summary>An item used by any document, price, set structure, alternate item, cart or stock movement cannot be deleted (MM-BR-807).</summary>
@@ -216,6 +253,15 @@ public sealed class Item
         SoUsdPrc = f.SoUsdPrc ?? 0,
         ReorderPoint = f.ReorderPoint ?? 0,
     };
+
+    // MM-BR-351: only an Inventory item keeps lots, also when its type changes
+    private static void CheckLot(string itemCd, ItemFields f)
+    {
+        if (f.LotManaged == true && f.ItemType != DefaultItemType)
+        {
+            throw new DomainException(LotRules.ManagementCode, itemCd);
+        }
+    }
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

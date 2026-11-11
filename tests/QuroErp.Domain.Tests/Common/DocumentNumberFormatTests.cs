@@ -9,10 +9,13 @@ public class DocumentNumberFormatTests
     private static readonly DateOnly Day = new(2026, 10, 27);
 
     [Theory, Trait("Id", "SD-UT-006"), Trait("Rule", "SD-BR-006")]
-    [InlineData(null, "SO261000001")]
-    [InlineData("SO261000041", "SO261000042")]
-    [InlineData("OLD-7", "SO261000001")]
-    public void Next_SalesOrder_IsSoYymmFiveDigits(string? last, string expected)
+    [InlineData(null, "SO2610000001")]
+    [InlineData("SO2610000041", "SO2610000042")]
+    [InlineData("SO261000041", "SO2610000042")]
+    [InlineData("SO261099999", "SO2610100000")]
+    [InlineData("SO2609000041", "SO2610000001")]
+    [InlineData("OLD-7", "SO2610000001")]
+    public void Next_SalesOrder_IsSoYymmSixDigits_AndContinuesAfterLegacyFiveDigitNumbers(string? last, string expected)
     {
         DocumentNumberFormat.SalesOrder.Next(Day, last).Should().Be(expected);
         DocumentNumberFormat.SalesOrder.Period(Day).Should().Be("2610");
@@ -21,7 +24,7 @@ public class DocumentNumberFormatTests
     [Fact, Trait("Id", "SD-UT-006"), Trait("Rule", "SD-BR-006")]
     public void Next_SequenceOutOfDigits_ThrowsSdE006InsteadOfReusingNumbers()
     {
-        var act = () => DocumentNumberFormat.SalesOrder.Next(Day, "SO261099999");
+        var act = () => DocumentNumberFormat.SalesOrder.Next(Day, "SO2610999999");
 
         var error = act.Should().Throw<DomainException>().Which;
         error.Code.Should().Be("SD-E-006");
@@ -38,28 +41,44 @@ public class DocumentNumberFormatTests
         DocumentNumberFormat.SalesInvoice.Period(Day.AddMonths(1)).Should().BeEmpty();
     }
 
-    // SD-BR-206, MM-BR-017, MM-BR-106, MM-BR-208, MM-BR-308
+    // SD-BR-206
+    [Fact, Trait("Id", "CORE-007-T01")]
+    public void Next_CreditMemo_IsCmYymmFiveDigits()
+    {
+        DocumentNumberFormat.CreditMemo.Next(Day, null).Should().Be("CM261000001");
+    }
+
+    // MM-BR-017, MM-BR-208, MM-BR-308; a 5-digit number already issued this month is continued after (SD-BR-006)
     [Theory, Trait("Id", "CORE-007-T01")]
-    [InlineData("CM")]
     [InlineData("PO")]
-    [InlineData("GR")]
     [InlineData("UR")]
     [InlineData("CT")]
-    public void Next_MonthlyDocuments_ArePrefixYymmFiveDigits(string prefix)
+    public void Next_MonthlyDocuments_ArePrefixYymmSixDigits(string prefix)
     {
         var format = new[]
         {
-            DocumentNumberFormat.CreditMemo, DocumentNumberFormat.PurchaseOrder, DocumentNumberFormat.GoodsReceipt,
-            DocumentNumberFormat.UnplannedReceipt, DocumentNumberFormat.StockCount,
+            DocumentNumberFormat.PurchaseOrder, DocumentNumberFormat.UnplannedReceipt, DocumentNumberFormat.StockCount,
         }.Single(f => f.Prefix == prefix);
 
-        format.Next(Day, null).Should().Be($"{prefix}261000001");
+        format.Next(Day, null).Should().Be($"{prefix}2610000001");
+        format.Next(Day, $"{prefix}261000040").Should().Be($"{prefix}2610000041");
+    }
+
+    [Theory, Trait("Id", "MM-UT-106"), Trait("Rule", "MM-BR-106")]
+    [InlineData("2026-10-27", "GR2610000011", "GR2610000012")]
+    [InlineData("2026-11-02", "GR2610000012", "GR2611000001")]
+    [InlineData("2026-10-27", null, "GR2610000001")]
+    public void Next_GoodsReceipt_IsGrYymmSixDigitsOfTheReceiptDate_AndRestartsMonthly(string grDt, string? last, string expected)
+    {
+        var date = DateOnly.Parse(grDt, System.Globalization.CultureInfo.InvariantCulture);
+
+        DocumentNumberFormat.GoodsReceipt.Next(date, last).Should().Be(expected);
     }
 
     [Theory, Trait("Id", "MM-UT-017"), Trait("Rule", "MM-BR-017")]
-    [InlineData("2026-10-27", "PO261000011", "PO261000012")]
-    [InlineData("2026-11-02", "PO261000012", "PO261100001")]
-    [InlineData("2026-10-27", null, "PO261000001")]
+    [InlineData("2026-10-27", "PO2610000011", "PO2610000012")]
+    [InlineData("2026-11-02", "PO2610000012", "PO2611000001")]
+    [InlineData("2026-10-27", null, "PO2610000001")]
     public void Next_PurchaseOrder_IsPoYymmOfPoDateAndRestartsMonthly(string poDt, string? last, string expected)
     {
         var date = DateOnly.Parse(poDt, System.Globalization.CultureInfo.InvariantCulture);

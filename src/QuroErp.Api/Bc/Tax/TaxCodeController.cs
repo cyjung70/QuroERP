@@ -1,19 +1,23 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuroErp.Api.Common.Auth;
 using QuroErp.Application.Bc.Tax;
 using QuroErp.Contracts.Bc.Tax;
 using QuroErp.Contracts.Common;
+using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Bc.Tax;
 
 /// <summary>
 /// Tax code management (BC-UC-028). Any signed-in user or API client can read (FallbackPolicy); changes need Full Access
-/// (BC-BR-507, BC-BR-214), checked by the admin role until the menu policy is applied, as on the other screens.
+/// on the screen (BC-BR-507, BC-BR-214), checked by the screen path policy.
 /// </summary>
 [ApiController]
 public sealed class TaxCodeController(TaxCodeService service) : ControllerBase
 {
+    private const string Screen = ScreenPolicy.Prefix + ScreenPaths.TaxCode;
+
     /// <summary>Every tax code in code order, with names in lang.</summary>
     /// <param name="lang">Language of Name. When omitted, the request language (Accept-Language) is used.</param>
     /// <param name="useYn">Only codes in use (true) or not in use (false). When omitted, all.</param>
@@ -30,7 +34,7 @@ public sealed class TaxCodeController(TaxCodeService service) : ControllerBase
     /// whose kind, rate or tax area changes or a deleted code is used by documents or partners, Common-E-004 when a row changed after
     /// it was read.
     /// </summary>
-    [HttpPost(TaxCodeRoutes.Batch), Authorize(Roles = "admin")]
+    [HttpPost(TaxCodeRoutes.Batch), Authorize(Policy = Screen)]
     public Task<IReadOnlyList<TaxCodeDto>> Save(
         BatchRequest<TaxCodeSaveRow, TaxCodeKey> request, [FromQuery] string? lang, CancellationToken cancellationToken) =>
         service.SaveAsync(request, lang ?? CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, User.Identity!.Name!, cancellationToken);

@@ -41,6 +41,36 @@ public partial class DesignTokenTests
         Contrast(t["brand"], t["brand-tint"]).Should().BeGreaterThanOrEqualTo(4.5);
     }
 
+    public static TheoryData<string, string, string> FieldValues => new()
+    {
+        { ":root {", "#fff8dc", "#ffffff" },
+        { ":root:not([data-theme=\"light\"]) {", "#2d2a19", "#1a2029" },
+        { ":root[data-theme=\"dark\"] {", "#2d2a19", "#1a2029" },
+    };
+
+    [Theory, Trait("Id", "CORE-060-WT-01")]
+    [MemberData(nameof(FieldValues))]
+    public void FieldTokens_AreRequiredYellowAndInputWhite_InEveryTheme(string block, string requiredBg, string input)
+    {
+        var tokens = Tokens(block);
+
+        tokens["field-required-bg"].Should().Be(requiredBg);
+        tokens["field-input"].Should().Be(input);
+        tokens.Should().NotContainKey("field-editable");
+    }
+
+    [Fact, Trait("Id", "CORE-060-WT-01")]
+    public void NothingUsesTheOldEditableFieldToken()
+    {
+        var web = Path.Combine(RepositoryRoot(), "src", "QuroErp.Web");
+        var files = Directory.GetFiles(web, "*.*", SearchOption.AllDirectories)
+            .Where(f => f.EndsWith(".css", StringComparison.Ordinal) || f.EndsWith(".razor", StringComparison.Ordinal) || f.EndsWith(".cs", StringComparison.Ordinal))
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
+
+        files.Where(f => File.ReadAllText(f).Contains("field-editable", StringComparison.Ordinal)).Should().BeEmpty();
+    }
+
     [Fact]
     public void ComponentStyles_DoNotHardCodeTheOldBrandColours()
     {
@@ -62,6 +92,17 @@ public partial class DesignTokenTests
 
         HexColor().Matches(CssComment().Replace(css, "")).Select(m => m.Value).Should().BeEmpty();
         css.Should().Contain("var(--q-brand)").And.Contain("@media (max-width: 767.98px)").And.Contain(":root[data-theme=\"dark\"] .login-brand");
+    }
+
+    [Fact]
+    public void LookupButton_UsesTheTextBoxHeight()
+    {
+        var css = File.ReadAllText(Path.Combine(RepositoryRoot(), "src", "QuroErp.Web", "wwwroot", "css", "quro-entry.css"));
+        var start = css.IndexOf(".quro-lookup-field > button {", StringComparison.Ordinal);
+
+        start.Should().BeGreaterThanOrEqualTo(0, "the find button needs its own rule (screens.md \"팝업\")");
+        css[start..css.IndexOf('}', start)].Should().Contain("height: var(--q-control-h)");
+        css.Should().Contain("min-height: var(--q-control-h)", "the text box sets its height from the same token");
     }
 
     private static Dictionary<string, string> Tokens(string block)

@@ -20,7 +20,7 @@
                 <li><a href="@ProfilePath" data-testid="user-menu-profile">@L["Common.MyInfo"]</a></li>
                 <li><a href="@WebAuthentication.ChangePasswordPath" data-testid="user-menu-change-password">@L["Bc.ChangePassword.Title"]</a></li>
                 <li>
-                    <form method="post" action="@WebAuthentication.LogoutPath">
+                    <form method="post" action="@WebAuthentication.LogoutPath" data-shell-logout>
                         <AntiforgeryToken />
                         <button type="submit" data-testid="user-menu-logout">@L["Common.Logout"]</button>
                     </form>

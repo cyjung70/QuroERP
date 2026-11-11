@@ -1,0 +1,121 @@
+@* Purchase order form (print-documents.md "purchase-order"): vendor address and contacts, header, lines in line order and the
+   stored totals. Rev. n when the order was changed after approval (MM-BR-021). Values use Razor output only. *@
+@using QuroErp.Application.Mm.PurchaseOrders
+
+<PrintLayout Company="Print.Company" Title="@T("Print.PurchaseOrder.Title")" DocumentNo="@Print.Order.PoNo" Revision="@Revision" Culture="Culture">
+    <section class="parties">
+        <div class="vendor">
+            <div class="label">@T("Print.PurchaseOrder.Vendor")</div>
+            <div class="name">@Print.Vendor.Name</div>
+            @foreach (var line in Print.Vendor.AddressLines)
+            {
+                <div>@line</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Print.Vendor.Contact))
+            {
+                <div>@T("Print.PurchaseOrder.Contact") @Print.Vendor.Contact</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Print.Vendor.Phone))
+            {
+                <div>@T("Print.Phone") @Print.Vendor.Phone</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Print.Vendor.Fax))
+            {
+                <div>@T("Print.Fax") @Print.Vendor.Fax</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Print.Vendor.Email))
+            {
+                <div>@T("Print.Email") @Print.Vendor.Email</div>
+            }
+        </div>
+        <table class="fields">
+            <tbody>
+                <tr><th>@T("Print.PurchaseOrder.PoDt")</th><td>@Date(Print.Order.PoDt)</td></tr>
+                <tr><th>@T("Print.PurchaseOrder.DueDt")</th><td>@Date(Print.Order.DueDt)</td></tr>
+                <tr><th>@T("Print.PurchaseOrder.Currency")</th><td>@Print.Order.CurrencyCode</td></tr>
+                <tr><th>@T("Print.PurchaseOrder.Incoterms")</th><td>@Print.Order.Incoterms</td></tr>
+                <tr><th>@T("Print.PurchaseOrder.PaymentTerms")</th><td>@Print.Order.PaymentTerms</td></tr>
+                <tr><th>@T("Print.PurchaseOrder.Buyer")</th><td>@Print.Order.Buyer</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <table class="lines">
+        <thead>
+            <tr>
+                <th class="num">@T("Print.PurchaseOrder.Seq")</th>
+                <th>@T("Print.PurchaseOrder.ItemCode")</th>
+                <th>@T("Print.PurchaseOrder.ItemName")</th>
+                <th>@T("Print.PurchaseOrder.Unit")</th>
+                <th class="num">@T("Print.PurchaseOrder.Qty")</th>
+                <th class="num">@T("Print.PurchaseOrder.UnitPrice")</th>
+                <th class="num">@T("Print.PurchaseOrder.DcRate")</th>
+                <th class="num">@T("Print.PurchaseOrder.Amount")</th>
+                <th>@T("Print.PurchaseOrder.LineDueDt")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in Print.Order.Lines.OrderBy(l => l.Seq))
+            {
+                <tr>
+                    <td class="num">@line.Seq</td>
+                    <td class="mono">@line.ItemCd</td>
+                    <td>@line.ItemName</td>
+                    <td>@line.Unit</td>
+                    <td class="num">@N(line.PoQty, Print.QtyDecimals)</td>
+                    <td class="num">@N(line.PoPrc, Print.PriceDecimals)</td>
+                    <td class="num">@(line.DcRate == 0 ? "" : N(line.DcRate, 2))</td>
+                    <td class="num">@N(line.PoAmt, Print.AmountDecimals)</td>
+                    <td>@Date(line.DueDt)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tbody>
+            <tr><th>@T("Print.PurchaseOrder.Subtotal")</th><td class="num">@N(Print.Order.GrossAmt, Print.AmountDecimals)</td></tr>
+            @if (Print.Order.DcAmt != 0)
+            {
+                <tr><th>@T("Print.PurchaseOrder.Discount")</th><td class="num">-@N(Print.Order.DcAmt, Print.AmountDecimals)</td></tr>
+            }
+            <tr><th>@T("Print.PurchaseOrder.Tax")</th><td class="num">@N(Print.Order.TaxAmt, Print.AmountDecimals)</td></tr>
+            <tr class="total"><th>@T("Print.PurchaseOrder.Total") (@Print.Order.CurrencyCode)</th><td class="num">@N(Print.Order.TotPoAmt, Print.AmountDecimals)</td></tr>
+        </tbody>
+    </table>
+
+    @if (!string.IsNullOrWhiteSpace(Print.Order.Remarks))
+    {
+        <section class="remarks">
+            <div class="label">@T("Print.PurchaseOrder.Remarks")</div>
+            <div class="text">@Print.Order.Remarks</div>
+        </section>
+    }
+
+    <style>
+        .parties { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 12px; }
+        .parties .label, .remarks .label { font-size: 8.5pt; color: #555; }
+        .parties .vendor .name { font-weight: 700; font-size: 11pt; }
+        table.fields { width: auto; }
+        table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+        table.totals { width: 45%; margin: 12px 0 0 auto; }
+        table.totals th { background: none; text-align: right; }
+        table.totals tr.total th, table.totals tr.total td { font-weight: 700; border-top: 2px solid #333; }
+        .remarks { margin-top: 16px; }
+        .remarks .text { white-space: pre-wrap; }
+    </style>
+</PrintLayout>
+
+@code {
+    [Parameter, EditorRequired] public PurchaseOrderPrint Print { get; set; } = default!;
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+    private string? Revision => Print.Order.RevisionNo >= 1 ? string.Format(Culture, T("Print.Revision"), Print.Order.RevisionNo) : null;
+
+    private string T(string key) => PrintText.Get(key, Culture);
+
+    private string N(decimal value, int decimals) => value.ToString("N" + decimals, Culture);
+
+    private string? Date(DateOnly? value) => value?.ToString("d", Culture);
+}

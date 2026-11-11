@@ -4,11 +4,14 @@ using Microsoft.Extensions.Time.Testing;
 using QuroErp.Application.Bc.UserProfiles;
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.Auth;
+using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Application.Tests.Common.Auth;
 using QuroErp.Contracts.Bc.UserProfiles;
+using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Domain.Bc.UserProfiles;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Common.Auth;
+using QuroErp.Domain.Mm.Warehouses;
 
 namespace QuroErp.Application.Tests.Bc.UserProfiles;
 
@@ -31,7 +34,7 @@ public class UserProfileServiceTests
         _profiles.Rows[8] = new UserProfileRow(8, "lee", "Lee", null, null, "en", null, "W01", "Main", Loaded);
     }
 
-    private UserProfileService Service => new(_profiles, _users, _tokens, _unitOfWork, new FakeTimeProvider(Now));
+    private UserProfileService Service => new(_profiles, _users, _tokens, new FakeWarehouseRepository(), _unitOfWork, new FakeTimeProvider(Now));
 
     private static UpdateUserProfileRequest Request(string? lang = "en", long? warehouseId = 2, DateTimeOffset? updatedAt = null) =>
         new(" Kim Min ", "kim@example.com", "010-1234-5678", lang, warehouseId, updatedAt ?? Loaded);
@@ -105,6 +108,17 @@ public class UserProfileServiceTests
         error.Args.Should().Equal(nameof(UserProfileFields.DefaultWarehouseId));
     }
 
+    [Fact, Trait("Id", "MM-UT-710"), Trait("Rule", "MM-BR-710")]
+    public async Task Update_WithTheConsignmentWarehouse_IsMmE710_AndSavesNothing()
+    {
+        var act = () => Service.UpdateAsync(7, Request(warehouseId: 3), "kim", CancellationToken.None);
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be(WarehouseRules.ConsignmentNotSelectableCode);
+        error.Args.Should().Equal("CONSIGN");
+        _profiles.UpdatedBy.Should().BeEmpty();
+    }
+
     [Fact, Trait("Id", "BC-UT-102")]
     public async Task Update_WithEmptyLanguageAndWarehouse_SkipsTheChecks_AndUsesTheCompanyDefault()
     {
@@ -138,6 +152,40 @@ public class UserProfileServiceTests
         await act.Should().ThrowAsync<NotFoundException>();
     }
 
+    /// <summary>Warehouse 3 is the consignment warehouse; it is in use, so only MM-BR-710 rejects it.</summary>
+    private sealed class FakeWarehouseRepository : IWarehouseRepository
+    {
+        public Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(
+            bool includeConsignment, bool includeInactive, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<ConsignmentWarehouse?> FindConsignmentAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<ConsignmentWarehouse?>(new ConsignmentWarehouse(3, "CONSIGN"));
+
+        public Task<IReadOnlyList<WarehouseRow>> FindAllAsync(bool forUpdate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyDictionary<long, string>> FindInactivationBlockersAsync(
+            IReadOnlyCollection<long> warehouseIds, DateOnly today, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyDictionary<long, string>> FindDeleteBlockersAsync(
+            IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task ClearDefaultAsync(string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<long> InsertAsync(WarehouseState warehouse, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task UpdateAsync(WarehouseState warehouse, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task DeleteAsync(IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+    }
+
     private sealed class FakeUserProfileRepository : IUserProfileRepository
     {
         public Dictionary<long, UserProfileRow> Rows { get; } = [];
@@ -153,7 +201,7 @@ public class UserProfileServiceTests
             Task.FromResult(langCode is "ko" or "en");
 
         public Task<bool> IsWarehouseInUseAsync(long warehouseId, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(warehouseId is 1 or 2);
+            Task.FromResult(warehouseId is 1 or 2 or 3);
 
         public Task<bool> UpdateAsync(
             long appUserId, UserProfileFields fields, DateTimeOffset expectedUpdatedAt, string updatedBy,

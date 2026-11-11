@@ -26,7 +26,7 @@ public class CodeMajorServiceTests
     {
         _service = new CodeMajorService(_majors, _majors, _localization, _uow);
         _majors.Add(1, CodeMajors.Unit, 3, new() { ["en"] = "Unit", ["ko"] = "단위" });
-        _majors.Add(2, "TERMS", 2, new() { ["en"] = "Terms" });
+        _majors.Add(2, "TERRITORY", 2, new() { ["en"] = "Territory" });
         _majors.Add(3, "TEMP", 0, new() { ["en"] = "Temporary" });
     }
 
@@ -36,9 +36,9 @@ public class CodeMajorServiceTests
         var all = await _service.SearchAsync(null, "ko", None);
         var te = await _service.SearchAsync(" te ", "ko", None);
 
-        all.Select(m => (m.MajorCode, m.Name, m.MinorCount)).Should().Equal(("TEMP", "Temporary", 0), ("TERMS", "Terms", 2), ("UNIT", "단위", 3));
+        all.Select(m => (m.MajorCode, m.Name, m.MinorCount)).Should().Equal(("TEMP", "Temporary", 0), ("TERRITORY", "Territory", 2), ("UNIT", "단위", 3));
         all[2].Names.Should().Equal(new Dictionary<string, string> { ["en"] = "Unit", ["ko"] = "단위" });
-        te.Select(m => m.MajorCode).Should().Equal("TEMP", "TERMS");
+        te.Select(m => m.MajorCode).Should().Equal("TEMP", "TERRITORY");
     }
 
     [Fact, Trait("Id", "BC-UC-023-T07")]
@@ -46,10 +46,10 @@ public class CodeMajorServiceTests
     {
         var majors = await _service.SaveAsync(new SaveCodeMajorsRequest(
             [new CodeMajorInsert("ship_via", new Dictionary<string, string?> { ["en"] = "Ship Via", ["ko"] = "운송 방법" }, null)],
-            [new CodeMajorUpdate(2, "terms", new Dictionary<string, string?> { ["en"] = "Payment Terms" }, false, Read)],
+            [new CodeMajorUpdate(2, "territory", new Dictionary<string, string?> { ["en"] = "Sales Territory" }, false, Read)],
             [new CodeMajorDelete(3, Read)]), "en", "kim", None);
 
-        majors.Select(m => (m.MajorCode, m.Name, m.UseYn)).Should().Equal(("SHIP_VIA", "Ship Via", true), ("TERMS", "Payment Terms", false), ("UNIT", "Unit", true));
+        majors.Select(m => (m.MajorCode, m.Name, m.UseYn)).Should().Equal(("SHIP_VIA", "Ship Via", true), ("TERRITORY", "Sales Territory", false), ("UNIT", "Unit", true));
         _majors.NamesOf("SHIP_VIA").Should().Equal(new Dictionary<string, string> { ["en"] = "Ship Via", ["ko"] = "운송 방법" });
         _uow.Commits.Should().Be(1);
     }
@@ -59,7 +59,7 @@ public class CodeMajorServiceTests
     {
         var act = () => _service.SaveAsync(new SaveCodeMajorsRequest(
             [new CodeMajorInsert("SHIP_VIA", new Dictionary<string, string?> { ["en"] = "Ship Via" }, null)],
-            [new CodeMajorUpdate(2, null, new Dictionary<string, string?> { ["en"] = "Payment Terms" }, true, Read)],
+            [new CodeMajorUpdate(2, null, new Dictionary<string, string?> { ["en"] = "Sales Territory" }, true, Read)],
             [new CodeMajorDelete(1, Read)]), "en", "kim", None);
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
@@ -81,7 +81,7 @@ public class CodeMajorServiceTests
     }
 
     [Theory, Trait("Id", "BC-UC-023-T01")]
-    [InlineData("terms", "TERMS")]
+    [InlineData("territory", "TERRITORY")]
     [InlineData("SO-STATUS", "SO-STATUS")]
     public async Task Save_AnExistingOrBadCode_IsSdE901(string code, string arg)
     {
@@ -130,11 +130,11 @@ public class CodeMajorServiceTests
     public async Task Save_ChangingTheCode_IsSdE902()
     {
         var act = () => _service.SaveAsync(new SaveCodeMajorsRequest(
-            null, [new CodeMajorUpdate(2, "PAY_TERMS", new Dictionary<string, string?> { ["en"] = "Terms" }, true, Read)], null), "en", "kim", None);
+            null, [new CodeMajorUpdate(2, "PAY_TERMS", new Dictionary<string, string?> { ["en"] = "Territory" }, true, Read)], null), "en", "kim", None);
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be(CodeMajorRules.CodeChangedCode);
-        error.Args.Should().Equal("TERMS");
+        error.Args.Should().Equal("TERRITORY");
     }
 
     [Fact, Trait("Id", "BC-UC-023-T03")]
@@ -144,7 +144,7 @@ public class CodeMajorServiceTests
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be(CodeMajorRules.HasMinorsCode);
-        error.Args.Should().Equal("TERMS");
+        error.Args.Should().Equal("TERRITORY");
     }
 
     [Theory, Trait("Id", "BC-UC-023-T04")]

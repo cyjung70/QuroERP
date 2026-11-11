@@ -17,7 +17,8 @@
     "SD-BR-403",
     "SD-BR-407",
     "SD-BR-408",
-    "SD-BR-409"
+    "SD-BR-409",
+    "BC-BR-423"
   ],
   "skills": [
     "quro-api",
@@ -36,5 +37,5 @@
     "관련 BR마다 테스트"
   ],
   "estimateHours": 2,
-  "status": "todo"
+  "status": "done"
 }

@@ -175,12 +175,13 @@ window.quroSubmit = (form) => form.requestSubmit();
     });
 })();
 
-// App shell (app-shell.md 3). The layout is static, so the menu toggle, group folding, collapse and the narrow-screen overlay
-// are plain DOM handlers. Folded groups and the collapsed state stay in localStorage; enhanced navigation redraws the shell
-// from the server, so the state is applied again after every page load.
+// App shell (app-shell.md 2, 3). The layout is static, so the module pick, menu toggle, group folding, collapse and the
+// narrow-screen overlay are plain DOM handlers. The module, folded groups and the collapsed state stay in localStorage;
+// enhanced navigation redraws the shell from the server, so the state is applied again after every page load.
 (() => {
     const collapsedKey = "quro.shell.collapsed";
     const foldedKey = "quro.shell.folded";
+    const moduleKey = "quro.shell.module";
     const narrow = window.matchMedia("(max-width: 767.98px)");
     const local = () => { try { return window.localStorage; } catch { return null; } };
 
@@ -193,6 +194,19 @@ window.quroSubmit = (form) => form.requestSubmit();
     };
 
     const setGroup = (group, open) => group.querySelector("[data-shell-group-toggle]")?.setAttribute("aria-expanded", String(open));
+
+    // The side menu shows the picked module only; an unknown module (no longer visible) falls back to the first
+    const pickModule = (code, keep) => {
+        const lists = [...document.querySelectorAll("[data-shell-module]")];
+        if (lists.length === 0) return;
+        if (!lists.some((list) => list.dataset.shellModule === code)) code = lists[0].dataset.shellModule;
+        lists.forEach((list) => { list.hidden = list.dataset.shellModule !== code; });
+        document.querySelectorAll("[data-shell-module-pick]").forEach((button) => {
+            if (button.dataset.shellModulePick === code) button.setAttribute("aria-current", "true");
+            else button.removeAttribute("aria-current");
+        });
+        if (keep) local()?.setItem(moduleKey, code);
+    };
 
     const setCollapsed = (collapsed) => {
         const el = shell();
@@ -227,6 +241,9 @@ window.quroSubmit = (form) => form.requestSubmit();
         // The group of the open screen always opens (app-shell.md 3)
         document.querySelectorAll("[data-shell-group]").forEach((group) =>
             setGroup(group, group.dataset.current === "true" || !closed.has(group.dataset.shellGroup)));
+        // The module of the open screen, else the one picked last (app-shell.md 3 "모듈 선택")
+        const current = document.querySelector("[data-shell-module][data-current]")?.dataset.shellModule;
+        pickModule(current ?? local()?.getItem(moduleKey), current !== undefined);
         setCollapsed(local()?.getItem(collapsedKey) === "1");
         setOpen(false);
     };
@@ -239,6 +256,9 @@ window.quroSubmit = (form) => form.requestSubmit();
             return;
         }
         if (target.closest("[data-shell-backdrop]")) { close(); return; }
+        // Picking a module changes the side menu only; no screen opens
+        const pick = target.closest("[data-shell-module-pick]");
+        if (pick) { pickModule(pick.dataset.shellModulePick, true); return; }
         if (target.closest("[data-shell-collapse]")) {
             const collapsed = !shell().hasAttribute("data-shell-collapsed");
             local()?.setItem(collapsedKey, collapsed ? "1" : "0");
@@ -284,6 +304,17 @@ window.quroSubmit = (form) => form.requestSubmit();
         if (e.target.matches?.("[data-shell-language]")) e.target.form.requestSubmit();
     });
 
+    // Signing out asks first when a screen tab has unsaved changes (app-shell.md 2 item 8); the tab list goes with the session
+    document.addEventListener("submit", (e) => {
+        if (!e.target.matches?.("[data-shell-logout]")) return;
+        const message = shell()?.dataset.confirmUnsaved;
+        if (message && document.querySelector("[data-shell-tab][data-dirty]") && !window.confirm(message)) {
+            e.preventDefault();
+            return;
+        }
+        window.quroShellTabs.clear();
+    }, true);
+
     narrow.addEventListener?.("change", () => setOpen(false));
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -292,9 +323,30 @@ window.quroSubmit = (form) => form.requestSubmit();
     });
 })();
 
+// Screen tabs (app-shell.md 3.3): the open tab paths stay in sessionStorage so a reload opens the same tabs (contents empty).
+// Every call is safe without storage; the tabs then just start with the open screen.
+window.quroShellTabs = (() => {
+    const key = "quro.shell.tabs";
+    const session = () => { try { return window.sessionStorage; } catch { return null; } };
+    return {
+        load: () => {
+            try {
+                const paths = JSON.parse(session()?.getItem(key) ?? "[]");
+                return Array.isArray(paths) ? paths.filter((p) => typeof p === "string" && p.startsWith("/")) : [];
+            } catch { return []; }
+        },
+        save: (paths) => { try { session()?.setItem(key, JSON.stringify(paths)); } catch { } },
+        clear: () => { try { session()?.removeItem(key); } catch { } },
+        // The active tab scrolls into view when the strip overflows
+        reveal: () => document.querySelector("[data-shell-tabs-strip] [data-active]")?.scrollIntoView({ block: "nearest", inline: "nearest" }),
+    };
+})();
+
 // Entry frame shortcuts (entry-frame.md 2): F3 search, Ctrl+S save, Ctrl+Insert add row, Ctrl+Delete mark delete.
-// One entry frame is on a page; it registers while mounted and disposes the returned reference when it goes.
-window.quroEntryShortcuts = (frame) => {
+// Tabs keep hidden frames mounted (app-shell.md 3.3), so every frame listens and only a visible one acts.
+// A frame registers while mounted and disposes the returned reference when it goes.
+window.quroEntryShortcuts = (frame, root) => {
+    const isVisible = (element) => element.getClientRects().length > 0;
     const commands = (e) => {
         if (e.key === "F3" && !e.ctrlKey && !e.altKey) return "search";
         if (!e.ctrlKey || e.altKey || e.shiftKey) return null;
@@ -305,7 +357,9 @@ window.quroEntryShortcuts = (frame) => {
     };
     const onKeyDown = (e) => {
         const command = commands(e);
-        if (!command || document.querySelector(".quro-dialog-backdrop")) return;
+        if (!command || !isVisible(root)) return;
+        // A dialog left open in a hidden tab does not block this one
+        if ([...document.querySelectorAll(".quro-dialog-backdrop")].some(isVisible)) return;
         e.preventDefault();
         // An edited input commits its value on change, so let it fire before the command runs
         const input = document.activeElement;
@@ -315,5 +369,19 @@ window.quroEntryShortcuts = (frame) => {
         frame.invokeMethodAsync("OnShortcut", command);
     };
     document.addEventListener("keydown", onKeyDown);
-    return DotNet.createJSObjectReference({ dispose: () => document.removeEventListener("keydown", onKeyDown) });
+    // A plain object: the caller asks for an IJSObjectReference, so Blazor makes the reference itself
+    return { dispose: () => document.removeEventListener("keydown", onKeyDown) };
+};
+
+// Row double-click on a list grid (screens.md "팝업"). Only a body row counts, so a header or empty space does nothing.
+// TODO(QuroGrid-request): replace with a public row double-click event of the package.
+window.quroListRowDoubleClick = (host, list) => {
+    const onDoubleClick = (e) => {
+        const row = e.target.closest?.(".quro-body [role=row][data-row]");
+        // The reference is gone when the dialog closed between two double-clicks
+        if (row && host.contains(row)) list.invokeMethodAsync("OnRowDoubleClick", Number(row.dataset.row)).catch(() => { });
+    };
+    host.addEventListener("dblclick", onDoubleClick);
+    // A plain object: the caller asks for an IJSObjectReference, so Blazor makes the reference itself
+    return { dispose: () => host.removeEventListener("dblclick", onDoubleClick) };
 };

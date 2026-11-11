@@ -1,0 +1,205 @@
+@page "/bc/set-item"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Definition
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Common
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.SetItems
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Bc.Models
+@inject SetItemApiClient Api
+@inject ItemApiClient Items
+@inject LocalizationApiClient LocalizationApi
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* BC-UC-013 set item composition, screen type M. Pick a set (code or lookup dialog), then add, change or delete its components and
+   save them together (SD-BR-506). Copy adds another set's components as new rows (SD-BR-508). The dialogs offer only what the
+   rules allow; the API checks every rule again (SD-BR-501~505, MM-BR-361). *@
+
+<PageTitle>@L["Bc.SetItem.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="set-item-load-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="SetComponentRow" Title="@L["Bc.SetItem.Title"]" TestId="set-item" Path="@L["Menu.G1BA"]"
+                   Definition="bc.set-item" Adjust="WithQtyFormat" Lookup="LookupComponentsAsync" UpperCaseFields="UpperCaseFields"
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="() => new SetComponentRow()" CanWrite="_canEdit" OnReset="ResetSearch" CanAddRow="() => _loadedSetCd is not null">
+        <SearchContent>
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Bc.SetItem.ItemCd"]" @bind-Value="_setCd" @bind-Value:after="SetCodeChanged" Required
+                          TextCase="TextCase.Upper" TestId="set-item-search-item-cd" />
+                <button type="button" aria-label="@L["Bc.SetItem.FindSet"]" data-testid="set-item-search-find-set" @onclick="() => OpenSetLookup(false)">…</button>
+            </div>
+            <QuroText Label="@L["Bc.SetItem.ItemNm"]" Value="@_setName" LockMode="LockMode.Always" TestId="set-item-search-item-nm" />
+        </SearchContent>
+        <ExtraCommands>
+            <button type="button" disabled="@(!_canEdit || _loadedSetCd is null)" data-testid="set-item-toolbar-copy-set"
+                    @onclick="() => OpenSetLookup(true)">@L["Bc.SetItem.CopySet"]</button>
+        </ExtraCommands>
+    </QuroMultiGrid>
+
+    <QuroLookupDialog TItem="ItemDto" Title="@L[_copying ? "Bc.SetItem.CopySet" : "Bc.SetItem.FindSet"]" TestId="set-item-set-lookup"
+                      @bind-Visible="_setLookupOpen" Search="FindSetsAsync" OnSelected="SetPicked">
+        <Columns>
+            <QuroColumn TRow="ItemDto" Title="@L["Bc.SetItem.ItemCd"]" Value="i => i.ItemCd" />
+            <QuroColumn TRow="ItemDto" Title="@L["Bc.SetItem.ItemNm"]" Value="i => i.ItemName" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string SdModule = "SD";
+    private const string SetType = "SET";
+    private const string InventoryType = "INVENTORY";
+    private const string NotInUse = "N";
+    private const string RequiredCode = "Common-E-005";
+    private const string UnavailableCode = "BC-E-003";
+    private static readonly string[] UpperCaseFields = ["itemCd"];
+
+    private QuroMultiGrid<SetComponentRow>? _grid;
+    private string? _setCd;
+    private string? _setName;
+    private string? _loadedSetCd;
+    private string? _qtyFormat;
+    private bool _canEdit;
+    private bool _ready;
+    private bool _setLookupOpen;
+    private bool _copying;
+    private string? _loadError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy is applied, as in SetItemController (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        try
+        {
+            var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+            _qtyFormat = localization.Qty(SdModule) is { } decimals ? $"N{decimals.ToString(CultureInfo.InvariantCulture)}" : null;
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // The quantity shows the SD quantity decimals, which the API checks on save (BC-BR-423)
+    private GridDef WithQtyFormat(GridDef grid) => _qtyFormat is null ? grid : grid with
+    {
+        Columns = [.. grid.Columns.Select(c => c.Id == "qty" ? c with { Fmt = _qtyFormat } : c)],
+    };
+
+    // SD-BR-501: the set comes first; its components are shown in sequence order
+    private void ResetSearch() => _setCd = _setName = _loadedSetCd = null;
+
+    private async Task<IReadOnlyList<SetComponentRow>> LoadAsync()
+    {
+        var setCd = _setCd?.Trim().ToUpperInvariant();
+        if (string.IsNullOrEmpty(setCd))
+        {
+            _loadedSetCd = null;
+            throw new ApiProblemException(new ApiProblem(400, RequiredCode, [L["Bc.SetItem.ItemCd"]]));
+        }
+        _loadedSetCd = null;
+        var set = await Api.GetAsync(setCd, CancellationToken.None);
+        _loadedSetCd = set.ItemCd;
+        _setCd = set.ItemCd;
+        _setName = set.ItemName;
+        return [.. set.Components.Select(SetComponentRow.From)];
+    }
+
+    // Saves for the set the rows were read for, even if the set code changed since. A rejected row is selected (SD-BR-506)
+    private async Task SaveAsync(BatchChanges<SetComponentRow> changes)
+    {
+        try
+        {
+            await Api.SaveAsync(_loadedSetCd!, SetComponentRow.ToRequest(changes), CancellationToken.None);
+        }
+        catch (ApiProblemException e) when (e.Problem.Args is [var itemCd, ..])
+        {
+            SelectRow(itemCd);
+            throw;
+        }
+    }
+
+    private void SelectRow(string itemCd)
+    {
+        var data = _grid!.Data;
+        foreach (var key in data.RowKeys)
+        {
+            if (string.Equals(data.GetItem(key).ItemCd?.Trim(), itemCd, StringComparison.OrdinalIgnoreCase))
+            {
+                data.MoveTo(key);
+                return;
+            }
+        }
+    }
+
+    // A typed code clears the name; the next search shows the name of that set
+    private void SetCodeChanged() => _setName = null;
+
+    private void OpenSetLookup(bool copying)
+    {
+        _copying = copying;
+        _setLookupOpen = true;
+    }
+
+    // SD-BR-501: only Set items in use can have components
+    private async Task<IReadOnlyList<ItemDto>> FindSetsAsync(string? keyword) =>
+        [.. (await Items.LookupAsync(keyword?.Trim(), CancellationToken.None)).Where(i => i.ItemType == SetType && i.ValidFlag != NotInUse)];
+
+    private async Task SetPicked(ItemDto set)
+    {
+        if (_copying)
+        {
+            // SD-BR-508: the other set's components come as new rows; the save checks them like typed rows
+            await _grid!.AddRowsAsync(async () =>
+                (await Api.GetAsync(set.ItemCd, CancellationToken.None)).Components.Select(SetComponentRow.CopyOf));
+            return;
+        }
+        // A picked set is searched right away (after the unsaved-changes check)
+        _setCd = set.ItemCd;
+        _setName = set.ItemName;
+        await _grid!.SearchAsync();
+    }
+
+    // SD-BR-502, MM-BR-361: components are Inventory items in use without lot management. Typed or pasted codes are read
+    // exactly; a code that is not a component is marked as not found
+    private async Task<IReadOnlyList<LookupRow>> LookupComponentsAsync(LookupQuery query)
+    {
+        IEnumerable<ItemDto> items;
+        if (query.Codes is { } codes)
+        {
+            var found = new List<ItemDto>();
+            foreach (var code in codes)
+            {
+                if (await Items.FindByCodeAsync(code.Trim(), CancellationToken.None) is { } item)
+                {
+                    found.Add(item);
+                }
+            }
+            items = found;
+        }
+        else
+        {
+            items = await Items.LookupAsync(query.Keyword?.Trim(), CancellationToken.None);
+        }
+        return [.. items.Where(IsComponent).Select(i => LookupRow.Of(("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit)))];
+    }
+
+    private static bool IsComponent(ItemDto item) => item.ItemType == InventoryType && item.ValidFlag != NotInUse && !item.LotManaged;
+}

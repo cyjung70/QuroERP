@@ -1,0 +1,82 @@
+@* Page of every printed document (reports.md "PDF"): company head, title and document number, then the body.
+   Values use Razor output only (security.md "출력 인코딩"); the font faces are added by PdfRenderer. *@
+<!DOCTYPE html>
+<html lang="@Culture.TwoLetterISOLanguageName">
+<head>
+    <meta charset="utf-8" />
+    <title>@Title @DocumentNo</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'IBM Plex Sans KR', sans-serif; font-size: 10pt; color: #111; }
+        .mono, td.num { font-family: 'IBM Plex Mono', 'IBM Plex Sans KR', monospace; }
+        .company { display: flex; align-items: flex-start; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #333; }
+        .company img { max-height: 48px; max-width: 160px; }
+        .company .name { font-size: 14pt; font-weight: 700; }
+        .company .lines { font-size: 8.5pt; color: #333; }
+        .title { display: flex; justify-content: space-between; align-items: baseline; margin: 12px 0; }
+        .title h1 { margin: 0; font-size: 16pt; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { display: table-header-group; }
+        th, td { border-bottom: 1px solid #ccc; padding: 3px 4px; text-align: left; vertical-align: top; }
+        th { background: #f0f0f0; font-weight: 700; }
+        td.num, th.num { text-align: right; }
+        tr { page-break-inside: avoid; }
+    </style>
+</head>
+<body>
+    <header class="company">
+        @if (LogoUri is { } logo)
+        {
+            <img src="@logo" alt="" />
+        }
+        <div>
+            <div class="name">@Company.Name</div>
+            <div class="lines">
+                @foreach (var line in Company.AddressLines)
+                {
+                    <div>@line</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Company.Phone))
+                {
+                    <span>@PrintText.Get("Print.Phone", Culture) @Company.Phone</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Company.Email))
+                {
+                    <span> · @PrintText.Get("Print.Email", Culture) @Company.Email</span>
+                }
+            </div>
+        </div>
+    </header>
+    <div class="title">
+        <h1>@Title</h1>
+        <span class="mono">@DocumentNo@if (Revision is not null)
+            {
+                <span class="revision"> @Revision</span>
+            }</span>
+    </div>
+    @ChildContent
+</body>
+</html>
+
+@code {
+    [Parameter, EditorRequired] public PrintCompany Company { get; set; } = default!;
+
+    /// <summary>Document title in the user's language.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    /// <summary>The stored document number, printed in full (print-documents.md).</summary>
+    [Parameter] public string? DocumentNo { get; set; }
+
+    /// <summary>Revision text next to the number, e.g. Rev. 2 (MM-BR-021); none when null.</summary>
+    [Parameter] public string? Revision { get; set; }
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    // The logo as a data URI: the page loads nothing from the network
+    private string? LogoUri =>
+        Company.Logo is { Length: > 0 } bytes && Company.LogoContentType is "image/png" or "image/jpeg"
+            ? $"data:{Company.LogoContentType};base64,{Convert.ToBase64String(bytes)}"
+            : null;
+}

@@ -4,7 +4,16 @@
 
 <section class="quro-entry quro-screen" data-testid="@TestId">
 <CascadingValue Value="Policies" IsFixed="true">
-    <NavigationLock ConfirmExternalNavigation="IsDirty" OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+    @* In a screen tab, switching tabs keeps the screen, so only closing the tab asks (the tab bar does); outside the tabs
+       leaving the screen asks here (app-shell.md 3.3) *@
+    @if (ShellTab is null)
+    {
+        <NavigationLock ConfirmExternalNavigation="IsDirty" OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+    }
+    else
+    {
+        <NavigationLock ConfirmExternalNavigation="IsDirty" />
+    }
 
     <header class="quro-entry-title" data-testid="@Id("title")">
         @if (Path is not null)
@@ -89,6 +98,12 @@
 
     [Parameter]
     public string? Notice { get; set; }
+
+    /// <summary>The screen tab this screen is drawn in, if any: it gets the unsaved-changes state and the title.</summary>
+    [CascadingParameter]
+    public ShellTabState? ShellTab { get; set; }
+
+    protected override void OnParametersSet() => ShellTab?.Report(IsDirty, Title);
 
     private string? Id(string part) => TestId is null ? null : $"{TestId}-{part}";
 }

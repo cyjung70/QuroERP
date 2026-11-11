@@ -1,0 +1,30 @@
+# MM-UC-017 warehouses (TASK-MM-026). The code is entered on new rows only; the type is set by the system (MM-BR-709).
+screen:
+  id: mm.warehouse.list
+  module: MM
+  title: Mm.Warehouse.Title
+  version: 1
+  api: /api/mm/warehouses
+  key: id
+  layout: grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: warehouses
+    bind: warehouses
+    rowKey: id
+    deletedRows: strike
+    columns[6]{id,label,type,width,edit,req,fmt,source,hidden}:
+      warehouseCode,Mm.Warehouse.WarehouseCode,text,110,new,true,"","",false
+      warehouseName,Mm.Warehouse.WarehouseName,text,220,true,true,"","",false
+      isDefault,Mm.Warehouse.IsDefault,checkbox,90,true,false,"","",false
+      useYn,Mm.Warehouse.UseYn,checkbox,80,true,false,"","",false
+      warehouseType,Mm.Warehouse.WarehouseType,text,120,false,false,"","",false
+      remarks,Mm.Warehouse.Remarks,text,260,true,false,"","",false

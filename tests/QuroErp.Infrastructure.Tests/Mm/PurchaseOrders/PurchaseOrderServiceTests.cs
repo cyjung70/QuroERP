@@ -9,9 +9,11 @@ using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.PurchaseOrders;
+using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Mm.PurchaseOrders;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.PurchaseOrders;
+using QuroErp.Domain.Mm.Warehouses;
 using QuroErp.Infrastructure.Tests.Common.Auth;
 using QuroErp.Infrastructure.Tests.Common.Persistence;
 
@@ -37,7 +39,7 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
     private PurchaseOrderService Service => new(
         db.Get<IPurchaseOrderRepository>(), db.Get<ITaxRepository>(), new TaxAreaRateProvider(db.Get<ITaxRepository>()),
         db.Get<ILocalizationRepository>(), db.Get<IBusinessPlaceRepository>(), new DocumentNumberService(db.Get<IDocumentNumberRepository>()),
-        db.Get<IUnitOfWorkFactory>());
+        db.Get<IWarehouseRepository>(), db.Get<IUnitOfWorkFactory>());
 
     [DatabaseFact, Trait("Id", "MM-UC-003-T01"), Trait("Id", "MM-UC-003-T07")]
     public async Task Create_SavesADraftWithANumber_AndServerAmounts()
@@ -212,6 +214,60 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
         (await Service.SearchAsync(new(null, m.Vendor, null, null, null), None)).Should().BeEmpty();
     }
 
+    [DatabaseFact, Trait("Id", "MM-UT-710"), Trait("Rule", "MM-BR-710")]
+    public async Task ConsignmentWarehouse_OnAHeaderOrALine_IsMmE710_AndSavesNothing()
+    {
+        var m = await MastersAsync();
+        ConsignmentWarehouse consignment;
+        await using (var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None))
+        {
+            consignment = (await db.Get<IWarehouseRepository>().FindConsignmentAsync(uow.Transaction, None))!;
+        }
+
+        var onHeader = () => Service.CreateAsync(Request(m, Line(m.Item)) with { WarehouseId = consignment.Id }, "kim", None);
+        var onLine = () => Service.CreateAsync(Request(m, Line(m.Item) with { WarehouseId = consignment.Id }), "kim", None);
+
+        foreach (var act in new[] { onHeader, onLine })
+        {
+            var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+            error.Code.Should().Be(WarehouseRules.ConsignmentNotSelectableCode);
+            error.Args.Should().Equal("CONSIGN");
+        }
+        (await Service.SearchAsync(new(null, m.Vendor, null, null, null), None)).Should().BeEmpty();
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-016")]
+    public async Task PriceDifferentFromStandardAndGroup_AsksFirst_ThenYesSavesTheGroupPrice()
+    {
+        var m = await MastersAsync();
+        var group = await PriceGroupAsync(m, standard: 100m, groupPrice: 90m);
+
+        var unanswered = () => Service.CreateAsync(Request(m, Line(m.Item, price: 120m)), "kim", None);
+        var warning = (await unanswered.Should().ThrowAsync<ConfirmationRequiredException>()).Which;
+        (await Service.SearchAsync(new(null, m.Vendor, null, null, null), None)).Should().BeEmpty();
+        var po = await Service.CreateAsync(Request(m, Line(m.Item, price: 120m)) with { UpdateVendorPrice = true }, "kim", None);
+
+        (warning.Code, warning.ConfirmField, warning.Args.Single()).Should().Be(("MM-W-016", "updateVendorPrice", m.ItemCd));
+        po.Lines[0].PoPrc.Should().Be(120m);
+        (await GroupPricesAsync(group)).Should().Equal((m.Item, 120m, "kim"));
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-016")]
+    public async Task VendorPrice_NoKeepsTheGroup_AndEqualPricesOrServicesDoNotAsk()
+    {
+        var m = await MastersAsync();
+        var group = await PriceGroupAsync(m, standard: 100m, groupPrice: null);
+
+        var no = await Service.CreateAsync(Request(m, Line(m.Item, price: 120m)) with { UpdateVendorPrice = false }, "kim", None);
+        var standard = await Service.CreateAsync(Request(m, Line(m.Item, price: 100m), Line(m.Service, price: 5m)), "kim", None);
+        var yes = await Service.UpdateAsync(
+            standard.Id, Request(m, standard.UpdatedAt, Line(m.Item, price: 110m)) with { UpdateVendorPrice = true }, "lee", None);
+
+        (no.Status, standard.Status).Should().Be((PoStatusCode.Draft, PoStatusCode.Draft));
+        yes.Lines.Single().PoPrc.Should().Be(110m);
+        (await GroupPricesAsync(group)).Should().Equal((m.Item, 110m, "lee"));
+    }
+
     private static SavePurchaseOrderRequest Request(Masters m, params SavePurchaseOrderLineRequest[] lines) => Request(m, null, lines);
 
     private static SavePurchaseOrderRequest Request(Masters m, DateTimeOffset? updatedAt, params SavePurchaseOrderLineRequest[] lines) =>
@@ -223,7 +279,30 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
     private static SavePurchaseOrderLineRequest ToRequest(PurchaseOrderLineDto l) =>
         new(l.Id, l.ItemId, l.ItemName, l.PoQty, l.PoPrc, l.DcRate, l.DueDt, l.WarehouseId, l.TaxCodeId);
 
-    private sealed record Masters(long Vendor, string VendorName, long Item, long Service, long Warehouse, long Vat10, long NoTax);
+    private sealed record Masters(long Vendor, string VendorName, long Item, string ItemCd, long Service, long Warehouse, long Vat10, long NoTax);
+
+    // Gives the vendor its own price group, the item a standard purchase price and, when given, a price in the group
+    private async Task<string> PriceGroupAsync(Masters m, decimal standard, decimal? groupPrice)
+    {
+        var group = "G" + m.ItemCd;
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        await connection.ExecuteAsync(
+            """
+            UPDATE bc_vendor SET vendor_price = @Group WHERE id = @Vendor;
+            UPDATE bc_item SET usd_prc = @Standard WHERE id = @Item;
+            INSERT INTO bc_purchase_price (vendor_price, item_id, purchase_prc, created_by, updated_by)
+            SELECT @Group, @Item, @GroupPrice, 't', 't' WHERE @GroupPrice::numeric IS NOT NULL;
+            """,
+            new { Group = group, m.Vendor, m.Item, Standard = standard, GroupPrice = groupPrice });
+        return group;
+    }
+
+    private async Task<List<(long ItemId, decimal PurchasePrc, string UpdatedBy)>> GroupPricesAsync(string group)
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        return [.. await connection.QueryAsync<(long, decimal, string)>(
+            "SELECT item_id, purchase_prc, updated_by FROM bc_purchase_price WHERE vendor_price = @Group ORDER BY item_id", new { Group = group })];
+    }
 
     // A vendor whose default tax code is a 10% VAT code, an inventory and a service item, and the default warehouse
     private async Task<Masters> MastersAsync()
@@ -244,7 +323,7 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
                    (SELECT id FROM s), (SELECT min(id) FROM bc_warehouse WHERE use_yn)
             """,
             new { Key = key });
-        return new Masters(ids.Vendor, "Vendor " + key, ids.Item, ids.Service, ids.Warehouse, ids.Vat10, ids.NoTax);
+        return new Masters(ids.Vendor, "Vendor " + key, ids.Item, "I" + key, ids.Service, ids.Warehouse, ids.Vat10, ids.NoTax);
     }
 
     private async Task ReceiveAsync(long purchaseOrderLineId, long taxCodeId, decimal qty)
@@ -260,6 +339,6 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
             new { Line = purchaseOrderLineId, Qty = qty, Tax = taxCodeId });
     }
 
-    [GeneratedRegex(@"^PO2610\d{5}$")]
+    [GeneratedRegex(@"^PO2610\d{6}$")]
     private static partial Regex PoNumber();
 }

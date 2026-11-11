@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Print.Phone" xml:space="preserve"><value>전화</value></data>
+  <data name="Print.Email" xml:space="preserve"><value>이메일</value></data>
+  <data name="Print.Fax" xml:space="preserve"><value>팩스</value></data>
+  <data name="Print.Revision" xml:space="preserve"><value>Rev. {0}</value></data>
+  <data name="Print.PurchaseOrder.Title" xml:space="preserve"><value>발주서</value></data>
+  <data name="Print.PurchaseOrder.PoNo" xml:space="preserve"><value>발주 번호</value></data>
+  <data name="Print.PurchaseOrder.RevisionNo" xml:space="preserve"><value>개정</value></data>
+  <data name="Print.PurchaseOrder.Vendor" xml:space="preserve"><value>공급자</value></data>
+  <data name="Print.PurchaseOrder.Contact" xml:space="preserve"><value>담당</value></data>
+  <data name="Print.PurchaseOrder.PoDt" xml:space="preserve"><value>발주일</value></data>
+  <data name="Print.PurchaseOrder.DueDt" xml:space="preserve"><value>납기일</value></data>
+  <data name="Print.PurchaseOrder.Currency" xml:space="preserve"><value>통화</value></data>
+  <data name="Print.PurchaseOrder.Incoterms" xml:space="preserve"><value>인코텀즈</value></data>
+  <data name="Print.PurchaseOrder.PaymentTerms" xml:space="preserve"><value>결제 조건</value></data>
+  <data name="Print.PurchaseOrder.Buyer" xml:space="preserve"><value>구매 담당</value></data>
+  <data name="Print.PurchaseOrder.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Print.PurchaseOrder.ItemCode" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Print.PurchaseOrder.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Print.PurchaseOrder.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Print.PurchaseOrder.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Print.PurchaseOrder.UnitPrice" xml:space="preserve"><value>단가</value></data>
+  <data name="Print.PurchaseOrder.DcRate" xml:space="preserve"><value>할인율 %</value></data>
+  <data name="Print.PurchaseOrder.Amount" xml:space="preserve"><value>금액</value></data>
+  <data name="Print.PurchaseOrder.LineDueDt" xml:space="preserve"><value>납기일</value></data>
+  <data name="Print.PurchaseOrder.Subtotal" xml:space="preserve"><value>소계</value></data>
+  <data name="Print.PurchaseOrder.Discount" xml:space="preserve"><value>할인</value></data>
+  <data name="Print.PurchaseOrder.Tax" xml:space="preserve"><value>세액</value></data>
+  <data name="Print.PurchaseOrder.Total" xml:space="preserve"><value>합계</value></data>
+  <data name="Print.PurchaseOrder.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Print.SalesOrder.Title" xml:space="preserve"><value>수주서</value></data>
+  <data name="Print.SalesOrder.BillTo" xml:space="preserve"><value>청구처</value></data>
+  <data name="Print.SalesOrder.ShipTo" xml:space="preserve"><value>배송지</value></data>
+  <data name="Print.SalesOrder.SoDt" xml:space="preserve"><value>수주일</value></data>
+  <data name="Print.SalesOrder.ExpShipDt" xml:space="preserve"><value>출하 예정일</value></data>
+  <data name="Print.SalesOrder.Rep" xml:space="preserve"><value>담당자</value></data>
+  <data name="Print.SalesOrder.ShipVia" xml:space="preserve"><value>운송 수단</value></data>
+  <data name="Print.SalesOrder.Terms" xml:space="preserve"><value>결제 조건</value></data>
+  <data name="Print.SalesOrder.DueDt" xml:space="preserve"><value>결제 예정일</value></data>
+  <data name="Print.SalesOrder.Currency" xml:space="preserve"><value>통화</value></data>
+  <data name="Print.SalesOrder.DcStatus" xml:space="preserve"><value>할인 구분</value></data>
+  <data name="Print.SalesOrder.Seq" xml:space="preserve"><value>순번</value></data>
+  <data name="Print.SalesOrder.ItemCode" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Print.SalesOrder.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Print.SalesOrder.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Print.SalesOrder.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Print.SalesOrder.UnitPrice" xml:space="preserve"><value>단가</value></data>
+  <data name="Print.SalesOrder.DcRate" xml:space="preserve"><value>할인율(%)</value></data>
+  <data name="Print.SalesOrder.Amount" xml:space="preserve"><value>금액</value></data>
+  <data name="Print.SalesOrder.Subtotal" xml:space="preserve"><value>공급가액</value></data>
+  <data name="Print.SalesOrder.Tax" xml:space="preserve"><value>세액</value></data>
+  <data name="Print.SalesOrder.Total" xml:space="preserve"><value>합계</value></data>
+  <data name="Print.SalesOrder.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Print.PickingList.Title" xml:space="preserve"><value>피킹 리스트</value></data>
+  <data name="Print.PickingList.Location" xml:space="preserve"><value>위치</value></data>
+  <data name="Print.PickingList.Picked" xml:space="preserve"><value>확인</value></data>
+  <data name="Print.PickingList.PackingBy" xml:space="preserve"><value>포장자</value></data>
+  <data name="Print.PickingList.Boxes" xml:space="preserve"><value>박스 수</value></data>
+  <data name="Print.PickingList.Weight" xml:space="preserve"><value>무게(Lbs)</value></data>
+  <data name="Print.SetComponentList.Title" xml:space="preserve"><value>세트 구성품 목록</value></data>
+  <data name="Print.SetComponentList.SetItem" xml:space="preserve"><value>세트 품목</value></data>
+  <data name="Print.SetComponentList.Component" xml:space="preserve"><value>구성품</value></data>
+  <data name="Print.SetComponentList.ComponentQty" xml:space="preserve"><value>구성품 수량</value></data>
+  <data name="Print.SetComponentList.None" xml:space="preserve"><value>세트 품목 줄이 없습니다.</value></data>
+  <data name="Print.DeliveryNote.Title" xml:space="preserve"><value>납품서</value></data>
+  <data name="Print.DeliveryNote.ShipDt" xml:space="preserve"><value>출하일</value></data>
+  <data name="Print.DeliveryNote.SoNo" xml:space="preserve"><value>수주 번호</value></data>
+  <data name="Print.DeliveryNote.InvoiceNo" xml:space="preserve"><value>송장 번호</value></data>
+  <data name="Print.DeliveryNote.Warehouse" xml:space="preserve"><value>창고</value></data>
+  <data name="Print.DeliveryNote.LotNo" xml:space="preserve"><value>로트</value></data>
+  <data name="Print.DeliveryNote.ReceivedBy" xml:space="preserve"><value>인수자</value></data>
+  <data name="Print.DeliveryNote.ReceivedDt" xml:space="preserve"><value>인수일</value></data>
+</root>

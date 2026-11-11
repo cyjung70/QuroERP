@@ -17,7 +17,7 @@ internal sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         coalesce((SELECT sum(g.gr_qty)
                   FROM mm_goods_receipt_line g JOIN mm_purchase_order_line l ON l.id = g.purchase_order_line_id
                   WHERE l.purchase_order_id = p.id), 0) AS received_qty,
-        p.updated_at
+        p.updated_at, p.created_at, p.created_by, p.updated_by
         """;
 
     private const string Search = $"""
@@ -44,13 +44,32 @@ internal sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         SELECT l.id, l.seq, coalesce(l.item_id, 0) AS item_id, i.item_cd, coalesce(l.item_name, i.item_name) AS item_name,
                coalesce(l.po_qty, 0) AS po_qty, coalesce(l.po_prc, 0) AS po_prc, l.gross_amt, l.dc_rate, l.dc_amt,
                coalesce(l.po_amt, 0) AS po_amt, l.tax_code_id, l.supply_amt, l.tax_amt, l.due_dt, l.warehouse_id,
-               coalesce((SELECT sum(g.gr_qty) FROM mm_goods_receipt_line g WHERE g.purchase_order_line_id = l.id), 0) AS received_qty
+               coalesce((SELECT sum(g.gr_qty) FROM mm_goods_receipt_line g WHERE g.purchase_order_line_id = l.id), 0) AS received_qty,
+               i.unit
         FROM mm_purchase_order_line l LEFT JOIN bc_item i ON i.id = l.item_id
         WHERE l.purchase_order_id = @Id
         ORDER BY l.seq
         """;
 
-    private const string SelectVendor = "SELECT id, v_name, currency_code, tax_code_id FROM bc_vendor WHERE id = @Id";
+    private const string SelectVendor = "SELECT id, v_name, currency_code, tax_code_id, vendor_price FROM bc_vendor WHERE id = @Id";
+
+    private const string SelectPrintVendor = """
+        SELECT v_name, addr1, addr2, city, state, zip_code, country, contact, phone1, fax_no, email FROM bc_vendor WHERE id = @Id
+        """;
+
+    private const string SelectVendorPrices = """
+        SELECT i.id AS item_id, i.item_cd, i.type AS item_type, i.usd_prc AS std_prc, p.purchase_prc AS group_prc
+        FROM bc_item i LEFT JOIN bc_purchase_price p ON p.item_id = i.id AND p.vendor_price = @VendorPrice
+        WHERE i.id = ANY(@Ids) AND i.type IS NOT NULL
+        """;
+
+    // One row per group and item (uq_bc_purchase_price_vendor_price_item_id), so concurrent saves cannot add it twice
+    private const string UpsertVendorPrice = """
+        INSERT INTO bc_purchase_price (vendor_price, item_id, purchase_prc, created_by, updated_by)
+        VALUES (@VendorPrice, @ItemId, @PurchasePrc, @User, @User)
+        ON CONFLICT (vendor_price, item_id) DO UPDATE
+        SET purchase_prc = EXCLUDED.purchase_prc, updated_at = now(), updated_by = EXCLUDED.updated_by
+        """;
 
     private const string SelectItemTypes = "SELECT id, type AS item_type FROM bc_item WHERE id = ANY(@Ids) AND type IS NOT NULL";
 
@@ -151,6 +170,21 @@ internal sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         (await transaction.Connection!.QueryAsync<(long Id, string ItemType)>(new CommandDefinition(
             SelectItemTypes, new { Ids = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken)))
         .ToDictionary(r => r.Id, r => r.ItemType);
+
+    public Task<PurchaseOrderPrintVendorRow?> FindPrintVendorAsync(long vendorId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.QuerySingleOrDefaultAsync<PurchaseOrderPrintVendorRow>(
+            new CommandDefinition(SelectPrintVendor, new { Id = vendorId }, transaction, cancellationToken: cancellationToken));
+
+    public async Task<IReadOnlyList<VendorPriceReference>> FindVendorPricesAsync(
+        string vendorPrice, IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        [.. await transaction.Connection!.QueryAsync<VendorPriceReference>(new CommandDefinition(
+            SelectVendorPrices, new { VendorPrice = vendorPrice, Ids = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken))];
+
+    public Task UpsertVendorPricesAsync(
+        string vendorPrice, IReadOnlyList<VendorPriceChange> prices, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            UpsertVendorPrice, prices.Select(p => new { VendorPrice = vendorPrice, p.ItemId, p.PurchasePrc, User = user }).ToList(), transaction,
+            cancellationToken: cancellationToken));
 
     public async Task<IReadOnlySet<long>> FindUsableWarehousesAsync(
         IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -280,12 +314,13 @@ internal sealed class PurchaseOrderRepository : IPurchaseOrderRepository
         long Id, string PoNo, string Status, long VendorId, string? VendorName, DateOnly PoDt, string CurrencyCode, decimal ExchangeRate,
         string? Incoterms, DateOnly? DueDt, long? WarehouseId, string? PaymentTerms, string? Buyer, string? Remarks, decimal SupplyAmt,
         decimal TaxAmt, decimal TotPoAmt, decimal TotBaseAmt, int RevisionNo, DateTime? ApprovedAt, string? ApprovedBy,
-        DateTime? ClosedAt, string? ClosedBy, DateTime? CancelledAt, string? CancelledBy, decimal ReceivedQty, DateTime UpdatedAt)
+        DateTime? ClosedAt, string? ClosedBy, DateTime? CancelledAt, string? CancelledBy, decimal ReceivedQty, DateTime UpdatedAt,
+        DateTime? CreatedAt, string? CreatedBy, string? UpdatedBy)
     {
         public PurchaseOrderRow ToPurchaseOrderRow() => new(
             Id, PoNo, Status, VendorId, VendorName, PoDt, CurrencyCode, ExchangeRate, Incoterms, DueDt, WarehouseId, PaymentTerms, Buyer,
             Remarks, SupplyAmt, TaxAmt, TotPoAmt, TotBaseAmt, RevisionNo, Utc(ApprovedAt), ApprovedBy, Utc(ClosedAt), ClosedBy,
-            Utc(CancelledAt), CancelledBy, ReceivedQty, Utc(UpdatedAt));
+            Utc(CancelledAt), CancelledBy, ReceivedQty, Utc(UpdatedAt), Utc(CreatedAt), CreatedBy, UpdatedBy);
 
         private static DateTimeOffset Utc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
 

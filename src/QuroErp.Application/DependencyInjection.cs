@@ -6,6 +6,8 @@ using QuroErp.Application.Bc.FieldPolicies;
 using QuroErp.Application.Bc.Items;
 using QuroErp.Application.Common;
 using QuroErp.Application.Bc.PurchasePrices;
+using QuroErp.Application.Bc.SetItems;
+using QuroErp.Application.Bc.SalesPrices;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Bc.Menus;
@@ -17,8 +19,15 @@ using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Lots;
+using QuroErp.Application.Mm.GoodsReceipts;
+using QuroErp.Application.Mm.SupplierInvoices;
 using QuroErp.Application.Mm.PurchaseOrders;
+using QuroErp.Application.Mm.Vendors;
+using QuroErp.Application.Sd.Customers;
 using QuroErp.Application.Mm.Warehouses;
+using QuroErp.Application.Sd.SalesOrders;
+using QuroErp.Application.Sd.Shipments;
 
 namespace QuroErp.Application;
 
@@ -36,6 +45,8 @@ public static class DependencyInjection
         services.AddScoped<CodeMajorService>();
         services.AddScoped<CodeMinorService>();
         services.AddScoped<PurchasePriceService>();
+        services.AddScoped<SetItemService>();
+        services.AddScoped<SalesPriceService>();
         services.AddScoped<CompanyLogoService>();
         services.AddScoped<CompanyService>();
         services.AddScoped<BusinessPlaceService>();
@@ -52,8 +63,19 @@ public static class DependencyInjection
         services.AddScoped<ItemService>();
         services.AddScoped<ItemImageService>();
         services.AddScoped<ItemBarcodeService>();
+        services.AddScoped<AlternateItemService>();
+        services.AddScoped<AlternateItemGroupService>();
         services.AddScoped<WarehouseService>();
+        services.AddScoped<VendorService>();
+        services.AddScoped<CustomerService>();
+        services.AddScoped<SalesOrderService>();
+        services.AddScoped<SalesOrderPrintService>();
+        services.AddScoped<ShipmentService>();
+        services.AddScoped<ShipmentPrintService>();
         services.AddScoped<PurchaseOrderService>();
+        services.AddScoped<GoodsReceiptService>();
+        services.AddScoped<SupplierInvoiceService>();
+        services.AddScoped<PurchaseOrderPrintService>();
         services.AddScoped<RoleService>();
         services.AddScoped<MenuService>();
         services.AddSingleton<MenuPermissionService>();
@@ -61,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<UserService>();
         services.AddScoped<DocumentNumberService>();
         services.AddScoped<InventoryService>();
+        services.AddScoped<LotService>();
         return services;
     }
 }

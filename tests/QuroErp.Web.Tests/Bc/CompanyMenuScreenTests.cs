@@ -85,7 +85,8 @@ public class CompanyMenuScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        page.Find("[data-testid=company-menu-toolbar-new]").Click();
+        Grid(page).Select(2);
+        page.Find("[data-testid=company-menu-toolbar-add-row]").Click();
 
         Enumerable.Range(0, 3).Should().OnlyContain(i => Grid(page).IsReadOnly(i, "menuCode"));
         Grid(page).IsReadOnly(3, "menuCode").Should().BeFalse();
@@ -98,8 +99,9 @@ public class CompanyMenuScreenTests : BunitContext
         var page = RenderAs("admin");
 
         Grid(page).Edit(1, "name", "Item master");
-        Grid(page).Click(2, "deleteRow");
-        page.Find("[data-testid=company-menu-toolbar-new]").Click();
+        Grid(page).Select(2);
+        page.Find("[data-testid=company-menu-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=company-menu-toolbar-add-row]").Click();
         Grid(page).Edit(3, "menuCode", "whs");
         Grid(page).Edit(3, "name", "Warehouses");
         Grid(page).Edit(3, "programId", "/mm/warehouse");
@@ -119,7 +121,7 @@ public class CompanyMenuScreenTests : BunitContext
     public void NewRow_WithoutRequiredValues_IsNotSent()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=company-menu-toolbar-new]").Click();
+        page.Find("[data-testid=company-menu-toolbar-add-row]").Click();
 
         page.Find("[data-testid=company-menu-toolbar-save]").Click();
 
@@ -170,8 +172,9 @@ public class CompanyMenuScreenTests : BunitContext
 
         // The handlers do nothing either
         Grid(page).Edit(0, "name", "Changed").Should().BeFalse();
-        page.Find("[data-testid=company-menu-toolbar-new]").Click();
-        Grid(page).Click(0, "deleteRow");
+        page.Find("[data-testid=company-menu-toolbar-add-row]").Click();
+        Grid(page).Select(0);
+        page.Find("[data-testid=company-menu-toolbar-mark-delete]").Click();
         page.Find("[data-testid=company-menu-toolbar-save]").Click();
         Grid(page).Rows.Should().HaveCount(rows);
         Grid(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);

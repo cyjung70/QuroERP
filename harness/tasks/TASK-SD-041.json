@@ -31,13 +31,19 @@
     "TASK-CORE-005",
     "TASK-CORE-006",
     "TASK-CORE-007",
-    "TASK-CORE-033"
+    "TASK-CORE-033",
+    "TASK-SD-005",
+    "TASK-SD-035"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)",
-    "'상세 보기' 토글: 켜면 상세 리포트의 열·합계·정렬·PDF와 같다. 합쳐진 상세 태스크의 명세 테스트 시나리오 포함"
+    "'상세 보기' 토글: 켜면 상세 리포트의 열·합계·정렬·PDF와 같다. 합쳐진 상세 태스크의 명세 테스트 시나리오 포함",
+    "화면 경로 상수 `ScreenPaths.ArAgingReport` = `/sd/report-ar-aging`로 API 권한을 걸고, 화면 메뉴를 새 Seed 스크립트로 더한다",
+    "조회 조건: 기준일(기본 오늘), 구간 일수 N(기본 30, 1~365), 통화(전체 또는 하나). 구간 열 제목은 N에 맞춰 바뀐다. 문서 통화별로 묶어 통화마다 합계와 기준 통화 환산 합계를 낸다 (SD-BR-802·821)",
+    "고객 행을 누르면 그 고객으로 '상세 보기'를 켠다. 토글만 켜면 전체 고객이다 (SD-BR-803)",
+    "단위 테스트: N을 바꾼 구간 경계값, 통화 조건·통화별 합계"
   ],
   "estimateHours": 2,
   "status": "todo"

@@ -3,8 +3,8 @@ using QuroErp.Contracts.Bc.Roles;
 
 namespace QuroErp.Application.Bc.Roles;
 
-/// <summary>Menu permission of one role: Full Access or read only (BC-BR-214).</summary>
-public sealed record RoleMenuGrant(string MenuCode, bool FullAccess);
+/// <summary>Menu permission of one role on a screen path (the menu's program id): Full Access or read only (BC-BR-214).</summary>
+public sealed record RoleMenuGrant(string ProgramId, bool FullAccess);
 
 public interface IRoleRepository
 {
@@ -48,6 +48,8 @@ public interface IRoleRepository
 
     Task DeleteAllMenusAsync(long roleId, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Menus in use (valid_flag Y) assigned to the role with this code, if the role is in use (BC-BR-206, BC-BR-214).</summary>
+    /// <summary>
+    /// Menus in use (valid_flag Y) with a program id, assigned to the role with this code, if the role is in use (BC-BR-206, BC-BR-214).
+    /// </summary>
     Task<IReadOnlyList<RoleMenuGrant>> FindPermissionsAsync(string roleCode, IDbTransaction transaction, CancellationToken cancellationToken);
 }

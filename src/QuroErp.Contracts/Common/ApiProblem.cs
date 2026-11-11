@@ -6,4 +6,7 @@ namespace QuroErp.Contracts.Common;
 /// </summary>
 /// <param name="Code">메시지 코드 (예: BC-E-001). 본문이 ProblemDetails가 아니면 null.</param>
 /// <param name="Args">메시지 인자 ({0}, {1} …).</param>
-public sealed record ApiProblem(int Status, string? Code, IReadOnlyList<string> Args);
+/// <param name="ConfirmField">
+/// A warning the user may accept: the request field that answers it, e.g. updateVendorPrice for MM-W-016. Null for errors.
+/// </param>
+public sealed record ApiProblem(int Status, string? Code, IReadOnlyList<string> Args, string? ConfirmField = null);

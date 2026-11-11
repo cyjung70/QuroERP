@@ -1,18 +1,22 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuroErp.Api.Common.Auth;
 using QuroErp.Application.Bc.PurchasePrices;
 using QuroErp.Contracts.Bc.PurchasePrices;
 using QuroErp.Contracts.Common;
+using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Bc.PurchasePrices;
 
 /// <summary>
 /// Purchase prices by price group (BC-UC-015). Any signed-in user or API client can read (FallbackPolicy); changes need Full Access
-/// (BC-BR-214), checked by the admin role until the menu policy is applied, as on the other screens.
+/// on the screen, checked by the screen path policy (BC-BR-214).
 /// </summary>
 [ApiController, Route(PurchasePriceRoutes.Base)]
 public sealed class PurchasePriceController(PurchasePriceService service) : ControllerBase
 {
+    private const string Screen = ScreenPolicy.Prefix + ScreenPaths.PurchasePrice;
+
     /// <summary>The price group's rows in item code order with the item standard price (MM-BR-905). 422 Common-E-005, MM-E-901.</summary>
     [HttpGet]
     public Task<IReadOnlyList<PurchasePriceDto>> Search([FromQuery] string? vendorPrice, CancellationToken cancellationToken) =>
@@ -22,7 +26,7 @@ public sealed class PurchasePriceController(PurchasePriceService service) : Cont
     /// 200 with the group's rows after the save. Nothing is saved when a row fails (MM-BR-904): 422 MM-E-901~903 or BC-E-423 with the
     /// row's item code, 409 Common-E-004 when a row changed after it was read.
     /// </summary>
-    [HttpPost(PurchasePriceRoutes.Batch), Authorize(Roles = "admin")]
+    [HttpPost(PurchasePriceRoutes.Batch), Authorize(Policy = Screen)]
     public Task<IReadOnlyList<PurchasePriceDto>> Save(
         [FromQuery] string? vendorPrice, BatchRequest<PurchasePriceRowRequest, PurchasePriceDeleteRequest> request,
         CancellationToken cancellationToken) =>

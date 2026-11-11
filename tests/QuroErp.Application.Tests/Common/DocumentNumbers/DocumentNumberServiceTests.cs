@@ -16,12 +16,12 @@ public class DocumentNumberServiceTests
     [Fact, Trait("Id", "CORE-007-T02"), Trait("Rule", "SD-BR-006")]
     public async Task NextAsync_ContinuesTheSavedCounter()
     {
-        _numbers.Last[("SO", "2610")] = "SO261000041";
+        _numbers.Last[("SO", "2610")] = "SO2610000041";
 
         var issued = await Service.NextAsync(DocumentNumberFormat.SalesOrder, Day, "kim", null!, CancellationToken.None);
 
-        issued.Should().Be("SO261000042");
-        _numbers.Last[("SO", "2610")].Should().Be("SO261000042");
+        issued.Should().Be("SO2610000042");
+        _numbers.Last[("SO", "2610")].Should().Be("SO2610000042");
     }
 
     [Fact, Trait("Id", "CORE-007-T03"), Trait("Rule", "SD-BR-006")]
@@ -29,18 +29,18 @@ public class DocumentNumberServiceTests
     {
         var issued = await Service.NextAsync(DocumentNumberFormat.SalesOrder, [Day, Day, Day], "kim", null!, CancellationToken.None);
 
-        issued.Should().Equal("SO261000001", "SO261000002", "SO261000003");
-        _numbers.Last[("SO", "2610")].Should().Be("SO261000003");
+        issued.Should().Equal("SO2610000001", "SO2610000002", "SO2610000003");
+        _numbers.Last[("SO", "2610")].Should().Be("SO2610000003");
     }
 
     [Fact, Trait("Id", "CORE-007-T04"), Trait("Rule", "SD-BR-006")]
     public async Task NextAsync_CounterCreatedByAnotherTransaction_LocksAgainAndContinuesIt()
     {
-        _numbers.CreatedByOther = "SO261000001";
+        _numbers.CreatedByOther = "SO2610000001";
 
         var issued = await Service.NextAsync(DocumentNumberFormat.SalesOrder, Day, "kim", null!, CancellationToken.None);
 
-        issued.Should().Be("SO261000002");
+        issued.Should().Be("SO2610000002");
         _numbers.Locked.Should().Equal(("SO", "2610"), ("SO", "2610"));
     }
 
@@ -51,7 +51,7 @@ public class DocumentNumberServiceTests
             DocumentNumberFormat.SalesOrder, [Day, new DateOnly(2026, 9, 30), Day, new DateOnly(2026, 9, 1)],
             "kim", null!, CancellationToken.None);
 
-        issued.Should().Equal("SO261000001", "SO260900001", "SO261000002", "SO260900002");
+        issued.Should().Equal("SO2610000001", "SO2609000001", "SO2610000002", "SO2609000002");
         _numbers.Locked.Should().Equal(("SO", "2609"), ("SO", "2610"));
     }
 
@@ -68,11 +68,11 @@ public class DocumentNumberServiceTests
     [Fact, Trait("Id", "SD-UT-006"), Trait("Rule", "SD-BR-006")]
     public async Task NextAsync_SequenceOutOfDigits_ThrowsSdE006AndSavesNothing()
     {
-        _numbers.Last[("SO", "2610")] = "SO261099999";
+        _numbers.Last[("SO", "2610")] = "SO2610999999";
 
         var act = () => Service.NextAsync(DocumentNumberFormat.SalesOrder, Day, "kim", null!, CancellationToken.None);
 
         (await act.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be("SD-E-006");
-        _numbers.Last[("SO", "2610")].Should().Be("SO261099999");
+        _numbers.Last[("SO", "2610")].Should().Be("SO2610999999");
     }
 }

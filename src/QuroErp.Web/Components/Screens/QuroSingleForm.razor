@@ -104,6 +104,10 @@
     [Parameter, EditorRequired]
     public Func<TModel, bool, Task<TModel>> Save { get; set; } = default!;
 
+    /// <summary>Text shown after "Saved" for the record as stored, e.g. a warning the API returned with the save; null for none.</summary>
+    [Parameter]
+    public Func<TModel, string?>? SavedNotice { get; set; }
+
     /// <summary>Deletes the loaded record. Without it there is no delete button.</summary>
     [Parameter]
     public Func<TModel, Task>? Delete { get; set; }
@@ -314,8 +318,9 @@
         }
         await RunAsync(async () =>
         {
-            SetLoaded(await Save(_model, _form.IsNew));
-            Notice = L["Common.Saved"];
+            var saved = await Save(_model, _form.IsNew);
+            SetLoaded(saved);
+            Notice = SavedNotice?.Invoke(saved) is { Length: > 0 } extra ? $"{L["Common.Saved"]} {extra}" : L["Common.Saved"];
         });
     }
 

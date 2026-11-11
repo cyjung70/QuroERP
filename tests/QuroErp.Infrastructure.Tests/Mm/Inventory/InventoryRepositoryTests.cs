@@ -257,6 +257,8 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(CancellationToken.None);
         var tx = uow.Transaction;
+        // The duplicate key is checked at commit since 0405 (TASK-BC-025); this test rolls back, so check it now
+        await tx.Connection!.ExecuteAsync("SET CONSTRAINTS ALL IMMEDIATE", transaction: tx);
         var setId = await InsertItemAsync(tx, onHand: 0, cost: 0, type: "SET");
         var part = await InsertItemAsync(tx, onHand: 0, cost: 0);
         var other = await InsertItemAsync(tx, onHand: 0, cost: 0);

@@ -52,7 +52,8 @@ public class FieldPolicyScreenTests : ScreenContext
         var page = RenderSample("US");
 
         var field = page.Find("[data-testid=single-header-valid-from]");
-        field.ClassList.Should().Contain("quro-field-required");
+        // Required by the policy only: the light yellow input (entry-frame.md 3)
+        field.ClassList.Should().Contain(["quro-field-input", "quro-field-required"]);
         field.QuerySelector("label")!.TextContent.Should().Be(L("Samples.ValidFrom") + "*");
     }
 
@@ -173,6 +174,24 @@ public class FieldPolicyScreenTests : ScreenContext
 
         page.WaitForAssertion(() => page.Find("[data-testid=t-message]").TextContent.Should().NotBeEmpty());
         page.FindAll("[data-testid=t-header-state]").Should().ContainSingle();
+    }
+
+    [Theory, Trait("Id", "CORE-060-WT-03"), Trait("Rule", "BC-BR-434")]
+    [InlineData(FieldPolicyStates.Required, true)]
+    [InlineData(FieldPolicyStates.ReadOnly, false)]
+    public void LineGrid_RequiredColumnsGetTheRequiredColor_AndAReadOnlyPolicyTakesItAway(string qtyState, bool qtyRequired)
+    {
+        SignIn("admin");
+        var page = RenderOrder(qtyState);
+        var lines = page.DataGrid<SampleLine, QuroHeaderDetail<SampleOrder, SampleLine>>("t-line");
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
+
+        var host = page.Find("[data-testid=t-line]");
+        host.ClassList.Should().Contain("quro-grid-entry");
+        var style = host.QuerySelector("style")!.TextContent;
+        style.Should().Contain($"#{host.Id} .quro-body-cell[data-field=\"itemCode\"]").And.Contain("var(--q-field-required-bg)");
+        style.Contains("[data-field=\"qty\"]", StringComparison.Ordinal).Should().Be(qtyRequired);
+        lines.IsReadOnly(1, "qty").Should().Be(!qtyRequired);
     }
 
     [Theory, Trait("Id", "BC-UT-434"), Trait("Rule", "BC-BR-434")]

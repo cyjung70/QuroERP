@@ -1,17 +1,21 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuroErp.Api.Common.Auth;
 using QuroErp.Application.Bc.Companies;
 using QuroErp.Contracts.Bc.Companies;
+using QuroErp.Domain.Common.Auth;
 
 namespace QuroErp.Api.Bc.Companies;
 
 /// <summary>
-/// The company (BC-UC-007, docs/architecture/print-documents.md). Any signed-in user can read it and its logo. Changes need Full Access on the company menu
-/// (BC-BR-305), checked by the admin role until the menu policy is applied. There is no POST or DELETE of the company (BC-BR-301, 405).
+/// The company (BC-UC-007, docs/architecture/print-documents.md). Any signed-in user can read it and its logo. Changes need Full Access on the company screen
+/// (BC-BR-305), checked by the screen path policy. There is no POST or DELETE of the company (BC-BR-301, 405).
 /// </summary>
 [ApiController]
 public sealed class CompanyController(CompanyService companies, CompanyLogoService logos) : ControllerBase
 {
+    private const string Screen = ScreenPolicy.Prefix + ScreenPaths.Company;
+
     [HttpGet(CompanyRoutes.Base)]
     public Task<CompanyDto> Get(CancellationToken cancellationToken) => companies.GetAsync(cancellationToken);
 
@@ -19,7 +23,7 @@ public sealed class CompanyController(CompanyService companies, CompanyLogoServi
     /// 200 with the saved company. 400 BC-E-313 or an unknown property (BC-BR-307), 422 BC-E-302~316, 409 Common-E-004 or
     /// BC-E-312/313/316 when trading data blocks the change.
     /// </summary>
-    [HttpPut(CompanyRoutes.Base), Authorize(Roles = "admin")]
+    [HttpPut(CompanyRoutes.Base), Authorize(Policy = Screen)]
     public Task<CompanyDto> Update(UpdateCompanyRequest request, CancellationToken cancellationToken) =>
         companies.UpdateAsync(request, User.Identity!.Name!, cancellationToken);
 
@@ -31,7 +35,7 @@ public sealed class CompanyController(CompanyService companies, CompanyLogoServi
     }
 
     /// <summary>multipart/form-data with field "file". PNG or JPEG up to 1 MB.</summary>
-    [HttpPut(CompanyRoutes.Logo), Authorize(Roles = "admin")]
+    [HttpPut(CompanyRoutes.Logo), Authorize(Policy = Screen)]
     [RequestSizeLimit(CompanyRoutes.LogoMaxBytes + 64 * 1024)]
     public async Task<IActionResult> UploadLogo([FromForm(Name = CompanyRoutes.LogoFormField)] IFormFile file, CancellationToken cancellationToken)
     {
@@ -41,7 +45,7 @@ public sealed class CompanyController(CompanyService companies, CompanyLogoServi
         return NoContent();
     }
 
-    [HttpDelete(CompanyRoutes.Logo), Authorize(Roles = "admin")]
+    [HttpDelete(CompanyRoutes.Logo), Authorize(Policy = Screen)]
     public async Task<IActionResult> DeleteLogo(CancellationToken cancellationToken)
     {
         await logos.DeleteLogoAsync(User.Identity!.Name!, cancellationToken);
