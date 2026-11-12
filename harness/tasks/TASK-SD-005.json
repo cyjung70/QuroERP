@@ -102,7 +102,7 @@
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
     "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)",
-    "마이그레이션: Credit Memo 줄 `sd_discount_rate.cancelled_invoice_line_id`(→ `sd_sales_invoice_line.id`, 선청구 미출하 취소가 만든 줄, SD-BR-145·146)만 더한다. `sd_sales_invoice.billing_flow`, `sd_sales_invoice_line.shipped_qty`·`cancelled_qty`, `sd_shipment_line.sales_invoice_line_id`는 출하 태스크(TASK-SD-063)가 이미 만들었다",
+    "마이그레이션: Credit Memo 줄 `sd_sales_invoice_line.cancelled_invoice_line_id`(→ `sd_sales_invoice_line.id`, 선청구 미출하 취소가 만든 줄, SD-BR-145·146)만 더한다. `sd_sales_invoice.billing_flow`, `sd_sales_invoice_line.shipped_qty`·`cancelled_qty`, `sd_shipment_line.sales_invoice_line_id`는 출하 태스크(TASK-SD-063)가 이미 만들었다",
     "선청구 송장: 수주 가져오기·위탁 이동 `TR`·Void/줄 삭제 차단 SD-E-144·미출하 취소와 자동 Credit Memo, 취소 되돌리기 (SD-BR-141~146)",
     "선청구 출하(SD-BR-175~177: 송장 가져오기 출하, 위탁 창고 출고, 출하 수량·Void 되돌리기)는 출하 API(TASK-SD-063)에 이미 있다. 이 태스크는 송장 쪽만 만들고, 통합 테스트 \"선청구 송장 → 출하 API 송장 가져오기 출하 → 출하 Void\"로 송장 줄 출하 수량·위탁 재고가 맞물리는지 확인한다",
     "단위 테스트: 위탁 이동 뒤 재고 금액 불변, 판매 가능 재고에서 위탁 창고 제외, 일부 출하 뒤 미출하 취소 → 위탁 재고 0·Credit Memo 금액"
