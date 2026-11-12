@@ -780,7 +780,7 @@
     },
     {
       "path": "docs/specifications/SD/sales-invoice.md",
-      "sha256": "c16d764134c9c88fd1c908f8a08b8b54246c5d92d09dd2a2226cfa4915f54f07"
+      "sha256": "117d5075eb1c402e2d96912a94a6c6089b46319a2a6a01b1377719b64fe7c4c2"
     },
     {
       "path": "docs/specifications/SD/sales-order-barcode-upload.md",
@@ -1532,7 +1532,7 @@
     },
     {
       "path": "harness/tasks/TASK-SD-005.json",
-      "sha256": "521f27cdeab870a660fc545daea69a3f38f699f38bebe1d83c3fff3e143c00ee"
+      "sha256": "15dc95d536870facafe3c1d7a9d780ae9e2d765a773091c6aa584ea45cd0f3a1"
     },
     {
       "path": "harness/tasks/TASK-SD-006.json",
