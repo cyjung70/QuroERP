@@ -32,12 +32,13 @@ public static class ScreenPaths
     public const string Customer = "/sd/customer";
     public const string SalesOrder = "/sd/sales-order";
     public const string Shipment = "/sd/shipment";
+    public const string SalesInvoice = "/sd/sales-invoice";
 
     /// <summary>Every path above. A test checks the seed gives the admin role Full Access to each.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
         Item, Code, CodeMajor, ItemBarcode, PurchasePrice, PurchaseOrder, GoodsReceipt, Company, Currency, User, CompanyMenu, RoleMenu,
         ExchangeRate, TaxCode, TaxArea, LocalizationSetting, SetItem, SalesPrice, AlternateItem, AlternateItemGroup, Vendor,
-        Warehouse, Customer, SalesOrder, Shipment, SupplierInvoice,
+        Warehouse, Customer, SalesOrder, Shipment, SupplierInvoice, SalesInvoice,
     ];
 }

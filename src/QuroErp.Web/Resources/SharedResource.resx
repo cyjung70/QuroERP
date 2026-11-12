@@ -937,6 +937,20 @@
   <data name="Sd.Shipment.ShipAmt" xml:space="preserve"><value>출하 금액</value></data>
   <data name="Sd.Shipment.BilledQty" xml:space="preserve"><value>청구 수량</value></data>
   <data name="Sd.Shipment.OnhandQty" xml:space="preserve"><value>현재고</value></data>
+  <data name="Sd.Shipment.Source" xml:space="preserve"><value>원본 줄</value></data>
+  <data name="SD-E-101" xml:space="preserve"><value>줄 {0}: 수량은 0보다 커야 합니다.</value></data>
+  <data name="SD-E-102" xml:space="preserve"><value>출하 {0} 줄 {1}의 미청구 수량은 {2}입니다. 그 이하로 청구하세요.</value></data>
+  <data name="SD-E-103" xml:space="preserve"><value>줄 {0}: 단가는 0일 수 없습니다.</value></data>
+  <data name="SD-E-113" xml:space="preserve"><value>송장 {0}은(는) 출하가 만든 송장이라 출하에서 Void하세요.</value></data>
+  <data name="SD-E-116" xml:space="preserve"><value>품목 {0}은(는) 재고 관리 품목이라 출하나 선청구 수주로만 청구할 수 있습니다.</value></data>
+  <data name="SD-E-119" xml:space="preserve"><value>저장한 송장의 고객은 바꿀 수 없습니다.</value></data>
+  <data name="SD-E-131" xml:space="preserve"><value>송장 통화 {0}이(가) 출하·수주 통화 {1}와(과) 다릅니다.</value></data>
+  <data name="SD-E-134" xml:space="preserve"><value>송장 {0}은(는) 세금계산서를 출력할 수 없습니다. 과세 줄과 사업자 고객·사업장의 사업자 정보가 필요합니다.</value></data>
+  <data name="SD-E-136" xml:space="preserve"><value>줄 {0}: 출하가 만든 송장의 출하 줄은 출하에서만 바꾸고, 이 송장에는 재고 관리가 아닌 품목만 직접 더할 수 있습니다.</value></data>
+  <data name="SD-E-141" xml:space="preserve"><value>선청구 수주 {0} 줄 {1}의 남은 청구 수량은 {2}입니다. 선청구 수주 줄은 출하 줄과 섞을 수 없습니다.</value></data>
+  <data name="SD-E-144" xml:space="preserve"><value>송장 {0}의 줄 {1}은(는) 출하 또는 취소가 있어 지우거나 Void할 수 없습니다.</value></data>
+  <data name="SD-E-145" xml:space="preserve"><value>송장 {0} 줄 {1}: 취소 수량은 0보다 크고 미출하 수량 {2} 이하여야 합니다 (선청구 송장만).</value></data>
+  <data name="SD-E-146" xml:space="preserve"><value>Credit Memo {0}이(가) 적용되어 미출하 취소를 되돌릴 수 없습니다.</value></data>
   <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>입고 등록</value></data>
   <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>입고 번호</value></data>
   <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>상태</value></data>

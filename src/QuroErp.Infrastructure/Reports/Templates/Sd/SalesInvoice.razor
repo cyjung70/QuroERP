@@ -1,0 +1,123 @@
+@* Sales invoice (print-documents.md "sales-invoice"): bill-to, ship-to, header, lines with item, qty, unit price and amount (a
+   discount column when a line has a discount), the stored supply, tax and total (SD-BR-133), what was paid and the balance.
+   Values use Razor output only. *@
+@using QuroErp.Application.Sd.SalesInvoices
+
+<PrintLayout Company="Print.Company" Title="@T("Print.SalesInvoice.Title")" DocumentNo="@Invoice.DnNo" Culture="Culture">
+    <section class="parties">
+        <div class="party">
+            <div class="label">@T("Print.SalesOrder.BillTo")</div>
+            <div class="name">@Print.BillTo.Name</div>
+            @foreach (var line in Print.BillTo.AddressLines)
+            {
+                <div>@line</div>
+            }
+        </div>
+        <div class="party">
+            <div class="label">@T("Print.SalesOrder.ShipTo")</div>
+            <div class="name">@Print.ShipTo.Name</div>
+            @foreach (var line in Print.ShipTo.AddressLines)
+            {
+                <div>@line</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Print.ShipTo.Phone))
+            {
+                <div>@T("Print.Phone") @Print.ShipTo.Phone</div>
+            }
+        </div>
+        <table class="fields">
+            <tbody>
+                <tr><th>@T("Print.SalesInvoice.DnDt")</th><td>@Invoice.DnDt.ToString("d", Culture)</td></tr>
+                <tr><th>@T("Print.SalesOrder.DueDt")</th><td>@Invoice.DueDt?.ToString("d", Culture)</td></tr>
+                <tr><th>@T("Print.SalesInvoice.SoNo")</th><td>@Invoice.SoNo</td></tr>
+                <tr><th>@T("Print.SalesOrder.Rep")</th><td>@Invoice.Rep</td></tr>
+                <tr><th>@T("Print.SalesOrder.ShipVia")</th><td>@Invoice.ShipVia</td></tr>
+                <tr><th>@T("Print.SalesOrder.Terms")</th><td>@Invoice.Terms</td></tr>
+                <tr><th>@T("Print.SalesOrder.Currency")</th><td>@Invoice.CurrencyCode</td></tr>
+                @if (!string.IsNullOrWhiteSpace(Invoice.TaxExemptionCertNo))
+                {
+                    <tr><th>@T("Print.SalesInvoice.TaxExemptionCertNo")</th><td>@Invoice.TaxExemptionCertNo</td></tr>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <table class="lines">
+        <thead>
+            <tr>
+                <th class="num">@T("Print.SalesOrder.Seq")</th>
+                <th>@T("Print.SalesOrder.ItemCode")</th>
+                <th>@T("Print.SalesOrder.ItemName")</th>
+                <th>@T("Print.SalesOrder.Unit")</th>
+                <th class="num">@T("Print.SalesOrder.Qty")</th>
+                <th class="num">@T("Print.SalesOrder.UnitPrice")</th>
+                @if (Print.ShowDiscount)
+                {
+                    <th class="num">@T("Print.SalesOrder.DcRate")</th>
+                }
+                <th class="num">@T("Print.SalesOrder.Amount")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in Invoice.Lines.OrderBy(l => l.Seq))
+            {
+                <tr>
+                    <td class="num">@line.Seq</td>
+                    <td class="mono">@line.ItemCd</td>
+                    <td>@line.ItemName</td>
+                    <td>@line.Unit</td>
+                    <td class="num">@N(line.DnQty, Print.QtyDecimals)</td>
+                    <td class="num">@N(line.DnPrc, Print.PriceDecimals)</td>
+                    @if (Print.ShowDiscount)
+                    {
+                        <td class="num">@(line.DcRate == 0 ? "" : N(line.DcRate, 2))</td>
+                    }
+                    <td class="num">@N(line.DnAmt, Print.AmountDecimals)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tbody>
+            <tr><th>@T("Print.SalesOrder.Subtotal")</th><td class="num">@N(Invoice.SupplyAmt, Print.AmountDecimals)</td></tr>
+            <tr><th>@T("Print.SalesOrder.Tax")</th><td class="num">@N(Invoice.TaxAmt, Print.AmountDecimals)</td></tr>
+            <tr class="total"><th>@T("Print.SalesOrder.Total") (@Invoice.CurrencyCode)</th><td class="num">@N(Invoice.TotDnAmt, Print.AmountDecimals)</td></tr>
+            <tr><th>@T("Print.SalesInvoice.Paid")</th><td class="num">@N(Invoice.TotDnAmt - Invoice.BalAmt, Print.AmountDecimals)</td></tr>
+            <tr class="total"><th>@T("Print.SalesInvoice.Balance")</th><td class="num">@N(Invoice.BalAmt, Print.AmountDecimals)</td></tr>
+        </tbody>
+    </table>
+
+    @if (!string.IsNullOrWhiteSpace(Invoice.Remarks))
+    {
+        <section class="remarks">
+            <div class="label">@T("Print.SalesOrder.Remarks")</div>
+            <div class="text">@Invoice.Remarks</div>
+        </section>
+    }
+
+    <style>
+        .parties { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 12px; }
+        .parties .label, .remarks .label { font-size: 8.5pt; color: #555; }
+        .parties .name { font-weight: 700; font-size: 11pt; }
+        table.fields { width: auto; }
+        table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+        table.totals { width: 45%; margin: 12px 0 0 auto; }
+        table.totals th { background: none; text-align: right; }
+        table.totals tr.total th, table.totals tr.total td { font-weight: 700; border-top: 2px solid #333; }
+        .remarks { margin-top: 16px; }
+        .remarks .text { white-space: pre-wrap; }
+    </style>
+</PrintLayout>
+
+@code {
+    [Parameter, EditorRequired] public SalesInvoicePrint Print { get; set; } = default!;
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+    private QuroErp.Contracts.Sd.SalesInvoices.SalesInvoiceDto Invoice => Print.Invoice;
+
+    private string T(string key) => PrintText.Get(key, Culture);
+
+    private string N(decimal value, int decimals) => value.ToString("N" + decimals, Culture);
+}

@@ -1,0 +1,82 @@
+@* KR tax invoice (SD-BR-134): written date, supplier (the invoice's business place) and buyer (the business customer) with
+   business number, name, CEO, address, business type and item; each line's supply and tax; the totals. The number is the invoice
+   number. A simple standard layout until the print layout is defined. Values use Razor output only. *@
+@using QuroErp.Application.Sd.SalesInvoices
+
+<PrintLayout Company="Print.Company" Title="@T("Print.TaxInvoice.Title")" DocumentNo="@Print.Invoice.DnNo" Culture="Culture">
+    <table class="parties">
+        <thead>
+            <tr>
+                <th></th>
+                <th>@T("Print.TaxInvoice.Supplier")</th>
+                <th>@T("Print.TaxInvoice.Buyer")</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><th>@T("Print.TaxInvoice.BusinessRegNo")</th><td class="mono">@Print.Supplier.BusinessRegNo</td><td class="mono">@Print.Buyer.BusinessRegNo</td></tr>
+            <tr><th>@T("Print.TaxInvoice.Name")</th><td>@Print.Supplier.Name</td><td>@Print.Buyer.Name</td></tr>
+            <tr><th>@T("Print.TaxInvoice.CeoName")</th><td>@Print.Supplier.CeoName</td><td>@Print.Buyer.CeoName</td></tr>
+            <tr><th>@T("Print.TaxInvoice.Address")</th><td>@Print.Supplier.Address</td><td>@Print.Buyer.Address</td></tr>
+            <tr><th>@T("Print.TaxInvoice.BusinessType")</th><td>@Print.Supplier.BusinessType</td><td>@Print.Buyer.BusinessType</td></tr>
+            <tr><th>@T("Print.TaxInvoice.BusinessItem")</th><td>@Print.Supplier.BusinessItem</td><td>@Print.Buyer.BusinessItem</td></tr>
+        </tbody>
+    </table>
+
+    <table class="fields">
+        <tbody>
+            <tr><th>@T("Print.TaxInvoice.WrittenDt")</th><td>@Print.Invoice.DnDt.ToString("d", Culture)</td></tr>
+        </tbody>
+    </table>
+
+    <table class="lines">
+        <thead>
+            <tr>
+                <th class="num">@T("Print.SalesOrder.Seq")</th>
+                <th>@T("Print.SalesOrder.ItemName")</th>
+                <th class="num">@T("Print.SalesOrder.Qty")</th>
+                <th class="num">@T("Print.TaxInvoice.SupplyAmt")</th>
+                <th class="num">@T("Print.TaxInvoice.TaxAmt")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in Print.Invoice.Lines.OrderBy(l => l.Seq))
+            {
+                <tr>
+                    <td class="num">@line.Seq</td>
+                    <td>@line.ItemName</td>
+                    <td class="num">@N(line.DnQty, Print.QtyDecimals)</td>
+                    <td class="num">@N(line.SupplyAmt, Print.AmountDecimals)</td>
+                    <td class="num">@N(line.TaxAmt, Print.AmountDecimals)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tbody>
+            <tr><th>@T("Print.TaxInvoice.SupplyAmt")</th><td class="num">@N(Print.Invoice.SupplyAmt, Print.AmountDecimals)</td></tr>
+            <tr><th>@T("Print.TaxInvoice.TaxAmt")</th><td class="num">@N(Print.Invoice.TaxAmt, Print.AmountDecimals)</td></tr>
+            <tr class="total"><th>@T("Print.SalesOrder.Total") (@Print.Invoice.CurrencyCode)</th><td class="num">@N(Print.Invoice.TotDnAmt, Print.AmountDecimals)</td></tr>
+        </tbody>
+    </table>
+
+    <style>
+        table.parties { margin-bottom: 12px; }
+        table.parties tbody th { width: 18%; white-space: nowrap; }
+        table.fields { width: auto; margin-bottom: 12px; }
+        table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+        table.totals { width: 45%; margin: 12px 0 0 auto; }
+        table.totals th { background: none; text-align: right; }
+        table.totals tr.total th, table.totals tr.total td { font-weight: 700; border-top: 2px solid #333; }
+    </style>
+</PrintLayout>
+
+@code {
+    [Parameter, EditorRequired] public TaxInvoicePrint Print { get; set; } = default!;
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+    private string T(string key) => PrintText.Get(key, Culture);
+
+    private string N(decimal value, int decimals) => value.ToString("N" + decimals, Culture);
+}
