@@ -1,0 +1,534 @@
+@page "/mm/supplier-invoice"
+@page "/mm/supplier-invoice/{InvoiceNo}"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Data
+@using QuroErp.Contracts.Bc.Localization
+@using QuroErp.Contracts.Bc.Tax
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.SupplierInvoices
+@using QuroErp.Contracts.Mm.Vendors
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.Tax
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.SupplierInvoices
+@using QuroErp.Web.Mm.Vendors
+@implements IDisposable
+@inject SupplierInvoiceApiClient Api
+@inject VendorApiClient VendorApi
+@inject ExchangeRateApiClient RateApi
+@inject LocalizationApiClient LocalizationApi
+@inject TaxCodeApiClient TaxCodeApi
+@inject IQuroConfirm Confirm
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* MM-UC-032 supplier invoice, screen type SM on the entry frame (entry-frame.md). The API checks every rule and calculates the
+   stored amounts, the matched receipt quantities and the PV postings (MM-BR-751~764); this screen shows defaults, locks and
+   display amounts with the document decimals. Lines come only from the vendor's open receipt lines (MM-BR-763). *@
+
+<PageTitle>@L["Mm.SupplierInvoice.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="supplier-invoice-load-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroHeaderDetail @ref="_frame" THeader="SupplierInvoiceHeader" TLine="SupplierInvoiceLine" Title="@L["Mm.SupplierInvoice.Title"]"
+                      TestId="supplier-invoice" Path="@L["Menu.G2MM"]" ReadOnly="!_canEdit"
+                      FindKeywordLabel="@L["Mm.SupplierInvoice.InvoiceNo"]"
+                      DocumentNo="i => i.InvoiceNo" Audit="i => i.ToAudit()"
+                      Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="_ => new SupplierInvoiceLine()"
+                      Save="SaveAsync" CanAddLine="false"
+                      Definition="mm.supplier-invoice.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
+                      ColumnFormats="SupplierInvoiceFormats.Of(_decimals)" IsLineReadOnly="l => l.IsSaved()"
+                      CanSave="SupplierInvoiceStatus.CanSave" CanDelete="i => _canEdit && SupplierInvoiceStatus.CanDelete(i)"
+                      Delete="DeleteAsync" DeleteText="@L["Mm.SupplierInvoice.Delete"]" LinesHint="LinesHint">
+        @* Find conditions: number (the keyword), vendor, period, type and status *@
+        <FindFilters>
+            <QuroText Label="@L["Mm.SupplierInvoice.VendorId"]" @bind-Value="_findVendor" TestId="supplier-invoice-find-vendor" />
+            <QuroDate Label="@L["Mm.SupplierInvoice.FindFrom"]" @bind-Value="_findFrom" TestId="supplier-invoice-find-from" />
+            <QuroDate Label="@L["Mm.SupplierInvoice.FindTo"]" @bind-Value="_findTo" TestId="supplier-invoice-find-to" />
+            <QuroSelect Label="@L["Mm.SupplierInvoice.Type"]" @bind-Value="_findType" Options="_typeOptions" TestId="supplier-invoice-find-type" />
+            <QuroSelect Label="@L["Mm.SupplierInvoice.Status"]" @bind-Value="_findStatus" Options="_statusOptions" TestId="supplier-invoice-find-status" />
+        </FindFilters>
+        <FindColumns>
+            <QuroColumn TRow="SupplierInvoiceHeader" Title="@L["Mm.SupplierInvoice.InvoiceNo"]" Value="i => i.InvoiceNo" />
+            <QuroColumn TRow="SupplierInvoiceHeader" Title="@L["Mm.SupplierInvoice.InvoiceDt"]" Value="i => i.InvoiceDt" />
+            <QuroColumn TRow="SupplierInvoiceHeader" Title="@L["Mm.SupplierInvoice.VendorId"]" Value="i => i.VendorName" />
+            <QuroColumn TRow="SupplierInvoiceHeader" Title="@L["Mm.SupplierInvoice.RefNo"]" Value="i => i.RefNo" />
+            <QuroColumn TRow="SupplierInvoiceHeader" Title="@L["Mm.SupplierInvoice.Type"]" Value="i => TypeText(i.Type)" />
+            <QuroColumn TRow="SupplierInvoiceHeader" Title="@L["Mm.SupplierInvoice.Status"]" Value="i => StatusText(i.Status)" />
+            <QuroColumn TRow="SupplierInvoiceHeader" Title="@L["Mm.SupplierInvoice.TotAmt"]" Value="i => Money(i.TotAmt, i.CurrencyCode)" />
+            <QuroColumn TRow="SupplierInvoiceHeader" Title="@L["Mm.SupplierInvoice.BalAmt"]" Value="i => Money(i.BalAmt ?? 0m, i.CurrencyCode)" />
+        </FindColumns>
+        <StatusChip Context="invoice">
+            <QuroStatusChip Code="@(invoice.Status ?? "")" Kind="SupplierInvoiceStatus.ChipOf(invoice.Status)" Text="@StatusText(invoice.Status)" />
+        </StatusChip>
+        <RowCommands Context="invoice">
+            <button type="button" disabled="@(!CanImport(invoice))" data-testid="supplier-invoice-line-import-receipts"
+                    @onclick="() => _importOpen = true">@L["Mm.SupplierInvoice.ImportReceipts"]</button>
+        </RowCommands>
+        <HeaderFields Context="invoice">
+            @* 1: vendor (2), vendor invoice number, invoice date *@
+            <div class="quro-lookup-field quro-span-2">
+                <QuroText Label="@L["Mm.SupplierInvoice.VendorId"]" Field="VendorName" Required TextCase="TextCase.Upper"
+                          LockMode="@(invoice.Id != 0 ? LockMode.Always : LockMode.None)" TestId="supplier-invoice-header-vendor-name" />
+                <button type="button" aria-label="@L["Mm.SupplierInvoice.FindVendor"]" disabled="@(!CanChangeVendor(invoice))"
+                        data-testid="supplier-invoice-header-vendor-lookup" @onclick="() => _vendorLookupOpen = true">…</button>
+            </div>
+            <QuroText Label="@L["Mm.SupplierInvoice.RefNo"]" Field="RefNo" Required MaxLength="50" TextCase="TextCase.Upper"
+                      TestId="supplier-invoice-header-ref-no" />
+            <QuroDate Label="@L["Mm.SupplierInvoice.InvoiceDt"]" Field="InvoiceDt" Required
+                      LockMode="@(invoice.HasSavedLines ? LockMode.Always : LockMode.None)" TestId="supplier-invoice-header-invoice-dt" />
+            @* 2: due date, terms, currency and rate (from the receipts, MM-BR-756) *@
+            <QuroDate Label="@L["Mm.SupplierInvoice.DueDt"]" Field="DueDt" Required TestId="supplier-invoice-header-due-dt" />
+            <QuroCodeSelect Major="TERMS" Label="@L["Mm.SupplierInvoice.Terms"]" Field="Terms" TestId="supplier-invoice-header-terms" />
+            <QuroText Label="@L["Mm.SupplierInvoice.CurrencyCode"]" Field="CurrencyCode" LockMode="LockMode.Always"
+                      TestId="supplier-invoice-header-currency-code" />
+            @* The rate defaults to the invoice date's and is locked with the date once a line is saved (MM-BR-756, MM-BR-760) *@
+            <QuroNumber Label="@L["Mm.SupplierInvoice.ExchangeRate"]" Field="ExchangeRate"
+                        LockMode="@(invoice.HasSavedLines ? LockMode.Always : LockMode.None)" TestId="supplier-invoice-header-exchange-rate" />
+            @* 3: tax invoice received, paid and balance (MM-BR-755), type *@
+            <QuroCheckbox Label="@L["Mm.SupplierInvoice.TaxInvoiceReceived"]" Field="TaxInvoiceReceived"
+                          TestId="supplier-invoice-header-tax-invoice-received" />
+            <QuroNumber Label="@L["Mm.SupplierInvoice.ClsAmt"]" Field="ClsAmt" LockMode="LockMode.Always" Decimals="_decimals.Amount"
+                        TestId="supplier-invoice-header-cls-amt" />
+            <QuroNumber Label="@L["Mm.SupplierInvoice.BalAmt"]" Field="BalAmt" LockMode="LockMode.Always" Decimals="_decimals.Amount"
+                        TestId="supplier-invoice-header-bal-amt" />
+            <QuroText Label="@L["Mm.SupplierInvoice.Type"]" Value="@TypeText(invoice.Type ?? SupplierInvoiceType.Invoice)"
+                      LockMode="LockMode.Always" TestId="supplier-invoice-header-type" />
+            @* 4: remarks *@
+            <QuroText Label="@L["Mm.SupplierInvoice.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="supplier-invoice-header-remarks" />
+        </HeaderFields>
+        <Totals Context="lines">
+            @{ var totals = TotalsOf(lines); }
+            <QuroTotals Subtotal="totals.Supply" Tax="totals.Tax" CurrencyCode="@_decimals.CurrencyCode" Decimals="_decimals.Amount"
+                        BaseTotal="BaseTotal(totals.Total)" BaseCurrencyCode="@_decimals.BaseCurrencyCode" BaseDecimals="_decimals.BaseAmount"
+                        TestId="supplier-invoice-totals" />
+        </Totals>
+    </QuroHeaderDetail>
+
+    <QuroLookupDialog TItem="VendorDto" Title="@L["Mm.SupplierInvoice.FindVendor"]" TestId="supplier-invoice-vendor-lookup"
+                      @bind-Visible="_vendorLookupOpen" Search="k => VendorApi.LookupAsync(k, CancellationToken.None)" OnSelected="SelectVendorAsync">
+        <Columns>
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.SupplierInvoice.VendorId"]" Value="v => v.VName" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.SupplierInvoice.CurrencyCode"]" Value="v => v.CurrencyCode" />
+            <QuroColumn TRow="VendorDto" Title="@L["Mm.SupplierInvoice.Terms"]" Value="v => v.Terms" />
+        </Columns>
+    </QuroLookupDialog>
+
+    @* Import receipt lines (MM-BR-763): one picked line is added at a time, from any of the vendor's receipts in the invoice
+       currency; lines already on the invoice are not offered again *@
+    <QuroLookupDialog TItem="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.ImportReceipts"]" TestId="supplier-invoice-receipt-lookup"
+                      @bind-Visible="_importOpen" Search="OpenReceiptLinesAsync" OnSelected="ImportAsync">
+        <Columns>
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.GrNo"]" Value="r => r.GrNo" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.GrSeq"]" Value="r => r.GrSeq" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.GrDt"]" Value="r => r.GrDt" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.ItemCd"]" Value="r => r.ItemCd" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.ItemName"]" Value="r => r.ItemName" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.GrQty"]" Value="r => r.GrQty" Format="@QtyFormat" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.InvoicedQty"]" Value="r => r.InvoicedQty" Format="@QtyFormat" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.OpenQty"]" Value="r => r.OpenQty" Format="@QtyFormat" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.GrPrc"]" Value="r => r.GrPrc" Format="@PriceFormat" />
+            <QuroColumn TRow="OpenReceiptLineDto" Title="@L["Mm.SupplierInvoice.CurrencyCode"]" Value="r => r.CurrencyCode" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string UnavailableCode = "BC-E-003";
+    private const string NotFoundCode = "Common-E-006";
+    private const string PriceDifferenceField = "confirmPriceDifference";
+    private const string NotSavedCode = "Mm.SupplierInvoice.PriceDifferenceNotSaved";
+    private static readonly string[] UpperCase = ["taxCode"];
+    private static readonly HashSet<string> AmountInputs =
+        new([nameof(SupplierInvoiceLine.Qty), nameof(SupplierInvoiceLine.Prc), nameof(SupplierInvoiceLine.TaxCodeId)],
+            StringComparer.OrdinalIgnoreCase);
+
+    private QuroHeaderDetail<SupplierInvoiceHeader, SupplierInvoiceLine>? _frame;
+    private QuroDataSet<SupplierInvoiceLine>? _watchedLines;
+    private LocalizationDto? _localization;
+    private PurchaseOrderDecimals _decimals = new("USD", 2, 2, 2, PurchaseOrderCalculator.HalfUp, PurchaseOrderCalculator.LineMode, "USD", 2);
+    private IReadOnlyList<TaxCodeDto> _taxCodes = [];
+    private bool _canEdit;
+    private bool _ready;
+    private bool _vendorLookupOpen;
+    private bool _importOpen;
+    private bool _applying;
+    private string? _loadError;
+    private string? _findVendor;
+    private DateOnly? _findFrom;
+    private DateOnly? _findTo;
+    private string? _findType;
+    private string? _findStatus;
+    private IReadOnlyList<CodeItemDto> _typeOptions = [];
+    private IReadOnlyList<CodeItemDto> _statusOptions = [];
+
+    /// <summary>Invoice number from the address /mm/supplier-invoice/{InvoiceNo}.</summary>
+    [Parameter]
+    public string? InvoiceNo { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Full Access is the admin role until the menu policy reaches the screens, as on the master screens (BC-BR-214)
+        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        _typeOptions = [.. new[] { SupplierInvoiceType.Invoice, SupplierInvoiceType.DebitMemo }.Select(t => new CodeItemDto(t, TypeText(t)))];
+        _statusOptions = [.. SupplierInvoiceStatus.All.Select(s => new CodeItemDto(s, StatusText(s)))];
+        var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        try
+        {
+            _localization = await LocalizationApi.GetAsync(lang, CancellationToken.None);
+            _decimals = PurchaseOrderDecimals.Of(_localization, null);
+            _taxCodes = await TaxCodeApi.InUseAsync(lang, CancellationToken.None);
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // The frame exists after its first render; its lines are watched once for the tax code ids and display amounts
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_frame is not null && _watchedLines is null)
+        {
+            _watchedLines = _frame.Lines;
+            _watchedLines.ValueChanged += OnLineValueChanged;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_watchedLines is not null)
+        {
+            _watchedLines.ValueChanged -= OnLineValueChanged;
+        }
+    }
+
+    // A new invoice is dated today and due the same day (MM-BR-756), in the base currency until receipts are imported
+    private SupplierInvoiceHeader CreateHeader()
+    {
+        UseDecimals(_localization?.BaseCurrencyCode);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        return new SupplierInvoiceHeader
+        {
+            Type = SupplierInvoiceType.Invoice,
+            InvoiceDt = today,
+            DueDt = today,
+            CurrencyCode = _localization?.BaseCurrencyCode,
+            ExchangeRate = 1m,
+        };
+    }
+
+    private Func<Task<HeaderLines<SupplierInvoiceHeader, SupplierInvoiceLine>?>>? Initial => InvoiceNo is null
+        ? null
+        : async () => await Api.FindByNoAsync(InvoiceNo, CancellationToken.None) is { } invoice ? Document(invoice) : null;
+
+    // The find dialog (F3): the keyword is the start of an invoice number; period, type and status go to the API. A vendor name
+    // that matches a vendor exactly searches by that vendor, any other text keeps the invoices whose vendor name contains it
+    private async Task<IReadOnlyList<SupplierInvoiceHeader>> FindAsync(string? keyword)
+    {
+        var number = keyword?.Trim().ToUpperInvariant();
+        var vendorText = _findVendor?.Trim();
+        var vendor = string.IsNullOrEmpty(vendorText) ? null : await VendorApi.FindByNameAsync(vendorText, CancellationToken.None);
+        var invoices = await Api.SearchAsync(
+            new SupplierInvoiceSearchQuery(string.IsNullOrEmpty(number) ? null : number, vendor?.Id, _findFrom, _findTo,
+                string.IsNullOrEmpty(_findType) ? null : _findType, string.IsNullOrEmpty(_findStatus) ? null : _findStatus),
+            CancellationToken.None);
+        return [.. invoices
+            .Where(i => vendor is not null || string.IsNullOrEmpty(vendorText)
+                        || (i.VendorName?.Contains(vendorText, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Select(SupplierInvoiceHeader.From)];
+    }
+
+    private string Money(decimal amount, string? currencyCode) =>
+        amount.ToString("N" + DecimalsOf(currencyCode).Amount.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture) + " " + currencyCode;
+
+    private async Task<HeaderLines<SupplierInvoiceHeader, SupplierInvoiceLine>?> LoadAsync(SupplierInvoiceHeader picked) =>
+        Document(await Api.GetAsync(picked.Id, CancellationToken.None));
+
+    private HeaderLines<SupplierInvoiceHeader, SupplierInvoiceLine> Document(SupplierInvoiceDto invoice)
+    {
+        UseDecimals(invoice.CurrencyCode);
+        return new HeaderLines<SupplierInvoiceHeader, SupplierInvoiceLine>(
+            SupplierInvoiceHeader.From(invoice), [.. invoice.Lines.OrderBy(l => l.Seq).Select(SupplierInvoiceLine.From)]);
+    }
+
+    // The kept lines, in screen order, go in one request (saved lines left out are deleted, MM-BR-760). A price that differs
+    // from the PO asks first (MM-W-754); yes saves it, no keeps the screen as it is (MM-BR-754)
+    private async Task<HeaderLines<SupplierInvoiceHeader, SupplierInvoiceLine>> SaveAsync(
+        SupplierInvoiceHeader invoice, bool isNew, BatchChanges<SupplierInvoiceLine> changes)
+    {
+        var lines = ActiveLines();
+        bool? confirmPriceDifference = null;
+        while (true)
+        {
+            var request = invoice.ToRequest(isNew, lines, confirmPriceDifference);
+            try
+            {
+                var saved = isNew
+                    ? await Api.CreateAsync(request, CancellationToken.None)
+                    : await Api.UpdateAsync(invoice.Id, request, CancellationToken.None);
+                return Document(saved);
+            }
+            catch (ApiProblemException e) when (confirmPriceDifference is null && e.Problem.ConfirmField == PriceDifferenceField)
+            {
+                if (!await Confirm.ConfirmAsync(Messages.Get(e.Problem)))
+                {
+                    throw new ApiProblemException(new ApiProblem(422, NotSavedCode, []));
+                }
+                confirmPriceDifference = true;
+            }
+        }
+    }
+
+    private Task DeleteAsync(SupplierInvoiceHeader invoice) => Api.DeleteAsync(invoice.Id, invoice.UpdatedAt!.Value, CancellationToken.None);
+
+    private string? LinesHint(SupplierInvoiceHeader invoice) => invoice.VendorId is null
+        ? L["Common.SelectPartnerFirst"].Value
+        : L["Mm.SupplierInvoice.ImportHint"].Value;
+
+    private string StatusText(string? status) => status is null ? "" : L[$"Mm.SupplierInvoice.Status.{status}"];
+
+    private string TypeText(string? type) => type is null ? "" : L[$"Mm.SupplierInvoice.Type.{type}"];
+
+    private string QtyFormat => "N" + _decimals.Qty.ToString(CultureInfo.InvariantCulture);
+
+    private string PriceFormat => "N" + _decimals.Price.ToString(CultureInfo.InvariantCulture);
+
+    private bool HasLines => _frame is not null && ActiveLines().Count > 0;
+
+    // The vendor is picked on a new invoice before any line is imported (MM-BR-751)
+    private bool CanChangeVendor(SupplierInvoiceHeader invoice) => _canEdit && invoice.Id == 0 && !HasLines;
+
+    private bool CanImport(SupplierInvoiceHeader invoice) =>
+        _canEdit && invoice.VendorId is not null && (invoice.Id == 0 || SupplierInvoiceStatus.CanSave(invoice));
+
+    // A typed vendor name is matched exactly; the terms follow the vendor. The invoice date sets the rate while no line is
+    // saved (MM-BR-756, MM-BR-760)
+    private void HeaderChanged(string field)
+    {
+        if (_applying)
+        {
+            return;
+        }
+        if (string.Equals(field, nameof(SupplierInvoiceHeader.VendorName), StringComparison.OrdinalIgnoreCase))
+        {
+            var name = Header().VendorName;
+            _ = InvokeAsync(() => _frame!.RunCommandAsync(() => FindVendorAsync(name)));
+        }
+        else if (string.Equals(field, nameof(SupplierInvoiceHeader.InvoiceDt), StringComparison.OrdinalIgnoreCase) && !Header().HasSavedLines)
+        {
+            _ = InvokeAsync(async () =>
+            {
+                await RefreshRateAsync();
+                StateHasChanged();
+            });
+        }
+    }
+
+    private async Task FindVendorAsync(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            SetHeader(nameof(SupplierInvoiceHeader.VendorId), null);
+            return;
+        }
+        if (await VendorApi.FindByNameAsync(name, CancellationToken.None) is { } vendor)
+        {
+            await ApplyVendorAsync(vendor);
+            return;
+        }
+        SetHeader(nameof(SupplierInvoiceHeader.VendorId), null);
+        throw new ApiProblemException(new ApiProblem(404, NotFoundCode, [name]));
+    }
+
+    private Task SelectVendorAsync(VendorDto vendor) => _frame!.RunCommandAsync(() => ApplyVendorAsync(vendor));
+
+    // The vendor's currency is shown until a receipt line sets the invoice currency (MM-BR-756)
+    private async Task ApplyVendorAsync(VendorDto vendor)
+    {
+        SetHeader(nameof(SupplierInvoiceHeader.VendorName), vendor.VName);
+        SetHeader(nameof(SupplierInvoiceHeader.VendorId), vendor.Id);
+        SetHeader(nameof(SupplierInvoiceHeader.Terms), vendor.Terms);
+        if (!HasLines)
+        {
+            await UseCurrencyAsync(vendor.CurrencyCode ?? _localization?.BaseCurrencyCode);
+        }
+        StateHasChanged();
+    }
+
+    private async Task UseCurrencyAsync(string? currencyCode)
+    {
+        SetHeader(nameof(SupplierInvoiceHeader.CurrencyCode), currencyCode);
+        UseDecimals(currencyCode);
+        await RefreshRateAsync();
+    }
+
+    // The rate of the invoice date, 1 for the base currency (BC-BR-412); empty when no rate is entered for that day
+    private async Task RefreshRateAsync()
+    {
+        var invoice = Header();
+        if (invoice.CurrencyCode is not { Length: > 0 } currency || _localization is null)
+        {
+            return;
+        }
+        var rate = currency == _localization.BaseCurrencyCode
+            ? 1m
+            : await RateApi.RateOnAsync(currency, invoice.InvoiceDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        SetHeader(nameof(SupplierInvoiceHeader.ExchangeRate), rate);
+    }
+
+    // Header values the page sets itself do not run the vendor and rate lookups again
+    private void SetHeader(string field, object? value)
+    {
+        var applying = _applying;
+        _applying = true;
+        try
+        {
+            _frame!.SetHeaderValue(field, value);
+        }
+        finally
+        {
+            _applying = applying;
+        }
+    }
+
+    // The vendor's receipt lines not yet invoiced, in the invoice currency once it has lines (MM-BR-756, MM-BR-763). The saved
+    // invoice's own lines count as open, so a line deleted on screen can come back
+    private async Task<IReadOnlyList<OpenReceiptLineDto>> OpenReceiptLinesAsync(string? keyword)
+    {
+        var invoice = Header();
+        if (invoice.VendorId is not { } vendorId)
+        {
+            return [];
+        }
+        var taken = ActiveLines().Select(l => l.GoodsReceiptLineId).OfType<long>().ToHashSet();
+        var currency = HasLines ? invoice.CurrencyCode : null;
+        var text = keyword?.Trim();
+        return [.. (await Api.OpenReceiptLinesAsync(vendorId, currency, invoice.Id == 0 ? null : invoice.Id, CancellationToken.None))
+            .Where(r => !taken.Contains(r.GoodsReceiptLineId))
+            .Where(r => string.IsNullOrEmpty(text)
+                        || r.GrNo.Contains(text, StringComparison.OrdinalIgnoreCase)
+                        || (r.ItemCd?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false)
+                        || (r.ItemName?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false))];
+    }
+
+    // The picked receipt line becomes a new line; the first line also sets the invoice currency (MM-BR-756)
+    private Task ImportAsync(OpenReceiptLineDto receiptLine) => _frame!.RunCommandAsync(async () =>
+    {
+        if (!HasLines && receiptLine.CurrencyCode != Header().CurrencyCode)
+        {
+            await UseCurrencyAsync(receiptLine.CurrencyCode);
+        }
+        var line = SupplierInvoiceLine.From(receiptLine);
+        line.TaxCode ??= TaxOf(line.TaxCodeId)?.TaxCode;
+        Amounts(line);
+        var lines = _frame.Lines;
+        lines.MoveTo(lines.AddRow(line, lines.CurrentRowKey));
+    });
+
+    // Line lookup: the tax codes in use
+    private Task<IReadOnlyList<LookupRow>> LookupAsync(LookupQuery query) => Task.FromResult<IReadOnlyList<LookupRow>>(query.LookupId switch
+    {
+        "mmPoTaxCode" => [.. _taxCodes.Where(t => Matches(query, t.TaxCode, t.Name)).Select(t => LookupRow.Of(
+            ("taxCode", t.TaxCode), ("name", t.Name), ("rate", t.Rate)))],
+        _ => [],
+    });
+
+    private static bool Matches(LookupQuery query, string code, string? name) =>
+        query.Codes is { } codes
+            ? codes.Contains(code, StringComparer.OrdinalIgnoreCase)
+            : string.IsNullOrWhiteSpace(query.Keyword)
+              || code.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase)
+              || (name?.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase) ?? false);
+
+    // The tax code id of a typed code and the display amounts of a new line (MM-BR-755)
+    private void OnLineValueChanged(object? sender, DataSetValueChangedEventArgs e)
+    {
+        var lines = _frame!.Lines;
+        if (lines.GetState(e.RowKey) is RowState.Normal or RowState.Deleted)
+        {
+            return;
+        }
+        var line = lines.GetItem(e.RowKey);
+        if (Is(e.Field, nameof(SupplierInvoiceLine.TaxCode)))
+        {
+            // The tax code id is an amount input: setting it calculates the tax again
+            lines.SetValue(e.RowKey, nameof(SupplierInvoiceLine.TaxCodeId), _taxCodes.FirstOrDefault(t => Is(t.TaxCode, line.TaxCode ?? ""))?.Id);
+        }
+        if (!AmountInputs.Contains(e.Field))
+        {
+            return;
+        }
+        var amount = LineAmount(line);
+        lines.SetValue(e.RowKey, nameof(SupplierInvoiceLine.SupplyAmt), amount);
+        lines.SetValue(e.RowKey, nameof(SupplierInvoiceLine.TaxAmt), LineTax(line, amount));
+    }
+
+    private void Amounts(SupplierInvoiceLine line)
+    {
+        line.SupplyAmt = LineAmount(line);
+        line.TaxAmt = LineTax(line, line.SupplyAmt.Value);
+    }
+
+    // SupplyAmt = round(Qty × Prc) in the document decimals (MM-BR-755, BC-BR-421)
+    private decimal LineAmount(SupplierInvoiceLine line) =>
+        PurchaseOrderCalculator.Line(line.Qty ?? 0, line.Prc ?? 0, 0m, _decimals.Amount, _decimals.RoundingMode).Amount;
+
+    private decimal LineTax(SupplierInvoiceLine line, decimal amount) => TaxOf(line.TaxCodeId) is { } tax
+        ? PurchaseOrderCalculator.Tax(amount, tax.Rate, tax.PriceIncluded, _decimals.Amount, _decimals.RoundingMode)
+        : 0m;
+
+    private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+
+    private PoDisplayTotals TotalsOf(IEnumerable<SupplierInvoiceLine> lines) => PurchaseOrderCalculator.Totals(
+        lines.Select(l => TaxOf(l.TaxCodeId) is { } tax
+            ? new PoLineInput(l.Qty ?? 0, l.Prc ?? 0, 0m, tax.Id, tax.Rate, tax.PriceIncluded)
+            : new PoLineInput(l.Qty ?? 0, l.Prc ?? 0, 0m, l.TaxCodeId ?? 0, 0m)),
+        _decimals.Amount, _decimals.TaxCalcMode, _decimals.RoundingMode);
+
+    // Total × rate in base currency decimals (BC-BR-413), shown by the totals panel for another document currency only
+    private decimal? BaseTotal(decimal total) => _frame is not null && Header().ExchangeRate is { } rate
+        ? PurchaseOrderCalculator.BaseTotal(total, rate, _decimals.BaseAmount, _decimals.RoundingMode)
+        : null;
+
+    private TaxCodeDto? TaxOf(long? taxCodeId) => taxCodeId is { } id ? _taxCodes.FirstOrDefault(t => t.Id == id) : null;
+
+    // The line formats are a frame parameter, so the page draws again when the currency changes
+    private void UseDecimals(string? currencyCode)
+    {
+        var decimals = DecimalsOf(currencyCode);
+        if (decimals != _decimals)
+        {
+            _decimals = decimals;
+            StateHasChanged();
+        }
+    }
+
+    private PurchaseOrderDecimals DecimalsOf(string? currencyCode) =>
+        _localization is null ? _decimals : PurchaseOrderDecimals.Of(_localization, currencyCode);
+
+    private List<SupplierInvoiceLine> ActiveLines()
+    {
+        var lines = _frame!.Lines;
+        return [.. lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).Select(lines.GetItem)];
+    }
+
+    // The header as the frame holds it (the inputs write to this object)
+    private SupplierInvoiceHeader Header() => _frame!.Header;
+}

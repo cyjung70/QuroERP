@@ -976,4 +976,52 @@
   <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
   <data name="Mm.GoodsReceipt.FindLot" xml:space="preserve"><value>로트 찾기</value></data>
   <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>저장하지 않았습니다. 입고 수량을 확인하세요.</value></data>
+  <data name="Menu.G2MM03" xml:space="preserve"><value>공급자 송장</value></data>
+  <data name="Mm.SupplierInvoice.Title" xml:space="preserve"><value>공급자 송장</value></data>
+  <data name="Mm.SupplierInvoice.InvoiceNo" xml:space="preserve"><value>송장 번호</value></data>
+  <data name="Mm.SupplierInvoice.Type" xml:space="preserve"><value>유형</value></data>
+  <data name="Mm.SupplierInvoice.Type.INV" xml:space="preserve"><value>송장</value></data>
+  <data name="Mm.SupplierInvoice.Type.DM" xml:space="preserve"><value>Debit Memo</value></data>
+  <data name="Mm.SupplierInvoice.Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Mm.SupplierInvoice.Status.OP" xml:space="preserve"><value>미지급</value></data>
+  <data name="Mm.SupplierInvoice.Status.PA" xml:space="preserve"><value>부분 지급</value></data>
+  <data name="Mm.SupplierInvoice.Status.CL" xml:space="preserve"><value>지급 완료</value></data>
+  <data name="Mm.SupplierInvoice.Status.VO" xml:space="preserve"><value>무효</value></data>
+  <data name="Mm.SupplierInvoice.VendorId" xml:space="preserve"><value>공급자</value></data>
+  <data name="Mm.SupplierInvoice.FindVendor" xml:space="preserve"><value>공급자 찾기</value></data>
+  <data name="Mm.SupplierInvoice.RefNo" xml:space="preserve"><value>공급자 송장 번호</value></data>
+  <data name="Mm.SupplierInvoice.InvoiceDt" xml:space="preserve"><value>송장 일자</value></data>
+  <data name="Mm.SupplierInvoice.DueDt" xml:space="preserve"><value>지급 예정일</value></data>
+  <data name="Mm.SupplierInvoice.Terms" xml:space="preserve"><value>결제 조건</value></data>
+  <data name="Mm.SupplierInvoice.CurrencyCode" xml:space="preserve"><value>통화</value></data>
+  <data name="Mm.SupplierInvoice.ExchangeRate" xml:space="preserve"><value>환율</value></data>
+  <data name="Mm.SupplierInvoice.TaxInvoiceReceived" xml:space="preserve"><value>세금계산서 수취</value></data>
+  <data name="Mm.SupplierInvoice.BalAmt" xml:space="preserve"><value>잔액</value></data>
+  <data name="Mm.SupplierInvoice.ClsAmt" xml:space="preserve"><value>지급 누계</value></data>
+  <data name="Mm.SupplierInvoice.FindFrom" xml:space="preserve"><value>송장 일자 시작</value></data>
+  <data name="Mm.SupplierInvoice.FindTo" xml:space="preserve"><value>송장 일자 끝</value></data>
+  <data name="Mm.SupplierInvoice.TotAmt" xml:space="preserve"><value>합계</value></data>
+  <data name="Mm.SupplierInvoice.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Mm.SupplierInvoice.Delete" xml:space="preserve"><value>송장 삭제</value></data>
+  <data name="Mm.SupplierInvoice.ImportReceipts" xml:space="preserve"><value>입고 가져오기</value></data>
+  <data name="Mm.SupplierInvoice.ImportHint" xml:space="preserve"><value>입고 가져오기로 줄을 넣으세요.</value></data>
+  <data name="Mm.SupplierInvoice.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Mm.SupplierInvoice.GrNo" xml:space="preserve"><value>입고 번호</value></data>
+  <data name="Mm.SupplierInvoice.GrSeq" xml:space="preserve"><value>입고 줄</value></data>
+  <data name="Mm.SupplierInvoice.GrDt" xml:space="preserve"><value>입고일</value></data>
+  <data name="Mm.SupplierInvoice.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Mm.SupplierInvoice.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Mm.SupplierInvoice.Unit" xml:space="preserve"><value>단위</value></data>
+  <data name="Mm.SupplierInvoice.GrQty" xml:space="preserve"><value>입고 수량</value></data>
+  <data name="Mm.SupplierInvoice.GrPrc" xml:space="preserve"><value>입고 단가</value></data>
+  <data name="Mm.SupplierInvoice.InvoicedQty" xml:space="preserve"><value>대사 누계</value></data>
+  <data name="Mm.SupplierInvoice.OpenQty" xml:space="preserve"><value>미대사 수량</value></data>
+  <data name="Mm.SupplierInvoice.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Mm.SupplierInvoice.Prc" xml:space="preserve"><value>단가</value></data>
+  <data name="Mm.SupplierInvoice.SupplyAmt" xml:space="preserve"><value>공급가</value></data>
+  <data name="Mm.SupplierInvoice.TaxCodeId" xml:space="preserve"><value>세금 코드</value></data>
+  <data name="Mm.SupplierInvoice.TaxAmt" xml:space="preserve"><value>세액</value></data>
+  <data name="Mm.SupplierInvoice.Deductible" xml:space="preserve"><value>공제</value></data>
+  <data name="Mm.SupplierInvoice.PvAmt" xml:space="preserve"><value>원가 조정</value></data>
+  <data name="Mm.SupplierInvoice.PriceDifferenceNotSaved" xml:space="preserve"><value>저장하지 않았습니다. 송장 단가를 확인하세요.</value></data>
 </root>

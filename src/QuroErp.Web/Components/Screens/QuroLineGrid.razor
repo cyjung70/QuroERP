@@ -18,8 +18,8 @@
         <style>@requiredStyle</style>
     }
     <QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
-                        ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor" OptionsFor="OptionsFor"
-                        AddRowOnLastEnter="@(AddRowOnLastEnter && CanEdit)" OnRowAdding="OnRowAdding"
+                        ConfirmLeave="false" AddRowsOnPaste="@(CanEdit && CanAddRows)" LookupFor="LookupFor" OptionsFor="OptionsFor"
+                        AddRowOnLastEnter="@(AddRowOnLastEnter && CanEdit && CanAddRows)" OnRowAdding="OnRowAdding"
                         OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged" OnRowAdded="OnRowAdded"
                         OnRowDeleting="OnRowDeleting" OnRowDeleted="OnRowDeleted" OnPasting="OnPasting" OnPasted="OnPasted"
                         OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick" RowReadOnly="IsRowReadOnly">
@@ -64,6 +64,10 @@
     /// <summary>The frame lets the user change the lines (status, Full Access). When false every cell is read-only.</summary>
     [Parameter]
     public bool CanEdit { get; set; } = true;
+
+    /// <summary>Pasting below the last line adds rows. False when lines only come from a row command. Default true.</summary>
+    [Parameter]
+    public bool CanAddRows { get; set; } = true;
 
     /// <summary>A line that may not be changed or deleted, e.g. one already received.</summary>
     [Parameter]

@@ -22,8 +22,9 @@ public class LineGridTests : ScreenContext
         return Task.FromResult(rows);
     }
 
-    private IRenderedComponent<QuroHeaderDetail<SamplePo, SamplePoLine>> Open() =>
+    private IRenderedComponent<QuroHeaderDetail<SamplePo, SamplePoLine>> Open(bool canAddLine = true) =>
         Render<QuroHeaderDetail<SamplePo, SamplePoLine>>(p => p
+            .Add(x => x.CanAddLine, canAddLine)
             .Add(x => x.Title, "T")
             .Add(x => x.TestId, "t")
             .Add(x => x.Definition, "samples.po.entry")
@@ -59,6 +60,19 @@ public class LineGridTests : ScreenContext
         _queries.Should().ContainSingle().Which.Codes.Should().Equal("MOU10001", "MON24001", "KBD10001");
         lines.Column("itemName").Should().Equal("Mouse optical", "Monitor 24 inch", "Keyboard USB");
         lines.Column("amount").Should().Equal("13.60", "1,800.00", "0.00");
+    }
+
+    [Fact, Trait("Rule", "MM-BR-763")]
+    public void LinesFromARowCommandOnly_DisableAddRow_AndPasteAddsNoLine()
+    {
+        var page = Open(canAddLine: false);
+        var lines = Lines(page);
+
+        page.Find("[data-testid=t-line-add-row]").HasAttribute("disabled").Should().BeTrue("the button stays, disabled");
+        lines.Paste(0, "itemCode", ["mou10001"], ["mon24001"], ["kbd10001"]);
+
+        lines.Rows.Should().HaveCount(2, "a supplier invoice line must come from a receipt line");
+        page.Find("[data-testid=t-line-mark-delete]").Should().NotBeNull();
     }
 
     [Fact]

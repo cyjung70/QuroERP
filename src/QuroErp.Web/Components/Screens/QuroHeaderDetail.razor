@@ -131,7 +131,7 @@
             <span data-testid="@Id("line-count")">@L["Common.LineCount", ActiveLines.Count]</span>
             @* Row commands act on the current line (entry-frame.md 2). The hint follows, so the buttons stay put when it appears *@
             <div class="quro-entry-line-commands" role="toolbar" aria-label="@L["Common.Lines"]" data-testid="@Id("line-commands")">
-                <button type="button" disabled="@(Busy || !CanSaveNow)" aria-keyshortcuts="Control+Insert"
+                <button type="button" disabled="@(Busy || !CanSaveNow || !CanAddLine)" aria-keyshortcuts="Control+Insert"
                         data-testid="@Id("line-add-row")" @onclick="AddLine"><QuroCommandIcon Name="add-row" />@L["Common.AddRow"]</button>
                 <button type="button" disabled="@(Busy || !CanMarkSelected)" aria-keyshortcuts="Control+Delete"
                         aria-pressed="@(SelectedIsDeleted ? "true" : "false")"
@@ -145,7 +145,7 @@
             }
         </div>
         <QuroLineGrid @ref="_lineGrid" TLine="TLine" Data="_lines" Definition="_definition" CanEdit="@(CanSaveNow && !Busy)"
-                      IsLineLocked="IsLineLocked" IsLineRemovable="IsLineRemovable" IsLineReadOnly="IsLineReadOnly" IsCellLocked="IsCellLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
+                      CanAddRows="CanAddLine" IsLineLocked="IsLineLocked" IsLineRemovable="IsLineRemovable" IsLineReadOnly="IsLineReadOnly" IsCellLocked="IsCellLocked" Lookup="Lookup" HeaderValue="HeaderValueOf" UpperCaseFields="UpperCaseFields"
                       OptionsFor="LineOptionsFor" AddRowOnLastEnter="AddRowOnLastEnter" FillAddedLine="FillLineOrNull" OnLinesPasted="OnLinesPasted"
                       OnMessage="ShowWarning" OnChanged="LinesChanged" TestId="@Id("line")" />
     </div>
@@ -322,6 +322,13 @@
     /// </summary>
     [Parameter]
     public bool ReadOnly { get; set; }
+
+    /// <summary>
+    /// False when lines only come from a row command, e.g. supplier invoice lines imported from receipts (MM-BR-763): Add Row
+    /// (and Ctrl+Insert) is disabled and pasting adds no rows. Default true.
+    /// </summary>
+    [Parameter]
+    public bool CanAddLine { get; set; } = true;
 
     /// <summary>Lines whose cells are all locked, e.g. received PO lines. They cannot be marked for delete.</summary>
     [Parameter]
@@ -504,7 +511,7 @@
             case "save" when CanSaveNow:
                 await SaveAsync();
                 break;
-            case "add-row" when CanSaveNow:
+            case "add-row" when CanSaveNow && CanAddLine:
                 AddLine();
                 break;
             case "mark-delete" when CanMarkSelected:
