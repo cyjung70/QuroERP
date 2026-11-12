@@ -15,6 +15,7 @@ public sealed class ShipmentApiClient(HttpClient http, AccessTokenProvider token
         var parameters = new List<string>();
         Add(parameters, "shipNo", query.ShipNo?.Trim());
         Add(parameters, "customerId", query.CustomerId?.ToString(CultureInfo.InvariantCulture));
+        Add(parameters, "customerName", query.CustomerName?.Trim());
         Add(parameters, "status", query.Status);
         Add(parameters, "fromDt", Date(query.FromDt));
         Add(parameters, "toDt", Date(query.ToDt));

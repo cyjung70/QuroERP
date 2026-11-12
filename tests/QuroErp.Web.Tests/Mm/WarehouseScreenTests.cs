@@ -73,7 +73,8 @@ public class WarehouseScreenTests : BunitContext
         var page = RenderAs("admin");
         var grid = Grid(page);
 
-        page.Find("[data-testid=warehouse-toolbar-new]").Click();
+        grid.Select(2);
+        page.Find("[data-testid=warehouse-toolbar-add-row]").Click();
 
         grid.IsReadOnly(1, "warehouseCode").Should().BeTrue();
         grid.IsReadOnly(3, "warehouseCode").Should().BeFalse();
@@ -102,7 +103,8 @@ public class WarehouseScreenTests : BunitContext
 
         grid.Toggle(2, "isDefault").Should().BeTrue();
         grid.Edit(2, "remarks", "Moved").Should().BeTrue();
-        page.Find("[data-testid=warehouse-toolbar-new]").Click();
+        grid.Select(2);
+        page.Find("[data-testid=warehouse-toolbar-add-row]").Click();
         grid.Edit(3, "warehouseCode", "east").Should().BeTrue();
         grid.Edit(3, "warehouseName", "East").Should().BeTrue();
 
@@ -125,7 +127,8 @@ public class WarehouseScreenTests : BunitContext
         var page = RenderAs("admin");
         var grid = Grid(page);
 
-        grid.Click(2, "deleteRow");
+        grid.Select(2);
+        page.Find("[data-testid=warehouse-toolbar-mark-delete]").Click();
         page.Find("[data-testid=warehouse-toolbar-save]").Click();
 
         page.WaitForAssertion(() => _api.Saved.Should().ContainSingle().Which.Deleted.Should().Equal(new WarehouseKey(2, Read)));

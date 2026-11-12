@@ -51,9 +51,57 @@ public sealed class ShipmentService(
     {
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
         var rows = await shipments.SearchAsync(query, ShipmentRoutes.MaxListSize, uow.Transaction, cancellationToken);
+        var amounts = await ListAmountsAsync(rows, uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return [.. rows.Select(r => new ShipmentSummaryDto(
-            r.Id, r.ShipNo, r.Status, r.BillingFlow, r.ShipDt, r.CustomerId, r.CustomerName, r.CurrencyCode, r.SalesInvoiceNo))];
+            r.Id, r.ShipNo, r.Status, r.BillingFlow, r.ShipDt, r.CustomerId, r.CustomerName, r.CurrencyCode, r.SalesInvoiceNo,
+            amounts.GetValueOrDefault(r.Id)))];
+    }
+
+    // The shipment amount is not stored: the supply amount of the kept lines at each shipment's date. A listed document may use a
+    // currency or tax code no longer in use, so these lookups take them all
+    private async Task<Dictionary<long, decimal>> ListAmountsAsync(
+        IReadOnlyList<ShipmentRow> rows, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (rows.Count == 0)
+        {
+            return [];
+        }
+        var lines = (await shipments.FindAmountLinesAsync([.. rows.Select(r => r.Id)], transaction, cancellationToken)).ToLookup(l => l.ShipmentId);
+        if (lines.Count == 0)
+        {
+            return [];
+        }
+        var company = await localization.FindCompanyAsync(transaction, cancellationToken);
+        var sd = (await localization.FindDecimalSettingsAsync(transaction, cancellationToken)).FirstOrDefault(d => d.Module == DecimalModule.Sd);
+        var settings = new ShipmentSettings(
+            company?.BaseCurrencyCode ?? CountryProfiles.Get(CountryProfiles.Us).BaseCurrencyCode, company?.TaxCalcMode ?? TaxCalcMode.Document,
+            sd is null ? RoundingMode.HalfUp : Rounding.ParseMode(sd.RoundingMode));
+        var rounder = new AmountRounder(
+            (await localization.FindCurrenciesAsync(transaction, cancellationToken)).Select(c => new Currency(c.CurrencyCode, c.Decimals)));
+        var codes = await taxes.FindTaxCodesAsync([.. lines.SelectMany(g => g).Select(l => l.TaxCodeId).Distinct()], transaction, cancellationToken);
+        var ratesByDate = new Dictionary<DateOnly, Dictionary<long, TaxCodeRate>>();
+        var amounts = new Dictionary<long, decimal>();
+        foreach (var row in rows.Where(r => lines.Contains(r.Id)))
+        {
+            if (!ratesByDate.TryGetValue(row.ShipDt, out var rates))
+            {
+                rates = [];
+                foreach (var code in codes)
+                {
+                    // Only a price that includes the tax takes the rate out of the supply amount (BC-BR-544)
+                    rates[code.Id] = code.PriceIncluded
+                        ? await taxRates.GetRateAsync(code, row.ShipDt, transaction, cancellationToken)
+                        : new TaxCodeRate(code.Id, 0m, false);
+                }
+                ratesByDate[row.ShipDt] = rates;
+            }
+            var (_, totals) = ShipmentInvoice.Calculate(
+                [.. lines[row.Id].Select(l => new ShipmentInvoiceInput(l.Seq, l.ShipQty, l.ShipPrc, l.DcRate, l.TaxCodeId))],
+                row.CurrencyCode, row.ExchangeRate, rates, settings, rounder);
+            amounts[row.Id] = totals.SupplyAmt;
+        }
+        return amounts;
     }
 
     /// <exception cref="NotFoundException">Common-E-006.</exception>
@@ -245,11 +293,18 @@ public sealed class ShipmentService(
         var company = await localization.FindCompanyAsync(transaction, cancellationToken);
         var baseCurrency = company?.BaseCurrencyCode ?? CountryProfiles.Get(CountryProfiles.Us).BaseCurrencyCode;
         // BC-BR-424: amounts and tax use the SD module rounding mode; HALF_UP when the setting row is missing
-        var sd = (await localization.FindDecimalSettingsAsync(transaction, cancellationToken)).FirstOrDefault(d => d.Module == DecimalModule.Sd);
+        var decimalSettings = await localization.FindDecimalSettingsAsync(transaction, cancellationToken);
+        var sd = decimalSettings.FirstOrDefault(d => d.Module == DecimalModule.Sd);
         var settings = new ShipmentSettings(
             baseCurrency, company?.TaxCalcMode ?? TaxCalcMode.Document, sd is null ? RoundingMode.HalfUp : Rounding.ParseMode(sd.RoundingMode));
-        var rounder = new AmountRounder(
-            (await localization.FindCurrenciesAsync(transaction, cancellationToken)).Where(c => c.UseYn).Select(c => new Currency(c.CurrencyCode, c.Decimals)));
+        var currencies = await localization.FindCurrenciesAsync(transaction, cancellationToken);
+        var rounder = new AmountRounder(currencies.Where(c => c.UseYn).Select(c => new Currency(c.CurrencyCode, c.Decimals)));
+        // BC-BR-423, BC-BR-429: the document currency's country decides the unit price decimals
+        var decimalPolicy = new DecimalPolicy(
+            company?.CountryCode ?? CountryProfiles.Us,
+            decimalSettings.Select(d => new DecimalSetting(d.Module, d.QtyDecimals, Rounding.ParseMode(d.RoundingMode))),
+            (await localization.FindCountryDecimalsAsync(transaction, cancellationToken)).Select(d => new CountryDecimal(d.CountryCode, d.Module, d.UnitPriceDecimals)),
+            currencies.ToDictionary(c => c.CurrencyCode, c => c.CountryCode));
 
         // SD-BR-171: saved lines come back unchanged with their id; the ones left out are deleted
         var storedById = storedLines.ToDictionary(l => l.Id);
@@ -321,7 +376,7 @@ public sealed class ShipmentService(
         var nextSeq = storedLines.Count == 0 ? 1 : storedLines.Max(l => l.Seq) + 1;
         var lines = ShipmentRules.Lines(
             added, nextSeq, billingFlow, request.CustomerId, orderLines, invoiceLines, itemCodes.Keys.ToHashSet(), usable, rates.Keys.ToHashSet(),
-            consignment?.Id);
+            consignment?.Id, currencyCode, decimalPolicy);
         ShipmentRules.EnsureRemaining(lines, deleted, orderLines);
         ShipmentRules.EnsureUnshipped(lines, deleted, invoiceLines, ShipmentStatus.Void);
 
@@ -559,14 +614,19 @@ public sealed class ShipmentService(
         var r = await shipments.FindAsync(id, forUpdate: false, transaction, cancellationToken) ?? throw new NotFoundException(NotFoundCode, id);
         var lines = await shipments.FindLinesAsync(id, transaction, cancellationToken);
         var s = r.ShipTo;
+        var invoice = r.BillingFlow == Customer.ShipAndBill && r.SalesInvoiceId is { } invoiceId
+            ? await shipments.FindInvoiceAsync(invoiceId, forUpdate: false, transaction, cancellationToken)
+            : null;
         return new ShipmentDto(
             r.Id, r.ShipNo, r.Status, r.BillingFlow, r.CustomerId, r.CustomerName, r.SalesOrderId, r.SoNo, r.ShipDt, r.WarehouseId, r.CurrencyCode,
             r.ExchangeRate, r.ShipVia, s.ShipName, s.ShipAddr1, s.ShipAddr2, s.ShipCity, s.ShipState, s.ShipZipCode, s.ShipCountry, s.ShipPhone,
             r.Remarks, r.SalesInvoiceId, r.SalesInvoiceNo,
             [.. lines.Select(l => new ShipmentLineDto(
                 l.Id, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.Unit, l.WarehouseId, l.WarehouseCode, l.LotId, l.LotNo, l.ShipQty, l.ShipPrc, l.DcCd,
-                l.DcRate, l.TaxCodeId, l.BilledQty, l.OnhandQty, l.SalesOrderLineId, l.SoNo, l.SoSeq, l.SalesInvoiceLineId, l.DnNo, l.DnSeq))],
-            r.UpdatedAt, r.CreatedAt, r.CreatedBy, r.UpdatedBy);
+                l.DcRate, l.TaxCodeId, l.BilledQty, l.OnhandQty, l.SalesOrderLineId, l.SoNo, l.SoSeq, l.SalesInvoiceLineId, l.DnNo, l.DnSeq,
+                l.RemainingQty))],
+            r.UpdatedAt, r.CreatedAt, r.CreatedBy, r.UpdatedBy,
+            invoice is not null && !ShipmentRules.IsInvoiceOpen(invoice.TotDnAmt, invoice.BalAmt));
     }
 
     private static Dictionary<long, decimal> Sum(IEnumerable<(long Key, decimal Qty)> changes) =>

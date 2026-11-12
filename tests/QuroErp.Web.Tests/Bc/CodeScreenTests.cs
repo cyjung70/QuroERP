@@ -100,7 +100,8 @@ public class CodeScreenTests : BunitContext
     {
         var page = SearchUnit(RenderAs("admin"));
 
-        page.Find("[data-testid=code-toolbar-new]").Click();
+        Grid(page).Select(1);
+        page.Find("[data-testid=code-toolbar-add-row]").Click();
 
         Enumerable.Range(0, 2).Should().OnlyContain(i => Grid(page).IsReadOnly(i, "minorCode"));
         Grid(page).IsReadOnly(2, "minorCode").Should().BeFalse();
@@ -118,8 +119,10 @@ public class CodeScreenTests : BunitContext
 
         Grid(page).Edit(1, "nameKo", "상자");
         Grid(page).Edit(1, "sortOrder", "30");
-        Grid(page).Click(0, "deleteRow");
-        page.Find("[data-testid=code-toolbar-new]").Click();
+        Grid(page).Select(0);
+        page.Find("[data-testid=code-toolbar-mark-delete]").Click();
+        Grid(page).Select(1);
+        page.Find("[data-testid=code-toolbar-add-row]").Click();
         Grid(page).Edit(2, "minorCode", "pc");
         Grid(page).Edit(2, "nameEn", "Piece");
         Grid(page).Edit(2, "sortOrder", "5");
@@ -151,11 +154,27 @@ public class CodeScreenTests : BunitContext
         saved.Deleted.Should().Equal(new CodeMinorDelete(11, Read));
     }
 
+    [Fact]
+    public void New_ClearsTheMajorAndTheGrid_AndAddRowWaitsForTheNextSearch()
+    {
+        var page = RenderAs("admin");
+        page.Find("[data-testid=code-toolbar-add-row]").HasAttribute("disabled").Should().BeTrue("no Major is read yet");
+        SearchUnit(page);
+        page.Find("[data-testid=code-toolbar-add-row]").HasAttribute("disabled").Should().BeFalse();
+
+        page.Find("[data-testid=code-toolbar-new]").Click();
+
+        Grid(page).Rows.Should().BeEmpty();
+        page.Find("[data-testid=code-search-major-code]").GetAttribute("value").Should().BeNullOrEmpty();
+        page.Find("[data-testid=code-toolbar-add-row]").HasAttribute("disabled").Should().BeTrue();
+    }
+
     [Fact, Trait("Id", "SD-UT-911")]
     public void NewRow_WithoutTheEnName_IsNotSent()
     {
         var page = SearchUnit(RenderAs("admin"));
-        page.Find("[data-testid=code-toolbar-new]").Click();
+        Grid(page).Select(1);
+        page.Find("[data-testid=code-toolbar-add-row]").Click();
         Grid(page).Edit(2, "minorCode", "PC");
         Grid(page).Edit(2, "sortOrder", "5");
 
@@ -210,8 +229,9 @@ public class CodeScreenTests : BunitContext
 
         // The handlers do nothing either
         Grid(page).Edit(0, "nameEn", "X").Should().BeFalse();
-        page.Find("[data-testid=code-toolbar-new]").Click();
-        Grid(page).Click(0, "deleteRow");
+        page.Find("[data-testid=code-toolbar-add-row]").Click();
+        Grid(page).Select(0);
+        page.Find("[data-testid=code-toolbar-mark-delete]").Click();
         page.Find("[data-testid=code-toolbar-save]").Click();
         Grid(page).Rows.Should().HaveCount(rows);
         Grid(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);

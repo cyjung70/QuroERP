@@ -25,7 +25,7 @@
 {
     <QuroMultiGrid TRow="CodeMajorRow" Title="@L["Bc.CodeMajor.Title"]" TestId="code-major" Path="@L["Menu.G1BA"]" LoadOnStart="true"
                    Definition="bc.code.major" Adjust="g => LanguageNames.InUse(g, _languages)" UpperCaseFields="UpperCaseFields"
-                   Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit">
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit" OnReset="ResetSearch">
         <SearchContent>
             <QuroText Label="@L["Bc.CodeMajor.MajorCode"]" @bind-Value="_majorCode" TextCase="TextCase.Upper" TestId="code-major-search-major-code" />
             <QuroText Label="@L["Bc.CodeMajor.Name"]" Value="@_majorName" LockMode="LockMode.Always" TestId="code-major-search-name" />
@@ -84,4 +84,6 @@
         Api.SaveAsync(CodeMajorRow.ToRequest(changes.Added, changes.Updated, changes.Deleted), Lang, CancellationToken.None);
 
     private CodeMajorRow NewRow() => CodeMajorRow.New(_languages);
+
+    private void ResetSearch() => _majorCode = _majorName = null;
 }

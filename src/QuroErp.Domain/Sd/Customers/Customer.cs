@@ -239,7 +239,8 @@ public sealed partial class Customer
         FaxNo = Text(f.FaxNo),
         Email = Text(f.Email),
         Rep = Text(f.Rep),
-        PriceLevel = Text(f.PriceLevel),
+        // SD-BR-304: the sales price table finds the level in upper case (SD-BR-409)
+        PriceLevel = Text(f.PriceLevel)?.ToUpperInvariant(),
         FreightCharge = Text(f.FreightCharge),
         Remarks = Text(f.Remarks),
         Memo2 = Text(f.Memo2),

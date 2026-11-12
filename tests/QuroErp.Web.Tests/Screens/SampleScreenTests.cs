@@ -132,7 +132,7 @@ public class SampleScreenTests : ScreenContext
 
         Loaded(page).Column("code").Should().Equal("A100", "B200");
         page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid"))
-            .Should().Equal("multi-toolbar-search", "multi-toolbar-new", "multi-toolbar-save", "multi-toolbar-export");
+            .Should().Equal("multi-toolbar-search", "multi-toolbar-new", "multi-toolbar-save", "multi-toolbar-add-row", "multi-toolbar-mark-delete", "multi-toolbar-restore-row", "multi-toolbar-export");
     }
 
     [Theory, Trait("Id", "CORE-058-WT-06")]
@@ -154,8 +154,9 @@ public class SampleScreenTests : ScreenContext
         var grid = Loaded(page);
 
         grid.Edit(0, "name", "Apricot").Should().BeTrue();
-        grid.Click(1, "deleteRow");
-        page.Find("[data-testid=multi-toolbar-new]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=multi-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=multi-toolbar-add-row]").Click();
 
         grid.Column("rowState").Should().Equal(State("Modified"), State("Deleted"), State("Added"));
     }
@@ -166,8 +167,9 @@ public class SampleScreenTests : ScreenContext
         var page = Render<SampleMulti>();
         var grid = Loaded(page);
         grid.Edit(0, "name", "Apricot");
-        grid.Click(1, "deleteRow");
-        page.Find("[data-testid=multi-toolbar-new]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=multi-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=multi-toolbar-add-row]").Click();
         grid.Edit(2, "code", "c300").Should().BeTrue();
         grid.Edit(2, "name", "Cherry");
 
@@ -183,7 +185,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SampleMulti>();
         var grid = Loaded(page);
-        page.Find("[data-testid=multi-toolbar-new]").Click();
+        page.Find("[data-testid=multi-toolbar-add-row]").Click();
         grid.Edit(2, "qty", "5");
 
         page.Find("[data-testid=multi-toolbar-save]").Click();
@@ -244,8 +246,8 @@ public class SampleScreenTests : ScreenContext
         page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
 
         lines.Select(0);
-        page.Find("[data-testid=header-detail-toolbar-mark-delete]").Click();
-        page.Find("[data-testid=header-detail-toolbar-add-row]").Click();
+        page.Find("[data-testid=header-detail-line-mark-delete]").Click();
+        page.Find("[data-testid=header-detail-line-add-row]").Click();
         lines.Edit(1, "itemCode", "c300").Should().BeFalse("C300 is not an item, so the popup cell stays in edit");
         lines.Edit(1, "itemCode", "b2").Should().BeTrue("one item matches and is taken");
         page.Find("[data-testid=header-detail-toolbar-save]").Click();
@@ -308,7 +310,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code] input").Change("v0001");
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
         var lines = PoLines(page);
 
         lines.Edit(0, "itemCode", "kbd").Should().BeTrue("one item matches the typed text");
@@ -326,7 +328,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code] input").Change("v0001");
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
         var lines = PoLines(page);
 
         var commit = lines.EditAsync(0, "itemCode", "mo");
@@ -345,7 +347,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code] input").Change("v0001");
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
         var lines = PoLines(page);
 
         var popup = lines.F4Async(0, "itemCode", "KBD10001");
@@ -361,7 +363,7 @@ public class SampleScreenTests : ScreenContext
     public void PoEntry_ItemCode_WaitsForTheVendor()
     {
         var page = Render<SamplePoEntry>();
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
 
         PoLines(page).Edit(0, "itemCode", "KBD10001").Should().BeFalse();
 
@@ -408,11 +410,11 @@ public class SampleScreenTests : ScreenContext
         PoFrame(page).Lines.GetState(lines.KeyOf(0)).Should().Be(Quro.Grid.Data.RowState.Updated);
 
         lines.Select(0);
-        page.Find("[data-testid=po-entry-toolbar-restore-row]").Click();
+        page.Find("[data-testid=po-entry-line-restore-row]").Click();
 
         lines.Text(0, "qty").Should().Be("2.00");
         PoFrame(page).Lines.HasChanges.Should().BeFalse();
-        page.Find("[data-testid=po-entry-toolbar-restore-row]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=po-entry-line-restore-row]").HasAttribute("disabled").Should().BeTrue();
     }
 
     [Fact]
@@ -422,11 +424,11 @@ public class SampleScreenTests : ScreenContext
         var lines = PoLines(page);
         lines.Select(0);
 
-        page.Find("[data-testid=po-entry-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=po-entry-line-mark-delete]").Click();
 
         page.Find("[data-testid=po-entry-totals-total] b").TextContent.Should().Be("125.00");
         lines.Rows[0].ClassList.Should().Contain("quro-deleted");
-        page.Find("[data-testid=po-entry-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=po-entry-line-mark-delete]").Click();
         page.Find("[data-testid=po-entry-totals-total] b").TextContent.Should().Be("1,825.00");
         PoFrame(page).Lines.HasChanges.Should().BeFalse();
     }
@@ -447,7 +449,7 @@ public class SampleScreenTests : ScreenContext
     {
         var page = Render<SamplePoEntry>();
         page.Find("[data-testid=po-entry-header-vendor-code] input").Change("v0003");
-        page.Find("[data-testid=po-entry-toolbar-add-row]").Click();
+        page.Find("[data-testid=po-entry-line-add-row]").Click();
         var lines = PoLines(page);
         lines.Edit(0, "itemCode", "MOU10001");
         lines.Edit(0, "qty", "3");
@@ -482,8 +484,9 @@ public class SampleScreenTests : ScreenContext
         page.Find("[data-testid=multi-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
         grid.IsReadOnly(0, "name").Should().BeTrue();
         grid.Edit(0, "name", "Apricot").Should().BeFalse();
-        grid.Click(1, "deleteRow");
-        page.Find("[data-testid=multi-toolbar-new]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=multi-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=multi-toolbar-add-row]").Click();
         grid.Column("name").Should().Equal("Apple", "Banana");
         grid.Column("rowState").Should().OnlyContain(s => s.Length == 0);
 
@@ -562,7 +565,7 @@ public class SampleScreenTests : ScreenContext
         page.WaitForAssertion(() => Groups(page).Rows.Should().HaveCount(2));
         PickGroup(page, 1);
 
-        page.Find("[data-testid=master-detail-toolbar-new]").Click();
+        page.Find("[data-testid=master-detail-toolbar-add-row]").Click();
         Members(page).Edit(0, "itemCode", "b200").Should().BeTrue();
         Members(page).Column("rowState").Should().Equal(State("Added"));
         page.Find("[data-testid=master-detail-toolbar-save]").Click();
@@ -577,10 +580,11 @@ public class SampleScreenTests : ScreenContext
         page.WaitForAssertion(() => Groups(page).Rows.Should().HaveCount(2));
         PickGroup(page, 0);
 
-        Members(page).Click(0, "deleteRow");
+        Members(page).Select(0);
+        page.Find("[data-testid=master-detail-toolbar-mark-delete]").Click();
         Members(page).Column("rowState").Should().Equal(State("Deleted"));
         Members(page).Select(0);
-        page.Find("[data-testid=master-detail-line-restore-row]").Click();
+        page.Find("[data-testid=master-detail-toolbar-restore-row]").Click();
 
         Members(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);
     }
@@ -599,8 +603,9 @@ public class SampleScreenTests : ScreenContext
         page.Find("[data-testid=master-detail-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=master-detail-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
 
-        page.Find("[data-testid=master-detail-toolbar-new]").Click();
-        members.Click(0, "deleteRow");
+        page.Find("[data-testid=master-detail-toolbar-add-row]").Click();
+        members.Select(0);
+        page.Find("[data-testid=master-detail-toolbar-mark-delete]").Click();
         members.Rows.Should().ContainSingle();
         members.Column("rowState").Should().OnlyContain(s => s.Length == 0);
     }

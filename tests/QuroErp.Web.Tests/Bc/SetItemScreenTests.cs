@@ -135,7 +135,7 @@ public class SetItemScreenTests : BunitContext
     public void TypedComponentCode_FillsTheName_ACodeThatCannotBeAComponentIsNotTaken_AndAPastedOneIsMarkedAndBlocksTheSave()
     {
         var page = SearchKit(RenderAs("admin"));
-        page.Find("[data-testid=set-item-toolbar-new]").Click();
+        page.Find("[data-testid=set-item-toolbar-add-row]").Click();
 
         Grid(page).Edit(2, "itemCd", "washer").Should().BeTrue();
         Grid(page).Edit(2, "qty", "3");
@@ -149,7 +149,7 @@ public class SetItemScreenTests : BunitContext
         string[] codes = ["FREIGHT", "KIT02", "LOTB", "OLDB", "NOPE"];
         foreach (var _ in codes)
         {
-            page.Find("[data-testid=set-item-toolbar-new]").Click();
+            page.Find("[data-testid=set-item-toolbar-add-row]").Click();
         }
         Grid(page).Paste(3, "itemCd", [.. codes.Select(c => new[] { c })]).Should().BeTrue();
         Enumerable.Range(3, codes.Length).Should().OnlyContain(i =>
@@ -164,7 +164,7 @@ public class SetItemScreenTests : BunitContext
     public async Task F4_OpensTheComponentLookup_WithInventoryItemsInUseWithoutLots_AndThePickFillsTheRow()
     {
         var page = SearchKit(RenderAs("admin"));
-        page.Find("[data-testid=set-item-toolbar-new]").Click();
+        page.Find("[data-testid=set-item-toolbar-add-row]").Click();
 
         var popup = Grid(page).F4Async(2, "itemCd", "");
         page.WaitForAssertion(() => page.LookupRows("set-item-lookup").Should().HaveCount(3));
@@ -183,8 +183,10 @@ public class SetItemScreenTests : BunitContext
         var page = SearchKit(RenderAs("admin"));
 
         Grid(page).Edit(1, "qty", "4");
-        Grid(page).Click(0, "deleteRow");
-        page.Find("[data-testid=set-item-toolbar-new]").Click();
+        Grid(page).Select(0);
+        page.Find("[data-testid=set-item-toolbar-mark-delete]").Click();
+        Grid(page).Select(1);
+        page.Find("[data-testid=set-item-toolbar-add-row]").Click();
         Grid(page).Edit(2, "itemCd", "WASHER");
         Grid(page).Edit(2, "qty", "6");
         page.Find("[data-testid=set-item-search-item-cd]").Change("KIT02");

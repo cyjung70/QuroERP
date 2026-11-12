@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "quro.grid.deflint": {
-      "version": "0.5.0-alpha.6",
+      "version": "0.5.0-alpha.9",
       "commands": [
         "quro-deflint"
       ],

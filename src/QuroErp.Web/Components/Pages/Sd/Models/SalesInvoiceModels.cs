@@ -38,9 +38,8 @@ public sealed class SalesInvoiceHeader
     public string? ShipFax { get; set; }
     public string? Remarks { get; set; }
 
-    /// <summary>The customer's bill-to address in one line and discount status (shown only).</summary>
-    public string? BillTo { get; set; }
-    public string? DcStatus { get; set; }
+    /// <summary>The US exemption certificate the invoice prints (SD-BR-133); empty lets the API take the customer's.</summary>
+    public string? TaxExemptionCertNo { get; set; }
 
     /// <summary>The source documents: the order of bill-first lines, the shipment that made a ship-and-bill invoice.</summary>
     public string? SoNo { get; set; }
@@ -111,6 +110,7 @@ public sealed class SalesInvoiceHeader
         ShipPhone = invoice.ShipPhone,
         ShipFax = invoice.ShipFax,
         Remarks = invoice.Remarks,
+        TaxExemptionCertNo = invoice.TaxExemptionCertNo,
         SoNo = invoice.SoNo,
         ShipNo = invoice.ShipNo,
         TotDnAmt = invoice.TotDnAmt,
@@ -124,13 +124,6 @@ public sealed class SalesInvoiceHeader
         CreatedBy = invoice.CreatedBy,
         UpdatedBy = invoice.UpdatedBy,
     };
-
-    /// <summary>The customer's bill-to address in one line (shown only).</summary>
-    public static string? AddressOf(params string?[] parts)
-    {
-        var text = string.Join(", ", parts.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p!.Trim()));
-        return text.Length == 0 ? null : text;
-    }
 
     /// <summary>
     /// The save request with the kept lines in screen order (lines left out are deleted, SD-BR-107). The rate is the screen's for
@@ -161,7 +154,8 @@ public sealed class SalesInvoiceHeader
             [.. lines.Select(l => l.ToRequest())],
             isNew ? null : UpdatedAt,
             answers.UpdateCustomerShipTo,
-            answers.ConfirmCreditLimit);
+            answers.ConfirmCreditLimit,
+            Clean(TaxExemptionCertNo));
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

@@ -42,7 +42,8 @@
         <div class="@FieldClass()">
             @FieldLabel(IsRequiredNow)
             @* A select has no readonly attribute; disabled keeps a locked value from changing *@
-            <select id="@InputId" disabled="@IsLocked" aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync">
+            @* A browser ignores selected once the user has picked an option; value also follows a reset from code *@
+            <select id="@InputId" value="@(Value ?? "")" disabled="@IsLocked" aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync">
                 <option value="" selected="@(Value is null)"></option>
                 @foreach (var option in Options)
                 {

@@ -21,6 +21,7 @@ using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Mm.Lots;
 using QuroErp.Application.Mm.GoodsReceipts;
+using QuroErp.Application.Mm.SupplierInvoices;
 using QuroErp.Application.Mm.PurchaseOrders;
 using QuroErp.Application.Mm.Vendors;
 using QuroErp.Application.Sd.Customers;
@@ -76,6 +77,7 @@ public static class DependencyInjection
         services.AddScoped<SalesInvoicePrintService>();
         services.AddScoped<PurchaseOrderService>();
         services.AddScoped<GoodsReceiptService>();
+        services.AddScoped<SupplierInvoiceService>();
         services.AddScoped<PurchaseOrderPrintService>();
         services.AddScoped<RoleService>();
         services.AddScoped<MenuService>();

@@ -104,17 +104,17 @@ public static class SalesOrderEntryRules
     /// Checks the header and lines and computes every amount. Lines are numbered 1..n in the order given.
     /// </summary>
     /// <param name="previousCurrencyCode">Currency of the stored order when it already has lines (SD-BR-031), else null.</param>
-    /// <exception cref="DomainException">SD-E-001, 002, 004, 031, 035, 404; Common-E-005; BC-E-412 for an unknown currency; BC-E-423 for a rate with more than 10 decimals.</exception>
+    /// <exception cref="DomainException">SD-E-001, 002, 004, 031, 035, 404; Common-E-005; BC-E-412 for an unknown currency; BC-E-423 for a quantity, price or rate with too many decimals.</exception>
     public static (IReadOnlyList<SalesOrderLine> Lines, SalesOrderTotals Totals) Calculate(
         SalesOrderHeader header, IReadOnlyList<SalesOrderLineInput> lines, string? previousCurrencyCode, SalesOrderMasters masters,
-        SalesOrderSettings settings, IAmountRounder rounder)
+        SalesOrderSettings settings, IAmountRounder rounder, IDecimalPolicy decimalPolicy)
     {
         CheckHeader(header, previousCurrencyCode, settings, rounder);
         var decimals = rounder.DecimalsOf(header.CurrencyCode);
         var computed = new List<SalesOrderLine>(lines.Count);
         foreach (var (line, seq) in lines.Select((l, i) => (l, i + 1)))
         {
-            var dcRate = CheckLine(line, seq, masters);
+            var dcRate = CheckLine(line, seq, header.CurrencyCode, masters, decimalPolicy);
             computed.Add(new SalesOrderLine(
                 line.Id, seq, line.ItemId, line.ItemName, line.SoQty, line.SoPrc, line.DcCd, dcRate,
                 LineAmount(line.SoQty, line.SoPrc, dcRate, decimals, settings.RoundingMode), line.TaxCodeId, 0m, 0m));
@@ -228,7 +228,7 @@ public static class SalesOrderEntryRules
     }
 
     // Returns the discount rate of the line's code (SD-BR-404)
-    private static decimal CheckLine(SalesOrderLineInput line, int seq, SalesOrderMasters masters)
+    private static decimal CheckLine(SalesOrderLineInput line, int seq, string currencyCode, SalesOrderMasters masters, IDecimalPolicy decimalPolicy)
     {
         if (!masters.ItemTypes.ContainsKey(line.ItemId))
         {
@@ -238,10 +238,12 @@ public static class SalesOrderEntryRules
         {
             throw new DomainException(QtyCode, seq);
         }
+        decimalPolicy.EnsureQty(DecimalModule.Sd, line.SoQty, "soQty");
         if (line.SoPrc == 0)
         {
             throw new DomainException(PriceCode, seq);
         }
+        decimalPolicy.EnsureUnitPrice(DecimalModule.Sd, currencyCode, line.SoPrc, "soPrc");
         decimal dcRate = 0;
         if (line.DcCd is { } code && !masters.DiscountRates.TryGetValue(code, out dcRate))
         {

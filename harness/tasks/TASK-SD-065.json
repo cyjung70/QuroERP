@@ -73,7 +73,8 @@
     "TASK-CORE-019",
     "TASK-CORE-021",
     "TASK-CORE-027",
-    "TASK-MM-025"
+    "TASK-MM-025",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "명세 REST API 구현",
@@ -81,7 +82,9 @@
     "관련 BR마다 테스트",
     "마이너스 재고 모드 2개 테스트 (현재고·시점별·월말)",
     "로트 관리 품목 줄: 로트 입력·선택, 로트 잔고 검사 (MM-BR-353~356)",
-    "줄 창고별 재고 이동, 줄 변경·삭제는 반대 부호 이동 (MM-BR-703·601)"
+    "줄 창고별 재고 이동, 줄 변경·삭제는 반대 부호 이동 (MM-BR-703·601)",
+    "출하 Void 검사 (SD-BR-561): 출하 API `POST /api/sd/shipments/{id}/void`에 Void가 아닌 반품이 있으면 422 SD-E-561을 더한다 (리소스 en·ko). 반품을 Void한 출하는 Void할 수 있다",
+    "단위·통합 테스트: 반품 1건 있는 출하 Void 422 SD-E-561, 그 반품 Void 뒤 출하 Void 200. 기존 출하 Void 테스트가 통과한다"
   ],
   "estimateHours": 3,
   "status": "todo"

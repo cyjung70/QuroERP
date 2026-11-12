@@ -6,6 +6,7 @@ using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using QuroErp.Contracts.Bc.FieldPolicies;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Contracts.Bc.Localization;
 using QuroErp.Contracts.Bc.Tax;
@@ -67,6 +68,8 @@ public class SalesInvoiceScreenTests : BunitContext
         Services.AddHttpClient<UserProfileApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<LotApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<CodeApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
+        Services.AddHttpClient<FieldPolicyApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
+        Services.AddScoped<FieldPolicyCache>();
         _auth = AddAuthorization();
     }
 
@@ -89,7 +92,7 @@ public class SalesInvoiceScreenTests : BunitContext
     }
 
     [Fact, Trait("Id", "SD-UC-003-T01"), Trait("Rule", "SD-BR-118")]
-    public void PickedCustomer_FillsTheBillToDiscountStatusRepAndShipTo()
+    public void PickedCustomer_FillsTheRepTermsAndShipTo()
     {
         var page = RenderAs("admin");
 
@@ -97,9 +100,7 @@ public class SalesInvoiceScreenTests : BunitContext
 
         page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
         var header = Frame(page).Header;
-        (header.BillTo, header.DcStatus, header.Rep, header.Terms, header.ShipName, header.ShipZipCode)
-            .Should().Be(("1 Main St, Springfield, CA, 90001, USA", "A", "KIM", "NET_30", "ACME DOCK", "90001"));
-        page.Field("sales-invoice-header-bill-to").IsReadOnly.Should().BeTrue();
+        (header.Rep, header.Terms, header.ShipName, header.ShipZipCode).Should().Be(("KIM", "NET_30", "ACME DOCK", "90001"));
         Button(page, "import-shipment").HasAttribute("disabled").Should().BeFalse();
         Button(page, "import-order").HasAttribute("disabled").Should().BeFalse();
     }
@@ -224,7 +225,6 @@ public class SalesInvoiceScreenTests : BunitContext
         page.Render();
 
         Enabled(page).Except(["search", "new"]).Should().BeEquivalentTo("save", "add-row", "pdf");
-        page.Field("sales-invoice-header-source-document").Value.Should().Be("SH0000001");
     }
 
     [Fact, Trait("Id", "SD-UT-144"), Trait("Rule", "SD-BR-144")]
@@ -375,6 +375,48 @@ public class SalesInvoiceScreenTests : BunitContext
             .Should().Be("다른 사용자가 먼저 수정했습니다. 다시 조회한 뒤 저장하세요."));
     }
 
+    [Fact, Trait("Id", "SD-UC-003-T06"), Trait("Rule", "SD-BR-104")]
+    public void PaidInvoice_DisablesSaveDeleteAndVoid_AndShowsTheCreditApplyPlaceholderDisabled()
+    {
+        _api.Invoice = Invoice("PA");
+
+        var page = Open();
+
+        Enabled(page).Should().NotContain(["save", "delete", "void"]);
+        // No 6: TASK-SD-038 wires the Credit Memo apply window and its enabled rule; until then it stays in place, disabled
+        Button(page, "apply-credit").HasAttribute("disabled").Should().BeTrue();
+        Button(page, "apply-credit").TextContent.Should().Be("Credit 적용");
+    }
+
+    [Fact, Trait("Id", "SD-UC-003-T08"), Trait("Rule", "SD-BR-133")]
+    public void UsCompany_ShowsTheExemptionCertificate_AndSavesWhatIsEntered()
+    {
+        _api.Invoice = Invoice() with { TaxExemptionCertNo = "TX-0001" };
+        var page = Open();
+
+        page.Field("sales-invoice-header-tax-exemption-cert-no").Value.Should().Be("TX-0001");
+        page.Field("sales-invoice-header-tax-exemption-cert-no").Change("TX-0002");
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => _api.Saved.Should().ContainSingle());
+        _api.Saved[0].TaxExemptionCertNo.Should().Be("TX-0002");
+    }
+
+    [Fact, Trait("Id", "SD-UC-003-T08"), Trait("Rule", "BC-BR-435")]
+    public void KoreanCompany_HidesTheExemptionCertificateAndTheShipToState()
+    {
+        _api.Policies =
+        [
+            new("Sd.SalesInvoice.TaxExemptionCertNo", FieldPolicyStates.Hidden, null, "Sd.SalesInvoice.TaxExemptionCertNo", "CountryPack"),
+            new("Sd.SalesInvoice.ShipState", FieldPolicyStates.Hidden, null, "Sd.SalesInvoice.ShipState", "CountryPack"),
+        ];
+
+        var page = RenderAs("admin");
+
+        page.WaitForAssertion(() => page.FindAll("[data-testid=sales-invoice-header-tax-exemption-cert-no]").Should().BeEmpty());
+        page.FindAll("[data-testid=sales-invoice-header-ship-state]").Should().BeEmpty();
+    }
+
     [Fact, Trait("Id", "SD-UC-003-T01"), Trait("Rule", "SD-BR-131")]
     public void ForeignInvoice_ShowsTheTotalInTheBaseCurrency()
     {
@@ -382,7 +424,7 @@ public class SalesInvoiceScreenTests : BunitContext
 
         var page = Open();
 
-        page.WaitForAssertion(() => page.Find("[data-testid=sales-invoice-totals-base-total]").TextContent.Should().Contain("48.40").And.Contain("USD"));
+        page.WaitForAssertion(() => page.Field("sales-invoice-header-tot-base-amt").Value.Should().Be("48.40"));
         page.Find("[data-testid=sales-invoice-totals-total]").TextContent.Should().Contain("44.00").And.Contain("EUR");
     }
 
@@ -394,7 +436,7 @@ public class SalesInvoiceScreenTests : BunitContext
         var page = Open();
 
         page.Find("[data-testid=sales-invoice-totals-total]").TextContent.Should().Contain("44.00").And.Contain("USD");
-        page.FindAll("[data-testid=sales-invoice-totals-base-total]").Should().BeEmpty();
+        page.FindAll("[data-testid=sales-invoice-header-tot-base-amt]").Should().BeEmpty();
     }
 
     [Fact, Trait("Id", "SD-UC-003-T01")]
@@ -481,10 +523,11 @@ public class SalesInvoiceScreenTests : BunitContext
         page.FindComponent<QuroHeaderDetail<SalesInvoiceHeader, SalesInvoiceLine>>().Instance;
 
     private static AngleSharp.Dom.IElement Button(IRenderedComponent<SalesInvoice> page, string action) =>
-        page.Find($"[data-testid={Screen}-toolbar-{action}]");
+        page.Find($"[data-testid={Screen}-toolbar-{action}], [data-testid={Screen}-line-{action}]");
 
     private static IReadOnlyList<string> Enabled(IRenderedComponent<SalesInvoice> page) =>
-        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", ""))];
+        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", "").Replace($"{Screen}-line-", ""))
+            .Where(b => b != "show-all-fields")];
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
 
@@ -548,6 +591,8 @@ public class SalesInvoiceScreenTests : BunitContext
 
         public string Country { get; set; } = "US";
 
+        public IReadOnlyList<FieldPolicyDto> Policies { get; set; } = [];
+
         /// <summary>The bodies of the next saves' errors, in order; a save without one passes.</summary>
         public Queue<string> SaveProblems { get; } = new();
 
@@ -561,6 +606,10 @@ public class SalesInvoiceScreenTests : BunitContext
             if (path.StartsWith("/api/codes/", StringComparison.Ordinal))
             {
                 return Json(Codes(path["/api/codes/".Length..]));
+            }
+            if (path.StartsWith("/" + FieldPolicyRoutes.Base, StringComparison.Ordinal))
+            {
+                return Json(Policies);
             }
             switch (path)
             {

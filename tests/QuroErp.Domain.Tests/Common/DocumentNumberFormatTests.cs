@@ -50,19 +50,20 @@ public class DocumentNumberFormatTests
         DocumentNumberFormat.CreditMemo.Next(Day, last).Should().Be(expected);
     }
 
-    // MM-BR-017, MM-BR-208, MM-BR-308
+    // MM-BR-017, MM-BR-208, MM-BR-308; a 5-digit number already issued this month is continued after (SD-BR-006)
     [Theory, Trait("Id", "CORE-007-T01")]
     [InlineData("PO")]
     [InlineData("UR")]
     [InlineData("CT")]
-    public void Next_MonthlyDocuments_ArePrefixYymmFiveDigits(string prefix)
+    public void Next_MonthlyDocuments_ArePrefixYymmSixDigits(string prefix)
     {
         var format = new[]
         {
             DocumentNumberFormat.PurchaseOrder, DocumentNumberFormat.UnplannedReceipt, DocumentNumberFormat.StockCount,
         }.Single(f => f.Prefix == prefix);
 
-        format.Next(Day, null).Should().Be($"{prefix}261000001");
+        format.Next(Day, null).Should().Be($"{prefix}2610000001");
+        format.Next(Day, $"{prefix}261000040").Should().Be($"{prefix}2610000041");
     }
 
     [Theory, Trait("Id", "MM-UT-106"), Trait("Rule", "MM-BR-106")]
@@ -77,9 +78,9 @@ public class DocumentNumberFormatTests
     }
 
     [Theory, Trait("Id", "MM-UT-017"), Trait("Rule", "MM-BR-017")]
-    [InlineData("2026-10-27", "PO261000011", "PO261000012")]
-    [InlineData("2026-11-02", "PO261000012", "PO261100001")]
-    [InlineData("2026-10-27", null, "PO261000001")]
+    [InlineData("2026-10-27", "PO2610000011", "PO2610000012")]
+    [InlineData("2026-11-02", "PO2610000012", "PO2611000001")]
+    [InlineData("2026-10-27", null, "PO2610000001")]
     public void Next_PurchaseOrder_IsPoYymmOfPoDateAndRestartsMonthly(string poDt, string? last, string expected)
     {
         var date = DateOnly.Parse(poDt, System.Globalization.CultureInfo.InvariantCulture);

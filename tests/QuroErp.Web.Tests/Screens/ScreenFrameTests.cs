@@ -64,14 +64,14 @@ public class ScreenFrameTests : ScreenContext
         single.Find("[data-testid=single-toolbar-delete]").HasAttribute("disabled").Should().BeTrue();
         single.Find("[data-testid=single-toolbar-deactivate]").HasAttribute("disabled").Should().BeTrue();
         // MM before a source row is picked
-        masterDetail.Find("[data-testid=master-detail-toolbar-new]").HasAttribute("disabled").Should().BeTrue();
+        masterDetail.Find("[data-testid=master-detail-toolbar-add-row]").HasAttribute("disabled").Should().BeTrue();
         masterDetail.Find("[data-testid=master-detail-toolbar-save]").HasAttribute("disabled").Should().BeTrue();
 
         var groups = masterDetail.DataGrid<SampleGroup, SampleMasterDetail>("master-detail-grid");
         masterDetail.WaitForAssertion(() => groups.Rows.Should().NotBeEmpty());
         groups.Click(0, QuroMasterMultiDetail<SampleGroup, SampleLine>.SelectField);
 
-        masterDetail.Find("[data-testid=master-detail-toolbar-new]").HasAttribute("disabled").Should().BeFalse();
+        masterDetail.Find("[data-testid=master-detail-toolbar-add-row]").HasAttribute("disabled").Should().BeFalse();
         masterDetail.Find("[data-testid=master-detail-toolbar-save]").HasAttribute("disabled").Should().BeFalse();
     }
 

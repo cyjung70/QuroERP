@@ -1,6 +1,6 @@
 @* Screen type MM: pick a row in the source list → edit the target grid for it → save (screens.md).
    Both grids are the QuroGrid package over the screen's .toon (grids[0] source, grids[1] target; TASK-CORE-056). Row state,
-   delete, undo and the permission lock are the frame's, as in the M frame (TASK-CORE-055). *@
+   the row commands and the permission lock are the frame's, as in the M frame (TASK-CORE-055). *@
 @typeparam TSource where TSource : class
 @typeparam TTarget where TTarget : class
 @inherits QuroScreenBase
@@ -12,9 +12,12 @@
 <QuroScreenFrame Title="@Title" Path="@Path" TestId="@TestId" IsDirty="IsDirty" OnBeforeInternalNavigation="GuardNavigationAsync"
                  OnSearch="SearchAsync" SearchContent="SearchContent" Error="@Error" Notice="@Notice" Policies="Policies">
     <Toolbar>
-        @* New and save need a selected source row and Full Access; until then they are disabled (screen-templates.md 0, 2) *@
-        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanShowAllFields="CanShowAllFields" ShowAllFields="Policies.ShowAllFields" OnToggleShowAllFields="ToggleShowAllFields" CanNew="CanChange" CanSave="CanChange"
-                     OnNew="AddTarget" OnSave="SaveAsync" ExtraCommands="ExtraCommands" />
+        @* Save and the row commands need a selected source row and Full Access; until then they are disabled (screen-templates.md 0, 4) *@
+        <QuroToolbar TestId="@TestId" Busy="Busy" OnSearch="SearchAsync" CanShowAllFields="CanShowAllFields" ShowAllFields="Policies.ShowAllFields" OnToggleShowAllFields="ToggleShowAllFields" CanNew="CanWrite" CanSave="CanChange"
+                     OnNew="NewAsync" OnSave="SaveAsync"
+                     OnAddRow="AddTarget" CanAddRow="CanChange"
+                     OnMarkDelete="MarkDelete" CanMarkDelete="CanMarkCurrent" MarkDeletePressed="CurrentIsDeleted"
+                     OnRestoreRow="RestoreRow" CanRestoreRow="CanRestoreCurrent" ExtraCommands="ExtraCommands" />
     </Toolbar>
     <ChildContent>
         <div class="quro-master-detail">
@@ -30,17 +33,10 @@
             @if (_selected is not null)
             {
                 <div class="quro-master-detail-target">
-                    <div class="quro-grid-commands">
-                        @* The package ignores button cells of a deleted row, so the current deleted row is restored from here (TODO(QuroGrid-request)) *@
-                        <button type="button" disabled="@(Busy || !CanChange || !CurrentIsDeleted)" data-testid="@Id("line-restore-row")"
-                                @onclick="RestoreCurrent">@L["Common.RestoreRow"]</button>
-                    </div>
                     <QuroLineGrid @ref="_targetGrid" TLine="TTarget" Data="_targets" Definition="_targetDefinition" CanEdit="CanWrite"
                                   Lookup="Lookup" UpperCaseFields="UpperCaseFields" OnMessage="ShowMessage" OnChanged="StateHasChanged"
-                                  OnCellButtonClick="OnTargetButton" TestId="@Id("line")">
+                                  TestId="@Id("line")">
                         <Quro.Grid.QuroColumn Field="@StateField" HeaderKey="Common.RowState" Width="60" Compute="StateOf" />
-                        <Quro.Grid.QuroColumn Field="@DeleteField" HeaderKey="Common.Delete" Type="CellType.Button" TextKey="Common.DeleteRow" Width="70" />
-                        <Quro.Grid.QuroColumn Field="@UndoField" HeaderKey="Common.UndoRow" Type="CellType.Button" TextKey="Common.UndoRow" Width="80" />
                     </QuroLineGrid>
                 </div>
             }
@@ -53,8 +49,6 @@
     public const string SelectField = "select";
 
     private const string StateField = "rowState";
-    private const string DeleteField = "deleteRow";
-    private const string UndoField = "undoRow";
 
     private readonly QuroDataSet<TSource> _sources = new();
     private readonly QuroDataSet<TTarget> _targets = new();
@@ -91,9 +85,13 @@
     [Parameter]
     public IReadOnlyCollection<string>? UpperCaseFields { get; set; }
 
-    /// <summary>Permission: false for a user without Full Access (BC-BR-214). New, save and the target grid are disabled.</summary>
+    /// <summary>Permission: false for a user without Full Access (BC-BR-214). New, save, the row commands and the target grid are disabled.</summary>
     [Parameter]
     public bool CanWrite { get; set; } = true;
+
+    /// <summary>New has emptied both grids: the screen clears its search conditions.</summary>
+    [Parameter]
+    public EventCallback OnReset { get; set; }
 
     [Parameter]
     public bool LoadOnStart { get; set; }
@@ -117,6 +115,11 @@
 
     private bool CurrentIsDeleted =>
         _targets.CurrentRowKey is { } key && _targets.GetState(key) == Quro.Grid.Data.RowState.Deleted;
+
+    private bool CanMarkCurrent => CanChange && _targets.CurrentRowKey is not null;
+
+    private bool CanRestoreCurrent =>
+        CanChange && _targets.CurrentRowKey is { } key && _targets.GetState(key) != Quro.Grid.Data.RowState.Normal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -158,11 +161,62 @@
         });
     }
 
+    // New empties the screen, as on an entry screen
+    private async Task NewAsync()
+    {
+        if (!CanWrite || !await ConfirmDiscardAsync())
+        {
+            return;
+        }
+        Error = null;
+        Notice = null;
+        _selected = null;
+        _targets.Load([]);
+        _sources.Load([]);
+        await OnReset.InvokeAsync();
+    }
+
+    // A new row goes below the selected row and becomes the selected row
     private void AddTarget()
     {
         if (CanChange)
         {
-            _targets.MoveTo(_targets.AddRow(CreateTarget(_selected!)));
+            _targets.MoveTo(_targets.AddRow(CreateTarget(_selected!), _targets.CurrentRowKey));
+        }
+    }
+
+    // Toggle as on an entry screen: a saved row is marked (and unmarked with its loaded values), a new row is removed at once
+    private void MarkDelete()
+    {
+        if (!CanMarkCurrent)
+        {
+            return;
+        }
+        var key = _targets.CurrentRowKey!.Value;
+        if (_targets.GetState(key) == Quro.Grid.Data.RowState.Deleted)
+        {
+            _targets.RevertRow(key);
+        }
+        else
+        {
+            _targets.DeleteRow(key);
+        }
+    }
+
+    private void RestoreRow()
+    {
+        if (!CanRestoreCurrent)
+        {
+            return;
+        }
+        var key = _targets.CurrentRowKey!.Value;
+        if (_targets.GetState(key) == Quro.Grid.Data.RowState.Inserted)
+        {
+            _targets.DeleteRow(key);
+        }
+        else
+        {
+            _targets.RevertRow(key);
         }
     }
 
@@ -240,14 +294,6 @@
         StateHasChanged();
     }
 
-    private void RestoreCurrent()
-    {
-        if (CanChange && CurrentIsDeleted)
-        {
-            _targets.RevertRow(_targets.CurrentRowKey!.Value);
-        }
-    }
-
     private object? StateOf(object item)
     {
         // New rows have negative row keys, so a missing row is null rather than -1
@@ -260,25 +306,6 @@
             Quro.Grid.Data.RowState.Deleted => L["Common.RowState.Deleted"].Value,
             _ => null,
         };
-    }
-
-    // Delete marks a loaded row (a new row goes away); undo restores the row's loaded values
-    private void OnTargetButton(CellButtonClickArgs<TTarget> args)
-    {
-        if (!CanChange || Busy)
-        {
-            return;
-        }
-        var state = _targets.GetState(args.RowKey);
-        if (args.Field == DeleteField && state != Quro.Grid.Data.RowState.Deleted)
-        {
-            _targets.DeleteRow(args.RowKey);
-        }
-        else if (args.Field == UndoField && state is Quro.Grid.Data.RowState.Updated or Quro.Grid.Data.RowState.Deleted)
-        {
-            _targets.RevertRow(args.RowKey);
-        }
-        StateHasChanged();
     }
 
     // The source list cannot change: edits, deletes and pastes are cancelled, and a row the grid adds is taken out (TODO(QuroGrid-R4))

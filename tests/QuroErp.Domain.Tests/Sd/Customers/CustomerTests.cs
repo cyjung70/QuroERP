@@ -94,6 +94,12 @@ public class CustomerTests
         Create(Valid with { PriceLevel = "WHOLESALE" }).Fields.PriceLevel.Should().Be("WHOLESALE");
     }
 
+    [Fact, Trait("Id", "SD-UT-304")]
+    public void PriceLevel_IsTrimmedUpperCase()
+    {
+        Create(Valid with { PriceLevel = " Whole Sale " }).Fields.PriceLevel.Should().Be("WHOLE SALE");
+    }
+
     [Theory, Trait("Id", "SD-UT-314")]
     [InlineData("ShipName", 101)]
     [InlineData("Contact", 101)]

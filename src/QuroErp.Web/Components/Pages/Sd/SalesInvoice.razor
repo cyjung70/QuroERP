@@ -56,7 +56,7 @@
 @if (_ready)
 {
     <QuroHeaderDetail @ref="_frame" THeader="SalesInvoiceHeader" TLine="SalesInvoiceLine" Title="@L["Sd.SalesInvoice.Title"]"
-                      TestId="sales-invoice" Path="@L["Menu.G3SD"]" ReadOnly="!_canEdit"
+                      TestId="sales-invoice" Path="@L["Menu.G3SD"]" PolicyScreen="Sd.SalesInvoice" ReadOnly="!_canEdit"
                       DocumentNo="s => s.DnNo" Audit="s => s.ToAudit()"
                       Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
                       Definition="sd.sales-invoice.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
@@ -87,13 +87,15 @@
                     @onclick="TaxInvoicePdfAsync">@L["Sd.SalesInvoice.TaxInvoice"]</button>
         </OutputCommands>
         <StatusCommands Context="s">
+            @* No 6: Credit Memo apply (SD-BR-251~259) has its place only; TASK-SD-038 opens the window and sets when it is enabled *@
+            <button type="button" disabled data-testid="sales-invoice-toolbar-apply-credit">@L["Sd.SalesInvoice.ApplyCredit"]</button>
             <button type="button" disabled="@(!_canEdit || !SalesInvoiceStatus.CanCancelUnshipped(s, SavedLines()))"
                     data-testid="sales-invoice-toolbar-cancel-unshipped" @onclick="OpenCancel">@L["Sd.SalesInvoice.CancelUnshipped"]</button>
             <button type="button" class="quro-danger-text" disabled="@(!_canEdit || !CanVoid(s))"
                     data-testid="sales-invoice-toolbar-void" @onclick="VoidAsync">@L["Sd.SalesInvoice.Void"]</button>
         </StatusCommands>
         <HeaderFields Context="s">
-            @* 1: customer (2), invoice date, due date *@
+            @* 1: customer (2), invoice date, due date (entry frame row order of the spec's screen items) *@
             <div class="quro-lookup-field quro-span-2">
                 <QuroText Label="@L["Sd.SalesInvoice.CustomerId"]" Field="CustomerName" Required TextCase="TextCase.Upper"
                           LockMode="@(s.IsSaved || HasLines ? LockMode.Always : LockMode.None)" TestId="sales-invoice-header-customer-name" />
@@ -103,48 +105,43 @@
             <QuroDate Label="@L["Sd.SalesInvoice.DnDt"]" Field="DnDt" Required LockMode="@(s.IsSaved ? LockMode.Always : LockMode.None)"
                       TestId="sales-invoice-header-dn-dt" />
             <QuroDate Label="@L["Sd.SalesInvoice.DueDt"]" Field="DueDt" Required TestId="sales-invoice-header-due-dt" />
-            @* 2: bill-to (2), terms, sales rep *@
-            <QuroText Label="@L["Sd.SalesInvoice.BillTo"]" Value="@s.BillTo" LockMode="LockMode.Always" Span="2" TestId="sales-invoice-header-bill-to" />
-            <QuroCodeSelect Major="TERMS" Label="@L["Sd.SalesInvoice.Terms"]" Field="Terms" TestId="sales-invoice-header-terms" />
-            <QuroCodeSelect Major="SALES_REP" Label="@L["Sd.SalesInvoice.Rep"]" Field="Rep" Required TestId="sales-invoice-header-rep" />
-            @* 3: currency, rate, warehouse, billing flow *@
+            @* 2: currency, rate, sales rep, terms *@
             <QuroSelect Label="@L["Sd.SalesInvoice.CurrencyCode"]" Field="CurrencyCode" Options="_currencies" Required
                         LockMode="@(s.IsSaved || HasLines ? LockMode.Always : LockMode.None)" TestId="sales-invoice-header-currency-code" />
             <QuroNumber Label="@L["Sd.SalesInvoice.ExchangeRate"]" Field="ExchangeRate" Required
                         LockMode="@(s.IsSaved || HasLines ? LockMode.Always : LockMode.None)" TestId="sales-invoice-header-exchange-rate" />
-            <QuroSelect Label="@L["Sd.SalesInvoice.WarehouseId"]" Field="WarehouseCode" Options="_warehouseOptions" Required
-                        TestId="sales-invoice-header-warehouse-code" />
-            <QuroSelect Label="@L["Sd.SalesInvoice.BillingFlow"]" Field="BillingFlow" Options="_billingFlows" LockMode="LockMode.Always"
-                        TestId="sales-invoice-header-billing-flow" />
-            @* 4: ship via, freight, the customer's discount status (shown only), the source document *@
+            <QuroCodeSelect Major="SALES_REP" Label="@L["Sd.SalesInvoice.Rep"]" Field="Rep" Required TestId="sales-invoice-header-rep" />
+            <QuroCodeSelect Major="TERMS" Label="@L["Sd.SalesInvoice.Terms"]" Field="Terms" TestId="sales-invoice-header-terms" />
+            @* 3: ship via, freight, the exemption certificate (SD-BR-133), the customer's unapplied credit (SD-BR-118) *@
             <QuroCodeSelect Major="SHIPMENT_VIA" Label="@L["Sd.SalesInvoice.ShipVia"]" Field="ShipVia" TestId="sales-invoice-header-ship-via" />
             <QuroCodeSelect Major="FREIGHT_CHARGE" Label="@L["Sd.SalesInvoice.FreightCharge"]" Field="FreightCharge"
                             TestId="sales-invoice-header-freight-charge" />
-            <QuroCodeSelect Major="DISCOUNT_STATUS" Label="@L["Sd.SalesInvoice.DcStatus"]" Field="DcStatus" LockMode="LockMode.Always"
-                            TestId="sales-invoice-header-dc-status" />
-            <QuroText Label="@L["Sd.SalesInvoice.SourceDocument"]" Value="@(s.ShipNo ?? s.SoNo)" LockMode="LockMode.Always"
-                      TestId="sales-invoice-header-source-document" />
-            @* 5: ship-to *@
-            <QuroText Label="@L["Sd.SalesInvoice.ShipName"]" Field="ShipName" Span="2" TestId="sales-invoice-header-ship-name" />
-            <QuroText Label="@L["Sd.SalesInvoice.ShipAddr1"]" Field="ShipAddr1" Span="2" TestId="sales-invoice-header-ship-addr1" />
-            <QuroText Label="@L["Sd.SalesInvoice.ShipAddr2"]" Field="ShipAddr2" Span="2" TestId="sales-invoice-header-ship-addr2" />
-            <QuroText Label="@L["Sd.SalesInvoice.ShipCity"]" Field="ShipCity" TestId="sales-invoice-header-ship-city" />
-            <QuroCodeSelect Major="STATE" Label="@L["Sd.SalesInvoice.ShipState"]" Field="ShipState" TestId="sales-invoice-header-ship-state" />
-            <QuroText Label="@L["Sd.SalesInvoice.ShipZipCode"]" Field="ShipZipCode" Required TestId="sales-invoice-header-ship-zip-code" />
-            <QuroText Label="@L["Sd.SalesInvoice.ShipCountry"]" Field="ShipCountry" TestId="sales-invoice-header-ship-country" />
-            <QuroText Label="@L["Sd.SalesInvoice.ShipPhone"]" Field="ShipPhone" TestId="sales-invoice-header-ship-phone" />
-            <QuroText Label="@L["Sd.SalesInvoice.ShipFax"]" Field="ShipFax" TestId="sales-invoice-header-ship-fax" />
-            @* 6: stored amounts (SD-BR-109, SD-BR-118, SD-BR-261), shown only *@
-            <QuroNumber Label="@L["Sd.SalesInvoice.TotDnAmt"]" Value="s.TotDnAmt" Decimals="_decimals.Amount" LockMode="LockMode.Always"
-                        TestId="sales-invoice-header-tot-dn-amt" />
-            <QuroNumber Label="@L["Sd.SalesInvoice.PaymentApplied"]" Value="s.PaymentApplied" Decimals="_decimals.Amount" LockMode="LockMode.Always"
-                        TestId="sales-invoice-header-payment-applied" />
-            <QuroNumber Label="@L["Sd.SalesInvoice.CreditApplied"]" Value="s.CreditApplied" Decimals="_decimals.Amount" LockMode="LockMode.Always"
-                        TestId="sales-invoice-header-credit-applied" />
-            <QuroNumber Label="@L["Sd.SalesInvoice.BalAmt"]" Value="s.BalAmt" Decimals="_decimals.Amount" LockMode="LockMode.Always"
-                        TestId="sales-invoice-header-bal-amt" />
+            <QuroText Label="@L["Sd.SalesInvoice.TaxExemptionCertNo"]" Policy="Sd.SalesInvoice.TaxExemptionCertNo" Field="TaxExemptionCertNo"
+                      TestId="sales-invoice-header-tax-exemption-cert-no" />
             <QuroNumber Label="@L["Sd.SalesInvoice.AvailableCredit"]" Value="s.AvailableCredit" Decimals="_decimals.Amount"
                         LockMode="LockMode.Always" TestId="sales-invoice-header-available-credit" />
+            @* 4: base currency total (BC-BR-413), only for a foreign currency; the default warehouse of bill-first and direct lines *@
+            @if (_decimals.IsForeign)
+            {
+                <QuroNumber Label="@L["Sd.SalesInvoice.TotBaseAmt"]" Value="BaseTotal(TotalsOf(ActiveLines()).Total)" Decimals="_decimals.BaseAmount"
+                            LockMode="LockMode.Always" Span="2" TestId="sales-invoice-header-tot-base-amt" />
+            }
+            <QuroSelect Label="@L["Sd.SalesInvoice.WarehouseId"]" Field="WarehouseCode" Options="_warehouseOptions" Required
+                        TestId="sales-invoice-header-warehouse-code" />
+            @* The ship-to, collapsed unless a picked customer leaves the required ZIP code empty *@
+            <QuroFieldSection Title="@L["Sd.SalesInvoice.ShipTo"]" KeepOpen="@(s.CustomerId is not null && string.IsNullOrWhiteSpace(s.ShipZipCode))"
+                              TestId="sales-invoice-header-ship-to">
+                <QuroText Label="@L["Sd.SalesInvoice.ShipName"]" Field="ShipName" Span="2" TestId="sales-invoice-header-ship-name" />
+                <QuroText Label="@L["Sd.SalesInvoice.ShipAddr1"]" Field="ShipAddr1" Span="2" TestId="sales-invoice-header-ship-addr1" />
+                <QuroText Label="@L["Sd.SalesInvoice.ShipAddr2"]" Field="ShipAddr2" Span="2" TestId="sales-invoice-header-ship-addr2" />
+                <QuroText Label="@L["Sd.SalesInvoice.ShipCity"]" Field="ShipCity" TestId="sales-invoice-header-ship-city" />
+                <QuroCodeSelect Major="STATE" Label="@L["Sd.SalesInvoice.ShipState"]" Policy="Sd.SalesInvoice.ShipState" Field="ShipState"
+                                TestId="sales-invoice-header-ship-state" />
+                <QuroText Label="@L["Sd.SalesInvoice.ShipZipCode"]" Field="ShipZipCode" Required TestId="sales-invoice-header-ship-zip-code" />
+                <QuroText Label="@L["Sd.SalesInvoice.ShipCountry"]" Field="ShipCountry" TestId="sales-invoice-header-ship-country" />
+                <QuroText Label="@L["Sd.SalesInvoice.ShipPhone"]" Field="ShipPhone" TestId="sales-invoice-header-ship-phone" />
+                <QuroText Label="@L["Sd.SalesInvoice.ShipFax"]" Field="ShipFax" TestId="sales-invoice-header-ship-fax" />
+            </QuroFieldSection>
             <QuroText Label="@L["Sd.SalesInvoice.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="sales-invoice-header-remarks" />
             @* 7: unshipped cancellations and their Credit Memos; an applied one stays (SD-BR-146) *@
             @if (s.Cancellations.Count > 0)
@@ -184,9 +181,12 @@
         </HeaderFields>
         <Totals Context="lines">
             @{ var totals = TotalsOf(lines); }
-            <QuroTotals Subtotal="totals.Subtotal" Discount="totals.Discount" Tax="totals.Tax" CurrencyCode="@_decimals.CurrencyCode"
-                        Decimals="_decimals.Amount" BaseTotal="BaseTotal(totals.Total)" BaseCurrencyCode="@_decimals.BaseCurrencyCode"
-                        BaseDecimals="_decimals.BaseAmount" TestId="sales-invoice-totals" />
+            @* No 19: supply, tax, total and the balance (SD-BR-109, SD-BR-132); the marked lines are left out by the frame *@
+            <QuroTotals Subtotal="totals.Supply" Tax="totals.Tax" SubtotalLabel="@L["Sd.SalesInvoice.SupplyAmt"]"
+                        CurrencyCode="@_decimals.CurrencyCode" Decimals="_decimals.Amount" TestId="sales-invoice-totals" />
+            <div class="quro-totals-row" data-testid="sales-invoice-totals-bal-amt">
+                <span>@L["Sd.SalesInvoice.BalAmt"]</span><b>@AmountText(BalanceOf(totals.Total))</b>
+            </div>
         </Totals>
     </QuroHeaderDetail>
 
@@ -378,8 +378,6 @@
             _itemIds[line.ItemCd!] = line.ItemId;
         }
         var header = SalesInvoiceHeader.From(invoice, _allWarehouses.ToDictionary(w => w.Id, w => w.WarehouseCode));
-        header.BillTo = BillToOf(_customer);
-        header.DcStatus = _customer.DcStatus;
         return new HeaderLines<SalesInvoiceHeader, SalesInvoiceLine>(
             header, [.. invoice.Lines.OrderBy(l => l.Seq).Select(l => WithAmount(SalesInvoiceLine.From(l, taxCodes)))]);
     }
@@ -542,8 +540,6 @@
             _frame.SetHeaderValue(nameof(SalesInvoiceHeader.Rep), customer.Rep);
             _frame.SetHeaderValue(nameof(SalesInvoiceHeader.Terms), customer.Terms);
             _frame.SetHeaderValue(nameof(SalesInvoiceHeader.FreightCharge), customer.FreightCharge);
-            _frame.SetHeaderValue(nameof(SalesInvoiceHeader.DcStatus), customer.DcStatus);
-            Header().BillTo = BillToOf(customer);
             Header().AvailableCredit = 0m;
             SetShipTo(customer.ShipName, customer.ShipAddr1, customer.ShipAddr2, customer.ShipCity, customer.ShipState, customer.ShipZipCode,
                 customer.ShipCountry, customer.ShipPhone, customer.ShipFax);
@@ -556,9 +552,6 @@
         await RefreshRateAsync();
         StateHasChanged();
     }
-
-    private static string? BillToOf(CustomerDto customer) =>
-        SalesInvoiceHeader.AddressOf(customer.Addr1, customer.Addr2, customer.City, customer.State, customer.ZipCode, customer.Country);
 
     private void SetShipTo(
         string? name, string? addr1, string? addr2, string? city, string? state, string? zip, string? country, string? phone, string? fax)
@@ -852,6 +845,12 @@
         SalesOrderCalculator.Line(line.DnQty ?? 0, line.DnPrc ?? 0, line.DcRate ?? 0, _decimals.Amount, _decimals.RoundingMode).Amount;
 
     // Entry frame totals: the document total in the base currency; the panel shows it only when the currencies differ
+    // SD-BR-261: a saved invoice shows its stored balance; a new one owes its whole total
+    private decimal BalanceOf(decimal total) => _frame?.Header is { IsSaved: true } h ? h.BalAmt : total;
+
+    private string AmountText(decimal amount) =>
+        amount.ToString("N" + _decimals.Amount.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture);
+
     private decimal? BaseTotal(decimal total) => _frame?.Header.ExchangeRate is { } rate
         ? SalesOrderCalculator.BaseTotal(total, rate, _decimals.BaseAmount, _decimals.RoundingMode)
         : null;

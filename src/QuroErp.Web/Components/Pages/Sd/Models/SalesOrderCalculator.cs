@@ -99,7 +99,6 @@ public sealed record SalesOrderDecimals(
         ["shipQty"] = N(Qty),
         ["dnQty"] = N(Qty),
         ["soPrc"] = N(Price),
-        ["stdPrc"] = N(Price),
         ["soAmt"] = N(Amount),
         ["taxAmt"] = N(Amount),
     };

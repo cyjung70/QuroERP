@@ -18,10 +18,11 @@
         <style>@requiredStyle</style>
     }
     <QuroGrid @ref="_grid" TItem="TLine" DataSet="Data" Definition="GridDefinition" Localizer="L" Culture="DisplayCulture.Current"
-                        ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor"
+                        ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor" OptionsFor="OptionsFor"
+                        AddRowOnLastEnter="@(AddRowOnLastEnter && CanEdit)" OnRowAdding="OnRowAdding"
                         OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged" OnRowAdded="OnRowAdded"
                         OnRowDeleting="OnRowDeleting" OnRowDeleted="OnRowDeleted" OnPasting="OnPasting" OnPasted="OnPasted"
-                        OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick">
+                        OnPopupRequested="OnPopupRequested" OnCellButtonClick="OnCellButtonClick" RowReadOnly="IsRowReadOnly">
         @ChildContent
     </QuroGrid>
 </div>
@@ -75,6 +76,14 @@
     [Parameter]
     public Func<TLine, bool>? IsLineRemovable { get; set; }
 
+    /// <summary>A line whose cells may not be changed but which may be deleted, e.g. a saved receipt line (delete and re-enter).</summary>
+    [Parameter]
+    public Func<TLine, bool>? IsLineReadOnly { get; set; }
+
+    /// <summary>One cell of a line that may not be changed, e.g. the item code of a line imported from an order.</summary>
+    [Parameter]
+    public Func<TLine, string, bool>? IsCellLocked { get; set; }
+
     /// <summary>Reads the lookups of the code columns. Without it a code column is plain text.</summary>
     [Parameter]
     public Func<LookupQuery, Task<IReadOnlyList<LookupRow>>>? Lookup { get; set; }
@@ -86,6 +95,22 @@
     /// <summary>Text fields whose typed value is kept in upper case (a column has no case setting).</summary>
     [Parameter]
     public IReadOnlyCollection<string>? UpperCaseFields { get; set; }
+
+    /// <summary>The options of a select column by its source. Keep the same delegate: a new one reads the lists again.</summary>
+    [Parameter]
+    public Func<string, IReadOnlyList<ComboOption>?>? OptionsFor { get; set; }
+
+    /// <summary>Enter on the last cell of the last line adds a line.</summary>
+    [Parameter]
+    public bool AddRowOnLastEnter { get; set; }
+
+    /// <summary>Fills a line the grid itself adds (paste, last Enter) as Add Row would.</summary>
+    [Parameter]
+    public Action<TLine>? FillAddedLine { get; set; }
+
+    /// <summary>Runs after a paste has read its codes, with the cells that changed.</summary>
+    [Parameter]
+    public Func<IReadOnlyList<(int RowKey, string Field)>, Task>? OnLinesPasted { get; set; }
 
     /// <summary>Shows a warning of the grid in the frame's message line, or clears it (null).</summary>
     [Parameter]
@@ -107,6 +132,9 @@
 
     /// <summary>The package grid, e.g. for tests that edit through its entry points.</summary>
     public QuroGrid<TLine>? Grid => _grid;
+
+    /// <summary>A paste is writing its cells; its codes are not read yet.</summary>
+    public bool IsPasting => _pasting;
 
     /// <summary>The screen's field policies, cascaded by the screen type component; applied to the columns by their label key.</summary>
     [CascadingParameter]
@@ -185,6 +213,10 @@
 
     private bool Locked(TLine item) => IsLineLocked?.Invoke(item) == true;
 
+    private bool CellsLocked(TLine item) => Locked(item) || IsLineReadOnly?.Invoke(item) == true;
+
+    private bool IsRowReadOnly(object item) => CellsLocked((TLine)item);
+
     // validate "requires {field}": the column waits for a header field, e.g. the vendor before item codes (screens.md "SM")
     private ValidateDef? MissingRequirement(string field) => Definition.Validate.FirstOrDefault(v =>
         Is(v.Target, field) && v.Rule.StartsWith("requires ", StringComparison.Ordinal)
@@ -192,7 +224,7 @@
 
     private void OnCellValueChanging(CellValueChangingArgs<TLine> args)
     {
-        if (!CanEdit || Locked(args.Item))
+        if (!CanEdit || CellsLocked(args.Item) || IsCellLocked?.Invoke(args.Item, args.Field) == true)
         {
             args.Cancel = true;
             return;
@@ -268,6 +300,15 @@
 
     private Task<IReadOnlyList<string>> LookupFor(string lookupId, string text) => GridLookups.CodesAsync(Lookup, lookupId, text);
 
+    // A copied row keeps the values it was copied with
+    private void OnRowAdding(RowAddingArgs<TLine> args)
+    {
+        if (args.SourceRowKey is null)
+        {
+            FillAddedLine?.Invoke(args.Item);
+        }
+    }
+
     // A frame row added by the grid itself (paste, last Enter) is taken out again while the lines are locked (TODO(QuroGrid-R4))
     private async Task OnRowAdded(RowAddedArgs<TLine> args)
     {
@@ -300,6 +341,11 @@
         var changes = _pasted.ToList();
         _pasted.Clear();
         await AfterChangeAsync(changes);
+        if (OnLinesPasted is not null)
+        {
+            await OnLinesPasted(changes);
+            await OnChanged.InvokeAsync();
+        }
         // Cells skipped as read-only, invalid or cancelled are told in the message line (screens.md "그리드 붙여 넣기")
         if (args.Skipped.Count > 0)
         {
@@ -310,7 +356,8 @@
     // Several matches or F4: the lookup's dialog opens and the grid waits for the picked code (null keeps the cell as it is)
     private async Task OnPopupRequested(PopupRequestedArgs<TLine> args)
     {
-        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || Locked(args.Item))
+        if (Lookup is null || ColumnOf(args.Field)?.Lookup is not { Length: > 0 } lookupId || !CanEdit || CellsLocked(args.Item)
+            || IsCellLocked?.Invoke(args.Item, args.Field) == true)
         {
             return;
         }

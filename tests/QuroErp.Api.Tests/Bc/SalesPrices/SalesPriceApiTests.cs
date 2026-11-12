@@ -32,10 +32,12 @@ public class SalesPriceApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Theory, Trait("Id", "SD-UT-409"), Trait("Rule", "SD-BR-409")]
-    [InlineData("ABCDEF", "SD-E-403")]
-    [InlineData(" ", "Common-E-005")]
-    public async Task List_ALevelOver5CharactersOrNone_Returns422(string level, string code)
+    [InlineData(101, "SD-E-403")]
+    [InlineData(0, "Common-E-005")]
+    public async Task List_ALevelOver100CharactersOrNone_Returns422(int length, string code)
     {
+        var level = length == 0 ? " " : new string('A', length);
+
         using var response = await factory.NonAdmin().GetAsync($"{SalesPriceRoutes.Base}?priceLevel={Uri.EscapeDataString(level)}");
 
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);

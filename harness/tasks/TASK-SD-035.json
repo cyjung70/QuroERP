@@ -50,13 +50,18 @@
     "TASK-CORE-015",
     "TASK-CORE-018",
     "TASK-CORE-019",
-    "TASK-CORE-021"
+    "TASK-CORE-021",
+    "TASK-SD-005"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
-    "새 Seed 스크립트로 `AR_PAYMENT_METHOD` Minor `CASH`·`MONEY_ORDER`·`CREDIT_CARD`·`CHECK`·`WIRE_TRANSFER`(정렬 10~50)와 ko·en 이름을 넣는다 (SD-BR-702). 이관 데이터와 같은 코드라 이관 적재 때 겹치지 않는다"
+    "새 Seed 스크립트로 `AR_PAYMENT_METHOD` Minor `CASH`·`MONEY_ORDER`·`CREDIT_CARD`·`CHECK`·`WIRE_TRANSFER`(정렬 10~50)와 ko·en 이름을 넣는다 (SD-BR-702). 이관 데이터와 같은 코드라 이관 적재 때 겹치지 않는다",
+    "마이그레이션은 없다: `sd_ar_receipt`·`sd_ar_clear`는 이미 있고, 통화·환율(`currency_code`·`exchange_rate`)과 환율 차이(`sd_ar_clear.fx_diff_base_amt`)도 이미 더해져 있다",
+    "송장 잔액 차감·복원(SD-BR-705·709)은 송장 행을 잠그고 같은 트랜잭션에서 한다. 송장 상태 재계산(SD-BR-712)은 매출 송장 태스크(TASK-SD-005)의 SD-BR-105 Domain 로직을 그대로 쓰고 따로 구현하지 않는다",
+    "줄의 Credit 값은 그 송장에 적용한 Credit Memo 합계(`sd_cm_clear`)를 읽기만 한다. Credit Memo 적용 기능(TASK-SD-037·039) 전에는 0이다. 'Credit 적용' 버튼은 화면 태스크가 단다",
+    "통합 테스트: KR 회사 USD 송장 1,000.00(환율 1,382.5)을 환율 1,400 입금으로 전액 적용 → 송장 잔액 0·`CL`, `fx_diff_base_amt` 17,500 (SD-BR-722, 기준 통화 자릿수 반올림)"
   ],
   "estimateHours": 3,
   "status": "todo"

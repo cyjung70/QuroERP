@@ -30,7 +30,7 @@
 {
     <QuroMultiGrid @ref="_grid" TRow="SetComponentRow" Title="@L["Bc.SetItem.Title"]" TestId="set-item" Path="@L["Menu.G1BA"]"
                    Definition="bc.set-item" Adjust="WithQtyFormat" Lookup="LookupComponentsAsync" UpperCaseFields="UpperCaseFields"
-                   Load="LoadAsync" Save="SaveAsync" CreateRow="() => new SetComponentRow()" CanWrite="_canEdit">
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="() => new SetComponentRow()" CanWrite="_canEdit" OnReset="ResetSearch" CanAddRow="() => _loadedSetCd is not null">
         <SearchContent>
             <div class="quro-lookup-field">
                 <QuroText Label="@L["Bc.SetItem.ItemCd"]" @bind-Value="_setCd" @bind-Value:after="SetCodeChanged" Required
@@ -104,6 +104,8 @@
     };
 
     // SD-BR-501: the set comes first; its components are shown in sequence order
+    private void ResetSearch() => _setCd = _setName = _loadedSetCd = null;
+
     private async Task<IReadOnlyList<SetComponentRow>> LoadAsync()
     {
         var setCd = _setCd?.Trim().ToUpperInvariant();

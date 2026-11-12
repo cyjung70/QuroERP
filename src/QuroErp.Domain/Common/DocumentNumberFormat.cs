@@ -24,17 +24,20 @@ public sealed record DocumentNumberFormat(string Prefix, int Digits, bool Restar
     /// <summary>SD-BR-206: CM + yymm + 6 digits. A migrated 5-digit number in the same month is continued after (SD-BR-006).</summary>
     public static readonly DocumentNumberFormat CreditMemo = new("CM", 6, RestartsMonthly: true);
 
-    /// <summary>MM-BR-017: PO + yymm + 5 digits.</summary>
-    public static readonly DocumentNumberFormat PurchaseOrder = new("PO", 5, RestartsMonthly: true);
+    /// <summary>MM-BR-017: PO + yymm + 6 digits. A 5-digit number already issued this month is continued after (SD-BR-006).</summary>
+    public static readonly DocumentNumberFormat PurchaseOrder = new("PO", 6, RestartsMonthly: true);
 
     /// <summary>MM-BR-106: GR + yymm + 6 digits.</summary>
     public static readonly DocumentNumberFormat GoodsReceipt = new("GR", 6, RestartsMonthly: true);
 
-    /// <summary>MM-BR-208: UR + yymm + 5 digits.</summary>
-    public static readonly DocumentNumberFormat UnplannedReceipt = new("UR", 5, RestartsMonthly: true);
+    /// <summary>MM-BR-752: VI + yymm + 6 digits.</summary>
+    public static readonly DocumentNumberFormat SupplierInvoice = new("VI", 6, RestartsMonthly: true);
 
-    /// <summary>MM-BR-308: CT + yymm + 5 digits.</summary>
-    public static readonly DocumentNumberFormat StockCount = new("CT", 5, RestartsMonthly: true);
+    /// <summary>MM-BR-208: UR + yymm + 6 digits.</summary>
+    public static readonly DocumentNumberFormat UnplannedReceipt = new("UR", 6, RestartsMonthly: true);
+
+    /// <summary>MM-BR-308: CT + yymm + 6 digits.</summary>
+    public static readonly DocumentNumberFormat StockCount = new("CT", 6, RestartsMonthly: true);
 
     /// <summary>MM-BR-607: stock movements (mm_goods_movement.document_no), ID + yymm + 10 digits.</summary>
     public static readonly DocumentNumberFormat GoodsMovement = new("ID", 10, RestartsMonthly: true);

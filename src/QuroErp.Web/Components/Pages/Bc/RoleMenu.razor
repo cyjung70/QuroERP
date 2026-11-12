@@ -25,7 +25,7 @@
 {
     <QuroMultiGrid @ref="_grid" TRow="RoleMenuRow" Title="@L["Bc.RoleMenu.Title"]" TestId="role-menu" Path="@L["Menu.G5AD"]" LoadOnStart="_roleId is not null"
                    Definition="bc.menu.role"
-                   Load="LoadAsync" Save="SaveAsync" OnAddRequested="OpenAddDialog" CanWrite="_canEdit">
+                   Load="LoadAsync" Save="SaveAsync" OnAddRequested="OpenAddDialog" CanWrite="_canEdit" OnReset="ResetSearch" CanAddRow="() => _loadedRoleId is not null">
         <SearchContent>
             <QuroSelect Label="@L["Bc.RoleMenu.Role"]" @bind-Value="_roleId" Options="_roles" Required TestId="role-menu-search-role" />
         </SearchContent>
@@ -105,6 +105,12 @@
             var row = _grid!.Items.FirstOrDefault(r => r.MenuId.ToString(CultureInfo.InvariantCulture) == menuId);
             throw new ApiProblemException(e.Problem with { Args = [row?.MenuCode ?? menuId] });
         }
+    }
+
+    private void ResetSearch()
+    {
+        _roleId = null;
+        _loadedRoleId = null;
     }
 
     private void OpenAddDialog()

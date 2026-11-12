@@ -23,17 +23,15 @@ public class StockPolicyTests
         StockPolicy.CheckOnHand(NegativeStockMode.Deny, onHand: 5, qty: -5, "ITEM-1", "MAIN").Should().BeFalse();
     }
 
-    [Theory, Trait("Id", "MM-UT-002")]
-    [InlineData(NegativeStockMode.Allow)]
-    [InlineData(NegativeStockMode.AllowInMonth)]
-    public void CheckOnHand_AllowModesAndIssueAboveOnHand_ReturnsNegativeFlag(NegativeStockMode mode)
+    [Fact, Trait("Id", "MM-UT-002")]
+    public void CheckOnHand_AllowInMonthAndIssueAboveOnHand_ReturnsNegativeFlag()
     {
-        StockPolicy.CheckOnHand(mode, onHand: 5, qty: -7, "ITEM-1", "MAIN").Should().BeTrue();
+        StockPolicy.CheckOnHand(NegativeStockMode.AllowInMonth, onHand: 5, qty: -7, "ITEM-1", "MAIN").Should().BeTrue();
     }
 
     [Theory, Trait("Id", "MM-UT-003")]
     [InlineData(null, NegativeStockMode.Deny)]
-    [InlineData("ALLOW", NegativeStockMode.Allow)]
+    [InlineData("ALLOW", NegativeStockMode.Deny)]
     [InlineData("ALLOW_IN_MONTH", NegativeStockMode.AllowInMonth)]
     [InlineData("DENY", NegativeStockMode.Deny)]
     public void ModeOrDefault_MissingRowIsDeny(string? code, NegativeStockMode expected)

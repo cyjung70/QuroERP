@@ -21,7 +21,7 @@ public sealed class DemoScriptTests : IDisposable
     }
 
     [DatabaseFact, Trait("Id", "DB-IT-11")]
-    public void UpgradeWithDemo_AppliesTheDemoScripts_WithThePurchaseOrderItemsAndVendorPrice()
+    public void UpgradeWithDemo_AppliesTheDemoScripts_WithThePurchaseOrderItemsVendorPriceAndLotItem()
     {
         var result = DatabaseMigrator.Upgrade(_connectionString, includeDemo: true, _schema, new NoOpUpgradeLog());
 
@@ -35,6 +35,10 @@ public sealed class DemoScriptTests : IDisposable
             JOIN bc_item i ON i.id = p.item_id
             WHERE v.v_name = 'MAPLE LEAF SUPPLY' AND i.item_cd = 'DEMO-BOLT-10' AND p.purchase_prc <> i.usd_prc
             """).Should().Be(1);
+        Scalar(connection, """
+            SELECT count(*) FROM bc_item
+            WHERE item_cd = 'DEMO-RESIN-LOT' AND type = 'INVENTORY' AND lot_managed AND lot_managed_from IS NOT NULL
+            """).Should().Be(1, "the goods receipt screen shows the lot column for it");
     }
 
     [DatabaseFact, Trait("Id", "DB-IT-11")]
@@ -55,6 +59,30 @@ public sealed class DemoScriptTests : IDisposable
             WHERE (l.lot_no, o.onhand_qty) IN (('L2611A', 30), ('L2611B', 20))
             """).Should().Be(2);
         Scalar(connection, "SELECT count(*) FROM mm_goods_movement WHERE ref_key = 'DEMO-OPENING' AND mov_type = 'GR'").Should().Be(4);
+    }
+
+    [DatabaseFact, Trait("Id", "DB-IT-11")]
+    public void UpgradeWithDemo_AddsAnOpenAndAPartlyPaidInvoice_WithTheCountersMovedOn()
+    {
+        var result = DatabaseMigrator.Upgrade(_connectionString, includeDemo: true, _schema, new NoOpUpgradeLog());
+
+        result.Successful.Should().BeTrue(result.Error?.Message);
+        using var connection = new NpgsqlConnection(_connectionString);
+        connection.Open();
+        Scalar(connection, """
+            SELECT count(*) FROM sd_sales_invoice d JOIN bc_customer c ON c.id = d.customer_id AND c.c_name = 'MAPLE HILL SUPPLY'
+            WHERE (d.status, d.tot_dn_amt, d.bal_amt) IN (('OP', 95, 95), ('PA', 190, 90))
+              AND (SELECT sum(l.dn_amt) FROM sd_sales_invoice_line l WHERE l.sales_invoice_id = d.id) = d.tot_dn_amt
+            """).Should().Be(2);
+        Scalar(connection, """
+            SELECT count(*) FROM sd_ar_clear a JOIN sd_sales_invoice d ON d.id = a.sales_invoice_id
+            WHERE d.status = 'PA' AND a.cls_amt = d.tot_dn_amt - d.bal_amt
+            """).Should().Be(1, "the paid part is what the demo receipt applied");
+        Scalar(connection, """
+            SELECT count(*) FROM sys_document_number n
+            WHERE (n.trans_type = 'DN' AND n.trans_no = (SELECT max(dn_no) FROM sd_sales_invoice))
+               OR (n.trans_type = 'CR' AND n.period = '2611' AND n.trans_no = (SELECT max(cls_ar_no) FROM sd_ar_receipt))
+            """).Should().Be(2, "the next invoice and receipt numbers come after the demo ones");
     }
 
     public void Dispose()

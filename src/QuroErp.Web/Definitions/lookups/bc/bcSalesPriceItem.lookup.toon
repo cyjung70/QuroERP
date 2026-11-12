@@ -1,0 +1,17 @@
+# Items a price level can hold (TASK-BC-028): Inventory items in use (SD-BR-408), with the standard sales price shown next to
+# the level price (SD-BR-409). The sales price screen answers it from the item lookup API and keeps only those items; the API
+# checks the rule again when the level is saved.
+lookup:
+  id: bcSalesPriceItem
+  title: Bc.SalesPrice.FindItem
+  version: 1
+  api: /api/bc/items
+  key: itemCd
+  text: itemName
+  minChars: 1
+queries[1]{id,params}:
+  all,""
+columns[3]{id,label,type,width,fmt}:
+  itemCd,Bc.SalesPrice.ItemCd,text,140,""
+  itemName,Bc.SalesPrice.ItemName,text,240,""
+  stdPrc,Bc.SalesPrice.StdPrc,number,110,""

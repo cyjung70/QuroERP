@@ -55,6 +55,29 @@ public class LocalizationSettingRepositoryTests(AuthSchemaFixture db)
         sd.Should().BeEmpty();
     }
 
+    [DatabaseFact, Trait("Id", "BC-UT-425"), Trait("Rule", "BC-BR-425"), Trait("Rule", "BC-BR-429")]
+    public async Task FindDocumentCurrencies_CountsSalesOrdersWithLines()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<ILocalizationSettingRepository>();
+        // The USD order has no lines, so it does not count
+        await uow.Transaction.Connection!.ExecuteAsync(
+            """
+            WITH so AS (
+                INSERT INTO sd_sales_order (so_no, currency_code, exchange_rate, business_place_id, created_by, updated_by)
+                VALUES ('SO-IT', 'KRW', 1, (SELECT id FROM bc_business_place WHERE is_default), 's', 's') RETURNING id)
+            INSERT INTO sd_sales_order_line (sales_order_id, seq, tax_code_id, created_by, updated_by)
+            SELECT id, 1, (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 's', 's' FROM so;
+            INSERT INTO sd_sales_order (so_no, currency_code, exchange_rate, business_place_id, created_by, updated_by)
+            VALUES ('SO-IT2', 'USD', 1, (SELECT id FROM bc_business_place WHERE is_default), 's', 's');
+            """,
+            transaction: uow.Transaction);
+
+        var sd = await repository.FindDocumentCurrenciesAsync("SD", uow.Transaction, None);
+
+        sd.Should().Equal("KRW");
+    }
+
     [DatabaseFact, Trait("Id", "BC-UC-027-IT-03")]
     public async Task Updates_ChangeOnlyRowsWithNewValues()
     {

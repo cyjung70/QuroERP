@@ -35,7 +35,7 @@ public static class PointInTimeStock
         string itemCd, string warehouseCode, string setItemCd = "")
     {
         // Only movements that decrease stock are checked (MM-BR-602)
-        if (qty >= 0 || mode == NegativeStockMode.Allow)
+        if (qty >= 0)
         {
             return false;
         }

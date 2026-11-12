@@ -29,7 +29,7 @@ public class EntryFrameTests : ScreenContext
         page.FindComponent<QuroHeaderDetail<SamplePo, SamplePoLine>>().Instance;
 
     private static AngleSharp.Dom.IElement Button(IRenderedComponent<SamplePoEntry> page, string action) =>
-        page.Find($"[data-testid={Screen}-toolbar-{action}]");
+        page.Find($"[data-testid={Screen}-toolbar-{action}], [data-testid={Screen}-line-{action}]");
 
     private static Task Shortcut(IRenderedComponent<SamplePoEntry> page, string command)
     {
@@ -55,14 +55,29 @@ public class EntryFrameTests : ScreenContext
         var page = Open();
 
         page.FindAll(".quro-commandbar-group").Select(g => g.GetAttribute("data-group"))
-            .Should().Equal("file", "rows", "status", "output");
-        page.FindAll("[role=toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().Equal(
+            .Should().Equal("file", "status", "output");
+        page.FindAll("[data-testid=po-entry-toolbar] button").Select(b => b.GetAttribute("data-testid")).Should().Equal(
             "po-entry-toolbar-search", "po-entry-toolbar-new", "po-entry-toolbar-save",
-            "po-entry-toolbar-add-row", "po-entry-toolbar-mark-delete", "po-entry-toolbar-restore-row",
             "po-entry-toolbar-approve", "po-entry-toolbar-delete");
         Button(page, "save").ClassList.Should().Contain("quro-primary");
         Button(page, "delete").ClassList.Should().Contain("quro-danger-text");
         Button(page, "delete").TextContent.Should().Be("발주 삭제");
+    }
+
+    [Fact]
+    public void RowCommands_SitInTheLinesTitleRow_AfterTheCount_AndBeforeTheHint()
+    {
+        var page = Render<SamplePoEntry>();
+
+        page.FindAll("[data-testid=po-entry-line-commands] button").Select(b => b.GetAttribute("data-testid")).Should().Equal(
+            "po-entry-line-add-row", "po-entry-line-mark-delete", "po-entry-line-restore-row");
+        page.Find("[data-testid=po-entry-line-commands]").GetAttribute("role").Should().Be("toolbar");
+
+        var head = page.Find(".quro-entry-lines-head").Children;
+        head[0].TagName.Should().Be("H2");
+        head[1].GetAttribute("data-testid").Should().Be("po-entry-line-count");
+        head[2].GetAttribute("data-testid").Should().Be("po-entry-line-commands");
+        head[3].ClassList.Should().Contain("quro-hint");
     }
 
     [Fact]
@@ -211,7 +226,8 @@ public class EntryFrameTests : ScreenContext
     public async Task Shortcuts_RunEnabledCommands_AndIgnoreDisabledOnes()
     {
         var page = Open();
-        JSInterop.VerifyInvoke("quroEntryShortcuts");
+        // The browser ignores a key for a frame whose root is hidden; bUnit runs no JavaScript, so this only checks it gets the root
+        JSInterop.VerifyInvoke("quroEntryShortcuts").Arguments[1].Should().BeOfType<ElementReference>();
 
         await Shortcut(page, "add-row");
         Lines(page).Rows.Should().HaveCount(3);
@@ -250,9 +266,36 @@ public class EntryFrameTests : ScreenContext
         lines.Edit(0, "qty", "9").Should().BeFalse();
         lines.Edit(1, "qty", "9").Should().BeTrue();
         lines.Select(0);
-        page.Find("[data-testid=t-toolbar-mark-delete]").HasAttribute("disabled").Should().BeTrue();
+        page.Find("[data-testid=t-line-mark-delete]").HasAttribute("disabled").Should().BeTrue();
         lines.Select(1);
-        page.Find("[data-testid=t-toolbar-mark-delete]").HasAttribute("disabled").Should().BeFalse();
+        page.Find("[data-testid=t-line-mark-delete]").HasAttribute("disabled").Should().BeFalse();
+    }
+
+    [Fact, Trait("Rule", "MM-BR-107")]
+    public void ReadOnlyLine_CannotBeEdited_ButCanBeMarked()
+    {
+        var store = new SampleStore();
+        var page = Render<QuroHeaderDetail<SampleOrder, SampleLine>>(p => p
+            .Add(x => x.Title, "T")
+            .Add(x => x.TestId, "t")
+            .Add(x => x.Definition, "samples.order.entry")
+            .Add(x => x.HeaderFields, (RenderFragment<SampleOrder>)(_ => _ => { }))
+            .Add(x => x.FindColumns, (RenderFragment)(_ => { }))
+            .Add(x => x.Find, _ => Task.FromResult<IReadOnlyList<SampleOrder>>([]))
+            .Add(x => x.Load, _ => Task.FromResult<HeaderLines<SampleOrder, SampleLine>?>(null))
+            .Add(x => x.Initial, () => Task.FromResult(store.FindOrder("SO261000001") is { } o
+                ? new HeaderLines<SampleOrder, SampleLine>(o.Order, o.Lines) : null))
+            .Add(x => x.Create, () => new SampleOrder())
+            .Add(x => x.CreateLine, _ => new SampleLine())
+            .Add(x => x.Save, (o, _, _) => Task.FromResult(new HeaderLines<SampleOrder, SampleLine>(o, [])))
+            .Add(x => x.IsLineReadOnly, l => l.ItemCode == "A100"));
+        var lines = page.DataGrid<SampleLine, QuroHeaderDetail<SampleOrder, SampleLine>>("t-line");
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
+
+        lines.Edit(0, "qty", "9").Should().BeFalse();
+        lines.Edit(1, "qty", "9").Should().BeTrue();
+        lines.Select(0);
+        page.Find("[data-testid=t-line-mark-delete]").HasAttribute("disabled").Should().BeFalse("a saved line is deleted and entered again");
     }
 }
 
@@ -302,5 +345,15 @@ public class EntryPartsTests : ScreenContext
         chip.Find("span").ClassList.Should().Contain(["quro-chip", css]);
         chip.Find("span").GetAttribute("data-status").Should().Be("DR");
         chip.Find("span").TextContent.Should().Be("Draft");
+    }
+
+    // bUnit has no Blazor JS wrapping. A function that wraps its result itself is wrapped again, so calling dispose on it
+    // throws when the frame goes, which ends the circuit. Only a browser shows the failure; this keeps the pattern out.
+    [Fact]
+    public void JsFunctions_ReturnPlainObjects_ForIJSObjectReferenceCallers()
+    {
+        var js = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "QuroErp.Web", "wwwroot", "js", "quro.js"));
+
+        js.Should().NotContain("DotNet.createJSObjectReference");
     }
 }

@@ -32,6 +32,15 @@ public sealed class ShipmentHeader
     public string? Remarks { get; set; }
     public string? SalesInvoiceNo { get; set; }
 
+    /// <summary>The list's calculated amount, shown only in the find dialog.</summary>
+    public decimal ShipAmt { get; set; }
+
+    /// <summary>A ship-then-bill line has been billed (SD-BR-168).</summary>
+    public bool HasBilledLines { get; set; }
+
+    /// <summary>The ship-and-bill invoice has a receipt or credit applied (SD-BR-104, SD-BR-167).</summary>
+    public bool InvoiceHasPayments { get; set; }
+
     public DateTimeOffset? UpdatedAt { get; set; }
     public DateTimeOffset? CreatedAt { get; set; }
     public string? CreatedBy { get; set; }
@@ -42,7 +51,10 @@ public sealed class ShipmentHeader
 
     public QuroAudit ToAudit() => new(CreatedBy, CreatedAt, UpdatedBy, UpdatedAt, null, null);
 
-    /// <summary>A row of the find dialog: number, date, customer, status and invoice.</summary>
+    /// <summary>A ship-and-bill shipment whose invoice was paid no longer changes; a bill-first shipment always can (SD-BR-177).</summary>
+    public bool InvoiceLocksShipment => BillingFlow == ShipmentFlows.ShipAndBill && InvoiceHasPayments;
+
+    /// <summary>A row of the find dialog: number, date, customer, status and amount.</summary>
     public static ShipmentHeader From(ShipmentSummaryDto shipment) => new()
     {
         Id = shipment.Id,
@@ -54,6 +66,7 @@ public sealed class ShipmentHeader
         ShipDt = shipment.ShipDt,
         CurrencyCode = shipment.CurrencyCode,
         SalesInvoiceNo = shipment.SalesInvoiceNo,
+        ShipAmt = shipment.ShipAmt,
     };
 
     /// <param name="warehouseCodes">Warehouse codes by id.</param>
@@ -80,6 +93,8 @@ public sealed class ShipmentHeader
         ShipPhone = shipment.ShipPhone,
         Remarks = shipment.Remarks,
         SalesInvoiceNo = shipment.SalesInvoiceNo,
+        HasBilledLines = shipment.Lines.Any(l => l.BilledQty != 0),
+        InvoiceHasPayments = shipment.InvoiceHasPayments,
         UpdatedAt = shipment.UpdatedAt,
         CreatedAt = shipment.CreatedAt,
         CreatedBy = shipment.CreatedBy,
@@ -135,26 +150,36 @@ public sealed class ShipmentLine
     public decimal? ShipPrc { get; set; }
     public decimal? DcRate { get; set; }
     public long? TaxCodeId { get; set; }
-    public string? TaxCode { get; set; }
-    public decimal? ShipAmt { get; set; }
+    public decimal? RemainingQty { get; set; }
     public decimal BilledQty { get; set; }
     public decimal? OnhandQty { get; set; }
     public long? SalesOrderLineId { get; set; }
+    public string? SoNo { get; set; }
     public long? SalesInvoiceLineId { get; set; }
-
-    /// <summary>The source line: order number-line or invoice number-line; empty for a direct line.</summary>
-    public string? Source { get; set; }
+    public string? DnNo { get; set; }
 
     /// <summary>A saved line is not changed: it is deleted and added again (SD-BR-171).</summary>
     public bool IsSaved => Id != 0;
 
     /// <summary>
-    /// A line that may be marked for delete: any line, except a billed line of a ship-then-bill shipment (SD-BR-168). The other
-    /// flows check their invoice on save (SD-BR-104).
+    /// A line that may be marked for delete: any line, except a billed line of a ship-then-bill shipment (SD-BR-168) and the lines of
+    /// a ship-and-bill shipment whose invoice was paid (SD-BR-104, SD-BR-167). Bill-first shipments are free (SD-BR-177).
     /// </summary>
-    public bool IsRemovable(string? billingFlow) => billingFlow != ShipmentFlows.ShipThenBill || BilledQty == 0;
+    public bool IsRemovable(ShipmentHeader? shipment) => shipment is null
+        || (!shipment.InvoiceLocksShipment && (shipment.BillingFlow != ShipmentFlows.ShipThenBill || BilledQty == 0));
 
-    public static ShipmentLine From(ShipmentLineDto line, IReadOnlyDictionary<long, string> taxCodes) => new()
+    /// <summary>
+    /// The item and price of an imported line are the source line's (SD-BR-167, SD-BR-175), and a bill-first line stays in the
+    /// consignment warehouse (SD-BR-176). A direct line has none of these locks (SD-BR-173).
+    /// </summary>
+    public bool IsCellLocked(string field)
+    {
+        var imported = SalesOrderLineId is not null || SalesInvoiceLineId is not null;
+        return (imported && (Is(field, nameof(ItemCd)) || Is(field, nameof(ShipPrc))))
+            || (SalesInvoiceLineId is not null && Is(field, nameof(WarehouseCode)));
+    }
+
+    public static ShipmentLine From(ShipmentLineDto line) => new()
     {
         Id = line.Id,
         Seq = line.Seq,
@@ -170,50 +195,50 @@ public sealed class ShipmentLine
         ShipPrc = line.ShipPrc,
         DcRate = line.DcRate,
         TaxCodeId = line.TaxCodeId,
-        TaxCode = taxCodes.GetValueOrDefault(line.TaxCodeId),
+        RemainingQty = line.RemainingQty,
         BilledQty = line.BilledQty,
         OnhandQty = line.OnhandQty,
         SalesOrderLineId = line.SalesOrderLineId,
+        SoNo = line.SoNo,
         SalesInvoiceLineId = line.SalesInvoiceLineId,
-        Source = SourceOf(line.SoNo, line.SoSeq) ?? SourceOf(line.DnNo, line.DnSeq),
+        DnNo = line.DnNo,
     };
 
-    /// <summary>An order line left to ship, with its remaining qty as the ship qty (SD-BR-172).</summary>
-    public static ShipmentLine From(
-        OpenSalesOrderDto order, OpenSalesOrderLineDto line, long? warehouseId, string? warehouseCode, IReadOnlyDictionary<long, string> taxCodes) => new()
-        {
-            ItemId = line.ItemId,
-            ItemCd = line.ItemCd,
-            ItemName = line.ItemName,
-            Unit = line.Unit,
-            WarehouseId = warehouseId,
-            WarehouseCode = warehouseCode,
-            ShipQty = line.RemainingQty,
-            ShipPrc = line.SoPrc,
-            DcRate = line.DcRate,
-            TaxCodeId = line.TaxCodeId,
-            TaxCode = taxCodes.GetValueOrDefault(line.TaxCodeId),
-            SalesOrderLineId = line.SalesOrderLineId,
-            Source = SourceOf(order.SoNo, line.Seq),
-        };
+    /// <summary>An order line left to ship; the ship qty is what the import dialog says, by default the remaining qty (SD-BR-172).</summary>
+    public static ShipmentLine From(OpenSalesOrderDto order, OpenSalesOrderLineDto line, decimal shipQty, long? warehouseId, string? warehouseCode) => new()
+    {
+        ItemId = line.ItemId,
+        ItemCd = line.ItemCd,
+        ItemName = line.ItemName,
+        Unit = line.Unit,
+        WarehouseId = warehouseId,
+        WarehouseCode = warehouseCode,
+        ShipQty = shipQty,
+        ShipPrc = line.SoPrc,
+        DcRate = line.DcRate,
+        TaxCodeId = line.TaxCodeId,
+        RemainingQty = line.RemainingQty,
+        SalesOrderLineId = line.SalesOrderLineId,
+        SoNo = order.SoNo,
+    };
 
     /// <summary>A bill-first invoice line left to ship, from the consignment warehouse (SD-BR-175, SD-BR-176).</summary>
-    public static ShipmentLine From(
-        UnshippedInvoiceLineDto line, long? consignmentId, string? consignmentCode, IReadOnlyDictionary<long, string> taxCodes) => new()
-        {
-            ItemId = line.ItemId,
-            ItemCd = line.ItemCd,
-            ItemName = line.ItemName,
-            WarehouseId = consignmentId,
-            WarehouseCode = consignmentCode,
-            ShipQty = line.UnshippedQty,
-            ShipPrc = line.Prc,
-            DcRate = line.DcRate,
-            TaxCodeId = line.TaxCodeId,
-            TaxCode = taxCodes.GetValueOrDefault(line.TaxCodeId),
-            SalesInvoiceLineId = line.SalesInvoiceLineId,
-            Source = SourceOf(line.DnNo, line.Seq),
-        };
+    public static ShipmentLine From(UnshippedInvoiceLineDto line, decimal shipQty, long? consignmentId, string? consignmentCode) => new()
+    {
+        ItemId = line.ItemId,
+        ItemCd = line.ItemCd,
+        ItemName = line.ItemName,
+        Unit = line.Unit,
+        WarehouseId = consignmentId,
+        WarehouseCode = consignmentCode,
+        ShipQty = shipQty,
+        ShipPrc = line.Prc,
+        DcRate = line.DcRate,
+        TaxCodeId = line.TaxCodeId,
+        RemainingQty = line.UnshippedQty,
+        SalesInvoiceLineId = line.SalesInvoiceLineId,
+        DnNo = line.DnNo,
+    };
 
     /// <summary>
     /// Saved lines go back with their id and stored values; price and tax code are sent for direct lines only, the others take the
@@ -228,18 +253,11 @@ public sealed class ShipmentLine
             direct || IsSaved ? TaxCodeId : null, lotNo is null ? null : LotId, lotNo, SalesOrderLineId, SalesInvoiceLineId);
     }
 
-    private static string? SourceOf(string? number, int? seq) =>
-        number is null ? null : seq is { } s ? string.Create(CultureInfo.InvariantCulture, $"{number}-{s}") : number;
+    private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 }
 
-/// <summary>A bill-first invoice with lines left to ship, a row of the invoice import dialog (SD-BR-175).</summary>
-public sealed record ShipmentInvoiceChoice(string DnNo, string CurrencyCode, decimal ExchangeRate, IReadOnlyList<UnshippedInvoiceLineDto> Lines)
-{
-    /// <summary>The lines grouped by invoice, in the order the API returned them.</summary>
-    public static IReadOnlyList<ShipmentInvoiceChoice> Of(IEnumerable<UnshippedInvoiceLineDto> lines) =>
-        [.. lines.GroupBy(l => l.SalesInvoiceId)
-            .Select(g => new ShipmentInvoiceChoice(g.First().DnNo, g.First().CurrencyCode, g.First().ExchangeRate, [.. g.OrderBy(l => l.Seq)]))];
-}
+/// <summary>An order line in the order import dialog, with the order whose header the first import copies (SD-BR-170, SD-BR-172).</summary>
+public sealed record ShipmentOrderLineChoice(OpenSalesOrderDto Order, OpenSalesOrderLineDto Line);
 
 /// <summary>The billing flows of a shipment (SD-BR-174).</summary>
 public static class ShipmentFlows
@@ -261,17 +279,21 @@ public static class ShipmentStatus
 
     public static ChipKind ChipOf(string? status) => status switch
     {
-        Open => ChipKind.Brand,
         PartlyBilled => ChipKind.Warn,
         Billed => ChipKind.Ok,
+        Void => ChipKind.Danger,
         _ => ChipKind.Neutral,
     };
 
-    /// <summary>A new shipment, or a stored one that is not void.</summary>
-    public static bool CanSave(ShipmentHeader shipment) => shipment.Status != Void;
+    /// <summary>A new shipment, or a stored one that is not void and whose ship-and-bill invoice has no payment (SD-BR-104, SD-BR-167).</summary>
+    public static bool CanSave(ShipmentHeader shipment) => shipment.Status != Void && !shipment.InvoiceLocksShipment;
 
-    /// <summary>A stored shipment that is not void (SD-BR-169); the API checks billing and payments.</summary>
-    public static bool CanVoid(ShipmentHeader shipment) => shipment.IsSaved && shipment.Status != Void;
+    /// <summary>
+    /// A stored shipment that can still change (SD-BR-169) without billed lines of a ship-then-bill flow (SD-BR-168). A bill-first
+    /// shipment voids whatever its invoice has received (SD-BR-177).
+    /// </summary>
+    public static bool CanVoid(ShipmentHeader shipment) =>
+        shipment.IsSaved && CanSave(shipment) && !(shipment.BillingFlow == ShipmentFlows.ShipThenBill && shipment.HasBilledLines);
 }
 
 /// <summary>The number formats of the shipment line columns with the document decimals.</summary>
@@ -280,10 +302,10 @@ public static class ShipmentFormats
     public static IReadOnlyDictionary<string, string> Of(SalesOrderDecimals decimals) => new Dictionary<string, string>
     {
         ["shipQty"] = N(decimals.Qty),
+        ["remainingQty"] = N(decimals.Qty),
         ["billedQty"] = N(decimals.Qty),
         ["onhandQty"] = N(decimals.Qty),
         ["shipPrc"] = N(decimals.Price),
-        ["shipAmt"] = N(decimals.Amount),
     };
 
     private static string N(int decimals) => "N" + decimals.ToString(CultureInfo.InvariantCulture);

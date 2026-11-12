@@ -131,7 +131,7 @@ public sealed record SalesInvoiceCancellationDto(long CreditMemoId, string CmNo,
 /// customer's currency and the rate of the invoice date); shipments and orders bring theirs (SD-BR-131). WarehouseId is the
 /// default of BILL_THEN_SHIP and direct lines (MM-BR-703). The customer (SD-BR-119) and DnDt do not change after the first save.
 /// UpdatedAt is required on PUT. UpdateCustomerShipTo and ConfirmCreditLimit answer SD-W-009 and SD-W-309 (SD-BR-117, SD-BR-309):
-/// null asks with 422 and confirmField.
+/// null asks with 422 and confirmField. TaxExemptionCertNo is the certificate the user entered; null keeps the customer's (SD-BR-133).
 /// </summary>
 public sealed record SaveSalesInvoiceRequest(
     long CustomerId,
@@ -157,7 +157,8 @@ public sealed record SaveSalesInvoiceRequest(
     IReadOnlyList<SaveSalesInvoiceLineRequest> Lines,
     DateTimeOffset? UpdatedAt,
     bool? UpdateCustomerShipTo = null,
-    bool? ConfirmCreditLimit = null);
+    bool? ConfirmCreditLimit = null,
+    string? TaxExemptionCertNo = null);
 
 /// <summary>
 /// One line. ShipmentLineId bills a SHIP_THEN_BILL shipment line (SD-BR-115), SalesOrderLineId a BILL_THEN_SHIP order line

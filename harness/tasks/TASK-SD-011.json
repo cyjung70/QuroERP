@@ -31,13 +31,18 @@
     "TASK-CORE-005",
     "TASK-CORE-006",
     "TASK-CORE-007",
-    "TASK-CORE-033"
+    "TASK-CORE-033",
+    "TASK-SD-063"
   ],
   "acceptance": [
     "명세 REST API 구현",
     "명세 테스트 시나리오 통과",
     "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)",
-    "'상세 보기' 토글: 켜면 상세 리포트의 열·합계·정렬·PDF와 같다. 합쳐진 상세 태스크의 명세 테스트 시나리오 포함"
+    "'상세 보기' 토글: 켜면 상세 리포트의 열·합계·정렬·PDF와 같다. 합쳐진 상세 태스크의 명세 테스트 시나리오 포함",
+    "화면 경로 상수 `ScreenPaths.OpenSalesOrderReport` = `/sd/report-open-sales-order`로 API 권한을 걸고, 화면 메뉴를 새 Seed 스크립트로 더한다",
+    "열은 고객·수주 금액·출하 금액·남은 금액이다. 출하 금액은 수주 줄에서 나간 출하 줄 기준이고 송장 금액이 아니다. 상세의 수량 열은 수주·출하·남은 수량이다 (SD-BR-960·961)",
+    "고객 행을 누르면 그 고객으로 '상세 보기'를 켠다. 토글만 켜면 조회 조건 범위의 전체 고객이다",
+    "엑셀 내려받기: 화면과 같은 조건·열 (`.xlsx`, SD-BR-969)"
   ],
   "estimateHours": 2,
   "status": "todo"
