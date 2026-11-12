@@ -16,7 +16,7 @@
 {
     <QuroMultiGrid TRow="CompanyMenuRow" Title="@L["Bc.CompanyMenu.Title"]" TestId="company-menu" Path="@L["Menu.G5AD"]" LoadOnStart="true"
                    Definition="bc.menu.company" UpperCaseFields="UpperCaseFields"
-                   Load="LoadAsync" Save="SaveAsync" CreateRow="CompanyMenuRow.New" CanWrite="_canEdit">
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="CompanyMenuRow.New" CanWrite="_canEdit" OnReset="ResetSearch">
         <SearchContent>
             <QuroText Label="@L["Bc.CompanyMenu.MenuCode"]" @bind-Value="_menuCode" TextCase="TextCase.Upper" TestId="company-menu-search-menu-code" />
             <QuroText Label="@L["Bc.CompanyMenu.Name"]" Value="@_menuName" LockMode="LockMode.Always" TestId="company-menu-search-name" />
@@ -51,6 +51,8 @@
         _types = new[] { "P", "U", "M" }.Select(t => new ComboOption(t, TypeName(t)!)).ToList();
         _ready = true;
     }
+
+    private void ResetSearch() => _menuCode = _menuName = null;
 
     private async Task<IReadOnlyList<CompanyMenuRow>> LoadAsync()
     {

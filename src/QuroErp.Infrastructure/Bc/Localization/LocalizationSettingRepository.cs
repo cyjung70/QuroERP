@@ -24,12 +24,15 @@ internal sealed class LocalizationSettingRepository : ILocalizationSettingReposi
         """;
 
     // Document lines of each module and their document currency (BC-BR-425, BC-BR-429). The MVP has no quotation; the shipment
-    // issues stock and the sales invoice bills it, and the goods receipt is also the purchase invoice. Lines of documents without a
+    // issues stock and the sales invoice bills it, and the supplier invoice bills the goods receipt. Lines of documents without a
     // currency answer NULL. sd_production_result_line is the SD simple result for sales BOM (SET) items, not a production (PP) document.
     private const string SelectMmCurrencies = """
         SELECT h.currency_code FROM mm_purchase_order h WHERE EXISTS (SELECT 1 FROM mm_purchase_order_line l WHERE l.purchase_order_id = h.id)
         UNION
         SELECT h.currency_code FROM mm_goods_receipt h WHERE EXISTS (SELECT 1 FROM mm_goods_receipt_line l WHERE l.goods_receipt_id = h.id)
+        UNION
+        SELECT h.currency_code FROM mm_supplier_invoice h
+        WHERE EXISTS (SELECT 1 FROM mm_supplier_invoice_line l WHERE l.supplier_invoice_id = h.id)
         UNION
         SELECT NULL WHERE EXISTS (SELECT 1 FROM mm_goods_issue_line)
             OR EXISTS (SELECT 1 FROM mm_goods_return_line)

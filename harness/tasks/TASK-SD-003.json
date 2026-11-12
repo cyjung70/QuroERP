@@ -82,8 +82,9 @@
     "명세 테스트 시나리오 통과",
     "관련 BR마다 테스트",
     "BC-BR-425 재검토: 이 문서 줄을 문서 통화 국가 기준으로 단가 자릿수 사용 여부 판단에 넣는다 (`LocalizationSettingRepository`. 지금은 통화가 없어 회사 국가 행만 사용 중으로 본다)",
+    "견적 가져오기(`GET /api/sd/sales-orders/open-quotation-lines`, 수주 줄의 견적 줄 연결·전환 수량, SD-BR-657·658)는 TASK-SD-067이 한다. 이 태스크는 견적 없이 수주를 저장한다",
     "장바구니에서 줄 가져오기와 저장 때 장바구니 비우기(SD-BR-011)는 TASK-SD-069가 한다. 이 태스크는 장바구니 없이 수주를 저장한다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

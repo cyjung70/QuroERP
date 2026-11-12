@@ -17,16 +17,26 @@ public class SalesPriceRulesTests
     [Theory, Trait("Id", "SD-UT-409")]
     [InlineData(" abc ", "ABC")]
     [InlineData("PL001", "PL001")]
-    public void Level_IsTrimmedUpperCaseUpTo5(string input, string expected)
+    [InlineData("ABCDEF", "ABCDEF")]
+    [InlineData(" Blue River Market ", "BLUE RIVER MARKET")]
+    public void Level_IsTrimmedUpperCase(string input, string expected)
     {
         SalesPriceRules.NormalizeLevel(input).Should().Be(expected);
     }
 
     [Fact, Trait("Id", "SD-UT-409")]
-    public void Level_EmptyIsRequired_LongerThan5IsSdE403()
+    public void Level_IsTheCustomerPriceLevelLength()
+    {
+        SalesPriceRules.LevelMaxLength.Should().Be(100);
+        SalesPriceRules.NormalizeLevel(new string('A', 100)).Should().HaveLength(100);
+    }
+
+    [Fact, Trait("Id", "SD-UT-409")]
+    public void Level_EmptyIsRequired_LongerThan100IsSdE403()
     {
         ErrorOf(() => SalesPriceRules.NormalizeLevel("  ")).Code.Should().Be(SalesPriceRules.RequiredCode);
-        ErrorOf(() => SalesPriceRules.NormalizeLevel("ABCDEF")).Code.Should().Be(SalesPriceRules.KeyCode);
+        ErrorOf(() => SalesPriceRules.NormalizeLevel(null)).Code.Should().Be(SalesPriceRules.RequiredCode);
+        ErrorOf(() => SalesPriceRules.NormalizeLevel(new string('A', 101))).Code.Should().Be(SalesPriceRules.KeyCode);
     }
 
     [Fact, Trait("Id", "SD-UT-403")]

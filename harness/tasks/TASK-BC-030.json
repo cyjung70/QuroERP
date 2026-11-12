@@ -4,6 +4,8 @@
   "title": "구매 단가 화면 (M)",
   "module": "BC",
   "layer": [
+    "Domain",
+    "Infrastructure",
     "Blazor"
   ],
   "screenType": "M",
@@ -15,9 +17,11 @@
     "MM-BR-902",
     "MM-BR-903",
     "MM-BR-904",
-    "MM-BR-905"
+    "MM-BR-905",
+    "MM-BR-854"
   ],
   "skills": [
+    "quro-dapper",
     "quro-blazor",
     "quro-unit-test",
     "quro-code-review"
@@ -29,8 +33,13 @@
   "acceptance": [
     "화면유형 공통 컴포넌트 사용",
     "명세 화면 필드 반영",
-    "ko·en 리소스"
+    "ko·en 리소스",
+    "조회 조건은 가격 그룹(필수, 대문자, 100자 이하 — 공급자 가격 그룹과 같은 값) (MM-BR-901)",
+    "MM-BR-901 변경: Domain `PurchasePriceRules.GroupMaxLength`를 5에서 100으로(공급자 가격 그룹 길이와 같다). 조회·일괄 저장 API가 100자까지 받는다. 단위 테스트: 6자 이상 그룹 통과, 101자 MM-E-901, 빈 그룹 Common-E-005",
+    "MM-BR-854 변경: 공급자 저장 때 입력한 가격 그룹을 trim·대문자로 저장한다 (이름 기본값은 이미 대문자). 단위 테스트: 소문자가 섞인 입력이 대문자로 저장된다",
+    "새 마이그레이션 스크립트(`Scripts/Schema/`, 판매 단가 BC-028의 `0416_price_level_upper_case.sql` 뒤 번호): 기존 `bc_vendor.vendor_price`와 `bc_purchase_price.vendor_price`를 trim·대문자로 맞춘다. 대문자로 바꾸면 겹치는 단가 행이 있으면 이미 대문자인 행을 남긴다",
+    "확인: 시연 공급자의 가격 그룹(공급자 이름)으로 조회·수정되고, 발주의 기본 단가가 바뀐 단가를 쓴다"
   ],
-  "estimateHours": 2,
+  "estimateHours": 3,
   "status": "todo"
 }

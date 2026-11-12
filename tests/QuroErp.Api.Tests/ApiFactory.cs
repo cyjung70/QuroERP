@@ -715,19 +715,20 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public sealed class InMemoryInventorySettingRepository : IInventorySettingRepository
     {
-        public InventorySettingRow Row { get; private set; } = new("DENY", new DateTimeOffset(2026, 10, 25, 0, 0, 0, TimeSpan.Zero), "system");
+        public InventorySettingRow Row { get; private set; } = new("DENY", "DENY", false, new DateTimeOffset(2026, 10, 25, 0, 0, 0, TimeSpan.Zero), "system");
 
         public Task<InventorySettingRow?> GetAsync(IDbTransaction transaction, CancellationToken cancellationToken) =>
             Task.FromResult<InventorySettingRow?>(Row);
 
         public Task<InventorySettingRow?> UpdateAsync(
-            string negativeStockMode, DateTimeOffset expectedUpdatedAt, string updatedBy, IDbTransaction transaction, CancellationToken cancellationToken)
+            string negativeStockMode, string overReceiptMode, bool allowCostAdjustmentEdit, DateTimeOffset expectedUpdatedAt, string updatedBy,
+            IDbTransaction transaction, CancellationToken cancellationToken)
         {
             if (expectedUpdatedAt != Row.UpdatedAt)
             {
                 return Task.FromResult<InventorySettingRow?>(null);
             }
-            Row = new InventorySettingRow(negativeStockMode, Row.UpdatedAt.AddSeconds(1), updatedBy);
+            Row = new InventorySettingRow(negativeStockMode, overReceiptMode, allowCostAdjustmentEdit, Row.UpdatedAt.AddSeconds(1), updatedBy);
             return Task.FromResult<InventorySettingRow?>(Row);
         }
     }

@@ -74,7 +74,8 @@ public class CodeMajorScreenTests : BunitContext
     {
         var page = RenderAs("admin");
 
-        page.Find("[data-testid=code-major-toolbar-new]").Click();
+        Grid(page).Select(2);
+        page.Find("[data-testid=code-major-toolbar-add-row]").Click();
 
         Enumerable.Range(0, 3).Should().OnlyContain(i => Grid(page).IsReadOnly(i, "majorCode"));
         Grid(page).IsReadOnly(3, "majorCode").Should().BeFalse();
@@ -92,8 +93,10 @@ public class CodeMajorScreenTests : BunitContext
 
         Grid(page).Edit(0, "nameKo", "임시");
         Grid(page).Toggle(0, "useYn");
-        Grid(page).Click(1, "deleteRow");
-        page.Find("[data-testid=code-major-toolbar-new]").Click();
+        Grid(page).Select(1);
+        page.Find("[data-testid=code-major-toolbar-mark-delete]").Click();
+        Grid(page).Select(2);
+        page.Find("[data-testid=code-major-toolbar-add-row]").Click();
         Grid(page).Edit(3, "majorCode", "ship_via");
         Grid(page).Edit(3, "nameEn", "Ship Via");
 
@@ -122,7 +125,7 @@ public class CodeMajorScreenTests : BunitContext
     public void NewRow_WithoutCodeOrEnName_IsNotSent()
     {
         var page = RenderAs("admin");
-        page.Find("[data-testid=code-major-toolbar-new]").Click();
+        page.Find("[data-testid=code-major-toolbar-add-row]").Click();
 
         page.Find("[data-testid=code-major-toolbar-save]").Click();
 
@@ -174,8 +177,9 @@ public class CodeMajorScreenTests : BunitContext
 
         // The handlers do nothing either
         Grid(page).Edit(0, "nameEn", "X").Should().BeFalse();
-        page.Find("[data-testid=code-major-toolbar-new]").Click();
-        Grid(page).Click(0, "deleteRow");
+        page.Find("[data-testid=code-major-toolbar-add-row]").Click();
+        Grid(page).Select(0);
+        page.Find("[data-testid=code-major-toolbar-mark-delete]").Click();
         page.Find("[data-testid=code-major-toolbar-save]").Click();
         Grid(page).Rows.Should().HaveCount(rows);
         Grid(page).Column("rowState").Should().OnlyContain(s => s.Length == 0);

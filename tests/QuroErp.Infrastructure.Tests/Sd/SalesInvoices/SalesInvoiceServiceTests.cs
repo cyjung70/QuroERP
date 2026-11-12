@@ -1,14 +1,17 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Dapper;
 using FluentAssertions;
 using Npgsql;
 using QuroErp.Application.Bc.BusinessPlaces;
+using QuroErp.Application.Bc.Companies;
 using QuroErp.Application.Bc.Localization;
 using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
+using QuroErp.Application.Common.Printing;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Application.Sd.Customers;
@@ -380,6 +383,88 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
         (await CreditMemoAsync(cm.CreditMemoId)).TotDnAmt.Should().Be(-210m, "the invoice's 5%, not the 8% of the Credit Memo date");
     }
 
+    [DatabaseFact, Trait("Id", "SD-UC-003-T05"), Trait("Id", "SD-UT-115"), Trait("Id", "SD-UT-131"), Trait("Id", "SD-UT-109")]
+    public async Task TwoUsdShipments_AreBilledOnOneInvoice_InTheirCurrency_WithTheBalanceEqualToTheTotal()
+    {
+        var m = await MastersAsync(ShipThenBill);
+        await ReceiveAsync(m.Item, m.Main, 10m);
+        var first = await Shipments.CreateAsync(ShipmentRequest(m, ShipmentLine(m.Item, 2m)), "kim", None);
+        var second = await Shipments.CreateAsync(ShipmentRequest(m, ShipmentLine(m.Item, 1m)), "kim", None);
+
+        // The request's currency is ignored: the shipments give it (SD-BR-131)
+        var inv = await Service.CreateAsync(
+            Request(m, FromShipment(first.Lines[0].Id, 2m), FromShipment(second.Lines[0].Id, 1m)) with { CurrencyCode = "KRW", ExchangeRate = 1300m },
+            "kim", None);
+
+        (inv.CurrencyCode, inv.ExchangeRate).Should().Be(("USD", 1m));
+        inv.Lines.Select(l => (l.ShipNo, l.DnQty)).Should().Equal((first.ShipNo, 2m), (second.ShipNo, 1m));
+        (inv.SupplyAmt, inv.TaxAmt, inv.TotDnAmt, inv.BalAmt, inv.TotBaseAmt).Should().Be((300m, 30m, 330m, 330m, 330m));
+        (await ShipmentLineAsync(first.Lines[0].Id)).Should().Be((2m, "BL"));
+        (await ShipmentLineAsync(second.Lines[0].Id)).Should().Be((1m, "BL"));
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UT-142"), Trait("Id", "SD-UT-143"), Trait("Rule", "SD-BR-175"), Trait("Rule", "SD-BR-176"), Trait("Rule", "SD-BR-177")]
+    public async Task BillFirstInvoice_ShippedByTheShipmentApi_ThenTheShipmentVoid_GivesTheShippedQtyAndConsignmentStockBack()
+    {
+        var m = await MastersAsync(BillThenShip);
+        await ReceiveAsync(m.Item, m.Main, 6m);
+        var so = await OrderAsync(m, BillThenShip, 6m, 100m);
+        var inv = await Service.CreateAsync(Request(m, FromOrder(so.Line, 6m)), "kim", None);
+
+        var sh = await Shipments.CreateAsync(ShipmentRequest(m, ShipmentLine(m.Item, 4m) with { SalesInvoiceLineId = inv.Lines[0].Id }), "kim", None);
+
+        (sh.BillingFlow, sh.Lines[0].WarehouseId).Should().Be((BillThenShip, m.Consignment));
+        (await OnHandAsync(m.Item, m.Consignment)).Should().Be(2m);
+        (await Service.GetAsync(inv.Id, None)).Lines[0].Should().Match<SalesInvoiceLineDto>(l => l.ShippedQty == 4m && l.UnshippedQty == 2m);
+
+        await Shipments.VoidAsync(sh.Id, sh.UpdatedAt, "kim", None);
+
+        (await OnHandAsync(m.Item, m.Consignment)).Should().Be(6m);
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(0m);
+        var after = await Service.GetAsync(inv.Id, None);
+        after.Lines[0].Should().Match<SalesInvoiceLineDto>(l => l.ShippedQty == 0m && l.UnshippedQty == 6m);
+        (after.Status, after.TotDnAmt).Should().Be(("OP", 600m), "the shipment does not bill (SD-BR-176)");
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UC-003-T07"), Trait("Id", "SD-UT-134")]
+    public async Task TaxInvoice_IsNotFoundOutsideKr_PrintsForABusinessCustomer_AndIsRefusedForAnIndividual()
+    {
+        var business = await MastersAsync(ShipThenBill);
+        var individual = await MastersAsync(ShipThenBill);
+        await ExecuteAsync(
+            "UPDATE bc_customer SET tax_party_type = 'BUSINESS', business_reg_no = '1234567890', ceo_name = 'Demo Ceo' WHERE id = @Id", business.Customer);
+        await ExecuteAsync("UPDATE bc_customer SET tax_party_type = 'INDIVIDUAL' WHERE id = @Id", individual.Customer);
+        await ExecuteAsync(
+            "UPDATE bc_business_place SET business_reg_no = '9876543210', ceo_name = 'Demo Owner' WHERE is_default AND id > @Id", 0);
+        var toBusiness = await Service.CreateAsync(Request(business, Direct(business.Service, 1m, 100m, business.Vat10)), "kim", None);
+        var toIndividual = await Service.CreateAsync(Request(individual, Direct(individual.Service, 1m, 100m, individual.Vat10)), "kim", None);
+
+        var outsideKr = () => Print.TaxInvoicePdfAsync(toBusiness.Id, CultureInfo.InvariantCulture, None);
+        await outsideKr.Should().ThrowAsync<NotFoundException>("a US company has no tax invoice");
+
+        await ExecuteAsync(
+            """
+            INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
+            SELECT 'Demo Co', 'KR', 'KRW', 'ko', 'Asia/Seoul', 't', 't' WHERE @Id > 0
+            """, 1);
+        try
+        {
+            var file = await Print.TaxInvoicePdfAsync(toBusiness.Id, CultureInfo.InvariantCulture, None);
+            var refused = () => Print.TaxInvoicePdfAsync(toIndividual.Id, CultureInfo.InvariantCulture, None);
+
+            (file.FileName, file.ContentType).Should().Be((toBusiness.DnNo + "-tax-invoice.pdf", SalesInvoicePrintService.PdfType));
+            (await refused.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(SalesInvoiceRules.TaxInvoiceCode);
+        }
+        finally
+        {
+            await ExecuteAsync("DELETE FROM bc_company WHERE country_code = 'KR' AND id > @Id", 0);
+        }
+    }
+
+    private SalesInvoicePrintService Print => new(
+        Service, db.Get<ISalesInvoiceRepository>(), db.Get<ICustomerRepository>(), db.Get<ICompanyRepository>(), db.Get<IBusinessPlaceRepository>(),
+        db.Get<ILocalizationRepository>(), new FakeDocument(), db.Get<IUnitOfWorkFactory>());
+
     private static SaveSalesInvoiceRequest Request(Masters m, params SaveSalesInvoiceLineRequest[] lines) =>
         new(m.Customer, DnDt, null, null, null, null, "DEMO_A", null, null, null, "Ship " + m.Key, "1 Main St", null, "Dallas", "TX", "75001",
             "USA", null, null, null, lines, null, UpdateCustomerShipTo: false);
@@ -575,6 +660,16 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
 
     [GeneratedRegex(@"^CM2611\d{6}$")]
     private static partial Regex CreditMemoNumber();
+
+    // The PDF itself is tested in SalesInvoiceDocumentTests; here only whether it is printed
+    private sealed class FakeDocument : ISalesInvoiceDocument
+    {
+        public Task<byte[]> SalesInvoicePdfAsync(SalesInvoicePrint print, PrintPaper paper, CultureInfo culture, CancellationToken cancellationToken) =>
+            Task.FromResult<byte[]>([1]);
+
+        public Task<byte[]> TaxInvoicePdfAsync(TaxInvoicePrint print, PrintPaper paper, CultureInfo culture, CancellationToken cancellationToken) =>
+            Task.FromResult<byte[]>([1]);
+    }
 
     private sealed class FixedClock : IBusinessClock
     {

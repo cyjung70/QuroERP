@@ -3,6 +3,8 @@
 Sd.Customer.State: HIDDEN
 Sd.Customer.ZipCode: REQUIRED
 Sd.Customer.ShipState: HIDDEN
+Sd.SalesOrder.ShipState: HIDDEN
+Sd.Shipment.ShipState: HIDDEN
 Sd.Customer.BusinessRegNo: OPTIONAL
 Sd.Customer.CeoName: OPTIONAL
 Sd.Customer.BusinessType: OPTIONAL

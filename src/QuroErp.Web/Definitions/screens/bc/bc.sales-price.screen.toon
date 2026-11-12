@@ -1,0 +1,32 @@
+# BC-UC-014 sales prices (TASK-BC-028), screen type M: the rows of one price level, saved together (SD-BR-409). The item code
+# is a lookup of Inventory items in use that fills the name and the standard sales price; the price formats come from the
+# localization settings.
+screen:
+  id: bc.sales-price
+  module: BC
+  title: Bc.SalesPrice.Title
+  version: 1
+  api: /api/bc/sales-prices
+  key: id
+  layout: grid
+  perm:
+    read: BC.Read
+    write: BC.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: prices
+    bind: prices
+    rowKey: id
+    deletedRows: strike
+    columns[4]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      itemCd,Bc.SalesPrice.ItemCd,text,150,true,true,"",bcSalesPriceItem,false,false
+      itemName,Bc.SalesPrice.ItemName,text,320,false,false,"","",false,false
+      salesPrc,Bc.SalesPrice.SalesPrc,number,130,true,true,N2,"",false,false
+      stdPrc,Bc.SalesPrice.StdPrc,number,130,false,false,N2,"",false,false
+    rules[1]{on,action,target,expr}:
+      itemCd.change,lookup,"itemName|stdPrc","bcSalesPriceItem.all()"

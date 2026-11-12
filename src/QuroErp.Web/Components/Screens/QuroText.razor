@@ -23,7 +23,7 @@
             }
             else
             {
-                <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked"
+                <input id="@InputId" type="@(Password ? "password" : "text")" value="@Value" readonly="@IsLocked" maxlength="@MaxLength"
                        aria-required="@(IsRequiredNow ? "true" : null)" data-testid="@TestId" @onchange="OnChangeAsync" />
             }
         </div>
@@ -45,7 +45,7 @@
     [Parameter]
     public Quro.UI.QuroCharType CharType { get; set; }
 
-    /// <summary>Longest text of the bound text box; null takes the column's [MaxLength].</summary>
+    /// <summary>Longest text. A bound text box takes the column's [MaxLength] when null; an unbound input has no limit then.</summary>
     [Parameter]
     public int? MaxLength { get; set; }
 

@@ -98,7 +98,7 @@ public class LineGridTests : ScreenContext
 
         lines.Edit(0, "qty", "1");
         lines.Select(1);
-        page.Find("[data-testid=t-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=t-line-mark-delete]").Click();
 
         shown.Should().ContainSingle().Which.Amount.Should().Be(850.00m);
     }

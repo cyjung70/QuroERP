@@ -295,6 +295,15 @@ public class PurchaseOrderScreenTests : BunitContext
         page.Find("[data-testid=purchase-order-totals-total]").TextContent.Should().Contain("13,750.00");
     }
 
+    [Fact]
+    public void Pdf_SharesThePrintIcon_AndExcelHasItsOwn()
+    {
+        var page = Open();
+
+        page.Find("[data-testid=purchase-order-toolbar-pdf] .quro-command-icon").GetAttribute("data-icon").Should().Be("print");
+        page.Find("[data-testid=purchase-order-toolbar-export] .quro-command-icon").GetAttribute("data-icon").Should().Be("excel");
+    }
+
     private IRenderedComponent<PurchaseOrder> RenderAs(string role, string? poNo = null)
     {
         var store = Services.GetRequiredService<AccessTokenStore>();
@@ -329,10 +338,10 @@ public class PurchaseOrderScreenTests : BunitContext
         page.FindComponent<QuroHeaderDetail<PurchaseOrderHeader, PurchaseOrderLine>>().Instance;
 
     private static AngleSharp.Dom.IElement Button(IRenderedComponent<PurchaseOrder> page, string action) =>
-        page.Find($"[data-testid={Screen}-toolbar-{action}]");
+        page.Find($"[data-testid={Screen}-toolbar-{action}], [data-testid={Screen}-line-{action}]");
 
     private static IReadOnlyList<string> Enabled(IRenderedComponent<PurchaseOrder> page) =>
-        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", ""))];
+        [.. page.FindAll("[role=toolbar] button:not([disabled])").Select(b => b.GetAttribute("data-testid")!.Replace($"{Screen}-toolbar-", "").Replace($"{Screen}-line-", ""))];
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
 

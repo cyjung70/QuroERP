@@ -25,9 +25,12 @@
   <data name="Bc.Company.Logo.Upload" xml:space="preserve"><value>Upload Logo</value></data>
   <data name="Mm.InventorySetting.Title" xml:space="preserve"><value>Inventory Settings</value></data>
   <data name="Mm.InventorySetting.NegativeStockMode" xml:space="preserve"><value>Negative Stock</value></data>
-  <data name="Mm.InventorySetting.Mode.ALLOW" xml:space="preserve"><value>Always allow</value></data>
   <data name="Mm.InventorySetting.Mode.ALLOW_IN_MONTH" xml:space="preserve"><value>Allow during the month (not at month end)</value></data>
   <data name="Mm.InventorySetting.Mode.DENY" xml:space="preserve"><value>Do not allow</value></data>
+  <data name="Mm.InventorySetting.OverReceiptMode" xml:space="preserve"><value>Over-Receipt</value></data>
+  <data name="Mm.InventorySetting.OverReceiptMode.DENY" xml:space="preserve"><value>Do not allow</value></data>
+  <data name="Mm.InventorySetting.OverReceiptMode.WARN" xml:space="preserve"><value>Warn, and save after confirmation</value></data>
+  <data name="Mm.InventorySetting.AllowCostAdjustmentEdit" xml:space="preserve"><value>Allow editing cost adjustment amounts</value></data>
   <data name="Common-E-004" xml:space="preserve"><value>Another user changed this data first. Reload and try again.</value></data>
   <data name="BC-E-004" xml:space="preserve"><value>The logo must be a PNG or JPEG file.</value></data>
   <data name="BC-E-005" xml:space="preserve"><value>The logo file must be {0} KB or smaller.</value></data>
@@ -75,13 +78,11 @@
   <data name="Common.SearchConditions" xml:space="preserve"><value>Search conditions</value></data>
   <data name="Common.AddRow" xml:space="preserve"><value>Add Row</value></data>
   <data name="Common.DeleteRow" xml:space="preserve"><value>Delete Row</value></data>
-  <data name="Common.RestoreRow" xml:space="preserve"><value>Restore</value></data>
   <data name="Common.Open" xml:space="preserve"><value>Open</value></data>
   <data name="Common.CodeNotFound" xml:space="preserve"><value>The code does not exist.</value></data>
   <data name="Common.SelectPartnerFirst" xml:space="preserve"><value>Select the partner first.</value></data>
   <data name="Common.PasteSkipped" xml:space="preserve"><value>{0} cell(s) were not pasted (read-only or not a valid value).</value></data>
   <data name="Common.Select" xml:space="preserve"><value>Select</value></data>
-  <data name="Common.UndoRow" xml:space="preserve"><value>Undo</value></data>
   <data name="Common.Keyword" xml:space="preserve"><value>Keyword</value></data>
   <data name="Common.Close" xml:space="preserve"><value>Close</value></data>
   <data name="Common.RowState" xml:space="preserve"><value>Status</value></data>
@@ -297,6 +298,13 @@
   <data name="Bc.SetItem.FindSet" xml:space="preserve"><value>Find Set Item</value></data>
   <data name="Bc.SetItem.FindItem" xml:space="preserve"><value>Find Component</value></data>
   <data name="Bc.SetItem.CopySet" xml:space="preserve"><value>Copy Set</value></data>
+  <data name="Bc.SalesPrice.Title" xml:space="preserve"><value>Sales Prices</value></data>
+  <data name="Bc.SalesPrice.PriceLevel" xml:space="preserve"><value>Price level</value></data>
+  <data name="Bc.SalesPrice.ItemCd" xml:space="preserve"><value>Item code</value></data>
+  <data name="Bc.SalesPrice.ItemName" xml:space="preserve"><value>Item name</value></data>
+  <data name="Bc.SalesPrice.SalesPrc" xml:space="preserve"><value>Sales price</value></data>
+  <data name="Bc.SalesPrice.StdPrc" xml:space="preserve"><value>Standard price</value></data>
+  <data name="Bc.SalesPrice.FindItem" xml:space="preserve"><value>Find item</value></data>
   <data name="Bc.ItemBarcode.ItemClass" xml:space="preserve"><value>Item Class</value></data>
   <data name="Bc.ItemBarcode.ValidFlag" xml:space="preserve"><value>Valid Flag</value></data>
   <data name="Bc.ItemBarcode.StartNo" xml:space="preserve"><value>Start No.</value></data>
@@ -730,6 +738,13 @@
   <data name="MM-E-117" xml:space="preserve"><value>The receipt date cannot change while the receipt has lines. Delete the lines and add them again.</value></data>
   <data name="MM-E-161" xml:space="preserve"><value>Currency {0} with rate {1} cannot be used. A receipt from a purchase order uses the order's currency and rate, and the currency cannot change once the receipt has lines.</value></data>
   <data name="MM-E-703" xml:space="preserve"><value>Line {0} has no warehouse. Line 0 is the header.</value></data>
+  <data name="MM-E-751" xml:space="preserve"><value>Invoice lines must come from receipt lines of this invoice's vendor in the same currency ({0}), and there must be at least one. The vendor of an invoice with lines can't change.</value></data>
+  <data name="MM-E-753" xml:space="preserve"><value>The quantity of line {0} must be above 0 and at most the receipt's uninvoiced quantity ({1}).</value></data>
+  <data name="MM-E-754" xml:space="preserve"><value>The price of line {0} can't be 0.</value></data>
+  <data name="MM-W-754" xml:space="preserve"><value>The price {1} of line {0} differs from the purchase order price {2}. Save anyway?</value></data>
+  <data name="MM-E-760" xml:space="preserve"><value>Invoice {0}: a paid invoice can't be changed or deleted. A saved line can't be changed, so delete it and add it again; the date, currency and rate of an invoice with saved lines can't change, so delete the lines and save first.</value></data>
+  <data name="MM-E-762" xml:space="preserve"><value>Invoice {0} is a Debit Memo and can't be changed or deleted here. Void the vendor return instead.</value></data>
+  <data name="MM-E-764" xml:space="preserve"><value>Vendor invoice number {0} is already on another invoice of this vendor.</value></data>
   <data name="Common.Audit.Approved" xml:space="preserve"><value>Approved</value></data>
   <data name="Mm.PurchaseOrder.Title" xml:space="preserve"><value>PO Entry</value></data>
   <data name="Mm.PurchaseOrder.PoNo" xml:space="preserve"><value>PO No.</value></data>
@@ -788,7 +803,14 @@
   <data name="SD-W-010" xml:space="preserve"><value>The price of these items differs from the standard price and the price level price: {0}. Update the price level too?</value></data>
   <data name="SD-W-309" xml:space="preserve"><value>After this save the customer balance of {1} exceeds the credit limit of {0}. Save anyway?</value></data>
   <data name="Menu.G3SD02" xml:space="preserve"><value>Sales orders</value></data>
-  <data name="Sd.SalesOrder.Title" xml:space="preserve"><value>Sales order</value></data>
+  <data name="Sd.SalesOrder.Path" xml:space="preserve"><value>SD &gt; Sales</value></data>
+  <data name="Sd.SalesOrder.TaxCode" xml:space="preserve"><value>Default tax code</value></data>
+  <data name="Sd.SalesOrder.ShipTo" xml:space="preserve"><value>Ship-to</value></data>
+  <data name="Sd.SalesOrder.SupplyAmt" xml:space="preserve"><value>Supply amount</value></data>
+  <data name="Sd.SalesOrder.TaxEstimate" xml:space="preserve"><value>Tax (estimated)</value></data>
+  <data name="Sd.SalesOrder.FindFrom" xml:space="preserve"><value>Order date from</value></data>
+  <data name="Sd.SalesOrder.FindTo" xml:space="preserve"><value>Order date to</value></data>
+  <data name="Sd.SalesOrder.Title" xml:space="preserve"><value>Sales Order</value></data>
   <data name="Sd.SalesOrder.SoNo" xml:space="preserve"><value>SO no.</value></data>
   <data name="Sd.SalesOrder.Status" xml:space="preserve"><value>Status</value></data>
   <data name="Sd.SalesOrder.CustomerId" xml:space="preserve"><value>Customer</value></data>
@@ -816,22 +838,22 @@
   <data name="Sd.SalesOrder.Remarks" xml:space="preserve"><value>Remarks</value></data>
   <data name="Sd.SalesOrder.TotSoAmt" xml:space="preserve"><value>Order total</value></data>
   <data name="Sd.SalesOrder.TotBaseAmt" xml:space="preserve"><value>Total in base currency</value></data>
-  <data name="Sd.SalesOrder.Seq" xml:space="preserve"><value>No.</value></data>
+  <data name="Sd.SalesOrder.Seq" xml:space="preserve"><value>No</value></data>
   <data name="Sd.SalesOrder.ItemCd" xml:space="preserve"><value>Item code</value></data>
   <data name="Sd.SalesOrder.ItemName" xml:space="preserve"><value>Item name</value></data>
   <data name="Sd.SalesOrder.Unit" xml:space="preserve"><value>Unit</value></data>
   <data name="Sd.SalesOrder.SoQty" xml:space="preserve"><value>Qty</value></data>
   <data name="Sd.SalesOrder.SoPrc" xml:space="preserve"><value>Unit price</value></data>
   <data name="Sd.SalesOrder.SoAmt" xml:space="preserve"><value>Amount</value></data>
-  <data name="Sd.SalesOrder.DcCd" xml:space="preserve"><value>Discount</value></data>
-  <data name="Sd.SalesOrder.DcRate" xml:space="preserve"><value>D/C rate</value></data>
+  <data name="Sd.SalesOrder.DcCd" xml:space="preserve"><value>Discount code</value></data>
+  <data name="Sd.SalesOrder.DcRate" xml:space="preserve"><value>Discount %</value></data>
   <data name="Sd.SalesOrder.StdPrc" xml:space="preserve"><value>Std price</value></data>
   <data name="Sd.SalesOrder.LineTaxCode" xml:space="preserve"><value>Tax code</value></data>
   <data name="Sd.SalesOrder.TaxCodeName" xml:space="preserve"><value>Tax code name</value></data>
   <data name="Sd.SalesOrder.TaxRate" xml:space="preserve"><value>Tax rate</value></data>
   <data name="Sd.SalesOrder.TaxAmt" xml:space="preserve"><value>Tax</value></data>
   <data name="Sd.SalesOrder.ShipQty" xml:space="preserve"><value>Shipped qty</value></data>
-  <data name="Sd.SalesOrder.DnQty" xml:space="preserve"><value>Inv qty</value></data>
+  <data name="Sd.SalesOrder.DnQty" xml:space="preserve"><value>Billed qty</value></data>
   <data name="Sd.SalesOrder.InvNo" xml:space="preserve"><value>Inv no.</value></data>
   <data name="Sd.SalesOrder.FindItem" xml:space="preserve"><value>Find item</value></data>
   <data name="Sd.SalesOrder.FindDiscount" xml:space="preserve"><value>Find discount code</value></data>
@@ -841,6 +863,7 @@
   <data name="Sd.SalesOrder.BarcodeFile" xml:space="preserve"><value>Upload barcode file</value></data>
   <data name="Sd.SalesOrder.PickingList" xml:space="preserve"><value>Picking list</value></data>
   <data name="Sd.SalesOrder.SetComponentList" xml:space="preserve"><value>Set component list</value></data>
+  <data name="Sd.SalesOrder.CheckThisCell" xml:space="preserve"><value>Check the value in this cell.</value></data>
   <data name="Sd.SalesOrder.LinesAdded" xml:space="preserve"><value>{0} lines were added from the file. Save to keep them.</value></data>
   <data name="Sd.SalesOrder.ConfirmRefillTax" xml:space="preserve"><value>The ship-to state changed. Fill the line tax codes again?</value></data>
   <data name="Sd.SalesOrder.FileErrorRow" xml:space="preserve"><value>Row {0} '{1}': {2}</value></data>
@@ -858,9 +881,17 @@
   <data name="SD-E-174" xml:space="preserve"><value>Order {0} bills before shipping, so ship it with Import invoice only.</value></data>
   <data name="SD-E-175" xml:space="preserve"><value>A bill-first shipment takes only lines from Import invoice and can't mix them with other lines (invoice {0}, line {1}, unshipped {2}).</value></data>
   <data name="Menu.G3SD03" xml:space="preserve"><value>Shipments</value></data>
+  <data name="Sd.Shipment.FindFrom" xml:space="preserve"><value>Ship date from</value></data>
+  <data name="Sd.Shipment.FindTo" xml:space="preserve"><value>Ship date to</value></data>
+  <data name="Sd.Shipment.ShipTo" xml:space="preserve"><value>Ship-to</value></data>
+  <data name="Sd.Shipment.TotalQty" xml:space="preserve"><value>Total qty</value></data>
+  <data name="Sd.Shipment.RemainingQty" xml:space="preserve"><value>Remaining qty</value></data>
+  <data name="Sd.Shipment.ImportLines" xml:space="preserve"><value>Import</value></data>
+  <data name="Sd.Shipment.Path" xml:space="preserve"><value>SD &gt; Sales</value></data>
   <data name="Sd.Shipment.Title" xml:space="preserve"><value>Shipment</value></data>
   <data name="Sd.Shipment.ShipNo" xml:space="preserve"><value>Ship no.</value></data>
   <data name="Sd.Shipment.ShipDt" xml:space="preserve"><value>Ship date</value></data>
+  <data name="Sd.Shipment.CheckThisCell" xml:space="preserve"><value>Check the value in this cell.</value></data>
   <data name="Sd.Shipment.CustomerId" xml:space="preserve"><value>Customer</value></data>
   <data name="Sd.Shipment.FindCustomer" xml:space="preserve"><value>Find customer</value></data>
   <data name="Sd.Shipment.Status" xml:space="preserve"><value>Status</value></data>
@@ -889,7 +920,6 @@
   <data name="Sd.Shipment.ConfirmVoid" xml:space="preserve"><value>Void this shipment? The issued stock comes back, and an invoice made with the shipment is voided too.</value></data>
   <data name="Sd.Shipment.LinesAdded" xml:space="preserve"><value>Added {0} lines. Save to issue the stock.</value></data>
   <data name="Sd.Shipment.SoNo" xml:space="preserve"><value>SO no.</value></data>
-  <data name="Sd.Shipment.SoDt" xml:space="preserve"><value>SO date</value></data>
   <data name="Sd.Shipment.DnNo" xml:space="preserve"><value>Invoice no.</value></data>
   <data name="Sd.Shipment.LineCount" xml:space="preserve"><value>Lines</value></data>
   <data name="Sd.Shipment.Seq" xml:space="preserve"><value>No.</value></data>
@@ -904,9 +934,7 @@
   <data name="Sd.Shipment.LotOnhandQty" xml:space="preserve"><value>Lot on hand</value></data>
   <data name="Sd.Shipment.ShipQty" xml:space="preserve"><value>Ship qty</value></data>
   <data name="Sd.Shipment.ShipPrc" xml:space="preserve"><value>Unit price</value></data>
-  <data name="Sd.Shipment.DcRate" xml:space="preserve"><value>Discount rate</value></data>
-  <data name="Sd.Shipment.TaxCode" xml:space="preserve"><value>Tax code</value></data>
-  <data name="Sd.Shipment.ShipAmt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Sd.Shipment.ShipAmt" xml:space="preserve"><value>Shipment amount</value></data>
   <data name="Sd.Shipment.BilledQty" xml:space="preserve"><value>Billed qty</value></data>
   <data name="Sd.Shipment.OnhandQty" xml:space="preserve"><value>On hand</value></data>
   <data name="Sd.Shipment.Source" xml:space="preserve"><value>Source line</value></data>
@@ -923,4 +951,43 @@
   <data name="SD-E-144" xml:space="preserve"><value>Line {1} of invoice {0} has shipped or cancelled qty, so it can&apos;t be deleted or voided.</value></data>
   <data name="SD-E-145" xml:space="preserve"><value>Invoice {0} line {1}: the qty to cancel must be above 0 and not above the unshipped qty {2} (bill-first invoices only).</value></data>
   <data name="SD-E-146" xml:space="preserve"><value>Credit Memo {0} is applied, so the cancellation can&apos;t be undone.</value></data>
+  <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>Goods Receipt</value></data>
+  <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>GR No.</value></data>
+  <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Mm.GoodsReceipt.Status.OP" xml:space="preserve"><value>Open</value></data>
+  <data name="Mm.GoodsReceipt.Status.PA" xml:space="preserve"><value>Partly Matched</value></data>
+  <data name="Mm.GoodsReceipt.Status.CL" xml:space="preserve"><value>Matched</value></data>
+  <data name="Mm.GoodsReceipt.Status.VO" xml:space="preserve"><value>Void</value></data>
+  <data name="Mm.GoodsReceipt.VendorName" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Mm.GoodsReceipt.FindVendor" xml:space="preserve"><value>Find Vendor</value></data>
+  <data name="Mm.GoodsReceipt.GrDt" xml:space="preserve"><value>Receipt Date</value></data>
+  <data name="Mm.GoodsReceipt.WarehouseCode" xml:space="preserve"><value>Default Warehouse</value></data>
+  <data name="Mm.GoodsReceipt.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Mm.GoodsReceipt.ExchangeRate" xml:space="preserve"><value>Exchange Rate</value></data>
+  <data name="Mm.GoodsReceipt.RefNo" xml:space="preserve"><value>Reference No.</value></data>
+  <data name="Mm.GoodsReceipt.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Mm.GoodsReceipt.TotGrAmt" xml:space="preserve"><value>Total</value></data>
+  <data name="Mm.GoodsReceipt.Delete" xml:space="preserve"><value>Delete Receipt</value></data>
+  <data name="Mm.GoodsReceipt.ImportPo" xml:space="preserve"><value>Import PO Lines</value></data>
+  <data name="Mm.GoodsReceipt.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Mm.GoodsReceipt.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Mm.GoodsReceipt.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Mm.GoodsReceipt.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Mm.GoodsReceipt.LineWarehouseCode" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Mm.GoodsReceipt.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.GoodsReceipt.OnHandQty" xml:space="preserve"><value>Lot Balance</value></data>
+  <data name="Mm.GoodsReceipt.GrQty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Mm.GoodsReceipt.GrPrc" xml:space="preserve"><value>Unit Price</value></data>
+  <data name="Mm.GoodsReceipt.GrAmt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Mm.GoodsReceipt.LineTaxCode" xml:space="preserve"><value>Tax Code</value></data>
+  <data name="Mm.GoodsReceipt.TaxAmt" xml:space="preserve"><value>Tax</value></data>
+  <data name="Mm.GoodsReceipt.PoNo" xml:space="preserve"><value>PO No.</value></data>
+  <data name="Mm.GoodsReceipt.PoSeq" xml:space="preserve"><value>PO Line</value></data>
+  <data name="Mm.GoodsReceipt.PoDt" xml:space="preserve"><value>PO Date</value></data>
+  <data name="Mm.GoodsReceipt.PoQty" xml:space="preserve"><value>PO Qty</value></data>
+  <data name="Mm.GoodsReceipt.PoReceivedQty" xml:space="preserve"><value>Received</value></data>
+  <data name="Mm.GoodsReceipt.RemainingQty" xml:space="preserve"><value>Remaining</value></data>
+  <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>Find Item</value></data>
+  <data name="Mm.GoodsReceipt.FindLot" xml:space="preserve"><value>Find Lot</value></data>
+  <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>Not saved. Check the received quantities.</value></data>
 </root>

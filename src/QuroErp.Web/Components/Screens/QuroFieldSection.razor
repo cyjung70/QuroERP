@@ -1,0 +1,31 @@
+@* A collapsible group of header fields across the 4 columns, e.g. the ship-to. Collapsed fields stay drawn, so the form's
+   required check and the field policy still see them. *@
+
+<div class="quro-field-section quro-span-4" data-testid="@TestId">
+    <button type="button" class="quro-field-section-toggle" aria-expanded="@(Shown ? "true" : "false")"
+            data-testid="@(TestId is null ? null : $"{TestId}-toggle")" @onclick="Toggle">@Title</button>
+    <div class="quro-field-section-body" hidden="@(!Shown)">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    private bool _open;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    /// <summary>Keeps the section open, e.g. while a required field inside it is empty.</summary>
+    [Parameter]
+    public bool KeepOpen { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private bool Shown => _open || KeepOpen;
+
+    private void Toggle() => _open = !_open;
+}

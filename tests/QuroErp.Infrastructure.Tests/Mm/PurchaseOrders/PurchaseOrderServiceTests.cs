@@ -339,6 +339,6 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
             new { Line = purchaseOrderLineId, Qty = qty, Tax = taxCodeId });
     }
 
-    [GeneratedRegex(@"^PO2610\d{5}$")]
+    [GeneratedRegex(@"^PO2610\d{6}$")]
     private static partial Regex PoNumber();
 }

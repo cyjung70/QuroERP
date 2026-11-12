@@ -32,24 +32,22 @@ grids[1]:
     bind: lines
     rowKey: id
     deletedRows: strike
-    columns[14]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+    columns[13]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
       seq,Sd.Shipment.Seq,number,50,false,false,N0,"",false,false
+      soNo,Sd.Shipment.SoNo,text,120,false,false,"","",false,false
+      dnNo,Sd.Shipment.DnNo,text,120,false,false,"","",false,false
       itemCd,Sd.Shipment.ItemCd,text,130,true,true,"",sdSoItem,false,false
-      itemName,Sd.Shipment.ItemName,text,200,true,false,"","",false,false
+      itemName,Sd.Shipment.ItemName,text,200,false,false,"","",false,false
       unit,Sd.Shipment.Unit,text,60,false,false,"","",false,false
       warehouseCode,Sd.Shipment.LineWarehouseId,text,100,true,true,"",sdShipWarehouse,false,false
       lotNo,Sd.Shipment.LotNo,text,120,true,false,"",sdShipLot,false,false
       shipQty,Sd.Shipment.ShipQty,number,90,true,true,N2,"",false,false
       shipPrc,Sd.Shipment.ShipPrc,number,110,true,true,N2,"",false,false
-      taxCode,Sd.Shipment.TaxCode,text,90,true,false,"",sdSoTaxCode,false,false
-      shipAmt,Sd.Shipment.ShipAmt,number,120,false,false,N2,"",false,false
-      billedQty,Sd.Shipment.BilledQty,number,90,false,false,N2,"",false,false
+      remainingQty,Sd.Shipment.RemainingQty,number,90,false,false,N2,"",false,false
       onhandQty,Sd.Shipment.OnhandQty,number,90,false,false,N2,"",false,false
-      source,Sd.Shipment.Source,text,140,false,false,"","",false,false
-      dcRate,Sd.Shipment.DcRate,number,70,false,false,N2,"",false,true
-    rules[3]{on,action,target,expr}:
+      billedQty,Sd.Shipment.BilledQty,number,90,false,false,N2,"",false,false
+    rules[2]{on,action,target,expr}:
       itemCd.change,lookup,"itemName|unit","sdSoItem.all()"
       warehouseCode.change,lookup,"","sdShipWarehouse.all()"
-      taxCode.change,lookup,"","sdSoTaxCode.all()"
     validate[1]{target,rule,msg}:
       itemCd,requires customerId,Common.SelectPartnerFirst

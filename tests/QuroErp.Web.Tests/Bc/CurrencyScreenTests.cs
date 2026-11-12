@@ -76,7 +76,8 @@ public class CurrencyScreenTests : BunitContext
         var page = RenderAs("admin");
         var grid = Grid(page);
 
-        page.Find("[data-testid=currency-toolbar-new]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=currency-toolbar-add-row]").Click();
 
         grid.IsReadOnly(0, "currencyCode").Should().BeTrue();
         grid.IsReadOnly(1, "currencyCode").Should().BeTrue();
@@ -93,8 +94,9 @@ public class CurrencyScreenTests : BunitContext
 
         grid.Edit(0, "nameKo", "엔").Should().BeTrue();
         grid.Toggle(0, "useYn").Should().BeTrue();
-        grid.Click(1, "deleteRow");
-        page.Find("[data-testid=currency-toolbar-new]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=currency-toolbar-mark-delete]").Click();
+        page.Find("[data-testid=currency-toolbar-add-row]").Click();
         grid.Edit(2, "currencyCode", "eur").Should().BeTrue();
         grid.Edit(2, "nameEn", "Euro").Should().BeTrue();
         grid.Edit(2, "countryCode", "de").Should().BeTrue();
@@ -131,7 +133,8 @@ public class CurrencyScreenTests : BunitContext
     {
         var page = RenderAs("admin");
         var grid = Grid(page);
-        page.Find("[data-testid=currency-toolbar-new]").Click();
+        grid.Select(1);
+        page.Find("[data-testid=currency-toolbar-add-row]").Click();
         grid.Edit(2, "currencyCode", "EUR");
 
         page.Find("[data-testid=currency-toolbar-save]").Click();
@@ -175,8 +178,9 @@ public class CurrencyScreenTests : BunitContext
 
         // The handlers do nothing either
         grid.Edit(0, "nameEn", "Y").Should().BeFalse();
-        page.Find("[data-testid=currency-toolbar-new]").Click();
-        grid.Click(0, "deleteRow");
+        page.Find("[data-testid=currency-toolbar-add-row]").Click();
+        grid.Select(0);
+        page.Find("[data-testid=currency-toolbar-mark-delete]").Click();
         page.Find("[data-testid=currency-toolbar-save]").Click();
         grid.Rows.Should().HaveCount(2);
         grid.Column("rowState").Should().OnlyContain(s => s.Length == 0);

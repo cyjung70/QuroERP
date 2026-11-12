@@ -259,10 +259,16 @@ public static class GoodsReceiptRules
     /// </summary>
     public static decimal StockAmount(
         decimal supplyAmt, decimal taxAmt, string taxKind, bool deductible, GoodsReceiptHeader header, GoodsReceiptSettings settings,
-        IAmountRounder rounder)
+        IAmountRounder rounder) =>
+        StockAmount(supplyAmt, taxAmt, taxKind, deductible, header.ExchangeRate, settings.BaseCurrencyCode, rounder, settings.RoundingMode);
+
+    /// <summary>MM-BR-164 with the document rate given: the supplier invoice uses it for its lines and the receipt lines (MM-BR-758).</summary>
+    public static decimal StockAmount(
+        decimal supplyAmt, decimal taxAmt, string taxKind, bool deductible, decimal exchangeRate, string baseCurrencyCode,
+        IAmountRounder rounder, RoundingMode roundingMode)
     {
         var costTax = taxKind == TaxKind.SalesTax || (IsVat(taxKind) && !deductible) ? taxAmt : 0m;
-        return ExchangeRate.BaseAmount(supplyAmt + costTax, header.ExchangeRate, settings.BaseCurrencyCode, rounder, settings.RoundingMode);
+        return ExchangeRate.BaseAmount(supplyAmt + costTax, exchangeRate, baseCurrencyCode, rounder, roundingMode);
     }
 
     /// <summary>

@@ -94,6 +94,17 @@ public partial class DesignTokenTests
         css.Should().Contain("var(--q-brand)").And.Contain("@media (max-width: 767.98px)").And.Contain(":root[data-theme=\"dark\"] .login-brand");
     }
 
+    [Fact]
+    public void LookupButton_UsesTheTextBoxHeight()
+    {
+        var css = File.ReadAllText(Path.Combine(RepositoryRoot(), "src", "QuroErp.Web", "wwwroot", "css", "quro-entry.css"));
+        var start = css.IndexOf(".quro-lookup-field > button {", StringComparison.Ordinal);
+
+        start.Should().BeGreaterThanOrEqualTo(0, "the find button needs its own rule (screens.md \"팝업\")");
+        css[start..css.IndexOf('}', start)].Should().Contain("height: var(--q-control-h)");
+        css.Should().Contain("min-height: var(--q-control-h)", "the text box sets its height from the same token");
+    }
+
     private static Dictionary<string, string> Tokens(string block)
     {
         var css = File.ReadAllText(Path.Combine(RepositoryRoot(), "src", "QuroErp.Web", "wwwroot", "css", "quro-tokens.css"));

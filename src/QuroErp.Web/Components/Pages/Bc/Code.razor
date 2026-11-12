@@ -27,7 +27,7 @@
 {
     <QuroMultiGrid @ref="_grid" TRow="CodeMinorRow" Title="@L["Bc.Code.Title"]" TestId="code" Path="@L["Menu.G1BA"]"
                    Definition="bc.code.minor" Adjust="g => LanguageNames.InUse(g, _languages)" UpperCaseFields="UpperCaseFields"
-                   Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit">
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="NewRow" CanWrite="_canEdit" OnReset="ResetSearch" CanAddRow="() => _loadedMajorCode is not null">
         <SearchContent>
             <div class="quro-lookup-field">
                 <QuroText Label="@L["Bc.Code.MajorCode"]" @bind-Value="_majorCode" @bind-Value:after="MajorCodeChanged" Required
@@ -109,6 +109,8 @@
         Api.SaveAsync(CodeMinorRow.ToRequest(_loadedMajorCode!, changes.Added, changes.Updated, changes.Deleted), Lang, CancellationToken.None);
 
     private CodeMinorRow NewRow() => CodeMinorRow.New(_languages);
+
+    private void ResetSearch() => _majorCode = _majorName = _loadedMajorCode = null;
 
     // A typed code clears the name; the next search shows the name of that Major
     private void MajorCodeChanged() => _majorName = null;

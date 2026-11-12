@@ -21,7 +21,7 @@ public sealed class DemoScriptTests : IDisposable
     }
 
     [DatabaseFact, Trait("Id", "DB-IT-11")]
-    public void UpgradeWithDemo_AppliesTheDemoScripts_WithThePurchaseOrderItemsAndVendorPrice()
+    public void UpgradeWithDemo_AppliesTheDemoScripts_WithThePurchaseOrderItemsVendorPriceAndLotItem()
     {
         var result = DatabaseMigrator.Upgrade(_connectionString, includeDemo: true, _schema, new NoOpUpgradeLog());
 
@@ -35,6 +35,10 @@ public sealed class DemoScriptTests : IDisposable
             JOIN bc_item i ON i.id = p.item_id
             WHERE v.v_name = 'MAPLE LEAF SUPPLY' AND i.item_cd = 'DEMO-BOLT-10' AND p.purchase_prc <> i.usd_prc
             """).Should().Be(1);
+        Scalar(connection, """
+            SELECT count(*) FROM bc_item
+            WHERE item_cd = 'DEMO-RESIN-LOT' AND type = 'INVENTORY' AND lot_managed AND lot_managed_from IS NOT NULL
+            """).Should().Be(1, "the goods receipt screen shows the lot column for it");
     }
 
     [DatabaseFact, Trait("Id", "DB-IT-11")]

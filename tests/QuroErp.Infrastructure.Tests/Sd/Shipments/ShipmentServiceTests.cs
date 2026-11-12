@@ -76,6 +76,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         sh.Lines.Select(l => (l.Seq, l.ShipQty, l.ShipPrc, l.DcRate, l.TaxCodeId, l.BilledQty, l.SalesOrderLineId, l.SoNo))
             .Should().Equal((1, 4m, 100m, -10m, m.Vat10, 4m, (long?)so.Lines[0], so.SoNo), (2, 2m, 120m, 0m, m.NoTax, 2m, null, null));
         sh.Lines[0].OnhandQty.Should().Be(14m);
+        sh.Lines.Select(l => l.RemainingQty).Should().Equal(6m, null);
         (await OnHandAsync(m.Item, m.Main)).Should().Be(14m);
         (await MovementsAsync(sh.ShipNo)).Should().Equal(("DN", 1, -4m, -200m, (DateOnly?)null), ("DN", 2, -2m, -100m, null));
         (await OrderLineAsync(so.Lines[0])).Should().Be((4m, 4m));
@@ -88,7 +89,22 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await InvoiceLinesAsync(invoice.Id)).Should().Equal(
             (1, 4m, 360m, 36m, (long?)so.Lines[0], sh.Lines[0].Id), (2, 2m, 240m, 0m, null, sh.Lines[1].Id));
         (await Service.SearchAsync(new(sh.ShipNo, m.Customer, null, ShipDt, ShipDt), None))
-            .Should().ContainSingle(s => s.Id == sh.Id && s.SalesInvoiceNo == sh.SalesInvoiceNo);
+            .Should().ContainSingle(s => s.Id == sh.Id && s.SalesInvoiceNo == sh.SalesInvoiceNo && s.ShipAmt == 600m);
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UC-051-T01")]
+    public async Task Search_FindsByPartOfTheCustomerName_WithoutTreatingItsWildcardsAsPatterns()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipAndBill);
+        await ReceiveAsync(m.Item, m.Main, 20m);
+        var sh = await Service.CreateAsync(Request(m, Direct(m.Item, 2m, 120m, m.NoTax)), "kim", None);
+        var name = sh.CustomerName!;
+
+        (await Service.SearchAsync(new(null, null, null, null, null, name[1..^1].ToLowerInvariant()), None))
+            .Should().ContainSingle(s => s.Id == sh.Id && s.ShipAmt == 240m);
+        (await Service.SearchAsync(new(null, null, null, null, null, "%"), None)).Should().NotContain(s => s.Id == sh.Id);
+        (await Service.SearchAsync(new(null, null, null, null, null, "NO SUCH CUSTOMER"), None)).Should().BeEmpty();
     }
 
     [DatabaseFact, Trait("Id", "SD-UC-051-T02"), Trait("Id", "SD-UT-169"), Trait("Id", "SD-UT-104")]
@@ -107,6 +123,8 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         var voidPaid = () => Service.VoidAsync(paid.Id, paid.UpdatedAt, "kim", None);
         var voided = await Service.VoidAsync(open.Id, open.UpdatedAt, "kim", None);
 
+        (await Service.GetAsync(paid.Id, None)).InvoiceHasPayments.Should().BeTrue();
+        open.InvoiceHasPayments.Should().BeFalse();
         (await update.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal(paid.SalesInvoiceNo!);
         (await voidPaid.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(ShipmentRules.InvoicePaidCode);
         (voided.Status, voided.Lines[0].BilledQty).Should().Be(("VO", 0m));
@@ -238,9 +256,11 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
     [DatabaseFact, Trait("Id", "SD-UT-161"), Trait("Id", "SD-UT-170"), Trait("Id", "SD-UT-163"), Trait("Id", "MM-UT-710")]
     public async Task Create_RefusesBadLines_AnotherCurrency_AZeroCost_AndTheConsignmentWarehouse()
     {
-        await ModeAsync("ALLOW");
+        await ModeAsync("ALLOW_IN_MONTH");
         var m = await MastersAsync(ShipAndBill);
         await ReceiveAsync(m.Item, m.Main, 20m);
+        // In stock at a moving average cost of 0, so only the cost check refuses it (SD-BR-163)
+        await ReceiveAsync(m.NoCostItem, m.Main, 5m, price: 0m);
         var euro = await OrderAsync(m, ShipAndBill, (m.Item, 5m, 100m, 0m, m.NoTax));
         await ExecuteAsync("UPDATE sd_sales_order SET currency_code = 'EUR', exchange_rate = 1.1 WHERE id = @Id", euro.Id);
 
@@ -257,6 +277,39 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await noCost.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("N" + m.Key);
         (await consignment.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be("MM-E-710");
         (await OnHandAsync(m.Item, m.Main)).Should().Be(19m, "every refused save rolled back");
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423"), Trait("Rule", "BC-BR-429")]
+    public async Task Save_RefusesTooManyDecimals_ByTheDocumentCurrency_AndIssuesNoStock()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipAndBill);
+        await ReceiveAsync(m.Item, m.Main, 20m);
+
+        var usd = () => Service.CreateAsync(Request(m, Direct(m.Item, 1m, 12.345m)), "kim", None);
+        var krw = () => Service.CreateAsync(
+            Request(m, Direct(m.Item, 1m, 100.5m)) with { CurrencyCode = "KRW", ExchangeRate = 0.00075m }, "kim", None);
+
+        var usdError = (await usd.Should().ThrowAsync<DomainException>()).Which;
+        (usdError.Code, usdError.Args[0], usdError.Args[1]).Should().Be(("BC-E-423", (object)"shipPrc", (object)2));
+        var krwError = (await krw.Should().ThrowAsync<DomainException>()).Which;
+        (krwError.Code, krwError.Args[0], krwError.Args[1]).Should().Be(("BC-E-423", (object)"shipPrc", (object)0));
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(20m);
+    }
+
+    [DatabaseFact, Trait("Id", "BC-UT-423"), Trait("Rule", "BC-BR-423"), Trait("Rule", "SD-BR-172")]
+    public async Task Save_AcceptsAValidDirectLine_AndAnOrderLineWithAnOlderPrice()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipAndBill);
+        await ReceiveAsync(m.Item, m.Main, 20m);
+        var order = await OrderAsync(m, ShipAndBill, (m.Item, 5m, 12.345m, 0m, m.NoTax));
+
+        var direct = await Service.CreateAsync(Request(m, Direct(m.Item, 1m, 12.34m)), "kim", None);
+        var imported = await Service.CreateAsync(Request(m, OrderLine(order.Lines[0], m.Item, 1m)), "kim", None);
+
+        direct.Lines.Should().ContainSingle().Which.ShipPrc.Should().Be(12.34m);
+        imported.Lines.Should().ContainSingle().Which.ShipPrc.Should().Be(12.345m);
     }
 
     [DatabaseFact, Trait("Id", "SD-UT-309")]
@@ -569,10 +622,10 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
     }
 
     // Receives stock at a cost of 50 on the ship date (or the date given)
-    private async Task ReceiveAsync(long item, long warehouse, decimal qty, string? lotNo = null, DateOnly? date = null)
+    private async Task ReceiveAsync(long item, long warehouse, decimal qty, string? lotNo = null, DateOnly? date = null, decimal price = 50m)
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
-        await Inventory.PostAsync([new StockMovementRequest("GR", date ?? ShipDt, item, warehouse, qty, 50m, "GR-TEST", 1, LotNo: lotNo)], "kim", uow.Transaction, None);
+        await Inventory.PostAsync([new StockMovementRequest("GR", date ?? ShipDt, item, warehouse, qty, price, "GR-TEST", 1, LotNo: lotNo)], "kim", uow.Transaction, None);
         await uow.CommitAsync(None);
     }
 

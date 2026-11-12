@@ -1,3 +1,5 @@
 # KR defaults for new records: field key -> value.
 Sd.Customer.Country: KR
 Sd.Customer.ShipCountry: KR
+Sd.SalesOrder.ShipCountry: KR
+Sd.Shipment.ShipCountry: KR
