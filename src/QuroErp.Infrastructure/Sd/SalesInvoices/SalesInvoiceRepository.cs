@@ -6,6 +6,8 @@ using QuroErp.Domain.Sd.SalesInvoices;
 using QuroErp.Domain.Sd.SalesOrders;
 using QuroErp.Domain.Sd.Shipments;
 
+using QuroErp.Infrastructure.Mm.Inventory;
+
 namespace QuroErp.Infrastructure.Sd.SalesInvoices;
 
 internal sealed class SalesInvoiceRepository : ISalesInvoiceRepository
@@ -118,12 +120,14 @@ internal sealed class SalesInvoiceRepository : ISalesInvoiceRepository
 
     private const string DeleteLines = "DELETE FROM sd_sales_invoice_line WHERE sales_invoice_id = @Id AND id = ANY(@Ids)";
 
-    private const string InsertLine = """
+    // Location '*' until the bill-first line takes one (TASK-CORE-075); Lot '*' until a bill-first posting sets the line's lot
+    private const string InsertLine = $"""
+        {StockKeys.EnsureStarRows}
         INSERT INTO sd_sales_invoice_line (sales_invoice_id, seq, item_id, item_name, dn_qty, dn_prc, dn_amt, sales_order_line_id, dc_cd, dc_rate,
-                                           warehouse_id, tax_code_id, supply_amt, tax_amt, shipment_line_id, lot_id, restock, created_by,
-                                           updated_by)
-        VALUES (@Id, @Seq, @ItemId, @ItemName, @DnQty, @DnPrc, @DnAmt, @SalesOrderLineId, @DcCd, @DcRate, @WarehouseId, @TaxCodeId, @SupplyAmt,
-                @TaxAmt, @ShipmentLineId, @LotId, false, @User, @User)
+                                           warehouse_id, location_id, tax_code_id, supply_amt, tax_amt, shipment_line_id, lot_id, restock,
+                                           created_by, updated_by)
+        VALUES (@Id, @Seq, @ItemId, @ItemName, @DnQty, @DnPrc, @DnAmt, @SalesOrderLineId, @DcCd, @DcRate, @WarehouseId, {StockKeys.StarLocationId},
+                @TaxCodeId, @SupplyAmt, @TaxAmt, @ShipmentLineId, coalesce(@LotId, {StockKeys.StarLotId}), false, @User, @User)
         RETURNING id
         """;
 
@@ -234,11 +238,13 @@ internal sealed class SalesInvoiceRepository : ISalesInvoiceRepository
         RETURNING id
         """;
 
-    private const string InsertCreditMemoLine = """
+    private const string InsertCreditMemoLine = $"""
+        {StockKeys.EnsureStarRows}
         INSERT INTO sd_sales_invoice_line (sales_invoice_id, seq, item_id, item_name, dn_qty, dn_prc, dn_amt, sales_order_line_id, warehouse_id,
-                                           tax_code_id, supply_amt, tax_amt, lot_id, cancelled_invoice_line_id, restock, created_by, updated_by)
-        VALUES (@Id, @Seq, @ItemId, @ItemName, @DnQty, @DnPrc, @DnAmt, @SalesOrderLineId, @WarehouseId, @TaxCodeId, @SupplyAmt, @TaxAmt, @LotId,
-                @CancelledInvoiceLineId, false, @User, @User)
+                                           location_id, tax_code_id, supply_amt, tax_amt, lot_id, cancelled_invoice_line_id, restock, created_by,
+                                           updated_by)
+        VALUES (@Id, @Seq, @ItemId, @ItemName, @DnQty, @DnPrc, @DnAmt, @SalesOrderLineId, @WarehouseId, {StockKeys.StarLocationId}, @TaxCodeId,
+                @SupplyAmt, @TaxAmt, coalesce(@LotId, {StockKeys.StarLotId}), @CancelledInvoiceLineId, false, @User, @User)
         """;
 
     private const string DeleteCreditMemo = "DELETE FROM sd_sales_invoice WHERE id = @Id AND type = 'CM'";

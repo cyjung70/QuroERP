@@ -364,7 +364,7 @@ public partial class GoodsReceiptServiceTests(AuthSchemaFixture db)
     {
         await using var connection = new NpgsqlConnection(db.ConnectionString);
         return await connection.ExecuteScalarAsync<decimal?>(
-            "SELECT onhand_qty FROM mm_onhand WHERE item_id = @Item AND warehouse_id = @Warehouse", new { Item = item, Warehouse = warehouse }) ?? 0m;
+            "SELECT sum(onhand_qty) FROM mm_onhand WHERE item_id = @Item AND warehouse_id = @Warehouse", new { Item = item, Warehouse = warehouse }) ?? 0m;
     }
 
     private async Task<decimal?> StandardPriceAsync(long item)

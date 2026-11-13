@@ -67,9 +67,13 @@ public class WarehouseRepositoryTests(AuthSchemaFixture db)
             """,
             transaction: uow.Transaction);
         await connection.ExecuteAsync(
-            """
-            INSERT INTO mm_onhand (item_id, warehouse_id, onhand_qty, created_by, updated_by)
-            SELECT @Item, w.id, v.qty, 't', 't'
+            StarKeys.Ensure("SELECT id FROM bc_warehouse WHERE warehouse_code IN ('MAIN', 'ZZ1', 'CONSIGN')", "@Item"),
+            new { Item = stocked },
+            uow.Transaction);
+        await connection.ExecuteAsync(
+            $"""
+            INSERT INTO mm_onhand (item_id, warehouse_id, location_id, lot_id, onhand_qty, created_by, updated_by)
+            SELECT @Item, w.id, {StarKeys.Location("w.id")}, {StarKeys.Lot("@Item")}, v.qty, 't', 't'
             FROM (VALUES ('MAIN', 5), ('ZZ1', 2.5), ('CONSIGN', 40)) v (code, qty)
             JOIN bc_warehouse w ON w.warehouse_code = v.code
             """,

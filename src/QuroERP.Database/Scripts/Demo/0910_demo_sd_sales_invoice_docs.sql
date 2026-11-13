@@ -3,7 +3,8 @@
 --   one open (OP), and one partly paid (PA) by a demo AR receipt of 100.00 applied to it (sd_ar_clear, SD-BR-261).
 -- The receipt is written here because the AR receipt screen is not built yet. The numbers take the next DN (SD-BR-106) and
 -- CR + yymm (SD-BR-701) numbers and move the counters on, so the screens go on after them.
--- An applied script is not changed. More demo data goes into a new script.
+-- An applied script is not changed. More demo data goes into a new script. Exception (approved, TASK-CORE-067): the invoice
+-- lines take Location and Lot '*'; demo scripts never run on the dev server and schema script 0418 converts earlier databases.
 
 DO $$
 DECLARE
@@ -60,10 +61,13 @@ BEGIN
     FROM bc_customer c WHERE c.id = v_customer
     RETURNING id INTO v_paid;
 
-    INSERT INTO sd_sales_invoice_line (sales_invoice_id, seq, item_id, item_name, dn_qty, dn_prc, dn_amt, dc_rate, warehouse_id, tax_code_id,
-                                       supply_amt, tax_amt, restock, created_by, updated_by)
-    VALUES (v_open, 1, v_item, v_item_name, 1, 95, 95, 0, v_warehouse, v_tax, 95, 0, false, 'system', 'system'),
-           (v_paid, 1, v_item, v_item_name, 2, 95, 190, 0, v_warehouse, v_tax, 190, 0, false, 'system', 'system');
+    -- Location and Lot '*' (TASK-CORE-067): the invoice moves no stock
+    INSERT INTO sd_sales_invoice_line (sales_invoice_id, seq, item_id, item_name, dn_qty, dn_prc, dn_amt, dc_rate, warehouse_id, location_id,
+                                       lot_id, tax_code_id, supply_amt, tax_amt, restock, created_by, updated_by)
+    SELECT x.invoice_id, 1, v_item, v_item_name, x.qty, 95, x.amt, 0, v_warehouse, c.id, l.id, v_tax, x.amt, 0, false, 'system', 'system'
+    FROM (VALUES (v_open, 1, 95), (v_paid, 2, 190)) AS x (invoice_id, qty, amt)
+    JOIN bc_location c ON c.warehouse_id = v_warehouse AND c.location_code = '*'
+    JOIN mm_lot l ON l.item_id = v_item AND l.lot_no = '*';
 
     -- SD-BR-701: CR + yymm of the receipt date + 6 digits
     SELECT coalesce(max(substr(x.no, 7)::bigint), 0)

@@ -6,6 +6,8 @@ using QuroErp.Domain.Mm.GoodsReceipts;
 using QuroErp.Domain.Mm.Inventory;
 using QuroErp.Domain.Mm.PurchaseOrders;
 
+using QuroErp.Infrastructure.Mm.Inventory;
+
 namespace QuroErp.Infrastructure.Mm.GoodsReceipts;
 
 internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
@@ -129,11 +131,13 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
         UPDATE mm_goods_receipt_line SET supply_amt = @SupplyAmt, tax_amt = @TaxAmt WHERE id = @LineId AND goods_receipt_id = @Id
         """;
 
-    private const string InsertLine = """
-        INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, item_name, warehouse_id, lot_id, gr_qty, gr_prc, gr_amt, tax_code_id,
-                                           supply_amt, tax_amt, deductible, purchase_order_line_id, created_by, updated_by)
-        VALUES (@Id, @Seq, @ItemId, @ItemName, @WarehouseId, @LotId, @GrQty, @GrPrc, @GrAmt, @TaxCodeId, @SupplyAmt, @TaxAmt, @Deductible,
-                @PurchaseOrderLineId, @User, @User)
+    // Location '*' until the receipt takes a Location (TASK-CORE-073); Lot '*' until the stock posting sets the line's lot
+    private const string InsertLine = $"""
+        {StockKeys.EnsureStarRows}
+        INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, item_name, warehouse_id, location_id, lot_id, gr_qty, gr_prc, gr_amt,
+                                           tax_code_id, supply_amt, tax_amt, deductible, purchase_order_line_id, created_by, updated_by)
+        VALUES (@Id, @Seq, @ItemId, @ItemName, @WarehouseId, {StockKeys.StarLocationId}, coalesce(@LotId, {StockKeys.StarLotId}), @GrQty, @GrPrc,
+                @GrAmt, @TaxCodeId, @SupplyAmt, @TaxAmt, @Deductible, @PurchaseOrderLineId, @User, @User)
         """;
 
     private const string SetLineLot = "UPDATE mm_goods_receipt_line SET lot_id = @LotId WHERE goods_receipt_id = @Id AND seq = @Seq";

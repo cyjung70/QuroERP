@@ -103,11 +103,17 @@ public class CompanyInfoRepositoryTests(AuthSchemaFixture db)
             """,
             transaction: uow.Transaction);
         await connection.ExecuteAsync(
-            """
-            WITH i AS (INSERT INTO bc_item (item_cd, created_by, updated_by) VALUES ('ZI1', 't', 't') RETURNING id)
-            INSERT INTO sd_shipment_line (shipment_id, seq, item_id, warehouse_id, ship_qty, ship_prc, billed_qty, tax_code_id, created_by, updated_by)
-            SELECT @shipment, 1, i.id, s.warehouse_id, 5, 1, 5, (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 't', 't'
-            FROM i, sd_shipment s WHERE s.id = @shipment
+            "INSERT INTO bc_item (item_cd, created_by, updated_by) VALUES ('ZI1', 't', 't')", transaction: uow.Transaction);
+        await connection.ExecuteAsync(
+            StarKeys.Ensure("SELECT warehouse_id FROM sd_shipment WHERE id = @shipment", "SELECT id FROM bc_item WHERE item_cd = 'ZI1'"),
+            new { shipment }, uow.Transaction);
+        await connection.ExecuteAsync(
+            $"""
+            INSERT INTO sd_shipment_line (shipment_id, seq, item_id, warehouse_id, location_id, lot_id, ship_qty, ship_prc, billed_qty, tax_code_id,
+                                          created_by, updated_by)
+            SELECT @shipment, 1, i.id, s.warehouse_id, {StarKeys.Location("s.warehouse_id")}, {StarKeys.Lot("i.id")}, 5, 1, 5,
+                   (SELECT id FROM bc_tax_code WHERE tax_code = 'NONE'), 't', 't'
+            FROM bc_item i, sd_shipment s WHERE i.item_cd = 'ZI1' AND s.id = @shipment
             """,
             new { shipment }, uow.Transaction);
         var allBilled = await companies.HasUnbilledShipmentsAsync(uow.Transaction, None);

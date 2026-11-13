@@ -39,7 +39,7 @@ public class PriceVarianceVendorReturnTests(AuthSchemaFixture db)
         db.Get<IItemRepository>(), db.Get<ILotRepository>(), new AnyCode(), db.Get<IUnitOfWorkFactory>(), new FixedClock());
 
     [DatabaseFact, Trait("Id", "MM-UT-759"), Trait("Rule", "MM-BR-759"), Trait("Rule", "MM-BR-005")]
-    public async Task PriceVariance_ChangesTheValueAndCost_NotTheStock_AndHasNoLot()
+    public async Task PriceVariance_ChangesTheValueAndCost_NotTheStock_OnLotStar()
     {
         var main = await MainAsync();
         var item = await CreateAsync(lotManaged: true);
@@ -49,10 +49,12 @@ public class PriceVarianceVendorReturnTests(AuthSchemaFixture db)
 
         (await StockAsync(item.Id)).Should().Be((10m, 170m, 17m));
         (await OnHandAsync(item.Id, main)).Should().Be(10m);
-        (await QueryAsync<(decimal Qty, decimal Prc, decimal Amount, long? LotId)>(
-            "SELECT qty, prc, amount, lot_id FROM mm_goods_movement WHERE id = @Id", new { posted.Single().Id }))
-            .Single().Should().Be((0m, 0m, 20m, (long?)null));
-        (await QueryAsync<long>("SELECT count(*) FROM mm_lot WHERE item_id = @Id", new { item.Id })).Single().Should().Be(1, "only lot A");
+        // A price difference has no lot of its own: the system lot '*' (MM-BR-360, MM-BR-363)
+        (await QueryAsync<(decimal Qty, decimal Prc, decimal Amount, string LotNo)>(
+            "SELECT g.qty, g.prc, g.amount, l.lot_no FROM mm_goods_movement g JOIN mm_lot l ON l.id = g.lot_id WHERE g.id = @Id",
+            new { posted.Single().Id }))
+            .Single().Should().Be((0m, 0m, 20m, "*"));
+        (await QueryAsync<string>("SELECT lot_no FROM mm_lot WHERE item_id = @Id ORDER BY lot_no", new { item.Id })).Should().Equal("*", "A");
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-005"), Trait("Rule", "MM-BR-005")]
@@ -207,7 +209,7 @@ public class PriceVarianceVendorReturnTests(AuthSchemaFixture db)
 
     private async Task<decimal> OnHandAsync(long itemId, long warehouseId) =>
         (await QueryAsync<decimal>(
-            "SELECT onhand_qty FROM mm_onhand WHERE item_id = @itemId AND warehouse_id = @warehouseId", new { itemId, warehouseId })).Single();
+            "SELECT sum(onhand_qty) FROM mm_onhand WHERE item_id = @itemId AND warehouse_id = @warehouseId", new { itemId, warehouseId })).Single();
 
     private async Task<IReadOnlyList<T>> QueryAsync<T>(string sql, object? args)
     {

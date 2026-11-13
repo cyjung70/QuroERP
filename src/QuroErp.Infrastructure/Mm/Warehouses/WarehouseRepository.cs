@@ -42,7 +42,7 @@ internal sealed class WarehouseRepository : IWarehouseRepository
         WHERE w.id = ANY(@Ids)
           AND (EXISTS (SELECT 1 FROM mm_goods_movement x WHERE x.warehouse_id = w.id)
                OR EXISTS (SELECT 1 FROM mm_onhand x WHERE x.warehouse_id = w.id)
-               OR EXISTS (SELECT 1 FROM mm_lot_onhand x WHERE x.warehouse_id = w.id)
+               OR EXISTS (SELECT 1 FROM bc_location x WHERE x.warehouse_id = w.id AND NOT x.is_system)
                OR EXISTS (SELECT 1 FROM mm_monthly_inventory x WHERE x.warehouse_id = w.id)
                OR EXISTS (SELECT 1 FROM mm_stock_count x WHERE x.warehouse_id = w.id)
                OR EXISTS (SELECT 1 FROM mm_stock_transfer x WHERE x.from_warehouse_id = w.id OR x.to_warehouse_id = w.id)
@@ -62,13 +62,20 @@ internal sealed class WarehouseRepository : IWarehouseRepository
         UPDATE bc_warehouse SET is_default = false, updated_at = now(), updated_by = @UpdatedBy WHERE is_default
         """;
 
+    // MM-BR-712: a new warehouse gets its system Location '*' in the same statement
     private const string Insert = """
+        WITH w AS (
         INSERT INTO bc_warehouse (warehouse_code, warehouse_name, is_default, use_yn, warehouse_type, remarks, business_place_id,
                                   created_by, updated_by)
         SELECT @WarehouseCode, @WarehouseName, @IsDefault, @UseYn, @WarehouseType, @Remarks, p.id, @UpdatedBy, @UpdatedBy
         FROM bc_business_place p
         WHERE p.is_default
         RETURNING id
+        ), location AS (
+        INSERT INTO bc_location (warehouse_id, location_code, is_system, created_by, updated_by)
+        SELECT id, '*', true, @UpdatedBy, @UpdatedBy FROM w
+        )
+        SELECT id FROM w
         """;
 
     private const string Update = """
@@ -80,7 +87,11 @@ internal sealed class WarehouseRepository : IWarehouseRepository
 
     private const string ClearUserDefaults = "UPDATE sys_app_user SET default_warehouse_id = NULL WHERE default_warehouse_id = ANY(@Ids)";
 
-    private const string Delete = "DELETE FROM bc_warehouse WHERE id = ANY(@Ids)";
+    // The system Location '*' goes with the warehouse; foreign keys are checked at the end of the statement
+    private const string Delete = """
+        WITH location AS (DELETE FROM bc_location WHERE warehouse_id = ANY(@Ids) AND is_system)
+        DELETE FROM bc_warehouse WHERE id = ANY(@Ids)
+        """;
 
     public async Task<IReadOnlyList<WarehouseOptionDto>> FindOptionsAsync(
         bool includeConsignment, bool includeInactive, IDbTransaction transaction, CancellationToken cancellationToken) =>
