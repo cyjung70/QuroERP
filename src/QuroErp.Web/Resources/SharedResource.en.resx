@@ -962,6 +962,8 @@
   <data name="Sd.SalesInvoice.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
   <data name="Sd.SalesInvoice.ExchangeRate" xml:space="preserve"><value>Exchange Rate</value></data>
   <data name="Sd.SalesInvoice.WarehouseId" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Sd.SalesInvoice.WarehouseName" xml:space="preserve"><value>Warehouse name</value></data>
+  <data name="Sd.SalesInvoice.FindWarehouse" xml:space="preserve"><value>Find warehouse</value></data>
   <data name="Sd.SalesInvoice.BillingFlow" xml:space="preserve"><value>Billing Flow</value></data>
   <data name="Sd.SalesInvoice.ShipVia" xml:space="preserve"><value>Ship Via</value></data>
   <data name="Sd.SalesInvoice.FreightCharge" xml:space="preserve"><value>Freight Charge</value></data>

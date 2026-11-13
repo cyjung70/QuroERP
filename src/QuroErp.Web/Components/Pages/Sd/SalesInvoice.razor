@@ -120,14 +120,20 @@
                       TestId="sales-invoice-header-tax-exemption-cert-no" />
             <QuroNumber Label="@L["Sd.SalesInvoice.AvailableCredit"]" Value="s.AvailableCredit" Decimals="_decimals.Amount"
                         LockMode="LockMode.Always" TestId="sales-invoice-header-available-credit" />
-            @* 4: base currency total (BC-BR-413), only for a foreign currency; the default warehouse of bill-first and direct lines *@
+            @* 4: the default warehouse of order-import and added lines (general warehouses only, MM-BR-703); the base currency total
+               (BC-BR-413), only for a foreign currency *@
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Sd.SalesInvoice.WarehouseId"]" Field="WarehouseCode" Required TextCase="TextCase.Upper"
+                          TestId="sales-invoice-header-warehouse-code" />
+                <button type="button" aria-label="@L["Sd.SalesInvoice.FindWarehouse"]" disabled="@(!_canEdit || !SalesInvoiceStatus.CanSave(s))"
+                        data-testid="sales-invoice-header-warehouse-lookup" @onclick="() => _warehouseLookupOpen = true">…</button>
+                <span class="quro-lookup-name" data-testid="sales-invoice-header-warehouse-name">@WarehouseOf(s.WarehouseCode)?.WarehouseName</span>
+            </div>
             @if (_decimals.IsForeign)
             {
                 <QuroNumber Label="@L["Sd.SalesInvoice.TotBaseAmt"]" Value="BaseTotal(TotalsOf(ActiveLines()).Total)" Decimals="_decimals.BaseAmount"
                             LockMode="LockMode.Always" Span="2" TestId="sales-invoice-header-tot-base-amt" />
             }
-            <QuroSelect Label="@L["Sd.SalesInvoice.WarehouseId"]" Field="WarehouseCode" Options="_warehouseOptions" Required
-                        TestId="sales-invoice-header-warehouse-code" />
             @* The ship-to, collapsed unless a picked customer leaves the required ZIP code empty *@
             <QuroFieldSection Title="@L["Sd.SalesInvoice.ShipTo"]" KeepOpen="@(s.CustomerId is not null && string.IsNullOrWhiteSpace(s.ShipZipCode))"
                               TestId="sales-invoice-header-ship-to">
@@ -201,6 +207,14 @@
         </Columns>
     </QuroLookupDialog>
 
+    <QuroLookupDialog TItem="WarehouseOptionDto" Title="@L["Sd.SalesInvoice.FindWarehouse"]" TestId="sales-invoice-warehouse-lookup"
+                      @bind-Visible="_warehouseLookupOpen" Search="FindWarehousesAsync" OnSelected="SelectWarehouse">
+        <Columns>
+            <QuroColumn TRow="WarehouseOptionDto" Title="@L["Sd.SalesInvoice.WarehouseId"]" Value="w => w.WarehouseCode" />
+            <QuroColumn TRow="WarehouseOptionDto" Title="@L["Sd.SalesInvoice.WarehouseName"]" Value="w => w.WarehouseName" />
+        </Columns>
+    </QuroLookupDialog>
+
     <QuroLookupDialog TItem="InvoiceShipmentChoice" Title="@L["Sd.SalesInvoice.ImportShipment"]" TestId="sales-invoice-shipment-lookup"
                       @bind-Visible="_shipmentLookupOpen" Search="FindShipmentsAsync" OnSelected="ImportShipmentAsync">
         <Columns>
@@ -245,7 +259,6 @@
     private IReadOnlyList<SalesOrderDiscountRateDto> _discounts = [];
     private IReadOnlyList<WarehouseOptionDto> _allWarehouses = [];
     private IReadOnlyList<WarehouseOptionDto> _warehouses = [];
-    private IReadOnlyList<CodeItemDto> _warehouseOptions = [];
     private IReadOnlyList<CodeItemDto> _billingFlows = [];
     private IReadOnlyList<CodeItemDto> _currencies = [];
     private IReadOnlyList<UnshippedCancelRow> _cancelRows = [];
@@ -255,6 +268,7 @@
     private bool _canEdit;
     private bool _ready;
     private bool _customerLookupOpen;
+    private bool _warehouseLookupOpen;
     private bool _shipmentLookupOpen;
     private bool _orderLookupOpen;
     private bool _cancelOpen;
@@ -285,7 +299,6 @@
             // Bill-first and direct lines use general warehouses, never the consignment warehouse (MM-BR-703, MM-BR-710)
             _allWarehouses = await WarehouseApi.GetOptionsAsync(CancellationToken.None);
             _warehouses = [.. _allWarehouses.Where(w => w.UseYn && w.WarehouseType == NormalWarehouse)];
-            _warehouseOptions = [.. _warehouses.Select(w => new CodeItemDto(w.WarehouseCode, $"{w.WarehouseCode} {w.WarehouseName}"))];
             // The user's default warehouse, else the company default warehouse (MM-BR-702, MM-BR-703)
             var profile = await ProfileApi.GetAsync(CancellationToken.None);
             var companyDefault = (await WarehouseApi.SearchAsync(false, CancellationToken.None)).FirstOrDefault(w => w.IsDefault)?.Id;
@@ -507,7 +520,32 @@
             UseDecimals(Header().CurrencyCode);
             _ = InvokeAsync(() => _frame!.RunCommandAsync(RefreshRateAsync));
         }
+        else if (Is(field, nameof(SalesInvoiceHeader.WarehouseCode)))
+        {
+            CheckWarehouse(Header().WarehouseCode?.Trim());
+        }
     }
+
+    // Only general warehouses are header warehouses (MM-BR-703). The message is set directly: a frame command starts by clearing it
+    private void CheckWarehouse(string? code)
+    {
+        if (!string.IsNullOrEmpty(code) && !_warehouses.Any(w => Is(w.WarehouseCode, code)))
+        {
+            SetQuietly(nameof(SalesInvoiceHeader.WarehouseCode), null);
+            _frame!.ShowMessage(Messages.Get(new ApiProblem(404, NotFoundCode, [code])), isError: true);
+        }
+    }
+
+    private Task<IReadOnlyList<WarehouseOptionDto>> FindWarehousesAsync(string? keyword)
+    {
+        var text = keyword?.Trim();
+        return Task.FromResult<IReadOnlyList<WarehouseOptionDto>>([.. _warehouses.Where(w => string.IsNullOrEmpty(text)
+            || w.WarehouseCode.Contains(text, StringComparison.OrdinalIgnoreCase)
+            || w.WarehouseName.Contains(text, StringComparison.OrdinalIgnoreCase))]);
+    }
+
+    private void SelectWarehouse(WarehouseOptionDto warehouse) =>
+        SetQuietly(nameof(SalesInvoiceHeader.WarehouseCode), warehouse.WarehouseCode);
 
     private async Task FindCustomerAsync(string? name)
     {

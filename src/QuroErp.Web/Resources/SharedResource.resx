@@ -962,6 +962,8 @@
   <data name="Sd.SalesInvoice.CurrencyCode" xml:space="preserve"><value>통화</value></data>
   <data name="Sd.SalesInvoice.ExchangeRate" xml:space="preserve"><value>환율</value></data>
   <data name="Sd.SalesInvoice.WarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Sd.SalesInvoice.WarehouseName" xml:space="preserve"><value>창고명</value></data>
+  <data name="Sd.SalesInvoice.FindWarehouse" xml:space="preserve"><value>창고 찾기</value></data>
   <data name="Sd.SalesInvoice.BillingFlow" xml:space="preserve"><value>청구 흐름</value></data>
   <data name="Sd.SalesInvoice.ShipVia" xml:space="preserve"><value>운송 방법</value></data>
   <data name="Sd.SalesInvoice.FreightCharge" xml:space="preserve"><value>운임 조건</value></data>

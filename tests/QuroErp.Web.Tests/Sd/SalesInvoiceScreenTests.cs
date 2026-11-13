@@ -79,9 +79,8 @@ public class SalesInvoiceScreenTests : BunitContext
         var page = RenderAs("admin");
 
         page.Find("[data-testid=sales-invoice-doc-no]").TextContent.Should().Be("새 문서");
-        page.Field("sales-invoice-header-warehouse-code").Selected.Should().BeEquivalentTo("MAIN");
-        page.Field("sales-invoice-header-warehouse-code").Options.Should().ContainSingle("never the consignment warehouse")
-            .Which.Code.Should().BeEquivalentTo("MAIN");
+        page.Field("sales-invoice-header-warehouse-code").Value.Should().Be("MAIN");
+        page.Find("[data-testid=sales-invoice-header-warehouse-name]").TextContent.Should().Be("Main Store");
         page.Field("sales-invoice-header-currency-code").Value.Should().BeEquivalentTo("USD");
         Frame(page).Header.DueDt.Should().Be(Frame(page).Header.DnDt);
         Button(page, "import-shipment").HasAttribute("disabled").Should().BeTrue();
@@ -91,6 +90,28 @@ public class SalesInvoiceScreenTests : BunitContext
         page.Find(".quro-entry-lines-head").TextContent.Should().Contain("거래처를 먼저 선택하세요.");
     }
 
+    [Fact, Trait("Id", "SD-UC-003-T01"), Trait("Rule", "MM-BR-703")]
+    public void HeaderWarehouse_Lookup_ListsGeneralWarehousesOnly_AndFillsTheCode()
+    {
+        var page = RenderAs("admin");
+
+        page.Find("[data-testid=sales-invoice-header-warehouse-lookup]").Click();
+
+        page.WaitForAssertion(() => page.LookupRows("sales-invoice-warehouse-lookup").Should().ContainSingle("never the consignment warehouse"));
+        page.PickLookupRow<WarehouseOptionDto, SalesInvoice>("sales-invoice-warehouse-lookup", 0);
+        page.WaitForAssertion(() => page.Field("sales-invoice-header-warehouse-code").Value.Should().Be("MAIN"));
+    }
+
+    [Fact, Trait("Id", "SD-UC-003-T01"), Trait("Rule", "MM-BR-703")]
+    public void HeaderWarehouse_TypedConsignmentCode_IsRefused()
+    {
+        var page = RenderAs("admin");
+
+        page.Field("sales-invoice-header-warehouse-code").Change("consign");
+
+        page.WaitForAssertion(() => page.Find("[data-testid=sales-invoice-message]").GetAttribute("data-level").Should().Be("error"));
+        Frame(page).Header.WarehouseCode.Should().BeNull();
+    }
     [Fact, Trait("Id", "SD-UC-003-T01"), Trait("Rule", "SD-BR-118")]
     public void PickedCustomer_FillsTheRepTermsAndShipTo()
     {
