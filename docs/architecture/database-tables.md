@@ -105,6 +105,7 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `mm_purchase_request` | 구매 요청 | MM | MM purchase-request.md | id, request_no UNIQUE (`PR` + yymm + 6자리), requester_id, request_dt, need_dt, status (OP, PO, CL), remarks, ext_attrs |
 | `mm_purchase_request_line` | 구매 요청 상세 | MM | MM purchase-request.md | id, purchase_request_id, seq, item_id, qty, warehouse_id, vendor_id (희망, NULL 허용), ordered_qty (발주 줄 수량 합) |
 | `mm_lot` | 로트 | MM | MM lot.md | id, item_id, lot_no (최대 30자, `*`은 시스템 — 품목마다 1행), supplier_lot_no, mfg_dt, expiry_dt, received_dt (FIFO 기준), goods_receipt_line_id (만든 입고 줄), assembly_id (만든 조립). UNIQUE (item_id, lot_no) (MM-BR-352·363·364) |
+| `mm_lot_onhand` | 로트 잔고 (없앨 테이블) | MM | MM lot.md, inventory.md | id, item_id, warehouse_id, lot_id, onhand_qty. 현재고가 (품목, 창고, Location, Lot) 키로 바뀌면 쓰지 않는다 — TASK-CORE-067이 잔고를 `mm_onhand`로 옮기고 지운다 (MM-BR-354) |
 | `sys_language` | 언어 | BC | i18n.md, BC localization.md | id, lang_code UNIQUE (en, ko 사용. sw 행은 use_yn = false), sort_order, use_yn |
 | `bc_currency` | 통화 | BC | localization.md, BC localization.md | id, currency_code UNIQUE (ISO 4217), decimals (0~4), country_code (ISO 3166-1, NULL 허용), use_yn |
 | `bc_currency_translation` | 통화 번역 | BC | i18n.md | id, currency_id, lang_code, name. UNIQUE (currency_id, lang_code) |

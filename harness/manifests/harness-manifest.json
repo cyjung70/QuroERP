@@ -80,7 +80,7 @@
     },
     {
       "path": "docs/architecture/database-tables.md",
-      "sha256": "1f9f76b7fd95432c39c9d11422b40a441398842d72265e235771297ead5f9e3c"
+      "sha256": "9aa5d2842097ebb162768bde58760a2d3d5b7def60aa790ab89cbcc281179b9f"
     },
     {
       "path": "docs/architecture/database.md",
@@ -344,7 +344,7 @@
     },
     {
       "path": "docs/glossary.md",
-      "sha256": "a8729d6a4e6e2b6368396b3ea8c0a99991d8079c3f488e4482c53ee24be40dfb"
+      "sha256": "393d99a8040f9c27ce532e32799875dd3992e54c9202993dffd292ed3c106510"
     },
     {
       "path": "docs/INDEX.md",
