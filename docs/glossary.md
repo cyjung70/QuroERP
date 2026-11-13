@@ -99,7 +99,6 @@
 | 구매 요청 | PurchaseRequest | mm_purchase_request | MM | TO BE 신규 |
 | 구매 요청 상세 | PurchaseRequestLine | mm_purchase_request_line | MM | TO BE 신규 |
 | 로트 | Lot | mm_lot | MM | TO BE 신규 |
-| 로트 잔고 (없앨 테이블) | LotOnhand | mm_lot_onhand | MM | TO BE 신규 |
 | 언어 | Language | sys_language | BC | TO BE 신규 |
 | 통화 | Currency | bc_currency | BC | TO BE 신규 |
 | 통화 번역 | CurrencyTranslation | bc_currency_translation | BC | TO BE 신규 |
