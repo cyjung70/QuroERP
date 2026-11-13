@@ -105,7 +105,6 @@ PostgreSQL 테이블 정의다. 규칙은 `database.md`, 코드 컬럼은 `codes
 | `mm_purchase_request` | 구매 요청 | MM | MM purchase-request.md | id, request_no UNIQUE (`PR` + yymm + 6자리), requester_id, request_dt, need_dt, status (OP, PO, CL), remarks, ext_attrs |
 | `mm_purchase_request_line` | 구매 요청 상세 | MM | MM purchase-request.md | id, purchase_request_id, seq, item_id, qty, warehouse_id, vendor_id (희망, NULL 허용), ordered_qty (발주 줄 수량 합) |
 | `mm_lot` | 로트 | MM | MM lot.md | id, item_id, lot_no (최대 30자, `*`은 시스템 — 품목마다 1행), supplier_lot_no, mfg_dt, expiry_dt, received_dt (FIFO 기준), goods_receipt_line_id (만든 입고 줄), assembly_id (만든 조립). UNIQUE (item_id, lot_no) (MM-BR-352·363·364) |
-| `mm_lot_onhand` | 로트 잔고 (없앨 테이블) | MM | MM lot.md, inventory.md | id, item_id, warehouse_id, lot_id, onhand_qty. 현재고가 (품목, 창고, Location, Lot) 키로 바뀌면 쓰지 않는다 — TASK-CORE-068이 잔고를 `mm_onhand`로 옮기고 지운다 (MM-BR-354) |
 | `sys_language` | 언어 | BC | i18n.md, BC localization.md | id, lang_code UNIQUE (en, ko 사용. sw 행은 use_yn = false), sort_order, use_yn |
 | `bc_currency` | 통화 | BC | localization.md, BC localization.md | id, currency_code UNIQUE (ISO 4217), decimals (0~4), country_code (ISO 3166-1, NULL 허용), use_yn |
 | `bc_currency_translation` | 통화 번역 | BC | i18n.md | id, currency_id, lang_code, name. UNIQUE (currency_id, lang_code) |
@@ -945,7 +944,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `seq` | integer | NOT NULL |  |  |
 | `item_id` | bigint | FK [추정] | → `bc_item.id` | AS IS item_cd |
 | `location_id` | bigint | FK NOT NULL | → `bc_location.id`. 실사는 품목+Location+Lot마다 1줄 (MM-BR-358) |  |
-| `lot_id` | bigint | FK NOT NULL | → `mm_lot.id`. 실사는 품목+Location+Lot마다 1줄 (MM-BR-358) |  |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 실사는 품목+Location+Lot마다 1줄 (MM-BR-358). 품목이 있는 줄은 필수 (CHECK, 품목 칸이 NULL을 허용하는 AS IS 정의라 NOT NULL 대신) |  |
 | `old_qty` | numeric |  |  |  |
 | `old_amt` | numeric |  |  |  |
 | `new_qty` | numeric |  |  |  |
@@ -959,6 +958,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (stock_count_id, seq)
+- CHECK: `item_id IS NULL OR lot_id IS NOT NULL`
 
 ## mm_stock_count
 
@@ -1031,7 +1031,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 재고 이동 창고 (MM-BR-703) |  |
 | `location_id` | bigint | FK NOT NULL | → `bc_location.id`. 재고 이동 Location. Location 관리를 하지 않는 품목은 `*` (MM-BR-713) |  |
-| `lot_id` | bigint | FK NOT NULL | → `mm_lot.id`. Lot 관리 품목은 구매입고 때 자동으로 만든다 (MM-BR-353·365) |  |
+| `lot_id` | bigint | FK | → `mm_lot.id`. Lot 관리 품목은 구매입고 때 자동으로 만든다 (MM-BR-353·365). 품목이 있는 줄은 필수 (CHECK, 품목 칸이 NULL을 허용하는 AS IS 정의라 NOT NULL 대신) |  |
 | `pallet_qty` | numeric |  | Pallet 하나의 수량. 넣으면 저장 때 줄 수량을 이 수량씩 나눠 Pallet을 만든다 (MM-BR-910) |  |
 | `gr_qty` | numeric |  | NOT NULL 후보 (참고) | G/R Quantity |
 | `gr_prc` | numeric |  | NOT NULL 후보 (참고) | G/R Unit Price |
@@ -1050,6 +1050,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (goods_receipt_id, seq)
+- CHECK: `item_id IS NULL OR lot_id IS NOT NULL`
 
 ## mm_goods_receipt
 
@@ -1252,7 +1253,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 재고 이동 창고 (MM-BR-703) |  |
 | `location_id` | bigint | FK NOT NULL | → `bc_location.id`. 재고 이동 Location. Location 관리를 하지 않는 품목은 `*` (MM-BR-713) |  |
-| `lot_id` | bigint | FK NOT NULL | → `mm_lot.id`. 늘리는 줄은 `*`, 줄이는 줄은 고른 Lot (MM-BR-355·365) |  |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 늘리는 줄은 `*`, 줄이는 줄은 고른 Lot (MM-BR-355·365). 품목이 있는 줄은 필수 (CHECK, 품목 칸이 NULL을 허용하는 AS IS 정의라 NOT NULL 대신) |  |
 | `ur_qty` | numeric |  |  | Unplanned Receipt Quantity |
 | `ur_amt` | numeric |  |  | Unplanned Receipt Amount |
 | `created_at` | timestamptz | NOT NULL | 감사 컬럼 |  |
@@ -1261,6 +1262,7 @@ Minor 코드 — AS IS `B_MINOR` (Minor Code)
 | `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (unplanned_receipt_id, seq)
+- CHECK: `item_id IS NULL OR lot_id IS NOT NULL`
 
 ## mm_unplanned_receipt
 
@@ -1414,6 +1416,7 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `item_id` | bigint | FK | → `bc_item.id` | AS IS item_cd |
 | `warehouse_id` | bigint | FK NOT NULL | → `bc_warehouse.id`. 재고 이동 창고 (MM-BR-703) |  |
 | `location_id` | bigint | FK NOT NULL | → `bc_location.id`. 선청구 줄의 출발 Location (MM-BR-713) |  |
+| `lot_id` | bigint | FK | → `mm_lot.id`. 선청구 줄의 출발 Lot (MM-BR-713). 품목이 있는 줄은 필수 (CHECK, 품목 칸이 NULL을 허용하는 AS IS 정의라 NOT NULL 대신) |  |
 | `shipment_line_id` | bigint | FK | → `sd_shipment_line.id`. 청구한 출하 줄, 직접 입력 줄은 NULL (SD-BR-108·116) |  |
 | `sales_return_line_id` | bigint | FK | → `sd_sales_return_line.id`. 매출 반품이 만든 Credit Memo 줄 (SD-BR-557) |  |
 | `cancelled_invoice_line_id` | bigint | FK | → `sd_sales_invoice_line.id`. 선청구 미출하 취소가 만든 Credit Memo 줄 (SD-BR-145·146) |  |
@@ -1436,6 +1439,7 @@ MRP 제품 — AS IS `P_MRP_PRODUCT` (MRP Product)
 | `updated_by` | varchar | NOT NULL | 감사 컬럼 |  |
 
 - UNIQUE: (sales_invoice_id, seq)
+- CHECK: `item_id IS NULL OR lot_id IS NOT NULL`
 
 ## sd_sales_invoice
 

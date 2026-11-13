@@ -1,7 +1,7 @@
 {
   "id": "TASK-CORE-067",
   "project": "core",
-  "title": "Location·Lot 재고 키 마이그레이션 1: 추가만 (기존 서비스 그대로 동작)",
+  "title": "Location·Lot 재고 키 마이그레이션",
   "module": "CORE",
   "layer": [
     "Infrastructure"
@@ -24,11 +24,11 @@
     "TASK-CORE-029"
   ],
   "acceptance": [
-    "추가만 하는 마이그레이션이다. 지금 재고 서비스(품목+창고 `mm_onhand`, `mm_lot_onhand`, `lot_id` NULL = 로트 관리 전)가 그대로 동작해야 한다. 키 변경·`mm_lot_onhand` 이전·`lot_id` NOT NULL은 TASK-CORE-068에서 서비스와 함께 한다",
-    "`bc_location`(창고마다 `*` 행, `is_system`), `bc_item.location_managed`·`show_components`, `mm_lot.supplier_lot_no`·`mfg_dt`·`expiry_dt`·`received_dt`·`goods_receipt_line_id`·`assembly_id`, 품목마다 Lot `*` 행 (database-tables.md). `mm_lot.lot_no` CHECK를 `*`도 받도록 바꾼다",
-    "`mm_goods_movement`와 재고 문서 줄 `mm_goods_receipt_line`·`mm_unplanned_receipt_line`·`mm_stock_count_line`·`mm_stock_transfer_line`·`sd_shipment_line`·`sd_sales_invoice_line`에 `location_id` NOT NULL(기존 행 `*`, 기본값 없이 저장 코드가 `*`을 넣는다)을 더한다. 창고 이동에 `mov_type`(기존 `TR`), `from_location_id`·`to_location_id`(기존 `*`). `mm_goods_issue_line`·`mm_goods_return_line`은 쓰는 태스크가 없어 바꾸지 않는다",
-    "창고를 만들 때 `*` Location을, 품목을 만들 때 Lot `*`을 함께 만든다 (MM-BR-712·363). 지금 저장 코드는 줄 `location_id`에 그 창고의 `*`을 넣는다",
-    "통합 테스트: 마이그레이션 뒤 기존 재고·Lot·출하·송장 테스트가 모두 통과한다. 다시 실행해도 결과가 같다(이미 적용한 개발 DB 포함)"
+    "마이그레이션: `bc_location`(창고마다 `*` 행, `is_system`), `bc_item.location_managed`·`show_components`, `mm_lot.supplier_lot_no`·`mfg_dt`·`expiry_dt`·`received_dt`·`goods_receipt_line_id`·`assembly_id`, 품목마다 Lot `*` 행, `mm_lot.lot_no` CHECK가 `*`을 받는다 (database-tables.md)",
+    "`mm_onhand`를 (품목, 창고, Location, Lot) 키로 바꾼다. 기존 현재고는 Location `*`·Lot `*`으로, 로트 잔고는 Location `*`·그 Lot으로 옮기고 `mm_lot_onhand`를 지운다. 시스템 로트 `MIGRATED`·`UNKNOWN`은 `*`로 합친다 (MM-BR-354·363)",
+    "`mm_goods_movement`와 재고 문서 줄에 `location_id` NOT NULL(기존 행 `*`). `lot_id`는 원장·출하 줄·창고 이동 줄 NOT NULL, 품목 칸이 NULL을 허용하는 입고·예외 입고·실사·송장 줄은 CHECK(품목이 있으면 필수). 창고 이동에 `mov_type`(기존 `TR`), `from_location_id`·`to_location_id`",
+    "저장소는 현재고를 Location `*`에 쓰고, 로트 잔고는 그 Lot의 `mm_onhand` 행이다 (API 변경 없음). 창고·품목을 만들 때 `*` Location·Lot을 함께 만든다 (MM-BR-712·363). 로트 관리를 켜도 기존 재고는 `*`에 둔다 (MM-BR-351)",
+    "마이그레이션 전후 품목+창고 현재고 합·원장 합·로트 잔고가 같은지 확인하는 통합 테스트. 다시 실행해도 결과가 같다(이미 적용한 개발 DB 포함)"
   ],
   "estimateHours": 3,
   "status": "done"
