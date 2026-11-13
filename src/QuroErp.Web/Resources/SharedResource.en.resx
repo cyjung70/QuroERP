@@ -1082,4 +1082,52 @@
   <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>Find Item</value></data>
   <data name="Mm.GoodsReceipt.FindLot" xml:space="preserve"><value>Find Lot</value></data>
   <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>Not saved. Check the received quantities.</value></data>
+  <data name="Menu.G2MM03" xml:space="preserve"><value>Supplier Invoices</value></data>
+  <data name="Mm.SupplierInvoice.Title" xml:space="preserve"><value>Supplier Invoice</value></data>
+  <data name="Mm.SupplierInvoice.InvoiceNo" xml:space="preserve"><value>Invoice No.</value></data>
+  <data name="Mm.SupplierInvoice.Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Mm.SupplierInvoice.Type.INV" xml:space="preserve"><value>Invoice</value></data>
+  <data name="Mm.SupplierInvoice.Type.DM" xml:space="preserve"><value>Debit Memo</value></data>
+  <data name="Mm.SupplierInvoice.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Mm.SupplierInvoice.Status.OP" xml:space="preserve"><value>Open</value></data>
+  <data name="Mm.SupplierInvoice.Status.PA" xml:space="preserve"><value>Partly Paid</value></data>
+  <data name="Mm.SupplierInvoice.Status.CL" xml:space="preserve"><value>Paid</value></data>
+  <data name="Mm.SupplierInvoice.Status.VO" xml:space="preserve"><value>Void</value></data>
+  <data name="Mm.SupplierInvoice.VendorId" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Mm.SupplierInvoice.FindVendor" xml:space="preserve"><value>Find Vendor</value></data>
+  <data name="Mm.SupplierInvoice.RefNo" xml:space="preserve"><value>Vendor Invoice No.</value></data>
+  <data name="Mm.SupplierInvoice.InvoiceDt" xml:space="preserve"><value>Invoice Date</value></data>
+  <data name="Mm.SupplierInvoice.DueDt" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Mm.SupplierInvoice.Terms" xml:space="preserve"><value>Terms</value></data>
+  <data name="Mm.SupplierInvoice.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Mm.SupplierInvoice.ExchangeRate" xml:space="preserve"><value>Exchange Rate</value></data>
+  <data name="Mm.SupplierInvoice.TaxInvoiceReceived" xml:space="preserve"><value>Tax Invoice Received</value></data>
+  <data name="Mm.SupplierInvoice.BalAmt" xml:space="preserve"><value>Balance</value></data>
+  <data name="Mm.SupplierInvoice.ClsAmt" xml:space="preserve"><value>Paid</value></data>
+  <data name="Mm.SupplierInvoice.FindFrom" xml:space="preserve"><value>Invoice date from</value></data>
+  <data name="Mm.SupplierInvoice.FindTo" xml:space="preserve"><value>Invoice date to</value></data>
+  <data name="Mm.SupplierInvoice.TotAmt" xml:space="preserve"><value>Total</value></data>
+  <data name="Mm.SupplierInvoice.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Mm.SupplierInvoice.Delete" xml:space="preserve"><value>Delete Invoice</value></data>
+  <data name="Mm.SupplierInvoice.ImportReceipts" xml:space="preserve"><value>Import Receipts</value></data>
+  <data name="Mm.SupplierInvoice.ImportHint" xml:space="preserve"><value>Add lines with Import Receipts.</value></data>
+  <data name="Mm.SupplierInvoice.Seq" xml:space="preserve"><value>No</value></data>
+  <data name="Mm.SupplierInvoice.GrNo" xml:space="preserve"><value>GR No.</value></data>
+  <data name="Mm.SupplierInvoice.GrSeq" xml:space="preserve"><value>GR Line</value></data>
+  <data name="Mm.SupplierInvoice.GrDt" xml:space="preserve"><value>Receipt Date</value></data>
+  <data name="Mm.SupplierInvoice.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Mm.SupplierInvoice.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Mm.SupplierInvoice.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Mm.SupplierInvoice.GrQty" xml:space="preserve"><value>Received Qty</value></data>
+  <data name="Mm.SupplierInvoice.GrPrc" xml:space="preserve"><value>Receipt Price</value></data>
+  <data name="Mm.SupplierInvoice.InvoicedQty" xml:space="preserve"><value>Invoiced</value></data>
+  <data name="Mm.SupplierInvoice.OpenQty" xml:space="preserve"><value>Open Qty</value></data>
+  <data name="Mm.SupplierInvoice.Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Mm.SupplierInvoice.Prc" xml:space="preserve"><value>Unit Price</value></data>
+  <data name="Mm.SupplierInvoice.SupplyAmt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Mm.SupplierInvoice.TaxCodeId" xml:space="preserve"><value>Tax Code</value></data>
+  <data name="Mm.SupplierInvoice.TaxAmt" xml:space="preserve"><value>Tax</value></data>
+  <data name="Mm.SupplierInvoice.Deductible" xml:space="preserve"><value>Deductible</value></data>
+  <data name="Mm.SupplierInvoice.PvAmt" xml:space="preserve"><value>Price Variance</value></data>
+  <data name="Mm.SupplierInvoice.PriceDifferenceNotSaved" xml:space="preserve"><value>Not saved. Check the invoice prices.</value></data>
 </root>

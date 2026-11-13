@@ -1,0 +1,57 @@
+# MM-UC-032 supplier invoice (TASK-MM-048), screen type SM on the entry frame. Lines come only from the vendor's open receipt
+# lines (MM-BR-763); the quantity, price, tax code and deduction can change on a new line. Amounts and tax are display values
+# the page calculates with the document decimals; the API calculates the stored ones and the PV amount (MM-BR-758). Saved
+# lines are read-only (MM-BR-760).
+screen:
+  id: mm.supplier-invoice.entry
+  module: MM
+  title: Mm.SupplierInvoice.Title
+  version: 1
+  api: /api/mm/supplier-invoices
+  key: id
+  layout: form-grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[4]: query,new,save,delete
+# The terms (code combo) and the tax invoice received check box are drawn by the page
+form:
+  cols: 4
+  fields[14]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+    vendorId,"",hidden,ro,"","","","",0,""
+    invoiceNo,Mm.SupplierInvoice.InvoiceNo,text,auto,"",upper,"","",1,""
+    vendorName,Mm.SupplierInvoice.VendorId,text,req,"",upper,"","",2,""
+    refNo,Mm.SupplierInvoice.RefNo,text,req,50,upper,"","",1,""
+    invoiceDt,Mm.SupplierInvoice.InvoiceDt,date,req,"","","","",1,""
+    dueDt,Mm.SupplierInvoice.DueDt,date,req,"","","","",1,""
+    currencyCode,Mm.SupplierInvoice.CurrencyCode,text,ro,"",upper,"","",1,""
+    exchangeRate,Mm.SupplierInvoice.ExchangeRate,number,ro,"","","","",1,""
+    balAmt,Mm.SupplierInvoice.BalAmt,number,ro,"","","","",1,""
+    remarks,Mm.SupplierInvoice.Remarks,textarea,opt,"","","","",4,""
+    type,"",hidden,ro,"","","","",0,""
+    status,"",hidden,ro,"","","","",0,""
+    updatedAt,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: lines
+    bind: lines
+    rowKey: id
+    deletedRows: strike
+    columns[15]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      seq,Mm.SupplierInvoice.Seq,number,50,false,false,N0,"",false,false
+      grNo,Mm.SupplierInvoice.GrNo,text,120,false,false,"","",false,false
+      grSeq,Mm.SupplierInvoice.GrSeq,number,50,false,false,N0,"",false,false
+      itemCd,Mm.SupplierInvoice.ItemCd,text,120,false,false,"","",false,false
+      itemName,Mm.SupplierInvoice.ItemName,text,180,false,false,"","",false,false
+      unit,Mm.SupplierInvoice.Unit,text,60,false,false,"","",false,false
+      grQty,Mm.SupplierInvoice.GrQty,number,90,false,false,N2,"",false,false
+      grPrc,Mm.SupplierInvoice.GrPrc,number,100,false,false,N2,"",false,false
+      qty,Mm.SupplierInvoice.Qty,number,90,true,true,N2,"",false,false
+      prc,Mm.SupplierInvoice.Prc,number,110,true,true,N2,"",false,false
+      supplyAmt,Mm.SupplierInvoice.SupplyAmt,number,120,false,false,N2,"",false,false
+      taxCode,Mm.SupplierInvoice.TaxCodeId,text,90,true,true,"",mmPoTaxCode,false,false
+      taxAmt,Mm.SupplierInvoice.TaxAmt,number,100,false,false,N2,"",false,false
+      deductible,Mm.SupplierInvoice.Deductible,checkbox,80,true,false,"","",false,false
+      pvAmt,Mm.SupplierInvoice.PvAmt,number,110,false,false,N0,"",false,false
+    rules[1]{on,action,target,expr}:
+      taxCode.change,lookup,"","mmPoTaxCode.all()"
