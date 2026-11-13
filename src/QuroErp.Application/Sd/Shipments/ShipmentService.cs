@@ -583,16 +583,25 @@ public sealed class ShipmentService(
             var dnNo = await numbers.NextAsync(DocumentNumberFormat.SalesInvoice, h.ShipDt, user, transaction, cancellationToken);
             invoiceId = await shipments.InsertInvoiceAsync(dnNo, businessPlaceId, invoiceHeader, user, transaction, cancellationToken);
         }
-        var inputs = save.Kept.Select(l => new ShipmentInvoiceInput(l.Seq, l.ShipQty, l.ShipPrc, l.DcRate, l.TaxCodeId))
-            .Concat(save.Added.Select(l => new ShipmentInvoiceInput(l.Seq, l.ShipQty, l.ShipPrc, l.DcRate, l.TaxCodeId)))
+        // The invoice keeps the lines of the kept shipment lines and the direct lines the invoice screen added (SD-BR-136); new lines
+        // continue its line numbers, and the whole invoice is recalculated so document tax rounding stays right (SD-BR-109)
+        var stored = await shipments.FindInvoiceLineInputsAsync(invoiceId.Value, transaction, cancellationToken);
+        var firstSeq = stored.Count == 0 ? 1 : stored.Max(l => l.Seq) + 1;
+        var newLines = save.Added.Select((l, i) => (Line: l, Seq: firstSeq + i)).ToList();
+        var inputs = stored.Concat(newLines.Select(n => new ShipmentInvoiceInput(n.Seq, n.Line.ShipQty, n.Line.ShipPrc, n.Line.DcRate, n.Line.TaxCodeId)))
             .OrderBy(l => l.Seq).ToList();
-        var (amounts, totals) = ShipmentInvoice.Calculate(inputs, h.CurrencyCode, h.ExchangeRate, save.Rates, save.Settings, save.Rounder);
-        var bySeq = amounts.ToDictionary(a => a.Seq);
-        var added = save.Added.Select(l =>
+        var rates = save.Rates;
+        if (inputs.Any(l => !rates.ContainsKey(l.TaxCodeId)))
         {
-            var a = bySeq[l.Seq];
+            rates = await TaxRatesAsync(inputs.Select(l => l.TaxCodeId).Concat(rates.Keys), h.ShipDt, transaction, cancellationToken);
+        }
+        var (amounts, totals) = ShipmentInvoice.Calculate(inputs, h.CurrencyCode, h.ExchangeRate, rates, save.Settings, save.Rounder);
+        var bySeq = amounts.ToDictionary(a => a.Seq);
+        var added = newLines.Select(n =>
+        {
+            var (l, a) = (n.Line, bySeq[n.Seq]);
             return new ShipmentInvoiceLineWrite(
-                l.Seq, l.ItemId, l.ItemName, l.ShipQty, l.ShipPrc, a.DnAmt, l.SalesOrderLineId, l.DcCd, l.DcRate, l.WarehouseId, l.TaxCodeId,
+                n.Seq, l.ItemId, l.ItemName, l.ShipQty, l.ShipPrc, a.DnAmt, l.SalesOrderLineId, l.DcCd, l.DcRate, l.WarehouseId, l.TaxCodeId,
                 a.SupplyAmt, a.TaxAmt, lineIds[l.Seq]);
         }).ToList();
         await shipments.UpdateInvoiceAsync(

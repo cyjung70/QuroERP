@@ -5,6 +5,8 @@ Sd.Customer.ZipCode: REQUIRED
 Sd.Customer.ShipState: HIDDEN
 Sd.SalesOrder.ShipState: HIDDEN
 Sd.Shipment.ShipState: HIDDEN
+Sd.SalesInvoice.ShipState: HIDDEN
+Sd.SalesInvoice.TaxExemptionCertNo: HIDDEN
 Sd.Customer.BusinessRegNo: OPTIONAL
 Sd.Customer.CeoName: OPTIONAL
 Sd.Customer.BusinessType: OPTIONAL

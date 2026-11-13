@@ -13,7 +13,7 @@ public sealed record LotRef(long Id, string LotNo);
 /// <summary>A saved movement and whether a reversal already points to it.</summary>
 public sealed record SavedMovement(GoodsMovement Movement, bool Reversed);
 
-/// <summary>Stock tables: bc_item stock columns, mm_onhand, mm_lot, mm_lot_onhand and mm_goods_movement (inventory.md).</summary>
+/// <summary>Stock tables: bc_item stock columns, mm_onhand (item + warehouse + Location + Lot), mm_lot and mm_goods_movement (inventory.md).</summary>
 public interface IInventoryRepository
 {
     /// <summary>bc_company.close_year_month: the first month not closed yet (YYYYMM), or null.</summary>
@@ -64,7 +64,7 @@ public interface IInventoryRepository
     Task<int> GetLastAutoLotSeqAsync(long itemId, string prefix, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Locks the mm_lot_onhand row of item + warehouse + lot (FOR UPDATE), creating it with 0 when missing. It is locked after
+    /// Locks the mm_onhand row of item + warehouse + lot (FOR UPDATE), creating it with 0 when missing. It is locked after
     /// the mm_onhand rows (inventory.md "로트").
     /// </summary>
     /// <returns>The lot balance.</returns>

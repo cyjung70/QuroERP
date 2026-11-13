@@ -1,0 +1,66 @@
+{
+  "id": "TASK-MM-060",
+  "project": "core",
+  "title": "PDA 입고 화면 (SM)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/MM/pda-receipt.md"
+  ],
+  "rules": [
+    "MM-BR-920",
+    "MM-BR-923",
+    "MM-BR-910",
+    "MM-BR-353",
+    "MM-BR-364",
+    "MM-BR-001",
+    "MM-BR-002",
+    "MM-BR-003",
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008",
+    "MM-BR-009",
+    "MM-BR-010",
+    "MM-BR-601",
+    "MM-BR-602",
+    "MM-BR-603",
+    "MM-BR-604",
+    "MM-BR-606",
+    "MM-BR-607",
+    "MM-BR-703",
+    "MM-BR-713",
+    "MM-BR-714",
+    "MM-BR-716",
+    "MM-BR-363",
+    "MM-BR-353",
+    "MM-BR-354",
+    "MM-BR-355",
+    "MM-BR-356",
+    "MM-BR-360",
+    "MM-BR-362"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-CORE-031",
+    "TASK-MM-059"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스",
+    "공통 엔트리 프레임 5단 (docs/architecture/entry-frame.md): 필수 입력 연노란색·일반 입력 흰색·읽기 전용 회색·필수 마커, 상태 칩, 비활성 버튼은 숨기지 않음",
+    "로트 관리 품목 줄의 로트 열: 늘리는 줄 입력(빈 값 = 자동), 줄이는 줄 로트 찾기 (MM-BR-353·355·362)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

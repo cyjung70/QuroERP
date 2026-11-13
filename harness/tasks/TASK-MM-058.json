@@ -1,0 +1,33 @@
+{
+  "id": "TASK-MM-058",
+  "project": "core",
+  "title": "바코드 라벨 출력 화면 (M)",
+  "module": "MM",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "M",
+  "specs": [
+    "docs/specifications/MM/label-print.md"
+  ],
+  "rules": [
+    "MM-BR-918",
+    "MM-BR-919"
+  ],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-MM-057"
+  ],
+  "acceptance": [
+    "화면유형 공통 컴포넌트 사용",
+    "명세 화면 필드 반영",
+    "ko·en 리소스"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

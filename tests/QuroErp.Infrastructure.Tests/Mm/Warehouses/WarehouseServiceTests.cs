@@ -53,6 +53,19 @@ public class WarehouseServiceTests(AuthSchemaFixture db)
         saved.Single(w => w.WarehouseCode == "T01B").UpdatedAt.Should().BeAfter(b.UpdatedAt);
     }
 
+    [DatabaseFact, Trait("Id", "MM-UT-712"), Trait("Rule", "MM-BR-712")]
+    public async Task Save_ANewWarehouse_GetsItsSystemLocationStar_AndADeleteTakesItAlong()
+    {
+        var added = (await Service.SaveAsync(Batch(added: [New("T712")]), "kim", None)).Single(w => w.WarehouseCode == "T712");
+
+        (await QueryAsync<(string Code, bool IsSystem, bool UseYn)>(
+            "SELECT location_code, is_system, use_yn FROM bc_location WHERE warehouse_id = @Id", new { added.Id }))
+            .Should().Equal(("*", true, true));
+
+        await Service.SaveAsync(Batch(deleted: [new WarehouseKey(added.Id, added.UpdatedAt)]), "kim", None);
+        (await QueryAsync<long>("SELECT count(*) FROM bc_location WHERE warehouse_id = @Id", new { added.Id })).Single().Should().Be(0);
+    }
+
     [DatabaseFact, Trait("Id", "MM-UC-017-T02"), Trait("Id", "MM-UC-017-T03"), Trait("Id", "MM-UT-701"), Trait("Rule", "MM-BR-701")]
     public async Task Save_RejectsADuplicateCodeIgnoringCase_AndAChangedCode_AndSavesNothing()
     {
@@ -133,8 +146,12 @@ public class WarehouseServiceTests(AuthSchemaFixture db)
         var used = await AddAsync("T07B");
         var item = await ItemAsync("ZZT07");
         await PostAsync(new("GR", Today.AddDays(-3), item, moved.Id, 1, Price: 1));
+        await ExecuteAsync(StarKeys.Ensure("@Id", "@Item"), new { Item = item, used.Id });
         await ExecuteAsync(
-            "INSERT INTO mm_onhand (item_id, warehouse_id, onhand_qty, created_by, updated_by) VALUES (@Item, @Id, 0, 't', 't')",
+            $"""
+            INSERT INTO mm_onhand (item_id, warehouse_id, location_id, lot_id, onhand_qty, created_by, updated_by)
+            VALUES (@Item, @Id, {StarKeys.Location("@Id")}, {StarKeys.Lot("@Item")}, 0, 't', 't')
+            """,
             new { Item = item, used.Id });
         moved = await ReadAsync(moved.Id);
 

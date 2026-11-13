@@ -53,7 +53,9 @@ internal sealed class ItemRepository : IItemRepository
 
     private const string Count = "SELECT count(*) FROM bc_item " + SearchCondition;
 
+    // MM-BR-363: a new item gets its system lot '*' in the same statement
     private const string Insert = """
+        WITH item AS (
         INSERT INTO bc_item (item_cd, item_name, item_name2, item_desc, type, unit, class, valid_flag, usd_prc, so_usd_prc, upc_code,
                              location, reorder_point, memo1, memo2, memo3, memo4, memo5, item_grade, taxable, vat_kind, plating,
                              item_group_cd, mvg_cost, onhand_qty, stk_val, lot_managed, lot_managed_from, created_by, updated_by)
@@ -61,6 +63,10 @@ internal sealed class ItemRepository : IItemRepository
                 @Location, @ReorderPoint, @Memo1, @Memo2, @Memo3, @Memo4, @Memo5, @ItemGrade, @Taxable, @VatKind, @Plating,
                 @ItemGroupCd, @MvgCost, @OnhandQty, @StkVal, @LotManaged, @LotManagedFrom, @UserId, @UserId)
         RETURNING id
+        ), lot AS (
+        INSERT INTO mm_lot (item_id, lot_no, created_by, updated_by) SELECT id, '*', @UserId, @UserId FROM item
+        )
+        SELECT id FROM item
         """;
 
     // Moving average cost, stock quantity and value are left alone (MM-BR-804, MM-BR-805)
@@ -74,7 +80,14 @@ internal sealed class ItemRepository : IItemRepository
         WHERE id = @Id AND updated_at = @ExpectedUpdatedAt
         """;
 
-    private const string Delete = "DELETE FROM bc_item WHERE id = @Id AND updated_at = @ExpectedUpdatedAt";
+    // The system lot '*' goes with the item; foreign keys are checked at the end of the statement
+    private const string Delete = """
+        WITH lot AS (
+        DELETE FROM mm_lot
+        WHERE item_id = @Id AND lot_no = '*' AND EXISTS (SELECT 1 FROM bc_item WHERE id = @Id AND updated_at = @ExpectedUpdatedAt)
+        )
+        DELETE FROM bc_item WHERE id = @Id AND updated_at = @ExpectedUpdatedAt
+        """;
 
     // MM-BR-806: stock in any warehouse, stock movements, set parent or component
     private const string SelectTypeLocked = """
@@ -104,7 +117,7 @@ internal sealed class ItemRepository : IItemRepository
             OR EXISTS (SELECT 1 FROM sd_shipment_line WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_sales_invoice_line WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_bom WHERE parent_item_id = @Id OR child_item_id = @Id)
-            OR EXISTS (SELECT 1 FROM mm_lot WHERE item_id = @Id)
+            OR EXISTS (SELECT 1 FROM mm_lot WHERE item_id = @Id AND lot_no <> '*')
             OR EXISTS (SELECT 1 FROM sd_mrp_part WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_mrp_product WHERE item_id = @Id)
             OR EXISTS (SELECT 1 FROM sd_production_result_line WHERE item_id = @Id)

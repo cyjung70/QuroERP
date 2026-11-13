@@ -329,12 +329,14 @@ public partial class PurchaseOrderServiceTests(AuthSchemaFixture db)
     private async Task ReceiveAsync(long purchaseOrderLineId, long taxCodeId, decimal qty)
     {
         await using var connection = new NpgsqlConnection(db.ConnectionString);
+        await connection.ExecuteAsync(StarKeys.Ensure("SELECT min(id) FROM bc_warehouse", "0"));
         await connection.ExecuteAsync(
-            """
+            $"""
             WITH g AS (INSERT INTO mm_goods_receipt (gr_no, warehouse_id, currency_code, exchange_rate, business_place_id, created_by, updated_by)
                        VALUES ('GR' || @Line, (SELECT min(id) FROM bc_warehouse), 'USD', 1, (SELECT id FROM bc_business_place WHERE is_default), 't', 't') RETURNING id)
-            INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, purchase_order_line_id, gr_qty, warehouse_id, tax_code_id, created_by, updated_by)
-            SELECT id, 1, @Line, @Qty, (SELECT min(id) FROM bc_warehouse), @Tax, 't', 't' FROM g
+            INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, purchase_order_line_id, gr_qty, warehouse_id, location_id, tax_code_id,
+                                               created_by, updated_by)
+            SELECT id, 1, @Line, @Qty, (SELECT min(id) FROM bc_warehouse), {StarKeys.Location("(SELECT min(id) FROM bc_warehouse)")}, @Tax, 't', 't' FROM g
             """,
             new { Line = purchaseOrderLineId, Qty = qty, Tax = taxCodeId });
     }

@@ -1,0 +1,52 @@
+{
+  "id": "TASK-TESTER-026",
+  "project": "tester",
+  "layer": [
+    "Tester"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "estimateHours": 3,
+  "status": "todo",
+  "title": "MM Location·Pallet 테스트: `*` 기본, LT 이동, FIFO 추천, Pallet 생성·분할·병합·출하, 라벨",
+  "module": "MM",
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-024.md"
+  ],
+  "rules": [
+    "MM-BR-712",
+    "MM-BR-713",
+    "MM-BR-714",
+    "MM-BR-715",
+    "MM-BR-716",
+    "MM-BR-717",
+    "MM-BR-910",
+    "MM-BR-911",
+    "MM-BR-912",
+    "MM-BR-913",
+    "MM-BR-914",
+    "MM-BR-915",
+    "MM-BR-916",
+    "MM-BR-918",
+    "MM-BR-919"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-CORE-068",
+    "TASK-CORE-070",
+    "TASK-CORE-073",
+    "TASK-CORE-074",
+    "TASK-MM-027",
+    "TASK-MM-051",
+    "TASK-MM-053",
+    "TASK-MM-057"
+  ],
+  "acceptance": [
+    "tests/scenario/MM/test_location_pallet.py: MM-TS-024, serial (negative_stock_mode fixture로 DENY)",
+    "현재고는 DB SELECT로 (품목, 창고, Location, Lot) 키를 확인한다. Pallet 번호는 실행일 yymm으로 계산한다",
+    "라벨 PDF는 쪽 수·순서와 DataMatrix 해석 값으로 확인한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -m serial -k location 통과, uv run ruff check 통과"
+  ]
+}

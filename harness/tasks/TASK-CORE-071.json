@@ -1,0 +1,31 @@
+{
+  "id": "TASK-CORE-071",
+  "project": "core",
+  "title": "PDA 화면 기반: 모바일 배치와 스캔 입력 컴포넌트",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/screens.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-006",
+    "TASK-CORE-070"
+  ],
+  "acceptance": [
+    "`/pda` 레이아웃: 폭 360px 한 열, 헤더 → 스캔 입력 → 줄 카드 → 하단 고정 저장 (screens.md \"PDA 화면\")",
+    "스캔 입력 컴포넌트: 항상 포커스, Enter로 확정, DataMatrix 해석(TASK-CORE-070), 거부 때 소리·진동·빨간 안내 (MM-BR-923)",
+    "PDA 메뉴(입고·출고·이동)를 메뉴 시드에 더한다. 권한은 화면과 같다 (BC-BR-214)",
+    "bUnit: 스캔 확정·거부, 360px에서 버튼이 잘리지 않음"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

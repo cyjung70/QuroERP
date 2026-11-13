@@ -4,6 +4,8 @@ using QuroErp.Application.Sd.Shipments;
 using QuroErp.Contracts.Sd.Shipments;
 using QuroErp.Domain.Sd.Shipments;
 
+using QuroErp.Infrastructure.Mm.Inventory;
+
 namespace QuroErp.Infrastructure.Sd.Shipments;
 
 internal sealed class ShipmentRepository : IShipmentRepository
@@ -53,7 +55,7 @@ internal sealed class ShipmentRepository : IShipmentRepository
     private const string SelectLines = """
         SELECT l.id, l.seq, l.item_id, i.item_cd, coalesce(l.item_name, i.item_name) AS item_name, i.unit, l.warehouse_id, w.warehouse_code,
                l.lot_id, t.lot_no, l.ship_qty, l.ship_prc, l.dc_cd, coalesce(l.dc_rate, 0) AS dc_rate, l.tax_code_id, l.billed_qty,
-               coalesce((SELECT h.onhand_qty FROM mm_onhand h WHERE h.item_id = l.item_id AND h.warehouse_id = l.warehouse_id), 0) AS onhand_qty,
+               coalesce((SELECT sum(h.onhand_qty) FROM mm_onhand h WHERE h.item_id = l.item_id AND h.warehouse_id = l.warehouse_id), 0) AS onhand_qty,
                l.sales_order_line_id, o.so_no, ol.seq AS so_seq, l.sales_invoice_line_id, d.dn_no, dl.seq AS dn_seq,
                CASE WHEN l.sales_invoice_line_id IS NOT NULL THEN coalesce(dl.dn_qty, 0) - dl.shipped_qty - dl.cancelled_qty
                     WHEN l.sales_order_line_id IS NOT NULL THEN coalesce(ol.so_qty, 0) - ol.ship_qty END AS remaining_qty
@@ -144,11 +146,13 @@ internal sealed class ShipmentRepository : IShipmentRepository
 
     private const string DeleteLines = "DELETE FROM sd_shipment_line WHERE shipment_id = @Id AND id = ANY(@Ids)";
 
-    private const string InsertLine = """
-        INSERT INTO sd_shipment_line (shipment_id, seq, item_id, item_name, warehouse_id, ship_qty, ship_prc, dc_cd, dc_rate, billed_qty,
-                                      sales_order_line_id, tax_code_id, lot_id, sales_invoice_line_id, created_by, updated_by)
-        VALUES (@Id, @Seq, @ItemId, @ItemName, @WarehouseId, @ShipQty, @ShipPrc, @DcCd, @DcRate, @BilledQty, @SalesOrderLineId, @TaxCodeId,
-                @LotId, @SalesInvoiceLineId, @User, @User)
+    // Location '*' until the shipment takes a Location (TASK-CORE-074); Lot '*' until the stock posting sets the line's lot
+    private const string InsertLine = $"""
+        {StockKeys.EnsureStarRows}
+        INSERT INTO sd_shipment_line (shipment_id, seq, item_id, item_name, warehouse_id, location_id, ship_qty, ship_prc, dc_cd, dc_rate,
+                                      billed_qty, sales_order_line_id, tax_code_id, lot_id, sales_invoice_line_id, created_by, updated_by)
+        VALUES (@Id, @Seq, @ItemId, @ItemName, @WarehouseId, {StockKeys.StarLocationId}, @ShipQty, @ShipPrc, @DcCd, @DcRate, @BilledQty,
+                @SalesOrderLineId, @TaxCodeId, coalesce(@LotId, {StockKeys.StarLotId}), @SalesInvoiceLineId, @User, @User)
         RETURNING id
         """;
 
@@ -203,11 +207,21 @@ internal sealed class ShipmentRepository : IShipmentRepository
         RETURNING id
         """;
 
-    private const string InsertInvoiceLine = """
+    // The invoice moves no stock: Location and Lot '*'
+    private const string InsertInvoiceLine = $"""
+        {StockKeys.EnsureStarRows}
         INSERT INTO sd_sales_invoice_line (sales_invoice_id, seq, item_id, item_name, dn_qty, dn_prc, dn_amt, sales_order_line_id, dc_cd, dc_rate,
-                                           warehouse_id, tax_code_id, supply_amt, tax_amt, shipment_line_id, created_by, updated_by)
-        VALUES (@Id, @Seq, @ItemId, @ItemName, @DnQty, @DnPrc, @DnAmt, @SalesOrderLineId, @DcCd, @DcRate, @WarehouseId, @TaxCodeId, @SupplyAmt,
-                @TaxAmt, @ShipmentLineId, @User, @User)
+                                           warehouse_id, location_id, lot_id, tax_code_id, supply_amt, tax_amt, shipment_line_id, created_by,
+                                           updated_by)
+        VALUES (@Id, @Seq, @ItemId, @ItemName, @DnQty, @DnPrc, @DnAmt, @SalesOrderLineId, @DcCd, @DcRate, @WarehouseId, {StockKeys.StarLocationId},
+                {StockKeys.StarLotId}, @TaxCodeId, @SupplyAmt, @TaxAmt, @ShipmentLineId, @User, @User)
+        """;
+
+    private const string SelectInvoiceLineInputs = """
+        SELECT seq, coalesce(dn_qty, 0) AS qty, coalesce(dn_prc, 0) AS prc, coalesce(dc_rate, 0) AS dc_rate, tax_code_id
+        FROM sd_sales_invoice_line
+        WHERE sales_invoice_id = @Id
+        ORDER BY seq
         """;
 
     private const string UpdateInvoiceLineAmounts = """
@@ -462,6 +476,11 @@ internal sealed class ShipmentRepository : IShipmentRepository
         transaction.Connection!.ExecuteScalarAsync<long>(new CommandDefinition(
             InsertInvoice, InvoiceParameters(header, user, new { DnNo = dnNo, BusinessPlaceId = businessPlaceId, Type = InvoiceType }), transaction,
             cancellationToken: cancellationToken));
+
+    public async Task<IReadOnlyList<ShipmentInvoiceInput>> FindInvoiceLineInputsAsync(
+        long salesInvoiceId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<ShipmentInvoiceInput>(new CommandDefinition(
+            SelectInvoiceLineInputs, new { Id = salesInvoiceId }, transaction, cancellationToken: cancellationToken))).AsList();
 
     public async Task UpdateInvoiceAsync(
         long salesInvoiceId, ShipmentInvoiceHeader header, IReadOnlyList<ShipmentInvoiceLineWrite> added,

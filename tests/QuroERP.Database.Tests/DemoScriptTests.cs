@@ -50,15 +50,41 @@ public sealed class DemoScriptTests : IDisposable
         using var connection = new NpgsqlConnection(_connectionString);
         connection.Open();
         Scalar(connection, """
-            SELECT count(*) FROM mm_onhand o JOIN bc_item i ON i.id = o.item_id JOIN bc_warehouse w ON w.id = o.warehouse_id AND w.is_default
-            WHERE (i.item_cd, o.onhand_qty) IN (('DEMO-BOLT-10', 1100), ('DEMO-PANEL-01', 42), ('DEMO-CABLE-LOT', 50))
-              AND i.onhand_qty = o.onhand_qty AND i.mvg_cost = i.usd_prc
-            """).Should().Be(3, "the opening stock and the supplier invoice demo receipt (0909) at the same prices");
+            SELECT count(*) FROM (SELECT o.item_id, sum(o.onhand_qty) AS qty FROM mm_onhand o
+                                  JOIN bc_warehouse w ON w.id = o.warehouse_id AND w.is_default GROUP BY o.item_id) o
+            JOIN bc_item i ON i.id = o.item_id
+            WHERE (i.item_cd, o.qty) IN (('DEMO-BOLT-10', 1100), ('DEMO-PANEL-01', 42), ('DEMO-CABLE-LOT', 50))
+              AND i.onhand_qty = o.qty AND i.mvg_cost = i.usd_prc
+            """).Should().Be(3, "the opening stock and the supplier invoice demo receipt (0913) at the same prices");
         Scalar(connection, """
-            SELECT count(*) FROM mm_lot_onhand o JOIN mm_lot l ON l.id = o.lot_id
+            SELECT count(*) FROM mm_onhand o JOIN mm_lot l ON l.id = o.lot_id
             WHERE (l.lot_no, o.onhand_qty) IN (('L2611A', 30), ('L2611B', 20))
             """).Should().Be(2);
         Scalar(connection, "SELECT count(*) FROM mm_goods_movement WHERE ref_key = 'DEMO-OPENING' AND mov_type = 'GR'").Should().Be(4);
+    }
+
+    [DatabaseFact, Trait("Id", "DB-IT-11")]
+    public void UpgradeWithDemo_AddsAnOpenAndAPartlyPaidInvoice_WithTheCountersMovedOn()
+    {
+        var result = DatabaseMigrator.Upgrade(_connectionString, includeDemo: true, _schema, new NoOpUpgradeLog());
+
+        result.Successful.Should().BeTrue(result.Error?.Message);
+        using var connection = new NpgsqlConnection(_connectionString);
+        connection.Open();
+        Scalar(connection, """
+            SELECT count(*) FROM sd_sales_invoice d JOIN bc_customer c ON c.id = d.customer_id AND c.c_name = 'MAPLE HILL SUPPLY'
+            WHERE (d.status, d.tot_dn_amt, d.bal_amt) IN (('OP', 95, 95), ('PA', 190, 90))
+              AND (SELECT sum(l.dn_amt) FROM sd_sales_invoice_line l WHERE l.sales_invoice_id = d.id) = d.tot_dn_amt
+            """).Should().Be(2);
+        Scalar(connection, """
+            SELECT count(*) FROM sd_ar_clear a JOIN sd_sales_invoice d ON d.id = a.sales_invoice_id
+            WHERE d.status = 'PA' AND a.cls_amt = d.tot_dn_amt - d.bal_amt
+            """).Should().Be(1, "the paid part is what the demo receipt applied");
+        Scalar(connection, """
+            SELECT count(*) FROM sys_document_number n
+            WHERE (n.trans_type = 'DN' AND n.trans_no = (SELECT max(dn_no) FROM sd_sales_invoice))
+               OR (n.trans_type = 'CR' AND n.period = '2611' AND n.trans_no = (SELECT max(cls_ar_no) FROM sd_ar_receipt))
+            """).Should().Be(2, "the next invoice and receipt numbers come after the demo ones");
     }
 
     [DatabaseFact, Trait("Id", "DB-IT-11"), Trait("Rule", "MM-BR-763")]
@@ -82,8 +108,11 @@ public sealed class DemoScriptTests : IDisposable
             WHERE g.ref_no = 'DEMO-PL-2611'
               AND ((l.seq = 1 AND l.invoiced_qty = l.gr_qty AND s.qty = l.gr_qty) OR (l.seq = 2 AND l.invoiced_qty = 0 AND s.id IS NULL))
             """).Should().Be(2, "line 1 is invoiced in full, line 2 is left for Import Receipts");
-        Scalar(connection, "SELECT count(*) FROM mm_goods_movement m JOIN mm_goods_receipt g ON g.gr_no = m.ref_key WHERE g.ref_no = 'DEMO-PL-2611'")
-            .Should().Be(2);
+        Scalar(connection, """
+            SELECT count(*) FROM mm_goods_movement m JOIN mm_goods_receipt g ON g.gr_no = m.ref_key
+            JOIN bc_location c ON c.id = m.location_id AND c.location_code = '*' JOIN mm_lot l ON l.id = m.lot_id AND l.lot_no = '*'
+            WHERE g.ref_no = 'DEMO-PL-2611'
+            """).Should().Be(2, "items without Location or Lot management move on '*'");
     }
 
     public void Dispose()

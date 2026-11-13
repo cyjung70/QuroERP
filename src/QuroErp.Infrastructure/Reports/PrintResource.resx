@@ -75,4 +75,22 @@
   <data name="Print.DeliveryNote.LotNo" xml:space="preserve"><value>로트</value></data>
   <data name="Print.DeliveryNote.ReceivedBy" xml:space="preserve"><value>인수자</value></data>
   <data name="Print.DeliveryNote.ReceivedDt" xml:space="preserve"><value>인수일</value></data>
+  <data name="Print.SalesInvoice.Title" xml:space="preserve"><value>송장</value></data>
+  <data name="Print.SalesInvoice.DnDt" xml:space="preserve"><value>송장 일자</value></data>
+  <data name="Print.SalesInvoice.SoNo" xml:space="preserve"><value>수주 번호</value></data>
+  <data name="Print.SalesInvoice.TaxExemptionCertNo" xml:space="preserve"><value>면세 증명서</value></data>
+  <data name="Print.SalesInvoice.Paid" xml:space="preserve"><value>입금·적용</value></data>
+  <data name="Print.SalesInvoice.Balance" xml:space="preserve"><value>잔액</value></data>
+  <data name="Print.TaxInvoice.Title" xml:space="preserve"><value>세금계산서</value></data>
+  <data name="Print.TaxInvoice.Supplier" xml:space="preserve"><value>공급자</value></data>
+  <data name="Print.TaxInvoice.Buyer" xml:space="preserve"><value>공급받는자</value></data>
+  <data name="Print.TaxInvoice.BusinessRegNo" xml:space="preserve"><value>사업자등록번호</value></data>
+  <data name="Print.TaxInvoice.Name" xml:space="preserve"><value>상호</value></data>
+  <data name="Print.TaxInvoice.CeoName" xml:space="preserve"><value>대표자</value></data>
+  <data name="Print.TaxInvoice.Address" xml:space="preserve"><value>주소</value></data>
+  <data name="Print.TaxInvoice.BusinessType" xml:space="preserve"><value>업태</value></data>
+  <data name="Print.TaxInvoice.BusinessItem" xml:space="preserve"><value>종목</value></data>
+  <data name="Print.TaxInvoice.WrittenDt" xml:space="preserve"><value>작성일자</value></data>
+  <data name="Print.TaxInvoice.SupplyAmt" xml:space="preserve"><value>공급가액</value></data>
+  <data name="Print.TaxInvoice.TaxAmt" xml:space="preserve"><value>세액</value></data>
 </root>

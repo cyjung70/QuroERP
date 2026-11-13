@@ -1,0 +1,40 @@
+{
+  "id": "TASK-CORE-074",
+  "project": "core",
+  "title": "출하: Location·Lot FIFO 추천, Pallet 출하, Kit 자동 할당, 구성품 표시",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/specifications/SD/shipment.md",
+    "docs/business-rules/SD/shipment.md",
+    "docs/business-rules/MM/pallet.md",
+    "docs/business-rules/SD/set-item.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-068",
+    "TASK-CORE-069",
+    "TASK-CORE-070"
+  ],
+  "acceptance": [
+    "출하 줄 Location·Lot 기본값 = FIFO 추천, 모자라면 줄을 나눈다 (MM-BR-716). Pallet 줄은 Pallet 값·수량 고정, 저장 때 Pallet `CLOSED`, 삭제·Void로 되돌림 (MM-BR-913)",
+    "Kit 줄 구성품 Location·Lot 자동 할당 (SD-BR-512·518). 구성품 표시 품목은 출하 화면·인쇄에 구성품 행 (SD-BR-517)",
+    "출하 화면 라인 그리드 Location·Lot·Pallet 열 (명세 화면 항목). 끝난 출하 API·화면을 고친다. 기존 테스트가 통과한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

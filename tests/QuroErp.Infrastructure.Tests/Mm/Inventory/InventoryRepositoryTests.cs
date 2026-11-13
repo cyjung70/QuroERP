@@ -53,7 +53,7 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
             WHERE item_id = @itemId ORDER BY id
             """, new { itemId }, tx)).ToList();
         var onHand = await tx.Connection!.QuerySingleAsync<decimal>(
-            "SELECT onhand_qty FROM mm_onhand WHERE item_id = @itemId AND warehouse_id = @warehouseId", new { itemId, warehouseId }, tx);
+            "SELECT sum(onhand_qty) FROM mm_onhand WHERE item_id = @itemId AND warehouse_id = @warehouseId", new { itemId, warehouseId }, tx);
         var item = await tx.Connection!.QuerySingleAsync<(decimal OnhandQty, decimal StkVal, decimal MvgCost)>(
             "SELECT onhand_qty, stk_val, mvg_cost FROM bc_item WHERE id = @itemId", new { itemId }, tx);
 
@@ -186,12 +186,17 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
         error.Args.Should().Equal($"IT-{itemId}", "MAIN", "2026-10-09", -2m, "");
     }
 
-    private static Task<int> InsertMovementAsync(IDbTransaction tx, long itemId, long warehouseId, DateOnly date, decimal qty) =>
-        tx.Connection!.ExecuteAsync(
-            """
-            INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, qty, prc, amount, created_by, updated_by)
-            VALUES (gen_random_uuid()::text, @date, CASE WHEN @qty > 0 THEN 'UR' ELSE 'GI' END, @itemId, @warehouseId, @qty, 1, @qty, 't', 't')
+    private static async Task InsertMovementAsync(IDbTransaction tx, long itemId, long warehouseId, DateOnly date, decimal qty)
+    {
+        await tx.Connection!.ExecuteAsync(StarKeys.Ensure("@warehouseId", "@itemId"), new { itemId, warehouseId }, tx);
+        await tx.Connection!.ExecuteAsync(
+            $"""
+            INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, location_id, lot_id, qty, prc, amount,
+                                           created_by, updated_by)
+            VALUES (gen_random_uuid()::text, @date, CASE WHEN @qty > 0 THEN 'UR' ELSE 'GI' END, @itemId, @warehouseId,
+                    {StarKeys.Location("@warehouseId")}, {StarKeys.Lot("@itemId")}, @qty, 1, @qty, 't', 't')
             """, new { itemId, warehouseId, date, qty }, tx);
+    }
 
     [DatabaseFact, Trait("Id", "CORE-011-IT-01")]
     public async Task PostAndReverse_SetLine_MovesComponentsFromSdBomWithTheSet()
@@ -245,7 +250,7 @@ public class InventoryRepositoryTests(AuthSchemaFixture db)
 
         await using var check = await units.BeginAsync(CancellationToken.None);
         (await check.Transaction.Connection!.QuerySingleAsync<decimal>(
-            "SELECT onhand_qty FROM mm_onhand WHERE item_id = @first AND warehouse_id = @warehouseId", new { first, warehouseId }, check.Transaction))
+            "SELECT sum(onhand_qty) FROM mm_onhand WHERE item_id = @first AND warehouse_id = @warehouseId", new { first, warehouseId }, check.Transaction))
             .Should().Be(5, "the first component's issue is rolled back with the document");
     }
 

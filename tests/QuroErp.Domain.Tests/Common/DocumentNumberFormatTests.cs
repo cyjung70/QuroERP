@@ -41,11 +41,13 @@ public class DocumentNumberFormatTests
         DocumentNumberFormat.SalesInvoice.Period(Day.AddMonths(1)).Should().BeEmpty();
     }
 
-    // SD-BR-206
-    [Fact, Trait("Id", "CORE-007-T01")]
-    public void Next_CreditMemo_IsCmYymmFiveDigits()
+    [Theory, Trait("Id", "SD-UT-206"), Trait("Rule", "SD-BR-206")]
+    [InlineData(null, "CM2610000001")]
+    [InlineData("CM261000041", "CM2610000042")]
+    [InlineData("CM2610000041", "CM2610000042")]
+    public void Next_CreditMemo_IsCmYymmSixDigits_ContinuingAfterMigratedFiveDigitNumbers(string? last, string expected)
     {
-        DocumentNumberFormat.CreditMemo.Next(Day, null).Should().Be("CM261000001");
+        DocumentNumberFormat.CreditMemo.Next(Day, last).Should().Be(expected);
     }
 
     // MM-BR-017, MM-BR-208, MM-BR-308; a 5-digit number already issued this month is continued after (SD-BR-006)

@@ -605,15 +605,17 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
     {
         var dnNo = "DN" + Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
         await using var connection = new NpgsqlConnection(db.ConnectionString);
+        await connection.ExecuteAsync(StarKeys.Ensure("@Main", "@Item"), new { m.Main, Item = item });
         var ids = await connection.QuerySingleAsync<(long Id, long Line)>(
-            """
+            $"""
             WITH d AS (INSERT INTO sd_sales_invoice (dn_no, customer_id, dn_dt, tot_dn_amt, bal_amt, type, status, currency_code, exchange_rate,
                                                      warehouse_id, business_place_id, billing_flow, created_by, updated_by)
                        SELECT @DnNo, @Customer, @DnDt, @Qty * @Price, @Qty * @Price, 'IV', 'OP', 'USD', 1, @Main, id, 'BILL_THEN_SHIP', 't', 't'
                        FROM bc_business_place WHERE is_default RETURNING id),
                  l AS (INSERT INTO sd_sales_invoice_line (sales_invoice_id, seq, item_id, dn_qty, dn_prc, dn_amt, sales_order_line_id, warehouse_id,
-                                                          tax_code_id, created_by, updated_by)
-                       SELECT id, 1, @Item, @Qty, @Price, @Qty * @Price, @OrderLine, @Main, @NoTax, 't', 't' FROM d RETURNING id)
+                                                          location_id, lot_id, tax_code_id, created_by, updated_by)
+                       SELECT id, 1, @Item, @Qty, @Price, @Qty * @Price, @OrderLine, @Main, {StarKeys.Location("@Main")}, {StarKeys.Lot("@Item")},
+                              @NoTax, 't', 't' FROM d RETURNING id)
             SELECT (SELECT id FROM d), (SELECT id FROM l)
             """,
             new { DnNo = dnNo, m.Customer, DnDt = ShipDt, Qty = qty, Price = price, m.Main, Item = item, OrderLine = orderLineId, m.NoTax });
@@ -637,7 +639,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
 
     private async Task<decimal> OnHandAsync(long item, long warehouse) =>
         (await QueryAsync<decimal?>(
-            "SELECT onhand_qty FROM mm_onhand WHERE item_id = @Item AND warehouse_id = @Warehouse", new { Item = item, Warehouse = warehouse }))
+            "SELECT sum(onhand_qty) FROM mm_onhand WHERE item_id = @Item AND warehouse_id = @Warehouse", new { Item = item, Warehouse = warehouse }))
         .SingleOrDefault() ?? 0m;
 
     private async Task<(decimal ShipQty, decimal DnQty)> OrderLineAsync(long id) =>

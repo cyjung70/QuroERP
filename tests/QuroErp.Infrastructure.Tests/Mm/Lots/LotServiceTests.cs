@@ -25,7 +25,8 @@ public sealed class LotSchemaDefinition : ICollectionFixture<AuthSchemaFixture>
 }
 
 /// <summary>
-/// 0404_mm_lot, item lot management, lot postings and lot search on real PostgreSQL (TASK-CORE-027, MM-BR-351~356, 361, 362).
+/// 0404_mm_lot and 0418 (lot balances on mm_onhand), item lot management, lot postings and lot search on real PostgreSQL
+/// (TASK-CORE-027, TASK-CORE-067, MM-BR-351~356, 361~363).
 /// Lot management starts on <see cref="Today"/>; each test makes its own items and a second warehouse.
 /// </summary>
 [Collection(LotSchemaDefinition.Name)]
@@ -42,7 +43,7 @@ public class LotServiceTests(AuthSchemaFixture db)
     private LotService Lots => new(db.Get<ILotRepository>(), db.Get<IUnitOfWorkFactory>());
 
     [DatabaseFact, Trait("Id", "MM-UT-351"), Trait("Rule", "MM-BR-351")]
-    public async Task TurningOn_MovesEachWarehouseStockToMigrated_AndStartsToday()
+    public async Task TurningOn_KeepsEachWarehouseStockOnLotStar_AndStartsToday()
     {
         var (main, second) = await WarehousesAsync();
         var item = await CreateAsync();
@@ -51,7 +52,7 @@ public class LotServiceTests(AuthSchemaFixture db)
         var saved = await Items.UpdateAsync(item.Id, Update(await Items.GetAsync(item.Id, None), lotManaged: true), "kim", None);
 
         (saved.LotManaged, saved.LotManagedFrom).Should().Be((true, Today));
-        (await Lots.SearchAsync(Query(item.Id, main, Today), None)).Should().Equal(new LotBalanceDto(Lot(await LotsAsync(item.Id), "MIGRATED"), "MIGRATED", 10));
+        (await Lots.SearchAsync(Query(item.Id, main, Today), None)).Should().Equal(new LotBalanceDto(Lot(await LotsAsync(item.Id), "*"), "*", 10));
         (await Lots.SearchAsync(Query(item.Id, second, Today), None)).Single().OnHandQty.Should().Be(4);
         (await MismatchesAsync(item.Id)).Should().BeEmpty();
     }
@@ -62,7 +63,10 @@ public class LotServiceTests(AuthSchemaFixture db)
         var (main, _) = await WarehousesAsync();
         var negative = await CreateAsync();
         await ExecuteAsync(
-            "INSERT INTO mm_onhand (item_id, warehouse_id, onhand_qty, created_by, updated_by) VALUES (@Id, @Main, -1, 't', 't')",
+            $"""
+            INSERT INTO mm_onhand (item_id, warehouse_id, location_id, lot_id, onhand_qty, created_by, updated_by)
+            VALUES (@Id, @Main, {StarKeys.Location("@Main")}, {StarKeys.Lot("@Id")}, -1, 't', 't')
+            """,
             new { negative.Id, Main = main });
         var component = await CreateAsync();
         var set = await CreateAsync(type: "SET");
@@ -81,7 +85,7 @@ public class LotServiceTests(AuthSchemaFixture db)
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-351"), Trait("Id", "MM-UT-807")]
-    public async Task TurningOn_WithoutStock_MakesNoLot_AndAnItemWithLotsIsInUse()
+    public async Task TurningOn_WithoutStock_KeepsOnlyLotStar_AndAnItemWithLotsIsInUse()
     {
         var (main, _) = await WarehousesAsync();
         var empty = await CreateAsync();
@@ -92,7 +96,7 @@ public class LotServiceTests(AuthSchemaFixture db)
 
         await Items.UpdateAsync(empty.Id, Update(empty, lotManaged: true), "kim", None);
 
-        (await LotsAsync(empty.Id)).Should().BeEmpty();
+        (await LotsAsync(empty.Id)).Keys.Should().Equal("*");
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         (await db.Get<IItemRepository>().IsInUseAsync(empty.Id, uow.Transaction, None)).Should().BeFalse();
         (await db.Get<IItemRepository>().IsInUseAsync(used.Id, uow.Transaction, None)).Should().BeTrue();
@@ -127,17 +131,13 @@ public class LotServiceTests(AuthSchemaFixture db)
         await ReverseAsync(issue.Single().Id);
 
         var lots = await LotsAsync(item.Id);
-        lots.Keys.Should().Equal("261010-001", "261010-002");
+        lots.Keys.Should().Equal("*", "261010-001", "261010-002");
         receipts.Select(m => m.LotId).Should().Equal(lots["261010-001"], lots["261010-002"]);
         (await QueryAsync<long?>("SELECT lot_id FROM mm_goods_movement WHERE item_id = @Id ORDER BY id", new { item.Id }))
             .Should().Equal(lots["261010-001"], lots["261010-002"], lots["261010-001"], lots["261010-001"]);
-        (await QueryAsync<decimal>("SELECT onhand_qty FROM mm_lot_onhand WHERE item_id = @Id ORDER BY lot_id", new { item.Id })).Should().Equal(5m, 3m);
+        // The lot balances are the item + warehouse rows of mm_onhand; nothing is left on Lot '*' (MM-BR-354, MM-BR-714)
+        (await LotOnHandAsync(item.Id)).Should().Equal(("*", 0m), ("261010-001", 5m), ("261010-002", 3m));
         (await MismatchesAsync(item.Id)).Should().BeEmpty();
-
-        // MM-BR-605 adds these rows to its differences (MM-BR-354)
-        await ExecuteAsync("UPDATE mm_lot_onhand SET onhand_qty = 1 WHERE item_id = @Id AND lot_id = @Lot", new { item.Id, Lot = lots["261010-002"] });
-        (await MismatchesAsync(item.Id)).Should().ContainSingle().Which.Should().Be(
-            new LotMismatchRow(item.Id, item.ItemCd, main, "MAIN", 8, 6));
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-356"), Trait("Rule", "MM-BR-356")]
@@ -154,7 +154,7 @@ public class LotServiceTests(AuthSchemaFixture db)
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         (error.Code, error.Args[3], error.Args[4]).Should().Be((LotRules.NegativeCode, (object)"2026-10-09", (object)(-1m)));
-        (await QueryAsync<decimal>("SELECT onhand_qty FROM mm_lot_onhand WHERE item_id = @Id ORDER BY lot_id", new { item.Id })).Should().Equal(5m, 5m);
+        (await LotOnHandAsync(item.Id)).Should().Equal(("*", 0m), ("A", 5m), ("B1", 5m));
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-362"), Trait("Rule", "MM-BR-362")]
@@ -179,23 +179,19 @@ public class LotServiceTests(AuthSchemaFixture db)
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-352"), Trait("Rule", "MM-BR-352")]
-    public async Task Migration_RejectsBadLotNumbers_DuplicateLots_AndNegativeLotBalances()
+    public async Task Migration_RejectsBadLotNumbers_AndDuplicateLots()
     {
-        var (main, _) = await WarehousesAsync();
         var item = await CreateAsync(lotManaged: true);
         await ExecuteAsync("INSERT INTO mm_lot (item_id, lot_no, created_by, updated_by) VALUES (@Id, 'OK-1', 't', 't')", new { item.Id });
 
         var lower = () => ExecuteAsync("INSERT INTO mm_lot (item_id, lot_no, created_by, updated_by) VALUES (@Id, 'ok-2', 't', 't')", new { item.Id });
         var duplicate = () => ExecuteAsync("INSERT INTO mm_lot (item_id, lot_no, created_by, updated_by) VALUES (@Id, 'OK-1', 't', 't')", new { item.Id });
-        var negative = () => ExecuteAsync(
-            """
-            INSERT INTO mm_lot_onhand (item_id, warehouse_id, lot_id, onhand_qty, created_by, updated_by)
-            SELECT @Id, @Main, id, -1, 't', 't' FROM mm_lot WHERE item_id = @Id
-            """, new { item.Id, Main = main });
+        var secondStar = () => ExecuteAsync("INSERT INTO mm_lot (item_id, lot_no, created_by, updated_by) VALUES (@Id, '*', 't', 't')", new { item.Id });
 
         (await lower.Should().ThrowAsync<PostgresException>()).Which.ConstraintName.Should().Be("ck_mm_lot_lot_no");
         (await duplicate.Should().ThrowAsync<PostgresException>()).Which.ConstraintName.Should().Be("uq_mm_lot_item_id_lot_no");
-        (await negative.Should().ThrowAsync<PostgresException>()).Which.ConstraintName.Should().Be("ck_mm_lot_onhand_onhand_qty");
+        (await secondStar.Should().ThrowAsync<PostgresException>()).Which.ConstraintName.Should().Be("uq_mm_lot_item_id_lot_no",
+            "the item got its system lot '*' when it was created (MM-BR-363)");
     }
 
     private static LotSearchQuery Query(long itemId, long warehouseId, DateOnly date) =>
@@ -256,6 +252,14 @@ public class LotServiceTests(AuthSchemaFixture db)
         var rows = await db.Get<ILotRepository>().FindLotMismatchesAsync(uow.Transaction, None);
         return rows.Where(r => r.ItemId == itemId).ToList();
     }
+
+    // Lot balances of the item, all warehouses together, in lot number order
+    private async Task<IReadOnlyList<(string LotNo, decimal Qty)>> LotOnHandAsync(long itemId) =>
+        await QueryAsync<(string, decimal)>(
+            """
+            SELECT l.lot_no, sum(o.onhand_qty) FROM mm_onhand o JOIN mm_lot l ON l.id = o.lot_id
+            WHERE o.item_id = @itemId GROUP BY l.lot_no ORDER BY l.lot_no
+            """, new { itemId });
 
     private async Task<IReadOnlyDictionary<string, long>> LotsAsync(long itemId) =>
         (await QueryAsync<(string LotNo, long Id)>("SELECT lot_no, id FROM mm_lot WHERE item_id = @itemId ORDER BY lot_no", new { itemId }))

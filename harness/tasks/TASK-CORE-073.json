@@ -1,0 +1,39 @@
+{
+  "id": "TASK-CORE-073",
+  "project": "core",
+  "title": "입고: Location, Lot 자동 생성·Lot 속성, Pallet 수량",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/specifications/MM/goods-receipt.md",
+    "docs/business-rules/MM/lot.md",
+    "docs/business-rules/MM/pallet.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-068",
+    "TASK-CORE-070"
+  ],
+  "acceptance": [
+    "입고 줄: 받는 Location(기본 `*`), Lot은 저장 때 자동 생성(사용자 입력 없음), 공급자 Lot 번호·제조일자·유효기한, Pallet 수량 (MM-BR-353·364·910)",
+    "저장 때 Pallet을 만들고 줄 수량을 Pallet 수량씩 나눈다. 입고 Void는 Pallet을 닫는다(이미 옮기거나 출하한 Pallet이 있으면 422)",
+    "입고 화면 라인 그리드에 Location·공급자 Lot·유효기한·Pallet 수량 열, 저장 뒤 'Pallet 라벨' 버튼(라벨 출력)",
+    "끝난 입고 API·화면을 고친다. 기존 테스트가 통과한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

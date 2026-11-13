@@ -1,0 +1,42 @@
+{
+  "id": "TASK-CORE-068",
+  "project": "core",
+  "title": "재고 서비스: Location·Lot 키 전환(마이그레이션 2), FIFO 추천, Location 관리",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/inventory.md",
+    "docs/business-rules/MM/warehouse.md",
+    "docs/business-rules/MM/lot.md",
+    "docs/business-rules/MM/inventory.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-067"
+  ],
+  "acceptance": [
+    "마이그레이션 2 (서비스와 같은 PR): `mm_onhand`를 (품목, 창고, Location, Lot) 키로 바꾼다. 기존 창고 현재고 중 로트 잔고에 없는 몫은 Location `*`·Lot `*`으로, 로트 잔고는 Location `*`·그 Lot으로 옮기고 `mm_lot_onhand`를 지운다(database-tables.md에서도 뺀다). 시스템 로트 `MIGRATED`·`UNKNOWN`은 `*`로 합친다 (MM-BR-354·363). `lot_id` NULL을 `*`로 채우고 NOT NULL로 바꾼다. 전후 품목+창고 현재고 합·원장 합이 같은지 통합 테스트",
+    "`lot_id` NULL을 \"로트 관리 전\"으로 보는 코드와 `MIGRATED`·`UNKNOWN` 상수를 없앤다. 로트 관리를 켜도 기존 재고는 `*`에 둔다",
+    "`InventoryService.PostAsync` 요청에 Location·Lot(비우면 `*`)·Pallet(선택)을 더한다. 잠금 순서 (품목, 창고, Location, Lot). Location·Lot 관리를 하지 않는 품목에 `*`이 아닌 값이면 422 MM-E-713·363",
+    "잔고 검사: 마이너스 재고 모드는 품목+창고 합, `*`이 아닌 Location·Lot 잔고는 모드와 상관없이 음수 불가 (MM-BR-714·356). 재고 대사는 키별 비교 (MM-BR-605)",
+    "구매입고가 아닌 입고는 Lot `*`, 반품은 원 Lot (MM-BR-365·359). 구매입고 Lot 자동 생성 `yymmdd-nnn`과 `received_dt` (MM-BR-353·364)",
+    "`GET /api/mm/stock-suggestions?itemId&warehouseId&qty&date` FIFO 추천 → [{ locationId, locationCode, lotId, lotNo, qty }] (MM-BR-716). `GET /api/mm/lots`에 Location을 더한다 (MM-BR-362)",
+    "품목 Location 관리 켜기·끄기 검사 (MM-BR-718), Lot 관리 켜기는 기존 재고를 `*`에 둔다 (MM-BR-351)",
+    "창고 이동 `LT` 유형: 같은 창고, Location이 다름, 금액은 `TR`과 같다 (MM-BR-715). 이동 유형 코드에 `LT`·`BI`·`DA`·`DR`을 더한다",
+    "단위 테스트: FIFO 순서(`*` 먼저, 입고일, Lot 번호, Location 코드), 여러 Lot에 걸친 추천 분할, Lot 잔고 부족 ALLOW_IN_MONTH에서도 차단, `LT` 같은 Location 차단"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

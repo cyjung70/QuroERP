@@ -1,11 +1,12 @@
 -- Demo supplier invoice for the supplier invoice screen (--demo only). Fictional names and numbers only.
 -- One goods receipt of the demo vendor MAPLE LEAF SUPPLY (0901) dated 2026-11-02 with two lines of the demo items (0903), and
 -- one open (OP) supplier invoice dated 2026-11-05 that matches the first line in full at the receipt price. The second line
--- stays not invoiced, so "Import Receipts" offers it (MM-BR-763). The vendor buys in the base currency with tax code NONE,
--- so the rate is 1, the tax 0 and no price variance (PV) is posted.
+-- stays not invoiced, so "Import Receipts" offers it (MM-BR-763). The vendor buys in the base currency (USD when no company
+-- is set up yet) with tax code NONE, so the rate is 1, the tax 0 and no price variance (PV) is posted.
 -- The receipt posts its stock like a saved receipt (movement GR, on-hand rows, item totals and moving average cost,
--- MM-BR-111, MM-BR-601), and the GR and VI numbers come from the same counters the API uses (MM-BR-106, MM-BR-752).
--- It runs once: nothing is added when the demo receipt is already there or a demo item is missing.
+-- MM-BR-111, MM-BR-601) on the default warehouse's Location '*' and the items' Lot '*' (MM-BR-713, MM-BR-363), and the GR
+-- and VI numbers come from the same counters the API uses (MM-BR-106, MM-BR-752).
+-- It runs once: nothing is added when the demo receipt is already there or a demo input is missing.
 -- An applied script is not changed. More demo data goes into a new script.
 
 DO $$
@@ -13,10 +14,13 @@ DECLARE
     v_vendor_id bigint;
     v_place_id bigint;
     v_warehouse_id bigint;
+    v_location_id bigint;
     v_tax_id bigint;
     v_currency varchar;
     v_bolt_id bigint;
     v_panel_id bigint;
+    v_bolt_lot_id bigint;
+    v_panel_lot_id bigint;
     v_last varchar;
     v_gr_no varchar;
     v_vi_no varchar;
@@ -27,12 +31,16 @@ BEGIN
     SELECT id INTO v_vendor_id FROM bc_vendor WHERE v_name = 'MAPLE LEAF SUPPLY';
     SELECT id INTO v_place_id FROM bc_business_place WHERE is_default;
     SELECT id INTO v_warehouse_id FROM bc_warehouse WHERE is_default;
+    SELECT id INTO v_location_id FROM bc_location WHERE warehouse_id = v_warehouse_id AND location_code = '*';
     SELECT id INTO v_tax_id FROM bc_tax_code WHERE tax_code = 'NONE';
-    SELECT base_currency_code INTO v_currency FROM bc_company ORDER BY id LIMIT 1;
+    -- The company row comes with --set-country; without it the base currency is USD (like 0303)
+    v_currency := coalesce((SELECT base_currency_code FROM bc_company ORDER BY id LIMIT 1), 'USD');
     SELECT id INTO v_bolt_id FROM bc_item WHERE item_cd = 'DEMO-BOLT-10';
     SELECT id INTO v_panel_id FROM bc_item WHERE item_cd = 'DEMO-PANEL-01';
-    IF v_vendor_id IS NULL OR v_place_id IS NULL OR v_warehouse_id IS NULL OR v_tax_id IS NULL OR v_currency IS NULL
-       OR v_bolt_id IS NULL OR v_panel_id IS NULL
+    SELECT id INTO v_bolt_lot_id FROM mm_lot WHERE item_id = v_bolt_id AND lot_no = '*';
+    SELECT id INTO v_panel_lot_id FROM mm_lot WHERE item_id = v_panel_id AND lot_no = '*';
+    IF v_vendor_id IS NULL OR v_place_id IS NULL OR v_warehouse_id IS NULL OR v_location_id IS NULL OR v_tax_id IS NULL
+       OR v_bolt_id IS NULL OR v_panel_id IS NULL OR v_bolt_lot_id IS NULL OR v_panel_lot_id IS NULL
        OR EXISTS (SELECT 1 FROM mm_goods_receipt WHERE vendor_id = v_vendor_id AND ref_no = 'DEMO-PL-2611') THEN
         RETURN;
     END IF;
@@ -51,22 +59,27 @@ BEGIN
     RETURNING id INTO v_gr_id;
 
     -- Line 1: 100 bolts at 0.45, invoiced in full below. Line 2: 2 panels at 128.00, not invoiced
-    INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, item_name, warehouse_id, gr_qty, gr_prc, gr_amt, tax_code_id,
-                                       supply_amt, tax_amt, deductible, invoiced_qty, created_by, updated_by)
-    VALUES (v_gr_id, 1, v_bolt_id, 'Demo Hex Bolt M10', v_warehouse_id, 100, 0.45, 45.00, v_tax_id, 45.00, 0, true, 100, 'system', 'system')
+    INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, item_name, warehouse_id, location_id, lot_id, gr_qty, gr_prc,
+                                       gr_amt, tax_code_id, supply_amt, tax_amt, deductible, invoiced_qty, created_by, updated_by)
+    VALUES (v_gr_id, 1, v_bolt_id, 'Demo Hex Bolt M10', v_warehouse_id, v_location_id, v_bolt_lot_id, 100, 0.45, 45.00, v_tax_id,
+            45.00, 0, true, 100, 'system', 'system')
     RETURNING id INTO v_gr_line_id;
-    INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, item_name, warehouse_id, gr_qty, gr_prc, gr_amt, tax_code_id,
-                                       supply_amt, tax_amt, deductible, created_by, updated_by)
-    VALUES (v_gr_id, 2, v_panel_id, 'Demo Steel Panel', v_warehouse_id, 2, 128.00, 256.00, v_tax_id, 256.00, 0, true, 'system', 'system');
+    INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, item_name, warehouse_id, location_id, lot_id, gr_qty, gr_prc,
+                                       gr_amt, tax_code_id, supply_amt, tax_amt, deductible, created_by, updated_by)
+    VALUES (v_gr_id, 2, v_panel_id, 'Demo Steel Panel', v_warehouse_id, v_location_id, v_panel_lot_id, 2, 128.00, 256.00, v_tax_id,
+            256.00, 0, true, 'system', 'system');
 
     -- The receipt's stock: one GR movement per line, the on-hand rows and the item totals and moving average cost
-    INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, qty, prc, amount, ref_key, ref_seq,
-                                   created_by, updated_by)
-    VALUES ('DEMO-SI-0001', DATE '2026-11-02', 'GR', v_bolt_id, v_warehouse_id, 100, 0.45, 45.00, v_gr_no, 1, 'system', 'system'),
-           ('DEMO-SI-0002', DATE '2026-11-02', 'GR', v_panel_id, v_warehouse_id, 2, 128.00, 256.00, v_gr_no, 2, 'system', 'system');
-    INSERT INTO mm_onhand (item_id, warehouse_id, onhand_qty, created_by, updated_by)
-    VALUES (v_bolt_id, v_warehouse_id, 100, 'system', 'system'), (v_panel_id, v_warehouse_id, 2, 'system', 'system')
-    ON CONFLICT (item_id, warehouse_id) DO UPDATE SET onhand_qty = mm_onhand.onhand_qty + excluded.onhand_qty;
+    INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, location_id, lot_id, qty, prc, amount,
+                                   ref_key, ref_seq, created_by, updated_by)
+    VALUES ('DEMO-SI-0001', DATE '2026-11-02', 'GR', v_bolt_id, v_warehouse_id, v_location_id, v_bolt_lot_id, 100, 0.45, 45.00,
+            v_gr_no, 1, 'system', 'system'),
+           ('DEMO-SI-0002', DATE '2026-11-02', 'GR', v_panel_id, v_warehouse_id, v_location_id, v_panel_lot_id, 2, 128.00, 256.00,
+            v_gr_no, 2, 'system', 'system');
+    INSERT INTO mm_onhand (item_id, warehouse_id, location_id, lot_id, onhand_qty, created_by, updated_by)
+    VALUES (v_bolt_id, v_warehouse_id, v_location_id, v_bolt_lot_id, 100, 'system', 'system'),
+           (v_panel_id, v_warehouse_id, v_location_id, v_panel_lot_id, 2, 'system', 'system')
+    ON CONFLICT (item_id, warehouse_id, location_id, lot_id) DO UPDATE SET onhand_qty = mm_onhand.onhand_qty + excluded.onhand_qty;
     UPDATE bc_item i
     SET onhand_qty = coalesce(i.onhand_qty, 0) + r.qty,
         stk_val = coalesce(i.stk_val, 0) + r.amount,

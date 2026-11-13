@@ -24,18 +24,39 @@ internal sealed class InventoryRepository : IInventoryRepository
         FOR UPDATE
         """;
 
+    // Stock is kept per item + warehouse + Location + Lot (MM-BR-714). Until the service passes a Location (TASK-CORE-068) every
+    // movement uses Location '*'. The ('*', '*') row of item + warehouse is where saves of the same item + warehouse wait for each
+    // other (MM-BR-603 ①); the item + warehouse balance is the sum of its rows.
     private const string EnsureOnHand = """
-        INSERT INTO mm_onhand (item_id, warehouse_id, onhand_qty, created_by, updated_by)
-        VALUES (@ItemId, @WarehouseId, 0, @User, @User)
-        ON CONFLICT (item_id, warehouse_id) DO NOTHING
+        INSERT INTO bc_location (warehouse_id, location_code, is_system, created_by, updated_by)
+        VALUES (@WarehouseId, '*', true, @User, @User)
+        ON CONFLICT (warehouse_id, location_code) DO NOTHING;
+        INSERT INTO mm_lot (item_id, lot_no, created_by, updated_by)
+        VALUES (@ItemId, '*', @User, @User)
+        ON CONFLICT (item_id, lot_no) DO NOTHING;
+        INSERT INTO mm_onhand (item_id, warehouse_id, location_id, lot_id, onhand_qty, created_by, updated_by)
+        SELECT @ItemId, @WarehouseId, c.id, l.id, 0, @User, @User
+        FROM bc_location c, mm_lot l
+        WHERE c.warehouse_id = @WarehouseId AND c.location_code = '*' AND l.item_id = @ItemId AND l.lot_no = '*'
+        ON CONFLICT (item_id, warehouse_id, location_id, lot_id) DO NOTHING
         """;
 
-    private const string LockOnHandRow = """
-        SELECT o.item_id, o.warehouse_id, w.warehouse_code, o.onhand_qty
+    private const string StarKey = """
+        location_id = (SELECT id FROM bc_location WHERE warehouse_id = @WarehouseId AND location_code = '*')
+        AND lot_id = (SELECT id FROM mm_lot WHERE item_id = @ItemId AND lot_no = '*')
+        """;
+
+    private const string LockOnHandRow = $"""
+        SELECT o.item_id, o.warehouse_id, w.warehouse_code
         FROM mm_onhand o
         JOIN bc_warehouse w ON w.id = o.warehouse_id
-        WHERE o.item_id = @ItemId AND o.warehouse_id = @WarehouseId
+        WHERE o.item_id = @ItemId AND o.warehouse_id = @WarehouseId AND {StarKey}
         FOR UPDATE OF o
+        """;
+
+    // Read after the lock in its own statement, so it sees what a save that held the lock committed
+    private const string SelectItemWarehouseOnHand = """
+        SELECT coalesce(sum(onhand_qty), 0) FROM mm_onhand WHERE item_id = @ItemId AND warehouse_id = @WarehouseId
         """;
 
     private const string SelectSellableOnHand = """
@@ -46,10 +67,13 @@ internal sealed class InventoryRepository : IInventoryRepository
         GROUP BY o.item_id
         """;
 
-    private const string UpdateOnHand = """
-        UPDATE mm_onhand
-        SET onhand_qty = @OnHandQty, updated_at = now(), updated_by = @User
-        WHERE item_id = @ItemId AND warehouse_id = @WarehouseId
+    // The new item + warehouse balance: the ('*', '*') row takes the difference. A lot balance is set on its own row by
+    // UpdateLotOnHand, which gives the ('*', '*') row its difference back, so the order of the two calls does not matter
+    private const string UpdateOnHand = $"""
+        UPDATE mm_onhand o
+        SET onhand_qty = o.onhand_qty + (@OnHandQty - s.total), updated_at = now(), updated_by = @User
+        FROM (SELECT sum(onhand_qty) AS total FROM mm_onhand WHERE item_id = @ItemId AND warehouse_id = @WarehouseId) s
+        WHERE o.item_id = @ItemId AND o.warehouse_id = @WarehouseId AND {StarKey}
         """;
 
     private const string UpdateItem = """
@@ -59,10 +83,12 @@ internal sealed class InventoryRepository : IInventoryRepository
         """;
 
     private const string InsertMovement = """
-        INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, qty, prc, amount,
+        INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, location_id, qty, prc, amount,
                                        ref_key, ref_seq, parent_movement_id, negative_stock, set_item_id, lot_id, created_by, updated_by)
-        VALUES (@DocumentNo, @DocumentDt, @MovType, @ItemId, @WarehouseId, @Qty, @Prc, @Amount,
-                @RefKey, @RefSeq, @ParentMovementId, @NegativeStock, @SetItemId, @LotId, @User, @User)
+        VALUES (@DocumentNo, @DocumentDt, @MovType, @ItemId, @WarehouseId,
+                (SELECT id FROM bc_location WHERE warehouse_id = @WarehouseId AND location_code = '*'), @Qty, @Prc, @Amount,
+                @RefKey, @RefSeq, @ParentMovementId, @NegativeStock, @SetItemId,
+                coalesce(@LotId, (SELECT id FROM mm_lot WHERE item_id = @ItemId AND lot_no = '*')), @User, @User)
         RETURNING id
         """;
 
@@ -118,22 +144,36 @@ internal sealed class InventoryRepository : IInventoryRepository
         WHERE item_id = @ItemId AND starts_with(lot_no, @Prefix) AND substr(lot_no, length(@Prefix) + 1) ~ '^[0-9]{1,9}$'
         """;
 
+    // A lot balance is the mm_onhand row of (item, warehouse, '*', lot) (MM-BR-354)
+    private const string LotKey = """
+        item_id = @ItemId AND warehouse_id = @WarehouseId AND lot_id = @LotId
+        AND location_id = (SELECT id FROM bc_location WHERE warehouse_id = @WarehouseId AND location_code = '*')
+        """;
+
     private const string EnsureLotOnHand = """
-        INSERT INTO mm_lot_onhand (item_id, warehouse_id, lot_id, onhand_qty, created_by, updated_by)
-        VALUES (@ItemId, @WarehouseId, @LotId, 0, @User, @User)
-        ON CONFLICT (item_id, warehouse_id, lot_id) DO NOTHING
+        INSERT INTO mm_onhand (item_id, warehouse_id, location_id, lot_id, onhand_qty, created_by, updated_by)
+        SELECT @ItemId, @WarehouseId, c.id, @LotId, 0, @User, @User
+        FROM bc_location c WHERE c.warehouse_id = @WarehouseId AND c.location_code = '*'
+        ON CONFLICT (item_id, warehouse_id, location_id, lot_id) DO NOTHING
         """;
 
-    private const string LockLotOnHandRow = """
-        SELECT onhand_qty FROM mm_lot_onhand
-        WHERE item_id = @ItemId AND warehouse_id = @WarehouseId AND lot_id = @LotId
-        FOR UPDATE
+    private const string LockLotOnHandRow = $"""
+        SELECT onhand_qty FROM mm_onhand WHERE {LotKey} FOR UPDATE
         """;
 
-    private const string UpdateLotOnHand = """
-        UPDATE mm_lot_onhand
-        SET onhand_qty = @OnHandQty, updated_at = now(), updated_by = @User
-        WHERE item_id = @ItemId AND warehouse_id = @WarehouseId AND lot_id = @LotId
+    // Sets the lot row and takes the change off the ('*', '*') row, whose item + warehouse total UpdateOnHand already counted.
+    // Lot '*' is that row itself, so it is left to UpdateOnHand
+    private const string UpdateLotOnHand = $"""
+        WITH before AS (
+          SELECT onhand_qty FROM mm_onhand WHERE {LotKey}
+        ), lot AS (
+          UPDATE mm_onhand SET onhand_qty = @OnHandQty, updated_at = now(), updated_by = @User
+          WHERE {LotKey} AND lot_id <> (SELECT id FROM mm_lot WHERE item_id = @ItemId AND lot_no = '*')
+          RETURNING 1
+        )
+        UPDATE mm_onhand
+        SET onhand_qty = onhand_qty - (@OnHandQty - (SELECT onhand_qty FROM before)), updated_at = now(), updated_by = @User
+        WHERE item_id = @ItemId AND warehouse_id = @WarehouseId AND {StarKey} AND EXISTS (SELECT 1 FROM lot)
         """;
 
     private const string SelectLotDailyQty = """
@@ -170,7 +210,9 @@ internal sealed class InventoryRepository : IInventoryRepository
         await transaction.Connection!.ExecuteAsync(new CommandDefinition(EnsureOnHand, key, transaction, cancellationToken: cancellationToken));
         var row = await transaction.Connection!.QuerySingleAsync<OnHandDbRow>(
             new CommandDefinition(LockOnHandRow, key, transaction, cancellationToken: cancellationToken));
-        return new OnHandRow(row.ItemId, row.WarehouseId, row.WarehouseCode, row.OnhandQty);
+        var onHandQty = await transaction.Connection!.ExecuteScalarAsync<decimal>(
+            new CommandDefinition(SelectItemWarehouseOnHand, key, transaction, cancellationToken: cancellationToken));
+        return new OnHandRow(row.ItemId, row.WarehouseId, row.WarehouseCode, onHandQty);
     }
 
     public Task UpdateOnHandAsync(long itemId, long warehouseId, decimal onHandQty, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -290,7 +332,7 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private sealed record BalanceRow(decimal Opening, DateOnly? DocumentDt, decimal? Balance, bool? MonthEnd);
 
-    private sealed record OnHandDbRow(long ItemId, long WarehouseId, string WarehouseCode, decimal OnhandQty);
+    private sealed record OnHandDbRow(long ItemId, long WarehouseId, string WarehouseCode);
 
     private sealed record MovementRow(
         long Id, string DocumentNo, DateOnly DocumentDt, string MovType, long ItemId, long WarehouseId, decimal Qty, decimal Prc,
