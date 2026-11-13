@@ -50,12 +50,14 @@ public sealed class DemoScriptTests : IDisposable
         using var connection = new NpgsqlConnection(_connectionString);
         connection.Open();
         Scalar(connection, """
-            SELECT count(*) FROM mm_onhand o JOIN bc_item i ON i.id = o.item_id JOIN bc_warehouse w ON w.id = o.warehouse_id AND w.is_default
-            WHERE (i.item_cd, o.onhand_qty) IN (('DEMO-BOLT-10', 1000), ('DEMO-PANEL-01', 40), ('DEMO-CABLE-LOT', 50))
-              AND i.onhand_qty = o.onhand_qty AND i.mvg_cost = i.usd_prc
+            SELECT count(*) FROM (SELECT o.item_id, sum(o.onhand_qty) AS qty FROM mm_onhand o
+                                  JOIN bc_warehouse w ON w.id = o.warehouse_id AND w.is_default GROUP BY o.item_id) o
+            JOIN bc_item i ON i.id = o.item_id
+            WHERE (i.item_cd, o.qty) IN (('DEMO-BOLT-10', 1000), ('DEMO-PANEL-01', 40), ('DEMO-CABLE-LOT', 50))
+              AND i.onhand_qty = o.qty AND i.mvg_cost = i.usd_prc
             """).Should().Be(3);
         Scalar(connection, """
-            SELECT count(*) FROM mm_lot_onhand o JOIN mm_lot l ON l.id = o.lot_id
+            SELECT count(*) FROM mm_onhand o JOIN mm_lot l ON l.id = o.lot_id
             WHERE (l.lot_no, o.onhand_qty) IN (('L2611A', 30), ('L2611B', 20))
             """).Should().Be(2);
         Scalar(connection, "SELECT count(*) FROM mm_goods_movement WHERE ref_key = 'DEMO-OPENING' AND mov_type = 'GR'").Should().Be(4);

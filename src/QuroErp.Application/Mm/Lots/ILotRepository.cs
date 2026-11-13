@@ -8,7 +8,7 @@ public sealed record LotBalanceRow(long LotId, string LotNo, decimal OnHandQty);
 /// <summary>An item + warehouse whose current stock differs from the sum of its lot balances (MM-BR-354).</summary>
 public sealed record LotMismatchRow(long ItemId, string ItemCd, long WarehouseId, string WarehouseCode, decimal OnHandQty, decimal LotQty);
 
-/// <summary>Lot search and the lot side of item lot management (mm_lot, mm_lot_onhand; MM lot.md).</summary>
+/// <summary>Lot search and the lot side of item lot management (mm_lot, lot rows of mm_onhand; MM lot.md).</summary>
 public interface ILotRepository
 {
     /// <summary>
@@ -28,7 +28,7 @@ public interface ILotRepository
     Task<bool> HasLotStockAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Adds each warehouse's current stock of the item to lot MIGRATED, creating the lot when missing (MM-BR-351). The item row
+    /// Turning lot management on: the current stock stays on Lot '*' (MM-BR-351), so there is nothing to move. The item row
     /// is locked by the caller, so no stock movement runs meanwhile.
     /// </summary>
     Task MigrateStockAsync(long itemId, string user, IDbTransaction transaction, CancellationToken cancellationToken);

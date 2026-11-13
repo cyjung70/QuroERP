@@ -171,6 +171,25 @@ public class ItemRepositoryTests(AuthSchemaFixture db)
         (await repository.FindAsync(unused, forUpdate: false, uow.Transaction, None)).Should().BeNull();
     }
 
+    [DatabaseFact, Trait("Id", "MM-UT-363"), Trait("Rule", "MM-BR-363")]
+    public async Task Insert_GivesTheItemItsSystemLotStar_WhichNeitherKeepsItInUseNorBlocksADelete()
+    {
+        await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
+        var repository = db.Get<IItemRepository>();
+        var id = await repository.InsertAsync(Item.Create("IT-STAR", Fields), "kim", uow.Transaction, None);
+
+        (await uow.Transaction.Connection!.QueryAsync<string>(
+            "SELECT lot_no FROM mm_lot WHERE item_id = @Id", new { Id = id }, uow.Transaction)).Should().Equal("*");
+        (await repository.IsInUseAsync(id, uow.Transaction, None)).Should().BeFalse();
+        var row = (await repository.FindAsync(id, forUpdate: false, uow.Transaction, None))!;
+        (await repository.DeleteAsync(id, row.UpdatedAt.AddSeconds(-1), uow.Transaction, None)).Should().BeFalse();
+        (await uow.Transaction.Connection!.ExecuteScalarAsync<long>(
+            "SELECT count(*) FROM mm_lot WHERE item_id = @Id", new { Id = id }, uow.Transaction)).Should().Be(1, "a stale delete keeps the lot too");
+        (await repository.DeleteAsync(id, row.UpdatedAt, uow.Transaction, None)).Should().BeTrue();
+        (await uow.Transaction.Connection!.ExecuteScalarAsync<long>(
+            "SELECT count(*) FROM mm_lot WHERE item_id = @Id", new { Id = id }, uow.Transaction)).Should().Be(0);
+    }
+
     [DatabaseFact, Trait("Id", "BC-UC-010-T01"), Trait("Id", "BC-UC-010-T03"), Trait("Id", "MM-UT-820"), Trait("Id", "MM-UT-822"), Trait("Id", "MM-UT-823")]
     public async Task Image_ReplacedWhole_FallsBackToTheItemGroupInPlatingThenCodeOrder_AndKeepsUpdatedAt()
     {

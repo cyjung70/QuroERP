@@ -624,7 +624,7 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
 
     private async Task<decimal> OnHandAsync(long item, long warehouse) =>
         (await QueryAsync<decimal?>(
-            "SELECT onhand_qty FROM mm_onhand WHERE item_id = @Item AND warehouse_id = @Warehouse", new { Item = item, Warehouse = warehouse }))
+            "SELECT sum(onhand_qty) FROM mm_onhand WHERE item_id = @Item AND warehouse_id = @Warehouse", new { Item = item, Warehouse = warehouse }))
         .SingleOrDefault() ?? 0m;
 
     // The item's stock value: the amount of all its movements
