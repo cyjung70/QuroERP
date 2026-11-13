@@ -1,0 +1,36 @@
+{
+  "id": "TASK-CORE-075",
+  "project": "core",
+  "title": "매출 송장 API: 선청구 줄 Location·Lot, 구성품 표시",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/specifications/SD/sales-invoice.md",
+    "docs/business-rules/SD/sales-invoice.md",
+    "docs/business-rules/SD/set-item.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-068",
+    "TASK-CORE-069"
+  ],
+  "acceptance": [
+    "선청구 송장 줄의 출발 Location·Lot(기본 FIFO 추천), 위탁 이동 `TR`이 Location·Lot을 그대로 옮긴다 (MM-BR-716·357)",
+    "송장 조회·인쇄에 구성품 행(코드·이름·수량, 금액 없음) (SD-BR-517)",
+    "끝난 송장 API를 고친다. 기존 테스트가 통과한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

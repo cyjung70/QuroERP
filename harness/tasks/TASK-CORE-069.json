@@ -1,0 +1,42 @@
+{
+  "id": "TASK-CORE-069",
+  "project": "core",
+  "title": "품목 유형 Kit·Set 분리",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/business-rules/SD/set-item.md",
+    "docs/business-rules/MM/inventory.md",
+    "docs/business-rules/MM/item.md",
+    "docs/specifications/BC/set-item.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-011",
+    "TASK-BC-025",
+    "TASK-CORE-067"
+  ],
+  "acceptance": [
+    "코드 `ITEM_TYPE`에 `KIT`(Kit)·`SET`(Set)을 둔다. 마이그레이션: 기존 Set 품목을 모두 `KIT`으로 바꾼다 (SD-BR-511). 리소스 키 ko·en",
+    "재고 전개(MM-BR-007)는 `KIT`만 한다. `SET`은 재고 관리 품목이다(MM-BR-008, SD-BR-513). `SET`은 구매입고 불가 422 SD-E-513",
+    "세트 구성 API·화면: 상위 품목 `KIT`·`SET`, 구성품 Inventory만, Lot 관리 품목 허용 (SD-BR-501·502, MM-BR-361 변경). 로트 관리 품목 구성품 차단(MM-E-361)을 없앤다",
+    "Kit 전개 구성품의 Location·Lot은 FIFO 자동 할당 (SD-BR-518, TASK-CORE-068 추천 사용)",
+    "단위 테스트: 기존 Set → KIT 마이그레이션 뒤 출하 전개 결과가 전과 같다, SET 출하는 자기 재고 출고"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

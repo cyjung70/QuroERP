@@ -1,0 +1,75 @@
+{
+  "id": "TASK-SD-070",
+  "project": "core",
+  "title": "PDA 출고 API (Application·Domain·Infrastructure)",
+  "module": "SD",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "SM",
+  "specs": [
+    "docs/specifications/SD/pda-issue.md"
+  ],
+  "rules": [
+    "MM-BR-921",
+    "MM-BR-923",
+    "MM-BR-716",
+    "MM-BR-913",
+    "MM-BR-001",
+    "MM-BR-002",
+    "MM-BR-003",
+    "MM-BR-004",
+    "MM-BR-005",
+    "MM-BR-006",
+    "MM-BR-007",
+    "MM-BR-008",
+    "MM-BR-009",
+    "MM-BR-010",
+    "MM-BR-601",
+    "MM-BR-602",
+    "MM-BR-603",
+    "MM-BR-604",
+    "MM-BR-606",
+    "MM-BR-607",
+    "MM-BR-703",
+    "MM-BR-713",
+    "MM-BR-714",
+    "MM-BR-716",
+    "MM-BR-363",
+    "MM-BR-353",
+    "MM-BR-354",
+    "MM-BR-355",
+    "MM-BR-356",
+    "MM-BR-360",
+    "MM-BR-362"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-017",
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007",
+    "TASK-CORE-008",
+    "TASK-CORE-009",
+    "TASK-CORE-011",
+    "TASK-CORE-071",
+    "TASK-CORE-074"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트",
+    "마이너스 재고 모드 2개 테스트 (현재고·시점별·월말)",
+    "로트 관리 품목 줄: 로트 입력·선택, 로트 잔고 검사 (MM-BR-353~356)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

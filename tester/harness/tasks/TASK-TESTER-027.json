@@ -1,0 +1,37 @@
+{
+  "id": "TASK-TESTER-027",
+  "project": "tester",
+  "layer": [
+    "Tester"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "estimateHours": 2,
+  "status": "todo",
+  "title": "MM Lot 추적 테스트: 정전개·역전개, 조립 Set Lot ↔ 구성품 Lot, Excel",
+  "module": "MM",
+  "scenarios": [
+    "tester/docs/scenarios/MM/MM-TS-025.md"
+  ],
+  "rules": [
+    "MM-BR-366",
+    "MM-BR-367",
+    "MM-BR-368",
+    "MM-BR-369",
+    "SD-BR-514"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-MM-063",
+    "TASK-SD-072",
+    "TASK-CORE-074",
+    "TASK-SD-005"
+  ],
+  "acceptance": [
+    "tests/scenario/MM/test_lot_trace.py: MM-TS-025",
+    "사전 데이터는 API로 만들고 업무 키에 run_id를 붙인다",
+    "Excel 행은 openpyxl로 읽어 화면 API 행과 비교한다",
+    "uv run pytest -k lot_trace 통과, uv run ruff check 통과"
+  ]
+}

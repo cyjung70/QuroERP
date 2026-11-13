@@ -25,6 +25,7 @@
     "MM-BR-209",
     "MM-BR-210",
     "MM-BR-211",
+    "MM-BR-365",
     "MM-BR-001",
     "MM-BR-002",
     "MM-BR-003",
@@ -42,6 +43,10 @@
     "MM-BR-606",
     "MM-BR-607",
     "MM-BR-703",
+    "MM-BR-713",
+    "MM-BR-714",
+    "MM-BR-716",
+    "MM-BR-363",
     "MM-BR-353",
     "MM-BR-354",
     "MM-BR-355",
@@ -65,6 +70,7 @@
     "TASK-CORE-009",
     "TASK-CORE-011",
     "TASK-CORE-027",
+    "TASK-CORE-068",
     "TASK-MM-025"
   ],
   "acceptance": [
