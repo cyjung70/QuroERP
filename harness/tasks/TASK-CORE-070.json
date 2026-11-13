@@ -1,0 +1,38 @@
+{
+  "id": "TASK-CORE-070",
+  "project": "core",
+  "title": "Pallet·라벨 기반: Pallet 테이블, 채번, DataMatrix, ZPL·PDF 출력",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/business-rules/MM/pallet.md",
+    "docs/architecture/inventory.md",
+    "docs/architecture/database-tables.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-068",
+    "TASK-CORE-033"
+  ],
+  "acceptance": [
+    "마이그레이션: `mm_pallet`, `mm_pallet_event`, `bc_label_format`(기본 4행), `mm_label_print`. `mm_goods_receipt_line.pallet_qty`, `sd_shipment_line.pallet_id`, `mm_stock_transfer_line.pallet_id`, `mm_goods_movement.pallet_id`",
+    "채번 `PL` + yymm + 6자리 (MM-BR-910). Pallet 수량 합 ≤ 현재고 검사를 재고 서비스 출고에 더한다 (MM-BR-916)",
+    "DataMatrix 내용 생성·해석 (MM-BR-918·923): `PL|…`, `IT|…`, `LT|…`, `LC|…`. 해석기는 PDA·화면 스캔이 같이 쓴다",
+    "라벨 렌더러: ZPL 문자열과 PDF(TASK-CORE-033 `IPdfRenderer`). Pallet은 Pallet 라벨 다음 DataMatrix 라벨 순 (MM-BR-918). 출력 이력 (MM-BR-919)",
+    "단위 테스트: 채번, DataMatrix 왕복(생성 → 해석), ZPL 견본 비교, 라벨 순서"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

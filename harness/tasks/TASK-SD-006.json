@@ -80,6 +80,7 @@
   "dependsOn": [
     "TASK-CORE-006",
     "TASK-CORE-031",
+    "TASK-CORE-075",
     "TASK-SD-005"
   ],
   "acceptance": [

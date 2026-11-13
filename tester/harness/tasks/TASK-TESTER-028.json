@@ -1,0 +1,41 @@
+{
+  "id": "TASK-TESTER-028",
+  "project": "tester",
+  "layer": [
+    "Tester"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "estimateHours": 3,
+  "status": "todo",
+  "title": "SD Kit·Set 테스트: Kit 출하 전개·FIFO 자동 할당, Set 조립 원가·해체, 구성품 표시",
+  "module": "SD",
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-022.md"
+  ],
+  "rules": [
+    "SD-BR-511",
+    "SD-BR-512",
+    "SD-BR-513",
+    "SD-BR-514",
+    "SD-BR-515",
+    "SD-BR-516",
+    "SD-BR-517",
+    "SD-BR-518",
+    "MM-BR-007"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-CORE-069",
+    "TASK-CORE-074",
+    "TASK-CORE-075",
+    "TASK-SD-072"
+  ],
+  "acceptance": [
+    "tests/scenario/SD/test_kit_set.py: SD-TS-022, serial (negative_stock_mode fixture로 ALLOW_IN_MONTH)",
+    "재고 이동·mm_lot_link는 DB SELECT로 확인한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -m serial -k kit 통과, uv run ruff check 통과"
+  ]
+}

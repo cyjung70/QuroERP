@@ -1,0 +1,40 @@
+{
+  "id": "TASK-MM-057",
+  "project": "core",
+  "title": "바코드 라벨 출력 API (Application·Domain·Infrastructure)",
+  "module": "MM",
+  "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "M",
+  "specs": [
+    "docs/specifications/MM/label-print.md"
+  ],
+  "rules": [
+    "MM-BR-918",
+    "MM-BR-919"
+  ],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-BC-017",
+    "TASK-CORE-003",
+    "TASK-CORE-005",
+    "TASK-CORE-007",
+    "TASK-CORE-070"
+  ],
+  "acceptance": [
+    "명세 REST API 구현",
+    "명세 테스트 시나리오 통과",
+    "관련 BR마다 테스트"
+  ],
+  "estimateHours": 2,
+  "status": "todo"
+}

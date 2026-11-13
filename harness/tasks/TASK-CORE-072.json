@@ -1,0 +1,38 @@
+{
+  "id": "TASK-CORE-072",
+  "project": "core",
+  "title": "품목 마스터·바코드: 유형 4개, Location·Lot 관리, 구성품 표시, 바코드 20자리",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/specifications/BC/item.md",
+    "docs/specifications/BC/item-barcode.md",
+    "docs/business-rules/MM/item.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-068",
+    "TASK-CORE-069"
+  ],
+  "acceptance": [
+    "품목 API·화면: 유형 Inventory·Service·Kit·Set, `locationManaged`·`lotManaged`·`showComponents` 체크박스(명세 화면 항목 No 17). 예전 위치 메모 칸을 화면에서 뺀다 (MM-BR-834·718·351, SD-BR-511·517)",
+    "바코드 20자리: `upc_code` 길이, 바코드 일괄 생성 상한 (MM-BR-816)",
+    "끝난 품목·바코드 화면을 이 명세대로 고친다. 기존 bUnit·API 테스트가 통과한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

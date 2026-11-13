@@ -1,0 +1,36 @@
+{
+  "id": "TASK-CORE-077",
+  "project": "core",
+  "title": "화면 쓰기 권한을 메뉴 Full Access로 판정 (업무 흐름 1차 목표 뒤)",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Application",
+    "Infrastructure",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/security.md",
+    "docs/business-rules/BC/menu-role.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-dapper",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-076",
+    "TASK-CORE-059"
+  ],
+  "acceptance": [
+    "`GET /api/auth/screen-access?path=` → { canRead, canWrite } — API 화면 경로 정책과 같은 판정 (BC-BR-214). 로그인한 모든 사용자",
+    "`IScreenAccess`가 이 API로 판정하고 세션 동안 화면 경로별로 캐시한다. 화면 코드는 바꾸지 않는다",
+    "bUnit·통합 테스트: Full Access 역할 사용자(관리자 아님)는 저장 가능, 조회 전용 배정은 버튼 비활성, `admin`도 배정이 없으면 쓰기 불가"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
