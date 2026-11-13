@@ -96,5 +96,5 @@
     "메뉴 시드: `/sd/sales-invoice` 화면 메뉴를 새 Seed 스크립트로 더한다 (출하 메뉴 시드와 같은 방식). 시연 데이터(`--demo`)에 화면 확인용 송장(OP·PA 각 1건)을 더한다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

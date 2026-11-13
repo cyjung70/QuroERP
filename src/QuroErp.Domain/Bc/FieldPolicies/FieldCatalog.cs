@@ -46,6 +46,11 @@ public static class FieldCatalog
                 required: ["ShipZipCode"],
                 optional: ["ShipName", "ShipAddr1", "ShipAddr2", "ShipCity", "ShipState", "ShipCountry", "ShipPhone"],
                 countries: ["ShipCountry"]),
+            // SD sales-invoice.md "화면 항목": the exemption certificate (No 14) and the ship-to fields (No 16)
+            ["Sd.SalesInvoice"] = Screen("Sd.SalesInvoice",
+                required: ["ShipZipCode"],
+                optional: ["TaxExemptionCertNo", "ShipName", "ShipAddr1", "ShipAddr2", "ShipCity", "ShipState", "ShipCountry", "ShipPhone", "ShipFax"],
+                countries: ["ShipCountry"]),
             // MM vendor.md "화면 필드"
             ["Mm.Vendor"] = Screen("Mm.Vendor",
                 required: ["VName", "Phone1", "ZipCode"],

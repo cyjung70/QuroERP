@@ -354,6 +354,18 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
         (await Service.GetAsync(exempted.Id, None)).TaxExemptionCertNo.Should().Be("CERT-" + m.Key);
     }
 
+    [DatabaseFact, Trait("Id", "SD-UT-133")]
+    public async Task EnteredCertificateNo_IsSaved_InsteadOfTheCustomers()
+    {
+        var m = await MastersAsync(ShipThenBill);
+        var line = Direct(m.Service, 1m, 100m, m.NoTax);
+
+        var invoice = await Service.CreateAsync(Request(m, line) with { TaxExemptionCertNo = "  PAPER-" + m.Key + " " }, "kim", None);
+
+        invoice.TaxExemptionCertNo.Should().Be("PAPER-" + m.Key);
+        (await Service.GetAsync(invoice.Id, None)).TaxExemptionCertNo.Should().Be("PAPER-" + m.Key);
+    }
+
     [DatabaseFact, Trait("Id", "BC-UT-547"), Trait("Id", "SD-UT-132")]
     public async Task AnInvoice_TaxesTheOrderLineAtTheRateOfItsOwnDate()
     {

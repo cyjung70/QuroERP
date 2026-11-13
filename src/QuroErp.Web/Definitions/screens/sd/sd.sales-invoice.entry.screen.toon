@@ -1,0 +1,58 @@
+# SD-UC-003 sales invoice (TASK-SD-006), screen type SM on the entry frame. Lines come from shipments (SD-BR-115), bill-first
+# orders (SD-BR-141) or are entered directly for items without stock (SD-BR-116): a picked item takes the sales order line
+# defaults (price, discount, tax code). Bill-first lines show their shipped, cancelled and unshipped qty (SD-BR-143). Saved lines
+# are not changed but deleted and added again (SD-BR-107). Amounts are display values; the API calculates the stored ones.
+screen:
+  id: sd.sales-invoice.entry
+  module: SD
+  title: Sd.SalesInvoice.Title
+  version: 1
+  api: /api/sd/sales-invoices
+  key: id
+  layout: form-grid
+  perm:
+    read: SD.Read
+    write: SD.Write
+toolbar[3]: query,new,save
+# The page draws the header (customer lookup, code combos, ship-to, amounts); these are the fields the frame binds by id
+form:
+  cols: 4
+  fields[8]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+    customerId,"",hidden,ro,"","","","",0,""
+    dnNo,Sd.SalesInvoice.DnNo,text,auto,"",upper,"","",1,""
+    customerName,Sd.SalesInvoice.CustomerId,text,req,"",upper,"","",2,""
+    dnDt,Sd.SalesInvoice.DnDt,date,req,"","","","",1,""
+    remarks,Sd.SalesInvoice.Remarks,textarea,opt,"","","","",4,""
+    status,"",hidden,ro,"","","","",0,""
+    updatedAt,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: lines
+    bind: lines
+    rowKey: id
+    deletedRows: strike
+    columns[17]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      seq,Sd.SalesInvoice.Seq,number,50,false,false,N0,"",false,false
+      itemCd,Sd.SalesInvoice.ItemCd,text,130,true,true,"",sdSoItem,false,false
+      itemName,Sd.SalesInvoice.ItemName,text,200,true,false,"","",false,false
+      unit,Sd.SalesInvoice.Unit,text,60,false,false,"","",false,false
+      warehouseCode,Sd.SalesInvoice.LineWarehouseId,text,100,true,true,"",sdShipWarehouse,false,false
+      lotNo,Sd.SalesInvoice.LotNo,text,120,true,false,"",sdShipLot,false,false
+      dnQty,Sd.SalesInvoice.DnQty,number,90,true,true,N2,"",false,false
+      dnPrc,Sd.SalesInvoice.DnPrc,number,110,true,true,N2,"",false,false
+      dcCd,Sd.SalesInvoice.DcCd,text,90,true,false,"",sdSoDiscount,false,false
+      dcRate,Sd.SalesInvoice.DcRate,number,80,false,false,N2,"",false,false
+      stdPrc,Sd.SalesInvoice.StdPrc,number,110,false,false,N2,"",false,false
+      taxCode,Sd.SalesInvoice.TaxCode,text,90,true,false,"",sdSoTaxCode,false,false
+      dnAmt,Sd.SalesInvoice.DnAmt,number,120,false,false,N2,"",false,false
+      source,Sd.SalesInvoice.Source,text,140,false,false,"","",false,false
+      shippedQty,Sd.SalesInvoice.ShippedQty,number,90,false,false,N2,"",false,false
+      cancelledQty,Sd.SalesInvoice.CancelledQty,number,90,false,false,N2,"",false,false
+      unshippedQty,Sd.SalesInvoice.UnshippedQty,number,90,false,false,N2,"",false,false
+    rules[4]{on,action,target,expr}:
+      itemCd.change,lookup,"itemName|unit|stdPrc","sdSoItem.all()"
+      warehouseCode.change,lookup,"","sdShipWarehouse.all()"
+      dcCd.change,lookup,"dcRate","sdSoDiscount.all()"
+      taxCode.change,lookup,"","sdSoTaxCode.all()"
+    validate[1]{target,rule,msg}:
+      itemCd,requires customerId,Common.SelectPartnerFirst

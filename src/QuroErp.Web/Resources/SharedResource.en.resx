@@ -951,6 +951,98 @@
   <data name="SD-E-144" xml:space="preserve"><value>Line {1} of invoice {0} has shipped or cancelled qty, so it can&apos;t be deleted or voided.</value></data>
   <data name="SD-E-145" xml:space="preserve"><value>Invoice {0} line {1}: the qty to cancel must be above 0 and not above the unshipped qty {2} (bill-first invoices only).</value></data>
   <data name="SD-E-146" xml:space="preserve"><value>Credit Memo {0} is applied, so the cancellation can&apos;t be undone.</value></data>
+  <data name="Sd.SalesInvoice.Title" xml:space="preserve"><value>Sales Invoice</value></data>
+  <data name="Sd.SalesInvoice.DnNo" xml:space="preserve"><value>Invoice No.</value></data>
+  <data name="Sd.SalesInvoice.DnDt" xml:space="preserve"><value>Invoice Date</value></data>
+  <data name="Sd.SalesInvoice.DueDt" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Sd.SalesInvoice.CustomerId" xml:space="preserve"><value>Customer</value></data>
+  <data name="Sd.SalesInvoice.FindCustomer" xml:space="preserve"><value>Find Customer</value></data>
+  <data name="Sd.SalesInvoice.Terms" xml:space="preserve"><value>Terms</value></data>
+  <data name="Sd.SalesInvoice.Rep" xml:space="preserve"><value>Sales Rep</value></data>
+  <data name="Sd.SalesInvoice.CurrencyCode" xml:space="preserve"><value>Currency</value></data>
+  <data name="Sd.SalesInvoice.ExchangeRate" xml:space="preserve"><value>Exchange Rate</value></data>
+  <data name="Sd.SalesInvoice.WarehouseId" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Sd.SalesInvoice.WarehouseName" xml:space="preserve"><value>Warehouse name</value></data>
+  <data name="Sd.SalesInvoice.FindWarehouse" xml:space="preserve"><value>Find warehouse</value></data>
+  <data name="Sd.SalesInvoice.BillingFlow" xml:space="preserve"><value>Billing Flow</value></data>
+  <data name="Sd.SalesInvoice.ShipVia" xml:space="preserve"><value>Ship Via</value></data>
+  <data name="Sd.SalesInvoice.FreightCharge" xml:space="preserve"><value>Freight Charge</value></data>
+  <data name="Sd.SalesInvoice.ShipName" xml:space="preserve"><value>Ship-to Name</value></data>
+  <data name="Sd.SalesInvoice.ShipAddr1" xml:space="preserve"><value>Ship-to Address 1</value></data>
+  <data name="Sd.SalesInvoice.ShipAddr2" xml:space="preserve"><value>Ship-to Address 2</value></data>
+  <data name="Sd.SalesInvoice.ShipCity" xml:space="preserve"><value>Ship-to City</value></data>
+  <data name="Sd.SalesInvoice.ShipState" xml:space="preserve"><value>Ship-to State</value></data>
+  <data name="Sd.SalesInvoice.ShipZipCode" xml:space="preserve"><value>Ship-to ZIP Code</value></data>
+  <data name="Sd.SalesInvoice.ShipCountry" xml:space="preserve"><value>Ship-to Country</value></data>
+  <data name="Sd.SalesInvoice.ShipPhone" xml:space="preserve"><value>Ship-to Phone</value></data>
+  <data name="Sd.SalesInvoice.ShipFax" xml:space="preserve"><value>Ship-to Fax</value></data>
+  <data name="Sd.SalesInvoice.ApplyCredit" xml:space="preserve"><value>Apply Credit</value></data>
+  <data name="Sd.SalesInvoice.TaxExemptionCertNo" xml:space="preserve"><value>Exemption certificate no.</value></data>
+  <data name="Sd.SalesInvoice.ShipTo" xml:space="preserve"><value>Ship-to</value></data>
+  <data name="Sd.SalesInvoice.TotBaseAmt" xml:space="preserve"><value>Total in base currency</value></data>
+  <data name="Sd.SalesInvoice.SupplyAmt" xml:space="preserve"><value>Supply amount</value></data>
+  <data name="Sd.SalesInvoice.TotDnAmt" xml:space="preserve"><value>Invoice Total</value></data>
+  <data name="Sd.SalesInvoice.BalAmt" xml:space="preserve"><value>Balance</value></data>
+  <data name="Sd.SalesInvoice.AvailableCredit" xml:space="preserve"><value>Available Credit</value></data>
+  <data name="Sd.SalesInvoice.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Sd.SalesInvoice.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Sd.SalesInvoice.Status.OP" xml:space="preserve"><value>Open</value></data>
+  <data name="Sd.SalesInvoice.Status.PA" xml:space="preserve"><value>Partially Paid</value></data>
+  <data name="Sd.SalesInvoice.Status.CL" xml:space="preserve"><value>Closed</value></data>
+  <data name="Sd.SalesInvoice.Status.VO" xml:space="preserve"><value>Void</value></data>
+  <data name="Sd.SalesInvoice.Delete" xml:space="preserve"><value>Delete Invoice</value></data>
+  <data name="Sd.SalesInvoice.Void" xml:space="preserve"><value>Void Invoice</value></data>
+  <data name="Sd.SalesInvoice.ConfirmVoid" xml:space="preserve"><value>Void this invoice? The billed quantity and the consignment moves are reversed.</value></data>
+  <data name="Sd.SalesInvoice.TaxInvoice" xml:space="preserve"><value>Tax Invoice</value></data>
+  <data name="Sd.SalesInvoice.ImportShipment" xml:space="preserve"><value>Import Shipment</value></data>
+  <data name="Sd.SalesInvoice.ImportOrder" xml:space="preserve"><value>Import Bill-First Order</value></data>
+  <data name="Sd.SalesInvoice.LinesAdded" xml:space="preserve"><value>{0} line(s) added. Save to keep them.</value></data>
+  <data name="Sd.SalesInvoice.ShipNo" xml:space="preserve"><value>Shipment No.</value></data>
+  <data name="Sd.SalesInvoice.ShipDt" xml:space="preserve"><value>Shipment Date</value></data>
+  <data name="Sd.SalesInvoice.SoNo" xml:space="preserve"><value>Order No.</value></data>
+  <data name="Sd.SalesInvoice.SoDt" xml:space="preserve"><value>Order Date</value></data>
+  <data name="Sd.SalesInvoice.LineCount" xml:space="preserve"><value>Lines</value></data>
+  <data name="Sd.SalesInvoice.SellableQty" xml:space="preserve"><value>Billable Qty</value></data>
+  <data name="Sd.SalesInvoice.Seq" xml:space="preserve"><value>No.</value></data>
+  <data name="Sd.SalesInvoice.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Sd.SalesInvoice.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Sd.SalesInvoice.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Sd.SalesInvoice.LineWarehouseId" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Sd.SalesInvoice.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Sd.SalesInvoice.DnQty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Sd.SalesInvoice.DnPrc" xml:space="preserve"><value>Price</value></data>
+  <data name="Sd.SalesInvoice.DcCd" xml:space="preserve"><value>Discount Code</value></data>
+  <data name="Sd.SalesInvoice.DcRate" xml:space="preserve"><value>Discount %</value></data>
+  <data name="Sd.SalesInvoice.StdPrc" xml:space="preserve"><value>Standard Price</value></data>
+  <data name="Sd.SalesInvoice.TaxCode" xml:space="preserve"><value>Tax Code</value></data>
+  <data name="Sd.SalesInvoice.DnAmt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Sd.SalesInvoice.Source" xml:space="preserve"><value>Source Line</value></data>
+  <data name="Sd.SalesInvoice.ShippedQty" xml:space="preserve"><value>Shipped Qty</value></data>
+  <data name="Sd.SalesInvoice.CancelledQty" xml:space="preserve"><value>Cancelled Qty</value></data>
+  <data name="Sd.SalesInvoice.UnshippedQty" xml:space="preserve"><value>Unshipped Qty</value></data>
+  <data name="Sd.SalesInvoice.CancelUnshipped" xml:space="preserve"><value>Cancel Unshipped</value></data>
+  <data name="Sd.SalesInvoice.CancelUnshippedHint" xml:space="preserve"><value>Enter the quantity to cancel. A Credit Memo is made for the cancelled amount and the stock goes back from the consignment warehouse.</value></data>
+  <data name="Sd.SalesInvoice.CancelDt" xml:space="preserve"><value>Cancel Date</value></data>
+  <data name="Sd.SalesInvoice.CancelQty" xml:space="preserve"><value>Qty to Cancel</value></data>
+  <data name="Sd.SalesInvoice.CancelQtyInvalid" xml:space="preserve"><value>Enter the cancel date and, on at least one line, a quantity above zero and up to the unshipped quantity.</value></data>
+  <data name="Sd.SalesInvoice.CmReasons" xml:space="preserve"><value>Credit Memo Reasons</value></data>
+  <data name="Sd.SalesInvoice.CmReason01" xml:space="preserve"><value>Broken</value></data>
+  <data name="Sd.SalesInvoice.CmReason02" xml:space="preserve"><value>Price Adjustment</value></data>
+  <data name="Sd.SalesInvoice.CmReason03" xml:space="preserve"><value>Defective Merchandise</value></data>
+  <data name="Sd.SalesInvoice.CmReason04" xml:space="preserve"><value>Wrong Order</value></data>
+  <data name="Sd.SalesInvoice.CmReason05" xml:space="preserve"><value>Wrong Shipment</value></data>
+  <data name="Sd.SalesInvoice.CmReason06" xml:space="preserve"><value>Unsatisfactory Design</value></data>
+  <data name="Sd.SalesInvoice.CmReason07" xml:space="preserve"><value>Unsatisfactory Price</value></data>
+  <data name="Sd.SalesInvoice.CmReason08" xml:space="preserve"><value>Exchange</value></data>
+  <data name="Sd.SalesInvoice.Cancelled" xml:space="preserve"><value>The unshipped quantity was cancelled and Credit Memo {0} was made.</value></data>
+  <data name="Sd.SalesInvoice.Cancellations" xml:space="preserve"><value>Unshipped Cancellations</value></data>
+  <data name="Sd.SalesInvoice.CmNo" xml:space="preserve"><value>Credit Memo No.</value></data>
+  <data name="Sd.SalesInvoice.CmAmt" xml:space="preserve"><value>Credit Memo Amount</value></data>
+  <data name="Sd.SalesInvoice.CmApplied" xml:space="preserve"><value>Applied</value></data>
+  <data name="Sd.SalesInvoice.CmApplied.Y" xml:space="preserve"><value>Yes</value></data>
+  <data name="Sd.SalesInvoice.CmApplied.N" xml:space="preserve"><value>No</value></data>
+  <data name="Sd.SalesInvoice.UndoCancel" xml:space="preserve"><value>Undo Cancellation</value></data>
+  <data name="Sd.SalesInvoice.ConfirmUndoCancel" xml:space="preserve"><value>Delete Credit Memo {0} and undo the cancellation? The stock goes back to the consignment warehouse.</value></data>
   <data name="Mm.GoodsReceipt.Title" xml:space="preserve"><value>Goods Receipt</value></data>
   <data name="Mm.GoodsReceipt.GrNo" xml:space="preserve"><value>GR No.</value></data>
   <data name="Mm.GoodsReceipt.Status" xml:space="preserve"><value>Status</value></data>

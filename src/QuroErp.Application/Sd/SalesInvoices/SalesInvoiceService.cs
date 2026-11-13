@@ -436,10 +436,10 @@ public sealed class SalesInvoiceService(
             request.CustomerId, stored?.SalesOrderId ?? addedOrders.Select(o => (long?)o.SalesOrderId).FirstOrDefault(), dnDt,
             request.DueDt ?? stored?.DueDt ?? SalesOrderDefaults.DueDate(terms, dnDt), currencyCode, exchangeRate, warehouseId, billingFlow,
             Clean(request.Rep) ?? (stored is null ? Clean(c.Rep) : null), terms, Clean(request.ShipVia), shipTo, Clean(request.Remarks),
-            // SD-BR-133: the certificate a line was exempted by
-            exemption is { Exempt: true } && exemptCodeId is { } exempt && kept.Select(l => l.TaxCodeId).Concat(added.Select(l => l.TaxCodeId)).Contains(exempt)
+            // SD-BR-133: the certificate the user entered, else the one a line was exempted by
+            Clean(request.TaxExemptionCertNo) ?? (exemption is { Exempt: true } && exemptCodeId is { } exempt && kept.Select(l => l.TaxCodeId).Concat(added.Select(l => l.TaxCodeId)).Contains(exempt)
                 ? exemption.CertificateNo
-                : stored?.TaxExemptionCertNo);
+                : stored?.TaxExemptionCertNo));
         if (string.IsNullOrWhiteSpace(header.Rep))
         {
             throw new DomainException(SalesInvoiceRules.RequiredCode, "rep");
