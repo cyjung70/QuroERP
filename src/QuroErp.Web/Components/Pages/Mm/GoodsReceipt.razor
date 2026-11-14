@@ -34,6 +34,7 @@
 @inject IQuroConfirm Confirm
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* MM-UC-004 goods receipt, screen type SM on the entry frame (entry-frame.md). The API checks every rule and calculates the
    stored amounts, stock, lots and PO quantities (MM-BR-101~117, MM-BR-161~164, MM-BR-703); this screen shows defaults, locks
@@ -127,6 +128,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/mm/goods-receipt";
+
     private const string UnavailableCode = "BC-E-003";
     private const string NotFoundCode = "Common-E-006";
     private const string OverReceiptField = "confirmOverReceipt";
@@ -157,13 +160,10 @@
     [Parameter]
     public string? GrNo { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy reaches the screens, as on the master screens (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         try
         {

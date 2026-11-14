@@ -9,6 +9,7 @@
 @inject ItemApiClient Api
 @inject IQuroConfirm Confirm
 @inject IStringLocalizer<SharedResource> L
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-010 item image upload, screen type S. Save uploads the picked file. The API checks the file content (MM-BR-821);
    this screen only checks the size before sending. *@
@@ -66,6 +67,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/item-image-upload";
+
     /// <summary>No file, not JPEG, larger than 10 MB, or no item (MM-BR-821).</summary>
     private const string InvalidFileCode = "MM-E-821";
 
@@ -83,16 +86,13 @@
     [SupplyParameterFromQuery(Name = "itemCd")]
     public string? ItemCd { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     /// <summary>This screen for one item.</summary>
     public static string PathOf(string itemCd) => $"/bc/item-image-upload?itemCd={Uri.EscapeDataString(itemCd)}";
 
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy exists, as in ItemController (MM-BR-824, BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         _searchCd = ItemCd?.Trim().ToUpperInvariant();
         _ready = true;
     }

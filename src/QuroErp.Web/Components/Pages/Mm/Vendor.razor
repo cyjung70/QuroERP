@@ -15,6 +15,7 @@
 @inject TaxCodeApiClient TaxCodeApi
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* MM-UC-001 vendor master, screen type S. Rules are checked by the API (MM-BR-851~872, BC-BR-415, BC-BR-521~523); this
    screen only shows defaults. Country fields follow the field policies of Mm.Vendor (field-policy.md 3). *@
@@ -94,6 +95,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/mm/vendor";
+
     private const string VatMethod = "VAT";
     private const string UnavailableCode = "BC-E-003";
 
@@ -115,13 +118,10 @@
     private VendorDto? _picked;
     private string? _loadError;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy exists, as in VendorController
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         _taxPartyTypes =
         [
             new(VendorModel.Business, L[$"Mm.Vendor.TaxPartyType.{VendorModel.Business}"]),

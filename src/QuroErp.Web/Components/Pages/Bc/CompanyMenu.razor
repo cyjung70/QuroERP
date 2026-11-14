@@ -6,6 +6,7 @@
 @using QuroErp.Web.Components.Pages.Bc.Models
 @inject MenuApiClient Api
 @inject IStringLocalizer<SharedResource> L
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-006 company menus, screen type M. Search by menu code, then add, change or delete rows and save them together.
    The API checks every rule (BC-BR-201~207); a failing row's menu code is in the message. *@
@@ -30,6 +31,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/company-menu";
+
     // BC-BR-204: module codes; they have no code table, so the code is its own name
     private static readonly IReadOnlyList<ComboOption> Modules = new[] { "bc", "mm", "sd", "fi", "rpt" }.Select(m => new ComboOption(m, m)).ToList();
     private static readonly string[] UpperCaseFields = ["menuCode", "parentMenuCode"];
@@ -40,13 +43,10 @@
     private bool _canEdit;
     private bool _ready;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy is applied, as in MenuController (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         // BC-BR-203: P program, U popup, M menu group
         _types = new[] { "P", "U", "M" }.Select(t => new ComboOption(t, TypeName(t)!)).ToList();
         _ready = true;

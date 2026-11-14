@@ -37,6 +37,7 @@
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* MM-UC-003 purchase order, screen type SM on the entry frame (entry-frame.md). The API checks every rule and calculates
    the stored amounts (MM-BR-011~032, BC-BR-541~547); this screen shows defaults, locks and display amounts with the
@@ -125,6 +126,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/mm/purchase-order";
+
     private const string UnavailableCode = "BC-E-003";
     private const string NotFoundCode = "Common-E-006";
     private const string StatusMajor = "PO_STATUS";
@@ -162,13 +165,10 @@
     [Parameter]
     public string? PoNo { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy reaches the screens, as on the master screens (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         try
         {

@@ -40,6 +40,7 @@
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* SD-UC-051 shipment, screen type SM on the entry frame (entry-frame.md). The API checks every rule, issues the stock and makes the
    invoice of a ship-and-bill shipment (SD-BR-161~177, MM-BR-001~010, MM-BR-353~362); this screen imports order and bill-first
@@ -175,6 +176,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/sd/shipment";
+
     private const string UnavailableCode = "BC-E-003";
     private const string NotFoundCode = "Common-E-006";
     private const string ItemNotInUse = "N";
@@ -213,13 +216,10 @@
     [Parameter]
     public string? ShipNo { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy reaches the screens, as on the sales order screen (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         _billingFlows = [.. new[] { ShipmentFlows.ShipAndBill, ShipmentFlows.ShipThenBill, ShipmentFlows.BillThenShip }
             .Select(f => new CodeItemDto(f, FlowText(f)))];

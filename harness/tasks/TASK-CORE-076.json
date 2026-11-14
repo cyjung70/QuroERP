@@ -26,5 +26,5 @@
     "bUnit: 가짜 `IScreenAccess`로 쓰기 가능·불가 때 버튼 활성. 기존 bUnit이 통과한다. `src/QuroErp.Web`에 `IsInRole(` 검색 결과 0건"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

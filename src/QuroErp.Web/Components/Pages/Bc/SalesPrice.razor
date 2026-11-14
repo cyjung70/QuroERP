@@ -14,6 +14,7 @@
 @inject LocalizationApiClient LocalizationApi
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-014 sales prices, screen type M. Search a price level, then add, change or delete its item prices and save them
    together (SD-BR-409). Each row shows the item's standard sales price read only. The item lookup offers only Inventory items
@@ -40,6 +41,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/sales-price";
+
     private const string SdModule = "SD";
     private const string InventoryType = "INVENTORY";
     private const string NotInUse = "N";
@@ -58,13 +61,10 @@
     private bool _ready;
     private string? _loadError;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Screens still give write access to the admin role only; the API checks the screen policy (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         try
         {
             var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);

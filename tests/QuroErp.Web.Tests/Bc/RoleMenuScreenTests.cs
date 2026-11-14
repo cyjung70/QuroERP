@@ -39,6 +39,8 @@ public class RoleMenuScreenTests : BunitContext
         Services.AddHttpClient<AuthApiClient>(http => http.BaseAddress = new Uri("http://api.test"));
         Services.AddHttpClient<RoleApiClient>(http => http.BaseAddress = new Uri("http://api.test")).ConfigurePrimaryHttpMessageHandler(() => _api);
         _auth = AddAuthorization();
+        // Screens ask IScreenAccess, which reads the role from this test authorization (security.md "화면 쓰기 권한")
+        Services.AddScoped<IScreenAccess, ScreenAccess>();
     }
 
     [Fact, Trait("Id", "BC-UT-211")]

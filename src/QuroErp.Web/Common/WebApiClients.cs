@@ -72,6 +72,8 @@ public static class WebApiClients
         services.AddScoped<FieldPolicyCache>();
         // Company time zone for every shown time (BC-BR-318)
         services.AddScoped(CompanyTime.Create);
+        // Write access of the screens (security.md "화면 쓰기 권한")
+        services.AddScoped<IScreenAccess, ScreenAccess>();
         return services;
     }
 }

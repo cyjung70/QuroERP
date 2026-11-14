@@ -14,6 +14,7 @@
 @inject LocalizationApiClient LocalizationApi
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-013 set item composition, screen type M. Pick a set (code or lookup dialog), then add, change or delete its components and
    save them together (SD-BR-506). Copy adds another set's components as new rows (SD-BR-508). The dialogs offer only what the
@@ -55,6 +56,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/set-item";
+
     private const string SdModule = "SD";
     private static readonly string[] ParentTypes = ["KIT", "SET"];
     private const string InventoryType = "INVENTORY";
@@ -74,13 +77,10 @@
     private bool _copying;
     private string? _loadError;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy is applied, as in SetItemController (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         try
         {
             var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
