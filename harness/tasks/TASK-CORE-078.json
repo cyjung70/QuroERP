@@ -1,0 +1,32 @@
+{
+  "id": "TASK-CORE-078",
+  "project": "core",
+  "title": "입력 칸 배치: 체크박스 가운데, 날짜 달력 버튼을 상자 옆에",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/entry-frame.md",
+    "docs/architecture/qurogrid-integration.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-060"
+  ],
+  "acceptance": [
+    "`QuroCheckbox`: 상자를 필드 칸 안에서 가로·세로 가운데에 둔다. 라벨은 다른 필드와 같은 라벨 열 (entry-frame.md 3장)",
+    "`QuroDate`: 달력 버튼을 입력 상자 바로 오른쪽에 붙인다. 칸 너비가 넓어도 상자와 버튼 사이가 벌어지지 않는다",
+    "공통 래퍼·스타일에서만 바꾼다. 화면 코드는 바꾸지 않는다. 라이트·다크, en·ko에서 같다",
+    "bUnit 또는 스타일 검사: 체크박스 래퍼의 가운데 정렬 클래스, 날짜 상자와 버튼이 같은 묶음 안에 있다. 기존 bUnit이 통과한다",
+    "PR 설명에 체크박스·날짜 필드가 있는 화면 캡처 (전후)"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
