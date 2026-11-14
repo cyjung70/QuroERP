@@ -5,10 +5,13 @@
 @* The field policy may hide the field (field-policy.md 3) *@
 @if (Drawn)
 {
+    @* The label sits where other fields have theirs; the box is centered in an area as high as a text box (entry-frame.md 3) *@
     <div class="@FieldClass("quro-checkbox")">
-        <input id="@InputId" type="checkbox" checked="@Current" disabled="@IsLocked" data-testid="@TestId"
-               @onchange="e => SetValueAsync(e.Value is true)" />
         @FieldLabel(false)
+        <div class="quro-checkbox-box">
+            <input id="@InputId" type="checkbox" checked="@Current" disabled="@IsLocked" data-testid="@TestId"
+                   @onchange="e => SetValueAsync(e.Value is true)" />
+        </div>
     </div>
 }
 

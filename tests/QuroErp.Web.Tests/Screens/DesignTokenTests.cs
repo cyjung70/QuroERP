@@ -105,6 +105,28 @@ public partial class DesignTokenTests
         css.Should().Contain("min-height: var(--q-control-h)", "the text box sets its height from the same token");
     }
 
+    // entry-frame.md 3: the checkbox is in the middle of a text box high area, across and up and down; the date picker button is
+    // as high as the text box and sits right after the boxes in the same group, with no gap however wide the field is
+    [Fact, Trait("Id", "CORE-078-WT-01")]
+    public void CheckboxBox_IsCenteredInATextBoxHighArea_AndTheDateButton_SitsRightNextToTheBox()
+    {
+        var css = File.ReadAllText(Path.Combine(RepositoryRoot(), "src", "QuroErp.Web", "wwwroot", "css", "quro-entry.css"));
+
+        Rule(css, ".quro-checkbox-box {").Should().Contain("display: flex").And.Contain("align-items: center")
+            .And.Contain("justify-content: center").And.Contain("min-height: var(--q-control-h)");
+        css.Should().NotContain(".quro-field.quro-checkbox {", "the field keeps the label-above layout of other fields");
+        Rule(css, ".quro-field .quro-ui-date-toggle {").Should().Contain("position: static").And.Contain("order: 1")
+            .And.Contain("flex: none").And.Contain("width: var(--q-control-h)").And.Contain("height: var(--q-control-h)");
+        Rule(css, ".quro-field .quro-ui-date {").Should().Contain("align-self: flex-start").And.Contain("gap: 0");
+    }
+
+    private static string Rule(string css, string selector)
+    {
+        var start = css.IndexOf(selector, StringComparison.Ordinal);
+        start.Should().BeGreaterThanOrEqualTo(0, $"quro-entry.css needs a {selector} rule");
+        return css[start..css.IndexOf('}', start)];
+    }
+
     private static Dictionary<string, string> Tokens(string block)
     {
         var css = File.ReadAllText(Path.Combine(RepositoryRoot(), "src", "QuroErp.Web", "wwwroot", "css", "quro-tokens.css"));
