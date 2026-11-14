@@ -71,6 +71,9 @@ public sealed class GoodsMovement
     /// </summary>
     public long? LotId { get; set; }
 
+    /// <summary>The Pallet this movement moved as a whole; null for stock that is not a Pallet line (MM-BR-912, MM-BR-913).</summary>
+    public long? PalletId { get; set; }
+
     /// <summary>This movement left the item + warehouse stock below zero (MM-BR-002).</summary>
     public bool NegativeStock { get; set; }
 
@@ -111,7 +114,7 @@ public sealed class GoodsMovement
     public static GoodsMovement Restore(
         long id, string documentNo, string movType, DateOnly documentDt, long itemId, long warehouseId, decimal qty, decimal prc,
         string? refKey, int? refSeq, long? parentMovementId, bool negativeStock, long? setItemId = null, long? lotId = null,
-        decimal? amount = null, long? locationId = null) =>
+        decimal? amount = null, long? locationId = null, long? palletId = null) =>
         new(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, parentMovementId, setItemId, amount ?? qty * prc)
         {
             Id = id,
@@ -119,6 +122,7 @@ public sealed class GoodsMovement
             NegativeStock = negativeStock,
             LotId = lotId,
             LocationId = locationId,
+            PalletId = palletId,
         };
 
     /// <summary>
@@ -137,6 +141,7 @@ public sealed class GoodsMovement
         {
             LocationId = LocationId,
             LotId = LotId,
+            PalletId = PalletId,
         };
     }
 }

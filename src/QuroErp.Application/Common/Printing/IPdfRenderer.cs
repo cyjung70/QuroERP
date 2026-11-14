@@ -16,6 +16,19 @@ public sealed record PrintPaper(string Format)
     /// <summary>A4 for KR; Letter for US and when the company country is not set (the default country is US).</summary>
     public static PrintPaper ForCountry(string? countryCode) =>
         string.Equals(countryCode, "KR", StringComparison.OrdinalIgnoreCase) ? A4 : Letter;
+
+    /// <summary>Page width of a label (CSS length, e.g. "100mm"); null for a paper format. A label has no margin and no footer.</summary>
+    public string? Width { get; init; }
+
+    /// <summary>Page height of a label; set with <see cref="Width"/>.</summary>
+    public string? Height { get; init; }
+
+    /// <summary>A label page of widthMm × heightMm (MM-BR-917), without margins or page number.</summary>
+    public static PrintPaper Label(decimal widthMm, decimal heightMm) => new("")
+    {
+        Width = widthMm.ToString(System.Globalization.CultureInfo.InvariantCulture) + "mm",
+        Height = heightMm.ToString(System.Globalization.CultureInfo.InvariantCulture) + "mm",
+    };
 }
 
 /// <summary>

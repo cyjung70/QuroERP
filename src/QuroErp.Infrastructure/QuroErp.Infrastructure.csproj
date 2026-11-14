@@ -16,6 +16,8 @@
     <PackageReference Include="Microsoft.Playwright" Version="1.64.1" />
     <PackageReference Include="Npgsql.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <!-- DataMatrix module pattern for PDF labels only (MM-BR-918); ZPL labels use the printer's own ^BX -->
+    <PackageReference Include="ZXing.Net" Version="0.16.11" />
   </ItemGroup>
 
   <!-- Country packs (field-policy.md "국가팩"): built in, read by EmbeddedCountryPackProvider -->

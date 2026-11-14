@@ -105,12 +105,13 @@ internal sealed class InventoryRepository : IInventoryRepository
 
     private const string InsertMovement = """
         INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, location_id, qty, prc, amount,
-                                       ref_key, ref_seq, parent_movement_id, negative_stock, set_item_id, lot_id, created_by, updated_by)
+                                       ref_key, ref_seq, parent_movement_id, negative_stock, set_item_id, lot_id, pallet_id,
+                                       created_by, updated_by)
         VALUES (@DocumentNo, @DocumentDt, @MovType, @ItemId, @WarehouseId,
                 coalesce(@LocationId, (SELECT id FROM bc_location WHERE warehouse_id = @WarehouseId AND location_code = '*')),
                 @Qty, @Prc, @Amount,
                 @RefKey, @RefSeq, @ParentMovementId, @NegativeStock, @SetItemId,
-                coalesce(@LotId, (SELECT id FROM mm_lot WHERE item_id = @ItemId AND lot_no = '*')), @User, @User)
+                coalesce(@LotId, (SELECT id FROM mm_lot WHERE item_id = @ItemId AND lot_no = '*')), @PalletId, @User, @User)
         RETURNING id
         """;
 
@@ -140,7 +141,7 @@ internal sealed class InventoryRepository : IInventoryRepository
     private const string LockMovements = """
         SELECT m.id, m.document_no, m.document_dt, m.mov_type, m.item_id, m.warehouse_id, m.qty, m.prc,
                m.ref_key, m.ref_seq, m.parent_movement_id, m.negative_stock, m.set_item_id, m.lot_id, m.amount, m.location_id,
-               EXISTS (SELECT 1 FROM mm_goods_movement r WHERE r.parent_movement_id = m.id) AS reversed
+               m.pallet_id, EXISTS (SELECT 1 FROM mm_goods_movement r WHERE r.parent_movement_id = m.id) AS reversed
         FROM mm_goods_movement m
         WHERE m.id = ANY(@MovementIds)
         ORDER BY m.id
@@ -232,8 +233,14 @@ internal sealed class InventoryRepository : IInventoryRepository
     public async Task<IReadOnlyList<StockBalance>> FindKeyBalancesAsync(
         long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken) =>
         (await transaction.Connection!.QueryAsync<StockBalance>(new CommandDefinition(
-            StockBalanceSql.SelectBalances, new { ItemId = itemId, WarehouseId = warehouseId, AsOf = asOf }, transaction,
+            StockBalanceSql.SelectAvailableBalances, new { ItemId = itemId, WarehouseId = warehouseId, AsOf = asOf }, transaction,
             cancellationToken: cancellationToken))).ToList();
+
+    public Task<decimal> GetKeyPalletQtyAsync(
+        long itemId, long warehouseId, long locationId, long lotId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteScalarAsync<decimal>(new CommandDefinition(
+            StockBalanceSql.SelectKeyPalletQty, new { ItemId = itemId, WarehouseId = warehouseId, LocationId = locationId, LotId = lotId },
+            transaction, cancellationToken: cancellationToken));
 
     public Task UpdateItemStockAsync(ItemStock item, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteAsync(new CommandDefinition(
@@ -263,6 +270,7 @@ internal sealed class InventoryRepository : IInventoryRepository
                 movement.SetItemId,
                 movement.LotId,
                 movement.LocationId,
+                movement.PalletId,
                 User = user,
             },
             transaction,
@@ -297,7 +305,7 @@ internal sealed class InventoryRepository : IInventoryRepository
             new CommandDefinition(LockMovements, new { MovementIds = movementIds.ToArray() }, transaction, cancellationToken: cancellationToken));
         return rows.Select(r => new SavedMovement(
             GoodsMovement.Restore(r.Id, r.DocumentNo, r.MovType, r.DocumentDt, r.ItemId, r.WarehouseId, r.Qty, r.Prc,
-                r.RefKey, r.RefSeq, r.ParentMovementId, r.NegativeStock, r.SetItemId, r.LotId, r.Amount, r.LocationId),
+                r.RefKey, r.RefSeq, r.ParentMovementId, r.NegativeStock, r.SetItemId, r.LotId, r.Amount, r.LocationId, r.PalletId),
             r.Reversed)).ToList();
     }
 
@@ -328,5 +336,5 @@ internal sealed class InventoryRepository : IInventoryRepository
     private sealed record MovementRow(
         long Id, string DocumentNo, DateOnly DocumentDt, string MovType, long ItemId, long WarehouseId, decimal Qty, decimal Prc,
         string? RefKey, int? RefSeq, long? ParentMovementId, bool NegativeStock, long? SetItemId, long? LotId, decimal Amount,
-        long? LocationId, bool Reversed);
+        long? LocationId, long? PalletId, bool Reversed);
 }

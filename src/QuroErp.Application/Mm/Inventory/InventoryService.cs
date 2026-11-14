@@ -18,7 +18,7 @@ namespace QuroErp.Application.Mm.Inventory;
 public sealed record StockMovementRequest(
     string MovType, DateOnly DocumentDt, long ItemId, long WarehouseId, decimal Qty,
     decimal? Price = null, string? RefKey = null, int? RefSeq = null, long? LotId = null, string? LotNo = null,
-    decimal? Amount = null, long? LocationId = null);
+    decimal? Amount = null, long? LocationId = null, long? PalletId = null);
 
 /// <summary>
 /// Posts stock movements for every stock document (inventory.md, AS IS receipt_inv, issue_inv, insert_inv, update_inv).
@@ -43,7 +43,8 @@ public sealed class InventoryService(
     /// MM-E-002 closed month, MM-E-606 wrong sign or zero qty, MM-E-001 not enough stock in DENY mode,
     /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end (a set component error ends with the
     /// set item code), SD-E-509 a set with no components, SD-E-518 a Kit component with Lot or Location management whose
-    /// balances do not cover its decrease, MM-E-713 a Location the line cannot use, MM-E-363 a lot other than
+    /// balances do not cover its decrease, MM-E-916 a decrease that is not a Pallet line taking stock its key's ACTIVE Pallets
+    /// hold, MM-E-713 a Location the line cannot use, MM-E-363 a lot other than
     /// '*' for an item without lot management, MM-E-352 a bad lot number, MM-E-355 a decrease from a lot the item does not
     /// have, MM-E-356 / MM-E-714 a Location or lot balance below zero or a lot movement dated before lot management started.
     /// </exception>
@@ -90,7 +91,8 @@ public sealed class InventoryService(
                     request.LocationId, request.LotId, request.LotNo, false, amountOnly,
                     stock => GoodsMovement.Create(
                         request.MovType, request.DocumentDt, request.ItemId, request.WarehouseId, request.Qty,
-                        request.Price ?? stock.MovingAverageCost, request.RefKey, request.RefSeq, amount: request.Amount)));
+                        request.Price ?? stock.MovingAverageCost, request.RefKey, request.RefSeq, amount: request.Amount),
+                    PalletId: request.PalletId));
                 continue;
             }
             if (amountOnly || request.MovType == MovementType.VendorReturn)
@@ -151,7 +153,7 @@ public sealed class InventoryService(
             transaction, cancellationToken);
         var lines = reversals.Select(r => new Line(
             r.ItemId, r.WarehouseId, r.DocumentDt, r.MovType, r.SetItemId is { } setId ? items[setId].ItemCd : "", r.Qty,
-            r.LocationId, r.LotId, null, true, MovementType.IsAmountOnly(r.MovType), _ => r)).ToList();
+            r.LocationId, r.LotId, null, true, MovementType.IsAmountOnly(r.MovType), _ => r, PalletId: r.PalletId)).ToList();
         return await ApplyAsync(lines, items, closeYearMonth, user, transaction, cancellationToken);
     }
 
@@ -224,8 +226,20 @@ public sealed class InventoryService(
                         movement.DocumentDt, movement.Qty, keyQty[stockKeyId], daily, item.ItemCd, warehouseCode, location.LocationCode, lot.LotNo);
                 }
                 keyQty[stockKeyId] += movement.Qty;
+                // MM-BR-916: a line that is not a Pallet line takes only the stock outside the key's ACTIVE Pallets
+                if (movement.Qty < 0 && line.PalletId is null)
+                {
+                    var palletQty = await inventory.GetKeyPalletQtyAsync(
+                        line.ItemId, line.WarehouseId, location.Id, lot.Id, transaction, cancellationToken);
+                    if (palletQty > 0)
+                    {
+                        PalletRules.EnsurePalletsCovered(
+                            item.ItemCd, warehouseCode, location.LocationCode, lot.LotNo, keyQty[stockKeyId], palletQty);
+                    }
+                }
                 movement.LocationId = location.Id;
                 movement.LotId = lot.Id;
+                movement.PalletId = line.PalletId;
             }
             qty[key] += movement.Qty;
             item.Apply(movement.Qty, movement.Amount, movement.Prc, MovementType.RecalculatesCost(movement.MovType, movement.Qty));
@@ -390,5 +404,5 @@ public sealed class InventoryService(
     private sealed record Line(
         long ItemId, long WarehouseId, DateOnly DocumentDt, string MovType, string SetItemCd, decimal Qty, long? LocationId,
         long? LotId, string? LotNo, bool Reversal, bool AmountOnly, Func<ItemStock, GoodsMovement> Build,
-        Func<decimal, Func<ItemStock, GoodsMovement>>? Split = null);
+        Func<decimal, Func<ItemStock, GoodsMovement>>? Split = null, long? PalletId = null);
 }

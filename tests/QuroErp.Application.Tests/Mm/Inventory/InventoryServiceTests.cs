@@ -748,6 +748,39 @@ public class InventoryServiceTests
         _inventory.KeyQty(1, Main, "*", "*").Should().Be(19, "P1 has no Lot or Location management, so it stays on ('*', '*')");
     }
 
+    [Fact, Trait("Id", "MM-UT-916"), Trait("Rule", "MM-BR-916")]
+    public async Task PostAsync_ADecreaseThatIsNotAPalletLine_CannotTakeThePalletStock_APalletLineCan()
+    {
+        AddLotItem();
+        await Post(new StockMovementRequest("GR", Day, 20, Main, 10, Price: 2, LotNo: "B1"));
+        _inventory.AddPallet(20, Main, "*", "B1", 6);
+        var lot = _inventory.Lots.Single(l => l.LotNo == "B1").Id;
+
+        await Post(new StockMovementRequest("DN", Day, 20, Main, -4, LotId: lot));
+        var intoPallets = () => Post(new StockMovementRequest("DN", Day, 20, Main, -1, LotId: lot));
+        var error = (await intoPallets.Should().ThrowAsync<DomainException>()).Which;
+        var pallet = await Post(new StockMovementRequest("DN", Day, 20, Main, -6, LotId: lot, PalletId: 77));
+
+        error.Code.Should().Be(PalletRules.PalletStockCode);
+        error.Args.Should().Equal("L", "WH1", "*", "B1", 5m, 6m);
+        pallet.Single().PalletId.Should().Be(77);
+        _inventory.KeyQty(20, Main, "*", "B1").Should().Be(0);
+    }
+
+    [Fact, Trait("Id", "MM-UT-916"), Trait("Rule", "MM-BR-916"), Trait("Rule", "SD-BR-518")]
+    public async Task PostAsync_KitComponents_AreNotAllocatedFromPalletStock()
+    {
+        AddKitWithLotComponent();
+        _inventory.AddPallet(20, Main, "*", "A1", 5);
+
+        var act = () => Post(new StockMovementRequest("DN", Day, 90, Main, -2));
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        var posted = await Post(new StockMovementRequest("DN", Day, 90, Main, -1));
+
+        error.Args.Should().Equal("SET", "L", "WH1", 4m, 3m);
+        posted.Where(m => m.ItemId == 20).Select(m => (_inventory.LotNo(m.LotId), m.Qty)).Should().Equal(("*", -1m), ("B1", -1m));
+    }
+
     private sealed class FakeInventoryRepository : IInventoryRepository
     {
         public Task<IReadOnlyDictionary<long, decimal>> GetSellableOnHandAsync(
@@ -814,6 +847,19 @@ public class InventoryServiceTests
 
         public List<(long ItemId, long WarehouseId, DateOnly AsOf)> BalanceReads { get; } = [];
 
+        /// <summary>ACTIVE Pallet quantity per key (mm_pallet).</summary>
+        public Dictionary<(long ItemId, long WarehouseId, long LocationId, long LotId), decimal> PalletQty { get; } = [];
+
+        public void AddPallet(long itemId, long warehouseId, string locationCode, string lotNo, decimal qty)
+        {
+            var key = (itemId, warehouseId, Location(warehouseId, locationCode).Id, Ensure(itemId, lotNo).Id);
+            PalletQty[key] = PalletQty.GetValueOrDefault(key) + qty;
+        }
+
+        public Task<decimal> GetKeyPalletQtyAsync(
+            long itemId, long warehouseId, long locationId, long lotId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(PalletQty.GetValueOrDefault((itemId, warehouseId, locationId, lotId)));
+
         // Same result as the SQL in StockBalanceSql: current balance minus later movements, above zero, Locations in use
         public Task<IReadOnlyList<StockBalance>> FindKeyBalancesAsync(
             long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -830,6 +876,7 @@ public class InventoryServiceTests
                     return (location.InUse, Balance: new StockBalance(
                         location.Id, location.LocationCode, lot.Id, lot.LotNo, ReceivedDates.TryGetValue(lot.Id, out var d) ? d : null, e.Value - later));
                 })
+                .Select(b => (b.InUse, Balance: b.Balance with { Qty = b.Balance.Qty - PalletQty.GetValueOrDefault((itemId, warehouseId, b.Balance.LocationId, b.Balance.LotId)) }))
                 .Where(b => b.InUse && b.Balance.Qty > 0).Select(b => b.Balance).ToList());
         }
 

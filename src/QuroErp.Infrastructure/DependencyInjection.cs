@@ -22,6 +22,7 @@ using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Common.Printing;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Labels;
 using QuroErp.Application.Mm.Locations;
 using QuroErp.Application.Mm.Lots;
 using QuroErp.Application.Mm.GoodsReceipts;
@@ -53,6 +54,7 @@ using QuroErp.Infrastructure.Common.Persistence;
 using QuroErp.Infrastructure.Reports;
 using QuroErp.Infrastructure.Reports.Mm;
 using QuroErp.Infrastructure.Mm.Inventory;
+using QuroErp.Infrastructure.Mm.Labels;
 using QuroErp.Infrastructure.Mm.Locations;
 using QuroErp.Infrastructure.Mm.Lots;
 using QuroErp.Infrastructure.Mm.GoodsReceipts;
@@ -133,6 +135,7 @@ public static class DependencyInjection
         services.AddSingleton<ISalesInvoiceRepository, SalesInvoiceRepository>();
         services.AddSingleton<ISalesInvoiceDocument, SalesInvoiceDocument>();
         services.AddSingleton<ILotRepository, LotRepository>();
+        services.AddSingleton<ILabelPrintRepository, LabelPrintRepository>();
         services.AddSingleton<IRoleRepository, RoleRepository>();
         services.AddSingleton<IMenuRepository, MenuRepository>();
         services.AddSingleton<ICodeMajorRepository, CodeMajorRepository>();
@@ -149,6 +152,7 @@ public static class DependencyInjection
         services.AddSingleton<IPdfRenderer>(sp => sp.GetRequiredService<PdfRenderer>());
         services.AddSingleton<IExcelWriter, ExcelWriter>();
         services.AddSingleton<IPurchaseOrderDocument, PurchaseOrderDocument>();
+        services.AddSingleton<ILabelPdfRenderer, LabelPdfRenderer>();
         services.AddSingleton<IPrintTemplateResolver>(_ => new PrintTemplateResolver());
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database")
