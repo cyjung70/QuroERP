@@ -31,9 +31,6 @@ public static partial class LotRules
     /// </summary>
     public const string NegativeCode = "MM-E-356";
 
-    /// <summary>A lot-managed item cannot be a set component, and a set component cannot turn lot management on. Arg: item code.</summary>
-    public const string SetComponentCode = "MM-E-361";
-
     /// <summary>The stock an item had when lot management was turned on (MM-BR-351).</summary>
     public const string Migrated = "MIGRATED";
 
@@ -111,19 +108,15 @@ public static partial class LotRules
     }
 
     /// <summary>
-    /// Lot management can be turned on for an Inventory item only, with no warehouse below zero, and not for a set component
-    /// (MM-BR-351, MM-BR-361).
+    /// Lot management can be turned on for an Inventory item only, with no warehouse below zero (MM-BR-351). A Kit or Set
+    /// component can be lot-managed (MM-BR-361).
     /// </summary>
-    /// <exception cref="DomainException">MM-E-351 or MM-E-361.</exception>
-    public static void EnsureCanTurnOn(string itemCd, bool inventoryItem, bool negativeWarehouse, bool setComponent)
+    /// <exception cref="DomainException">MM-E-351.</exception>
+    public static void EnsureCanTurnOn(string itemCd, bool inventoryItem, bool negativeWarehouse)
     {
         if (!inventoryItem || negativeWarehouse)
         {
             throw new DomainException(ManagementCode, itemCd);
-        }
-        if (setComponent)
-        {
-            throw new DomainException(SetComponentCode, itemCd);
         }
     }
 

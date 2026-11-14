@@ -448,7 +448,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         private static readonly Dictionary<string, string[]> ItemCodes = new()
         {
-            ["ITEM_TYPE"] = ["INVENTORY", "SET", "SERVICE"],
+            ["ITEM_TYPE"] = ["INVENTORY", "KIT", "SET", "SERVICE"],
             ["UNIT"] = ["EA", "PCS"],
             ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2", "ZZAUD1", "ZZAUD2", "ZZBC1", "ZZBC2", "ZZBC3", "ZZBC4", "ZZBC5"],
             ["GRADE"] = ["A01"],

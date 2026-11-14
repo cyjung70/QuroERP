@@ -23,7 +23,7 @@ public sealed class SetItemController(SetItemService service) : ControllerBase
         service.GetAsync(itemCd, cancellationToken);
 
     /// <summary>
-    /// 200 with the set after the save. Nothing is saved when a row fails (SD-BR-506): 422 SD-E-501, SD-E-502, MM-E-361, SD-E-503,
+    /// 200 with the set after the save. Nothing is saved when a row fails (SD-BR-506): 422 SD-E-501, SD-E-502, SD-E-503,
     /// SD-E-504 or BC-E-423 with the row's item code, 409 Common-E-004 when a row changed after it was read.
     /// </summary>
     [HttpPost(SetItemRoutes.Batch), Authorize(Policy = Screen)]

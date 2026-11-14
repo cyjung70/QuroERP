@@ -55,8 +55,8 @@ public sealed class ItemService(
         var item = Item.Create(request.ItemCd, ToFields(request));
         if (item.LotManaged)
         {
-            // A new item has no stock and is in no set yet
-            item.StartLotManagement(clock.Today(), negativeWarehouse: false, setComponent: false);
+            // A new item has no stock yet
+            item.StartLotManagement(clock.Today(), negativeWarehouse: false);
         }
         await EnsureCodesAsync(item.Fields, cancellationToken);
 
@@ -93,14 +93,11 @@ public sealed class ItemService(
         var typeLocked = fields.ItemType != item.Fields.ItemType && await items.IsTypeLockedAsync(id, uow.Transaction, cancellationToken);
         var wasLotManaged = item.LotManaged;
         item.Change(fields, typeLocked);
-        // MM-BR-351, MM-BR-361. The item row is locked, so no stock movement of the item runs until this save ends
+        // MM-BR-351. The item row is locked, so no stock movement of the item runs until this save ends
         var lotTurnedOn = !wasLotManaged && item.LotManaged;
         if (lotTurnedOn)
         {
-            item.StartLotManagement(
-                clock.Today(),
-                await lots.HasNegativeOnHandAsync(id, uow.Transaction, cancellationToken),
-                await lots.IsSetComponentAsync(id, uow.Transaction, cancellationToken));
+            item.StartLotManagement(clock.Today(), await lots.HasNegativeOnHandAsync(id, uow.Transaction, cancellationToken));
         }
         else if (wasLotManaged && !item.LotManaged)
         {

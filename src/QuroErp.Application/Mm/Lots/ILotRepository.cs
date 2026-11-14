@@ -21,9 +21,6 @@ public interface ILotRepository
     /// <summary>A warehouse of the item has stock below zero (MM-BR-351).</summary>
     Task<bool> HasNegativeOnHandAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>The item is a component of a set (MM-BR-361).</summary>
-    Task<bool> IsSetComponentAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken);
-
     /// <summary>A lot balance of the item is not 0 (MM-BR-351).</summary>
     Task<bool> HasLotStockAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken);
 

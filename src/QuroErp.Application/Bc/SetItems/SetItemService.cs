@@ -14,7 +14,7 @@ namespace QuroErp.Application.Bc.SetItems;
 public sealed class SetItemService(ISetItemRepository sets, ILocalizationRepository localization, IUnitOfWorkFactory unitOfWork)
 {
     /// <summary>The set and its components in sequence order. Copying another set (SD-BR-508) reads it here.</summary>
-    /// <exception cref="DomainException">Common-E-005 without a code, SD-E-501 when the item is not a Set in use.</exception>
+    /// <exception cref="DomainException">Common-E-005 without a code, SD-E-501 when the item is not a Kit or Set in use.</exception>
     public async Task<SetItemDto> GetAsync(string? itemCd, CancellationToken cancellationToken)
     {
         var code = SetItemRules.NormalizeCode(itemCd, "itemCd");
@@ -29,7 +29,7 @@ public sealed class SetItemService(ISetItemRepository sets, ILocalizationReposit
     /// Saves added, changed and deleted component rows of one set in one transaction (SD-BR-506). One failing row saves nothing;
     /// its item code is the message arg. New rows get the next sequences (SD-BR-505). Returns the set after the save.
     /// </summary>
-    /// <exception cref="DomainException">Common-E-005, SD-E-501, SD-E-502, MM-E-361, SD-E-503, BC-E-423, SD-E-504.</exception>
+    /// <exception cref="DomainException">Common-E-005, SD-E-501, SD-E-502, SD-E-503, BC-E-423, SD-E-504.</exception>
     /// <exception cref="ConcurrencyException">A changed or deleted row is gone, is not in this set, or was saved by someone else first.</exception>
     public async Task<SetItemDto> SaveAsync(
         string? itemCd, BatchRequest<SetComponentRowRequest, SetComponentDeleteRequest> request, string user,

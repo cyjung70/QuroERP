@@ -60,11 +60,12 @@ public sealed class InventoryService(
         }
 
         // inventory.md step 0: read the components first, then lock every item row in one pass in id order so two
-        // documents cannot lock the same rows in a different order. Saving a set's components locks the set row too
+        // documents cannot lock the same rows in a different order. Saving a Kit's components locks the Kit row too. Only a Kit
+        // expands; a Set moves its own stock (MM-BR-007, SD-BR-513)
         var requestIds = requests.Select(r => r.ItemId).Distinct().ToList();
         var read = await sets.GetComponentsAsync(requestIds, transaction, cancellationToken);
         var items = await LockItemsAsync(requestIds.Concat(read.Select(c => c.ComponentItemId)), transaction, cancellationToken);
-        var setIds = requestIds.Where(id => items[id].IsSet).ToList();
+        var setIds = requestIds.Where(id => items[id].IsKit).ToList();
         var components = setIds.Count == 0
             ? []
             : await sets.GetComponentsAsync(setIds, transaction, cancellationToken);
@@ -78,7 +79,7 @@ public sealed class InventoryService(
         {
             var item = items[request.ItemId];
             var amountOnly = MovementType.IsAmountOnly(request.MovType);
-            if (!item.IsSet)
+            if (!item.IsKit)
             {
                 lines.Add(new Line(request.ItemId, request.WarehouseId, request.DocumentDt, "", request.Qty, request.LotId, request.LotNo, false, amountOnly,
                     stock => GoodsMovement.Create(
@@ -88,9 +89,9 @@ public sealed class InventoryService(
             }
             if (amountOnly || request.MovType == MovementType.VendorReturn)
             {
-                throw new ArgumentException($"Set item {item.ItemCd} is not bought, so it has no {request.MovType} movement.", nameof(requests));
+                throw new ArgumentException($"Kit item {item.ItemCd} is not bought, so it has no {request.MovType} movement.", nameof(requests));
             }
-            // Components move at their own moving average cost and remember the set (MM-BR-007)
+            // Components move at their own moving average cost and remember the Kit (MM-BR-007)
             foreach (var (componentId, qty) in SetComponent.Expand(item.ItemCd, request.Qty, components.Where(c => c.SetItemId == item.ItemId)))
             {
                 lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, item.ItemCd, qty, null, null, false, false, stock => GoodsMovement.Create(

@@ -560,7 +560,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
     {
         await using var connection = new NpgsqlConnection(db.ConnectionString);
         var id = await connection.ExecuteScalarAsync<long>(
-            "INSERT INTO bc_item (item_cd, item_name, type, created_by, updated_by) VALUES (@Code, 'Kit', 'SET', 't', 't') RETURNING id",
+            "INSERT INTO bc_item (item_cd, item_name, type, created_by, updated_by) VALUES (@Code, 'Kit', 'KIT', 't', 't') RETURNING id",
             new { Code = "K" + key });
         foreach (var (component, seq) in components.Select((c, i) => (c, i + 1)))
         {

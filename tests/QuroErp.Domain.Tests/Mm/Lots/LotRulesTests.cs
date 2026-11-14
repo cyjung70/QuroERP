@@ -86,7 +86,7 @@ public class LotRulesTests
         var item = Item.Restore(5, "B100", Fields, null, 1, 10, 10);
 
         item.Change(Fields with { LotManaged = true }, typeLocked: false);
-        item.StartLotManagement(Day, negativeWarehouse: false, setComponent: false);
+        item.StartLotManagement(Day, negativeWarehouse: false);
         (item.LotManaged, item.LotManagedFrom).Should().Be((true, Day));
 
         // A missing setting keeps it
@@ -106,19 +106,19 @@ public class LotRulesTests
         Error(() => Item.Create("S1", Fields with { ItemType = "SERVICE", LotManaged = true })).Args.Should().Equal("S1");
         Error(() => item.Change(Fields with { ItemType = "SET" }, typeLocked: false)).Code.Should().Be(LotRules.ManagementCode);
         Error(() => item.StopLotManagement(lotStockLeft: true)).Code.Should().Be(LotRules.ManagementCode);
-        Error(() => Item.Restore(6, "B200", Fields, null, 1, 10, 10).StartLotManagement(Day, negativeWarehouse: true, setComponent: false))
+        Error(() => Item.Restore(6, "B200", Fields, null, 1, 10, 10).StartLotManagement(Day, negativeWarehouse: true))
             .Code.Should().Be(LotRules.ManagementCode);
         Item.Create("N1", Fields).LotManaged.Should().BeFalse();
     }
 
+    // MM-BR-361: a Kit or Set component can turn lot management on; nothing asks whether it is a component
     [Fact, Trait("Id", "MM-UT-361"), Trait("Rule", "MM-BR-361")]
-    public void Item_ASetComponent_CannotTurnLotsOn()
+    public void Item_AnInventoryItem_CanTurnLotsOn_ComponentOrNot()
     {
         var item = Item.Restore(5, "B100", Fields, null, 1, 10, 10);
 
-        var error = Error(() => item.StartLotManagement(Day, negativeWarehouse: false, setComponent: true));
+        item.StartLotManagement(Day, negativeWarehouse: false);
 
-        (error.Code, error.Args[0]).Should().Be((LotRules.SetComponentCode, (object)"B100"));
-        item.LotManagedFrom.Should().BeNull();
+        item.LotManagedFrom.Should().Be(Day);
     }
 }

@@ -101,7 +101,7 @@ public class InventoryServiceTests
     [Fact, Trait("Id", "MM-UT-007")]
     public async Task PostAsync_SetIssue_ReducesEachComponentByQtyTimesComponentQty()
     {
-        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(90, "SET", type: "KIT");
         _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
         _inventory.AddItem(2, "P2", onHand: (Main, 20m), cost: 5);
         _sets.Components.AddRange([new SetComponent(90, 1, 2), new SetComponent(90, 2, 1)]);
@@ -114,10 +114,25 @@ public class InventoryServiceTests
         _inventory.OnHand.Should().NotContainKey((90, Main), "a set keeps no stock");
     }
 
+    // SD-BR-513, MM-BR-008: a Set is a stock item, so its shipment issues its own stock even when it has components
+    [Fact, Trait("Id", "SD-UT-513"), Trait("Id", "MM-UT-008")]
+    public async Task PostAsync_SetItemIssue_ReducesTheSetsOwnStock_NotItsComponents()
+    {
+        _inventory.AddItem(91, "ASM", type: "SET", onHand: (Main, 5m), cost: 20);
+        _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
+        _sets.Components.Add(new SetComponent(91, 1, 2));
+
+        var posted = await Post(new StockMovementRequest("DN", Day, 91, Main, -2, RefKey: "DN-1", RefSeq: 1));
+
+        posted.Select(m => (m.ItemId, m.Qty, m.Amount, m.SetItemId)).Should().Equal((91L, -2m, -40m, (long?)null));
+        _inventory.OnHand[(91, Main)].Should().Be(3);
+        _inventory.OnHand[(1, Main)].Should().Be(20);
+    }
+
     [Fact, Trait("Id", "CORE-011-T01")]
     public async Task PostAsync_SetLine_LocksItemSetAndComponentsInOnePassAndRemembersTheSet()
     {
-        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(90, "SET", type: "KIT");
         _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
         _inventory.AddItem(2, "P2", onHand: (Main, 20m), cost: 5);
         _inventory.AddItem(50, "A", onHand: (Main, 20m), cost: 1);
@@ -134,7 +149,7 @@ public class InventoryServiceTests
     [Fact, Trait("Id", "SD-UT-509")]
     public async Task PostAsync_SetWithoutComponents_ThrowsSdE509AndSavesNothing()
     {
-        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(90, "SET", type: "KIT");
 
         var act = () => Post(new StockMovementRequest("DN", Day, 90, Main, -1));
 
@@ -147,7 +162,7 @@ public class InventoryServiceTests
     [Fact, Trait("Id", "CORE-011-T02")]
     public async Task PostAsync_ComponentsChangedBeforeTheLock_ThrowsConcurrency()
     {
-        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(90, "SET", type: "KIT");
         _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
         _inventory.AddItem(2, "P2", onHand: (Main, 20m), cost: 5);
         _sets.Components.Add(new SetComponent(90, 1, 2));
@@ -162,7 +177,7 @@ public class InventoryServiceTests
     [Fact, Trait("Id", "MM-UT-007")]
     public async Task PostAsync_SetComponentShortInDeny_ThrowsWithTheSetCode()
     {
-        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(90, "SET", type: "KIT");
         _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
         _inventory.AddItem(2, "P2", onHand: (Main, 1m), cost: 5);
         _sets.Components.AddRange([new SetComponent(90, 1, 2), new SetComponent(90, 2, 1)]);
@@ -177,7 +192,7 @@ public class InventoryServiceTests
     [Fact, Trait("Id", "MM-UT-601")]
     public async Task ReverseAsync_SetComponentMovement_KeepsTheSetAndNamesItInErrors()
     {
-        _inventory.AddItem(90, "SET", type: "SET");
+        _inventory.AddItem(90, "SET", type: "KIT");
         _inventory.AddItem(1, "P1", cost: 3);
         _sets.Components.Add(new SetComponent(90, 1, 2));
         var receipt = (await Post(new StockMovementRequest("GR", Day, 90, Main, 2, Price: 3))).Single();

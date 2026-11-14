@@ -27,7 +27,7 @@ public static partial class CodeMinorRules
     /// </summary>
     public static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> ProtectedMinors = new Dictionary<string, IReadOnlySet<string>>
     {
-        [CodeMajors.ItemType] = Set(ItemStock.Inventory, ItemStock.Set, ItemStock.Service),
+        [CodeMajors.ItemType] = Set(ItemStock.Inventory, ItemStock.Kit, ItemStock.Set, ItemStock.Service),
         [CodeMajors.MovementType] = Set(
             MovementType.GoodsReceipt, MovementType.Return, MovementType.SetAssembly, MovementType.UnplannedReceipt, MovementType.StockCount,
             MovementType.GoodsIssue, MovementType.Delivery, MovementType.StockTransfer, MovementType.PriceVariance,

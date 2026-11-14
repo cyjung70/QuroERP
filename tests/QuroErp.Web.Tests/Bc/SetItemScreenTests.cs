@@ -146,7 +146,7 @@ public class SetItemScreenTests : BunitContext
         Grid(page).Edit(2, "itemCd", "FREIGHT").Should().BeFalse();
         Grid(page).Text(2, "itemCd").Should().Be("WASHER");
 
-        string[] codes = ["FREIGHT", "KIT02", "LOTB", "OLDB", "NOPE"];
+        string[] codes = ["FREIGHT", "KIT02", "OLDB", "NOPE"];
         foreach (var _ in codes)
         {
             page.Find("[data-testid=set-item-toolbar-add-row]").Click();
@@ -161,16 +161,16 @@ public class SetItemScreenTests : BunitContext
     }
 
     [Fact, Trait("Id", "SD-UT-502"), Trait("Id", "MM-UT-361")]
-    public async Task F4_OpensTheComponentLookup_WithInventoryItemsInUseWithoutLots_AndThePickFillsTheRow()
+    public async Task F4_OpensTheComponentLookup_WithInventoryItemsInUse_LotManagedToo_AndThePickFillsTheRow()
     {
         var page = SearchKit(RenderAs("admin"));
         page.Find("[data-testid=set-item-toolbar-add-row]").Click();
 
         var popup = Grid(page).F4Async(2, "itemCd", "");
-        page.WaitForAssertion(() => page.LookupRows("set-item-lookup").Should().HaveCount(3));
+        page.WaitForAssertion(() => page.LookupRows("set-item-lookup").Should().HaveCount(4));
         LookupTexts(page, "set-item-lookup").Should().SatisfyRespectively(
-            r => r.Should().Contain("BOLT"), r => r.Should().Contain("NUT"), r => r.Should().Contain("WASHER"));
-        page.PickLookupRow<LookupRow, SetItem>("set-item-lookup", 2);
+            r => r.Should().Contain("BOLT"), r => r.Should().Contain("LOTB"), r => r.Should().Contain("NUT"), r => r.Should().Contain("WASHER"));
+        page.PickLookupRow<LookupRow, SetItem>("set-item-lookup", 3);
 
         (await popup).Should().BeTrue();
         Grid(page).Text(2, "itemCd").Should().Be("WASHER");
@@ -311,8 +311,8 @@ public class SetItemScreenTests : BunitContext
         page.DataGrid<SetComponentRow, SetItem>("set-item-grid");
 
     /// <summary>
-    /// SD quantities with 2 decimals. Sets KIT01 (Gift kit: BOLT 2, NUT 1.5), KIT02 (WASHER 3, NUT 4) and KIT09 (not in use);
-    /// components BOLT, NUT (valid flag empty) and WASHER; FREIGHT (service), LOTB (lot-managed) and OLDB (not in use) cannot be.
+    /// SD quantities with 2 decimals. Kit KIT01 (Gift kit: BOLT 2, NUT 1.5), Set KIT02 (WASHER 3, NUT 4) and KIT09 (not in use);
+    /// components BOLT, LOTB (lot-managed), NUT (valid flag empty) and WASHER; FREIGHT (service) and OLDB (not in use) cannot be.
     /// </summary>
     private sealed class FakeApi : HttpMessageHandler
     {
@@ -320,7 +320,7 @@ public class SetItemScreenTests : BunitContext
         [
             Item(1, "BOLT", "Bolt", "INVENTORY", "Y"),
             Item(2, "FREIGHT", "Freight", "SERVICE", "Y"),
-            Item(3, "KIT01", "Gift kit", "SET", "Y"),
+            Item(3, "KIT01", "Gift kit", "KIT", "Y"),
             Item(4, "KIT02", "Spare kit", "SET", "Y"),
             Item(5, "KIT09", "Old kit", "SET", "N"),
             Item(6, "LOTB", "Lot bolt", "INVENTORY", "Y") with { LotManaged = true },

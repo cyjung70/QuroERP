@@ -58,7 +58,7 @@ public class LotServiceTests(AuthSchemaFixture db)
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-351"), Trait("Id", "MM-UT-361"), Trait("Rule", "MM-BR-361")]
-    public async Task TurningOn_IsRefused_ForANegativeWarehouse_ASetComponent_OrAServiceItem()
+    public async Task TurningOn_IsRefused_ForANegativeWarehouse_OrAServiceItem_ButAllowedForAKitComponent()
     {
         var (main, _) = await WarehousesAsync();
         var negative = await CreateAsync();
@@ -69,19 +69,19 @@ public class LotServiceTests(AuthSchemaFixture db)
             """,
             new { negative.Id, Main = main });
         var component = await CreateAsync();
-        var set = await CreateAsync(type: "SET");
+        var kit = await CreateAsync(type: "KIT");
         await ExecuteAsync(
             "INSERT INTO sd_bom (parent_item_id, seq, child_item_id, child_qty, created_by, updated_by) VALUES (@Set, 1, @Component, 1, 't', 't')",
-            new { Set = set.Id, Component = component.Id });
+            new { Set = kit.Id, Component = component.Id });
 
         var onNegative = () => Items.UpdateAsync(negative.Id, Update(negative, lotManaged: true), "kim", None);
         var onComponent = () => Items.UpdateAsync(component.Id, Update(component, lotManaged: true), "kim", None);
         var onService = () => CreateAsync(type: "SERVICE", lotManaged: true);
 
         (await onNegative.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(LotRules.ManagementCode);
-        (await onComponent.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(LotRules.SetComponentCode);
         (await onService.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(LotRules.ManagementCode);
-        (await Items.GetAsync(component.Id, None)).LotManaged.Should().BeFalse();
+        // MM-BR-361: a Kit or Set component can be lot-managed
+        (await onComponent()).LotManaged.Should().BeTrue();
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-351"), Trait("Id", "MM-UT-807")]

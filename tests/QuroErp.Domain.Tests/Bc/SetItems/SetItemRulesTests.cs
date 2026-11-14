@@ -2,28 +2,29 @@ using FluentAssertions;
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Bc.SetItems;
 using QuroErp.Domain.Common;
-using QuroErp.Domain.Mm.Lots;
 
 namespace QuroErp.Domain.Tests.Bc.SetItems;
 
-/// <summary>Set item composition rules (BC-UC-013, SD-BR-501~505, MM-BR-361).</summary>
+/// <summary>Set item composition rules (BC-UC-013, SD-BR-501~505, SD-BR-513, MM-BR-361).</summary>
 public class SetItemRulesTests
 {
     // SD quantities have 2 decimals
     private static readonly DecimalPolicy Decimals = new(
         "US", [new DecimalSetting("SD", 2, RoundingMode.HalfUp)], [new CountryDecimal("US", "SD", 2)], new Dictionary<string, string?>());
 
-    private static readonly SetItemCandidate Set = new(1, "KIT", "Kit", "SET", "Y", false);
+    private static readonly SetItemCandidate Kit = new(1, "KIT", "Kit", "KIT", "Y", false);
+    private static readonly SetItemCandidate Set = new(3, "ASM", "Assembled set", "SET", "Y", false);
     private static readonly SetItemCandidate Part = new(2, "BOLT", "Bolt", "INVENTORY", "Y", false);
 
     private static DomainException ErrorOf(Action act) => act.Should().Throw<DomainException>().Which;
 
     [Fact, Trait("Id", "SD-UT-501"), Trait("Rule", "SD-BR-501")]
-    public void Set_MustBeASetItemInUse()
+    public void Parent_MustBeAKitOrSetItemInUse()
     {
-        SetItemRules.EnsureSet("KIT", Set).Should().Be(Set);
+        SetItemRules.EnsureSet("KIT", Kit).Should().Be(Kit);
+        SetItemRules.EnsureSet("ASM", Set).Should().Be(Set);
 
-        foreach (var item in new SetItemCandidate?[] { null, Part, Set with { ValidFlag = "N" } })
+        foreach (var item in new SetItemCandidate?[] { null, Part, Part with { ItemType = "SERVICE" }, Kit with { ValidFlag = "N" }, Set with { ValidFlag = "N" } })
         {
             var error = ErrorOf(() => SetItemRules.EnsureSet("KIT", item));
             (error.Code, error.Args).Should().BeEquivalentTo((SetItemRules.SetCode, new object[] { "KIT" }));
@@ -31,22 +32,35 @@ public class SetItemRulesTests
     }
 
     [Fact, Trait("Id", "SD-UT-502"), Trait("Rule", "SD-BR-502")]
-    public void Component_MustBeAnInventoryItemInUse_SoNoServiceAndNoSetInASet()
+    public void Component_MustBeAnInventoryItemInUse_SoNoServiceAndNoKitOrSetInside()
     {
         SetItemRules.EnsureComponent("BOLT", Part).Should().Be(Part);
 
-        foreach (var item in new SetItemCandidate?[] { null, Set, Part with { ItemType = "SERVICE" }, Part with { ValidFlag = "N" } })
+        foreach (var item in new SetItemCandidate?[] { null, Kit, Set, Part with { ItemType = "SERVICE" }, Part with { ValidFlag = "N" } })
         {
             ErrorOf(() => SetItemRules.EnsureComponent("BOLT", item)).Code.Should().Be(SetItemRules.ComponentCode);
         }
     }
 
     [Fact, Trait("Id", "MM-UT-361"), Trait("Rule", "MM-BR-361")]
-    public void Component_LotManaged_IsMmE361()
+    public void Component_LotManaged_IsAllowed()
     {
-        var error = ErrorOf(() => SetItemRules.EnsureComponent("BOLT", Part with { LotManaged = true }));
+        var lotPart = Part with { LotManaged = true };
 
-        (error.Code, error.Args).Should().BeEquivalentTo((LotRules.SetComponentCode, new object[] { "BOLT" }));
+        SetItemRules.EnsureComponent("BOLT", lotPart).Should().Be(lotPart);
+    }
+
+    [Fact, Trait("Id", "SD-UT-513"), Trait("Rule", "SD-BR-513")]
+    public void GoodsReceipt_OfASet_IsSdE513()
+    {
+        var error = ErrorOf(() => SetItemRules.EnsureNotReceived("SET", 2));
+        (error.Code, error.Args).Should().BeEquivalentTo((SetItemRules.PurchaseCode, new object[] { 2 }));
+
+        foreach (var type in new[] { "INVENTORY", "SERVICE", "KIT", null })
+        {
+            var act = () => SetItemRules.EnsureNotReceived(type, 1);
+            act.Should().NotThrow();
+        }
     }
 
     [Theory, Trait("Id", "SD-UT-503"), Trait("Rule", "SD-BR-503")]

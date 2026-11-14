@@ -67,7 +67,6 @@
   <data name="MM-E-352" xml:space="preserve"><value>Lot number '{1}' of item {0} cannot be used. Use up to 30 upper case letters, digits, - or _; MIGRATED and UNKNOWN are reserved.</value></data>
   <data name="MM-E-355" xml:space="preserve"><value>Item {0} is lot managed: a line that decreases its stock needs one of its lots.</value></data>
   <data name="MM-E-356" xml:space="preserve"><value>Lot {2} of item {0} in warehouse {1} would be {4} on {3}. A lot balance cannot go below zero, and no stock movement can be dated before lot management started.</value></data>
-  <data name="MM-E-361" xml:space="preserve"><value>Item {0}: a lot-managed item cannot be a set component, and a set component cannot turn lot management on.</value></data>
   <data name="SD-E-006" xml:space="preserve"><value>All document numbers for {0} are used, so no more documents can be saved.</value></data>
   <data name="Common.Search" xml:space="preserve"><value>Search</value></data>
   <data name="Common.New" xml:space="preserve"><value>New</value></data>
@@ -241,10 +240,11 @@
   <data name="SD-E-333" xml:space="preserve"><value>Exemption certificate {0} is not a certificate of this customer. Search again.</value></data>
   <data name="SD-E-335" xml:space="preserve"><value>Billing flow '{0}' must be SHIP_AND_BILL, SHIP_THEN_BILL or BILL_THEN_SHIP.</value></data>
   <data name="BC-E-524" xml:space="preserve"><value>The exemption certificate value {0} is not valid. A certificate needs its number and state, and one state has one valid certificate.</value></data>
-  <data name="SD-E-501" xml:space="preserve"><value>Item {0} is not a set item. Only an item of type Set that is in use can have components.</value></data>
+  <data name="SD-E-501" xml:space="preserve"><value>Item {0} cannot have components. Only an item of type Kit or Set that is in use can have components.</value></data>
   <data name="SD-E-502" xml:space="preserve"><value>Item {0} cannot be a component. A component must be an inventory item in use.</value></data>
   <data name="SD-E-503" xml:space="preserve"><value>The quantity of component {0} must be above 0.</value></data>
   <data name="SD-E-504" xml:space="preserve"><value>Component {0} is in the set twice. Each component can be in a set only once.</value></data>
+  <data name="SD-E-513" xml:space="preserve"><value>Line {0}: a Set item cannot be received from a purchase. Set stock grows only by assembly.</value></data>
   <data name="SD-E-403" xml:space="preserve"><value>Price level {0} / item {1}: a price level is up to 5 uppercase characters, and each item appears once in it.</value></data>
   <data name="SD-E-407" xml:space="preserve"><value>The sales price of item {0} must be above 0.</value></data>
   <data name="SD-E-408" xml:space="preserve"><value>Item {0} does not exist, is not an inventory item, or is not in use.</value></data>

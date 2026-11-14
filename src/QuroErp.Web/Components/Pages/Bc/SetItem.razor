@@ -56,7 +56,7 @@
 
 @code {
     private const string SdModule = "SD";
-    private const string SetType = "SET";
+    private static readonly string[] ParentTypes = ["KIT", "SET"];
     private const string InventoryType = "INVENTORY";
     private const string NotInUse = "N";
     private const string RequiredCode = "Common-E-005";
@@ -158,9 +158,9 @@
         _setLookupOpen = true;
     }
 
-    // SD-BR-501: only Set items in use can have components
+    // SD-BR-501: only Kit and Set items in use can have components
     private async Task<IReadOnlyList<ItemDto>> FindSetsAsync(string? keyword) =>
-        [.. (await Items.LookupAsync(keyword?.Trim(), CancellationToken.None)).Where(i => i.ItemType == SetType && i.ValidFlag != NotInUse)];
+        [.. (await Items.LookupAsync(keyword?.Trim(), CancellationToken.None)).Where(i => ParentTypes.Contains(i.ItemType) && i.ValidFlag != NotInUse)];
 
     private async Task SetPicked(ItemDto set)
     {
@@ -177,7 +177,7 @@
         await _grid!.SearchAsync();
     }
 
-    // SD-BR-502, MM-BR-361: components are Inventory items in use without lot management. Typed or pasted codes are read
+    // SD-BR-502, MM-BR-361: components are Inventory items in use, lot-managed or not. Typed or pasted codes are read
     // exactly; a code that is not a component is marked as not found
     private async Task<IReadOnlyList<LookupRow>> LookupComponentsAsync(LookupQuery query)
     {
@@ -201,5 +201,5 @@
         return [.. items.Where(IsComponent).Select(i => LookupRow.Of(("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit)))];
     }
 
-    private static bool IsComponent(ItemDto item) => item.ItemType == InventoryType && item.ValidFlag != NotInUse && !item.LotManaged;
+    private static bool IsComponent(ItemDto item) => item.ItemType == InventoryType && item.ValidFlag != NotInUse;
 }
