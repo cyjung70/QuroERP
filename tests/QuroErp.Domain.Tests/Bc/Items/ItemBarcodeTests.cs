@@ -16,23 +16,23 @@ public class ItemBarcodeTests
     }
 
     [Theory, Trait("Id", "MM-UT-816"), Trait("Id", "BC-UC-011-T03")]
-    [InlineData("9999999998", 2)]
-    [InlineData("10000000000", 1)]
+    [InlineData("99999999999999999998", 2)]
+    [InlineData("100000000000000000000", 1)]
     [InlineData("12A", 1)]
     [InlineData("-1", 1)]
     [InlineData("１２", 1)]
     [InlineData("", 1)]
     [InlineData(null, 1)]
-    public void Generate_NotDigitsOrOverTenDigits_IsMmE816(string? startNo, int count)
+    public void Generate_NotDigitsOrOverTwentyDigits_IsMmE816(string? startNo, int count)
     {
         var generate = () => ItemBarcode.Generate(startNo, count);
 
-        generate.Should().Throw<DomainException>().Which.Should().BeEquivalentTo(new { Code = "MM-E-816", Args = new object[] { 10 } });
+        generate.Should().Throw<DomainException>().Which.Should().BeEquivalentTo(new { Code = "MM-E-816", Args = new object[] { 20 } });
     }
 
     [Fact, Trait("Id", "MM-UT-816")]
-    public void Generate_LastBarcodeOfTenDigits_IsAllowed() =>
-        ItemBarcode.Generate("9999999998", 1).Should().Equal("9999999999");
+    public void Generate_TwentyDigits_IsAllowed_BeyondWhatALongHolds() =>
+        ItemBarcode.Generate("99999999999999999998", 1).Should().Equal("99999999999999999999");
 
     [Fact, Trait("Id", "MM-UT-817")]
     public void Duplicate_NamesTheOtherItemsOnceInCodeOrder() =>

@@ -48,7 +48,7 @@ public sealed class ItemService(
     }
 
     /// <exception cref="DomainException">
-    /// MM-E-801 (also for a used code), 802, 803, 817, 825, 831, 351; Common-E-002 for an unknown code value.
+    /// MM-E-801 (also for a used code), 802, 803, 817, 825, 831, 351, 834; Common-E-002 for an unknown code value.
     /// </exception>
     public async Task<ItemDto> CreateAsync(CreateItemRequest request, string createdBy, CancellationToken cancellationToken)
     {
@@ -72,8 +72,8 @@ public sealed class ItemService(
     }
 
     /// <exception cref="DomainException">
-    /// MM-E-802, 803, 806, 817, 825, 831; MM-E-351 / 361 when lot management cannot be turned on or off; Common-E-002 for an
-    /// unknown code value.
+    /// MM-E-802, 803, 806, 817, 825, 831; MM-E-351 / 361 when lot management cannot be turned on or off; MM-E-834 for Location
+    /// management on an item without its own stock, MM-E-718 when it cannot be turned off; Common-E-002 for an unknown code value.
     /// </exception>
     /// <exception cref="ConcurrencyException">updatedAt differs from the stored row.</exception>
     /// <exception cref="NotFoundException">Common-E-006.</exception>
@@ -164,7 +164,7 @@ public sealed class ItemService(
     private static ItemFields ToFields(ItemFieldsRequest r) => new(
         r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc, r.SoUsdPrc, r.UpcCode, r.Location,
         r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind, r.LotManaged,
-        r.LocationManaged);
+        r.LocationManaged, r.ShowComponents);
 
     private static Item ToItem(ItemRow r) => Item.Restore(
         r.Id,
@@ -172,7 +172,7 @@ public sealed class ItemService(
         new ItemFields(
             r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc, r.SoUsdPrc, r.UpcCode, r.Location,
             r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind, r.LotManaged,
-            r.LocationManaged),
+            r.LocationManaged, r.ShowComponents),
         r.Plating,
         r.MvgCost ?? 0,
         r.OnhandQty ?? 0,
@@ -183,5 +183,5 @@ public sealed class ItemService(
         r.Id, r.ItemCd, r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc ?? 0, r.SoUsdPrc ?? 0,
         r.UpcCode, r.Location, r.ReorderPoint ?? 0, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind,
         r.ItemGroupCd ?? r.ItemCd, r.MvgCost ?? 0, r.OnhandQty ?? 0, r.StkVal ?? 0, r.CreatedAt, r.CreatedBy, r.UpdatedAt, r.UpdatedBy,
-        r.LotManaged, r.LotManagedFrom, r.LocationManaged);
+        r.LotManaged, r.LotManagedFrom, r.LocationManaged, r.ShowComponents);
 }

@@ -459,7 +459,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         {
             ["ITEM_TYPE"] = ["INVENTORY", "KIT", "SET", "SERVICE"],
             ["UNIT"] = ["EA", "PCS"],
-            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2", "ZZAUD1", "ZZAUD2", "ZZBC1", "ZZBC2", "ZZBC3", "ZZBC4", "ZZBC5"],
+            ["ITEM_CLASS"] = ["PART", "ZZNAV1", "ZZNAV2", "ZZAUD1", "ZZAUD2", "ZZBC1", "ZZBC2", "ZZBC3", "ZZBC4", "ZZBC5", "ZZBC6"],
             ["GRADE"] = ["A01"],
             ["DISPLAY_OPTIONS"] = ["Y", "N", "ALL"],
             ["STATE"] = ["CA", "NY"],
@@ -870,7 +870,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 id, item.ItemCd, f.ItemName, f.ItemName2, f.ItemDesc, f.ItemType, f.Unit, f.ItemClass, f.ValidFlag, f.UsdPrc, f.SoUsdPrc,
                 f.UpcCode, f.Location, f.ReorderPoint, f.Memo1, f.Memo2, f.Memo3, f.Memo4, f.Memo5, f.ItemGrade, f.Taxable ?? true,
                 f.VatKind ?? Item.VatTaxable, item.Plating, item.ItemGroupCd, item.MvgCost, item.OnhandQty, item.StkVal,
-                createdAt, createdBy, updatedAt, updatedBy);
+                createdAt, createdBy, updatedAt, updatedBy, item.LotManaged, item.LotManagedFrom, item.LocationManaged, item.ShowComponents);
         }
     }
 

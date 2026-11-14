@@ -45,6 +45,18 @@ public sealed class ItemModel
     /// <summary>Read only: the day lot management was turned on.</summary>
     public DateOnly? LotManagedFrom { get; set; }
 
+    /// <summary>Stock on Locations other than '*' (MM-BR-718, MM-BR-834); the server checks when it can be turned on or off.</summary>
+    public bool LocationManaged { get; set; }
+
+    /// <summary>Kit and Set documents print the component lines (SD-BR-517). On for a new item.</summary>
+    public bool ShowComponents { get; set; } = true;
+
+    /// <summary>A Kit or Set: the only types whose documents use <see cref="ShowComponents"/>.</summary>
+    public bool HasComponents => ItemType is KitType or SetType;
+
+    private const string KitType = "KIT";
+    private const string SetType = "SET";
+
     // Read only: set by the server (MM-BR-804, 808)
     public decimal? MvgCost { get; set; } = 0m;
     public decimal? OnhandQty { get; set; } = 0m;
@@ -80,6 +92,8 @@ public sealed class ItemModel
         VatKind = dto.VatKind,
         LotManaged = dto.LotManaged,
         LotManagedFrom = dto.LotManagedFrom,
+        LocationManaged = dto.LocationManaged,
+        ShowComponents = dto.ShowComponents,
         MvgCost = dto.MvgCost,
         OnhandQty = dto.OnhandQty,
         StkVal = dto.StkVal,
@@ -111,6 +125,8 @@ public sealed class ItemModel
         Taxable = Taxable,
         VatKind = VatKind,
         LotManaged = LotManaged,
+        LocationManaged = LocationManaged,
+        ShowComponents = ShowComponents,
     };
 
     public UpdateItemRequest ToUpdateRequest() => new()
@@ -136,6 +152,8 @@ public sealed class ItemModel
         Taxable = Taxable,
         VatKind = VatKind,
         LotManaged = LotManaged,
+        LocationManaged = LocationManaged,
+        ShowComponents = ShowComponents,
         UpdatedAt = UpdatedAt,
     };
 }

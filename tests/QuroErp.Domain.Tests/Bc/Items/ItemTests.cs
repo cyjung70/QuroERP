@@ -223,4 +223,39 @@ public class ItemTests
     {
         Item.DocumentUnitPrice((decimal)standard, (decimal)rate, decimals, mode).Should().Be((decimal)expected);
     }
+
+    [Theory, Trait("Id", "MM-UT-834"), Trait("Rule", "MM-BR-834")]
+    [InlineData("INVENTORY", true)]
+    [InlineData("SET", true)]
+    [InlineData("KIT", false)]
+    [InlineData("SERVICE", false)]
+    public void LocationManagement_OnlyForAnItemWithItsOwnStock_ElseMmE834(string itemType, bool allowed)
+    {
+        var create = () => Item.Create("B100", Valid with { ItemType = itemType, LocationManaged = true });
+        var change = () => Stored().Change(Stored().Fields with { ItemType = itemType, LocationManaged = true }, typeLocked: false);
+
+        if (allowed)
+        {
+            create().LocationManaged.Should().BeTrue();
+            change.Should().NotThrow();
+        }
+        else
+        {
+            Error(() => create()).Should().BeEquivalentTo(new { Code = Item.LocationNotAllowedCode, Args = new object[] { "B100" } });
+            Error(change).Code.Should().Be(Item.LocationNotAllowedCode);
+        }
+    }
+
+    [Fact, Trait("Id", "MM-UT-834"), Trait("Rule", "SD-BR-517")]
+    public void ShowComponents_IsOnForANewItem_KeptWhenMissing_AndStoredForEveryType()
+    {
+        var item = Stored(Valid with { ItemType = "KIT", Unit = "EA", ValidFlag = "Y", UsdPrc = 2m, ShowComponents = false });
+
+        item.Change(item.Fields with { ShowComponents = null, ItemName = "BOLT 2" }, typeLocked: false);
+
+        Item.Create("B100", Valid).ShowComponents.Should().BeTrue();
+        Stored().ShowComponents.Should().BeTrue("a row without the value reads as the column default");
+        item.ShowComponents.Should().BeFalse();
+        Item.Create("B101", Valid with { ShowComponents = false }).ShowComponents.Should().BeFalse("an Inventory item keeps it unused");
+    }
 }

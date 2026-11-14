@@ -216,6 +216,7 @@
   <data name="MM-E-814" xml:space="preserve"><value>Alternate item group {0} has items, so it can't be deleted. Take its items out on the alternate item screen first.</value></data>
   <data name="MM-E-825" xml:space="preserve"><value>{0} allows up to {1} characters.</value></data>
   <data name="MM-E-831" xml:space="preserve"><value>VAT kind '{0}' is not valid. Choose TAXABLE or EXEMPT.</value></data>
+  <data name="MM-E-834" xml:space="preserve"><value>Location management cannot be turned on for item {0}. Only an item with its own stock (Inventory or Set) can use it.</value></data>
   <data name="MM-E-701" xml:space="preserve"><value>Warehouse code '{0}' can't be used. Enter up to 10 capital letters, digits, - or _, not used by another warehouse, and don't change a saved code. Enter the warehouse name too.</value></data>
   <data name="MM-E-702" xml:space="preserve"><value>The default warehouse must be exactly one warehouse in use, and it can't be deleted or set not in use ({0}).</value></data>
   <data name="MM-E-704" xml:space="preserve"><value>Warehouse {0} can't be set not in use or deleted (reason: {1}).</value></data>
@@ -281,6 +282,8 @@
   <data name="Bc.Item.StkVal" xml:space="preserve"><value>Stock Value</value></data>
   <data name="Bc.Item.LotManaged" xml:space="preserve"><value>Lot Managed</value></data>
   <data name="Bc.Item.LotManagedFrom" xml:space="preserve"><value>Lot Managed From</value></data>
+  <data name="Bc.Item.LocationManaged" xml:space="preserve"><value>Location Managed</value></data>
+  <data name="Bc.Item.ShowComponents" xml:space="preserve"><value>Show Components</value></data>
   <data name="Bc.Item.Memo1" xml:space="preserve"><value>Memo 1</value></data>
   <data name="Bc.Item.Memo2" xml:space="preserve"><value>Memo 2</value></data>
   <data name="Bc.Item.Memo3" xml:space="preserve"><value>Memo 3</value></data>

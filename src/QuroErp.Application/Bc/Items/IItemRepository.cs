@@ -38,7 +38,8 @@ public sealed record ItemRow(
     string UpdatedBy,
     bool LotManaged = false,
     DateOnly? LotManagedFrom = null,
-    bool LocationManaged = false);
+    bool LocationManaged = false,
+    bool ShowComponents = true);
 
 /// <summary>List conditions as given by the caller; the repository escapes LIKE wildcards.</summary>
 public sealed record ItemSearch(string? ItemCd, string? ItemName, string? ItemClass, string? ValidFlag, int Offset, int Limit);
