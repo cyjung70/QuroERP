@@ -38,5 +38,5 @@
     "단위 테스트: 기존 Set → KIT 마이그레이션 뒤 출하 전개 결과가 전과 같다, SET 출하는 자기 재고 출고"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

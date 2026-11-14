@@ -252,6 +252,7 @@
   <data name="SD-E-503" xml:space="preserve"><value>구성품 {0}의 수량은 0보다 커야 합니다.</value></data>
   <data name="SD-E-504" xml:space="preserve"><value>구성품 {0}이(가) 세트에 두 번 들어 있습니다. 한 세트에 같은 구성품은 한 번만 넣을 수 있습니다.</value></data>
   <data name="SD-E-513" xml:space="preserve"><value>{0}행: Set 품목은 구매입고할 수 없습니다. Set 재고는 조립으로만 늘어납니다.</value></data>
+  <data name="SD-E-518" xml:space="preserve"><value>Kit {0}의 구성품 {1} 재고가 창고 {2}에 모자랍니다. 필요 {3}, 있는 수량 {4}. Kit 구성품의 Location·Lot은 시스템이 FIFO로 할당합니다.</value></data>
   <data name="SD-E-403" xml:space="preserve"><value>가격 레벨 {0} / 품목 {1}: 가격 레벨은 대문자 5자 이하이고, 한 레벨에 품목은 한 번만 넣을 수 있습니다.</value></data>
   <data name="SD-E-407" xml:space="preserve"><value>품목 {0}의 판매 단가는 0보다 커야 합니다.</value></data>
   <data name="SD-E-408" xml:space="preserve"><value>품목 {0}이(가) 없거나, 재고(Inventory) 품목이 아니거나, 사용하지 않는 품목입니다.</value></data>

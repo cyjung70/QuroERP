@@ -229,6 +229,12 @@ internal sealed class InventoryRepository : IInventoryRepository
             transaction,
             cancellationToken: cancellationToken))).ToList();
 
+    public async Task<IReadOnlyList<StockBalance>> FindKeyBalancesAsync(
+        long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<StockBalance>(new CommandDefinition(
+            StockBalanceSql.SelectBalances, new { ItemId = itemId, WarehouseId = warehouseId, AsOf = asOf }, transaction,
+            cancellationToken: cancellationToken))).ToList();
+
     public Task UpdateItemStockAsync(ItemStock item, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteAsync(new CommandDefinition(
             UpdateItem,

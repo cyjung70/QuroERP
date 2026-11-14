@@ -674,6 +674,80 @@ public class InventoryServiceTests
         }
     }
 
+    // Kit 90 "SET" = 2 × lot item L (20) + 1 × P1 (1, no Lot or Location management). L has 8 in the main warehouse: 1 on
+    // Lot '*', 2 on B1 (received 9/1) on shelf A01 and 5 on A1 (received 9/5) (SD-BR-518)
+    private void AddKitWithLotComponent()
+    {
+        AddLotItem(onStar: 1);
+        _inventory.SetLocationManaged(20);
+        _inventory.AddLocation(Main, "A01");
+        _inventory.AddKeyStock(20, Main, "A01", "B1", 2);
+        _inventory.AddKeyStock(20, Main, "*", "A1", 5);
+        _inventory.SetReceived(20, "B1", new DateOnly(2026, 9, 1));
+        _inventory.SetReceived(20, "A1", new DateOnly(2026, 9, 5));
+        _inventory.AddItem(1, "P1", onHand: (Main, 20m), cost: 3);
+        _inventory.AddItem(90, "SET", type: "KIT");
+        _sets.Components.AddRange([new SetComponent(90, 20, 2), new SetComponent(90, 1, 1)]);
+    }
+
+    [Fact, Trait("Id", "SD-UT-518"), Trait("Rule", "SD-BR-518"), Trait("Rule", "MM-BR-007")]
+    public async Task PostAsync_KitIssue_TakesTheLotComponentInFifoOrder_SplitOverItsLocationsAndLots()
+    {
+        AddKitWithLotComponent();
+
+        var posted = await Post(new StockMovementRequest("DN", Day, 90, Main, -3, RefKey: "DN-1", RefSeq: 1));
+
+        posted.Select(m => (m.ItemId, _inventory.LotNo(m.LotId), m.Qty, m.SetItemId, m.RefKey)).Should().Equal(
+            (20L, "*", -1m, 90L, "DN-1"), (20L, "B1", -2m, 90L, "DN-1"), (20L, "A1", -3m, 90L, "DN-1"), (1L, "*", -3m, 90L, "DN-1"));
+        posted[1].LocationId.Should().Be(_inventory.Locations.Single(l => l.LocationCode == "A01").Id);
+        (_inventory.KeyQty(20, Main, "*", "*"), _inventory.KeyQty(20, Main, "A01", "B1"), _inventory.KeyQty(20, Main, "*", "A1"))
+            .Should().Be((0m, 0m, 2m));
+        _inventory.BalanceReads.Should().Equal([(20L, Main, Day)], "only the Lot-managed component is allocated");
+    }
+
+    [Fact, Trait("Id", "SD-UT-518"), Trait("Rule", "SD-BR-518")]
+    public async Task PostAsync_TwoKitLinesInOneDocument_ShareTheBalances()
+    {
+        AddKitWithLotComponent();
+
+        var posted = await Post(
+            new StockMovementRequest("DN", Day, 90, Main, -2, RefSeq: 1),
+            new StockMovementRequest("DN", Day, 90, Main, -1, RefSeq: 2));
+
+        posted.Where(m => m.ItemId == 20).Select(m => (m.RefSeq, _inventory.LotNo(m.LotId), m.Qty)).Should().Equal(
+            (1, "*", -1m), (1, "B1", -2m), (1, "A1", -1m), (2, "A1", -2m));
+        _inventory.KeyQty(20, Main, "*", "A1").Should().Be(2);
+    }
+
+    [Theory, Trait("Id", "SD-UT-518"), Trait("Rule", "SD-BR-518")]
+    [InlineData("DENY")]
+    [InlineData("ALLOW_IN_MONTH")]
+    public async Task PostAsync_KitIssue_LotComponentShort_ThrowsSdE518WhateverTheNegativeStockMode(string mode)
+    {
+        _settings.Mode = mode;
+        AddKitWithLotComponent();
+
+        var act = () => Post(new StockMovementRequest("DN", Day, 90, Main, -5));
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be(SetComponent.NotEnoughStock);
+        error.Args.Should().Equal("SET", "L", "WH1", 10m, 8m);
+        _inventory.Movements.Should().BeEmpty();
+    }
+
+    [Fact, Trait("Id", "SD-UT-518"), Trait("Rule", "SD-BR-518"), Trait("Rule", "MM-BR-365")]
+    public async Task PostAsync_KitReturn_PutsTheComponentsOnLotStar_AndTheNextIssueTakesThatFirst()
+    {
+        AddKitWithLotComponent();
+
+        var returned = await Post(new StockMovementRequest("RT", Day, 90, Main, 1));
+        var issued = await Post(new StockMovementRequest("DN", Day, 90, Main, -2));
+
+        returned.Select(m => (m.ItemId, _inventory.LotNo(m.LotId), m.Qty)).Should().Equal((20L, "*", 2m), (1L, "*", 1m));
+        issued.Select(m => (m.ItemId, _inventory.LotNo(m.LotId), m.Qty)).Should().Equal((20L, "*", -3m), (20L, "B1", -1m), (1L, "*", -2m));
+        _inventory.KeyQty(1, Main, "*", "*").Should().Be(19, "P1 has no Lot or Location management, so it stays on ('*', '*')");
+    }
+
     private sealed class FakeInventoryRepository : IInventoryRepository
     {
         public Task<IReadOnlyDictionary<long, decimal>> GetSellableOnHandAsync(
@@ -735,6 +809,29 @@ public class InventoryServiceTests
         }
 
         public void SetLocationManaged(long itemId) => Items[itemId] = Copy(Items[itemId], locationManaged: true);
+
+        public void SetReceived(long itemId, string lotNo, DateOnly receivedDt) => ReceivedDates[Ensure(itemId, lotNo).Id] = receivedDt;
+
+        public List<(long ItemId, long WarehouseId, DateOnly AsOf)> BalanceReads { get; } = [];
+
+        // Same result as the SQL in StockBalanceSql: current balance minus later movements, above zero, Locations in use
+        public Task<IReadOnlyList<StockBalance>> FindKeyBalancesAsync(
+            long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            BalanceReads.Add((itemId, warehouseId, asOf));
+            return Task.FromResult<IReadOnlyList<StockBalance>>(KeyOnHand
+                .Where(e => e.Key.ItemId == itemId && e.Key.WarehouseId == warehouseId)
+                .Select(e =>
+                {
+                    var location = Locations.Single(l => l.Id == e.Key.LocationId);
+                    var lot = Lots.Single(l => l.Id == e.Key.LotId);
+                    var later = Movements.Where(m => m.ItemId == itemId && m.WarehouseId == warehouseId && m.LocationId == location.Id
+                        && m.LotId == lot.Id && m.DocumentDt > asOf).Sum(m => m.Qty);
+                    return (location.InUse, Balance: new StockBalance(
+                        location.Id, location.LocationCode, lot.Id, lot.LotNo, ReceivedDates.TryGetValue(lot.Id, out var d) ? d : null, e.Value - later));
+                })
+                .Where(b => b.InUse && b.Balance.Qty > 0).Select(b => b.Balance).ToList());
+        }
 
         public StockLocation AddLocation(long warehouseId, string code, bool inUse = true)
         {

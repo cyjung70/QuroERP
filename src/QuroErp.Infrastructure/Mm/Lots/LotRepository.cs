@@ -2,30 +2,12 @@ using System.Data;
 using Dapper;
 using QuroErp.Application.Mm.Lots;
 using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Infrastructure.Mm.Inventory;
 
 namespace QuroErp.Infrastructure.Mm.Lots;
 
 internal sealed class LotRepository : ILotRepository
 {
-    // MM-BR-362, MM-BR-716: balance of each (Location, Lot) at the end of @AsOf = current balance minus the movements of that key
-    // dated after it. Locations not in use cannot be picked for new lines (MM-BR-717)
-    private const string SelectBalances = """
-        SELECT location_id, location_code, lot_id, lot_no, received_dt, qty
-        FROM (
-          SELECT o.location_id, c.location_code, o.lot_id, l.lot_no, l.received_dt,
-                 o.onhand_qty - coalesce((SELECT sum(m.qty) FROM mm_goods_movement m
-                                          WHERE m.item_id = o.item_id AND m.warehouse_id = o.warehouse_id
-                                            AND m.location_id = o.location_id AND m.lot_id = o.lot_id
-                                            AND m.document_dt > @AsOf), 0) AS qty
-          FROM mm_onhand o
-          JOIN bc_location c ON c.id = o.location_id
-          JOIN mm_lot l ON l.id = o.lot_id
-          WHERE o.item_id = @ItemId AND o.warehouse_id = @WarehouseId AND c.use_yn
-        ) b
-        WHERE qty > 0
-        """;
-
-
     // MM-BR-351: a balance on a lot other than '*'
     private const string SelectHasLotStock = """
         SELECT EXISTS (SELECT 1 FROM mm_onhand o JOIN mm_lot l ON l.id = o.lot_id
@@ -65,7 +47,7 @@ internal sealed class LotRepository : ILotRepository
     public async Task<IReadOnlyList<StockBalance>> FindBalancesAsync(
         long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken) =>
         (await transaction.Connection!.QueryAsync<StockBalance>(new CommandDefinition(
-            SelectBalances, new { ItemId = itemId, WarehouseId = warehouseId, AsOf = asOf }, transaction, cancellationToken: cancellationToken))).ToList();
+            StockBalanceSql.SelectBalances, new { ItemId = itemId, WarehouseId = warehouseId, AsOf = asOf }, transaction, cancellationToken: cancellationToken))).ToList();
 
 
     public Task<bool> HasLotStockAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>
