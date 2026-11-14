@@ -299,6 +299,35 @@ public class LotServiceTests(AuthSchemaFixture db)
             .Should().Equal(("*", "*", 5m, 0m), ("*", "B1", 0m, 5m));
     }
 
+    [DatabaseFact, Trait("Id", "SD-UT-518"), Trait("Rule", "SD-BR-518"), Trait("Rule", "MM-BR-007")]
+    public async Task KitIssue_TakesTheLotComponentInFifoOrder_AndAReversalPutsEachLotBack()
+    {
+        var (main, _) = await WarehousesAsync();
+        var component = await CreateAsync(lotManaged: true);
+        var kit = await CreateAsync(type: "KIT");
+        await ExecuteAsync(
+            "INSERT INTO sd_bom (parent_item_id, seq, child_item_id, child_qty, created_by, updated_by) VALUES (@Kit, 1, @Component, 2, 't', 't')",
+            new { Kit = kit.Id, Component = component.Id });
+        await PostAsync(
+            new StockMovementRequest("GR", Day, component.Id, main, 5, Price: 2, LotNo: "A1"),
+            new StockMovementRequest("GR", Day.AddDays(-2), component.Id, main, 2, Price: 2, LotNo: "B1"));
+
+        var issued = await PostAsync(new StockMovementRequest("DN", Day, kit.Id, main, -2, RefKey: "DN-K", RefSeq: 1));
+        var lots = await LotsAsync(component.Id);
+
+        issued.Select(m => (m.ItemId, m.LotId, m.Qty, m.SetItemId)).Should().Equal(
+            (component.Id, (long?)lots["B1"], -2m, (long?)kit.Id), (component.Id, (long?)lots["A1"], -2m, (long?)kit.Id));
+        (await KeyOnHandAsync(component.Id)).Should().Equal(("*", "*", 0m), ("*", "A1", 3m), ("*", "B1", 0m));
+
+        foreach (var movement in issued)
+        {
+            await ReverseAsync(movement.Id);
+        }
+        (await KeyOnHandAsync(component.Id)).Should().Equal(("*", "*", 0m), ("*", "A1", 5m), ("*", "B1", 2m));
+        var short_ = () => PostAsync(new StockMovementRequest("DN", Day, kit.Id, main, -4));
+        (await short_.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(SetComponent.NotEnoughStock);
+    }
+
     private static LotSearchQuery Query(long itemId, long warehouseId, DateOnly date) =>
         new() { ItemId = itemId, WarehouseId = warehouseId, Date = date };
 

@@ -252,6 +252,7 @@
   <data name="SD-E-503" xml:space="preserve"><value>The quantity of component {0} must be above 0.</value></data>
   <data name="SD-E-504" xml:space="preserve"><value>Component {0} is in the set twice. Each component can be in a set only once.</value></data>
   <data name="SD-E-513" xml:space="preserve"><value>Line {0}: a Set item cannot be received from a purchase. Set stock grows only by assembly.</value></data>
+  <data name="SD-E-518" xml:space="preserve"><value>Kit {0}: component {1} is short in warehouse {2}. Needed {3}, available {4}. The system assigns the Locations and Lots of Kit components in FIFO order.</value></data>
   <data name="SD-E-403" xml:space="preserve"><value>Price level {0} / item {1}: a price level is up to 5 uppercase characters, and each item appears once in it.</value></data>
   <data name="SD-E-407" xml:space="preserve"><value>The sales price of item {0} must be above 0.</value></data>
   <data name="SD-E-408" xml:space="preserve"><value>Item {0} does not exist, is not an inventory item, or is not in use.</value></data>

@@ -42,7 +42,8 @@ public sealed class InventoryService(
     /// <exception cref="QuroErp.Domain.Common.DomainException">
     /// MM-E-002 closed month, MM-E-606 wrong sign or zero qty, MM-E-001 not enough stock in DENY mode,
     /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end (a set component error ends with the
-    /// set item code), SD-E-509 a set with no components, MM-E-713 a Location the line cannot use, MM-E-363 a lot other than
+    /// set item code), SD-E-509 a set with no components, SD-E-518 a Kit component with Lot or Location management whose
+    /// balances do not cover its decrease, MM-E-713 a Location the line cannot use, MM-E-363 a lot other than
     /// '*' for an item without lot management, MM-E-352 a bad lot number, MM-E-355 a decrease from a lot the item does not
     /// have, MM-E-356 / MM-E-714 a Location or lot balance below zero or a lot movement dated before lot management started.
     /// </exception>
@@ -96,13 +97,15 @@ public sealed class InventoryService(
             {
                 throw new ArgumentException($"Kit item {item.ItemCd} is not bought, so it has no {request.MovType} movement.", nameof(requests));
             }
-            // Components move at their own moving average cost and remember the Kit (MM-BR-007)
+            // Components move at their own moving average cost and remember the Kit (MM-BR-007). Split builds the movement of
+            // any part of the qty, for the FIFO allocation of the component's Locations and Lots (SD-BR-518)
             foreach (var (componentId, qty) in SetComponent.Expand(item.ItemCd, request.Qty, components.Where(c => c.SetItemId == item.ItemId)))
             {
+                Func<ItemStock, GoodsMovement> Split(decimal part) => stock => GoodsMovement.Create(
+                    request.MovType, request.DocumentDt, componentId, request.WarehouseId, part,
+                    stock.MovingAverageCost, request.RefKey, request.RefSeq, item.ItemId);
                 lines.Add(new Line(componentId, request.WarehouseId, request.DocumentDt, request.MovType, item.ItemCd, qty,
-                    null, null, null, false, false, stock => GoodsMovement.Create(
-                        request.MovType, request.DocumentDt, componentId, request.WarehouseId, qty,
-                        stock.MovingAverageCost, request.RefKey, request.RefSeq, item.ItemId)));
+                    null, null, null, false, false, Split(qty), Split));
             }
         }
 
@@ -167,6 +170,7 @@ public sealed class InventoryService(
             onHand[key] = await inventory.LockOnHandAsync(key.ItemId, key.WarehouseId, user, transaction, cancellationToken);
         }
         var qty = onHand.ToDictionary(e => e.Key, e => e.Value.OnHandQty);
+        lines = await AllocateKitComponentsAsync(lines, items, onHand, transaction, cancellationToken);
 
         // The Location and lot of every line, then their mm_onhand rows locked in (item, warehouse, Location, Lot) order
         // (MM-BR-714). A price difference changes the item's value only, so it has neither (MM-BR-360)
@@ -243,6 +247,48 @@ public sealed class InventoryService(
             await inventory.UpdateItemStockAsync(items[itemId], user, transaction, cancellationToken);
         }
         return posted;
+    }
+
+    // SD-BR-518, MM-BR-007: a Kit component decrease of an item with Lot or Location management takes its Locations and Lots
+    // in FIFO order (MM-BR-716), one line per part; short stock stops the save (SD-E-518). The item rows are locked, so the
+    // balances cannot change meanwhile; earlier lines of the document take their part first. Other components stay on
+    // ('*', '*') and follow the negative stock mode, and an increase (a Kit return) goes to ('*', '*') like other receipts (MM-BR-365)
+    private async Task<IReadOnlyList<Line>> AllocateKitComponentsAsync(
+        IReadOnlyList<Line> lines, Dictionary<long, ItemStock> items, Dictionary<(long ItemId, long WarehouseId), OnHandRow> onHand,
+        IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        bool Allocated(Line line) =>
+            line.Split is not null && line.Qty < 0 && items[line.ItemId] is { } item && (item.LotManaged || item.LocationManaged);
+        if (!lines.Any(Allocated))
+        {
+            return lines;
+        }
+
+        var balances = new Dictionary<(long, long, DateOnly), List<StockBalance>>();
+        var allocated = new List<Line>(lines.Count);
+        foreach (var line in lines)
+        {
+            if (!Allocated(line))
+            {
+                allocated.Add(line);
+                continue;
+            }
+            var key = (line.ItemId, line.WarehouseId, line.DocumentDt);
+            if (!balances.TryGetValue(key, out var left))
+            {
+                left = [.. await inventory.FindKeyBalancesAsync(line.ItemId, line.WarehouseId, line.DocumentDt, transaction, cancellationToken)];
+                balances[key] = left;
+            }
+            var picks = SetComponent.AllocateFifo(
+                line.SetItemCd, items[line.ItemId].ItemCd, onHand[(line.ItemId, line.WarehouseId)].WarehouseCode, left, -line.Qty);
+            foreach (var pick in picks)
+            {
+                var index = left.FindIndex(b => b.LocationId == pick.LocationId && b.LotId == pick.LotId);
+                left[index] = left[index] with { Qty = left[index].Qty - pick.Qty };
+                allocated.Add(line with { Qty = -pick.Qty, LocationId = pick.LocationId, LotId = pick.LotId, Build = line.Split!(-pick.Qty) });
+            }
+        }
+        return allocated;
     }
 
     // MM-BR-713, MM-BR-363, MM-BR-353, MM-BR-355, MM-BR-365: the Location and lot of one line. A reversal takes the original's
@@ -340,8 +386,9 @@ public sealed class InventoryService(
     // Build runs at posting time so an issue takes the moving average cost after the lines before it.
     // SetItemCd is the set a component line came from, empty otherwise (last arg of stock errors). Qty is the signed change;
     // LocationId, LotId and LotNo are what the caller asked for, or the original key of a reversal. AmountOnly is a price
-    // difference (PV)
+    // difference (PV). Split builds the movement of a part of a Kit component line (null for other lines)
     private sealed record Line(
         long ItemId, long WarehouseId, DateOnly DocumentDt, string MovType, string SetItemCd, decimal Qty, long? LocationId,
-        long? LotId, string? LotNo, bool Reversal, bool AmountOnly, Func<ItemStock, GoodsMovement> Build);
+        long? LotId, string? LotNo, bool Reversal, bool AmountOnly, Func<ItemStock, GoodsMovement> Build,
+        Func<decimal, Func<ItemStock, GoodsMovement>>? Split = null);
 }

@@ -80,6 +80,13 @@ public interface IInventoryRepository
     Task<IReadOnlyList<StockKeyDailyQty>> GetKeyDailyQtyAsync(
         long itemId, long warehouseId, long locationId, long lotId, DateOnly fromDate, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The (Location, Lot) balances of item + warehouse at the end of day asOf, above zero, on Locations in use, with the Lot's
+    /// received date: the FIFO allocation of Kit components reads them (SD-BR-518, MM-BR-716). Same query as the Lot search.
+    /// </summary>
+    Task<IReadOnlyList<StockBalance>> FindKeyBalancesAsync(
+        long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <summary>A lot of the item by id when lotId is given, otherwise by lot number; null when the item has no such lot.</summary>
     Task<LotRef?> FindLotAsync(long itemId, long? lotId, string? lotNo, IDbTransaction transaction, CancellationToken cancellationToken);
 
