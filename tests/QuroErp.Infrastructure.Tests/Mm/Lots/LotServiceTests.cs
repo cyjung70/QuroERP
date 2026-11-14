@@ -220,9 +220,9 @@ public class LotServiceTests(AuthSchemaFixture db)
     {
         var (main, _) = await WarehousesAsync();
         var item = await CreateAsync(lotManaged: true, locationManaged: true);
-        var a01 = await AddLocationAsync(main, "A01");
-        var b01 = await AddLocationAsync(main, "B01");
-        var closed = await AddLocationAsync(main, "Z99");
+        var (a01, a01Code) = await AddLocationAsync(main, "A01");
+        var (b01, b01Code) = await AddLocationAsync(main, "B01");
+        var (closed, _) = await AddLocationAsync(main, "Z99");
         await PostAsync(
             new StockMovementRequest("UR", Day, item.Id, main, 1, Price: 2),
             new StockMovementRequest("GR", Day, item.Id, main, 4, Price: 2, LocationId: b01),
@@ -230,10 +230,11 @@ public class LotServiceTests(AuthSchemaFixture db)
             new StockMovementRequest("GR", Day.AddDays(-5), item.Id, main, 9, Price: 2, LocationId: closed));
         await ExecuteAsync("UPDATE bc_location SET use_yn = false WHERE id = @closed", new { closed });
 
-        var picks = await Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 5 }, None);
-        var noQty = () => Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 0 }, None);
+        // The receipts are dated after the fixed clock's today, so the suggestion asks for the balances at the end of Day
+        var picks = await Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 5, Date = Day }, None);
+        var noQty = () => Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 0, Date = Day }, None);
 
-        picks.Select(p => (p.LocationCode, p.LotNo, p.Qty)).Should().Equal(("*", "*", 1m), ("A01", "261007-001", 2m), ("B01", "261010-001", 2m));
+        picks.Select(p => (p.LocationCode, p.LotNo, p.Qty)).Should().Equal(("*", "*", 1m), (a01Code, "261007-001", 2m), (b01Code, "261010-001", 2m));
         picks[1].LocationId.Should().Be(a01);
         (await noQty.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("qty");
     }
@@ -243,18 +244,18 @@ public class LotServiceTests(AuthSchemaFixture db)
     {
         var (main, second) = await WarehousesAsync();
         var item = await CreateAsync(locationManaged: true);
-        var a01 = await AddLocationAsync(main, "A01");
-        var otherWarehouse = await AddLocationAsync(second, "A01");
+        var (a01, a01Code) = await AddLocationAsync(main, "A01");
+        var (otherWarehouse, _) = await AddLocationAsync(second, "A01");
 
         var receipt = (await PostAsync(new StockMovementRequest("UR", Day, item.Id, main, 5, Price: 2, LocationId: a01))).Single();
         var wrong = () => PostAsync(new StockMovementRequest("UR", Day, item.Id, main, 1, Price: 2, LocationId: otherWarehouse));
         var short_ = () => PostAsync(new StockMovementRequest("DN", Day, item.Id, main, -6, LocationId: a01));
 
-        (await KeyOnHandAsync(item.Id)).Should().Equal(("*", "*", 0m), ("A01", "*", 5m));
+        (await KeyOnHandAsync(item.Id)).Should().Equal(("*", "*", 0m), (a01Code, "*", 5m));
         (await wrong.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(StockKeyRules.LocationCode);
         (await short_.Should().ThrowAsync<DomainException>()).Which.Code.Should().BeOneOf("MM-E-001", StockKeyRules.NegativeCode);
         await ReverseAsync(receipt.Id);
-        (await KeyOnHandAsync(item.Id)).Should().Equal(("*", "*", 0m), ("A01", "*", 0m));
+        (await KeyOnHandAsync(item.Id)).Should().Equal(("*", "*", 0m), (a01Code, "*", 0m));
         (await QueryAsync<long>("SELECT location_id FROM mm_goods_movement WHERE item_id = @Id ORDER BY id", new { item.Id }))
             .Should().Equal(a01, a01);
     }
@@ -264,7 +265,7 @@ public class LotServiceTests(AuthSchemaFixture db)
     {
         var (main, _) = await WarehousesAsync();
         var item = await CreateAsync(locationManaged: true);
-        var a01 = await AddLocationAsync(main, "A01");
+        var (a01, _) = await AddLocationAsync(main, "A01");
         await PostAsync(new StockMovementRequest("UR", Day, item.Id, main, 3, Price: 2, LocationId: a01));
 
         var withStock = () => Items.UpdateAsync(item.Id, Update(item, lotManaged: false, locationManaged: false), "kim", None);
@@ -373,12 +374,17 @@ public class LotServiceTests(AuthSchemaFixture db)
             WHERE o.item_id = @itemId GROUP BY c.location_code, l.lot_no ORDER BY 1, 2
             """, new { itemId });
 
-    private async Task<long> AddLocationAsync(long warehouseId, string code) =>
-        (await QueryAsync<long>(
+    // MAIN is shared by every test, so the code gets a unique suffix: prefix-XXXXXX
+    private async Task<(long Id, string Code)> AddLocationAsync(long warehouseId, string prefix)
+    {
+        var code = prefix + "-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var id = (await QueryAsync<long>(
             """
             INSERT INTO bc_location (warehouse_id, location_code, created_by, updated_by) VALUES (@warehouseId, @code, 't', 't')
             RETURNING id
             """, new { warehouseId, code })).Single();
+        return (id, code);
+    }
 
     private async Task<long> StarLocationAsync(long warehouseId) =>
         (await QueryAsync<long>("SELECT id FROM bc_location WHERE warehouse_id = @warehouseId AND location_code = '*'", new { warehouseId })).Single();
