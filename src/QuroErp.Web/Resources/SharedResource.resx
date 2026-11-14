@@ -220,6 +220,8 @@
   <data name="MM-E-704" xml:space="preserve"><value>창고 {0}은(는) 사용 안 함으로 바꾸거나 지울 수 없습니다 (사유: {1}).</value></data>
   <data name="MM-E-709" xml:space="preserve"><value>창고 {0}: 위탁 창고는 추가·삭제하거나 기본 창고·사용 안 함으로 바꿀 수 없고, 창고 유형은 바꿀 수 없습니다.</value></data>
   <data name="MM-E-710" xml:space="preserve"><value>창고 {0}은(는) 위탁 창고라 문서 창고나 기본 창고로 고를 수 없습니다. 다른 창고를 고르세요.</value></data>
+  <data name="MM-E-712" xml:space="preserve"><value>Location 코드 '{0}'을(를) 쓸 수 없습니다. 대문자·숫자·-·_로 20자 이하, 창고 안에서 겹치지 않게 입력하고, 저장한 코드와 시스템 Location *은 바꾸거나 지우지 마세요.</value></data>
+  <data name="MM-E-717" xml:space="preserve"><value>Location {0}은(는) 사용 안 함으로 바꾸거나 지울 수 없습니다 (사유: {1}).</value></data>
   <data name="MM-E-851" xml:space="preserve"><value>필수 항목 {0}을(를) 입력하세요.</value></data>
   <data name="MM-E-852" xml:space="preserve"><value>공급자 이름 '{0}'은(는) 이미 있습니다.</value></data>
   <data name="MM-E-853" xml:space="preserve"><value>배송 주소를 입력했으면 배송 우편번호도 입력하세요.</value></data>
@@ -691,6 +693,15 @@
   <data name="Mm.Warehouse.IsDefault" xml:space="preserve"><value>기본 창고</value></data>
   <data name="Mm.Warehouse.Remarks" xml:space="preserve"><value>비고</value></data>
   <data name="Mm.Warehouse.Title" xml:space="preserve"><value>창고</value></data>
+  <data name="Menu.G1BA12" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.Location.Title" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.Location.WarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.Location.LocationCode" xml:space="preserve"><value>Location 코드</value></data>
+  <data name="Mm.Location.LocationName" xml:space="preserve"><value>Location 이름</value></data>
+  <data name="Mm.Location.UseYn" xml:space="preserve"><value>사용</value></data>
+  <data name="Mm.Location.OnhandQty" xml:space="preserve"><value>현재고</value></data>
+  <data name="Mm.Location.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Mm.Location.IncludeInactive" xml:space="preserve"><value>사용 안 함 포함</value></data>
   <data name="Mm.Warehouse.UseYn" xml:space="preserve"><value>사용</value></data>
   <data name="Mm.Warehouse.WarehouseCode" xml:space="preserve"><value>창고 코드</value></data>
   <data name="Mm.Warehouse.WarehouseName" xml:space="preserve"><value>창고 이름</value></data>

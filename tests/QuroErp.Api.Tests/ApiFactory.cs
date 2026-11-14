@@ -37,6 +37,8 @@ using QuroErp.Application.Bc.Tax;
 using QuroErp.Application.Mm.Vendors;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Api.Tests.Mm.Vendors;
+using QuroErp.Api.Tests.Mm.Locations;
+using QuroErp.Application.Mm.Locations;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Contracts.Mm.Warehouses;
@@ -150,6 +152,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Vendors ACME (in use) and BETA (KR business number) (MM-UC-001).</summary>
     public InMemoryVendorRepository Vendors { get; } = new();
 
+    /// <summary>Locations of warehouses 1 and 2 (MM-UC-034).</summary>
+    public InMemoryLocationRepository Locations { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -216,6 +221,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IAlternateItemRepository>(AlternateItems);
             services.AddSingleton<IAlternateItemGroupRepository>(AlternateItemGroups);
             services.AddSingleton<IVendorRepository>(Vendors);
+            services.AddSingleton<ILocationRepository>(Locations);
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             // /health without PostgreSQL or Chromium: one check whose status the test sets
             services.Configure<HealthCheckServiceOptions>(o =>
