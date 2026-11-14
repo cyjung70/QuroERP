@@ -67,6 +67,19 @@ public class WarehouseScreenTests : BunitContext
         _api.Queries.Should().Equal("", "?includeInactive=true");
     }
 
+    // TASK-CORE-078: a checkbox field has its label first, as other fields do, and the box in its own centered wrapper
+    [Fact, Trait("Id", "CORE-078-WT-02")]
+    public void CheckboxField_HasTheLabelFirst_AndTheBoxInTheCenteredWrapper()
+    {
+        var input = RenderAs("admin").Find("[data-testid=warehouse-search-include-inactive]");
+        var field = input.Closest(".quro-field.quro-checkbox")!;
+
+        input.ParentElement!.ClassList.Should().Contain("quro-checkbox-box");
+        field.Children.Select(c => c.LocalName).Should().Equal("label", "div");
+        field.Children[0].GetAttribute("for").Should().Be(input.Id);
+        field.Children[0].TextContent.Should().Be("사용 안 함 포함");
+    }
+
     [Fact, Trait("Id", "MM-UC-017-T03"), Trait("Id", "MM-UT-701"), Trait("Id", "MM-UT-709")]
     public void Code_IsEnteredOnNewRowsOnly_AndTheTypeNever()
     {
