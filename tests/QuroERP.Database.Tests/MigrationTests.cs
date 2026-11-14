@@ -67,7 +67,8 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             """);
 
         Query<long>("SELECT count(*) FROM sys_code_major").Single().Should().Be(24);
-        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(127);
+        // 0508 adds ITEM_TYPE KIT (TASK-CORE-069)
+        Query<long>("SELECT count(*) FROM sys_code_minor").Single().Should().Be(128);
         majorsWithout.Should().BeEmpty();
         minorsWithout.Should().BeEmpty();
     }
