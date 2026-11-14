@@ -5,7 +5,7 @@ using QuroErp.Domain.Mm.Lots;
 
 namespace QuroErp.Domain.Tests.Mm.Lots;
 
-/// <summary>Lot rules and item lot management (MM lot.md, MM-BR-351~356, 361).</summary>
+/// <summary>Lot rules and item lot management (MM lot.md, MM-BR-351~356, 361). Lot balances: StockKeyRulesTests.</summary>
 public class LotRulesTests
 {
     private static readonly DateOnly Day = new(2026, 10, 10);
@@ -29,8 +29,7 @@ public class LotRulesTests
     [InlineData("A B")]
     [InlineData("LOT#1")]
     [InlineData("1234567890123456789012345678901")]
-    [InlineData("migrated")]
-    [InlineData("UNKNOWN")]
+    [InlineData("*")]
     public void NormalizeNumber_AgainstTheRules_IsMmE352(string lotNo)
     {
         var error = Error(() => LotRules.NormalizeNumber("A", lotNo));
@@ -49,35 +48,14 @@ public class LotRulesTests
     }
 
     [Fact, Trait("Id", "MM-UT-356"), Trait("Rule", "MM-BR-356")]
-    public void EnsureBalance_ChecksTheDocumentDateAndEveryLaterDay()
+    public void EnsureManagedFrom_BlocksALotOtherThanStarBeforeLotManagementStarted()
     {
-        // Lot balance now 6: +5 on 10/12, −3 on 10/15. End of 10/10 = 4, 10/12 = 9, 10/15 = 6
-        LotDailyQty[] daily = [new(new(2026, 10, 12), 5), new(new(2026, 10, 15), -3)];
+        FluentActions.Invoking(() => LotRules.EnsureManagedFrom(Day, Day, "A", "MAIN", "*", "B", 3)).Should().NotThrow();
+        FluentActions.Invoking(() => LotRules.EnsureManagedFrom(Day, null, "A", "MAIN", "*", "B", 3)).Should().NotThrow();
+        FluentActions.Invoking(() => LotRules.EnsureManagedFrom(Day.AddDays(-1), Day, "A", "MAIN", "*", "*", 3)).Should().NotThrow();
 
-        FluentActions.Invoking(() => LotRules.EnsureBalance(Day, -4, 6, daily, "A", "MAIN", "B")).Should().NotThrow();
-        var error = Error(() => LotRules.EnsureBalance(Day, -5, 6, daily, "A", "MAIN", "B"));
-
-        error.Code.Should().Be(LotRules.NegativeCode);
-        error.Args.Should().Equal("A", "MAIN", "B", "2026-10-10", -1m);
-    }
-
-    [Fact, Trait("Id", "MM-UT-356"), Trait("Rule", "MM-BR-356")]
-    public void EnsureBalance_ALaterIssue_LimitsAnEarlierOne()
-    {
-        // Now 1: the lot had 5 until 10/15, when 4 went out
-        LotDailyQty[] daily = [new(new(2026, 10, 15), -4)];
-
-        Error(() => LotRules.EnsureBalance(Day, -2, 1, daily, "A", "MAIN", "B")).Args.Should().Equal("A", "MAIN", "B", "2026-10-15", -1m);
-        FluentActions.Invoking(() => LotRules.EnsureBalance(Day, 3, 1, daily, "A", "MAIN", "B")).Should().NotThrow();
-    }
-
-    [Fact, Trait("Id", "MM-UT-356"), Trait("Rule", "MM-BR-356")]
-    public void EnsureManagedFrom_BlocksADateBeforeLotManagementStarted()
-    {
-        FluentActions.Invoking(() => LotRules.EnsureManagedFrom(Day, Day, "A", "MAIN", "B", 3)).Should().NotThrow();
-        FluentActions.Invoking(() => LotRules.EnsureManagedFrom(Day, null, "A", "MAIN", "B", 3)).Should().NotThrow();
-
-        Error(() => LotRules.EnsureManagedFrom(Day.AddDays(-1), Day, "A", "MAIN", "B", 3)).Args.Should().Equal("A", "MAIN", "B", "2026-10-09", 3m);
+        Error(() => LotRules.EnsureManagedFrom(Day.AddDays(-1), Day, "A", "MAIN", "A01", "B", 3))
+            .Args.Should().Equal("A", "MAIN", "A01", "B", "2026-10-09", 3m);
     }
 
     [Fact, Trait("Id", "MM-UT-351"), Trait("Rule", "MM-BR-351")]
@@ -86,7 +64,7 @@ public class LotRulesTests
         var item = Item.Restore(5, "B100", Fields, null, 1, 10, 10);
 
         item.Change(Fields with { LotManaged = true }, typeLocked: false);
-        item.StartLotManagement(Day, negativeWarehouse: false);
+        item.StartLotManagement(Day);
         (item.LotManaged, item.LotManagedFrom).Should().Be((true, Day));
 
         // A missing setting keeps it
@@ -99,15 +77,17 @@ public class LotRulesTests
     }
 
     [Fact, Trait("Id", "MM-UT-351"), Trait("Rule", "MM-BR-351")]
-    public void Item_LotsOnlyForInventoryItems_WithoutNegativeWarehouses_AndOffOnlyWithoutLotStock()
+    public void Item_LotsOnlyForItemsWithOwnStock_AndOffOnlyWithoutLotStock()
     {
         var item = Item.Restore(5, "B100", Fields with { LotManaged = true }, null, 1, 10, 10, Day);
 
         Error(() => Item.Create("S1", Fields with { ItemType = "SERVICE", LotManaged = true })).Args.Should().Equal("S1");
-        Error(() => item.Change(Fields with { ItemType = "SET" }, typeLocked: false)).Code.Should().Be(LotRules.ManagementCode);
+        Error(() => item.Change(Fields with { ItemType = "KIT" }, typeLocked: false)).Code.Should().Be(LotRules.ManagementCode);
         Error(() => item.StopLotManagement(lotStockLeft: true)).Code.Should().Be(LotRules.ManagementCode);
-        Error(() => Item.Restore(6, "B200", Fields, null, 1, 10, 10).StartLotManagement(Day, negativeWarehouse: true))
-            .Code.Should().Be(LotRules.ManagementCode);
+        // The stock stays on lot '*', so a warehouse below zero does not matter (MM-BR-351)
+        FluentActions.Invoking(() => Item.Restore(6, "B200", Fields, null, 1, -10, -10).StartLotManagement(Day)).Should().NotThrow();
+        // A Set has its own stock, so it can be lot-managed too
+        FluentActions.Invoking(() => Item.Create("S2", Fields with { ItemType = "SET", LotManaged = true })).Should().NotThrow();
         Item.Create("N1", Fields).LotManaged.Should().BeFalse();
     }
 
@@ -117,7 +97,7 @@ public class LotRulesTests
     {
         var item = Item.Restore(5, "B100", Fields, null, 1, 10, 10);
 
-        item.StartLotManagement(Day, negativeWarehouse: false);
+        item.StartLotManagement(Day);
 
         item.LotManagedFrom.Should().Be(Day);
     }

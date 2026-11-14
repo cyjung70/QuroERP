@@ -60,7 +60,13 @@ public sealed class GoodsMovement
     public long? SetItemId { get; }
 
     /// <summary>
-    /// The lot of a lot-managed item, set when the movement is posted; null for other items (MM-BR-354). A reversal keeps the
+    /// The Location of the movement, set when it is posted: '*' unless the line names one (MM-BR-713). A reversal keeps the
+    /// original Location.
+    /// </summary>
+    public long? LocationId { get; set; }
+
+    /// <summary>
+    /// The lot of the movement, set when it is posted: '*' for an item without lot management (MM-BR-363). A reversal keeps the
     /// original lot (MM-BR-355).
     /// </summary>
     public long? LotId { get; set; }
@@ -105,18 +111,19 @@ public sealed class GoodsMovement
     public static GoodsMovement Restore(
         long id, string documentNo, string movType, DateOnly documentDt, long itemId, long warehouseId, decimal qty, decimal prc,
         string? refKey, int? refSeq, long? parentMovementId, bool negativeStock, long? setItemId = null, long? lotId = null,
-        decimal? amount = null) =>
+        decimal? amount = null, long? locationId = null) =>
         new(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, parentMovementId, setItemId, amount ?? qty * prc)
         {
             Id = id,
             DocumentNo = documentNo,
             NegativeStock = negativeStock,
             LotId = lotId,
+            LocationId = locationId,
         };
 
     /// <summary>
-    /// The reversal of this movement on reversalDt: same item, warehouse, type, price, reference, set and lot, opposite sign of
-    /// qty and amount (MM-BR-601, MM-BR-355).
+    /// The reversal of this movement on reversalDt: same item, warehouse, Location, lot, type, price, reference and set, opposite
+    /// sign of qty and amount (MM-BR-601, MM-BR-355).
     /// </summary>
     /// <param name="alreadyReversed">Another movement already points to this one.</param>
     /// <exception cref="DomainException">MM-E-606 when this movement is itself a reversal or is already reversed.</exception>
@@ -126,6 +133,10 @@ public sealed class GoodsMovement
         {
             throw new DomainException(InvalidMovement, MovType, -Qty);
         }
-        return new GoodsMovement(MovType, reversalDt, ItemId, WarehouseId, -Qty, Prc, RefKey, RefSeq, Id, SetItemId, -Amount) { LotId = LotId };
+        return new GoodsMovement(MovType, reversalDt, ItemId, WarehouseId, -Qty, Prc, RefKey, RefSeq, Id, SetItemId, -Amount)
+        {
+            LocationId = LocationId,
+            LotId = LotId,
+        };
     }
 }

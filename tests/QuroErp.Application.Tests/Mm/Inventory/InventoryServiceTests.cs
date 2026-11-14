@@ -6,13 +6,12 @@ using QuroErp.Application.Tests.Common.DocumentNumbers;
 using QuroErp.Application.Mm.Inventory;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
-using QuroErp.Domain.Mm.Lots;
 
 namespace QuroErp.Application.Tests.Mm.Inventory;
 
 /// <summary>
 /// InventoryService with in-memory repositories: on-hand per item + warehouse, ledger, cost and sets
-/// (MM-BR-001~008, MM-BR-601~603, MM-BR-606) and lots (MM-BR-352~356).
+/// (MM-BR-001~008, MM-BR-601~603, MM-BR-606), Locations and lots (MM-BR-352~365, MM-BR-713, MM-BR-714).
 /// </summary>
 public class InventoryServiceTests
 {
@@ -424,29 +423,31 @@ public class InventoryServiceTests
         error.Args.Should().Equal("A", "WH1", "2026-10-06", -1m, "");
     }
 
-    // Lot-managed item 20 "L" since 10/1 (MM-BR-351~356)
+    // Lot-managed item 20 "L" since 10/1 (MM-BR-351~356, MM-BR-363, MM-BR-365)
     private static readonly DateOnly LotStart = new(2026, 10, 1);
 
-    private void AddLotItem(decimal migrated = 0)
+    private void AddLotItem(decimal onStar = 0)
     {
         _inventory.AddItem(20, "L", cost: 2, lotManagedFrom: LotStart);
-        if (migrated != 0)
+        if (onStar != 0)
         {
-            _inventory.AddLotStock(20, Main, LotRules.Migrated, migrated);
+            _inventory.AddKeyStock(20, Main, "*", "*", onStar);
         }
     }
 
     [Fact, Trait("Id", "MM-UT-353"), Trait("Rule", "MM-BR-353")]
-    public async Task PostAsync_LotIncreaseWithoutNumber_GetsTheNextAutomaticNumberOfTheDocumentDate()
+    public async Task PostAsync_PurchaseReceiptWithoutLot_GetsTheNextAutomaticNumberAndItsReceivedDate()
     {
         AddLotItem();
 
         await Post(new StockMovementRequest("GR", Day, 20, Main, 5, Price: 2));
         var posted = await Post(new StockMovementRequest("GR", Day, 20, Main, 3, Price: 2), new StockMovementRequest("GR", Day, 20, Main, 1, Price: 2));
 
-        _inventory.Lots.Select(l => l.LotNo).Should().Equal("261010-001", "261010-002", "261010-003");
-        posted.Select(m => m.LotId).Should().Equal(2, 3);
-        _inventory.LotOnHand.Should().Contain((20, Main, 1), 5m).And.Contain((20, Main, 2), 3m).And.Contain((20, Main, 3), 1m);
+        _inventory.LotNumbers(20).Should().Equal("*", "261010-001", "261010-002", "261010-003");
+        posted.Select(m => _inventory.LotNo(m.LotId)).Should().Equal("261010-002", "261010-003");
+        _inventory.KeyQty(20, Main, "*", "261010-001").Should().Be(5);
+        _inventory.KeyQty(20, Main, "*", "261010-003").Should().Be(1);
+        _inventory.ReceivedDates.Values.Should().AllBeEquivalentTo(Day);
         _inventory.OnHand[(20, Main)].Should().Be(9);
     }
 
@@ -458,13 +459,12 @@ public class InventoryServiceTests
 
         await Post(new StockMovementRequest("GR", Day, 20, Main, 2, Price: 2, LotNo: " b-1 "));
 
-        _inventory.Lots.Should().ContainSingle().Which.LotNo.Should().Be("B-1");
-        _inventory.LotOnHand[(20, Main, 1)].Should().Be(7);
+        _inventory.LotNumbers(20).Should().Equal("*", "B-1");
+        _inventory.KeyQty(20, Main, "*", "B-1").Should().Be(7);
     }
 
     [Theory, Trait("Id", "MM-UT-352"), Trait("Rule", "MM-BR-352")]
     [InlineData("A B")]
-    [InlineData("MIGRATED")]
     [InlineData("1234567890123456789012345678901")]
     public async Task PostAsync_LotNumberAgainstTheRules_IsMmE352(string lotNo)
     {
@@ -473,27 +473,72 @@ public class InventoryServiceTests
         var act = () => Post(new StockMovementRequest("GR", Day, 20, Main, 5, Price: 2, LotNo: lotNo));
 
         (await act.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be("MM-E-352");
-        _inventory.Lots.Should().BeEmpty();
+        _inventory.LotNumbers(20).Should().Equal("*");
+    }
+
+    [Fact, Trait("Id", "MM-UT-365"), Trait("Rule", "MM-BR-365")]
+    public async Task PostAsync_ReceiptsOtherThanPurchase_AndDecreasesWithoutALot_UseLotStar()
+    {
+        AddLotItem(onStar: 10);
+
+        var posted = await Post(
+            new StockMovementRequest("UR", Day, 20, Main, 4, Price: 2),
+            new StockMovementRequest("DN", Day, 20, Main, -3));
+
+        posted.Select(m => _inventory.LotNo(m.LotId)).Should().Equal("*", "*");
+        _inventory.LotNumbers(20).Should().Equal("*");
+        _inventory.KeyQty(20, Main, "*", "*").Should().Be(11);
+    }
+
+    [Fact, Trait("Id", "MM-UT-365"), Trait("Rule", "MM-BR-365")]
+    public async Task PostAsync_AReceiptOtherThanPurchase_NamesAnExistingLot_ButNeverMakesOne()
+    {
+        AddLotItem();
+        await Post(new StockMovementRequest("GR", Day, 20, Main, 5, Price: 2, LotNo: "B-1"));
+
+        var back = await Post(new StockMovementRequest("RT", Day, 20, Main, 1, Price: 2, LotNo: "b-1"));
+        var act = () => Post(new StockMovementRequest("UR", Day, 20, Main, 1, Price: 2, LotNo: "NEW"));
+
+        _inventory.LotNo(back.Single().LotId).Should().Be("B-1");
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-352");
+        error.Args.Should().Equal("L", "NEW");
+        _inventory.LotNumbers(20).Should().Equal("*", "B-1");
     }
 
     [Fact, Trait("Id", "MM-UT-355"), Trait("Rule", "MM-BR-355")]
-    public async Task PostAsync_LotDecreaseWithoutALot_IsMmE355AndSavesNothing()
+    public async Task PostAsync_DecreaseFromALotTheItemDoesNotHave_IsMmE355AndSavesNothing()
     {
-        AddLotItem(migrated: 10);
+        AddLotItem(onStar: 10);
 
-        var act = () => Post(new StockMovementRequest("DN", Day, 20, Main, -1));
-        var unknown = () => Post(new StockMovementRequest("DN", Day, 20, Main, -1, LotNo: "NONE"));
+        var act = () => Post(new StockMovementRequest("DN", Day, 20, Main, -1, LotNo: "NONE"));
 
-        (await act.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("L");
-        (await unknown.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be("MM-E-355");
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-355");
+        error.Args.Should().Equal("L");
         _inventory.Movements.Should().BeEmpty();
+    }
+
+    [Fact, Trait("Id", "MM-UT-363"), Trait("Rule", "MM-BR-363")]
+    public async Task PostAsync_ItemWithoutLotManagement_TakesOnlyLotStar()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 5m), cost: 2);
+
+        var star = await Post(new StockMovementRequest("DN", Day, 10, Main, -1, LotNo: "*"));
+        var act = () => Post(new StockMovementRequest("DN", Day, 10, Main, -1, LotNo: "X"));
+
+        _inventory.LotNo(star.Single().LotId).Should().Be("*");
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-363");
+        error.Args.Should().Equal("A", "X");
+        _inventory.LotNumbers(10).Should().Equal("*");
     }
 
     [Fact, Trait("Id", "MM-UT-356"), Trait("Rule", "MM-BR-356")]
     public async Task PostAsync_LotBalanceShort_IsBlockedEvenWhenNegativeStockIsAllowedInTheMonth()
     {
         _settings.Mode = "ALLOW_IN_MONTH";
-        AddLotItem(migrated: 10);
+        AddLotItem(onStar: 10);
         await Post(new StockMovementRequest("GR", Day, 20, Main, 5, Price: 2, LotNo: "B"));
 
         // The warehouse has 15, lot B only 5
@@ -501,61 +546,132 @@ public class InventoryServiceTests
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
         error.Code.Should().Be("MM-E-356");
-        error.Args.Should().Equal("L", "WH1", "B", "2026-10-10", -1m);
-        _inventory.LotOnHand[(20, Main, 2)].Should().Be(5);
+        error.Args.Should().Equal("L", "WH1", "*", "B", "2026-10-10", -1m);
+        _inventory.KeyQty(20, Main, "*", "B").Should().Be(5);
     }
 
     [Fact, Trait("Id", "MM-UT-356"), Trait("Rule", "MM-BR-356")]
     public async Task PostAsync_LotIssueDatedBeforeTheLotWasReceived_IsBlockedAtThatDate()
     {
-        AddLotItem(migrated: 10);
+        AddLotItem(onStar: 10);
         await Post(new StockMovementRequest("GR", new DateOnly(2026, 10, 20), 20, Main, 5, Price: 2, LotNo: "B"));
 
         var act = () => Post(new StockMovementRequest("DN", new DateOnly(2026, 10, 15), 20, Main, -2, LotNo: "B"));
 
-        (await act.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("L", "WH1", "B", "2026-10-15", -2m);
+        (await act.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("L", "WH1", "*", "B", "2026-10-15", -2m);
     }
 
     [Fact, Trait("Id", "MM-UT-356"), Trait("Rule", "MM-BR-356")]
-    public async Task PostAsync_MigratedStock_CountsFromTheDayLotManagementStarted()
+    public async Task PostAsync_LotStar_MovesBeforeLotManagementStarted_OtherLotsDoNot()
     {
-        AddLotItem(migrated: 10);
+        AddLotItem(onStar: 10);
 
-        var posted = await Post(new StockMovementRequest("DN", LotStart, 20, Main, -4, LotNo: "migrated"));
-        var before = () => Post(new StockMovementRequest("GR", LotStart.AddDays(-1), 20, Main, 1, Price: 2));
+        var star = await Post(new StockMovementRequest("DN", LotStart.AddDays(-5), 20, Main, -4));
+        var before = () => Post(new StockMovementRequest("GR", LotStart.AddDays(-1), 20, Main, 1, Price: 2, LotNo: "B"));
 
-        posted.Single().LotId.Should().Be(1);
-        _inventory.LotOnHand[(20, Main, 1)].Should().Be(6);
-        (await before.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("L", "WH1", "260930-001", "2026-09-30", 0m);
+        _inventory.KeyQty(20, Main, "*", "*").Should().Be(6);
+        star.Single().LotId.Should().NotBeNull();
+        (await before.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("L", "WH1", "*", "B", "2026-09-30", 0m);
     }
 
     [Fact, Trait("Id", "MM-UT-355"), Trait("Rule", "MM-BR-355")]
-    public async Task ReverseAsync_LotItem_UsesTheOriginalLot_OrMigratedForAMovementFromBeforeLotManagement()
+    public async Task ReverseAsync_PutsTheStockBackOnTheOriginalLocationAndLot()
     {
-        AddLotItem(migrated: 10);
-        var receipt = (await Post(new StockMovementRequest("GR", Day, 20, Main, 5, Price: 2, LotNo: "B"))).Single();
-        var old = _inventory.AddOldMovement(20, Main, 3);
+        AddLotItem();
+        _inventory.SetLocationManaged(20);
+        var shelf = _inventory.AddLocation(Main, "A01");
+        var receipt = (await Post(new StockMovementRequest("GR", Day, 20, Main, 5, Price: 2, LotNo: "B", LocationId: shelf.Id))).Single();
 
-        var reversals = await Service.ReverseAsync([receipt.Id, old.Id], Day, "kim", null!, CancellationToken.None);
+        var reversal = (await Service.ReverseAsync([receipt.Id], Day, "kim", null!, CancellationToken.None)).Single();
 
-        reversals.Select(r => r.LotId).Should().Equal(2, 1);
-        _inventory.LotOnHand[(20, Main, 2)].Should().Be(0);
-        _inventory.LotOnHand[(20, Main, 1)].Should().Be(7);
+        (reversal.LocationId, reversal.LotId).Should().Be((shelf.Id, receipt.LotId));
+        _inventory.KeyQty(20, Main, "A01", "B").Should().Be(0);
+        _inventory.OnHand[(20, Main)].Should().Be(0);
     }
 
-    [Fact, Trait("Id", "MM-UT-354"), Trait("Rule", "MM-BR-354")]
-    public async Task PostAsync_LotBalances_AreLockedAfterTheOnHandRows_AndItemsWithoutLotsIgnoreTheLot()
+    [Fact, Trait("Id", "MM-UT-714"), Trait("Rule", "MM-BR-714")]
+    public async Task PostAsync_LocksTheStarRowsFirst_ThenEveryKeyInItemWarehouseLocationLotOrder()
     {
-        AddLotItem(migrated: 10);
+        AddLotItem(onStar: 10);
         _inventory.AddItem(10, "A", onHand: (Main, 5m), cost: 2);
+        var star10 = _inventory.StarLot(10);
+        var star20 = _inventory.StarLot(20);
+        var location = _inventory.StarLocation(Main).Id;
 
-        var posted = await Post(
-            new StockMovementRequest("DN", Day, 20, Main, -1, LotNo: LotRules.Migrated),
-            new StockMovementRequest("DN", Day, 10, Main, -1, LotNo: "X"));
+        await Post(
+            new StockMovementRequest("DN", Day, 20, Main, -1),
+            new StockMovementRequest("DN", Day, 10, Main, -1));
 
-        _inventory.LockLog.Should().Equal("onhand 10/1", "onhand 20/1", "lot 20/1/1");
-        posted.Select(m => m.LotId).Should().Equal(1, null);
-        _inventory.Lots.Should().ContainSingle();
+        _inventory.LockLog.Should().Equal(
+            "onhand 10/1", "onhand 20/1", $"key 10/1/{location}/{star10}", $"key 20/1/{location}/{star20}");
+    }
+
+    [Fact, Trait("Id", "MM-UT-713"), Trait("Rule", "MM-BR-713")]
+    public async Task PostAsync_LocationOtherThanStar_OnlyForALocationManagedItem_InUse_InTheLineWarehouse()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 5m), cost: 2);
+        var shelf = _inventory.AddLocation(Main, "A01");
+        var otherWarehouse = _inventory.AddLocation(Second, "B01");
+        var closed = _inventory.AddLocation(Main, "Z99", inUse: false);
+
+        var notManaged = () => Post(new StockMovementRequest("UR", Day, 10, Main, 1, Price: 2, LocationId: shelf.Id));
+        (await notManaged.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("A", "WH1", "A01");
+
+        _inventory.SetLocationManaged(10);
+        var wrongWarehouse = () => Post(new StockMovementRequest("UR", Day, 10, Main, 1, Price: 2, LocationId: otherWarehouse.Id));
+        var notInUse = () => Post(new StockMovementRequest("UR", Day, 10, Main, 1, Price: 2, LocationId: closed.Id));
+        var missing = () => Post(new StockMovementRequest("UR", Day, 10, Main, 1, Price: 2, LocationId: 999));
+        (await wrongWarehouse.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be("MM-E-713");
+        (await notInUse.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("A", "WH1", "Z99");
+        (await missing.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("A", "WH1", "999");
+        _inventory.Movements.Should().BeEmpty();
+
+        var posted = await Post(new StockMovementRequest("UR", Day, 10, Main, 2, Price: 2, LocationId: shelf.Id));
+
+        posted.Single().LocationId.Should().Be(shelf.Id);
+        _inventory.KeyQty(10, Main, "A01", "*").Should().Be(2);
+        _inventory.OnHand[(10, Main)].Should().Be(7);
+    }
+
+    [Fact, Trait("Id", "MM-UT-714"), Trait("Rule", "MM-BR-714")]
+    public async Task PostAsync_LocationBalanceShort_IsBlockedEvenWhenNegativeStockIsAllowedInTheMonth()
+    {
+        _settings.Mode = "ALLOW_IN_MONTH";
+        _inventory.AddItem(10, "A", onHand: (Main, 10m), cost: 2);
+        _inventory.SetLocationManaged(10);
+        var shelf = _inventory.AddLocation(Main, "A01");
+        await Post(new StockMovementRequest("UR", Day, 10, Main, 2, Price: 2, LocationId: shelf.Id));
+
+        var act = () => Post(new StockMovementRequest("DN", Day, 10, Main, -3, LocationId: shelf.Id));
+
+        var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+        error.Code.Should().Be("MM-E-714");
+        error.Args.Should().Equal("A", "WH1", "A01", "*", -1m);
+    }
+
+    [Theory, Trait("Id", "MM-UT-714"), Trait("Rule", "MM-BR-714")]
+    [InlineData("DENY", true)]
+    [InlineData("ALLOW_IN_MONTH", false)]
+    public async Task PostAsync_StarRowBelowZero_FollowsTheNegativeStockMode(string mode, bool blocked)
+    {
+        // The warehouse has 10, all of it on lot B: nothing is left on ('*', '*')
+        _settings.Mode = mode;
+        AddLotItem();
+        await Post(new StockMovementRequest("GR", Day, 20, Main, 10, Price: 2, LotNo: "B"));
+
+        var act = () => Post(new StockMovementRequest("DN", Day, 20, Main, -1));
+
+        if (blocked)
+        {
+            var error = (await act.Should().ThrowAsync<DomainException>()).Which;
+            error.Code.Should().Be("MM-E-714");
+            error.Args.Should().Equal("L", "WH1", "*", "*", -1m);
+        }
+        else
+        {
+            await act.Should().NotThrowAsync();
+            _inventory.KeyQty(20, Main, "*", "*").Should().Be(-1);
+        }
     }
 
     private sealed class FakeInventoryRepository : IInventoryRepository
@@ -568,7 +684,12 @@ public class InventoryServiceTests
 
         public Dictionary<long, ItemStock> Items { get; } = [];
 
-        public Dictionary<(long ItemId, long WarehouseId), decimal> OnHand { get; } = [];
+        /// <summary>mm_onhand: one balance per item + warehouse + Location + Lot.</summary>
+        public Dictionary<(long ItemId, long WarehouseId, long LocationId, long LotId), decimal> KeyOnHand { get; } = [];
+
+        /// <summary>Item + warehouse balances: the sum of their keys.</summary>
+        public Dictionary<(long ItemId, long WarehouseId), decimal> OnHand =>
+            KeyOnHand.GroupBy(e => (e.Key.ItemId, e.Key.WarehouseId)).ToDictionary(g => g.Key, g => g.Sum(e => e.Value));
 
         public List<GoodsMovement> Movements { get; } = [];
 
@@ -579,81 +700,66 @@ public class InventoryServiceTests
         /// <summary>Starting stock, read as the closing balance of a closed month (keeps ledger = on-hand, MM-BR-605).</summary>
         public Dictionary<(long ItemId, long WarehouseId), decimal> Opening { get; } = [];
 
+        public List<StockLocation> Locations { get; } = [];
+
+        public List<LotRef> Lots { get; } = [];
+
+        public Dictionary<long, DateOnly> ReceivedDates { get; } = [];
+
+        public List<string> LockLog { get; } = [];
+
+        private readonly Dictionary<long, long> _lotItems = [];
+
         public void AddItem(
             long id, string itemCd, (long WarehouseId, decimal Qty)? onHand = null, decimal cost = 0, string type = "INVENTORY",
             DateOnly? lotManagedFrom = null)
         {
-            var qty = onHand?.Qty ?? 0;
-            Items[id] = new ItemStock(id, itemCd, type, qty, qty * cost, cost, lotManagedFrom is not null, lotManagedFrom);
+            Items[id] = new ItemStock(id, itemCd, type, 0, 0, cost, lotManagedFrom is not null, lotManagedFrom);
+            Ensure(id, "*");
             if (onHand is { } o)
             {
-                OnHand[(id, o.WarehouseId)] = o.Qty;
-                Opening[(id, o.WarehouseId)] = o.Qty;
+                AddOnHand(id, o.WarehouseId, o.Qty);
             }
         }
 
-        public void AddOnHand(long itemId, long warehouseId, decimal qty)
+        /// <summary>Stock on ('*', '*') read as the closing balance of a closed month.</summary>
+        public void AddOnHand(long itemId, long warehouseId, decimal qty) => AddKeyStock(itemId, warehouseId, "*", "*", qty);
+
+        public void AddKeyStock(long itemId, long warehouseId, string locationCode, string lotNo, decimal qty)
         {
-            OnHand[(itemId, warehouseId)] = qty;
-            Opening[(itemId, warehouseId)] = qty;
+            var key = (itemId, warehouseId, Location(warehouseId, locationCode).Id, Ensure(itemId, lotNo).Id);
+            KeyOnHand[key] = KeyOnHand.GetValueOrDefault(key) + qty;
+            Opening[(itemId, warehouseId)] = Opening.GetValueOrDefault((itemId, warehouseId)) + qty;
             var item = Items[itemId];
-            Items[itemId] = new ItemStock(
-                itemId, item.ItemCd, item.Type, item.OnHandQty + qty, item.StockValue + qty * item.MovingAverageCost, item.MovingAverageCost,
-                item.LotManaged, item.LotManagedFrom);
+            Items[itemId] = Copy(item, item.OnHandQty + qty, item.StockValue + qty * item.MovingAverageCost, item.LocationManaged);
         }
 
-        public List<LotRef> Lots { get; } = [];
+        public void SetLocationManaged(long itemId) => Items[itemId] = Copy(Items[itemId], locationManaged: true);
 
-        private readonly Dictionary<long, long> _lotItems = [];
-
-        public Dictionary<(long ItemId, long WarehouseId, long LotId), decimal> LotOnHand { get; } = [];
-
-        public List<string> LockLog { get; } = [];
-
-        public void AddLotStock(long itemId, long warehouseId, string lotNo, decimal qty)
+        public StockLocation AddLocation(long warehouseId, string code, bool inUse = true)
         {
-            var lot = Ensure(itemId, lotNo);
-            LotOnHand[(itemId, warehouseId, lot.Id)] = qty;
-            AddOnHand(itemId, warehouseId, qty);
+            var location = new StockLocation(Locations.Count + 1, warehouseId, code, inUse);
+            Locations.Add(location);
+            return location;
         }
 
-        /// <summary>A movement saved before lot management was turned on: no lot, already in the MIGRATED balance.</summary>
-        public GoodsMovement AddOldMovement(long itemId, long warehouseId, decimal qty)
-        {
-            var movement = GoodsMovement.Restore(Movements.Count + 1, "OLD", "GR", new DateOnly(2026, 9, 1), itemId, warehouseId, qty, 2, null, null, null, false);
-            Movements.Add(movement);
-            return movement;
-        }
+        public StockLocation StarLocation(long warehouseId) => Location(warehouseId, "*");
 
-        public Task<LotRef?> FindLotAsync(long itemId, long? lotId, string? lotNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(Lots.FirstOrDefault(l => _lotItems[l.Id] == itemId && (lotId is { } id ? l.Id == id : l.LotNo == lotNo)));
+        public long StarLot(long itemId) => Ensure(itemId, "*").Id;
 
-        public Task<LotRef> EnsureLotAsync(long itemId, string lotNo, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(Ensure(itemId, lotNo));
+        public decimal KeyQty(long itemId, long warehouseId, string locationCode, string lotNo) =>
+            KeyOnHand.GetValueOrDefault((itemId, warehouseId, Location(warehouseId, locationCode).Id, Ensure(itemId, lotNo).Id));
 
-        public Task<int> GetLastAutoLotSeqAsync(long itemId, string prefix, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult(Lots.Where(l => _lotItems[l.Id] == itemId && l.LotNo.StartsWith(prefix, StringComparison.Ordinal)
-                    && int.TryParse(l.LotNo[prefix.Length..], out _))
-                .Select(l => int.Parse(l.LotNo[prefix.Length..], System.Globalization.CultureInfo.InvariantCulture)).DefaultIfEmpty(0).Max());
+        public IEnumerable<string> LotNumbers(long itemId) => Lots.Where(l => _lotItems[l.Id] == itemId).Select(l => l.LotNo);
 
-        public Task<decimal> LockLotOnHandAsync(long itemId, long warehouseId, long lotId, string user, IDbTransaction transaction, CancellationToken cancellationToken)
-        {
-            LockLog.Add($"lot {itemId}/{warehouseId}/{lotId}");
-            return Task.FromResult(LotOnHand.GetValueOrDefault((itemId, warehouseId, lotId)));
-        }
+        public string? LotNo(long? lotId) => Lots.FirstOrDefault(l => l.Id == lotId)?.LotNo;
 
-        public Task UpdateLotOnHandAsync(
-            long itemId, long warehouseId, long lotId, decimal onHandQty, string user, IDbTransaction transaction, CancellationToken cancellationToken)
-        {
-            LotOnHand[(itemId, warehouseId, lotId)] = onHandQty;
-            return Task.CompletedTask;
-        }
+        private StockLocation Location(long warehouseId, string code) =>
+            Locations.FirstOrDefault(l => l.WarehouseId == warehouseId && l.LocationCode == code) ?? AddLocation(warehouseId, code);
 
-        public Task<IReadOnlyList<LotDailyQty>> GetLotDailyQtyAsync(
-            long itemId, long warehouseId, long lotId, DateOnly fromDate, IDbTransaction transaction, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<LotDailyQty>>(Movements
-                .Where(m => m.ItemId == itemId && m.WarehouseId == warehouseId && m.LotId == lotId && m.DocumentDt >= fromDate)
-                .GroupBy(m => m.DocumentDt).OrderBy(g => g.Key).Select(g => new LotDailyQty(g.Key, g.Sum(m => m.Qty))).ToList());
+        private static ItemStock Copy(ItemStock i, decimal? onHandQty = null, decimal? stockValue = null, bool? locationManaged = null) =>
+            new(i.ItemId, i.ItemCd, i.Type, onHandQty ?? i.OnHandQty, stockValue ?? i.StockValue, i.MovingAverageCost, i.LotManaged,
+                i.LotManagedFrom, locationManaged ?? i.LocationManaged);
 
         private LotRef Ensure(long itemId, string lotNo)
         {
@@ -667,27 +773,65 @@ public class InventoryServiceTests
             return lot;
         }
 
+        public Task<LotRef?> FindLotAsync(long itemId, long? lotId, string? lotNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Lots.FirstOrDefault(l => _lotItems[l.Id] == itemId && (lotId is { } id ? l.Id == id : l.LotNo == lotNo)));
+
+        public Task<LotRef> EnsureLotAsync(long itemId, string lotNo, DateOnly receivedDt, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            var isNew = !LotNumbers(itemId).Contains(lotNo);
+            var lot = Ensure(itemId, lotNo);
+            if (isNew)
+            {
+                ReceivedDates[lot.Id] = receivedDt;
+            }
+            return Task.FromResult(lot);
+        }
+
+        public Task<int> GetLastAutoLotSeqAsync(long itemId, string prefix, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(Lots.Where(l => _lotItems[l.Id] == itemId && l.LotNo.StartsWith(prefix, StringComparison.Ordinal)
+                    && int.TryParse(l.LotNo[prefix.Length..], out _))
+                .Select(l => int.Parse(l.LotNo[prefix.Length..], System.Globalization.CultureInfo.InvariantCulture)).DefaultIfEmpty(0).Max());
+
+        public Task<StockLocation?> FindLocationAsync(long warehouseId, long? locationId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult(locationId is { } id ? Locations.FirstOrDefault(l => l.Id == id) : StarLocation(warehouseId));
+
+        public Task<decimal> LockKeyOnHandAsync(
+            long itemId, long warehouseId, long locationId, long lotId, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            LockLog.Add($"key {itemId}/{warehouseId}/{locationId}/{lotId}");
+            return Task.FromResult(KeyOnHand.GetValueOrDefault((itemId, warehouseId, locationId, lotId)));
+        }
+
+        public Task AddOnHandAsync(
+            long itemId, long warehouseId, long locationId, long lotId, decimal qty, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+        {
+            var key = (itemId, warehouseId, locationId, lotId);
+            KeyOnHand[key] = KeyOnHand.GetValueOrDefault(key) + qty;
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<StockKeyDailyQty>> GetKeyDailyQtyAsync(
+            long itemId, long warehouseId, long locationId, long lotId, DateOnly fromDate, IDbTransaction transaction, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<StockKeyDailyQty>>(Movements
+                .Where(m => m.ItemId == itemId && m.WarehouseId == warehouseId && m.LocationId == locationId && m.LotId == lotId && m.DocumentDt >= fromDate)
+                .GroupBy(m => m.DocumentDt).OrderBy(g => g.Key).Select(g => new StockKeyDailyQty(g.Key, g.Sum(m => m.Qty))).ToList());
+
         public Task<string?> GetCloseYearMonthAsync(IDbTransaction transaction, CancellationToken cancellationToken) => Task.FromResult(CloseYearMonth);
 
         // Copies, so a failed post does not change the stored items
         public Task<IReadOnlyList<ItemStock>> LockItemsAsync(IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken)
         {
             LockedItemCalls.Add([.. itemIds]);
-            return Task.FromResult<IReadOnlyList<ItemStock>>(itemIds.Where(Items.ContainsKey).Select(id => Items[id])
-                .Select(i => new ItemStock(i.ItemId, i.ItemCd, i.Type, i.OnHandQty, i.StockValue, i.MovingAverageCost, i.LotManaged, i.LotManagedFrom)).ToList());
+            return Task.FromResult<IReadOnlyList<ItemStock>>(itemIds.Where(Items.ContainsKey).Select(id => Copy(Items[id])).ToList());
         }
 
         public Task<OnHandRow> LockOnHandAsync(long itemId, long warehouseId, string user, IDbTransaction transaction, CancellationToken cancellationToken)
         {
             Locked.Add((itemId, warehouseId));
             LockLog.Add($"onhand {itemId}/{warehouseId}");
+            StarLocation(warehouseId);
+            Ensure(itemId, "*");
             return Task.FromResult(new OnHandRow(itemId, warehouseId, $"WH{warehouseId}", OnHand.GetValueOrDefault((itemId, warehouseId))));
-        }
-
-        public Task UpdateOnHandAsync(long itemId, long warehouseId, decimal onHandQty, string user, IDbTransaction transaction, CancellationToken cancellationToken)
-        {
-            OnHand[(itemId, warehouseId)] = onHandQty;
-            return Task.CompletedTask;
         }
 
         public Task UpdateItemStockAsync(ItemStock item, string user, IDbTransaction transaction, CancellationToken cancellationToken)

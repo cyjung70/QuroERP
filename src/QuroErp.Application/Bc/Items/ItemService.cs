@@ -55,8 +55,7 @@ public sealed class ItemService(
         var item = Item.Create(request.ItemCd, ToFields(request));
         if (item.LotManaged)
         {
-            // A new item has no stock yet
-            item.StartLotManagement(clock.Today(), negativeWarehouse: false);
+            item.StartLotManagement(clock.Today());
         }
         await EnsureCodesAsync(item.Fields, cancellationToken);
 
@@ -92,26 +91,27 @@ public sealed class ItemService(
         var item = ToItem(row);
         var typeLocked = fields.ItemType != item.Fields.ItemType && await items.IsTypeLockedAsync(id, uow.Transaction, cancellationToken);
         var wasLotManaged = item.LotManaged;
+        var wasLocationManaged = item.LocationManaged;
         item.Change(fields, typeLocked);
-        // MM-BR-351. The item row is locked, so no stock movement of the item runs until this save ends
-        var lotTurnedOn = !wasLotManaged && item.LotManaged;
-        if (lotTurnedOn)
+        // MM-BR-351, MM-BR-718. The item row is locked, so no stock movement of the item runs until this save ends.
+        // Turning either on leaves the stock on '*'
+        if (!wasLotManaged && item.LotManaged)
         {
-            item.StartLotManagement(clock.Today(), await lots.HasNegativeOnHandAsync(id, uow.Transaction, cancellationToken));
+            item.StartLotManagement(clock.Today());
         }
         else if (wasLotManaged && !item.LotManaged)
         {
             item.StopLotManagement(await lots.HasLotStockAsync(id, uow.Transaction, cancellationToken));
+        }
+        if (wasLocationManaged && !item.LocationManaged)
+        {
+            item.StopLocationManagement(await lots.HasLocationStockAsync(id, uow.Transaction, cancellationToken));
         }
         await EnsureBarcodeUnusedAsync(item.Fields.UpcCode, [id], uow.Transaction, cancellationToken);
 
         if (!await items.UpdateAsync(item, request.UpdatedAt, updatedBy, uow.Transaction, cancellationToken))
         {
             throw new ConcurrencyException();
-        }
-        if (lotTurnedOn)
-        {
-            await lots.MigrateStockAsync(id, updatedBy, uow.Transaction, cancellationToken);
         }
         var saved = await items.FindAsync(id, forUpdate: false, uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
@@ -163,14 +163,16 @@ public sealed class ItemService(
 
     private static ItemFields ToFields(ItemFieldsRequest r) => new(
         r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc, r.SoUsdPrc, r.UpcCode, r.Location,
-        r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind, r.LotManaged);
+        r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind, r.LotManaged,
+        r.LocationManaged);
 
     private static Item ToItem(ItemRow r) => Item.Restore(
         r.Id,
         r.ItemCd,
         new ItemFields(
             r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc, r.SoUsdPrc, r.UpcCode, r.Location,
-            r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind, r.LotManaged),
+            r.ReorderPoint, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind, r.LotManaged,
+            r.LocationManaged),
         r.Plating,
         r.MvgCost ?? 0,
         r.OnhandQty ?? 0,
@@ -181,5 +183,5 @@ public sealed class ItemService(
         r.Id, r.ItemCd, r.ItemName, r.ItemName2, r.ItemDesc, r.ItemType, r.Unit, r.ItemClass, r.ValidFlag, r.UsdPrc ?? 0, r.SoUsdPrc ?? 0,
         r.UpcCode, r.Location, r.ReorderPoint ?? 0, r.Memo1, r.Memo2, r.Memo3, r.Memo4, r.Memo5, r.ItemGrade, r.Taxable, r.VatKind,
         r.ItemGroupCd ?? r.ItemCd, r.MvgCost ?? 0, r.OnhandQty ?? 0, r.StkVal ?? 0, r.CreatedAt, r.CreatedBy, r.UpdatedAt, r.UpdatedBy,
-        r.LotManaged, r.LotManagedFrom);
+        r.LotManaged, r.LotManagedFrom, r.LocationManaged);
 }

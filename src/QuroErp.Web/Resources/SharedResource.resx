@@ -63,10 +63,11 @@
   <data name="MM-E-027" xml:space="preserve"><value>인코텀즈 '{0}'이(가) 올바르지 않습니다. Incoterms 2020 코드(EXW, FCA, FAS, FOB, CFR, CIF, CPT, CIP, DAP, DPU, DDP) 중 하나를 고르세요.</value></data>
   <data name="MM-E-031" xml:space="preserve"><value>통화 {0}·환율 {1}을(를) 쓸 수 없습니다. 환율은 0보다 커야 하고 기준 통화면 1이며, 줄이 있는 발주는 통화를 바꿀 수 없습니다.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>품목 {0}의 창고 {1} 재고가 {2} 월말에 {3}(으)로 음수가 되어 저장할 수 없습니다.</value></data>
-  <data name="MM-E-351" xml:space="preserve"><value>품목 {0}의 로트 관리를 바꿀 수 없습니다. 로트 관리는 재고(Inventory) 품목만 켤 수 있고, 현재고가 음수인 창고가 있으면 켤 수 없으며, 로트 잔고가 모두 0일 때만 끌 수 있습니다.</value></data>
-  <data name="MM-E-352" xml:space="preserve"><value>품목 {0}의 로트 번호 '{1}'을(를) 쓸 수 없습니다. 대문자·숫자·-·_로 30자 이하로 넣고, MIGRATED·UNKNOWN은 쓸 수 없습니다.</value></data>
-  <data name="MM-E-355" xml:space="preserve"><value>품목 {0}은(는) 로트 관리 품목이라 재고를 줄이는 줄에 그 품목의 로트를 골라야 합니다.</value></data>
-  <data name="MM-E-356" xml:space="preserve"><value>품목 {0}의 창고 {1} 로트 {2} 잔고가 {3}에 {4}입니다. 로트 잔고는 음수가 될 수 없고, 로트 관리를 시작한 날 앞 일자로는 재고 이동을 넣을 수 없습니다.</value></data>
+  <data name="MM-E-351" xml:space="preserve"><value>품목 {0}의 로트 관리를 바꿀 수 없습니다. 로트 관리는 자기 재고가 있는 품목(Inventory·Set)만 켤 수 있고, * 말고 다른 로트의 잔고가 모두 0일 때만 끌 수 있습니다.</value></data>
+  <data name="MM-E-352" xml:space="preserve"><value>품목 {0}의 로트 번호 '{1}'을(를) 쓸 수 없습니다. 대문자·숫자·-·_로 30자 이하로 넣으세요. *는 시스템 로트입니다.</value></data>
+  <data name="MM-E-355" xml:space="preserve"><value>품목 {0}에 그 로트가 없습니다. 재고를 줄이는 줄에는 그 품목의 로트를 고르세요.</value></data>
+  <data name="MM-E-356" xml:space="preserve"><value>품목 {0}의 창고 {1} Location {2} 로트 {3} 잔고가 {4}에 {5}입니다. 로트 잔고는 음수가 될 수 없고, 로트 관리를 시작한 날 앞 일자로는 로트 이동을 넣을 수 없습니다.</value></data>
+  <data name="MM-E-363" xml:space="preserve"><value>품목 {0}은(는) 로트 관리 품목이 아니라 로트 '{1}'을(를) 쓸 수 없습니다. 로트를 비우거나 *를 쓰세요.</value></data>
   <data name="SD-E-006" xml:space="preserve"><value>{0} 문서 번호를 모두 사용해 더 이상 저장할 수 없습니다.</value></data>
   <data name="Common.Search" xml:space="preserve"><value>조회</value></data>
   <data name="Common.New" xml:space="preserve"><value>신규</value></data>
@@ -222,6 +223,10 @@
   <data name="MM-E-710" xml:space="preserve"><value>창고 {0}은(는) 위탁 창고라 문서 창고나 기본 창고로 고를 수 없습니다. 다른 창고를 고르세요.</value></data>
   <data name="MM-E-712" xml:space="preserve"><value>Location 코드 '{0}'을(를) 쓸 수 없습니다. 대문자·숫자·-·_로 20자 이하, 창고 안에서 겹치지 않게 입력하고, 저장한 코드와 시스템 Location *은 바꾸거나 지우지 마세요.</value></data>
   <data name="MM-E-717" xml:space="preserve"><value>Location {0}은(는) 사용 안 함으로 바꾸거나 지울 수 없습니다 (사유: {1}).</value></data>
+  <data name="MM-E-713" xml:space="preserve"><value>품목 {0}의 창고 {1}에 Location '{2}'을(를) 쓸 수 없습니다. 줄 창고의 사용 중 Location이어야 하고, Location 관리 품목만 * 말고 다른 Location을 쓸 수 있습니다.</value></data>
+  <data name="MM-E-714" xml:space="preserve"><value>품목 {0}의 창고 {1} Location {2} 로트 {3} 잔고가 {4}이(가) 됩니다. 이 잔고는 음수가 될 수 없습니다.</value></data>
+  <data name="MM-E-715" xml:space="preserve"><value>{1}번 줄의 이동 유형 {0}이(가) 맞지 않습니다. TR은 보내는 창고와 받는 창고가 달라야 하고, LT는 같은 창고에서 보내는 Location과 받는 Location이 달라야 합니다.</value></data>
+  <data name="MM-E-718" xml:space="preserve"><value>품목 {0}의 Location 관리를 끌 수 없습니다. * 말고 다른 Location의 잔고가 모두 0이어야 합니다.</value></data>
   <data name="MM-E-851" xml:space="preserve"><value>필수 항목 {0}을(를) 입력하세요.</value></data>
   <data name="MM-E-852" xml:space="preserve"><value>공급자 이름 '{0}'은(는) 이미 있습니다.</value></data>
   <data name="MM-E-853" xml:space="preserve"><value>배송 주소를 입력했으면 배송 우편번호도 입력하세요.</value></data>

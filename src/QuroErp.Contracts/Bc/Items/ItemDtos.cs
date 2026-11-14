@@ -37,6 +37,7 @@ public static class ItemRoutes
 /// <summary>
 /// One item. MvgCost, OnhandQty and StkVal are read-only: only stock movements change them (MM-BR-804).
 /// ItemGroupCd is set by the server (MM-BR-808). LotManagedFrom is the day lot management was turned on, null when off (MM-BR-351).
+/// LocationManaged: stock may use Locations other than '*' (MM-BR-713).
 /// </summary>
 public sealed record ItemDto(
     long Id,
@@ -70,7 +71,8 @@ public sealed record ItemDto(
     DateTimeOffset UpdatedAt,
     string UpdatedBy,
     bool LotManaged = false,
-    DateOnly? LotManagedFrom = null) : AuditInfo(CreatedAt, CreatedBy, UpdatedAt, UpdatedBy);
+    DateOnly? LotManagedFrom = null,
+    bool LocationManaged = false) : AuditInfo(CreatedAt, CreatedBy, UpdatedAt, UpdatedBy);
 
 /// <summary>A page of items in item class, item code order (the screen's previous and next order).</summary>
 public sealed record ItemListDto(IReadOnlyList<ItemDto> Items, int Total);
@@ -122,10 +124,16 @@ public abstract record ItemFieldsRequest
     public string? VatKind { get; init; }
 
     /// <summary>
-    /// Keep stock per lot (Inventory items only). Turning it on moves the current stock to lot MIGRATED; turning it off needs
-    /// every lot balance at 0 (MM-BR-351, MM-BR-361). Missing keeps the current setting; a new item starts without it.
+    /// Keep stock per lot (Inventory items only). Turning it on leaves the current stock on lot '*'; turning it off needs every
+    /// balance on other lots at 0 (MM-BR-351, MM-BR-361). Missing keeps the current setting; a new item starts without it.
     /// </summary>
     public bool? LotManaged { get; init; }
+
+    /// <summary>
+    /// Keep stock on Locations (shelves) other than '*'. Turning it on leaves the current stock on '*'; turning it off needs
+    /// every balance on other Locations at 0 (MM-BR-718). Missing keeps the current setting; a new item starts without it.
+    /// </summary>
+    public bool? LocationManaged { get; init; }
 }
 
 /// <summary>

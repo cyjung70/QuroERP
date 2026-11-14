@@ -81,11 +81,11 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
             WHERE m.major_code = 'SO_STATUS' ORDER BY n.sort_order
             """).Should().Equal("SO", "RE", "CL");
-        // inventory.md movement types, PV and VR last (TASK-CORE-028)
+        // inventory.md movement types: PV and VR (TASK-CORE-028), then LT, BI, DA and DR (TASK-CORE-068)
         Query<string>("""
             SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
             WHERE m.major_code = 'MOVEMENT_TYPE' ORDER BY n.sort_order
-            """).Should().EndWith(["TR", "PV", "VR"]).And.HaveCount(10);
+            """).Should().EndWith(["TR", "PV", "VR", "LT", "BI", "DA", "DR"]).And.HaveCount(14);
         // SD-BR-511: Kit and Set are separate item types, the Kit with ko and en names (TASK-CORE-069)
         Query<string>("""
             SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
