@@ -348,12 +348,13 @@ internal sealed class ItemRepository : IItemRepository
         string UpdatedBy,
         bool LotManaged,
         DateOnly? LotManagedFrom,
-        bool LocationManaged)
+        bool LocationManaged,
+        bool ShowComponents)
     {
         public ItemRow ToItemRow() => new(
             Id, ItemCd, ItemName, ItemName2, ItemDesc, ItemType, Unit, ItemClass, ValidFlag, UsdPrc, SoUsdPrc, UpcCode, Location,
             ReorderPoint, Memo1, Memo2, Memo3, Memo4, Memo5, ItemGrade, Taxable, VatKind, Plating, ItemGroupCd, MvgCost, OnhandQty, StkVal,
-            Utc(CreatedAt), CreatedBy, Utc(UpdatedAt), UpdatedBy, LotManaged, LotManagedFrom, LocationManaged);
+            Utc(CreatedAt), CreatedBy, Utc(UpdatedAt), UpdatedBy, LotManaged, LotManagedFrom, LocationManaged, ShowComponents);
 
         private static DateTimeOffset Utc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
     }
