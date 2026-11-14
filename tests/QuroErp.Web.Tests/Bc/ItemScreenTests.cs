@@ -42,6 +42,8 @@ public class ItemScreenTests : BunitContext
         Services.AddHttpClient<CodeApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<LocalizationApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         _auth = AddAuthorization();
+        // Screens ask IScreenAccess, which reads the role from this test authorization (security.md "화면 쓰기 권한")
+        Services.AddScoped<IScreenAccess, ScreenAccess>();
     }
 
     [Fact, Trait("Id", "BC-UC-009-T01"), Trait("Id", "BC-UC-009-T09"), Trait("Id", "BC-UC-009-T10")]
@@ -254,6 +256,24 @@ public class ItemScreenTests : BunitContext
         page.Field("item-header-item-name").IsReadOnly.Should().BeTrue();
         page.Field("item-header-unit").IsReadOnly.Should().BeTrue();
         page.Field("item-header-valid-flag-n").IsReadOnly.Should().BeTrue();
+    }
+
+    // security.md "화면 쓰기 권한": the buttons follow IScreenAccess for this screen path, not the role
+    [Theory, Trait("Id", "BC-UT-214")]
+    [InlineData("admin", false)]
+    [InlineData("user", true)]
+    public void WriteButtons_FollowTheScreenAccess_ForTheItemPath(string role, bool canWrite)
+    {
+        var access = new FakeScreenAccess(canWrite);
+        Services.AddSingleton<IScreenAccess>(access);
+
+        var page = RenderAs(role);
+        Search(page, "A100");
+
+        page.Find("[data-testid=item-toolbar-new]").HasAttribute("disabled").Should().Be(!canWrite);
+        page.Find("[data-testid=item-toolbar-save]").HasAttribute("disabled").Should().Be(!canWrite);
+        page.Field("item-header-item-name").IsReadOnly.Should().Be(!canWrite);
+        access.Asked.Should().Contain("/bc/item");
     }
 
     [Fact, Trait("Id", "BC-UC-010-T04")]

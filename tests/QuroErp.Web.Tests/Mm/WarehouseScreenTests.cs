@@ -40,6 +40,8 @@ public class WarehouseScreenTests : BunitContext
         Services.AddHttpClient<AuthApiClient>(Configure);
         Services.AddHttpClient<WarehouseApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         _auth = AddAuthorization();
+        // Screens ask IScreenAccess, which reads the role from this test authorization (security.md "화면 쓰기 권한")
+        Services.AddScoped<IScreenAccess, ScreenAccess>();
     }
 
     [Fact, Trait("Id", "MM-UC-017-T01")]
@@ -176,6 +178,22 @@ public class WarehouseScreenTests : BunitContext
         grid.IsReadOnly(1, "warehouseName").Should().BeTrue();
         grid.Toggle(2, "isDefault").Should().BeFalse();
         _api.Saved.Should().BeEmpty();
+    }
+
+    // security.md "화면 쓰기 권한": the buttons follow IScreenAccess for this screen path, not the role
+    [Theory, Trait("Id", "BC-UT-214")]
+    [InlineData("admin", false)]
+    [InlineData("user", true)]
+    public void WriteButtons_FollowTheScreenAccess_ForTheWarehousePath(string role, bool canWrite)
+    {
+        var access = new FakeScreenAccess(canWrite);
+        Services.AddSingleton<IScreenAccess>(access);
+
+        var page = RenderAs(role);
+
+        page.Find("[data-testid=warehouse-toolbar-new]").HasAttribute("disabled").Should().Be(!canWrite);
+        page.Find("[data-testid=warehouse-toolbar-save]").HasAttribute("disabled").Should().Be(!canWrite);
+        access.Asked.Should().Equal("/mm/warehouse");
     }
 
     [Fact]

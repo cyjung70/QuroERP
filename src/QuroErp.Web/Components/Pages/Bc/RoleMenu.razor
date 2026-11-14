@@ -10,6 +10,7 @@
 @inject RoleApiClient Api
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-005 role menu permissions, screen type M. Pick a role, then add menus from the dialog, change Full Access or delete rows,
    and save them together (BC-BR-211~213). The API checks every rule, including keeping a manager of this screen (BC-BR-216). *@
@@ -42,6 +43,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/role-menu";
+
     private const string RequiredCode = "Common-E-005";
     private const string DuplicateMenuCode = "BC-E-212";
     private const string UnavailableCode = "BC-E-003";
@@ -55,13 +58,10 @@
     private bool _addOpen;
     private string? _loadError;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy is applied, as in RoleController (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         try
         {
             _roles = (await Api.GetInUseAsync(CancellationToken.None))

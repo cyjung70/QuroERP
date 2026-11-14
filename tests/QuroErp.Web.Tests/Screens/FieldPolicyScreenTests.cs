@@ -11,6 +11,7 @@ using QuroErp.Contracts.Bc.FieldPolicies;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Web.Auth;
 using QuroErp.Web.Bc.Localization;
+using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Samples;
 using QuroErp.Web.Components.Screens;
 
@@ -35,6 +36,8 @@ public class FieldPolicyScreenTests : ScreenContext
             .ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddScoped<FieldPolicyCache>();
         _auth = AddAuthorization();
+        // Screens ask IScreenAccess, which reads the role from this test authorization (security.md "화면 쓰기 권한")
+        Services.AddScoped<IScreenAccess, ScreenAccess>();
     }
 
     [Fact, Trait("Id", "BC-UT-434"), Trait("Rule", "BC-BR-434")]

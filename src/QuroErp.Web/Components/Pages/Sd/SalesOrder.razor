@@ -33,6 +33,7 @@
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* SD-UC-002 sales order, screen type SM on the entry frame (entry-frame.md). The API checks every rule and calculates the
    stored amounts (SD-BR-001~035, SD-BR-401~405, BC-BR-541~547); this screen shows defaults, locks and display amounts with
@@ -160,6 +161,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/sd/sales-order";
+
     private const string UnavailableCode = "BC-E-003";
     private const string NotFoundCode = "Common-E-006";
     private const string FileTooLargeCode = "SD-E-017";
@@ -221,13 +224,10 @@
     [Parameter]
     public string? SoNo { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy reaches the screens, as on the purchase order screen (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         _billingFlows = [.. BillingFlows.Select(f => new CodeItemDto(f, L["Sd.Customer.BillingFlow." + f]))];
         try

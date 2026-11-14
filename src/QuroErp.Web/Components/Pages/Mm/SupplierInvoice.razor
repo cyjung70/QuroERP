@@ -24,6 +24,7 @@
 @inject IQuroConfirm Confirm
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* MM-UC-032 supplier invoice, screen type SM on the entry frame (entry-frame.md). The API checks every rule and calculates the
    stored amounts, the matched receipt quantities and the PV postings (MM-BR-751~764); this screen shows defaults, locks and
@@ -142,6 +143,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/mm/supplier-invoice";
+
     private const string UnavailableCode = "BC-E-003";
     private const string NotFoundCode = "Common-E-006";
     private const string PriceDifferenceField = "confirmPriceDifference";
@@ -174,13 +177,10 @@
     [Parameter]
     public string? InvoiceNo { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy reaches the screens, as on the master screens (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         _typeOptions = [.. new[] { SupplierInvoiceType.Invoice, SupplierInvoiceType.DebitMemo }.Select(t => new CodeItemDto(t, TypeText(t)))];
         _statusOptions = [.. SupplierInvoiceStatus.All.Select(s => new CodeItemDto(s, StatusText(s)))];
         var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;

@@ -8,6 +8,7 @@
 @inject LocalizationApiClient Localization
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-026 currencies, screen type M. Every currency is listed on open; add, change or delete currencies and save them together.
    Names are edited per language in use. The API checks every rule (BC-BR-404, 411, 412, 428, 312), including the 409 for
@@ -29,6 +30,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/currency";
+
     // The en name is required (BC-BR-404); its column comes first
     private const string FallbackLang = "en";
     private const string UnavailableCode = "BC-E-003";
@@ -39,15 +42,12 @@
     private bool _ready;
     private string? _loadError;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     private static string Lang => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy is applied, as in CurrencyController (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         try
         {
             var languages = (await Localization.GetAsync(Lang, CancellationToken.None)).Languages.OrderBy(l => l.SortOrder).Select(l => l.LangCode);

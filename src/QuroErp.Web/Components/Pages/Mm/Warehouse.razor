@@ -4,6 +4,7 @@
 @using QuroErp.Web.Mm.Warehouses
 @inject WarehouseApiClient Api
 @inject IStringLocalizer<SharedResource> L
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* MM-UC-017 warehouses, screen type M. Warehouses in use are listed on open; the condition adds those not in use. Add, change
    or delete warehouses and save them together. Checking one row as the default unchecks the others (MM-BR-702); the API
@@ -20,18 +21,17 @@
 </QuroMultiGrid>
 
 @code {
+    private const string ScreenPath = "/mm/warehouse";
+
     private static readonly string[] UpperCaseFields = ["warehouseCode"];
 
     private QuroMultiGrid<WarehouseRow>? _grid;
     private bool _includeInactive;
     private bool _canEdit;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync() =>
-        // Full Access is the admin role until the menu policy reaches the screens, as on the other master screens (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
 
     private async Task<IReadOnlyList<WarehouseRow>> LoadAsync() =>
         (await Api.SearchAsync(_includeInactive, CancellationToken.None)).Select(WarehouseRow.From).ToList();

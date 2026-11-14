@@ -12,6 +12,7 @@
 @inject LocalizationApiClient Localization
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-008 code management, screen type M. Pick a Major (code or lookup dialog), then add, change or delete its Minor codes and
    save them together (SD-BR-905). Names are edited per language in use. The API checks every rule (SD-BR-910~916). *@
@@ -48,6 +49,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/code";
+
     // The en name is required (SD-BR-911); its column comes first
     private const string FallbackLang = "en";
     private const string RequiredCode = "Common-E-005";
@@ -64,15 +67,12 @@
     private bool _lookupOpen;
     private string? _loadError;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     private static string Lang => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy is applied, as in CodeMinorController (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         try
         {
             var languages = (await Localization.GetAsync(Lang, CancellationToken.None)).Languages.OrderBy(l => l.SortOrder).Select(l => l.LangCode);

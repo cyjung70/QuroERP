@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
@@ -31,6 +30,9 @@ public abstract class QuroScreenBase : ComponentBase
 
     private const string UnavailableCode = "BC-E-003";
 
+    /// <summary>"Show all fields" needs write access on the localization setting menu (BC-BR-435).</summary>
+    private const string LocalizationSettingPath = "/bc/localization-setting";
+
     [Inject]
     protected IQuroConfirm Confirm { get; set; } = default!;
 
@@ -42,9 +44,6 @@ public abstract class QuroScreenBase : ComponentBase
 
     [Inject]
     private IServiceProvider ScreenServices { get; set; } = default!;
-
-    [CascadingParameter]
-    private Task<AuthenticationState>? ScreenAuthentication { get; set; }
 
     /// <summary>
     /// The screen code of the field policies (field-policy.md 3), e.g. <c>Sd.Customer</c>. The screen reads them once when it
@@ -61,8 +60,8 @@ public abstract class QuroScreenBase : ComponentBase
     protected QuroFieldPolicy Policies { get; } = new();
 
     /// <summary>
-    /// The command bar shows "show all fields": the screen has field policies and the user has Full Access on the localization
-    /// menu (BC-BR-435), the admin role until the menu policy is applied.
+    /// The command bar shows "show all fields": the screen has field policies and the user can write on the localization
+    /// setting menu (BC-BR-435, <see cref="IScreenAccess"/>).
     /// </summary>
     protected bool CanShowAllFields { get; private set; }
 
@@ -127,7 +126,7 @@ public abstract class QuroScreenBase : ComponentBase
                 StateHasChanged();
             });
         }
-        CanShowAllFields = ScreenAuthentication is not null && (await ScreenAuthentication).User.IsInRole("admin");
+        CanShowAllFields = ScreenServices.GetService<IScreenAccess>() is { } access && await access.CanWriteAsync(LocalizationSettingPath);
         try
         {
             Policies.Load(LoadPolicies is not null

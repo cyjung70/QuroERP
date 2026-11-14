@@ -12,6 +12,7 @@
 @inject LocalizationApiClient LocalizationApi
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-009 item master, screen type S. Rules are checked by the API (MM-BR-801~832); this screen only shows defaults. *@
 
@@ -90,6 +91,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/item";
+
     private const string SalesTaxMethod = "SALES_TAX";
     private const string VatMethod = "VAT";
 
@@ -108,13 +111,10 @@
     private ItemDto? _picked;
     private string? _loadError;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy exists, as in ItemController (BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         _vatKinds =
         [
             new(ItemModel.VatTaxable, L[$"Bc.Item.VatKind.{ItemModel.VatTaxable}"]),

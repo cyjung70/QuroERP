@@ -20,6 +20,7 @@
 @inject FieldPolicyCache PolicyCache
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* SD-UC-001 customer master, screen type S. Rules are checked by the API (SD-BR-301~335, BC-BR-415, BC-BR-521~524); this
    screen only shows defaults. Country fields follow the field policies of Sd.Customer (field-policy.md 3). The exemption
@@ -145,6 +146,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/sd/customer";
+
     private const string PolicyScreen = "Sd.Customer";
     private const string ExemptionsField = "Sd.Customer.TaxExemptions";
     private const string ExemptionDefinition = "sd.customer.tax-exemption";
@@ -183,13 +186,10 @@
 
     private bool _exemptionsShown => !_exemptionsHidden && _exemptionCustomerId is not null;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy exists, as in CustomerController
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         _exemptionGrid = ScreenDefinitions.Shared.Get(ExemptionDefinition).Grids[0];
         _taxPartyTypes =
         [

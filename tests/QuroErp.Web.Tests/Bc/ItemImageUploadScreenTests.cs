@@ -42,6 +42,8 @@ public class ItemImageUploadScreenTests : BunitContext
         Services.AddHttpClient<ItemApiClient>(http => http.BaseAddress = new Uri("http://api.test"))
             .ConfigurePrimaryHttpMessageHandler(() => _api);
         _auth = AddAuthorization();
+        // Screens ask IScreenAccess, which reads the role from this test authorization (security.md "화면 쓰기 권한")
+        Services.AddScoped<IScreenAccess, ScreenAccess>();
     }
 
     [Fact, Trait("Id", "MM-UT-820")]

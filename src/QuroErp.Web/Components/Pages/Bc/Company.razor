@@ -22,6 +22,7 @@
 @inject IQuroConfirm Confirm
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* BC-UC-007 company, screen type S. There is exactly one company: it loads when the screen opens and is never created or
    deleted here (BC-BR-301). Rules are checked by the API (BC-BR-302~316). The business place (BC-BR-319, 320), logo (BC-BR-306),
@@ -224,6 +225,8 @@
 }
 
 @code {
+    private const string ScreenPath = "/bc/company";
+
     private const string KrCountry = "KR";
     private const string TooLargeCode = "BC-E-005";
     private const string UnavailableCode = "BC-E-003";
@@ -262,13 +265,10 @@
     private string? _error;
     private string? _notice;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        // Full Access is the admin role until the menu policy exists, as in CompanyController (BC-BR-305, BC-BR-214)
-        _canEdit = (await AuthenticationState).User.IsInRole("admin");
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
         _securityForm.ReadOnly = !_canEdit;
         _placeForm.ReadOnly = !_canEdit;
         _countries = Countries.Select(c => new CodeItemDto(c, L[$"Bc.Company.Country.{c}"])).ToList();

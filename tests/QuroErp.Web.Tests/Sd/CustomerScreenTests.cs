@@ -51,6 +51,8 @@ public class CustomerScreenTests : BunitContext
         Services.AddHttpClient<TaxCodeApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<FieldPolicyApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         _auth = AddAuthorization();
+        // Screens ask IScreenAccess, which reads the role from this test authorization (security.md "화면 쓰기 권한")
+        Services.AddScoped<IScreenAccess, ScreenAccess>();
     }
 
     [Fact, Trait("Id", "SD-UT-301"), Trait("Rule", "SD-BR-301")]
