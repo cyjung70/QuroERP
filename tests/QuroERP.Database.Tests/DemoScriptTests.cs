@@ -115,6 +115,25 @@ public sealed class DemoScriptTests : IDisposable
             """).Should().Be(2, "items without Location or Lot management move on '*'");
     }
 
+    [DatabaseFact, Trait("Id", "DB-IT-11"), Trait("Rule", "MM-BR-712")]
+    public void UpgradeWithDemo_AddsLocationsInAndNotInUse_AndEveryWarehouseHasItsStar()
+    {
+        var result = DatabaseMigrator.Upgrade(_connectionString, includeDemo: true, _schema, new NoOpUpgradeLog());
+
+        result.Successful.Should().BeTrue(result.Error?.Message);
+        using var connection = new NpgsqlConnection(_connectionString);
+        connection.Open();
+        Scalar(connection, """
+            SELECT count(*) FROM bc_location l JOIN bc_warehouse w ON w.id = l.warehouse_id
+            WHERE (w.is_default AND (l.location_code, l.use_yn) IN (('A-01', true), ('A-02', true), ('B-01', false)))
+               OR (w.warehouse_code = 'EAST' AND l.location_code = 'E-01')
+            """).Should().Be(4, "the Location screen shows shelves in use and one not in use (0914)");
+        Scalar(connection, """
+            SELECT count(*) FROM bc_warehouse w
+            WHERE NOT EXISTS (SELECT 1 FROM bc_location l WHERE l.warehouse_id = w.id AND l.location_code = '*' AND l.is_system)
+            """).Should().Be(0);
+    }
+
     public void Dispose()
     {
         if (_connectionString.Length > 0)
