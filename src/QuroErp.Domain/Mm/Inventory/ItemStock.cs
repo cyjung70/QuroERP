@@ -6,7 +6,7 @@ namespace QuroErp.Domain.Mm.Inventory;
 /// </summary>
 public sealed class ItemStock(
     long itemId, string itemCd, string? type, decimal onHandQty, decimal stockValue, decimal movingAverageCost,
-    bool lotManaged = false, DateOnly? lotManagedFrom = null)
+    bool lotManaged = false, DateOnly? lotManagedFrom = null, bool locationManaged = false)
 {
     /// <summary>ITEM_TYPE codes.</summary>
     public const string Inventory = "INVENTORY";
@@ -42,11 +42,14 @@ public sealed class ItemStock(
     /// <summary>Movements of a Kit expand into its components (MM-BR-007).</summary>
     public bool IsKit => Type == Kit;
 
-    /// <summary>bc_item.lot_managed: stock is kept per lot as well (MM-BR-351).</summary>
+    /// <summary>bc_item.lot_managed: stock may use lots other than '*' (MM-BR-351).</summary>
     public bool LotManaged { get; } = lotManaged;
 
     /// <summary>bc_item.lot_managed_from: movements dated before it are blocked (MM-BR-356).</summary>
     public DateOnly? LotManagedFrom { get; } = lotManagedFrom;
+
+    /// <summary>bc_item.location_managed: stock may use Locations other than '*' (MM-BR-713).</summary>
+    public bool LocationManaged { get; } = locationManaged;
 
     /// <summary>
     /// Applies one movement. A receipt or receipt reversal recalculates the moving average cost (MM-BR-005):

@@ -63,10 +63,11 @@
   <data name="MM-E-027" xml:space="preserve"><value>Incoterms '{0}' is not valid. Choose an Incoterms 2020 code (EXW, FCA, FAS, FOB, CFR, CIF, CPT, CIP, DAP, DPU, DDP).</value></data>
   <data name="MM-E-031" xml:space="preserve"><value>Currency {0} with rate {1} cannot be used. The rate must be above 0 and 1 for the base currency, and the currency cannot change once the order has lines.</value></data>
   <data name="MM-E-010" xml:space="preserve"><value>Item {0} in warehouse {1} would end month {2} at {3}, below zero, so the movement cannot be saved.</value></data>
-  <data name="MM-E-351" xml:space="preserve"><value>Lot management of item {0} cannot change. Only an inventory item can turn it on, not while a warehouse has stock below zero, and it can be turned off only when every lot balance is 0.</value></data>
-  <data name="MM-E-352" xml:space="preserve"><value>Lot number '{1}' of item {0} cannot be used. Use up to 30 upper case letters, digits, - or _; MIGRATED and UNKNOWN are reserved.</value></data>
-  <data name="MM-E-355" xml:space="preserve"><value>Item {0} is lot managed: a line that decreases its stock needs one of its lots.</value></data>
-  <data name="MM-E-356" xml:space="preserve"><value>Lot {2} of item {0} in warehouse {1} would be {4} on {3}. A lot balance cannot go below zero, and no stock movement can be dated before lot management started.</value></data>
+  <data name="MM-E-351" xml:space="preserve"><value>Lot management of item {0} cannot change. Only an item with its own stock (Inventory or Set) can turn it on, and it can be turned off only when every balance on lots other than * is 0.</value></data>
+  <data name="MM-E-352" xml:space="preserve"><value>Lot number '{1}' of item {0} cannot be used. Use up to 30 upper case letters, digits, - or _; * is the system lot.</value></data>
+  <data name="MM-E-355" xml:space="preserve"><value>Item {0} has no such lot. A line that decreases its stock needs one of its lots.</value></data>
+  <data name="MM-E-356" xml:space="preserve"><value>Lot {3} of item {0} in warehouse {1}, Location {2} would be {5} on {4}. A lot balance cannot go below zero, and no lot movement can be dated before lot management started.</value></data>
+  <data name="MM-E-363" xml:space="preserve"><value>Item {0} is not lot managed, so it cannot use lot '{1}'. Leave the lot empty or use *.</value></data>
   <data name="SD-E-006" xml:space="preserve"><value>All document numbers for {0} are used, so no more documents can be saved.</value></data>
   <data name="Common.Search" xml:space="preserve"><value>Search</value></data>
   <data name="Common.New" xml:space="preserve"><value>New</value></data>
@@ -222,6 +223,10 @@
   <data name="MM-E-710" xml:space="preserve"><value>Warehouse {0} is the consignment warehouse and can't be picked for a document or as your default warehouse. Pick another warehouse.</value></data>
   <data name="MM-E-712" xml:space="preserve"><value>Location code '{0}' can't be used. Use up to 20 capital letters, digits, - and _, not used twice in the warehouse. Don't change a saved code, and don't change or delete the system Location *.</value></data>
   <data name="MM-E-717" xml:space="preserve"><value>Location {0} can't be set not in use or deleted (reason: {1}).</value></data>
+  <data name="MM-E-713" xml:space="preserve"><value>Item {0} cannot use Location '{2}' in warehouse {1}. It must be a Location in use of the line warehouse, and only a Location-managed item can use a Location other than *.</value></data>
+  <data name="MM-E-714" xml:space="preserve"><value>The balance of item {0} in warehouse {1}, Location {2}, lot {3} would be {4}. This balance cannot go below zero.</value></data>
+  <data name="MM-E-715" xml:space="preserve"><value>Line {1} has the wrong transfer type {0}. TR moves between two different warehouses; LT stays in one warehouse and moves between two different Locations.</value></data>
+  <data name="MM-E-718" xml:space="preserve"><value>Location management of item {0} cannot be turned off while a Location other than * has a balance.</value></data>
   <data name="MM-E-851" xml:space="preserve"><value>Enter the required field {0}.</value></data>
   <data name="MM-E-852" xml:space="preserve"><value>Vendor name '{0}' already exists.</value></data>
   <data name="MM-E-853" xml:space="preserve"><value>Enter the ship zip code when you enter a ship address.</value></data>

@@ -337,16 +337,17 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         saved.Status.Should().Be("BL");
     }
 
-    [DatabaseFact, Trait("Id", "SD-UC-051-T09"), Trait("Id", "MM-UT-355"), Trait("Id", "MM-UT-356")]
-    public async Task LotItems_NeedALot_AndALotBalanceBelowZeroIsRefusedEvenInAllowInMonth()
+    [DatabaseFact, Trait("Id", "SD-UC-051-T09"), Trait("Id", "MM-UT-714"), Trait("Id", "MM-UT-356")]
+    public async Task LotItems_WithoutALotUseTheEmptyLotStar_AndALotBalanceBelowZeroIsRefusedEvenInAllowInMonth()
     {
         await ModeAsync("DENY");
         var m = await MastersAsync(ShipAndBill);
         await ReceiveAsync(m.LotItem, m.Main, 5m, "A1");
         await ReceiveAsync(m.LotItem, m.Main, 5m, "B1");
 
+        // Without a lot the line takes Lot '*', which holds nothing: in DENY it cannot go below zero (MM-BR-363, MM-BR-714)
         var noLot = () => Service.CreateAsync(Request(m, Direct(m.LotItem, 1m)), "kim", None);
-        (await noLot.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(LotRules.RequiredCode);
+        (await noLot.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(StockKeyRules.NegativeCode);
 
         await ModeAsync("ALLOW_IN_MONTH");
         var tooMuch = () => Service.CreateAsync(Request(m, Direct(m.LotItem, 6m) with { LotNo = "a1" }), "kim", None);

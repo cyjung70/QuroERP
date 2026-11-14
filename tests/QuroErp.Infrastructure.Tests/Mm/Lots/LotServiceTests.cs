@@ -11,6 +11,7 @@ using QuroErp.Application.Mm.Lots;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Contracts.Mm.Lots;
 using QuroErp.Domain.Common;
+using QuroErp.Domain.Mm.Inventory;
 using QuroErp.Domain.Mm.Lots;
 using QuroErp.Infrastructure.Tests.Common.Auth;
 using QuroErp.Infrastructure.Tests.Common.Persistence;
@@ -25,8 +26,9 @@ public sealed class LotSchemaDefinition : ICollectionFixture<AuthSchemaFixture>
 }
 
 /// <summary>
-/// 0404_mm_lot and 0418 (lot balances on mm_onhand), item lot management, lot postings and lot search on real PostgreSQL
-/// (TASK-CORE-027, TASK-CORE-067, MM-BR-351~356, 361~363).
+/// 0404_mm_lot and 0418 (Location and lot balances on mm_onhand), item lot and Location management, postings, lot search,
+/// FIFO suggestions and the per-key reconciliation on real PostgreSQL (TASK-CORE-027, TASK-CORE-067, TASK-CORE-068,
+/// MM-BR-351~365, MM-BR-605, MM-BR-713~718).
 /// Lot management starts on <see cref="Today"/>; each test makes its own items and a second warehouse.
 /// </summary>
 [Collection(LotSchemaDefinition.Name)]
@@ -40,7 +42,7 @@ public class LotServiceTests(AuthSchemaFixture db)
     private ItemService Items => new(
         db.Get<IItemRepository>(), db.Get<ILotRepository>(), new AnyCode(), db.Get<IUnitOfWorkFactory>(), new FixedClock());
 
-    private LotService Lots => new(db.Get<ILotRepository>(), db.Get<IUnitOfWorkFactory>());
+    private LotService Lots => new(db.Get<ILotRepository>(), db.Get<IUnitOfWorkFactory>(), new FixedClock());
 
     [DatabaseFact, Trait("Id", "MM-UT-351"), Trait("Rule", "MM-BR-351")]
     public async Task TurningOn_KeepsEachWarehouseStockOnLotStar_AndStartsToday()
@@ -52,13 +54,14 @@ public class LotServiceTests(AuthSchemaFixture db)
         var saved = await Items.UpdateAsync(item.Id, Update(await Items.GetAsync(item.Id, None), lotManaged: true), "kim", None);
 
         (saved.LotManaged, saved.LotManagedFrom).Should().Be((true, Today));
-        (await Lots.SearchAsync(Query(item.Id, main, Today), None)).Should().Equal(new LotBalanceDto(Lot(await LotsAsync(item.Id), "*"), "*", 10));
+        (await Lots.SearchAsync(Query(item.Id, main, Today), None)).Should().Equal(
+            new LotBalanceDto(Lot(await LotsAsync(item.Id), "*"), "*", 10, await StarLocationAsync(main), "*"));
         (await Lots.SearchAsync(Query(item.Id, second, Today), None)).Single().OnHandQty.Should().Be(4);
         (await MismatchesAsync(item.Id)).Should().BeEmpty();
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-351"), Trait("Id", "MM-UT-361"), Trait("Rule", "MM-BR-361")]
-    public async Task TurningOn_IsRefused_ForANegativeWarehouse_OrAServiceItem_ButAllowedForAKitComponent()
+    public async Task TurningOn_IsRefused_ForAServiceItem_ButAllowedForANegativeWarehouse_AndAKitComponent()
     {
         var (main, _) = await WarehousesAsync();
         var negative = await CreateAsync();
@@ -78,7 +81,8 @@ public class LotServiceTests(AuthSchemaFixture db)
         var onComponent = () => Items.UpdateAsync(component.Id, Update(component, lotManaged: true), "kim", None);
         var onService = () => CreateAsync(type: "SERVICE", lotManaged: true);
 
-        (await onNegative.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(LotRules.ManagementCode);
+        // The stock stays on lot '*', so a warehouse below zero does not matter (MM-BR-351)
+        (await onNegative()).LotManaged.Should().BeTrue();
         (await onService.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(LotRules.ManagementCode);
         // MM-BR-361: a Kit or Set component can be lot-managed
         (await onComponent()).LotManaged.Should().BeTrue();
@@ -153,12 +157,12 @@ public class LotServiceTests(AuthSchemaFixture db)
         var act = () => PostAsync(new StockMovementRequest("DN", Day.AddDays(-1), item.Id, main, -1, LotNo: "B1"));
 
         var error = (await act.Should().ThrowAsync<DomainException>()).Which;
-        (error.Code, error.Args[3], error.Args[4]).Should().Be((LotRules.NegativeCode, (object)"2026-10-09", (object)(-1m)));
+        (error.Code, error.Args[4], error.Args[5]).Should().Be((LotRules.NegativeCode, (object)"2026-10-09", (object)(-1m)));
         (await LotOnHandAsync(item.Id)).Should().Equal(("*", 0m), ("A", 5m), ("B1", 5m));
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-362"), Trait("Rule", "MM-BR-362")]
-    public async Task Search_ShowsLotsAboveZeroAtTheEndOfTheDate_InLotNumberOrder()
+    public async Task Search_ShowsLotsAboveZeroAtTheEndOfTheDate_InFifoOrder()
     {
         var (main, second) = await WarehousesAsync();
         var item = await CreateAsync(lotManaged: true);
@@ -173,8 +177,9 @@ public class LotServiceTests(AuthSchemaFixture db)
         var later = await Lots.SearchAsync(Query(item.Id, main, Day.AddDays(5)), None);
         var missing = () => Lots.SearchAsync(new LotSearchQuery { ItemId = item.Id, WarehouseId = main }, None);
 
-        onDay.Select(l => (l.LotNo, l.OnHandQty)).Should().Equal(("A", 2m), ("C", 5m));
-        later.Select(l => (l.LotNo, l.OnHandQty)).Should().Equal(("B", 4m), ("C", 5m));
+        // A and C were received on the same day, B five days later (MM-BR-364, MM-BR-716)
+        onDay.Select(l => (l.LotNo, l.OnHandQty, l.LocationCode)).Should().Equal(("A", 2m, "*"), ("C", 5m, "*"));
+        later.Select(l => (l.LotNo, l.OnHandQty)).Should().Equal(("C", 5m), ("B", 4m));
         (await missing.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("date");
     }
 
@@ -194,12 +199,112 @@ public class LotServiceTests(AuthSchemaFixture db)
             "the item got its system lot '*' when it was created (MM-BR-363)");
     }
 
+    [DatabaseFact, Trait("Id", "MM-UT-353"), Trait("Rule", "MM-BR-353"), Trait("Rule", "MM-BR-364")]
+    public async Task PurchaseReceipt_NumbersANewLotWithItsReceivedDate_OtherReceiptsUseLotStar()
+    {
+        var (main, _) = await WarehousesAsync();
+        var item = await CreateAsync(lotManaged: true);
+
+        var posted = await PostAsync(
+            new StockMovementRequest("GR", Day, item.Id, main, 5, Price: 2),
+            new StockMovementRequest("UR", Day, item.Id, main, 2, Price: 2));
+
+        var lots = await LotsAsync(item.Id);
+        posted.Select(m => m.LotId).Should().Equal(lots["261010-001"], lots["*"]);
+        (await QueryAsync<DateOnly?>("SELECT received_dt FROM mm_lot WHERE id = @Id", new { Id = lots["261010-001"] })).Single()
+            .Should().Be(Day);
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-716"), Trait("Rule", "MM-BR-716"), Trait("Rule", "MM-BR-713")]
+    public async Task Suggest_FillsFromLotStarThenTheOldestLots_OverLocationsInUse()
+    {
+        var (main, _) = await WarehousesAsync();
+        var item = await CreateAsync(lotManaged: true, locationManaged: true);
+        var (a01, a01Code) = await AddLocationAsync(main, "A01");
+        var (b01, b01Code) = await AddLocationAsync(main, "B01");
+        var (closed, _) = await AddLocationAsync(main, "Z99");
+        await PostAsync(
+            new StockMovementRequest("UR", Day, item.Id, main, 1, Price: 2),
+            new StockMovementRequest("GR", Day, item.Id, main, 4, Price: 2, LocationId: b01),
+            new StockMovementRequest("GR", Day.AddDays(-3), item.Id, main, 2, Price: 2, LocationId: a01),
+            new StockMovementRequest("GR", Day.AddDays(-5), item.Id, main, 9, Price: 2, LocationId: closed));
+        await ExecuteAsync("UPDATE bc_location SET use_yn = false WHERE id = @closed", new { closed });
+
+        // The receipts are dated after the fixed clock's today, so the suggestion asks for the balances at the end of Day
+        var picks = await Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 5, Date = Day }, None);
+        var noQty = () => Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 0, Date = Day }, None);
+
+        picks.Lines.Select(p => (p.LocationCode, p.LotNo, p.Qty)).Should().Equal(("*", "*", 1m), (a01Code, "261007-001", 2m), (b01Code, "261010-001", 2m));
+        picks.Lines[1].LocationId.Should().Be(a01);
+        picks.ShortQty.Should().Be(0);
+        (await noQty.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("qty");
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-713"), Trait("Rule", "MM-BR-713")]
+    public async Task Posting_ToALocation_KeepsItsOwnBalance_AndAReversalPutsItBack()
+    {
+        var (main, second) = await WarehousesAsync();
+        var item = await CreateAsync(locationManaged: true);
+        var (a01, a01Code) = await AddLocationAsync(main, "A01");
+        var (otherWarehouse, _) = await AddLocationAsync(second, "A01");
+
+        var receipt = (await PostAsync(new StockMovementRequest("UR", Day, item.Id, main, 5, Price: 2, LocationId: a01))).Single();
+        var wrong = () => PostAsync(new StockMovementRequest("UR", Day, item.Id, main, 1, Price: 2, LocationId: otherWarehouse));
+        var short_ = () => PostAsync(new StockMovementRequest("DN", Day, item.Id, main, -6, LocationId: a01));
+
+        (await KeyOnHandAsync(item.Id)).Should().Equal(("*", "*", 0m), (a01Code, "*", 5m));
+        (await wrong.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(StockKeyRules.LocationCode);
+        (await short_.Should().ThrowAsync<DomainException>()).Which.Code.Should().BeOneOf("MM-E-001", StockKeyRules.NegativeCode);
+        await ReverseAsync(receipt.Id);
+        (await KeyOnHandAsync(item.Id)).Should().Equal(("*", "*", 0m), (a01Code, "*", 0m));
+        (await QueryAsync<long>("SELECT location_id FROM mm_goods_movement WHERE item_id = @Id ORDER BY id", new { item.Id }))
+            .Should().Equal(a01, a01);
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-718"), Trait("Rule", "MM-BR-718")]
+    public async Task TurningLocationManagementOff_NeedsEveryBalanceOnOtherLocationsAtZero()
+    {
+        var (main, _) = await WarehousesAsync();
+        var item = await CreateAsync(locationManaged: true);
+        var (a01, _) = await AddLocationAsync(main, "A01");
+        await PostAsync(new StockMovementRequest("UR", Day, item.Id, main, 3, Price: 2, LocationId: a01));
+
+        // Posting stock updates the item row, so the update sends the current updatedAt
+        var current = await Items.GetAsync(item.Id, None);
+        var withStock = () => Items.UpdateAsync(item.Id, Update(current, lotManaged: false, locationManaged: false), "kim", None);
+        (await withStock.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(StockKeyRules.LocationManagementCode);
+
+        await PostAsync(new StockMovementRequest("DN", Day, item.Id, main, -3, LocationId: a01));
+        var off = await Items.UpdateAsync(item.Id, Update(await Items.GetAsync(item.Id, None), lotManaged: false, locationManaged: false), "kim", None);
+
+        off.LocationManaged.Should().BeFalse();
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-605"), Trait("Rule", "MM-BR-605")]
+    public async Task Reconciliation_ComparesEveryKeyWithItsLedgerSum()
+    {
+        var (main, _) = await WarehousesAsync();
+        var item = await CreateAsync(lotManaged: true);
+        await PostAsync(new StockMovementRequest("GR", Day, item.Id, main, 5, Price: 2, LotNo: "B1"));
+        (await MismatchesAsync(item.Id)).Should().BeEmpty();
+
+        // The item + warehouse total stays 5, but the stock sits on the wrong lot
+        await ExecuteAsync(
+            """
+            UPDATE mm_onhand o SET onhand_qty = onhand_qty + CASE WHEN l.lot_no = '*' THEN 5 ELSE -5 END
+            FROM mm_lot l WHERE l.id = o.lot_id AND o.item_id = @Id
+            """, new { item.Id });
+
+        (await MismatchesAsync(item.Id)).Select(r => (r.LocationCode, r.LotNo, r.OnHandQty, r.LedgerQty))
+            .Should().Equal(("*", "*", 5m, 0m), ("*", "B1", 0m, 5m));
+    }
+
     private static LotSearchQuery Query(long itemId, long warehouseId, DateOnly date) =>
         new() { ItemId = itemId, WarehouseId = warehouseId, Date = date };
 
     private static long Lot(IReadOnlyDictionary<string, long> lots, string lotNo) => lots[lotNo];
 
-    private async Task<ItemDto> CreateAsync(string type = "INVENTORY", bool lotManaged = false) =>
+    private async Task<ItemDto> CreateAsync(string type = "INVENTORY", bool lotManaged = false, bool locationManaged = false) =>
         await Items.CreateAsync(
             new CreateItemRequest
             {
@@ -208,11 +313,12 @@ public class LotServiceTests(AuthSchemaFixture db)
                 ItemType = type,
                 ItemClass = "TEST",
                 LotManaged = lotManaged,
+                LocationManaged = locationManaged,
             },
             "kim",
             None);
 
-    private static UpdateItemRequest Update(ItemDto i, bool lotManaged) => new()
+    private static UpdateItemRequest Update(ItemDto i, bool lotManaged, bool? locationManaged = null) => new()
     {
         ItemName = i.ItemName,
         ItemType = i.ItemType,
@@ -222,10 +328,11 @@ public class LotServiceTests(AuthSchemaFixture db)
         UsdPrc = i.UsdPrc,
         VatKind = i.VatKind,
         LotManaged = lotManaged,
+        LocationManaged = locationManaged,
         UpdatedAt = i.UpdatedAt,
     };
 
-    private async Task<IReadOnlyList<QuroErp.Domain.Mm.Inventory.GoodsMovement>> PostAsync(params StockMovementRequest[] requests)
+    private async Task<IReadOnlyList<GoodsMovement>> PostAsync(params StockMovementRequest[] requests)
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
         var posted = await Inventory().PostAsync(requests, "kim", uow.Transaction, None);
@@ -246,10 +353,10 @@ public class LotServiceTests(AuthSchemaFixture db)
         db.Get<ISetComponentRepository>(),
         new DocumentNumberService(db.Get<IDocumentNumberRepository>()));
 
-    private async Task<IReadOnlyList<LotMismatchRow>> MismatchesAsync(long itemId)
+    private async Task<IReadOnlyList<OnHandMismatchRow>> MismatchesAsync(long itemId)
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
-        var rows = await db.Get<ILotRepository>().FindLotMismatchesAsync(uow.Transaction, None);
+        var rows = await db.Get<ILotRepository>().FindOnHandMismatchesAsync(uow.Transaction, None);
         return rows.Where(r => r.ItemId == itemId).ToList();
     }
 
@@ -260,6 +367,30 @@ public class LotServiceTests(AuthSchemaFixture db)
             SELECT l.lot_no, sum(o.onhand_qty) FROM mm_onhand o JOIN mm_lot l ON l.id = o.lot_id
             WHERE o.item_id = @itemId GROUP BY l.lot_no ORDER BY l.lot_no
             """, new { itemId });
+
+    // Key balances of the item, all warehouses together, in Location and lot order
+    private async Task<IReadOnlyList<(string LocationCode, string LotNo, decimal Qty)>> KeyOnHandAsync(long itemId) =>
+        await QueryAsync<(string, string, decimal)>(
+            """
+            SELECT c.location_code, l.lot_no, sum(o.onhand_qty) FROM mm_onhand o
+            JOIN mm_lot l ON l.id = o.lot_id JOIN bc_location c ON c.id = o.location_id
+            WHERE o.item_id = @itemId GROUP BY c.location_code, l.lot_no ORDER BY 1, 2
+            """, new { itemId });
+
+    // MAIN is shared by every test, so the code gets a unique suffix: prefix-XXXXXX
+    private async Task<(long Id, string Code)> AddLocationAsync(long warehouseId, string prefix)
+    {
+        var code = prefix + "-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var id = (await QueryAsync<long>(
+            """
+            INSERT INTO bc_location (warehouse_id, location_code, created_by, updated_by) VALUES (@warehouseId, @code, 't', 't')
+            RETURNING id
+            """, new { warehouseId, code })).Single();
+        return (id, code);
+    }
+
+    private async Task<long> StarLocationAsync(long warehouseId) =>
+        (await QueryAsync<long>("SELECT id FROM bc_location WHERE warehouse_id = @warehouseId AND location_code = '*'", new { warehouseId })).Single();
 
     private async Task<IReadOnlyDictionary<string, long>> LotsAsync(long itemId) =>
         (await QueryAsync<(string LotNo, long Id)>("SELECT lot_no, id FROM mm_lot WHERE item_id = @itemId ORDER BY lot_no", new { itemId }))

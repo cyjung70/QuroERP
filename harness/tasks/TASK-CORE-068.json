@@ -37,5 +37,5 @@
     "단위 테스트: FIFO 순서(`*` 먼저, 입고일, Lot 번호, Location 코드), 여러 Lot에 걸친 추천 분할, 모자란 수량 `shortQty`, Lot 잔고 부족 ALLOW_IN_MONTH에서도 차단, `LT` 같은 Location 차단"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

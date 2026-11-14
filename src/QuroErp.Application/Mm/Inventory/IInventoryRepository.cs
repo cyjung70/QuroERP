@@ -1,19 +1,24 @@
 using System.Data;
 using QuroErp.Domain.Mm.Inventory;
-using QuroErp.Domain.Mm.Lots;
 
 namespace QuroErp.Application.Mm.Inventory;
 
-/// <summary>Locked mm_onhand row of one item + warehouse, with the codes used in messages.</summary>
+/// <summary>
+/// The locked ('*', '*') mm_onhand row of one item + warehouse, with the warehouse code used in messages. OnHandQty is the item +
+/// warehouse balance: the sum of all its Location and Lot rows (MM-BR-714).
+/// </summary>
 public sealed record OnHandRow(long ItemId, long WarehouseId, string WarehouseCode, decimal OnHandQty);
 
-/// <summary>An mm_lot row: one lot number of one item (MM-BR-352).</summary>
+/// <summary>An mm_lot row: one lot number of one item (MM-BR-352); '*' is the item's system lot (MM-BR-363).</summary>
 public sealed record LotRef(long Id, string LotNo);
 
 /// <summary>A saved movement and whether a reversal already points to it.</summary>
 public sealed record SavedMovement(GoodsMovement Movement, bool Reversed);
 
-/// <summary>Stock tables: bc_item stock columns, mm_onhand (item + warehouse + Location + Lot), mm_lot and mm_goods_movement (inventory.md).</summary>
+/// <summary>
+/// Stock tables: bc_item stock columns, mm_onhand (item + warehouse + Location + Lot), bc_location, mm_lot and mm_goods_movement
+/// (inventory.md).
+/// </summary>
 public interface IInventoryRepository
 {
     /// <summary>bc_company.close_year_month: the first month not closed yet (YYYYMM), or null.</summary>
@@ -24,8 +29,9 @@ public interface IInventoryRepository
     Task<IReadOnlyList<ItemStock>> LockItemsAsync(IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Locks the mm_onhand row of item + warehouse (FOR UPDATE), creating it with 0 when missing (MM-BR-603 ①).
-    /// Saves of the same item + warehouse wait here for each other.
+    /// Locks the ('*', '*') mm_onhand row of item + warehouse (FOR UPDATE), creating the warehouse's Location '*', the item's
+    /// Lot '*' and the row with 0 when missing (MM-BR-603 step 1). Saves of the same item + warehouse wait here for each other,
+    /// so the other rows of the item + warehouse are locked after it.
     /// </summary>
     Task<OnHandRow> LockOnHandAsync(long itemId, long warehouseId, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
@@ -38,12 +44,28 @@ public interface IInventoryRepository
     Task<IReadOnlyDictionary<long, decimal>> GetSellableOnHandAsync(
         IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    Task UpdateOnHandAsync(long itemId, long warehouseId, decimal onHandQty, string user, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>
+    /// A Location: the one with locationId, or Location '*' of the warehouse when it is null. Null when no Location has that
+    /// id; the caller checks that it belongs to the warehouse (MM-BR-713).
+    /// </summary>
+    Task<StockLocation?> FindLocationAsync(long warehouseId, long? locationId, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Locks the mm_onhand row of item + warehouse + Location + Lot (FOR UPDATE), creating it with 0 when missing. Called after
+    /// <see cref="LockOnHandAsync"/>, in (item, warehouse, Location, Lot) order (inventory.md "로트").
+    /// </summary>
+    /// <returns>The key balance.</returns>
+    Task<decimal> LockKeyOnHandAsync(
+        long itemId, long warehouseId, long locationId, long lotId, string user, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Adds qty to the mm_onhand row of the key, which <see cref="LockKeyOnHandAsync"/> locked.</summary>
+    Task AddOnHandAsync(
+        long itemId, long warehouseId, long locationId, long lotId, decimal qty, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Saves bc_item.onhand_qty, stk_val and mvg_cost.</summary>
     Task UpdateItemStockAsync(ItemStock item, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Inserts the movement and sets its Id.</summary>
+    /// <summary>Inserts the movement and sets its Id. A movement without a Location or Lot gets '*'.</summary>
     Task InsertMovementAsync(GoodsMovement movement, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>
@@ -54,28 +76,21 @@ public interface IInventoryRepository
     Task<(decimal Opening, IReadOnlyList<DailyStockBalance> Balances)> GetDailyBalancesAsync(
         long itemId, long warehouseId, DateOnly? lastClosedMonthEnd, DateOnly movementDate, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>Ledger sums of item + warehouse + Location + Lot per day, from fromDate on, in date order (MM-BR-714, MM-BR-356).</summary>
+    Task<IReadOnlyList<StockKeyDailyQty>> GetKeyDailyQtyAsync(
+        long itemId, long warehouseId, long locationId, long lotId, DateOnly fromDate, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <summary>A lot of the item by id when lotId is given, otherwise by lot number; null when the item has no such lot.</summary>
     Task<LotRef?> FindLotAsync(long itemId, long? lotId, string? lotNo, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>The lot of the item with this number, created when missing (MM-BR-353). The item row is locked by the caller.</summary>
-    Task<LotRef> EnsureLotAsync(long itemId, string lotNo, string user, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>
+    /// The lot of the item with this number, created with received date receivedDt when missing (MM-BR-353, MM-BR-364). The item
+    /// row is locked by the caller.
+    /// </summary>
+    Task<LotRef> EnsureLotAsync(long itemId, string lotNo, DateOnly receivedDt, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>The largest number after prefix (yymmdd-) among the item's automatic lot numbers, 0 when none (MM-BR-353).</summary>
     Task<int> GetLastAutoLotSeqAsync(long itemId, string prefix, IDbTransaction transaction, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Locks the mm_onhand row of item + warehouse + lot (FOR UPDATE), creating it with 0 when missing. It is locked after
-    /// the mm_onhand rows (inventory.md "로트").
-    /// </summary>
-    /// <returns>The lot balance.</returns>
-    Task<decimal> LockLotOnHandAsync(long itemId, long warehouseId, long lotId, string user, IDbTransaction transaction, CancellationToken cancellationToken);
-
-    Task UpdateLotOnHandAsync(
-        long itemId, long warehouseId, long lotId, decimal onHandQty, string user, IDbTransaction transaction, CancellationToken cancellationToken);
-
-    /// <summary>Ledger sums of item + warehouse + lot per day, from fromDate on, in date order (MM-BR-356).</summary>
-    Task<IReadOnlyList<LotDailyQty>> GetLotDailyQtyAsync(
-        long itemId, long warehouseId, long lotId, DateOnly fromDate, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Reads and locks (FOR UPDATE) movements to reverse.</summary>
     /// <returns>Only the movements that exist.</returns>
