@@ -225,6 +225,8 @@
   <data name="MM-E-717" xml:space="preserve"><value>Location {0} can't be set not in use or deleted (reason: {1}).</value></data>
   <data name="MM-E-713" xml:space="preserve"><value>Item {0} cannot use Location '{2}' in warehouse {1}. It must be a Location in use of the line warehouse, and only a Location-managed item can use a Location other than *.</value></data>
   <data name="MM-E-714" xml:space="preserve"><value>The balance of item {0} in warehouse {1}, Location {2}, lot {3} would be {4}. This balance cannot go below zero.</value></data>
+  <data name="MM-E-916" xml:space="preserve"><value>The balance of item {0} in warehouse {1}, Location {2}, lot {3} would be {4}, less than the {5} held in Pallets. Pallet stock leaves only as whole Pallets.</value></data>
+  <data name="MM-E-923" xml:space="preserve"><value>This barcode cannot be read: {0}</value></data>
   <data name="MM-E-715" xml:space="preserve"><value>Line {1} has the wrong transfer type {0}. TR moves between two different warehouses; LT stays in one warehouse and moves between two different Locations.</value></data>
   <data name="MM-E-718" xml:space="preserve"><value>Location management of item {0} cannot be turned off while a Location other than * has a balance.</value></data>
   <data name="MM-E-851" xml:space="preserve"><value>Enter the required field {0}.</value></data>

@@ -23,7 +23,7 @@ public sealed class LotService(ILotRepository lots, IUnitOfWorkFactory unitOfWor
         var warehouseId = query.WarehouseId ?? throw new DomainException(RequiredCode, "warehouseId");
         var date = query.Date ?? throw new DomainException(RequiredCode, "date");
 
-        var balances = await FindBalancesAsync(itemId, warehouseId, date, cancellationToken);
+        var balances = await FindBalancesAsync(itemId, warehouseId, date, withoutPallets: false, cancellationToken);
         return StockSuggestion.FifoOrder(balances)
             .Select(b => new LotBalanceDto(b.LotId, b.LotNo, b.Qty, b.LocationId, b.LocationCode)).ToList();
     }
@@ -31,7 +31,8 @@ public sealed class LotService(ILotRepository lots, IUnitOfWorkFactory unitOfWor
     /// <summary>
     /// Where a decrease of qty should take its stock: the balances at the end of the date filled in FIFO order, split over
     /// several (Location, Lot) when one is not enough. Short stock gives parts that add up to less than qty, and ShortQty is the
-    /// rest (MM-BR-716).
+    /// rest (MM-BR-716). Stock held in ACTIVE Pallets is not suggested: the suggestion is for lines that are not Pallet lines
+    /// (MM-BR-916).
     /// </summary>
     /// <exception cref="DomainException">Common-E-005 when itemId, warehouseId or a qty above zero is missing.</exception>
     public async Task<StockSuggestionResultDto> SuggestAsync(StockSuggestionQuery query, CancellationToken cancellationToken)
@@ -40,17 +41,18 @@ public sealed class LotService(ILotRepository lots, IUnitOfWorkFactory unitOfWor
         var warehouseId = query.WarehouseId ?? throw new DomainException(RequiredCode, "warehouseId");
         var qty = query.Qty is { } q && q > 0 ? q : throw new DomainException(RequiredCode, "qty");
 
-        var balances = await FindBalancesAsync(itemId, warehouseId, query.Date ?? clock.Today(), cancellationToken);
+        var balances = await FindBalancesAsync(itemId, warehouseId, query.Date ?? clock.Today(), withoutPallets: true, cancellationToken);
         var picks = StockSuggestion.Fifo(balances, qty);
         return new StockSuggestionResultDto(
             [.. picks.Select(p => new StockSuggestionDto(p.LocationId, p.LocationCode, p.LotId, p.LotNo, p.Qty))],
             StockSuggestion.ShortQty(picks, qty));
     }
 
-    private async Task<IReadOnlyList<StockBalance>> FindBalancesAsync(long itemId, long warehouseId, DateOnly date, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<StockBalance>> FindBalancesAsync(
+        long itemId, long warehouseId, DateOnly date, bool withoutPallets, CancellationToken cancellationToken)
     {
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
-        var rows = await lots.FindBalancesAsync(itemId, warehouseId, date, uow.Transaction, cancellationToken);
+        var rows = await lots.FindBalancesAsync(itemId, warehouseId, date, withoutPallets, uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return rows;
     }

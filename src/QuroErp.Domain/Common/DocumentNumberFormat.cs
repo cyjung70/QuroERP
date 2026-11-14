@@ -45,6 +45,9 @@ public sealed record DocumentNumberFormat(string Prefix, int Digits, bool Restar
     /// <summary>MM-BR-708: stock transfers, TR + yymm + 10 digits.</summary>
     public static readonly DocumentNumberFormat StockTransfer = new("TR", 10, RestartsMonthly: true);
 
+    /// <summary>MM-BR-910: Pallets, PL + yymm of the receipt date + 6 digits.</summary>
+    public static readonly DocumentNumberFormat Pallet = new("PL", 6, RestartsMonthly: true);
+
     /// <summary>The sys_document_number.period of a document dated documentDt: yymm, or "" for continuous numbers.</summary>
     public string Period(DateOnly documentDt) =>
         RestartsMonthly ? documentDt.ToString("yyMM", CultureInfo.InvariantCulture) : "";

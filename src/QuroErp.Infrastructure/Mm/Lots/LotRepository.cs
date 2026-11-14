@@ -45,10 +45,10 @@ internal sealed class LotRepository : ILotRepository
         """;
 
     public async Task<IReadOnlyList<StockBalance>> FindBalancesAsync(
-        long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        long itemId, long warehouseId, DateOnly asOf, bool withoutPallets, IDbTransaction transaction, CancellationToken cancellationToken) =>
         (await transaction.Connection!.QueryAsync<StockBalance>(new CommandDefinition(
-            StockBalanceSql.SelectBalances, new { ItemId = itemId, WarehouseId = warehouseId, AsOf = asOf }, transaction, cancellationToken: cancellationToken))).ToList();
-
+            withoutPallets ? StockBalanceSql.SelectAvailableBalances : StockBalanceSql.SelectBalances,
+            new { ItemId = itemId, WarehouseId = warehouseId, AsOf = asOf }, transaction, cancellationToken: cancellationToken))).ToList();
 
     public Task<bool> HasLotStockAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         Exists(SelectHasLotStock, itemId, transaction, cancellationToken);

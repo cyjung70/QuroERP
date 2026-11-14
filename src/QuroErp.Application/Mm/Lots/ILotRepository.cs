@@ -13,9 +13,10 @@ public interface ILotRepository
     /// <summary>
     /// The (Location, Lot) balances of item + warehouse at the end of day asOf: the current balance minus later movements. Only
     /// balances above zero on Locations in use, with the Lot's received date (MM-BR-362, MM-BR-716). The caller orders them.
+    /// withoutPallets leaves out what the key's ACTIVE Pallets hold: what a line that is not a Pallet line may take (MM-BR-916).
     /// </summary>
     Task<IReadOnlyList<StockBalance>> FindBalancesAsync(
-        long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken);
+        long itemId, long warehouseId, DateOnly asOf, bool withoutPallets, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>A balance of the item on a lot other than '*' is not 0 (MM-BR-351).</summary>
     Task<bool> HasLotStockAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken);

@@ -225,6 +225,8 @@
   <data name="MM-E-717" xml:space="preserve"><value>Location {0}은(는) 사용 안 함으로 바꾸거나 지울 수 없습니다 (사유: {1}).</value></data>
   <data name="MM-E-713" xml:space="preserve"><value>품목 {0}의 창고 {1}에 Location '{2}'을(를) 쓸 수 없습니다. 줄 창고의 사용 중 Location이어야 하고, Location 관리 품목만 * 말고 다른 Location을 쓸 수 있습니다.</value></data>
   <data name="MM-E-714" xml:space="preserve"><value>품목 {0}의 창고 {1} Location {2} 로트 {3} 잔고가 {4}이(가) 됩니다. 이 잔고는 음수가 될 수 없습니다.</value></data>
+  <data name="MM-E-916" xml:space="preserve"><value>품목 {0}의 창고 {1} Location {2} 로트 {3} 잔고가 {4}이(가) 되어 Pallet에 묶인 수량 {5}보다 작아집니다. Pallet 재고는 Pallet 단위로만 출고합니다.</value></data>
+  <data name="MM-E-923" xml:space="preserve"><value>읽을 수 없는 바코드입니다: {0}</value></data>
   <data name="MM-E-715" xml:space="preserve"><value>{1}번 줄의 이동 유형 {0}이(가) 맞지 않습니다. TR은 보내는 창고와 받는 창고가 달라야 하고, LT는 같은 창고에서 보내는 Location과 받는 Location이 달라야 합니다.</value></data>
   <data name="MM-E-718" xml:space="preserve"><value>품목 {0}의 Location 관리를 끌 수 없습니다. * 말고 다른 Location의 잔고가 모두 0이어야 합니다.</value></data>
   <data name="MM-E-851" xml:space="preserve"><value>필수 항목 {0}을(를) 입력하세요.</value></data>

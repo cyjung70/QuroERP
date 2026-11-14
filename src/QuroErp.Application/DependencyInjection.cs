@@ -19,6 +19,7 @@ using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.I18n;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Labels;
 using QuroErp.Application.Mm.Locations;
 using QuroErp.Application.Mm.Lots;
 using QuroErp.Application.Mm.GoodsReceipts;
@@ -89,6 +90,7 @@ public static class DependencyInjection
         services.AddScoped<DocumentNumberService>();
         services.AddScoped<InventoryService>();
         services.AddScoped<LotService>();
+        services.AddScoped<LabelPrintService>();
         return services;
     }
 }

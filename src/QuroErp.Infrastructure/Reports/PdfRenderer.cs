@@ -42,15 +42,24 @@ public sealed class PdfRenderer(IServiceProvider services, ILoggerFactory logger
                 async (page, timeoutMs) =>
                 {
                     await page.SetContentAsync(html, new() { WaitUntil = WaitUntilState.Load, Timeout = timeoutMs });
-                    return await page.PdfAsync(new()
-                    {
-                        Format = paper.Format,
-                        PrintBackground = true,
-                        DisplayHeaderFooter = true,
-                        HeaderTemplate = "<span></span>",
-                        FooterTemplate = Footer,
-                        Margin = new() { Top = PrintPaper.Margin, Right = PrintPaper.Margin, Bottom = PrintPaper.Margin, Left = PrintPaper.Margin },
-                    });
+                    // A label page is the label size with no margin or page number (MM-BR-917)
+                    return await page.PdfAsync(paper.Width is not null
+                        ? new()
+                        {
+                            Width = paper.Width,
+                            Height = paper.Height,
+                            PrintBackground = true,
+                            Margin = new() { Top = "0", Right = "0", Bottom = "0", Left = "0" },
+                        }
+                        : new()
+                        {
+                            Format = paper.Format,
+                            PrintBackground = true,
+                            DisplayHeaderFooter = true,
+                            HeaderTemplate = "<span></span>",
+                            FooterTemplate = Footer,
+                            Margin = new() { Top = PrintPaper.Margin, Right = PrintPaper.Margin, Bottom = PrintPaper.Margin, Left = PrintPaper.Margin },
+                        });
                 },
                 limit.Token);
         }

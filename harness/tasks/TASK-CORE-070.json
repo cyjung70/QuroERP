@@ -35,5 +35,5 @@
     "단위 테스트: 채번, Pallet에 묶인 수량을 뺀 FIFO 추천, DataMatrix 왕복(생성 → 해석), ZPL 견본 비교, 라벨 순서"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

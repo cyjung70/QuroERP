@@ -23,7 +23,7 @@ public sealed class InMemoryLotRepository : ILotRepository
     };
 
     public Task<IReadOnlyList<StockBalance>> FindBalancesAsync(
-        long itemId, long warehouseId, DateOnly asOf, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        long itemId, long warehouseId, DateOnly asOf, bool withoutPallets, IDbTransaction transaction, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<StockBalance>>(_balances.TryGetValue((itemId, warehouseId), out var rows) ? [.. rows] : []);
 
     public Task<bool> HasLotStockAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>

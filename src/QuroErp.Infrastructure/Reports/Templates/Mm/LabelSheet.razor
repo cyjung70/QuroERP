@@ -1,0 +1,66 @@
+@* Label pages (MM-BR-917~919): one page per label page of the format's size. A Pallet prints its text page, then its DataMatrix
+   page. Values use Razor output only (security.md "출력 인코딩"); the DataMatrix SVG is code-made from the label code. *@
+@using QuroErp.Domain.Mm.Labels
+@using QuroErp.Infrastructure.Mm.Labels
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Labels</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'IBM Plex Sans KR', sans-serif; color: #000; }
+        .page { width: @(Width); height: @(Height); padding: 3mm; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; gap: 1.5mm; }
+        .page:last-child { page-break-after: auto; }
+        .line { font-size: 10pt; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .line:first-child { font-size: 13pt; font-weight: 700; }
+        .code { flex: 1; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+    @for (var copy = 0; copy < Copies; copy++)
+    {
+        foreach (var page in Pages)
+        {
+            <div class="page">
+                @if (page.Text)
+                {
+                    foreach (var field in Format.Fields)
+                    {
+                        if (page.Label.Values.GetValueOrDefault(field) is { Length: > 0 } value)
+                        {
+                            <div class="line">@value</div>
+                        }
+                    }
+                }
+                @if (page.Barcode)
+                {
+                    <div class="code">@((MarkupString)DataMatrixSvg.Render(page.Label.Code, BarcodeMm(page)))</div>
+                }
+            </div>
+        }
+    }
+</body>
+</html>
+
+@code {
+    [Parameter, EditorRequired]
+    public LabelFormat Format { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<LabelPage> Pages { get; set; } = [];
+
+    [Parameter]
+    public int Copies { get; set; } = 1;
+
+    private string Width => Format.WidthMm.ToString(CultureInfo.InvariantCulture) + "mm";
+
+    private string Height => Format.HeightMm.ToString(CultureInfo.InvariantCulture) + "mm";
+
+    // A barcode-only page fills the label; with text it takes about a third of the shorter side
+    private decimal BarcodeMm(LabelPage page)
+    {
+        var side = Math.Min(Format.WidthMm, Format.HeightMm) - 6;
+        return Math.Max(8, page.Text ? side / 3 : side * 0.8m);
+    }
+}

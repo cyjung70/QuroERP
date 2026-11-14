@@ -7,6 +7,7 @@ using QuroErp.Application.Common.Codes;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Labels;
 using QuroErp.Application.Mm.Lots;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Contracts.Mm.Lots;
@@ -326,6 +327,56 @@ public class LotServiceTests(AuthSchemaFixture db)
         (await KeyOnHandAsync(component.Id)).Should().Equal(("*", "*", 0m), ("*", "A1", 5m), ("*", "B1", 2m));
         var short_ = () => PostAsync(new StockMovementRequest("DN", Day, kit.Id, main, -4));
         (await short_.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(SetComponent.NotEnoughStock);
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-916"), Trait("Rule", "MM-BR-916"), Trait("Rule", "MM-BR-716")]
+    public async Task PalletStock_IsLeftOutOfTheSuggestion_AndALineThatIsNotAPalletLineCannotTakeIt()
+    {
+        var (main, _) = await WarehousesAsync();
+        var item = await CreateAsync(lotManaged: true);
+        await PostAsync(
+            new StockMovementRequest("GR", Day.AddDays(-2), item.Id, main, 4, Price: 2, LotNo: "B1"),
+            new StockMovementRequest("GR", Day, item.Id, main, 6, Price: 2, LotNo: "A1"));
+        var lots = await LotsAsync(item.Id);
+        await ExecuteAsync(
+            """
+            INSERT INTO mm_pallet (pallet_no, item_id, lot_id, warehouse_id, location_id, qty, status, created_by, updated_by)
+            VALUES (@No, @Item, @Lot, @Warehouse, (SELECT id FROM bc_location WHERE warehouse_id = @Warehouse AND location_code = '*'), 3, 'ACTIVE', 't', 't'),
+                   (@Closed, @Item, @Lot, @Warehouse, (SELECT id FROM bc_location WHERE warehouse_id = @Warehouse AND location_code = '*'), 0, 'CLOSED', 't', 't')
+            """,
+            new { No = "PL" + Guid.NewGuid().ToString("N")[..8], Closed = "PL" + Guid.NewGuid().ToString("N")[..8], Item = item.Id, Lot = lots["B1"], Warehouse = main });
+
+        var suggestion = await Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 5, Date = Day }, None);
+        var search = await Lots.SearchAsync(Query(item.Id, main, Day), None);
+        var intoPallet = () => PostAsync(new StockMovementRequest("DN", Day, item.Id, main, -2, LotNo: "B1"));
+
+        suggestion.Lines.Select(l => (l.LotNo, l.Qty)).Should().Equal(("B1", 1m), ("A1", 4m));
+        search.Select(b => (b.LotNo, b.OnHandQty)).Should().Equal(("B1", 4m), ("A1", 6m));
+        (await intoPallet.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal(item.ItemCd, "MAIN", "*", "B1", 2m, 3m);
+        (await PostAsync(new StockMovementRequest("DN", Day, item.Id, main, -1, LotNo: "B1"))).Single().PalletId.Should().BeNull();
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-919"), Trait("Rule", "MM-BR-919"), Trait("Rule", "MM-BR-917")]
+    public async Task LabelPrint_KeepsOneHistoryRowPerLabel_AndTheFourDefaultFormatsExist()
+    {
+        var refId = Random.Shared.NextInt64(1_000_000, long.MaxValue);
+        await using (var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None))
+        {
+            await db.Get<ILabelPrintRepository>().AddAsync(
+                [new LabelPrintRow("PALLET", refId, 2, "ZPL", "ZEBRA-1", "kim"), new LabelPrintRow("PALLET", refId, 1, "PDF", null, "kim")],
+                uow.Transaction, None);
+            await uow.CommitAsync(None);
+        }
+
+        (await QueryAsync<(int, string, string?, string)>(
+            "SELECT copies, output_kind, printer_name, printed_by FROM mm_label_print WHERE ref_id = @refId ORDER BY id", new { refId }))
+            .Should().Equal((2, "ZPL", "ZEBRA-1", "kim"), (1, "PDF", null, "kim"));
+        (await QueryAsync<string>("SELECT label_type || ' ' || output_kind || ' ' || fields::text FROM bc_label_format ORDER BY label_type", null))
+            .Should().Equal(
+                """ITEM ZPL ["itemCd", "itemName"]""",
+                """LOCATION ZPL ["warehouseCode", "locationCode"]""",
+                """LOT ZPL ["itemCd", "lotNo", "expiryDt"]""",
+                """PALLET ZPL ["palletNo", "itemCd", "itemName", "lotNo", "qty", "expiryDt"]""");
     }
 
     private static LotSearchQuery Query(long itemId, long warehouseId, DateOnly date) =>
