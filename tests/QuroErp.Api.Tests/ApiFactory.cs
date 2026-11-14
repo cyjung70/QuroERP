@@ -38,7 +38,9 @@ using QuroErp.Application.Mm.Vendors;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Api.Tests.Mm.Vendors;
 using QuroErp.Api.Tests.Mm.Locations;
+using QuroErp.Api.Tests.Mm.Lots;
 using QuroErp.Application.Mm.Locations;
+using QuroErp.Application.Mm.Lots;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Contracts.Mm.Warehouses;
@@ -222,6 +224,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IAlternateItemGroupRepository>(AlternateItemGroups);
             services.AddSingleton<IVendorRepository>(Vendors);
             services.AddSingleton<ILocationRepository>(Locations);
+            services.AddSingleton<ILotRepository>(new InMemoryLotRepository());
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             // /health without PostgreSQL or Chromium: one check whose status the test sets
             services.Configure<HealthCheckServiceOptions>(o =>

@@ -42,4 +42,7 @@ public static class StockSuggestion
         }
         return picks;
     }
+
+    /// <summary>The part of qty the picks do not cover: qty minus their sum, 0 when they cover it (MM-BR-716).</summary>
+    public static decimal ShortQty(IEnumerable<StockPick> picks, decimal qty) => Math.Max(qty - picks.Sum(p => p.Qty), 0);
 }

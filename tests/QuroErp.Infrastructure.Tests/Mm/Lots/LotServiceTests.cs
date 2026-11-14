@@ -234,8 +234,9 @@ public class LotServiceTests(AuthSchemaFixture db)
         var picks = await Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 5, Date = Day }, None);
         var noQty = () => Lots.SuggestAsync(new StockSuggestionQuery { ItemId = item.Id, WarehouseId = main, Qty = 0, Date = Day }, None);
 
-        picks.Select(p => (p.LocationCode, p.LotNo, p.Qty)).Should().Equal(("*", "*", 1m), (a01Code, "261007-001", 2m), (b01Code, "261010-001", 2m));
-        picks[1].LocationId.Should().Be(a01);
+        picks.Lines.Select(p => (p.LocationCode, p.LotNo, p.Qty)).Should().Equal(("*", "*", 1m), (a01Code, "261007-001", 2m), (b01Code, "261010-001", 2m));
+        picks.Lines[1].LocationId.Should().Be(a01);
+        picks.ShortQty.Should().Be(0);
         (await noQty.Should().ThrowAsync<DomainException>()).Which.Args.Should().Equal("qty");
     }
 
@@ -268,7 +269,9 @@ public class LotServiceTests(AuthSchemaFixture db)
         var (a01, _) = await AddLocationAsync(main, "A01");
         await PostAsync(new StockMovementRequest("UR", Day, item.Id, main, 3, Price: 2, LocationId: a01));
 
-        var withStock = () => Items.UpdateAsync(item.Id, Update(item, lotManaged: false, locationManaged: false), "kim", None);
+        // Posting stock updates the item row, so the update sends the current updatedAt
+        var current = await Items.GetAsync(item.Id, None);
+        var withStock = () => Items.UpdateAsync(item.Id, Update(current, lotManaged: false, locationManaged: false), "kim", None);
         (await withStock.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(StockKeyRules.LocationManagementCode);
 
         await PostAsync(new StockMovementRequest("DN", Day, item.Id, main, -3, LocationId: a01));

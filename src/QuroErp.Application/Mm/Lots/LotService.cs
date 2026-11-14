@@ -30,18 +30,21 @@ public sealed class LotService(ILotRepository lots, IUnitOfWorkFactory unitOfWor
 
     /// <summary>
     /// Where a decrease of qty should take its stock: the balances at the end of the date filled in FIFO order, split over
-    /// several (Location, Lot) when one is not enough. Short stock gives parts that add up to less than qty (MM-BR-716).
+    /// several (Location, Lot) when one is not enough. Short stock gives parts that add up to less than qty, and ShortQty is the
+    /// rest (MM-BR-716).
     /// </summary>
     /// <exception cref="DomainException">Common-E-005 when itemId, warehouseId or a qty above zero is missing.</exception>
-    public async Task<IReadOnlyList<StockSuggestionDto>> SuggestAsync(StockSuggestionQuery query, CancellationToken cancellationToken)
+    public async Task<StockSuggestionResultDto> SuggestAsync(StockSuggestionQuery query, CancellationToken cancellationToken)
     {
         var itemId = query.ItemId ?? throw new DomainException(RequiredCode, "itemId");
         var warehouseId = query.WarehouseId ?? throw new DomainException(RequiredCode, "warehouseId");
         var qty = query.Qty is { } q && q > 0 ? q : throw new DomainException(RequiredCode, "qty");
 
         var balances = await FindBalancesAsync(itemId, warehouseId, query.Date ?? clock.Today(), cancellationToken);
-        return StockSuggestion.Fifo(balances, qty)
-            .Select(p => new StockSuggestionDto(p.LocationId, p.LocationCode, p.LotId, p.LotNo, p.Qty)).ToList();
+        var picks = StockSuggestion.Fifo(balances, qty);
+        return new StockSuggestionResultDto(
+            [.. picks.Select(p => new StockSuggestionDto(p.LocationId, p.LocationCode, p.LotId, p.LotNo, p.Qty))],
+            StockSuggestion.ShortQty(picks, qty));
     }
 
     private async Task<IReadOnlyList<StockBalance>> FindBalancesAsync(long itemId, long warehouseId, DateOnly date, CancellationToken cancellationToken)

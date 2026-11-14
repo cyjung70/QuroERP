@@ -53,4 +53,18 @@ public class StockSuggestionTests
         StockSuggestion.Fifo([], 5).Should().BeEmpty();
         FluentActions.Invoking(() => StockSuggestion.Fifo(balances, 0)).Should().Throw<ArgumentOutOfRangeException>();
     }
+
+    [Theory, Trait("Id", "MM-UT-716"), Trait("Rule", "MM-BR-716")]
+    [InlineData(5, 0)]
+    [InlineData(6, 0)]
+    [InlineData(8, 2)]
+    public void ShortQty_IsWhatThePicksDoNotCover_AndZeroWhenCovered(decimal qty, decimal expected)
+    {
+        StockBalance[] balances = [new(1, "*", 20, "*", null, 2), new(2, "A01", 21, "260901-001", Early, 4)];
+
+        var picks = StockSuggestion.Fifo(balances, qty);
+
+        StockSuggestion.ShortQty(picks, qty).Should().Be(expected);
+        StockSuggestion.ShortQty([], 3).Should().Be(3);
+    }
 }

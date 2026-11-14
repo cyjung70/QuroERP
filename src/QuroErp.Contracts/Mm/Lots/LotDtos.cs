@@ -47,3 +47,9 @@ public sealed class StockSuggestionQuery
 /// when the warehouse does not have it (MM-BR-716).
 /// </summary>
 public sealed record StockSuggestionDto(long LocationId, string LocationCode, long LotId, string LotNo, decimal Qty);
+
+/// <summary>
+/// The FIFO suggestion of a decrease: the (Location, Lot) parts and ShortQty, the part of the asked quantity the warehouse
+/// cannot give (0 when the lines cover it) (MM-BR-716).
+/// </summary>
+public sealed record StockSuggestionResultDto(IReadOnlyList<StockSuggestionDto> Lines, decimal ShortQty);
