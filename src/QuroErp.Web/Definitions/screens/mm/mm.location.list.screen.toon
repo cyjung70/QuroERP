@@ -1,0 +1,30 @@
+# MM-UC-034 Locations of one warehouse (TASK-MM-052). The code is entered on new rows only; the '*' row is locked by the screen
+# (MM-BR-712); the balance is shown only.
+screen:
+  id: mm.location.list
+  module: MM
+  title: Mm.Location.Title
+  version: 1
+  api: /api/mm/locations
+  key: id
+  layout: grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: locations
+    bind: locations
+    rowKey: id
+    deletedRows: strike
+    columns[5]{id,label,type,width,edit,req,fmt,source,hidden}:
+      locationCode,Mm.Location.LocationCode,text,140,new,true,"","",false
+      locationName,Mm.Location.LocationName,text,220,true,false,"","",false
+      useYn,Mm.Location.UseYn,checkbox,80,true,false,"","",false
+      onhandQty,Mm.Location.OnhandQty,number,120,false,false,"","",false
+      remarks,Mm.Location.Remarks,text,260,true,false,"","",false
