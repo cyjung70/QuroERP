@@ -37,7 +37,7 @@
                           ItemsProvider="LoadPage" PageSize="@(_definition.PageSize > 0 ? _definition.PageSize : 100)"
                           OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged"
                           OnRowAdded="OnRowAdded" OnRowDeleting="OnRowDeleting" OnPasting="OnPasting" OnPasted="OnPasted"
-                          OnPopupRequested="OnPopupRequested">
+                          OnPopupRequested="OnPopupRequested" RowReadOnly="IsRowReadOnly">
                     @* The package puts declared columns after the definition's: the screen's own, then row state *@
                     @Columns
                     @if (Editable)
@@ -137,6 +137,13 @@
     [Parameter]
     public Func<bool>? CanAddRow { get; set; }
 
+    /// <summary>
+    /// A saved row nobody may change or delete, e.g. the system Location '*' (MM-BR-712): its cells are read-only and delete-row
+    /// skips it. Without it every row follows <see cref="CanWrite"/>.
+    /// </summary>
+    [Parameter]
+    public Func<TRow, bool>? IsRowLocked { get; set; }
+
     /// <summary>New has emptied the grid: the screen clears its search conditions.</summary>
     [Parameter]
     public EventCallback OnReset { get; set; }
@@ -234,7 +241,11 @@
 
     private bool CanAddNow => CanWrite && (CanAddRow?.Invoke() ?? true);
 
-    private bool CanMarkCurrent => CanWrite && _data.CurrentRowKey is not null;
+    private bool CanMarkCurrent => CanWrite && _data.CurrentRowKey is { } key && !RowLocked(_data.GetItem(key));
+
+    private bool RowLocked(TRow item) => IsRowLocked?.Invoke(item) == true;
+
+    private bool IsRowReadOnly(object item) => RowLocked((TRow)item);
 
     private bool CanRestoreCurrent =>
         CanWrite && _data.CurrentRowKey is { } key && _data.GetState(key) != Quro.Grid.Data.RowState.Normal;
@@ -596,7 +607,7 @@
         }
     }
 
-    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanEdit;
+    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanEdit || RowLocked(args.Item);
 
     private void OnPasting(PastingArgs args)
     {

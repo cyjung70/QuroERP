@@ -1,0 +1,102 @@
+@page "/mm/location"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Web.Bc.UserProfiles
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.Locations
+@using QuroErp.Web.Mm.Warehouses
+@inject LocationApiClient Api
+@inject WarehouseApiClient WarehouseApi
+@inject UserProfileApiClient ProfileApi
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
+
+@* MM-UC-034 Locations (shelves) of one warehouse, screen type M. Pick a warehouse, then add, change or delete Locations and save
+   them together. The system Location '*' is on top and locked (MM-BR-712); Locations not in use stay listed so they can be put
+   back in use. The API checks every rule (MM-BR-712, 717). *@
+
+<PageTitle>@L["Mm.Location.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="location-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="LocationRow" Title="@L["Mm.Location.Title"]" TestId="location" Path="@L["Menu.G1BA"]"
+                   LoadOnStart="_warehouseId is not null" Definition="mm.location.list" UpperCaseFields="UpperCaseFields"
+                   Load="LoadAsync" Save="SaveAsync" CreateRow="() => new LocationRow { WarehouseId = _loadedWarehouseId ?? 0 }"
+                   CanWrite="_canEdit" CanAddRow="() => _loadedWarehouseId is not null" IsRowLocked="r => r.IsSystem" OnReset="ResetSearch">
+        <SearchContent>
+            <QuroSelect Label="@L["Mm.Location.WarehouseId"]" @bind-Value="_warehouseId" Options="_warehouses" Required TestId="location-search-warehouse" />
+        </SearchContent>
+    </QuroMultiGrid>
+}
+
+@code {
+    private const string ScreenPath = "/mm/location";
+    private const string RequiredCode = "Common-E-005";
+    private const string UnavailableCode = "BC-E-003";
+
+    private static readonly string[] UpperCaseFields = ["locationCode"];
+
+    private QuroMultiGrid<LocationRow>? _grid;
+    private IReadOnlyList<CodeItemDto> _warehouses = [];
+    private string? _warehouseId;
+    private long? _loadedWarehouseId;
+    private bool _canEdit;
+    private bool _ready;
+    private string? _loadError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
+        try
+        {
+            // General warehouses in use; only the system posts to the consignment warehouse (MM-BR-710)
+            var warehouses = (await WarehouseApi.GetOptionsAsync(CancellationToken.None)).Where(w => w.UseYn && w.WarehouseType == "NORMAL").ToList();
+            _warehouses = [.. warehouses.Select(w => new CodeItemDto(w.Id.ToString(CultureInfo.InvariantCulture), $"{w.WarehouseCode} {w.WarehouseName}"))];
+            // The user's default warehouse first, otherwise the first one (location.md "화면 필드")
+            var profile = await ProfileApi.GetAsync(CancellationToken.None);
+            _warehouseId = (warehouses.FirstOrDefault(w => w.Id == profile.DefaultWarehouseId) ?? warehouses.FirstOrDefault())?.Id
+                .ToString(CultureInfo.InvariantCulture);
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    private async Task<IReadOnlyList<LocationRow>> LoadAsync()
+    {
+        if (!long.TryParse(_warehouseId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var warehouseId))
+        {
+            _loadedWarehouseId = null;
+            throw new ApiProblemException(new ApiProblem(400, RequiredCode, [L["Mm.Location.WarehouseId"]]));
+        }
+        var locations = await Api.SearchAsync(warehouseId, CancellationToken.None);
+        _loadedWarehouseId = warehouseId;
+        return locations.Select(LocationRow.From).ToList();
+    }
+
+    // Saves under the warehouse the rows were read for, even if the warehouse select changed since
+    private Task SaveAsync(BatchChanges<LocationRow> changes) =>
+        Api.SaveAsync(LocationRow.ToRequest(changes, _loadedWarehouseId!.Value), CancellationToken.None);
+
+    private void ResetSearch()
+    {
+        _warehouseId = null;
+        _loadedWarehouseId = null;
+    }
+}
