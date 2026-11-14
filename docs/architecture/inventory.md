@@ -54,7 +54,7 @@
 - Location 마스터 `bc_location`은 창고별이다. 선반 번호 = Location 코드다. 창고마다 시스템 Location `*`이 1행 있고 바꾸거나 지울 수 없다 (MM-BR-712).
 - 모든 재고 문서 줄에 Location이 있고 기본값은 `*`이다. Location 관리 품목(`bc_item.location_managed`)만 `*`이 아닌 Location을 쓴다 (MM-BR-713).
 - 같은 창고 안 Location 간 이동은 창고 이동 문서에 이동 유형 `LT`로 남긴다 (MM-BR-715).
-- 출고 줄의 Location·Lot은 시스템이 FIFO로 추천하고 사용자가 바꿀 수 있다 (MM-BR-716). Kit 전개·조립 구성품은 추천대로 자동 할당한다 (SD-BR-518).
+- 출고 줄의 Location·Lot은 시스템이 FIFO로 추천하고 사용자가 바꿀 수 있다. Pallet에 묶인 수량은 Pallet이 아닌 줄에 추천하지 않는다 (MM-BR-716·916). Kit 전개·조립 구성품은 추천대로 자동 할당한다 (SD-BR-518).
 
 ## 로트
 
@@ -83,7 +83,7 @@
 
 - 품목 유형 `KIT`(판매 때 전개, 재고 없음)와 `SET`(조립 재고)을 나눈다 (SD-BR-511).
 - 조립(`mm_assembly`, `ASSEMBLE`): 구성품 출고 `BI`, Set 입고 `BP`. Set 금액 = 구성품 출고 금액 합 (SD-BR-514·515).
-- 해체(`DISASSEMBLE`): 원 조립을 가리키고 Set 출고 `DA`, 구성품 입고 `DR`(원 조립의 Lot·단가) (SD-BR-516).
+- 해체(`DISASSEMBLE`): 원 조립을 가리키고 Set 출고 `DA`, 구성품 입고 `DR`(원 조립의 Lot·단가, 조립 때 쓴 순서의 반대로 Lot을 채운다) (SD-BR-516).
 
 ## 마이너스 재고 허용 옵션
 

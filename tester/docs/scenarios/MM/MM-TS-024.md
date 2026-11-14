@@ -31,7 +31,7 @@
 | 5 | `POST /api/mm/goods-receipts` | W, P 수량 6, Location `A-02` (오늘 두 번째 Lot) |
 | 6 | `POST /api/mm/stock-transfers` | `LT`, W → W, P Lot `D-001` 수량 2, `A-01` → `A-01` |
 | 7 | `POST /api/mm/stock-transfers` | `LT`, W → W, 3단계 Pallet 첫째(수량 4), `A-01` → `A-02` |
-| 8 | `GET /api/mm/stock-suggestions?itemId={P}&warehouseId={W}&qty=12` | — |
+| 8 | `GET /api/mm/stock-suggestions?itemId={P}&warehouseId={W}&qty=8` | — |
 | 9 | `POST /api/mm/pallets/{3단계 Pallet 둘째}/split` | 수량 1 |
 | 10 | `POST /api/mm/pallets/merge` | 대상 = 3단계 Pallet 둘째, 원 = 9단계 새 Pallet |
 | 11 | `POST /api/mm/pallets/merge` | 대상 = 3단계 Pallet 셋째(`A-01`), 원 = 7단계로 옮긴 Pallet(`A-02`) |
@@ -51,7 +51,7 @@
 | 5 | 201 | — | — | (P, W, `A-02`, `D-002`) = 6 |
 | 6 | 422 | `MM-E-715` | 같은 Location | 이동 없음 |
 | 7 | 201 | — | — | 이동 유형 `LT` 두 줄, 금액 같음. Pallet Location = `A-02` (MM-BR-912). (P, W, `A-01`, `D-001`) = 6, (P, W, `A-02`, `D-001`) = 4 |
-| 8 | 200 | — | 입고일이 같아 Lot 번호 순: `D-001`(`A-01` 6, `A-02` 4) → `D-002`(`A-02` 2), 합 12 (MM-BR-716) | — |
+| 8 | 200 | — | `D-001`은 `A-01` 6·`A-02` 4가 모두 Pallet에 묶여 있어 추천하지 않는다. `D-002`(`A-02` 6)만, 모자란 수량 2를 알린다 (MM-BR-716·916) | — |
 | 9 | 201 | — | 새 Pallet 수량 1, 원 3 | `parent_pallet_id`, 재고 이동 없음 (MM-BR-914) |
 | 10 | 200 | — | 원 Pallet `CLOSED`·0, 대상 4 | `mm_pallet_event` `SPLIT`·`MERGE` (MM-BR-915·916) |
 | 11 | 422 | `MM-E-915` | Location이 다르다 | 변경 없음 |
