@@ -328,7 +328,7 @@
     },
     {
       "path": "docs/business-rules/SD/sales-report.md",
-      "sha256": "b2d2b875463becb625caa7009021f042d5327730fbf16ca2a137d5d2992c2385"
+      "sha256": "384ae8c4d5a39905273a548fde00a5ef6d932cb4c7f7c3cf1bd8006d5b573475"
     },
     {
       "path": "docs/business-rules/SD/sales-return.md",
@@ -552,11 +552,11 @@
     },
     {
       "path": "docs/specifications/MM/report-item-list-excel.md",
-      "sha256": "7517486e795fea31806ba19913d8e1cc75cdf92bfb410e37649810cc9727aa5a"
+      "sha256": "169461af10884f767dafc3541f0f2baf86d282feadd3ec6a94f62b75cee06302"
     },
     {
       "path": "docs/specifications/MM/report-item-list.md",
-      "sha256": "0efc8632e932a2c25a78080807e0df7e5419b94f6d4bef27c9804887a7e08dbd"
+      "sha256": "e3be33fe99673a3a5fd68e67c663ca4767ef6d6d52c30ae4bbf53190aa8de43e"
     },
     {
       "path": "docs/specifications/MM/report-item-transactions.md",
@@ -564,7 +564,7 @@
     },
     {
       "path": "docs/specifications/MM/report-ptp-item-list.md",
-      "sha256": "0facb4967facd64f61c1fb2c7c43bca05fd56949f7038b548921d8527f513755"
+      "sha256": "9b3c00f7e99000ce99cf948903e452bbe7f9f595a538228eff073bc95564dc28"
     },
     {
       "path": "docs/specifications/MM/report-vat-purchase.md",
