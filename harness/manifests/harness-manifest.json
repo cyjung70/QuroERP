@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/architecture/entry-frame.md",
-      "sha256": "333d1b34cee94ec96e6f3c64259c91e6e3508771893679df44a50f5e40a9db70"
+      "sha256": "63bfc73813ba9a5126723aec92f8d5cb4c47e2216db5e2b5dd9bc9d3104581b3"
     },
     {
       "path": "docs/architecture/field-policy.md",
@@ -1397,6 +1397,10 @@
     {
       "path": "harness/tasks/TASK-CORE-077.json",
       "sha256": "7881fd97a9fde0c934c4674d69799c46d97e5b68a732ade01416ab813184736c"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-078.json",
+      "sha256": "97bf7cbb1606166adb92350bb64b91ed6d44ad9a08ebb13ff5e565895728675c"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
