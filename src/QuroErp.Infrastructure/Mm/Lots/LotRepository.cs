@@ -25,8 +25,6 @@ internal sealed class LotRepository : ILotRepository
 
     private const string SelectHasNegativeOnHand = "SELECT EXISTS (SELECT 1 FROM mm_onhand WHERE item_id = @ItemId AND onhand_qty < 0)";
 
-    private const string SelectIsSetComponent = "SELECT EXISTS (SELECT 1 FROM sd_bom WHERE child_item_id = @ItemId)";
-
     // MM-BR-351: a balance on a lot other than '*'
     private const string SelectHasLotStock = """
         SELECT EXISTS (SELECT 1 FROM mm_onhand o JOIN mm_lot l ON l.id = o.lot_id
@@ -40,9 +38,6 @@ internal sealed class LotRepository : ILotRepository
 
     public Task<bool> HasNegativeOnHandAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         Exists(SelectHasNegativeOnHand, itemId, transaction, cancellationToken);
-
-    public Task<bool> IsSetComponentAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        Exists(SelectIsSetComponent, itemId, transaction, cancellationToken);
 
     public Task<bool> HasLotStockAsync(long itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         Exists(SelectHasLotStock, itemId, transaction, cancellationToken);

@@ -186,11 +186,10 @@ public sealed class Item
     /// Lot management was just turned on: it starts today, and the caller moves the stock to lot MIGRATED (MM-BR-351).
     /// </summary>
     /// <param name="negativeWarehouse">A warehouse of the item has stock below zero.</param>
-    /// <param name="setComponent">The item is a component of a set (MM-BR-361).</param>
-    /// <exception cref="DomainException">MM-E-351 or MM-E-361.</exception>
-    public void StartLotManagement(DateOnly today, bool negativeWarehouse, bool setComponent)
+    /// <exception cref="DomainException">MM-E-351.</exception>
+    public void StartLotManagement(DateOnly today, bool negativeWarehouse)
     {
-        LotRules.EnsureCanTurnOn(ItemCd, Fields.ItemType == DefaultItemType, negativeWarehouse, setComponent);
+        LotRules.EnsureCanTurnOn(ItemCd, Fields.ItemType == DefaultItemType, negativeWarehouse);
         LotManagedFrom = today;
     }
 

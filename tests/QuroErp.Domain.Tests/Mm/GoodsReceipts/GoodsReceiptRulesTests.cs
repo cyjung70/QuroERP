@@ -1,5 +1,6 @@
 using FluentAssertions;
 using QuroErp.Domain.Bc.Localization;
+using QuroErp.Domain.Bc.SetItems;
 using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.GoodsReceipts;
@@ -14,6 +15,8 @@ public class GoodsReceiptRulesTests
     private const long Inventory = 1;
     private const long Service = 2;
     private const long Asset = 3;
+    private const long Kit = 4;
+    private const long SetItem = 5;
     private const long Warehouse = 7;
     private const long Vat10 = 1;
     private const long NoTax = 2;
@@ -26,7 +29,7 @@ public class GoodsReceiptRulesTests
     private static readonly GoodsReceiptSettings KrwBase = new("KRW", TaxCalcMode.Document);
 
     private static GoodsReceiptMasters Masters(string poStatus = PoStatusCode.Approved, long poVendor = Vendor, decimal received = 0m) => new(
-        new Dictionary<long, string> { [Inventory] = "INVENTORY", [Service] = "SERVICE", [Asset] = "ASSET" },
+        new Dictionary<long, string> { [Inventory] = "INVENTORY", [Service] = "SERVICE", [Asset] = "ASSET", [Kit] = "KIT", [SetItem] = "SET" },
         new HashSet<long> { Warehouse },
         new Dictionary<long, ReceiptTaxCode>
         {
@@ -71,11 +74,21 @@ public class GoodsReceiptRulesTests
         Calc(Header(), lines: Line(qty: 1m, price: -5m)).Totals.SupplyAmt.Should().Be(-5m);
     }
 
+    // SD-BR-513: a Set's stock grows only by assembly, so a goods receipt line of a Set says so
+    [Fact, Trait("Id", "SD-UT-513"), Trait("Rule", "SD-BR-513")]
+    public void Item_ASet_IsSdE513()
+    {
+        var error = Assert.Throws<DomainException>(() => Calc(Header(), lines: [Line(), Line(item: SetItem)]));
+
+        (error.Code, error.Args).Should().BeEquivalentTo((SetItemRules.PurchaseCode, new object[] { 2 }));
+    }
+
     [Fact, Trait("Id", "MM-UT-115"), Trait("Rule", "MM-BR-115")]
     public void Item_MustBeInventoryOrService()
     {
         CodeOf(() => Calc(Header(), lines: Line(item: Asset))).Should().Be(GoodsReceiptRules.ItemCode);
         CodeOf(() => Calc(Header(), lines: Line(item: 99))).Should().Be(GoodsReceiptRules.ItemCode);
+        CodeOf(() => Calc(Header(), lines: Line(item: Kit))).Should().Be(GoodsReceiptRules.ItemCode);
         Calc(Header(), lines: Line(item: Service, taxCode: NoTax)).Lines.Single().ItemId.Should().Be(Service);
     }
 

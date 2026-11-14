@@ -148,7 +148,7 @@ internal sealed class SalesOrderRepository : ISalesOrderRepository
         SELECT l.seq, s.item_cd AS set_item_cd, coalesce(l.item_name, s.item_name) AS set_item_name, coalesce(l.so_qty, 0) AS so_qty,
                ci.item_cd AS component_cd, ci.item_name AS component_name, ci.unit, ci.location, b.child_qty
         FROM sd_sales_order_line l
-        JOIN bc_item s ON s.id = l.item_id AND s.type = 'SET'
+        JOIN bc_item s ON s.id = l.item_id AND s.type IN ('KIT', 'SET')
         JOIN sd_bom b ON b.parent_item_id = s.id
         LEFT JOIN bc_item ci ON ci.id = b.child_item_id
         WHERE l.sales_order_id = @Id

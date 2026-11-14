@@ -10,6 +10,11 @@ public sealed class ItemStock(
 {
     /// <summary>ITEM_TYPE codes.</summary>
     public const string Inventory = "INVENTORY";
+
+    /// <summary>A sales BOM: no stock of its own, movements expand into its components (SD-BR-511, MM-BR-007).</summary>
+    public const string Kit = "KIT";
+
+    /// <summary>An assembled item with stock of its own (SD-BR-511, SD-BR-513).</summary>
     public const string Set = "SET";
     public const string Service = "SERVICE";
 
@@ -28,10 +33,14 @@ public sealed class ItemStock(
     /// <summary>bc_item.mvg_cost.</summary>
     public decimal MovingAverageCost { get; private set; } = movingAverageCost;
 
-    /// <summary>Every item type except Service keeps stock; a Set keeps it through its components (MM-BR-008).</summary>
+    /// <summary>
+    /// Every item type except Service keeps stock: a Kit through its components (MM-BR-007), a Set on its own (MM-BR-008,
+    /// SD-BR-513).
+    /// </summary>
     public bool IsStockManaged => Type != Service;
 
-    public bool IsSet => Type == Set;
+    /// <summary>Movements of a Kit expand into its components (MM-BR-007).</summary>
+    public bool IsKit => Type == Kit;
 
     /// <summary>bc_item.lot_managed: stock is kept per lot as well (MM-BR-351).</summary>
     public bool LotManaged { get; } = lotManaged;

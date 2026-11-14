@@ -98,7 +98,7 @@ public static class SalesOrderEntryRules
     public const string ConfirmCreditLimitField = "confirmCreditLimit";
 
     /// <summary>Item types that never get a price level row (SD-BR-010, SD-BR-408).</summary>
-    public static IReadOnlyList<string> ItemTypesWithoutPriceLevel { get; } = ["SERVICE", "SET"];
+    public static IReadOnlyList<string> ItemTypesWithoutPriceLevel { get; } = ["SERVICE", "KIT", "SET"];
 
     /// <summary>
     /// Checks the header and lines and computes every amount. Lines are numbered 1..n in the order given.

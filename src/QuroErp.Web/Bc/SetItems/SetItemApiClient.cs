@@ -9,7 +9,7 @@ namespace QuroErp.Web.Bc.SetItems;
 public sealed class SetItemApiClient(HttpClient http, AccessTokenProvider tokens)
 {
     /// <summary>The set and its components in sequence order.</summary>
-    /// <exception cref="ApiProblemException">422 Common-E-005 without a code, SD-E-501 when the item is not a set in use.</exception>
+    /// <exception cref="ApiProblemException">422 Common-E-005 without a code, SD-E-501 when the item is not a Kit or Set in use.</exception>
     public async Task<SetItemDto> GetAsync(string itemCd, CancellationToken cancellationToken)
     {
         var uri = $"{SetItemRoutes.Base}?itemCd={Uri.EscapeDataString(itemCd)}";
@@ -20,7 +20,7 @@ public sealed class SetItemApiClient(HttpClient http, AccessTokenProvider tokens
 
     /// <summary>Saves the changed rows in one transaction (SD-BR-506) and returns the set as saved.</summary>
     /// <exception cref="ApiProblemException">
-    /// 422 SD-E-501~504, MM-E-361 or BC-E-423 with the row's item code; 409 Common-E-004; 403 for users without Full Access.
+    /// 422 SD-E-501~504 or BC-E-423 with the row's item code; 409 Common-E-004; 403 for users without Full Access.
     /// </exception>
     public async Task<SetItemDto> SaveAsync(
         string itemCd, BatchRequest<SetComponentRowRequest, SetComponentDeleteRequest> request, CancellationToken cancellationToken)

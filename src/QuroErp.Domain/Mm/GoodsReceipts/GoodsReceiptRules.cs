@@ -1,4 +1,5 @@
 using QuroErp.Domain.Bc.Localization;
+using QuroErp.Domain.Bc.SetItems;
 using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.PurchaseOrders;
@@ -327,7 +328,9 @@ public static class GoodsReceiptRules
 
     private static void CheckLine(GoodsReceiptLineInput line, int seq, GoodsReceiptHeader header, GoodsReceiptMasters masters)
     {
-        if (!masters.ItemTypes.TryGetValue(line.ItemId, out var itemType) || !ReceivableItemTypes.Contains(itemType))
+        masters.ItemTypes.TryGetValue(line.ItemId, out var itemType);
+        SetItemRules.EnsureNotReceived(itemType, seq);
+        if (itemType is null || !ReceivableItemTypes.Contains(itemType))
         {
             throw new DomainException(ItemCode, seq);
         }

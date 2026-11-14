@@ -12,7 +12,6 @@ using QuroErp.Contracts.Common;
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Bc.SetItems;
 using QuroErp.Domain.Common;
-using QuroErp.Domain.Mm.Lots;
 using QuroErp.Infrastructure.Tests.Common.Auth;
 using QuroErp.Infrastructure.Tests.Common.Persistence;
 
@@ -53,6 +52,17 @@ public class SetItemServiceTests(AuthSchemaFixture db)
         (saved.ItemCd, saved.ItemName).Should().Be((m.Set, "Kit"));
     }
 
+    // SD-BR-501: a Set has components as well as a Kit; MM-BR-361: a lot-managed item can be one of them
+    [DatabaseFact, Trait("Id", "SD-UT-501"), Trait("Id", "MM-UT-361")]
+    public async Task Batch_ASetToo_AndALotManagedComponent_AreSaved()
+    {
+        var m = await MastersAsync();
+
+        var saved = await Service.SaveAsync(m.Other, Batch(added: [Row(m.A, 1), Row(m.Lot, 2)]), "kim", None);
+
+        saved.Components.Select(c => (c.ItemCd, c.Qty)).Should().Equal((m.A, 1m), (m.Lot, 2m));
+    }
+
     [DatabaseFact, Trait("Id", "BC-UC-013-T02"), Trait("Id", "SD-UT-506"), Trait("Id", "SD-UT-502"), Trait("Id", "SD-UT-503")]
     public async Task Batch_OneBadRow_SavesNothing()
     {
@@ -63,7 +73,6 @@ public class SetItemServiceTests(AuthSchemaFixture db)
             (Row(m.Service, 1), SetItemRules.ComponentCode),
             (Row(m.Unused, 1), SetItemRules.ComponentCode),
             (Row(m.Other, 1), SetItemRules.ComponentCode),
-            (Row(m.Lot, 1), LotRules.SetComponentCode),
             (Row(m.B, 0), SetItemRules.QtyCode),
             (Row(m.B, 1.23456m), DecimalPolicy.TooManyDecimalsCode),
         })
@@ -195,14 +204,14 @@ public class SetItemServiceTests(AuthSchemaFixture db)
         await connection.ExecuteAsync(
             """
             INSERT INTO bc_item (item_cd, item_name, type, unit, valid_flag, lot_managed, created_by, updated_by) VALUES
-                (@Set, 'Kit', 'SET', 'EA', 'Y', false, 't', 't'),
-                (@OffSet, 'Old kit', 'SET', 'EA', 'N', false, 't', 't'),
+                (@Set, 'Kit', 'KIT', 'EA', 'Y', false, 't', 't'),
+                (@OffSet, 'Old kit', 'KIT', 'EA', 'N', false, 't', 't'),
                 (@A, 'Bolt', 'INVENTORY', 'EA', 'Y', false, 't', 't'),
                 (@B, 'Nut', 'INVENTORY', 'EA', NULL, false, 't', 't'),
                 (@C, 'Washer', 'INVENTORY', 'EA', 'Y', false, 't', 't'),
                 (@Service, 'Freight', 'SERVICE', 'EA', 'Y', false, 't', 't'),
                 (@Unused, 'Old bolt', 'INVENTORY', 'EA', 'N', false, 't', 't'),
-                (@Other, 'Other kit', 'SET', 'EA', 'Y', false, 't', 't'),
+                (@Other, 'Other set', 'SET', 'EA', 'Y', false, 't', 't'),
                 (@Lot, 'Lot bolt', 'INVENTORY', 'EA', 'Y', true, 't', 't')
             """,
             m);

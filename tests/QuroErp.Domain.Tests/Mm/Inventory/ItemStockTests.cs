@@ -88,16 +88,18 @@ public class ItemStockTests
         (item.OnHandQty, item.StockValue, item.MovingAverageCost).Should().Be((6m, 102m, 17m));
     }
 
-    [Theory, Trait("Id", "MM-UT-008")]
+    // MM-BR-007: only a Kit expands into its components; SD-BR-513: a Set keeps its own stock
+    [Theory, Trait("Id", "MM-UT-008"), Trait("Rule", "SD-BR-511")]
     [InlineData("INVENTORY", true, false)]
-    [InlineData("SET", true, true)]
+    [InlineData("KIT", true, true)]
+    [InlineData("SET", true, false)]
     [InlineData("SERVICE", false, false)]
     [InlineData(null, true, false)]
-    public void IsStockManaged_EveryTypeButService(string? type, bool stockManaged, bool isSet)
+    public void IsStockManaged_EveryTypeButService_OnlyAKitExpands(string? type, bool stockManaged, bool isKit)
     {
         var item = new ItemStock(1, "A", type, 0, 0, 0);
 
         item.IsStockManaged.Should().Be(stockManaged);
-        item.IsSet.Should().Be(isSet);
+        item.IsKit.Should().Be(isKit);
     }
 }

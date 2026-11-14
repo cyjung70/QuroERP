@@ -85,6 +85,16 @@ public partial class MigrationTests(MigratedSchemaFixture db)
             SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
             WHERE m.major_code = 'MOVEMENT_TYPE' ORDER BY n.sort_order
             """).Should().EndWith(["TR", "PV", "VR"]).And.HaveCount(10);
+        // SD-BR-511: Kit and Set are separate item types, the Kit with ko and en names (TASK-CORE-069)
+        Query<string>("""
+            SELECT n.minor_code FROM sys_code_minor n JOIN sys_code_major m ON m.id = n.major_id
+            WHERE m.major_code = 'ITEM_TYPE' ORDER BY n.sort_order
+            """).Should().Equal("INVENTORY", "SET", "KIT", "SERVICE");
+        Query<string>("""
+            SELECT t.lang_code || '=' || t.name FROM sys_code_minor_translation t JOIN sys_code_minor n ON n.id = t.minor_id
+            JOIN sys_code_major m ON m.id = n.major_id
+            WHERE m.major_code = 'ITEM_TYPE' AND n.minor_code = 'KIT' ORDER BY t.lang_code
+            """).Should().Equal("en=Kit", "ko=키트");
         Query<string>("SELECT role_code FROM sys_role ORDER BY role_code")
             .Should().Equal("admin", "manager", "poweruser", "salesman", "srep");
     }
