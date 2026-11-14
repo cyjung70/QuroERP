@@ -74,14 +74,14 @@ public class ItemBarcodeApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact, Trait("Id", "BC-UC-011-T03"), Trait("Id", "MM-UT-816")]
-    public async Task OverTenDigitsOrNotDigits_Returns422MmE816_AndChangesNothing()
+    public async Task OverTwentyDigitsOrNotDigits_Returns422MmE816_AndChangesNothing()
     {
         var client = await factory.AdminAsync();
         await CreateAsync(client, "BC3-A", "ZZBC3", upcCode: "3000000001");
         await CreateAsync(client, "BC3-B", "ZZBC3");
 
-        using var preview = await client.GetAsync($"{ItemBarcodeRoutes.Base}/{ItemBarcodeRoutes.Preview}" + Query("ZZBC3", startNo: "9999999998"));
-        using var generated = await GenerateAsync(client, "ZZBC3", "9999999998");
+        using var preview = await client.GetAsync($"{ItemBarcodeRoutes.Base}/{ItemBarcodeRoutes.Preview}" + Query("ZZBC3", startNo: "99999999999999999998"));
+        using var generated = await GenerateAsync(client, "ZZBC3", "99999999999999999998");
         using var letters = await GenerateAsync(client, "ZZBC3", "12AB");
 
         foreach (var response in new[] { preview, generated, letters })
@@ -90,6 +90,19 @@ public class ItemBarcodeApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
             (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("MM-E-816");
         }
         (await ListAsync(client, "ZZBC3")).Select(i => i.UpcCode).Should().Equal("3000000001", null);
+    }
+
+    [Fact, Trait("Id", "MM-UT-816")]
+    public async Task TwentyDigitBarcodes_AreGenerated()
+    {
+        var client = await factory.AdminAsync();
+        await CreateAsync(client, "BC6-A", "ZZBC6");
+        await CreateAsync(client, "BC6-B", "ZZBC6");
+
+        using var generated = await GenerateAsync(client, "ZZBC6", "99999999999999999997");
+
+        generated.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await ListAsync(client, "ZZBC6")).Select(i => i.UpcCode).Should().Equal("99999999999999999998", "99999999999999999999");
     }
 
     [Fact, Trait("Id", "BC-UC-011-T04"), Trait("Id", "BC-UC-011-T05"), Trait("Id", "MM-UT-817"), Trait("Id", "MM-UT-818")]

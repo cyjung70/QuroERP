@@ -34,5 +34,5 @@
     "끝난 품목·바코드 화면을 이 명세대로 고친다. 기존 bUnit·API 테스트가 통과한다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }

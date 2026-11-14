@@ -179,6 +179,7 @@ public class ItemScreenTests : BunitContext
     [InlineData("MM-E-801", "A100", "품목 코드 'A100'을(를) 쓸 수 없습니다. 대문자 18자 이하로, 다른 품목과 겹치지 않게 입력하세요.")]
     [InlineData("MM-E-803", "UsdPrc", "구매 단가은(는) 0 이상이어야 합니다.")]
     [InlineData("MM-E-806", "A100", "품목 A100은(는) 재고·재고 이동·세트 구성이 있어 유형을 바꿀 수 없습니다.")]
+    [InlineData("MM-E-834", "A100", "품목 A100의 Location 관리를 켤 수 없습니다. Location 관리는 자기 재고가 있는 품목(Inventory·Set)만 켤 수 있습니다.")]
     public void SaveRejectedByTheApi_ShowsTheMessage_WithFieldLabels(string code, string arg, string message)
     {
         var page = RenderAs("admin");
@@ -300,6 +301,40 @@ public class ItemScreenTests : BunitContext
         page.FindAll($"[data-testid={hidden}]").Should().BeEmpty();
     }
 
+    // Item 17: Location, lot and show components; the old Location memo is off the screen (MM-BR-834, MM-BR-718, SD-BR-517)
+    [Fact, Trait("Id", "MM-UT-834"), Trait("Id", "CORE-072-WT-01")]
+    public void Item17_LocationLotAndShowComponents_WithoutTheOldLocationMemo()
+    {
+        var page = RenderAs("admin");
+
+        page.FindAll("[data-testid=item-header-location]").Should().BeEmpty();
+        page.Markup.Should().Contain("Location 관리").And.Contain("구성품 표시");
+        page.Find("[data-testid=item-header-location-managed]").HasAttribute("checked").Should().BeFalse();
+        page.Find("[data-testid=item-header-show-components]").HasAttribute("checked").Should().BeTrue();
+        page.Find("[data-testid=item-header-show-components]").HasAttribute("disabled").Should().BeTrue("an Inventory item has no components");
+
+        page.Field("item-header-item-type").Change("KIT");
+
+        page.Find("[data-testid=item-header-show-components]").HasAttribute("disabled").Should().BeFalse();
+    }
+
+    [Fact, Trait("Id", "CORE-072-WT-02")]
+    public void SaveNew_SendsLocationManagedAndShowComponents()
+    {
+        var page = RenderAs("admin");
+        page.Field("item-header-item-cd").Change("K300");
+        page.Field("item-header-item-name").Change("BOX KIT");
+        page.Field("item-header-item-class").Change("HW");
+        page.Field("item-header-item-type").Change("SET");
+        page.Find("[data-testid=item-header-location-managed]").Change(true);
+        page.Find("[data-testid=item-header-show-components]").Change(false);
+
+        page.Find("[data-testid=item-toolbar-save]").Click();
+
+        page.WaitForAssertion(() => _api.Created.Should().ContainSingle());
+        _api.Created[0].Should().BeEquivalentTo(new { ItemType = "SET", LocationManaged = true, ShowComponents = false, Location = (string?)null });
+    }
+
     private IRenderedComponent<Item> RenderAs(string role)
     {
         var store = Services.GetRequiredService<AccessTokenStore>();
@@ -410,7 +445,7 @@ public class ItemScreenTests : BunitContext
 
         private static IReadOnlyList<CodeItemDto> Codes(string major) => major switch
         {
-            "ITEM_TYPE" => [new("INVENTORY", "재고 품목"), new("SET", "세트"), new("SERVICE", "서비스")],
+            "ITEM_TYPE" => [new("INVENTORY", "재고 품목"), new("SERVICE", "서비스"), new("KIT", "키트"), new("SET", "세트")],
             "UNIT" => [new("EA", "개"), new("BX", "박스")],
             "ITEM_CLASS" => [new("FR", "과일"), new("HW", "철물")],
             "VALID_FLAG" => [new("Y", "사용"), new("N", "사용 안 함")],

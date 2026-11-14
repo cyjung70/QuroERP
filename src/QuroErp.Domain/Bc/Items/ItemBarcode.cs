@@ -12,12 +12,13 @@ public static class ItemBarcode
     /// <summary>A barcode another item already has. Arg: the other item codes.</summary>
     public const string DuplicateCode = "MM-E-817";
 
-    /// <summary>Generated barcodes only; a typed barcode may be up to 20 characters (MM-BR-825).</summary>
-    public const int MaxDigits = 10;
+    /// <summary>A generated barcode, like a typed one (bc_item.upc_code, MM-BR-816, MM-BR-825).</summary>
+    public const int MaxDigits = 20;
 
     public const string DefaultStartNo = "1000000000";
 
-    private const long MaxValue = 9_999_999_999;
+    // 20 digits do not fit in a long, so the numbers are decimals (28 digits)
+    private const decimal MaxValue = 99_999_999_999_999_999_999m;
 
     /// <summary>MM-BR-815, MM-BR-816: start number + 1, + 2, … for count items, in the order the items are given.</summary>
     /// <exception cref="DomainException">MM-E-816.</exception>
@@ -25,11 +26,11 @@ public static class ItemBarcode
     {
         var start = startNo?.Trim();
         if (string.IsNullOrEmpty(start) || start.Length > MaxDigits || !start.All(char.IsAsciiDigit)
-            || long.Parse(start, CultureInfo.InvariantCulture) + count > MaxValue)
+            || decimal.Parse(start, CultureInfo.InvariantCulture) + count > MaxValue)
         {
             throw new DomainException(InvalidStartNoCode, MaxDigits);
         }
-        var first = long.Parse(start, CultureInfo.InvariantCulture);
+        var first = decimal.Parse(start, CultureInfo.InvariantCulture);
         return Enumerable.Range(1, count).Select(i => (first + i).ToString(CultureInfo.InvariantCulture)).ToList();
     }
 

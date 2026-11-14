@@ -11,7 +11,7 @@ internal sealed class ItemRepository : IItemRepository
         id, item_cd, item_name, item_name2, item_desc, type AS item_type, unit, class AS item_class, valid_flag, usd_prc, so_usd_prc,
         upc_code, location, reorder_point, memo1, memo2, memo3, memo4, memo5, item_grade, taxable, vat_kind, plating, item_group_cd,
         mvg_cost, onhand_qty, stk_val, created_at, created_by, updated_at, updated_by, lot_managed, lot_managed_from,
-        location_managed
+        location_managed, show_components
         """;
 
     private const string SelectById = "SELECT " + Columns + " FROM bc_item WHERE id = @Id";
@@ -59,10 +59,12 @@ internal sealed class ItemRepository : IItemRepository
         WITH item AS (
         INSERT INTO bc_item (item_cd, item_name, item_name2, item_desc, type, unit, class, valid_flag, usd_prc, so_usd_prc, upc_code,
                              location, reorder_point, memo1, memo2, memo3, memo4, memo5, item_grade, taxable, vat_kind, plating,
-                             item_group_cd, mvg_cost, onhand_qty, stk_val, lot_managed, lot_managed_from, location_managed, created_by, updated_by)
+                             item_group_cd, mvg_cost, onhand_qty, stk_val, lot_managed, lot_managed_from, location_managed,
+                             show_components, created_by, updated_by)
         VALUES (@ItemCd, @ItemName, @ItemName2, @ItemDesc, @ItemType, @Unit, @ItemClass, @ValidFlag, @UsdPrc, @SoUsdPrc, @UpcCode,
                 @Location, @ReorderPoint, @Memo1, @Memo2, @Memo3, @Memo4, @Memo5, @ItemGrade, @Taxable, @VatKind, @Plating,
-                @ItemGroupCd, @MvgCost, @OnhandQty, @StkVal, @LotManaged, @LotManagedFrom, @LocationManaged, @UserId, @UserId)
+                @ItemGroupCd, @MvgCost, @OnhandQty, @StkVal, @LotManaged, @LotManagedFrom, @LocationManaged, @ShowComponents,
+                @UserId, @UserId)
         RETURNING id
         ), lot AS (
         INSERT INTO mm_lot (item_id, lot_no, created_by, updated_by) SELECT id, '*', @UserId, @UserId FROM item
@@ -78,7 +80,7 @@ internal sealed class ItemRepository : IItemRepository
             reorder_point = @ReorderPoint, memo1 = @Memo1, memo2 = @Memo2, memo3 = @Memo3, memo4 = @Memo4, memo5 = @Memo5,
             item_grade = @ItemGrade, taxable = @Taxable, vat_kind = @VatKind, item_group_cd = @ItemGroupCd,
             lot_managed = @LotManaged, lot_managed_from = @LotManagedFrom, location_managed = @LocationManaged,
-            updated_at = now(), updated_by = @UserId
+            show_components = @ShowComponents, updated_at = now(), updated_by = @UserId
         WHERE id = @Id AND updated_at = @ExpectedUpdatedAt
         """;
 
@@ -301,6 +303,7 @@ internal sealed class ItemRepository : IItemRepository
             item.LotManaged,
             item.LotManagedFrom,
             item.LocationManaged,
+            item.ShowComponents,
             UserId = userId,
         });
         if (expectedUpdatedAt is { } expected)

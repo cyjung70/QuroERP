@@ -31,7 +31,8 @@ public sealed record ItemFields(
     bool? Taxable,
     string? VatKind,
     bool? LotManaged = null,
-    bool? LocationManaged = null);
+    bool? LocationManaged = null,
+    bool? ShowComponents = null);
 
 /// <summary>
 /// Item master (bc_item) and its rules MM-BR-801~809, 825, 831, 832, lot management (MM-BR-351, 361) and Location management
@@ -62,6 +63,9 @@ public sealed class Item
 
     /// <summary>Unknown KR VAT kind. Arg: the value.</summary>
     public const string InvalidVatKindCode = "MM-E-831";
+
+    /// <summary>Location management on an item without its own stock (Kit, Service). Arg: item code.</summary>
+    public const string LocationNotAllowedCode = "MM-E-834";
 
     public const int ItemCdMaxLength = 18;
 
@@ -134,6 +138,9 @@ public sealed class Item
     /// <summary>Stock may use Locations other than '*' (MM-BR-713).</summary>
     public bool LocationManaged => Fields.LocationManaged == true;
 
+    /// <summary>Kit and Set documents print the component lines (SD-BR-517). Stored for every type; only Kit and Set use it.</summary>
+    public bool ShowComponents => Fields.ShowComponents != false;
+
     /// <summary>The day lot management was turned on; movements before it are blocked (MM-BR-356). Null when it is off.</summary>
     public DateOnly? LotManagedFrom { get; private set; }
 
@@ -142,7 +149,7 @@ public sealed class Item
     /// The moving average cost is the purchase price; stock quantity and value are 0 (MM-BR-804).
     /// Code uniqueness and code values are checked by the caller.
     /// </summary>
-    /// <exception cref="DomainException">MM-E-801, 802, 803, 825, 831; MM-E-351 for lot management on a non-Inventory item.</exception>
+    /// <exception cref="DomainException">MM-E-801, 802, 803, 825, 831; MM-E-351 and MM-E-834 for lot or Location management on an item without its own stock.</exception>
     public static Item Create(string? itemCd, ItemFields fields)
     {
         var code = itemCd?.Trim() ?? "";
@@ -160,6 +167,7 @@ public sealed class Item
             UsdPrc = normalized.UsdPrc ?? DefaultUsdPrc,
             LotManaged = normalized.LotManaged ?? false,
             LocationManaged = normalized.LocationManaged ?? false,
+            ShowComponents = normalized.ShowComponents ?? true,
         };
         Check(normalized);
         CheckLot(code, normalized);
@@ -170,7 +178,12 @@ public sealed class Item
     public static Item Restore(
         long id, string itemCd, ItemFields fields, string? plating, decimal mvgCost, decimal onhandQty, decimal stkVal,
         DateOnly? lotManagedFrom = null) =>
-        new(id, itemCd, Normalize(fields) with { LotManaged = fields.LotManaged ?? false, LocationManaged = fields.LocationManaged ?? false },
+        new(id, itemCd, Normalize(fields) with
+        {
+            LotManaged = fields.LotManaged ?? false,
+            LocationManaged = fields.LocationManaged ?? false,
+            ShowComponents = fields.ShowComponents ?? true,
+        },
             plating, mvgCost, onhandQty, stkVal, lotManagedFrom);
 
     /// <summary>
@@ -181,7 +194,7 @@ public sealed class Item
     /// A missing LotManaged or LocationManaged keeps the current setting. Turning lot management on or off is finished by
     /// StartLotManagement or StopLotManagement, turning Location management off by StopLocationManagement.
     /// </remarks>
-    /// <exception cref="DomainException">MM-E-802, 803, 806, 825, 831; MM-E-351 for lot management on a non-Inventory item.</exception>
+    /// <exception cref="DomainException">MM-E-802, 803, 806, 825, 831; MM-E-351 and MM-E-834 for lot or Location management on an item without its own stock.</exception>
     public void Change(ItemFields fields, bool typeLocked)
     {
         var normalized = Normalize(fields);
@@ -189,6 +202,7 @@ public sealed class Item
         {
             LotManaged = normalized.LotManaged ?? Fields.LotManaged ?? false,
             LocationManaged = normalized.LocationManaged ?? Fields.LocationManaged ?? false,
+            ShowComponents = normalized.ShowComponents ?? Fields.ShowComponents ?? true,
         };
         Check(normalized);
         CheckLot(ItemCd, normalized);
@@ -277,12 +291,16 @@ public sealed class Item
         ReorderPoint = f.ReorderPoint ?? 0,
     };
 
-    // MM-BR-351: only an Inventory item keeps lots, also when its type changes
+    // MM-BR-351, MM-BR-834: only an item with its own stock keeps lots or Locations, also when its type changes
     private static void CheckLot(string itemCd, ItemFields f)
     {
         if (f.LotManaged == true && !HasOwnStock(f.ItemType))
         {
             throw new DomainException(LotRules.ManagementCode, itemCd);
+        }
+        if (f.LocationManaged == true && !HasOwnStock(f.ItemType))
+        {
+            throw new DomainException(LocationNotAllowedCode, itemCd);
         }
     }
 

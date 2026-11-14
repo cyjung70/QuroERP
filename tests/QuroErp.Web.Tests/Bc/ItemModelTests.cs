@@ -26,7 +26,8 @@ public class ItemModelTests
     {
         var updatedAt = new DateTimeOffset(2026, 10, 29, 1, 2, 3, TimeSpan.Zero);
         var dto = new ItemDto(7, "A100", "APPLE", "RED", "DESC", "SET", "BX", "FR", "N", 1.5m, 2m, "123", "L1", 3m,
-            "M1", "M2", "M3", "M4", "M5", "A01", false, "EXEMPT", "A10", 9m, 8m, 7m, updatedAt, "setup", updatedAt, "kim");
+            "M1", "M2", "M3", "M4", "M5", "A01", false, "EXEMPT", "A10", 9m, 8m, 7m, updatedAt, "setup", updatedAt, "kim",
+            LocationManaged: true, ShowComponents: false);
 
         var request = ItemModel.From(dto).ToUpdateRequest();
 
@@ -53,6 +54,8 @@ public class ItemModelTests
             Taxable = false,
             VatKind = "EXEMPT",
             LotManaged = false,
+            LocationManaged = true,
+            ShowComponents = false,
             UpdatedAt = updatedAt,
         });
     }

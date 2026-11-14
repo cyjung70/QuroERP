@@ -154,6 +154,51 @@ public class ItemApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         (await stale.ReadProblemAsync()).GetProperty("code").GetString().Should().Be(ConcurrencyException.Code);
     }
 
+    [Fact, Trait("Id", "MM-UT-834"), Trait("Rule", "SD-BR-517")]
+    public async Task LocationManagedAndShowComponents_AreSavedAndRead_AMissingValueKeepsThem()
+    {
+        var client = await factory.AdminAsync();
+
+        using var created = await client.PostAsJsonAsync(ItemRoutes.Base, NewItem("T834") with
+        {
+            ItemType = "SET",
+            LocationManaged = true,
+            ShowComponents = false,
+        });
+        var item = (await created.Content.ReadFromJsonAsync<ItemDto>())!;
+        using var renamed = await client.PutAsJsonAsync(ItemUrl(item.Id), new UpdateItemRequest
+        {
+            ItemName = "BOX SET",
+            ItemType = item.ItemType,
+            Unit = item.Unit,
+            ItemClass = item.ItemClass,
+            ValidFlag = item.ValidFlag,
+            UsdPrc = item.UsdPrc,
+            UpdatedAt = item.UpdatedAt,
+        });
+
+        item.Should().BeEquivalentTo(new { LocationManaged = true, ShowComponents = false });
+        (await renamed.Content.ReadFromJsonAsync<ItemDto>()).Should().BeEquivalentTo(new { ItemName = "BOX SET", LocationManaged = true, ShowComponents = false });
+        (await CreateAsync(client, "T834B")).Should().BeEquivalentTo(new { LocationManaged = false, ShowComponents = true });
+    }
+
+    [Theory, Trait("Id", "MM-UT-834"), Trait("Rule", "MM-BR-834")]
+    [InlineData("KIT")]
+    [InlineData("SERVICE")]
+    public async Task Post_LocationManagedOnAnItemWithoutItsOwnStock_Returns422MmE834(string itemType)
+    {
+        var client = await factory.AdminAsync();
+
+        using var response = await client.PostAsJsonAsync(ItemRoutes.Base, NewItem("T834" + itemType[0]) with
+        {
+            ItemType = itemType,
+            LocationManaged = true,
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("MM-E-834");
+    }
+
     [Fact, Trait("Id", "MM-UT-802")]
     public async Task Post_UnknownUnitCode_Returns422CommonE002()
     {

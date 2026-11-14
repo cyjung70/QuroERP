@@ -384,6 +384,19 @@ public class LotServiceTests(AuthSchemaFixture db)
 
     private static long Lot(IReadOnlyDictionary<string, long> lots, string lotNo) => lots[lotNo];
 
+    [DatabaseFact, Trait("Id", "MM-UT-834"), Trait("Rule", "SD-BR-517")]
+    public async Task ShowComponents_IsStoredAndRead_ANewItemHasItOn_AMissingValueKeepsIt()
+    {
+        var kit = await CreateAsync("KIT");
+        var off = await Items.UpdateAsync(kit.Id, Update(kit, lotManaged: false) with { ShowComponents = false }, "kim", None);
+        var renamed = await Items.UpdateAsync(kit.Id, Update(off, lotManaged: false) with { ItemName = "KIT 2" }, "kim", None);
+
+        kit.ShowComponents.Should().BeTrue();
+        off.ShowComponents.Should().BeFalse();
+        renamed.ShowComponents.Should().BeFalse();
+        (await QueryAsync<bool>("SELECT show_components FROM bc_item WHERE id = @Id", new { kit.Id })).Single().Should().BeFalse();
+    }
+
     private async Task<ItemDto> CreateAsync(string type = "INVENTORY", bool lotManaged = false, bool locationManaged = false) =>
         await Items.CreateAsync(
             new CreateItemRequest
