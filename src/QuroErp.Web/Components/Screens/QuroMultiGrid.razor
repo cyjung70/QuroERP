@@ -144,6 +144,13 @@
     [Parameter]
     public Func<TRow, bool>? IsRowLocked { get; set; }
 
+    /// <summary>
+    /// False on a grid whose rows are never deleted, e.g. the four label formats (MM-BR-917): delete-row is disabled and the grid
+    /// refuses a delete.
+    /// </summary>
+    [Parameter]
+    public bool CanDeleteRows { get; set; } = true;
+
     /// <summary>New has emptied the grid: the screen clears its search conditions.</summary>
     [Parameter]
     public EventCallback OnReset { get; set; }
@@ -241,7 +248,7 @@
 
     private bool CanAddNow => CanWrite && (CanAddRow?.Invoke() ?? true);
 
-    private bool CanMarkCurrent => CanWrite && _data.CurrentRowKey is { } key && !RowLocked(_data.GetItem(key));
+    private bool CanMarkCurrent => CanWrite && CanDeleteRows && _data.CurrentRowKey is { } key && !RowLocked(_data.GetItem(key));
 
     private bool RowLocked(TRow item) => IsRowLocked?.Invoke(item) == true;
 
@@ -607,7 +614,7 @@
         }
     }
 
-    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanEdit || RowLocked(args.Item);
+    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanEdit || !CanDeleteRows || RowLocked(args.Item);
 
     private void OnPasting(PastingArgs args)
     {

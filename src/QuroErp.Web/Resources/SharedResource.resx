@@ -713,6 +713,31 @@
   <data name="Mm.Location.OnhandQty" xml:space="preserve"><value>현재고</value></data>
   <data name="Mm.Location.Remarks" xml:space="preserve"><value>비고</value></data>
   <data name="Mm.Location.IncludeInactive" xml:space="preserve"><value>사용 안 함 포함</value></data>
+  <data name="Mm.LabelFormat.Title" xml:space="preserve"><value>라벨 형식</value></data>
+  <data name="Mm.LabelFormat.LabelType" xml:space="preserve"><value>라벨 종류</value></data>
+  <data name="Mm.LabelFormat.OutputKind" xml:space="preserve"><value>출력 형식</value></data>
+  <data name="Mm.LabelFormat.WidthMm" xml:space="preserve"><value>너비(mm)</value></data>
+  <data name="Mm.LabelFormat.HeightMm" xml:space="preserve"><value>높이(mm)</value></data>
+  <data name="Mm.LabelFormat.Dpi" xml:space="preserve"><value>해상도(dpi)</value></data>
+  <data name="Mm.LabelFormat.Fields" xml:space="preserve"><value>찍을 항목</value></data>
+  <data name="Mm.LabelFormat.UseYn" xml:space="preserve"><value>사용</value></data>
+  <data name="Mm.LabelFormat.ChooseFields" xml:space="preserve"><value>항목 선택</value></data>
+  <data name="Mm.LabelFormat.ApplyFields" xml:space="preserve"><value>적용</value></data>
+  <data name="Mm.LabelFormat.ChooseFieldsHint" xml:space="preserve"><value>찍을 항목을 고르고 ↑·↓로 순서를 정합니다.</value></data>
+  <data name="Mm.LabelFormat.Field" xml:space="preserve"><value>항목</value></data>
+  <data name="Mm.LabelFormat.Order" xml:space="preserve"><value>순서</value></data>
+  <data name="Mm.LabelFormat.MoveUp" xml:space="preserve"><value>위로</value></data>
+  <data name="Mm.LabelFormat.MoveDown" xml:space="preserve"><value>아래로</value></data>
+  <data name="Mm.LabelFormat.Preview" xml:space="preserve"><value>미리보기</value></data>
+  <data name="Mm.LabelFormat.PreviewHint" xml:space="preserve"><value>저장된 형식으로 견본 라벨 PDF를 내려받습니다. 바꾼 내용은 먼저 저장하세요.</value></data>
+  <data name="Mm.LabelFormat.Field.palletNo" xml:space="preserve"><value>Pallet 번호</value></data>
+  <data name="Mm.LabelFormat.Field.itemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Mm.LabelFormat.Field.itemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Mm.LabelFormat.Field.lotNo" xml:space="preserve"><value>Lot 번호</value></data>
+  <data name="Mm.LabelFormat.Field.qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Mm.LabelFormat.Field.expiryDt" xml:space="preserve"><value>유효기한</value></data>
+  <data name="Mm.LabelFormat.Field.warehouseCode" xml:space="preserve"><value>창고 코드</value></data>
+  <data name="Mm.LabelFormat.Field.locationCode" xml:space="preserve"><value>Location 코드</value></data>
   <data name="Mm.Pallet.Title" xml:space="preserve"><value>Pallet</value></data>
   <data name="Mm.Pallet.PalletNo" xml:space="preserve"><value>Pallet 번호</value></data>
   <data name="Mm.Pallet.ItemId" xml:space="preserve"><value>품목</value></data>
