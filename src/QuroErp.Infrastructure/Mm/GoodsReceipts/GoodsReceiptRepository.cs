@@ -5,7 +5,6 @@ using QuroErp.Contracts.Mm.GoodsReceipts;
 using QuroErp.Domain.Mm.GoodsReceipts;
 using QuroErp.Domain.Mm.Inventory;
 using QuroErp.Domain.Mm.PurchaseOrders;
-
 using QuroErp.Infrastructure.Mm.Inventory;
 
 namespace QuroErp.Infrastructure.Mm.GoodsReceipts;
@@ -50,10 +49,12 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
                l.warehouse_id, w.warehouse_code, l.lot_id, lot.lot_no, coalesce(l.gr_qty, 0) AS gr_qty, coalesce(l.gr_prc, 0) AS gr_prc,
                coalesce(l.gr_amt, 0) AS gr_amt, l.tax_code_id, t.tax_code, l.supply_amt, l.tax_amt, l.deductible,
                l.purchase_order_line_id, p.po_no, pl.seq AS po_seq, pl.po_qty, pl.receipt_qty AS po_received_qty,
-               l.invoiced_qty, l.returned_qty
+               l.invoiced_qty, l.returned_qty, l.location_id, loc.location_code, lot.supplier_lot_no, lot.mfg_dt, lot.expiry_dt,
+               l.pallet_qty
         FROM mm_goods_receipt_line l
         LEFT JOIN bc_item i ON i.id = l.item_id
         LEFT JOIN bc_warehouse w ON w.id = l.warehouse_id
+        LEFT JOIN bc_location loc ON loc.id = l.location_id
         LEFT JOIN mm_lot lot ON lot.id = l.lot_id
         LEFT JOIN bc_tax_code t ON t.id = l.tax_code_id
         LEFT JOIN mm_purchase_order_line pl ON pl.id = l.purchase_order_line_id
@@ -65,6 +66,8 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
     private const string SelectVendor = "SELECT id, v_name, currency_code, tax_code_id FROM bc_vendor WHERE id = @Id";
 
     private const string SelectItemTypes = "SELECT id, type AS item_type FROM bc_item WHERE id = ANY(@Ids) AND type IS NOT NULL";
+
+    private const string SelectLotManagedItems = "SELECT id FROM bc_item WHERE id = ANY(@Ids) AND lot_managed";
 
     private const string SelectUsableWarehouses = "SELECT id FROM bc_warehouse WHERE id = ANY(@Ids) AND use_yn";
 
@@ -131,16 +134,31 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
         UPDATE mm_goods_receipt_line SET supply_amt = @SupplyAmt, tax_amt = @TaxAmt WHERE id = @LineId AND goods_receipt_id = @Id
         """;
 
-    // Location '*' until the receipt takes a Location (TASK-CORE-073); Lot '*' until the stock posting sets the line's lot
+    // Location and Lot '*' until the stock posting sets the line's Location and Lot (a Service line keeps them)
     private const string InsertLine = $"""
         {StockKeys.EnsureStarRows}
         INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, item_name, warehouse_id, location_id, lot_id, gr_qty, gr_prc, gr_amt,
-                                           tax_code_id, supply_amt, tax_amt, deductible, purchase_order_line_id, created_by, updated_by)
+                                           tax_code_id, supply_amt, tax_amt, deductible, purchase_order_line_id, pallet_qty, created_by,
+                                           updated_by)
         VALUES (@Id, @Seq, @ItemId, @ItemName, @WarehouseId, {StockKeys.StarLocationId}, coalesce(@LotId, {StockKeys.StarLotId}), @GrQty, @GrPrc,
-                @GrAmt, @TaxCodeId, @SupplyAmt, @TaxAmt, @Deductible, @PurchaseOrderLineId, @User, @User)
+                @GrAmt, @TaxCodeId, @SupplyAmt, @TaxAmt, @Deductible, @PurchaseOrderLineId, @PalletQty, @User, @User)
         """;
 
-    private const string SetLineLot = "UPDATE mm_goods_receipt_line SET lot_id = @LotId WHERE goods_receipt_id = @Id AND seq = @Seq";
+    private const string SetLineKey = """
+        UPDATE mm_goods_receipt_line SET location_id = @LocationId, lot_id = @LotId WHERE goods_receipt_id = @Id AND seq = @Seq
+        """;
+
+    // MM-BR-364: Lot '*' has no attributes; MM-BR-367: the line that made the Lot
+    private const string SetLotAttributes = """
+        UPDATE mm_lot
+        SET supplier_lot_no = @SupplierLotNo, mfg_dt = @MfgDt, expiry_dt = @ExpiryDt,
+            goods_receipt_line_id = coalesce(@GoodsReceiptLineId, goods_receipt_line_id), updated_at = now(), updated_by = @User
+        WHERE id = @LotId AND lot_no <> '*'
+        """;
+
+    private const string UnlinkLots = "UPDATE mm_lot SET goods_receipt_line_id = NULL WHERE goods_receipt_line_id = ANY(@Ids)";
+
+    private const string Touch = "UPDATE mm_goods_receipt SET updated_at = now(), updated_by = @User WHERE id = @Id AND updated_at = @UpdatedAt";
 
     private const string SelectOpenMovements = """
         SELECT m.id FROM mm_goods_movement m
@@ -204,6 +222,12 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
         (await transaction.Connection!.QueryAsync<(long Id, string ItemType)>(new CommandDefinition(
             SelectItemTypes, new { Ids = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken)))
         .ToDictionary(r => r.Id, r => r.ItemType);
+
+    public async Task<IReadOnlySet<long>> FindLotManagedItemsAsync(
+        IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<long>(new CommandDefinition(
+            SelectLotManagedItems, new { Ids = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken)))
+        .ToHashSet();
 
     public async Task<IReadOnlySet<long>> FindUsableWarehousesAsync(
         IReadOnlyCollection<long> warehouseIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -280,10 +304,33 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
         return true;
     }
 
-    public Task SetLineLotsAsync(long id, IReadOnlyDictionary<int, long> lotBySeq, IDbTransaction transaction, CancellationToken cancellationToken) =>
+    public Task SetLineKeysAsync(
+        long id, IReadOnlyDictionary<int, (long LocationId, long LotId)> keyBySeq, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteAsync(new CommandDefinition(
-            SetLineLot, lotBySeq.Select(e => new { Id = id, Seq = e.Key, LotId = e.Value }).ToList(), transaction,
+            SetLineKey, keyBySeq.Select(e => new { Id = id, Seq = e.Key, e.Value.LocationId, e.Value.LotId }).ToList(), transaction,
             cancellationToken: cancellationToken));
+
+    public Task SetLotAttributesAsync(IReadOnlyList<ReceiptLotWrite> lots, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            SetLotAttributes,
+            lots.Select(l => new
+            {
+                l.LotId,
+                l.Attributes.SupplierLotNo,
+                l.Attributes.MfgDt,
+                l.Attributes.ExpiryDt,
+                l.GoodsReceiptLineId,
+                User = user,
+            }).ToList(),
+            transaction, cancellationToken: cancellationToken));
+
+    public Task UnlinkLotsAsync(IReadOnlyCollection<long> lineIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            UnlinkLots, new { Ids = lineIds.ToArray() }, transaction, cancellationToken: cancellationToken));
+
+    public async Task<bool> TouchAsync(long id, DateTimeOffset updatedAt, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        await transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            Touch, new { Id = id, UpdatedAt = updatedAt, User = user }, transaction, cancellationToken: cancellationToken)) == 1;
 
     public async Task<IReadOnlyList<long>> FindOpenMovementIdsAsync(
         string grNo, IReadOnlyCollection<int> seqs, IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -322,6 +369,7 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
                     l.TaxAmt,
                     l.Deductible,
                     l.PurchaseOrderLineId,
+                    l.PalletQty,
                     User = user,
                 },
                 transaction, cancellationToken: cancellationToken));

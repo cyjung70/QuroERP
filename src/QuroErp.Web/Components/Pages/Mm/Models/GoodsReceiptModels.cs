@@ -29,8 +29,14 @@ public sealed class GoodsReceiptHeader
     /// <summary>The stored receipt has lines, so the receipt date cannot change (MM-BR-117).</summary>
     public bool HasSavedLines { get; set; }
 
-    /// <summary>A line is matched by a supplier invoice or returned, so the receipt cannot change (MM-BR-104, MM-BR-790).</summary>
+    /// <summary>
+    /// A line is matched by a supplier invoice or returned, so the receipt cannot change (MM-BR-104, MM-BR-790) except the Lot
+    /// attributes of its lines (MM-BR-364).
+    /// </summary>
     public bool IsMatched { get; set; }
+
+    /// <summary>A line made Pallets, so the Pallet labels can be printed (MM-BR-918).</summary>
+    public bool HasPallets { get; set; }
 
     public DateTimeOffset? UpdatedAt { get; set; }
     public DateTimeOffset? CreatedAt { get; set; }
@@ -71,6 +77,7 @@ public sealed class GoodsReceiptHeader
         VendorTaxCode = vendorTaxCode,
         HasSavedLines = receipt.Lines.Count > 0,
         IsMatched = receipt.Lines.Any(l => l.InvoicedQty > 0 || l.ReturnedQty > 0),
+        HasPallets = receipt.Lines.Any(l => l.PalletNos is { Count: > 0 }),
         UpdatedAt = receipt.UpdatedAt,
         CreatedAt = receipt.CreatedAt,
         CreatedBy = receipt.CreatedBy,
@@ -96,9 +103,19 @@ public sealed class GoodsReceiptHeader
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
-/// <summary>A line of the goods receipt grid (mm.goods-receipt.entry). Codes are shown; the ids are hidden columns.</summary>
+/// <summary>
+/// A line of the goods receipt grid (mm.goods-receipt.entry). Codes are shown; the ids are hidden columns. The Lot is made by the
+/// save (MM-BR-353); the user gives its attributes (MM-BR-364), the Location (MM-BR-713) and the Pallet qty (MM-BR-910).
+/// </summary>
 public sealed class GoodsReceiptLine
 {
+    /// <summary>The system Location and Lot (MM-BR-713, MM-BR-363).</summary>
+    public const string System = "*";
+
+    /// <summary>The Lot attribute cells, which a saved line of a lot-managed item can still change (MM-BR-364).</summary>
+    public static IReadOnlyList<string> LotAttributeFields { get; } =
+        [nameof(SupplierLotNo), nameof(MfgDt), nameof(ExpiryDt)];
+
     public long Id { get; set; }
     public int? Seq { get; set; }
     public long? ItemId { get; set; }
@@ -108,11 +125,26 @@ public sealed class GoodsReceiptLine
     public long? WarehouseId { get; set; }
     public string? WarehouseCode { get; set; }
 
-    /// <summary>The item keeps stock by lot, so the line has a lot (MM-BR-353).</summary>
+    /// <summary>The item keeps stock by lot, so the save makes the line a new Lot with these attributes (MM-BR-353, MM-BR-364).</summary>
     public bool LotManaged { get; set; }
 
+    /// <summary>The item may keep stock on Locations other than '*' (MM-BR-713).</summary>
+    public bool LocationManaged { get; set; }
+
+    /// <summary>An Inventory item: it has stock, so it can have Pallets (MM-BR-910). A Service item has none.</summary>
+    public bool StockItem { get; set; }
+
+    public long? LocationId { get; set; }
+    public string? LocationCode { get; set; } = System;
     public long? LotId { get; set; }
     public string? LotNo { get; set; }
+    public string? SupplierLotNo { get; set; }
+    public DateOnly? MfgDt { get; set; }
+    public DateOnly? ExpiryDt { get; set; }
+    public decimal? PalletQty { get; set; }
+
+    /// <summary>The Pallets the saved line made, in number order.</summary>
+    public string? PalletNos { get; set; }
     public decimal? GrQty { get; set; }
     public decimal? GrPrc { get; set; }
     public decimal? GrAmt { get; set; }
@@ -141,9 +173,16 @@ public sealed class GoodsReceiptLine
         Unit = line.Unit,
         WarehouseId = line.WarehouseId,
         WarehouseCode = line.WarehouseCode,
-        LotManaged = line.LotId is not null,
+        LotManaged = line.LotNo is { } lotNo && lotNo != System,
+        LocationId = line.LocationId,
+        LocationCode = line.LocationCode ?? System,
         LotId = line.LotId,
         LotNo = line.LotNo,
+        SupplierLotNo = line.SupplierLotNo,
+        MfgDt = line.MfgDt,
+        ExpiryDt = line.ExpiryDt,
+        PalletQty = line.PalletQty,
+        PalletNos = line.PalletNos is { Count: > 0 } pallets ? string.Join(", ", pallets) : null,
         GrQty = line.GrQty,
         GrPrc = line.GrPrc,
         GrAmt = line.GrAmt,
@@ -185,8 +224,8 @@ public sealed class GoodsReceiptLine
         };
 
     /// <summary>
-    /// A saved line goes back as it was stored, with its Id; a new line sends the lot number only for a lot-managed item
-    /// (empty makes a new lot, MM-BR-353).
+    /// A saved line goes back as it was stored, with its Id and its Lot attributes, which may change (MM-BR-364). A new line
+    /// sends its Location (null is '*'), its Pallet qty and, for a lot-managed item, the attributes of the Lot the save makes.
     /// </summary>
     public SaveGoodsReceiptLineRequest ToRequest() =>
         new(
@@ -194,13 +233,16 @@ public sealed class GoodsReceiptLine
             ItemId ?? 0,
             ItemName,
             WarehouseId,
-            IsSaved() ? LotId : null,
-            !IsSaved() && LotManaged && !string.IsNullOrWhiteSpace(LotNo) ? LotNo.Trim().ToUpperInvariant() : null,
             GrQty ?? 0,
             GrPrc ?? 0,
             TaxCodeId,
             Deductible,
-            PurchaseOrderLineId);
+            PurchaseOrderLineId,
+            LocationId,
+            LotManaged && !string.IsNullOrWhiteSpace(SupplierLotNo) ? SupplierLotNo.Trim() : null,
+            LotManaged ? MfgDt : null,
+            LotManaged ? ExpiryDt : null,
+            PalletQty);
 }
 
 /// <summary>Goods receipt statuses: how much of the receipt the supplier invoices have matched (MM-BR-105).</summary>
@@ -225,6 +267,9 @@ public static class GoodsReceiptStatus
     /// <summary>Save, line changes and delete: nothing matched or returned yet (MM-BR-104, MM-BR-790).</summary>
     public static bool CanSave(GoodsReceiptHeader receipt) => !receipt.IsMatched && receipt.Status is null or Open;
 
+    /// <summary>A matched or returned receipt still saves the Lot attributes of its lines (MM-BR-364).</summary>
+    public static bool CanSaveLotAttributes(GoodsReceiptHeader receipt) => CanSave(receipt) || receipt.IsMatched;
+
     public static bool CanDelete(GoodsReceiptHeader receipt) => CanSave(receipt);
 }
 
@@ -236,6 +281,7 @@ public static class GoodsReceiptFormats
         ["grQty"] = N(decimals.Qty),
         ["poQty"] = N(decimals.Qty),
         ["poReceivedQty"] = N(decimals.Qty),
+        ["palletQty"] = N(decimals.Qty),
         ["grPrc"] = N(decimals.Price),
         ["grAmt"] = N(decimals.Amount),
         ["taxAmt"] = N(decimals.Amount),

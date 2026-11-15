@@ -9,6 +9,9 @@ public static class GoodsReceiptRoutes
     /// <summary>GET {Base}/open-po-lines?vendorId: PO lines the receipt can import (MM-BR-113).</summary>
     public const string OpenPoLines = "open-po-lines";
 
+    /// <summary>GET {Base}/{id}/pallet-labels: the labels of the receipt's ACTIVE Pallets as a PDF (MM-BR-918, MM-BR-919).</summary>
+    public const string PalletLabels = "pallet-labels";
+
     /// <summary>Most rows the list returns, newest first.</summary>
     public const int MaxListSize = 200;
 }
@@ -53,6 +56,11 @@ public sealed record GoodsReceiptDto(
 /// (MM-BR-162). PoNo, PoSeq, PoQty and PoReceivedQty describe the PO line it came from, if any. InvoicedQty and ReturnedQty
 /// above 0 lock the receipt (MM-BR-104).
 /// </summary>
+/// <param name="LotId">The Lot the save made for a lot-managed item, else Lot '*' (MM-BR-353, MM-BR-363).</param>
+/// <param name="LocationId">The Location the line received to; '*' by default (MM-BR-713).</param>
+/// <param name="SupplierLotNo">Lot attributes of the line's Lot (MM-BR-364).</param>
+/// <param name="PalletQty">Qty per Pallet; null made no Pallet (MM-BR-910).</param>
+/// <param name="PalletNos">Numbers of the Pallets the line made, in number order.</param>
 public sealed record GoodsReceiptLineDto(
     long Id,
     int Seq,
@@ -78,7 +86,14 @@ public sealed record GoodsReceiptLineDto(
     decimal? PoQty,
     decimal? PoReceivedQty,
     decimal InvoicedQty,
-    decimal ReturnedQty);
+    decimal ReturnedQty,
+    long? LocationId = null,
+    string? LocationCode = null,
+    string? SupplierLotNo = null,
+    DateOnly? MfgDt = null,
+    DateOnly? ExpiryDt = null,
+    decimal? PalletQty = null,
+    IReadOnlyList<string>? PalletNos = null);
 
 /// <summary>
 /// New or changed receipt. CurrencyCode and ExchangeRate come from the PO when lines come from one (MM-BR-161); without PO lines
@@ -86,7 +101,8 @@ public sealed record GoodsReceiptLineDto(
 /// the company default (MM-BR-703).
 /// </summary>
 /// <param name="Lines">Every line to keep, unchanged and with its Id, and the new lines without an Id. A saved line left out is
-/// deleted; a changed saved line is refused (MM-BR-107).</param>
+/// deleted; a changed saved line is refused (MM-BR-107). Lot attributes of saved lines may change, also on an invoiced receipt
+/// (MM-BR-364).</param>
 /// <param name="UpdatedAt">Required on PUT: the value from the last GET (409 when it differs).</param>
 /// <param name="ConfirmOverReceipt">The answer to MM-W-102 in WARN mode: true saves the over-receipt (MM-BR-102).</param>
 public sealed record SaveGoodsReceiptRequest(
@@ -102,22 +118,28 @@ public sealed record SaveGoodsReceiptRequest(
     bool? ConfirmOverReceipt = null);
 
 /// <param name="WarehouseId">Null takes the header warehouse (MM-BR-703).</param>
-/// <param name="LotId">A lot-managed item's lot; for a new line LotNo may name a new lot instead, empty makes one (MM-BR-353).</param>
 /// <param name="TaxCodeId">Null takes the vendor's tax code (BC-BR-542).</param>
 /// <param name="Deductible">KR input VAT is deducted (default); false adds it to cost (MM-BR-163, MM-BR-164).</param>
 /// <param name="PurchaseOrderLineId">The PO line the line comes from; null for an item entered directly (MM-BR-114).</param>
+/// <param name="LocationId">A Location of the line warehouse; null is '*'. Only a Location-managed item takes another (MM-BR-713).</param>
+/// <param name="SupplierLotNo">Up to 30 characters. With MfgDt and ExpiryDt (not before MfgDt) only for a lot-managed item, whose
+/// Lot the save numbers itself (MM-BR-353, MM-BR-364).</param>
+/// <param name="PalletQty">Above 0 splits the qty into Pallets of this qty; null makes none. Stock items only (MM-BR-910).</param>
 public sealed record SaveGoodsReceiptLineRequest(
     long? Id,
     long ItemId,
     string? ItemName,
     long? WarehouseId,
-    long? LotId,
-    string? LotNo,
     decimal GrQty,
     decimal GrPrc,
     long? TaxCodeId,
     bool Deductible = true,
-    long? PurchaseOrderLineId = null);
+    long? PurchaseOrderLineId = null,
+    long? LocationId = null,
+    string? SupplierLotNo = null,
+    DateOnly? MfgDt = null,
+    DateOnly? ExpiryDt = null,
+    decimal? PalletQty = null);
 
 /// <summary>
 /// A PO line the receipt can import: from an approved or partly received order of the vendor with RemainingQty above 0

@@ -10,6 +10,7 @@ using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.GoodsReceipts;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Pallets;
 using QuroErp.Application.Mm.SupplierInvoices;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Mm.GoodsReceipts;
@@ -51,8 +52,8 @@ public partial class SupplierInvoiceServiceTests(AuthSchemaFixture db)
     private GoodsReceiptService Receipts => new(
         db.Get<IGoodsReceiptRepository>(), db.Get<ITaxRepository>(), new TaxAreaRateProvider(db.Get<ITaxRepository>()),
         db.Get<ILocalizationRepository>(), db.Get<IExchangeRateRepository>(), db.Get<IBusinessPlaceRepository>(),
-        db.Get<IWarehouseRepository>(), Inventory, new DocumentNumberService(db.Get<IDocumentNumberRepository>()), new FixedClock(),
-        db.Get<IUnitOfWorkFactory>());
+        db.Get<IWarehouseRepository>(), db.Get<IPalletRepository>(), Inventory, new DocumentNumberService(db.Get<IDocumentNumberRepository>()),
+        new FixedClock(), db.Get<IUnitOfWorkFactory>());
 
     private InventoryService Inventory => new(
         db.Get<IInventoryRepository>(), db.Get<IInventorySettingRepository>(), db.Get<ISetComponentRepository>(),
@@ -316,7 +317,7 @@ public partial class SupplierInvoiceServiceTests(AuthSchemaFixture db)
         Receipts.CreateAsync(
             new SaveGoodsReceiptRequest(
                 m.Vendor, GrDt, m.Main, "dn", null, null, null,
-                [.. lines.Select(l => new SaveGoodsReceiptLineRequest(null, l.Item, null, null, null, null, l.Qty, 100m, null))], null),
+                [.. lines.Select(l => new SaveGoodsReceiptLineRequest(null, l.Item, null, null, l.Qty, 100m, null))], null),
             "kim", None);
 
     private sealed record Masters(long Vendor, long Item, long Service, long Main, long Vat10);

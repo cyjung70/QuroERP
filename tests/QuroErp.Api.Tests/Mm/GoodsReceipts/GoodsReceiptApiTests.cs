@@ -37,6 +37,8 @@ public class GoodsReceiptApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         (await client.GetAsync($"{GoodsReceiptRoutes.Base}/1")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await client.GetAsync($"{GoodsReceiptRoutes.Base}/{GoodsReceiptRoutes.OpenPoLines}?vendorId=1")).StatusCode
             .Should().Be(HttpStatusCode.Forbidden);
+        (await client.GetAsync($"{GoodsReceiptRoutes.Base}/1/{GoodsReceiptRoutes.PalletLabels}")).StatusCode
+            .Should().Be(HttpStatusCode.Forbidden);
         (await factory.CreateClient().GetAsync(GoodsReceiptRoutes.Base)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

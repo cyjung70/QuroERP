@@ -4,6 +4,8 @@ using QuroErp.Domain.Bc.SetItems;
 using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.GoodsReceipts;
+using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Domain.Mm.Lots;
 using QuroErp.Domain.Mm.PurchaseOrders;
 
 namespace QuroErp.Domain.Tests.Mm.GoodsReceipts;
@@ -17,6 +19,7 @@ public class GoodsReceiptRulesTests
     private const long Asset = 3;
     private const long Kit = 4;
     private const long SetItem = 5;
+    private const long LotItem = 6;
     private const long Warehouse = 7;
     private const long Vat10 = 1;
     private const long NoTax = 2;
@@ -29,7 +32,15 @@ public class GoodsReceiptRulesTests
     private static readonly GoodsReceiptSettings KrwBase = new("KRW", TaxCalcMode.Document);
 
     private static GoodsReceiptMasters Masters(string poStatus = PoStatusCode.Approved, long poVendor = Vendor, decimal received = 0m) => new(
-        new Dictionary<long, string> { [Inventory] = "INVENTORY", [Service] = "SERVICE", [Asset] = "ASSET", [Kit] = "KIT", [SetItem] = "SET" },
+        new Dictionary<long, string>
+        {
+            [Inventory] = "INVENTORY",
+            [Service] = "SERVICE",
+            [Asset] = "ASSET",
+            [Kit] = "KIT",
+            [SetItem] = "SET",
+            [LotItem] = "INVENTORY",
+        },
         new HashSet<long> { Warehouse },
         new Dictionary<long, ReceiptTaxCode>
         {
@@ -37,7 +48,8 @@ public class GoodsReceiptRulesTests
             [NoTax] = new(new(NoTax, 0m, false), TaxKind.None),
             [SalesTax8] = new(new(SalesTax8, 8m, false), TaxKind.SalesTax),
         },
-        new Dictionary<long, ReceiptPoLine> { [PoLineId] = PoLine(poStatus, poVendor, received) });
+        new Dictionary<long, ReceiptPoLine> { [PoLineId] = PoLine(poStatus, poVendor, received) },
+        new HashSet<long> { LotItem });
 
     private static ReceiptPoLine PoLine(string status = PoStatusCode.Approved, long vendor = Vendor, decimal received = 0m, decimal qty = 10m) =>
         new(PoLineId, 500, "PO2611000001", 1, status, vendor, "USD", 1m, qty, received);
@@ -47,11 +59,13 @@ public class GoodsReceiptRulesTests
 
     private static GoodsReceiptLineInput Line(
         decimal qty = 10m, decimal price = 100m, long item = Inventory, long taxCode = Vat10, long? warehouse = Warehouse,
-        bool deductible = true, long? poLine = null) =>
-        new(item, null, warehouse, null, null, qty, price, taxCode, deductible, poLine);
+        bool deductible = true, long? poLine = null, long? location = null, decimal? palletQty = null, LotAttributes? lot = null) =>
+        new(item, null, warehouse, qty, price, taxCode, deductible, poLine, location, palletQty, lot);
 
-    private static StoredGoodsReceiptLine Stored(int seq = 1, decimal qty = 10m, decimal price = 100m, decimal invoiced = 0m, decimal returned = 0m) =>
-        new(100 + seq, seq, Inventory, null, Warehouse, null, qty, price, Vat10, true, null, invoiced, returned);
+    private static StoredGoodsReceiptLine Stored(
+        int seq = 1, decimal qty = 10m, decimal price = 100m, decimal invoiced = 0m, decimal returned = 0m, long? location = 70,
+        decimal? palletQty = null, LotAttributes? lot = null) =>
+        new(100 + seq, seq, Inventory, null, Warehouse, 80, qty, price, Vat10, true, null, invoiced, returned, location, palletQty, lot);
 
     private static (IReadOnlyList<GoodsReceiptLine> Lines, GoodsReceiptTotals Totals) Calc(
         GoodsReceiptHeader header, GoodsReceiptSettings? settings = null, GoodsReceiptMasters? masters = null,
@@ -185,6 +199,79 @@ public class GoodsReceiptRulesTests
         CodeOf(() => GoodsReceiptRules.EnsureUnchanged(stored, Line(taxCode: NoTax))).Should().Be(GoodsReceiptRules.LineChangedCode);
         CodeOf(() => GoodsReceiptRules.EnsureUnchanged(stored, Line(deductible: false))).Should().Be(GoodsReceiptRules.LineChangedCode);
     }
+
+    [Fact, Trait("Id", "MM-UT-107"), Trait("Rule", "MM-BR-107"), Trait("Id", "MM-UT-364"), Trait("Rule", "MM-BR-364")]
+    public void SavedLine_KeepsItsLocationAndPalletQty_ButItsLotAttributesMayChange()
+    {
+        var stored = Stored(palletQty: 5m);
+
+        GoodsReceiptRules.EnsureUnchanged(stored, Line(palletQty: 5m, lot: new LotAttributes("S-1", GrDt, null)));
+        GoodsReceiptRules.EnsureUnchanged(stored, Line(palletQty: 5m, location: 70));
+        CodeOf(() => GoodsReceiptRules.EnsureUnchanged(stored, Line(palletQty: 5m, location: 71))).Should().Be(GoodsReceiptRules.LineChangedCode);
+        CodeOf(() => GoodsReceiptRules.EnsureUnchanged(stored, Line(palletQty: 4m))).Should().Be(GoodsReceiptRules.LineChangedCode);
+        CodeOf(() => GoodsReceiptRules.EnsureUnchanged(stored, Line())).Should().Be(GoodsReceiptRules.LineChangedCode);
+    }
+
+    [Fact, Trait("Id", "MM-UT-104"), Trait("Rule", "MM-BR-104"), Trait("Id", "MM-UT-364"), Trait("Rule", "MM-BR-364")]
+    public void LockedReceipt_TakesOnlyLotAttributeChanges()
+    {
+        StoredGoodsReceiptLine[] lines = [Stored(invoiced: 1m), Stored(2)];
+        static (long?, GoodsReceiptLineInput) Same(StoredGoodsReceiptLine l) =>
+            (l.Id, Line(l.GrQty, l.GrPrc) with { Lot = new LotAttributes("NEW", null, null) });
+
+        GoodsReceiptRules.EnsureLotAttributesOnly("GR1", Header(), Header(), lines, [.. lines.Select(Same)]);
+        CodeOf(() => GoodsReceiptRules.EnsureLotAttributesOnly("GR1", Header(), Header() with { Remarks = "x" }, lines, [.. lines.Select(Same)]))
+            .Should().Be(GoodsReceiptRules.LockedCode);
+        CodeOf(() => GoodsReceiptRules.EnsureLotAttributesOnly("GR1", Header(), Header(), lines, [Same(lines[0])]))
+            .Should().Be(GoodsReceiptRules.LockedCode, "a line is deleted");
+        CodeOf(() => GoodsReceiptRules.EnsureLotAttributesOnly("GR1", Header(), Header(), lines, [.. lines.Select(Same), (null, Line())]))
+            .Should().Be(GoodsReceiptRules.LockedCode, "a line is added");
+        CodeOf(() => GoodsReceiptRules.EnsureLotAttributesOnly("GR1", Header(), Header(), lines, [Same(lines[0]), (lines[1].Id, Line(qty: 1m))]))
+            .Should().Be(GoodsReceiptRules.LockedCode, "a line is changed");
+    }
+
+    [Fact, Trait("Id", "MM-UT-364"), Trait("Rule", "MM-BR-364")]
+    public void LotAttributes_OnlyForALotManagedItem_WithASupplierLotOf30AndExpiryNotBeforeMfg()
+    {
+        var lot = new LotAttributes(" S-1 ", GrDt, GrDt);
+
+        Calc(Header(), lines: Line(item: LotItem, lot: lot)).Lines.Single().Lot.Should().Be(new LotAttributes("S-1", GrDt, GrDt));
+        Calc(Header(), lines: Line(lot: new LotAttributes(" ", null, null))).Lines.Single().Lot.Should().Be(LotAttributes.None);
+        Calc(Header(), lines: Line(item: LotItem, lot: lot with { SupplierLotNo = new string('A', 30) })).Lines.Should().ContainSingle();
+        var error = Assert.Throws<DomainException>(
+            () => Calc(Header(), lines: [Line(), Line(item: LotItem, lot: lot with { SupplierLotNo = new string('A', 31) })]));
+        (error.Code, error.Args).Should().BeEquivalentTo((LotRules.AttributesCode, new object[] { 2 }));
+        CodeOf(() => Calc(Header(), lines: Line(item: LotItem, lot: lot with { ExpiryDt = GrDt.AddDays(-1) }))).Should().Be(LotRules.AttributesCode);
+        CodeOf(() => Calc(Header(), lines: Line(lot: lot))).Should().Be(LotRules.AttributesCode);
+        CodeOf(() => Calc(Header(), kept: [Stored(lot: lot)])).Should().Be(LotRules.AttributesCode, "a saved line is checked too");
+    }
+
+    [Fact, Trait("Id", "MM-UT-910"), Trait("Rule", "MM-BR-910")]
+    public void PalletQty_AboveZero_AndOnlyForAStockItem()
+    {
+        Calc(Header(), lines: Line(palletQty: 4m)).Lines.Single().PalletQty.Should().Be(4m);
+        CodeOf(() => Calc(Header(), lines: Line(palletQty: 0m))).Should().Be(PalletRules.QtyCode);
+        CodeOf(() => Calc(Header(), lines: Line(palletQty: -1m))).Should().Be(PalletRules.QtyCode);
+        CodeOf(() => Calc(Header(), lines: Line(item: Service, taxCode: NoTax, palletQty: 1m))).Should().Be(PalletRules.QtyCode);
+    }
+
+    [Theory, Trait("Id", "MM-UT-910"), Trait("Rule", "MM-BR-910")]
+    [InlineData("25", "10", "10|10|5")]
+    [InlineData("20", "10", "10|10")]
+    [InlineData("3", "10", "3")]
+    [InlineData("2.5", "1", "1|1|0.5")]
+    public void Pallets_SplitTheQty_TheLastTakesTheRest(string qty, string palletQty, string expected) =>
+        PalletRules.Split(Dec(qty), Dec(palletQty)).Should().Equal(expected.Split('|').Select(Dec));
+
+    [Fact, Trait("Id", "MM-UT-911"), Trait("Rule", "MM-BR-911")]
+    public void DeletingAReceiptLine_NeedsItsPalletsAsReceived()
+    {
+        PalletRules.EnsureAsReceived("PL2611000001", asReceived: true);
+        var error = Assert.Throws<DomainException>(() => PalletRules.EnsureAsReceived("PL2611000002", asReceived: false));
+        (error.Code, error.Args).Should().BeEquivalentTo((PalletRules.ChangedCode, new object[] { "PL2611000002" }));
+    }
+
+    private static decimal Dec(string value) => decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
 
     [Fact, Trait("Id", "MM-UT-116"), Trait("Rule", "MM-BR-116"), Trait("Id", "MM-UT-117"), Trait("Rule", "MM-BR-117")]
     public void SavedHeader_KeepsItsVendor_AndItsDateWhileItHasLines()

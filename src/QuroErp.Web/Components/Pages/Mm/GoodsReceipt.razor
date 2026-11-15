@@ -17,28 +17,30 @@
 @using QuroErp.Web.Bc.UserProfiles
 @using QuroErp.Web.Common
 @using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Contracts.Mm.Locations
 @using QuroErp.Web.Mm.GoodsReceipts
-@using QuroErp.Web.Mm.Lots
+@using QuroErp.Web.Mm.Locations
 @using QuroErp.Web.Mm.Vendors
 @using QuroErp.Web.Mm.Warehouses
 @implements IDisposable
 @inject GoodsReceiptApiClient Api
 @inject VendorApiClient VendorApi
 @inject ItemApiClient ItemApi
-@inject LotApiClient LotApi
+@inject LocationApiClient LocationApi
 @inject ExchangeRateApiClient RateApi
 @inject LocalizationApiClient LocalizationApi
 @inject TaxCodeApiClient TaxCodeApi
 @inject WarehouseApiClient WarehouseApi
 @inject UserProfileApiClient ProfileApi
 @inject IQuroConfirm Confirm
+@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
 @inject QuroErp.Web.Common.IScreenAccess ScreenAccess
 
 @* MM-UC-004 goods receipt, screen type SM on the entry frame (entry-frame.md). The API checks every rule and calculates the
-   stored amounts, stock, lots and PO quantities (MM-BR-101~117, MM-BR-161~164, MM-BR-703); this screen shows defaults, locks
-   and display amounts with the document decimals. The receipt has no payable: no due date, terms, balance or paid amount
+   stored amounts, stock, Lots, Pallets and PO quantities (MM-BR-101~117, MM-BR-161~164, MM-BR-353, MM-BR-364, MM-BR-703,
+   MM-BR-910); this screen shows defaults, locks and display amounts with the document decimals. The receipt has no payable: no due date, terms, balance or paid amount
    (MM-BR-751). The status is how far supplier invoices matched it (MM-BR-105). *@
 
 <PageTitle>@L["Mm.GoodsReceipt.Title"]</PageTitle>
@@ -55,8 +57,9 @@
                       DocumentNo="gr => gr.GrNo" Audit="gr => gr.ToAudit()"
                       Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
                       Definition="mm.goods-receipt.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
-                      ColumnFormats="GoodsReceiptFormats.Of(_decimals)" IsLineReadOnly="l => l.IsSaved()"
-                      CanSave="GoodsReceiptStatus.CanSave" CanDelete="gr => _canEdit && GoodsReceiptStatus.CanDelete(gr)"
+                      ColumnFormats="GoodsReceiptFormats.Of(_decimals)" IsCellLocked="CellLocked" IsLineRemovable="_ => !_matched"
+                      CanAddLine="!_matched" CanSave="GoodsReceiptStatus.CanSaveLotAttributes"
+                      CanDelete="gr => _canEdit && GoodsReceiptStatus.CanDelete(gr)"
                       Delete="DeleteAsync" DeleteText="@L["Mm.GoodsReceipt.Delete"]" LinesHint="LinesHint">
         <FindColumns>
             <QuroColumn TRow="GoodsReceiptHeader" Title="@L["Mm.GoodsReceipt.GrNo"]" Value="g => g.GrNo" />
@@ -68,6 +71,10 @@
         <StatusChip Context="gr">
             <QuroStatusChip Code="@(gr.Status ?? "")" Kind="GoodsReceiptStatus.ChipOf(gr.Status)" Text="@StatusText(gr.Status)" />
         </StatusChip>
+        <OutputCommands Context="gr">
+            <button type="button" disabled="@(gr.Id == 0 || !gr.HasPallets)" data-testid="goods-receipt-toolbar-pallet-labels"
+                    @onclick="PalletLabelsAsync">@L["Mm.GoodsReceipt.PalletLabels"]</button>
+        </OutputCommands>
         <RowCommands Context="gr">
             <button type="button" disabled="@(!CanImport(gr))" data-testid="goods-receipt-line-import-po"
                     @onclick="() => _importOpen = true">@L["Mm.GoodsReceipt.ImportPo"]</button>
@@ -82,17 +89,19 @@
             </div>
             <QuroDate Label="@L["Mm.GoodsReceipt.GrDt"]" Field="GrDt" Required
                       LockMode="@(gr.HasSavedLines ? LockMode.Always : LockMode.None)" TestId="goods-receipt-header-gr-dt" />
+            @* A matched receipt changes only the Lot attributes of its lines (MM-BR-104, MM-BR-364) *@
             <QuroSelect Label="@L["Mm.GoodsReceipt.WarehouseCode"]" Field="WarehouseCode" Options="_warehouseOptions" Required
-                        TestId="goods-receipt-header-warehouse-code" />
+                        LockMode="@(gr.IsMatched ? LockMode.Always : LockMode.None)" TestId="goods-receipt-header-warehouse-code" />
             @* 2: currency and rate (from the vendor or the PO, MM-BR-161), reference number *@
             <QuroText Label="@L["Mm.GoodsReceipt.CurrencyCode"]" Field="CurrencyCode" LockMode="LockMode.Always"
                       TestId="goods-receipt-header-currency-code" />
             <QuroNumber Label="@L["Mm.GoodsReceipt.ExchangeRate"]" Field="ExchangeRate" LockMode="LockMode.Always"
                         TestId="goods-receipt-header-exchange-rate" />
             <QuroText Label="@L["Mm.GoodsReceipt.RefNo"]" Field="RefNo" MaxLength="50" TextCase="TextCase.Upper" Span="2"
-                      TestId="goods-receipt-header-ref-no" />
+                      LockMode="@(gr.IsMatched ? LockMode.Always : LockMode.None)" TestId="goods-receipt-header-ref-no" />
             @* 3: remarks *@
-            <QuroText Label="@L["Mm.GoodsReceipt.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="goods-receipt-header-remarks" />
+            <QuroText Label="@L["Mm.GoodsReceipt.Remarks"]" Field="Remarks" Rows="3" Span="4"
+                      LockMode="@(gr.IsMatched ? LockMode.Always : LockMode.None)" TestId="goods-receipt-header-remarks" />
         </HeaderFields>
         <Totals Context="lines">
             @{ var totals = TotalsOf(lines); }
@@ -134,8 +143,9 @@
     private const string NotFoundCode = "Common-E-006";
     private const string OverReceiptField = "confirmOverReceipt";
     private const string NotSavedCode = "Mm.GoodsReceipt.OverReceiptNotSaved";
-    private static readonly string[] ReceivableTypes = ["INVENTORY", "SERVICE"];
-    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "lotNo", "taxCode"];
+    private const string StockItemType = "INVENTORY";
+    private static readonly string[] ReceivableTypes = [StockItemType, "SERVICE"];
+    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "locationCode", "taxCode"];
     private static readonly HashSet<string> AmountInputs =
         new([nameof(GoodsReceiptLine.GrQty), nameof(GoodsReceiptLine.GrPrc), nameof(GoodsReceiptLine.TaxCodeId)],
             StringComparer.OrdinalIgnoreCase);
@@ -149,7 +159,9 @@
     private IReadOnlyList<CodeItemDto> _warehouseOptions = [];
     private string? _defaultWarehouseCode;
     private readonly Dictionary<string, ItemDto> _items = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<long, IReadOnlyList<LocationOptionDto>> _locations = [];
     private bool _canEdit;
+    private bool _matched;
     private bool _ready;
     private bool _vendorLookupOpen;
     private bool _importOpen;
@@ -209,6 +221,7 @@
     // A new receipt is in the base currency until a vendor is picked, with the user's default warehouse (MM-BR-703)
     private GoodsReceiptHeader CreateHeader()
     {
+        _matched = false;
         UseDecimals(_localization?.BaseCurrencyCode);
         return new GoodsReceiptHeader
         {
@@ -269,9 +282,16 @@
         }
         var warehouseCodes = _warehouses.ToDictionary(w => w.Id, w => w.WarehouseCode);
         var taxCodes = _taxCodes.ToDictionary(t => t.Id, t => t.TaxCode);
+        var header = GoodsReceiptHeader.From(receipt, warehouseCodes, vendor?.TaxCode);
+        if (_matched != header.IsMatched)
+        {
+            // Add Row and line delete follow the receipt the frame shows
+            _matched = header.IsMatched;
+            StateHasChanged();
+        }
         UseDecimals(receipt.CurrencyCode);
         return new HeaderLines<GoodsReceiptHeader, GoodsReceiptLine>(
-            GoodsReceiptHeader.From(receipt, warehouseCodes, vendor?.TaxCode),
+            header,
             [.. receipt.Lines.OrderBy(l => l.Seq).Select(l => GoodsReceiptLine.From(l, taxCodes))]);
     }
 
@@ -281,6 +301,10 @@
         GoodsReceiptHeader gr, bool isNew, BatchChanges<GoodsReceiptLine> changes)
     {
         var lines = ActiveLines();
+        foreach (var line in lines.Where(l => !l.IsSaved()))
+        {
+            line.LocationId = await LocationIdAsync(line);
+        }
         var warehouseId = WarehouseOf(gr.WarehouseCode)?.Id;
         bool? confirmOverReceipt = null;
         while (true)
@@ -305,6 +329,60 @@
     }
 
     private Task DeleteAsync(GoodsReceiptHeader gr) => Api.DeleteAsync(gr.Id, gr.UpdatedAt!.Value, CancellationToken.None);
+
+    // MM-BR-918: the labels of the saved receipt's Pallets as a PDF
+    private Task PalletLabelsAsync() => _frame!.RunCommandAsync(async () =>
+    {
+        var gr = Header();
+        if (gr.Id == 0 || gr.GrNo is null)
+        {
+            return;
+        }
+        var file = await Api.PalletLabelsAsync(gr.Id, gr.GrNo, CancellationToken.None);
+        await QuroExcel.DownloadAsync(JS, file.FileName, file.Content);
+    });
+
+    // Saved lines keep everything but their Lot attributes (MM-BR-107, MM-BR-364). Lot attributes only for a lot-managed item
+    // (MM-BR-364), a Location other than '*' only for a Location-managed item (MM-BR-713), a Pallet qty only for a stock item
+    // (MM-BR-910)
+    private static bool CellLocked(GoodsReceiptLine line, string field)
+    {
+        if (GoodsReceiptLine.LotAttributeFields.Any(f => Is(f, field)))
+        {
+            return !line.LotManaged;
+        }
+        if (line.IsSaved())
+        {
+            return true;
+        }
+        if (Is(field, nameof(GoodsReceiptLine.LocationCode)))
+        {
+            return !line.LocationManaged;
+        }
+        return Is(field, nameof(GoodsReceiptLine.PalletQty)) && !line.StockItem;
+    }
+
+    // The Location id of a new line's code in its warehouse; '*' or empty is null (MM-BR-713)
+    private async Task<long?> LocationIdAsync(GoodsReceiptLine line)
+    {
+        var code = line.LocationCode?.Trim();
+        if (string.IsNullOrEmpty(code) || code == GoodsReceiptLine.System || line.WarehouseId is not { } warehouseId)
+        {
+            return null;
+        }
+        return (await LocationOptionsAsync(warehouseId)).FirstOrDefault(o => Is(o.LocationCode, code))?.Id
+               ?? throw new ApiProblemException(new ApiProblem(404, NotFoundCode, [code]));
+    }
+
+    private async Task<IReadOnlyList<LocationOptionDto>> LocationOptionsAsync(long warehouseId)
+    {
+        if (!_locations.TryGetValue(warehouseId, out var options))
+        {
+            options = await LocationApi.GetOptionsAsync(warehouseId, CancellationToken.None);
+            _locations[warehouseId] = options;
+        }
+        return options;
+    }
 
     private string? LinesHint(GoodsReceiptHeader gr) => gr.VendorId is null ? L["Common.SelectPartnerFirst"].Value : null;
 
@@ -436,7 +514,7 @@
             _taxCodes.FirstOrDefault(t => t.Id == poLine.TaxCodeId)?.TaxCode, price);
         if (poLine.ItemCd is { } code && await ItemOfAsync(code) is { } item)
         {
-            line.LotManaged = item.LotManaged;
+            SetItemFlags(line, item);
         }
         Amounts(line);
         var lines = _frame.Lines;
@@ -457,7 +535,15 @@
         return null;
     }
 
-    // Line lookups: items with the standard purchase price, general warehouses, tax codes in use and the lots of the line
+    private static void SetItemFlags(GoodsReceiptLine line, ItemDto? item)
+    {
+        line.LotManaged = item?.LotManaged ?? false;
+        line.LocationManaged = item?.LocationManaged ?? false;
+        line.StockItem = item?.ItemType == StockItemType;
+    }
+
+    // Line lookups: items with the standard purchase price, general warehouses, the Locations of the line's warehouse and tax
+    // codes in use
     private async Task<IReadOnlyList<LookupRow>> LookupAsync(LookupQuery query)
     {
         switch (query.LookupId)
@@ -476,35 +562,23 @@
             case "mmPoTaxCode":
                 return [.. _taxCodes.Where(t => Matches(query, t.TaxCode, t.Name)).Select(t => LookupRow.Of(
                     ("taxCode", t.TaxCode), ("name", t.Name), ("rate", t.Rate)))];
-            case "mmGrLot":
-                return await LotsAsync(query.Keyword);
+            case "mmGrLocation":
+                return await LocationsAsync(query);
             default:
                 return [];
         }
     }
 
-    // The lots of the current line's item in its warehouse on the receipt date (MM-BR-362). A receipt adds stock, so a typed
-    // number that is not listed is offered as a new lot (MM-BR-353); a line whose item has no lots has none
-    private async Task<IReadOnlyList<LookupRow>> LotsAsync(string? keyword)
+    // The Locations in use of the current line's warehouse, '*' first (MM-BR-717)
+    private async Task<IReadOnlyList<LookupRow>> LocationsAsync(LookupQuery query)
     {
         var lines = _frame!.Lines;
-        if (lines.CurrentRowKey is not { } key || lines.GetItem(key) is not { LotManaged: true } line)
+        if (lines.CurrentRowKey is not { } key || lines.GetItem(key) is not { WarehouseId: { } warehouseId })
         {
             return [];
         }
-        var text = keyword?.Trim().ToUpperInvariant();
-        var rows = new List<LookupRow>();
-        if (line.ItemId is { } itemId && line.WarehouseId is { } warehouseId)
-        {
-            var lots = await LotApi.SearchAsync(itemId, warehouseId, Header().GrDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
-            rows.AddRange(lots.Where(l => string.IsNullOrEmpty(text) || l.LotNo.Contains(text, StringComparison.OrdinalIgnoreCase))
-                .Select(l => LookupRow.Of(("lotNo", l.LotNo), ("onHandQty", l.OnHandQty))));
-        }
-        if (!string.IsNullOrEmpty(text) && !rows.Any(r => string.Equals(r["lotNo"] as string, text, StringComparison.OrdinalIgnoreCase)))
-        {
-            rows.Insert(0, LookupRow.Of(("lotNo", text), ("onHandQty", null)));
-        }
-        return rows;
+        return [.. (await LocationOptionsAsync(warehouseId)).Where(o => Matches(query, o.LocationCode, o.LocationName)).Select(o => LookupRow.Of(
+            ("locationCode", o.LocationCode), ("locationName", o.LocationName)))];
     }
 
     private static bool Matches(LookupQuery query, string code, string? name) =>
@@ -514,7 +588,7 @@
               || code.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase)
               || (name?.Contains(query.Keyword.Trim(), StringComparison.OrdinalIgnoreCase) ?? false);
 
-    // The ids of the codes a new line names, its lot flag, and its display amounts (MM-BR-112, MM-BR-162)
+    // The ids of the codes a new line names, its item flags, and its display amounts (MM-BR-112, MM-BR-162)
     private void OnLineValueChanged(object? sender, DataSetValueChangedEventArgs e)
     {
         var lines = _frame!.Lines;
@@ -528,20 +602,32 @@
         {
             var item = line.ItemCd is { } code ? _items.GetValueOrDefault(code) : null;
             lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.ItemId), item?.Id);
-            lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.LotManaged), item?.LotManaged ?? false);
-            if (item?.LotManaged != true && line.LotNo is not null)
+            SetItemFlags(line, item);
+            // Lot attributes for a lot-managed item, a Location for a Location-managed one, Pallets for a stock item
+            if (!line.LotManaged)
             {
-                lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.LotNo), null);
+                foreach (var field in GoodsReceiptLine.LotAttributeFields.Where(f => lines.GetValue(e.RowKey, f) is not null))
+                {
+                    lines.SetValue(e.RowKey, field, null);
+                }
             }
-        }
-        else if (Is(e.Field, nameof(GoodsReceiptLine.LotNo)) && !line.LotManaged && line.LotNo is not null)
-        {
-            // Only a lot-managed item has a lot (MM-BR-353)
-            lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.LotNo), null);
+            if (item?.LocationManaged != true && line.LocationCode != GoodsReceiptLine.System)
+            {
+                lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.LocationCode), GoodsReceiptLine.System);
+            }
+            if (item?.ItemType != StockItemType && line.PalletQty is not null)
+            {
+                lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.PalletQty), null);
+            }
         }
         else if (Is(e.Field, nameof(GoodsReceiptLine.WarehouseCode)))
         {
+            // A Location belongs to one warehouse, so another warehouse starts at '*'
             lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.WarehouseId), WarehouseOf(line.WarehouseCode)?.Id);
+            if (line.LocationCode != GoodsReceiptLine.System)
+            {
+                lines.SetValue(e.RowKey, nameof(GoodsReceiptLine.LocationCode), GoodsReceiptLine.System);
+            }
         }
         else if (Is(e.Field, nameof(GoodsReceiptLine.TaxCode)))
         {

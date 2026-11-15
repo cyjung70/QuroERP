@@ -6,6 +6,7 @@ using QuroErp.Application.Common;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Inventory;
+using QuroErp.Application.Mm.Pallets;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Contracts.Mm.GoodsReceipts;
 using QuroErp.Domain.Bc.BusinessPlaces;
@@ -14,6 +15,7 @@ using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.GoodsReceipts;
 using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Domain.Mm.Lots;
 using QuroErp.Domain.Mm.PurchaseOrders;
 using QuroErp.Domain.Mm.Warehouses;
 
@@ -21,8 +23,9 @@ namespace QuroErp.Application.Mm.GoodsReceipts;
 
 /// <summary>
 /// Goods receipts (MM-UC-004): list, find, save, delete and the PO lines to import. One save is one transaction: header, lines,
-/// number, PO received qty and status, stock movements and standard purchase prices (goods-receipt.md "기본 흐름" 5). Every write
-/// locks the header row and checks updatedAt (409). The receipt makes no payable; the supplier invoice matches its lines.
+/// number, PO received qty and status, stock movements, Lots and their attributes, Pallets and standard purchase prices
+/// (goods-receipt.md "기본 흐름" 5, MM-BR-353, MM-BR-364, MM-BR-910). Every write locks the header row and checks updatedAt (409).
+/// The receipt makes no payable; the supplier invoice matches its lines.
 /// </summary>
 public sealed class GoodsReceiptService(
     IGoodsReceiptRepository receipts,
@@ -32,6 +35,7 @@ public sealed class GoodsReceiptService(
     IExchangeRateRepository exchangeRates,
     IBusinessPlaceRepository businessPlaces,
     IWarehouseRepository warehouseMasters,
+    IPalletRepository pallets,
     InventoryService inventory,
     DocumentNumberService numbers,
     IBusinessClock clock,
@@ -92,10 +96,11 @@ public sealed class GoodsReceiptService(
     }
 
     /// <summary>
-    /// Changes the reference number, remarks and default warehouse, adds lines and deletes the lines left out (MM-BR-107). A
-    /// deleted line takes back its stock and PO received qty (MM-BR-108, MM-BR-111).
+    /// Changes the reference number, remarks and default warehouse, adds lines, deletes the lines left out (MM-BR-107) and
+    /// changes the Lot attributes of saved lines (MM-BR-364). A deleted line takes back its stock and PO received qty and closes
+    /// its Pallets (MM-BR-108, MM-BR-111, MM-BR-911). An invoiced or returned receipt takes Lot attribute changes only (MM-BR-104).
     /// </summary>
-    /// <exception cref="DomainException">MM-E-104, 107, 116, 117 and the checks of <see cref="CreateAsync"/>.</exception>
+    /// <exception cref="DomainException">MM-E-104, 107, 116, 117, 911 and the checks of <see cref="CreateAsync"/>.</exception>
     /// <exception cref="ConfirmationRequiredException">MM-W-102 as on <see cref="CreateAsync"/>.</exception>
     /// <exception cref="ConcurrencyException">updatedAt is missing or differs, or a line id is not one of this receipt.</exception>
     /// <exception cref="NotFoundException">Common-E-006.</exception>
@@ -105,8 +110,15 @@ public sealed class GoodsReceiptService(
         var transaction = uow.Transaction;
         var row = await LockAsync(id, request.UpdatedAt ?? default, transaction, cancellationToken);
         var lines = await receipts.FindLinesAsync(id, transaction, cancellationToken);
-        GoodsReceiptRules.EnsureEditable(row.GrNo, lines.Select(l => l.ToStored()));
+        if (GoodsReceiptRules.IsLocked(lines.Select(l => l.ToStored())))
+        {
+            await UpdateLotAttributesAsync(row, lines, request, user, transaction, cancellationToken);
+            var updated = await ReadAsync(id, transaction, cancellationToken);
+            await uow.CommitAsync(cancellationToken);
+            return updated;
+        }
         var save = await PrepareAsync(request, row, lines, user, transaction, cancellationToken);
+        await ReleaseDeletedLinesAsync(row.GrNo, save, transaction, user, cancellationToken);
         if (!await receipts.UpdateAsync(
                 id, save.Write, [.. save.Deleted.Select(l => l.Id)], row.UpdatedAt, user, transaction, cancellationToken))
         {
@@ -118,8 +130,14 @@ public sealed class GoodsReceiptService(
         return dto;
     }
 
-    /// <summary>Deletes the receipt; every line takes back its stock and PO received qty (MM-BR-108, MM-BR-109, MM-BR-111).</summary>
-    /// <exception cref="DomainException">MM-E-104; the inventory checks of a decrease (MM-E-001, 002, 009, 010, 356).</exception>
+    /// <summary>
+    /// Deletes the receipt; every line takes back its stock and PO received qty and closes its Pallets (MM-BR-108, MM-BR-109,
+    /// MM-BR-111, MM-BR-911).
+    /// </summary>
+    /// <exception cref="DomainException">
+    /// MM-E-104; MM-E-911 when a Pallet was moved, shipped, split, merged or adjusted; the inventory checks of a decrease
+    /// (MM-E-001, 002, 009, 010, 356).
+    /// </exception>
     /// <exception cref="ConcurrencyException">updatedAt differs from the stored row.</exception>
     /// <exception cref="NotFoundException">Common-E-006.</exception>
     public async Task DeleteAsync(long id, DateTimeOffset updatedAt, string user, CancellationToken cancellationToken)
@@ -131,6 +149,7 @@ public sealed class GoodsReceiptService(
         GoodsReceiptRules.EnsureEditable(row.GrNo, lines.Select(l => l.ToStored()));
         var poLines = await LockPoLinesAsync(lines.Select(l => l.PurchaseOrderLineId), transaction, cancellationToken);
         var save = new PreparedSave(new GoodsReceiptWrite(Header(row), new(0, 0, 0, 0), []), [], lines, poLines, BaseCurrencyCode: "");
+        await ReleaseDeletedLinesAsync(row.GrNo, save, transaction, user, cancellationToken);
         await ApplyAsync(id, row.GrNo, save, user, transaction, cancellationToken);
         if (!await receipts.DeleteAsync(id, updatedAt, transaction, cancellationToken))
         {
@@ -170,15 +189,17 @@ public sealed class GoodsReceiptService(
         var settings = new GoodsReceiptSettings(
             baseCurrency, company?.TaxCalcMode ?? TaxCalcMode.Document, mm is null ? RoundingMode.HalfUp : Rounding.ParseMode(mm.RoundingMode));
 
-        // MM-BR-107: saved lines come back unchanged with their id; the ones left out are deleted
+        // MM-BR-107: saved lines come back unchanged with their id, except their Lot attributes (MM-BR-364); the ones left out
+        // are deleted
         var storedById = storedLines.ToDictionary(l => l.Id);
         var kept = new List<StoredGoodsReceiptLine>();
         foreach (var line in request.Lines.Where(l => l.Id is not null))
         {
             // A line id of another receipt means the screen is stale
             var saved = storedById.GetValueOrDefault(line.Id!.Value) ?? throw new ConcurrencyException();
-            GoodsReceiptRules.EnsureUnchanged(saved.ToStored(), Input(line, saved.WarehouseId, saved.TaxCodeId));
-            kept.Add(saved.ToStored());
+            var input = Input(line, saved.WarehouseId, saved.TaxCodeId);
+            GoodsReceiptRules.EnsureUnchanged(saved.ToStored(), input);
+            kept.Add(saved.ToStored() with { Lot = input.Lot });
         }
         var keptIds = kept.Select(l => l.Id).ToHashSet();
         var deleted = storedLines.Where(l => !keptIds.Contains(l.Id)).ToList();
@@ -212,7 +233,9 @@ public sealed class GoodsReceiptService(
             await receipts.FindItemTypesAsync([.. added.Select(l => l.ItemId).Distinct()], transaction, cancellationToken),
             await receipts.FindUsableWarehousesAsync(warehouseIds, transaction, cancellationToken),
             await TaxCodesAsync(kept.Select(l => l.TaxCodeId).Concat(added.Select(l => l.TaxCodeId)), header.GrDt, transaction, cancellationToken),
-            poLines);
+            poLines,
+            await receipts.FindLotManagedItemsAsync(
+                [.. kept.Select(l => l.ItemId).Concat(added.Select(l => l.ItemId)).Distinct()], transaction, cancellationToken));
 
         var rounder = new AmountRounder(currencies.Select(c => new Currency(c.CurrencyCode, c.Decimals)));
         var nextSeq = storedLines.Count == 0 ? 1 : storedLines.Max(l => l.Seq) + 1;
@@ -285,8 +308,71 @@ public sealed class GoodsReceiptService(
         }
     }
 
-    // The side effects of a save in the receipt's transaction: stock (MM-BR-111, MM-BR-601), lots (MM-BR-353), PO received qty
-    // and status (MM-BR-108, MM-BR-109) and standard purchase prices (MM-BR-110)
+    // An invoiced or returned receipt (MM-BR-104) takes only new Lot attributes of its saved lines (MM-BR-364)
+    private async Task UpdateLotAttributesAsync(
+        GoodsReceiptRow row, IReadOnlyList<GoodsReceiptLineRow> lines, SaveGoodsReceiptRequest request, string user,
+        IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var storedById = lines.ToDictionary(l => l.Id);
+        var inputs = request.Lines
+            .Select(l => (l.Id, Line: l.Id is { } lineId && storedById.TryGetValue(lineId, out var saved)
+                ? Input(l, saved.WarehouseId, saved.TaxCodeId)
+                : Input(l, row.WarehouseId, 0)))
+            .ToList();
+        var header = new GoodsReceiptHeader(
+            request.VendorId, request.GrDt, request.WarehouseId ?? row.WarehouseId, Clean(request.RefNo)?.ToUpperInvariant(),
+            Clean(request.Remarks), Clean(request.CurrencyCode)?.ToUpperInvariant() ?? row.CurrencyCode, request.ExchangeRate ?? row.ExchangeRate);
+        GoodsReceiptRules.EnsureLotAttributesOnly(row.GrNo, Header(row), header, [.. lines.Select(l => l.ToStored())], inputs);
+
+        var lotManaged = await receipts.FindLotManagedItemsAsync([.. lines.Select(l => l.ItemId).Distinct()], transaction, cancellationToken);
+        var writes = inputs.Select(i => (Saved: storedById[i.Id!.Value], i.Line.Lot))
+            .Where(x => x.Saved.LotId is not null)
+            .Select(x => new ReceiptLotWrite(
+                x.Saved.LotId!.Value,
+                LotRules.CheckAttributes(
+                    x.Saved.Seq, lotManaged.Contains(x.Saved.ItemId), x.Lot?.SupplierLotNo, x.Lot?.MfgDt, x.Lot?.ExpiryDt),
+                null))
+            .ToList();
+        await receipts.SetLotAttributesAsync(writes, user, transaction, cancellationToken);
+        if (!await receipts.TouchAsync(row.Id, row.UpdatedAt, user, transaction, cancellationToken))
+        {
+            throw new ConcurrencyException();
+        }
+    }
+
+    // MM-BR-911: a deleted line closes its Pallets, which must still be as the receipt made them, before its stock goes back
+    // (so the reversal is not held by MM-BR-916) and before the line row goes (the Pallets and Lots point at it)
+    private async Task ReleaseDeletedLinesAsync(
+        string grNo, PreparedSave save, IDbTransaction transaction, string user, CancellationToken cancellationToken)
+    {
+        if (save.Deleted.Count == 0)
+        {
+            return;
+        }
+        var lineIds = save.Deleted.Select(l => l.Id).ToList();
+        var linePallets = await pallets.LockByReceiptLinesAsync(lineIds, transaction, cancellationToken);
+        foreach (var pallet in linePallets)
+        {
+            PalletRules.EnsureAsReceived(pallet.PalletNo, pallet.AsReceived);
+        }
+        if (linePallets.Count > 0)
+        {
+            await pallets.CloseForDeletedLinesAsync(
+                [.. linePallets.Select(p => p.Id)], ReversalDt(save.Write.Header), grNo, user, transaction, cancellationToken);
+        }
+        await receipts.UnlinkLotsAsync(lineIds, transaction, cancellationToken);
+    }
+
+    // MM-BR-601: a reversal is dated the day it is made, never before the receipt itself
+    private DateOnly ReversalDt(GoodsReceiptHeader header)
+    {
+        var today = clock.Today();
+        return today < header.GrDt ? header.GrDt : today;
+    }
+
+    // The side effects of a save in the receipt's transaction: stock (MM-BR-111, MM-BR-601), Lots and their attributes
+    // (MM-BR-353, MM-BR-364), Pallets (MM-BR-910), PO received qty and status (MM-BR-108, MM-BR-109) and standard purchase
+    // prices (MM-BR-110)
     private async Task ApplyAsync(
         long id, string grNo, PreparedSave save, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
@@ -297,22 +383,29 @@ public sealed class GoodsReceiptService(
             : await receipts.FindOpenMovementIdsAsync(grNo, [.. save.Deleted.Select(l => l.Seq)], transaction, cancellationToken);
         if (movementIds.Count > 0)
         {
-            // MM-BR-601: the reversal is dated the day it is made, never before the receipt itself
-            var today = clock.Today();
-            var reversalDt = today < header.GrDt ? header.GrDt : today;
-            await inventory.ReverseAsync(movementIds, reversalDt, user, transaction, cancellationToken);
+            await inventory.ReverseAsync(movementIds, ReversalDt(header), user, transaction, cancellationToken);
         }
+        var lotWrites = save.Write.Lines.Where(l => l.Id is not null && l.LotId is not null)
+            .Select(l => new ReceiptLotWrite(l.LotId!.Value, l.Lot ?? LotAttributes.None, null))
+            .ToList();
         if (save.Added.Count > 0)
         {
-            // Service items have no stock; the inventory service skips them (MM-BR-008)
+            // Service items have no stock; the inventory service skips them (MM-BR-008). A lot-managed item gets a new Lot (MM-BR-353)
             var posted = await inventory.PostAsync(
                 [.. save.Added.Select(l => new StockMovementRequest(
-                    MovementType.GoodsReceipt, header.GrDt, l.ItemId, l.WarehouseId, l.GrQty, l.StockPrice, grNo, l.Seq, l.LotId, l.LotNo))],
+                    MovementType.GoodsReceipt, header.GrDt, l.ItemId, l.WarehouseId, l.GrQty, l.StockPrice, grNo, l.Seq,
+                    LocationId: l.LocationId))],
                 user, transaction, cancellationToken);
-            var lots = posted.Where(m => m.LotId is not null && m.RefSeq is not null).ToDictionary(m => m.RefSeq!.Value, m => m.LotId!.Value);
-            if (lots.Count > 0)
+            var movements = posted.Where(m => m.LotId is not null && m.RefSeq is not null).ToDictionary(m => m.RefSeq!.Value);
+            if (movements.Count > 0)
             {
-                await receipts.SetLineLotsAsync(id, lots, transaction, cancellationToken);
+                await receipts.SetLineKeysAsync(
+                    id, movements.ToDictionary(m => m.Key, m => (m.Value.LocationId!.Value, m.Value.LotId!.Value)), transaction, cancellationToken);
+                var lineIds = (await receipts.FindLinesAsync(id, transaction, cancellationToken)).ToDictionary(l => l.Seq, l => l.Id);
+                var added = save.Added.Where(l => movements.ContainsKey(l.Seq)).ToList();
+                lotWrites.AddRange(added.Select(l => new ReceiptLotWrite(
+                    movements[l.Seq].LotId!.Value, l.Lot ?? LotAttributes.None, lineIds[l.Seq])));
+                await CreatePalletsAsync(grNo, header.GrDt, added, movements, lineIds, user, transaction, cancellationToken);
             }
             // MM-BR-110: prices in the base currency only; a foreign price has no standard price to replace (as MM-BR-016)
             if (header.CurrencyCode == save.BaseCurrencyCode)
@@ -320,6 +413,11 @@ public sealed class GoodsReceiptService(
                 await receipts.SetStandardPricesAsync(
                     save.Added.GroupBy(l => l.ItemId).ToDictionary(g => g.Key, g => g.Last().GrPrc), user, transaction, cancellationToken);
             }
+        }
+
+        if (lotWrites.Count > 0)
+        {
+            await receipts.SetLotAttributesAsync(lotWrites, user, transaction, cancellationToken);
         }
 
         var qtyByPoLine = save.Added.Where(l => l.PurchaseOrderLineId is not null).Select(l => (Line: l.PurchaseOrderLineId!.Value, Qty: l.GrQty))
@@ -345,10 +443,32 @@ public sealed class GoodsReceiptService(
         }
     }
 
+    // MM-BR-910: a stock line with a Pallet qty is split into Pallets of that qty on its Location and new Lot, numbered PL + yymm
+    // of the receipt date
+    private async Task CreatePalletsAsync(
+        string grNo, DateOnly grDt, IReadOnlyList<GoodsReceiptLine> added, Dictionary<int, GoodsMovement> movements,
+        Dictionary<int, long> lineIds, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var parts = added.Where(l => l.PalletQty is not null)
+            .SelectMany(l => PalletRules.Split(l.GrQty, l.PalletQty!.Value).Select(qty => (Line: l, Qty: qty)))
+            .ToList();
+        if (parts.Count == 0)
+        {
+            return;
+        }
+        var palletNos = await numbers.NextAsync(DocumentNumberFormat.Pallet, [.. parts.Select(_ => grDt)], user, transaction, cancellationToken);
+        await pallets.InsertAsync(
+            [.. parts.Zip(palletNos, (p, no) => new NewPallet(
+                no, p.Line.ItemId, movements[p.Line.Seq].LotId!.Value, p.Line.WarehouseId, movements[p.Line.Seq].LocationId!.Value, p.Qty,
+                lineIds[p.Line.Seq], grDt, grNo, p.Line.Seq))],
+            user, transaction, cancellationToken);
+    }
+
     private async Task<GoodsReceiptDto> ReadAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var r = await receipts.FindAsync(id, forUpdate: false, transaction, cancellationToken) ?? throw new NotFoundException(NotFoundCode, id);
         var lines = await receipts.FindLinesAsync(id, transaction, cancellationToken);
+        var palletNos = await pallets.FindNumbersByReceiptAsync(id, transaction, cancellationToken);
         var status = GoodsReceiptRules.StatusOf(r.TotGrAmt, [.. lines.Select(l => (l.GrQty, l.InvoicedQty, l.ReturnedQty))]);
         return new GoodsReceiptDto(
             r.Id, r.GrNo, status, r.VendorId, r.VendorName, r.GrDt, r.WarehouseId, r.RefNo, r.Remarks, r.CurrencyCode, r.ExchangeRate,
@@ -356,7 +476,8 @@ public sealed class GoodsReceiptService(
             [.. lines.Select(l => new GoodsReceiptLineDto(
                 l.Id, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.Unit, l.WarehouseId, l.WarehouseCode, l.LotId, l.LotNo, l.GrQty, l.GrPrc,
                 l.GrAmt, l.TaxCodeId, l.TaxCode, l.SupplyAmt, l.TaxAmt, l.Deductible, l.PurchaseOrderLineId, l.PoNo, l.PoSeq, l.PoQty,
-                l.PoReceivedQty, l.InvoicedQty, l.ReturnedQty))],
+                l.PoReceivedQty, l.InvoicedQty, l.ReturnedQty, l.LocationId, l.LocationCode, l.SupplierLotNo, l.MfgDt, l.ExpiryDt,
+                l.PalletQty, palletNos.GetValueOrDefault(l.Id) ?? []))],
             r.UpdatedAt, r.CreatedAt, r.CreatedBy, r.UpdatedBy);
     }
 
@@ -364,8 +485,9 @@ public sealed class GoodsReceiptService(
         new(row.VendorId, row.GrDt, row.WarehouseId, row.RefNo, row.Remarks, row.CurrencyCode, row.ExchangeRate);
 
     private static GoodsReceiptLineInput Input(SaveGoodsReceiptLineRequest line, long defaultWarehouseId, long defaultTaxCodeId) => new(
-        line.ItemId, Clean(line.ItemName), line.WarehouseId ?? defaultWarehouseId, line.LotId, Clean(line.LotNo)?.ToUpperInvariant(),
-        line.GrQty, line.GrPrc, line.TaxCodeId ?? defaultTaxCodeId, line.Deductible, line.PurchaseOrderLineId);
+        line.ItemId, Clean(line.ItemName), line.WarehouseId ?? defaultWarehouseId, line.GrQty, line.GrPrc, line.TaxCodeId ?? defaultTaxCodeId,
+        line.Deductible, line.PurchaseOrderLineId, line.LocationId, line.PalletQty,
+        new LotAttributes(line.SupplierLotNo, line.MfgDt, line.ExpiryDt));
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
