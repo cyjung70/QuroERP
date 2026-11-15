@@ -22,6 +22,7 @@ using QuroErp.Application.Mm.Inventory;
 using QuroErp.Application.Mm.Labels;
 using QuroErp.Application.Mm.Locations;
 using QuroErp.Application.Mm.Lots;
+using QuroErp.Application.Mm.Pallets;
 using QuroErp.Application.Mm.GoodsReceipts;
 using QuroErp.Application.Mm.SupplierInvoices;
 using QuroErp.Application.Mm.PurchaseOrders;
@@ -70,6 +71,7 @@ public static class DependencyInjection
         services.AddScoped<AlternateItemGroupService>();
         services.AddScoped<WarehouseService>();
         services.AddScoped<LocationService>();
+        services.AddScoped<PalletService>();
         services.AddScoped<VendorService>();
         services.AddScoped<CustomerService>();
         services.AddScoped<SalesOrderService>();

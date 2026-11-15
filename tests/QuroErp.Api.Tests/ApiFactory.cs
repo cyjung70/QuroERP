@@ -39,8 +39,11 @@ using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Api.Tests.Mm.Vendors;
 using QuroErp.Api.Tests.Mm.Locations;
 using QuroErp.Api.Tests.Mm.Lots;
+using QuroErp.Api.Tests.Mm.Pallets;
+using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Mm.Locations;
 using QuroErp.Application.Mm.Lots;
+using QuroErp.Application.Mm.Pallets;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Domain.Bc.BusinessPlaces;
 using QuroErp.Contracts.Mm.Warehouses;
@@ -157,6 +160,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Locations of warehouses 1 and 2 (MM-UC-034).</summary>
     public InMemoryLocationRepository Locations { get; } = new();
 
+    /// <summary>Pallets of item BOLT on MAIN A-01 (MM-UC-035).</summary>
+    public InMemoryPalletRepository Pallets { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -225,6 +231,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IVendorRepository>(Vendors);
             services.AddSingleton<ILocationRepository>(Locations);
             services.AddSingleton<ILotRepository>(new InMemoryLotRepository());
+            services.AddSingleton<IPalletRepository>(Pallets);
+            services.AddSingleton<IDocumentNumberRepository>(new Common.InMemoryDocumentNumberRepository());
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             // /health without PostgreSQL or Chromium: one check whose status the test sets
             services.Configure<HealthCheckServiceOptions>(o =>
