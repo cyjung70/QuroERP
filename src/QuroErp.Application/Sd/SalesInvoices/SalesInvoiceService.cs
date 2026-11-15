@@ -216,14 +216,20 @@ public sealed class SalesInvoiceService(
                 -totals.SupplyAmt, -totals.TaxAmt, -totals.TotDnAmt, -totals.TotBaseAmt, row.DnNo),
             cmLines, user, transaction, cancellationToken);
 
-        // The stock goes back the way it came, under the Credit Memo number (SD-BR-145, MM-BR-357)
-        await inventory.PostAsync(
+        // The stock goes back the way it came, under the Credit Memo number (SD-BR-145, MM-BR-357): from the consignment warehouse's
+        // Location '*' and the line's lot to the line's Location; a Kit's components back to Location '*' with their lots
+        var departed = await inventory.PostAsync(
             [.. cancels.Select((c, i) => new StockMovementRequest(
                 MovementType.StockTransfer, request.CancelDt, c.Line.ItemId, consignment.Id, -c.Qty, null, cmNo, i + 1, c.Line.LotId))],
             user, transaction, cancellationToken);
-        await inventory.PostAsync(
-            [.. cancels.Select((c, i) => new StockMovementRequest(
-                MovementType.StockTransfer, request.CancelDt, c.Line.ItemId, c.Line.WarehouseId, c.Qty, null, cmNo, i + 1, c.Line.LotId))],
+        var lineBySeq = cancels.Select((c, i) => (Seq: i + 1, c.Line)).ToDictionary(x => x.Seq, x => x.Line);
+        await PostArrivalsAsync(
+            departed, cmNo,
+            m =>
+            {
+                var line = lineBySeq[m.RefSeq!.Value];
+                return (line.WarehouseId, m.ItemId == line.ItemId ? line.LocationId : null);
+            },
             user, transaction, cancellationToken);
         await invoices.AddCancelledQtyAsync(Sum(cancels.Select(c => (c.Line.Id, c.Qty))), user, transaction, cancellationToken);
         await AddOrderDnQtyAsync(cancels.Select(c => (c.Line.SalesOrderLineId, -c.Qty)), user, transaction, cancellationToken);
@@ -534,21 +540,24 @@ public sealed class SalesInvoiceService(
         if (billFirst.Count > 0)
         {
             var consignment = save.Consignment ?? throw new DomainException(WarehouseRules.ConsignmentCode, "-");
+            // The stock leaves the line warehouse from the line's Location and Lot (MM-BR-713, MM-BR-716); a Kit's components leave
+            // from the Locations and Lots the inventory service allocates in FIFO order (MM-BR-007, SD-BR-518)
             var issued = await inventory.PostAsync(
                 [.. billFirst.Select(l => new StockMovementRequest(
-                    MovementType.StockTransfer, save.Header.DnDt, l.ItemId, l.WarehouseId, -l.DnQty, null, dnNo, l.Seq, l.LotId, l.LotNo))],
+                    MovementType.StockTransfer, save.Header.DnDt, l.ItemId, l.WarehouseId, -l.DnQty, null, dnNo, l.Seq, l.LotId, l.LotNo,
+                    LocationId: l.LocationId))],
                 user, transaction, cancellationToken);
-            // MM-BR-357: the lot leaves the line warehouse and arrives in the consignment warehouse
-            var lots = issued.Where(m => m.LotId is not null && m.RefSeq is not null).GroupBy(m => m.RefSeq!.Value)
-                .ToDictionary(g => g.Key, g => g.First().LotId!.Value);
-            await inventory.PostAsync(
-                [.. billFirst.Select(l => new StockMovementRequest(
-                    MovementType.StockTransfer, save.Header.DnDt, l.ItemId, consignment.Id, l.DnQty, null, dnNo, l.Seq,
-                    lots.TryGetValue(l.Seq, out var lotId) ? lotId : null))],
-                user, transaction, cancellationToken);
-            if (lots.Count > 0)
+            // MM-BR-357, MM-BR-715: every item and lot that left arrives in the consignment warehouse's Location '*'
+            await PostArrivalsAsync(issued, dnNo, _ => (consignment.Id, null), user, transaction, cancellationToken);
+            // The line keeps the key its own item left from; a Kit line's components keep theirs in the movements
+            var itemBySeq = billFirst.ToDictionary(l => l.Seq, l => l.ItemId);
+            var keys = issued
+                .Where(m => m.RefSeq is { } seq && itemBySeq.GetValueOrDefault(seq) == m.ItemId && m.LocationId is not null && m.LotId is not null)
+                .GroupBy(m => m.RefSeq!.Value)
+                .ToDictionary(g => g.Key, g => (g.First().LocationId!.Value, g.First().LotId!.Value));
+            if (keys.Count > 0)
             {
-                await invoices.SetLineLotsAsync(id, lots, transaction, cancellationToken);
+                await invoices.SetLineKeysAsync(id, keys, transaction, cancellationToken);
             }
         }
         await TakeBackQtyAsync(
@@ -565,6 +574,27 @@ public sealed class SalesInvoiceService(
         await LockOrderLinesAsync(lines.Where(l => l.ShipmentLineId is null).Select(l => l.SalesOrderLineId), transaction, cancellationToken);
         await ReverseTransfersAsync(row.DnNo, [.. lines.Where(IsBillFirst).Select(l => l.Seq)], row.DnDt, user, transaction, cancellationToken);
         await TakeBackQtyAsync(lines.Select(l => (l.ShipmentLineId, l.SalesOrderLineId, -l.DnQty)), shipmentLines, user, transaction, cancellationToken);
+    }
+
+    // The arriving side of a TR: each movement that left arrives with the same item, lot, qty, date and line in the warehouse and
+    // Location the target gives (null is '*'), at the moving average cost (SD-BR-142, MM-BR-357). The arrivals are components, never
+    // the Kit itself, so a Kit is not expanded again
+    private async Task PostArrivalsAsync(
+        IReadOnlyList<GoodsMovement> departed, string refKey, Func<GoodsMovement, (long WarehouseId, long? LocationId)> target, string user,
+        IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (departed.Count == 0)
+        {
+            return;
+        }
+        await inventory.PostAsync(
+            [.. departed.Select(m =>
+            {
+                var (warehouseId, locationId) = target(m);
+                return new StockMovementRequest(
+                    MovementType.StockTransfer, m.DocumentDt, m.ItemId, warehouseId, -m.Qty, null, refKey, m.RefSeq, m.LotId, LocationId: locationId);
+            })],
+            user, transaction, cancellationToken);
     }
 
     // MM-BR-601: a reversal is dated the day it is made, never before the document itself
@@ -630,6 +660,7 @@ public sealed class SalesInvoiceService(
         var applied = await invoices.FindAppliedAsync(id, transaction, cancellationToken);
         var credit = await invoices.FindAvailableCreditAsync(r.CustomerId, transaction, cancellationToken);
         var cancellations = await invoices.FindCancellationsAsync(id, transaction, cancellationToken);
+        var components = await ComponentsAsync(lines, transaction, cancellationToken);
         var s = r.ShipTo;
         return new SalesInvoiceDto(
             r.Id, r.DnNo, r.Status, r.BillingFlow, r.CustomerId, r.CustomerName, r.SalesOrderId, r.SoNo, r.DnDt, r.DueDt, r.WarehouseId, r.CurrencyCode,
@@ -639,9 +670,27 @@ public sealed class SalesInvoiceService(
             [.. lines.Select(l => new SalesInvoiceLineDto(
                 l.Id, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.Unit, l.WarehouseId, l.WarehouseCode, l.LotId, l.LotNo, l.DnQty, l.DnPrc, l.DnAmt,
                 l.DcCd, l.DcRate, l.StdPrc, l.TaxCodeId, l.SupplyAmt, l.TaxAmt, l.SalesOrderLineId, l.SoNo, l.SoSeq, l.ShipmentLineId, l.ShipNo,
-                l.ShipSeq, l.ShippedQty, l.CancelledQty, IsBillFirst(l.ToStored()) ? l.DnQty - l.ShippedQty - l.CancelledQty : 0m))],
+                l.ShipSeq, l.ShippedQty, l.CancelledQty, IsBillFirst(l.ToStored()) ? l.DnQty - l.ShippedQty - l.CancelledQty : 0m,
+                l.LocationId, l.LocationCode, l.ShowComponents, components.GetValueOrDefault(l.Seq)))],
             [.. cancellations.Select(x => new SalesInvoiceCancellationDto(x.Id, x.CmNo, x.CmDt, x.TotDnAmt, x.BalAmt, x.TotDnAmt != x.BalAmt))],
             r.UpdatedAt, r.CreatedAt, r.CreatedBy, r.UpdatedBy);
+    }
+
+    // SD-BR-517: a Kit or Set line whose item shows its components lists its BOM × the line qty, without amounts
+    private async Task<Dictionary<int, IReadOnlyList<SalesInvoiceComponentDto>>> ComponentsAsync(
+        IReadOnlyList<SalesInvoiceLineRow> lines, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var shown = lines.Where(l => l.ShowComponents && l.ItemType is ItemStock.Kit or ItemStock.Set).ToList();
+        if (shown.Count == 0)
+        {
+            return [];
+        }
+        var bom = (await shipments.FindBomAsync([.. shown.Select(l => l.ItemId).Distinct()], transaction, cancellationToken))
+            .ToLookup(b => b.SetItemId);
+        return shown.ToDictionary(
+            l => l.Seq,
+            l => (IReadOnlyList<SalesInvoiceComponentDto>)[.. bom[l.ItemId].Select(b => new SalesInvoiceComponentDto(
+                b.ItemId, b.ItemCd, b.ItemName, b.Unit, b.ChildQty * l.DnQty))]);
     }
 
     // A BILL_THEN_SHIP line bills an order line without a shipment line (SD-BR-141)
@@ -671,7 +720,7 @@ public sealed class SalesInvoiceService(
 
     private static SalesInvoiceLineInput Input(SaveSalesInvoiceLineRequest l) => new(
         l.Id, l.ItemId, Clean(l.ItemName), l.DnQty, l.DnPrc, l.DcCd is null ? null : Clean(l.DcCd) ?? "", l.TaxCodeId, l.WarehouseId, l.LotId,
-        Clean(l.LotNo)?.ToUpperInvariant(), l.ShipmentLineId, l.SalesOrderLineId);
+        Clean(l.LotNo)?.ToUpperInvariant(), l.ShipmentLineId, l.SalesOrderLineId, l.LocationId);
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

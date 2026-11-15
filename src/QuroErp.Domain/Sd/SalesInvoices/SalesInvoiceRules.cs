@@ -9,15 +9,17 @@ namespace QuroErp.Domain.Sd.SalesInvoices;
 /// <summary>
 /// An invoice line as the request sends it. ShipmentLineId bills a SHIP_THEN_BILL shipment line (SD-BR-115), SalesOrderLineId a
 /// BILL_THEN_SHIP order line (SD-BR-141); neither is a line entered directly (SD-BR-116). Null values take their defaults.
+/// LocationId is the Location a BILL_THEN_SHIP line moves its stock from (MM-BR-713, MM-BR-716); null is '*'.
 /// </summary>
 public sealed record SalesInvoiceLineInput(
     long? Id, long ItemId, string? ItemName, decimal DnQty, decimal? DnPrc, string? DcCd, long? TaxCodeId, long? WarehouseId, long? LotId,
-    string? LotNo, long? ShipmentLineId, long? SalesOrderLineId);
+    string? LotNo, long? ShipmentLineId, long? SalesOrderLineId, long? LocationId = null);
 
-/// <summary>A saved invoice line with its shipped and cancelled qty (SD-BR-143).</summary>
+/// <summary>A saved invoice line with its shipped and cancelled qty (SD-BR-143) and its stock key.</summary>
 public sealed record StoredInvoiceLine(
     long Id, int Seq, long ItemId, string? ItemName, decimal DnQty, decimal DnPrc, string? DcCd, decimal DcRate, long TaxCodeId,
-    long WarehouseId, long? LotId, long? ShipmentLineId, long? SalesOrderLineId, decimal ShippedQty, decimal CancelledQty)
+    long WarehouseId, long? LotId, long? ShipmentLineId, long? SalesOrderLineId, decimal ShippedQty, decimal CancelledQty,
+    long? LocationId = null)
 {
     /// <summary>SD-BR-143: invoiced − shipped − cancelled.</summary>
     public decimal UnshippedQty => DnQty - ShippedQty - CancelledQty;
@@ -42,10 +44,10 @@ public sealed record InvoiceOrderSource(
     public decimal RemainingQty => SoQty - DnQty;
 }
 
-/// <summary>A new invoice line with the values the save stores.</summary>
+/// <summary>A new invoice line with the values the save stores. Only a BILL_THEN_SHIP line has a LocationId (null is '*').</summary>
 public sealed record SalesInvoiceLine(
     int Seq, long ItemId, string? ItemName, decimal DnQty, decimal DnPrc, string? DcCd, decimal DcRate, long TaxCodeId, long WarehouseId,
-    long? LotId, string? LotNo, long? ShipmentLineId, long? SalesOrderLineId);
+    long? LotId, string? LotNo, long? ShipmentLineId, long? SalesOrderLineId, long? LocationId = null);
 
 /// <summary>
 /// What the line checks need from masters: item types and codes of the items that exist, discount rates, tax codes in use, the
@@ -177,8 +179,8 @@ public static class SalesInvoiceRules
     }
 
     /// <summary>
-    /// SD-BR-107: a saved line comes back as it was. The item, qty, price, discount, tax code, warehouse and source cannot change;
-    /// a null value in the request means "as saved".
+    /// SD-BR-107: a saved line comes back as it was. The item, qty, price, discount, tax code, warehouse, Location and source cannot
+    /// change; a null value in the request means "as saved".
     /// </summary>
     /// <exception cref="DomainException">SD-E-107 with the line number.</exception>
     public static void EnsureUnchanged(StoredInvoiceLine stored, SalesInvoiceLineInput input)
@@ -187,6 +189,7 @@ public static class SalesInvoiceRules
             || (input.DcCd is { } dcCd && dcCd != (stored.DcCd ?? ""))
             || (input.TaxCodeId is { } taxCodeId && taxCodeId != stored.TaxCodeId)
             || (input.WarehouseId is { } warehouseId && warehouseId != stored.WarehouseId)
+            || (input.LocationId is { } locationId && locationId != stored.LocationId)
             || (input.ShipmentLineId is { } shipmentLineId && shipmentLineId != stored.ShipmentLineId)
             || (input.SalesOrderLineId is { } orderLineId && orderLineId != stored.SalesOrderLineId))
         {
@@ -404,7 +407,7 @@ public static class SalesInvoiceRules
 
     private static SalesInvoiceLine FromOrder(SalesInvoiceLineInput input, int seq, InvoiceOrderSource source, long headerWarehouseId) => new(
         seq, source.ItemId, input.ItemName ?? source.ItemName, input.DnQty, source.SoPrc, source.DcCd, source.DcRate,
-        input.TaxCodeId ?? source.TaxCodeId, input.WarehouseId ?? headerWarehouseId, input.LotId, input.LotNo, null, source.Id);
+        input.TaxCodeId ?? source.TaxCodeId, input.WarehouseId ?? headerWarehouseId, input.LotId, input.LotNo, null, source.Id, input.LocationId);
 
     // SD-BR-116: only items that keep no stock (MM-BR-008); SD-BR-404: the discount code's rate
     private static SalesInvoiceLine Direct(SalesInvoiceLineInput input, int seq, long headerWarehouseId, SalesInvoiceMasters masters)

@@ -8,6 +8,8 @@
 @using QuroErp.Contracts.Bc.Tax
 @using QuroErp.Contracts.Common
 @using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.Locations
+@using QuroErp.Contracts.Mm.Lots
 @using QuroErp.Contracts.Mm.Warehouses
 @using QuroErp.Contracts.Sd.Customers
 @using QuroErp.Contracts.Sd.SalesInvoices
@@ -19,6 +21,7 @@
 @using QuroErp.Web.Common
 @using QuroErp.Web.Components.Pages.Mm.Models
 @using QuroErp.Web.Components.Pages.Sd.Models
+@using QuroErp.Web.Mm.Locations
 @using QuroErp.Web.Mm.Lots
 @using QuroErp.Web.Mm.PurchaseOrders
 @using QuroErp.Web.Mm.Warehouses
@@ -36,6 +39,7 @@
 @inject WarehouseApiClient WarehouseApi
 @inject UserProfileApiClient ProfileApi
 @inject LotApiClient LotApi
+@inject LocationApiClient LocationApi
 @inject IQuroConfirm Confirm
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
@@ -45,7 +49,8 @@
 @* SD-UC-003 sales invoice, screen type SM on the entry frame (entry-frame.md). The API checks every rule, bills shipment and
    order lines, moves bill-first stock to the consignment warehouse and makes the Credit Memo of an unshipped cancellation
    (SD-BR-101~147); this screen imports shipment or bill-first order lines (never both), shows defaults, locks and display
-   amounts. Saved lines are deleted and added again, never changed (SD-BR-107). *@
+   amounts. Bill-first lines take the FIFO Location and Lot their stock leaves from (MM-BR-716); Kit and Set lines show their
+   components (SD-BR-517). Saved lines are deleted and added again, never changed (SD-BR-107). *@
 
 <PageTitle>@L["Sd.SalesInvoice.Title"]</PageTitle>
 
@@ -61,8 +66,8 @@
                       DocumentNo="s => s.DnNo" Audit="s => s.ToAudit()"
                       Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
                       Definition="sd.sales-invoice.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
-                      ColumnFormats="SalesInvoiceFormats.Of(_decimals)" IsLineLocked="l => l.IsSaved"
-                      IsLineRemovable="l => l.IsRemovable(_frame?.Header.BillingFlow)"
+                      ColumnFormats="SalesInvoiceFormats.Of(_decimals)" IsLineLocked="l => l.IsLocked"
+                      IsLineRemovable="l => l.IsRemovable(_frame?.Header.BillingFlow)" IsCellLocked="(l, field) => l.IsCellLocked(field)"
                       CanSave="SalesInvoiceStatus.CanSave" CanDelete="s => _canEdit && CanVoid(s)"
                       Delete="DeleteAsync" DeleteText="@L["Sd.SalesInvoice.Delete"]" OnPdf="InvoicePdfAsync" LinesHint="LinesHint">
         <FindColumns>
@@ -187,7 +192,7 @@
             }
         </HeaderFields>
         <Totals Context="lines">
-            @{ var totals = TotalsOf(lines); }
+            @{ var totals = TotalsOf(InvoiceLines(lines)); }
             @* No 19: supply, tax, total and the balance (SD-BR-109, SD-BR-132); the marked lines are left out by the frame *@
             <QuroTotals Subtotal="totals.Supply" Tax="totals.Tax" SubtotalLabel="@L["Sd.SalesInvoice.SupplyAmt"]"
                         CurrencyCode="@_decimals.CurrencyCode" Decimals="_decimals.Amount" TestId="sales-invoice-totals" />
@@ -250,7 +255,8 @@
     private const string ServiceItem = "SERVICE";
     private const string NormalWarehouse = "NORMAL";
     private const string Korea = "KR";
-    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "lotNo", "taxCode", "dcCd"];
+    private const string CheckCellKey = "Sd.SalesOrder.CheckThisCell";
+    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "locationCode", "lotNo", "taxCode", "dcCd"];
     private static readonly HashSet<string> AmountInputs =
         new([nameof(SalesInvoiceLine.DnQty), nameof(SalesInvoiceLine.DnPrc), nameof(SalesInvoiceLine.DcRate)], StringComparer.OrdinalIgnoreCase);
 
@@ -266,6 +272,9 @@
     private IReadOnlyList<CodeItemDto> _currencies = [];
     private IReadOnlyList<UnshippedCancelRow> _cancelRows = [];
     private readonly Dictionary<string, long> _itemIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<long, ItemDto> _items = [];
+    private readonly Dictionary<long, IReadOnlyList<LocationOptionDto>> _locations = [];
+    private IReadOnlyList<LotBalanceDto> _lotBalances = [];
     private CustomerDto? _customer;
     private string? _defaultWarehouseCode;
     private bool _canEdit;
@@ -392,7 +401,8 @@
         }
         var header = SalesInvoiceHeader.From(invoice, _allWarehouses.ToDictionary(w => w.Id, w => w.WarehouseCode));
         return new HeaderLines<SalesInvoiceHeader, SalesInvoiceLine>(
-            header, [.. invoice.Lines.OrderBy(l => l.Seq).Select(l => WithAmount(SalesInvoiceLine.From(l, taxCodes)))]);
+            header,
+            [.. invoice.Lines.OrderBy(l => l.Seq).SelectMany(l => SalesInvoiceLine.Rows(l, taxCodes)).Select(l => l.IsComponent ? l : WithAmount(l))]);
     }
 
     // The lines kept, in screen order, go in one request (lines left out are deleted). The ship-to and credit limit questions are
@@ -401,6 +411,7 @@
         SalesInvoiceHeader s, bool isNew, BatchChanges<SalesInvoiceLine> changes)
     {
         var lines = ActiveLines();
+        await ResolveLocationsAsync(lines);
         var warehouseId = WarehouseOf(s.WarehouseCode)?.Id;
         var answers = new SalesOrderSaveAnswers();
         while (true)
@@ -726,10 +737,20 @@
             _applying = false;
         }
         _frame.ShowMessage(string.Format(CultureInfo.CurrentCulture, L["Sd.SalesInvoice.LinesAdded"], added.Count), isError: false);
+
+        // MM-BR-716: each imported bill-first line then takes its FIFO Locations and Lots, one after the other
+        var keys = _frame.Lines.RowKeys.TakeLast(added.Count).ToList();
+        Later(async () =>
+        {
+            foreach (var key in keys)
+            {
+                await SuggestAsync(key);
+            }
+        });
     }
 
     // Line lookups: items without stock in use (direct lines, SD-BR-116), general warehouses, discount codes, tax codes in use and
-    // the lots of the current line
+    // the Locations and lots of the current line
     private async Task<IReadOnlyList<LookupRow>> LookupAsync(LookupQuery query)
     {
         switch (query.LookupId)
@@ -739,7 +760,11 @@
                     ? [.. (await Task.WhenAll(codes.Select(c => ItemApi.FindByCodeAsync(c, CancellationToken.None)))).OfType<ItemDto>()]
                     : await ItemApi.LookupAsync(query.Keyword, CancellationToken.None);
                 var usable = items.Where(i => i.ValidFlag != ItemNotInUse && i.ItemType == ServiceItem).ToList();
-                usable.ForEach(i => _itemIds[i.ItemCd] = i.Id);
+                usable.ForEach(i =>
+                {
+                    _itemIds[i.ItemCd] = i.Id;
+                    _items[i.Id] = i;
+                });
                 return [.. usable.Select(i => LookupRow.Of(
                     ("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit), ("stdPrc", i.SoUsdPrc)))];
             case "sdShipWarehouse":
@@ -750,6 +775,10 @@
             case "sdSoTaxCode":
                 return [.. _taxCodes.Where(t => Matches(query, t.TaxCode, t.Name)).Select(t => LookupRow.Of(
                     ("taxCode", t.TaxCode), ("name", t.Name), ("rate", t.Rate)))];
+            case "sdShipLocation":
+                return [.. (await BalancesAsync()).GroupBy(b => b.LocationCode, StringComparer.OrdinalIgnoreCase)
+                    .Where(g => Matches(query, g.Key, null))
+                    .Select(g => LookupRow.Of(("locationCode", g.Key), ("onHandQty", g.Sum(b => b.OnHandQty))))];
             case "sdShipLot":
                 return await LotsAsync(query);
             default:
@@ -757,16 +786,25 @@
         }
     }
 
-    // MM-BR-362: lots of the current line's item in its warehouse with a balance above zero at the end of the invoice date
-    private async Task<IReadOnlyList<LookupRow>> LotsAsync(LookupQuery query)
+    // MM-BR-362: (Location, lot) balances of the current line's item in its warehouse above zero at the end of the invoice date
+    private async Task<IReadOnlyList<LotBalanceDto>> BalancesAsync()
     {
         var lines = _frame!.Lines;
         if (lines.CurrentRowKey is not { } key || lines.GetItem(key) is not { ItemId: { } itemId, WarehouseId: { } warehouseId })
         {
             return [];
         }
-        var lots = await LotApi.SearchAsync(itemId, warehouseId, Header().DnDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
-        return [.. lots.Where(l => Matches(query, l.LotNo, null)).Select(l => LookupRow.Of(("lotNo", l.LotNo), ("onHandQty", l.OnHandQty)))];
+        _lotBalances = await LotApi.SearchAsync(itemId, warehouseId, Header().DnDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        return _lotBalances;
+    }
+
+    // The lots of the line, in its Location when it has one
+    private async Task<IReadOnlyList<LookupRow>> LotsAsync(LookupQuery query)
+    {
+        var location = _frame!.Lines.CurrentRowKey is { } key ? _frame.Lines.GetItem(key).LocationCode?.Trim() : null;
+        return [.. (await BalancesAsync())
+            .Where(b => (string.IsNullOrEmpty(location) || Is(b.LocationCode, location)) && Matches(query, b.LotNo, null))
+            .Select(b => LookupRow.Of(("lotNo", b.LotNo), ("locationCode", b.LocationCode), ("onHandQty", b.OnHandQty)))];
     }
 
     private static bool Matches(LookupQuery query, string code, string? name) =>
@@ -803,12 +841,40 @@
         }
         else if (Is(e.Field, nameof(SalesInvoiceLine.WarehouseCode)))
         {
-            lines.SetValue(e.RowKey, nameof(SalesInvoiceLine.WarehouseId), WarehouseOf(line.WarehouseCode)?.Id);
-            lines.SetValue(e.RowKey, nameof(SalesInvoiceLine.LotNo), null);
+            var rowKey = e.RowKey;
+            lines.SetValue(rowKey, nameof(SalesInvoiceLine.WarehouseId), WarehouseOf(line.WarehouseCode)?.Id);
+            lines.SetValue(rowKey, nameof(SalesInvoiceLine.LotNo), null);
+            if (!_applying)
+            {
+                ClearLocation(rowKey);
+                Later(() => SuggestAsync(rowKey));
+            }
+        }
+        else if (Is(e.Field, nameof(SalesInvoiceLine.DnQty)))
+        {
+            // A suggested or empty Location and Lot follow the new qty; ones the user picked stay (MM-BR-716)
+            var rowKey = e.RowKey;
+            if (!_applying && line.IsBillFirst && (line.Suggested || (string.IsNullOrEmpty(line.LocationCode) && string.IsNullOrEmpty(line.LotNo))))
+            {
+                Later(() => SuggestAsync(rowKey));
+            }
+        }
+        else if (Is(e.Field, nameof(SalesInvoiceLine.LocationCode)))
+        {
+            lines.SetValue(e.RowKey, nameof(SalesInvoiceLine.LocationId), null);
+            if (!_applying)
+            {
+                line.Suggested = false;
+            }
         }
         else if (Is(e.Field, nameof(SalesInvoiceLine.LotNo)))
         {
             lines.SetValue(e.RowKey, nameof(SalesInvoiceLine.LotId), null);
+            if (!_applying)
+            {
+                line.Suggested = false;
+                FillLotLocation(e.RowKey, line);
+            }
         }
         else if (Is(e.Field, nameof(SalesInvoiceLine.DcCd)))
         {
@@ -873,6 +939,176 @@
         StateHasChanged();
     }
 
+    // Runs after the grid finishes the edit: the change event comes in the middle of it
+    private void Later(Func<Task> action) => _ = InvokeAsync(async () =>
+    {
+        await Task.Yield();
+        await action();
+    });
+
+    private void ClearLocation(int rowKey)
+    {
+        var lines = _frame!.Lines;
+        lines.SetValue(rowKey, nameof(SalesInvoiceLine.LocationCode), null);
+        lines.SetValue(rowKey, nameof(SalesInvoiceLine.LocationId), null);
+        lines.GetItem(rowKey).Suggested = false;
+    }
+
+    // A lot picked without a Location takes the lot's Location when the lot is in one Location only
+    private void FillLotLocation(int rowKey, SalesInvoiceLine line)
+    {
+        if (!string.IsNullOrEmpty(line.LocationCode) || line.LotNo is not { Length: > 0 } lotNo)
+        {
+            return;
+        }
+        var balances = _lotBalances.Where(b => Is(b.LotNo, lotNo)).ToList();
+        if (balances.Select(b => b.LocationCode).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 1)
+        {
+            return;
+        }
+        Quietly(() =>
+        {
+            _frame!.Lines.SetValue(rowKey, nameof(SalesInvoiceLine.LocationCode), balances[0].LocationCode);
+            _frame.Lines.SetValue(rowKey, nameof(SalesInvoiceLine.LocationId), balances[0].LocationId);
+        });
+    }
+
+    private void Quietly(Action action)
+    {
+        var applying = _applying;
+        _applying = true;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            _applying = applying;
+        }
+    }
+
+    // MM-BR-716: a new bill-first line of a lot- or Location-managed item takes the (Location, Lot) parts of the FIFO suggestion.
+    // Each part after the first is a line under it, and a short qty stays on a line with no Location or Lot, with a warning (the
+    // save then fails on the stock check). A Kit line is left alone: its components are allocated by the API (SD-BR-518)
+    private async Task SuggestAsync(int rowKey)
+    {
+        var lines = _frame!.Lines;
+        if (!IsNewRow(rowKey))
+        {
+            return;
+        }
+        var line = lines.GetItem(rowKey);
+        if (line.IsLocked || !line.IsBillFirst || line.ItemId is not { } itemId || line.WarehouseId is not { } warehouseId
+            || line.DnQty is not { } qty || qty <= 0)
+        {
+            return;
+        }
+        StockSuggestionResultDto result;
+        try
+        {
+            if (await ItemOfAsync(itemId, line.ItemCd) is not { } item)
+            {
+                return;
+            }
+            line.ItemType = item.ItemType;
+            if (line.IsKit || !(item.LotManaged || item.LocationManaged))
+            {
+                return;
+            }
+            result = await LotApi.SuggestAsync(itemId, warehouseId, qty, Header().DnDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        }
+        catch (ApiProblemException e)
+        {
+            _frame.ShowMessage(Messages.Get(e.Problem), isError: true);
+            return;
+        }
+        catch (HttpRequestException)
+        {
+            _frame.ShowMessage(Messages.Get(UnavailableCode), isError: true);
+            return;
+        }
+        // The line may have changed while the API answered
+        if (!IsNewRow(rowKey) || lines.GetItem(rowKey) is not { } current || current.ItemId != itemId || current.WarehouseId != warehouseId
+            || current.DnQty != qty)
+        {
+            return;
+        }
+        var parts = result.Lines.Select(p => current.Part(p, p.Qty)).ToList();
+        if (result.ShortQty > 0)
+        {
+            parts.Add(current.Part(null, result.ShortQty));
+        }
+        if (parts.Count == 0)
+        {
+            return;
+        }
+        var last = rowKey;
+        Quietly(() =>
+        {
+            var first = parts[0];
+            lines.SetValue(rowKey, nameof(SalesInvoiceLine.LocationCode), first.LocationCode);
+            lines.SetValue(rowKey, nameof(SalesInvoiceLine.LocationId), first.LocationId);
+            lines.SetValue(rowKey, nameof(SalesInvoiceLine.LotNo), first.LotNo);
+            lines.SetValue(rowKey, nameof(SalesInvoiceLine.LotId), first.LotId);
+            lines.SetValue(rowKey, nameof(SalesInvoiceLine.DnQty), first.DnQty);
+            lines.SetValue(rowKey, nameof(SalesInvoiceLine.DnAmt), AmountOf(current));
+            current.Suggested = first.Suggested;
+            foreach (var part in parts.Skip(1))
+            {
+                last = lines.AddRow(WithAmount(part), last);
+            }
+        });
+        if (result.ShortQty > 0)
+        {
+            MarkCell(last, nameof(SalesInvoiceLine.LocationCode), true);
+            _frame.ShowMessage(string.Format(CultureInfo.CurrentCulture, L["Sd.SalesInvoice.StockShort"], current.ItemCd,
+                result.ShortQty.ToString("N" + _decimals.Qty.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture)), isError: false);
+        }
+        StateHasChanged();
+    }
+
+    private bool IsNewRow(int rowKey) =>
+        _frame!.Lines.RowKeys.Contains(rowKey) && _frame.Lines.GetState(rowKey) is not (RowState.Normal or RowState.Deleted);
+
+    private async Task<ItemDto?> ItemOfAsync(long itemId, string? itemCd)
+    {
+        if (_items.TryGetValue(itemId, out var item))
+        {
+            return item;
+        }
+        if (itemCd is null || await ItemApi.FindByCodeAsync(itemCd, CancellationToken.None) is not { } found)
+        {
+            return null;
+        }
+        _items[found.Id] = found;
+        return found;
+    }
+
+    // A warning, so it shows the cell without stopping the next save; the API decides again then
+    private void MarkCell(int rowKey, string field, bool marked) =>
+        _frame!.Lines.SetCellMark(rowKey, field, marked ? new CellMark(CellMarkLevel.Warning, CheckCellKey) : null);
+
+    // The Location ids of new bill-first lines from their codes in the line warehouse; '*' or none is null, which the API reads as
+    // '*' (MM-BR-713)
+    private async Task ResolveLocationsAsync(IEnumerable<SalesInvoiceLine> lines)
+    {
+        foreach (var line in lines.Where(l => !l.IsLocked && l.IsBillFirst))
+        {
+            var code = line.LocationCode?.Trim();
+            if (string.IsNullOrEmpty(code) || code == SalesInvoiceLine.System || line.WarehouseId is not { } warehouseId)
+            {
+                line.LocationId = null;
+                continue;
+            }
+            if (!_locations.TryGetValue(warehouseId, out var options))
+            {
+                options = await LocationApi.GetOptionsAsync(warehouseId, CancellationToken.None);
+                _locations[warehouseId] = options;
+            }
+            line.LocationId = options.FirstOrDefault(o => Is(o.LocationCode, code))?.Id ?? line.LocationId;
+        }
+    }
+
     private SalesInvoiceLine WithAmount(SalesInvoiceLine line)
     {
         line.DnAmt = AmountOf(line);
@@ -919,11 +1155,14 @@
         }
     }
 
+    // The lines kept, without the component rows (SD-BR-517)
     private List<SalesInvoiceLine> ActiveLines()
     {
         var lines = _frame!.Lines;
-        return [.. lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).Select(lines.GetItem)];
+        return InvoiceLines(lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).Select(lines.GetItem));
     }
+
+    private static List<SalesInvoiceLine> InvoiceLines(IEnumerable<SalesInvoiceLine> lines) => [.. lines.Where(l => !l.IsComponent)];
 
     // The saved lines, also the ones marked for delete: the status commands look at what is stored
     private List<SalesInvoiceLine> SavedLines()

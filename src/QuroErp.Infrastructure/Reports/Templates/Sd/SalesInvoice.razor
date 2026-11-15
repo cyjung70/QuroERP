@@ -1,6 +1,6 @@
 @* Sales invoice (print-documents.md "sales-invoice"): bill-to, ship-to, header, lines with item, qty, unit price and amount (a
-   discount column when a line has a discount), the stored supply, tax and total (SD-BR-133), what was paid and the balance.
-   Values use Razor output only. *@
+   discount column when a line has a discount), the components of Kit and Set lines whose item shows them (SD-BR-517), the stored
+   supply, tax and total (SD-BR-133), what was paid and the balance. Values use Razor output only. *@
 @using QuroErp.Application.Sd.SalesInvoices
 
 <PrintLayout Company="Print.Company" Title="@T("Print.SalesInvoice.Title")" DocumentNo="@Invoice.DnNo" Culture="Culture">
@@ -74,6 +74,23 @@
                     }
                     <td class="num">@N(line.DnAmt, Print.AmountDecimals)</td>
                 </tr>
+                @* SD-BR-517: the components under their Kit or Set line, without amounts *@
+                @foreach (var component in line.Components ?? [])
+                {
+                    <tr class="component">
+                        <td></td>
+                        <td class="mono">@component.ItemCd</td>
+                        <td>@component.ItemName</td>
+                        <td>@component.Unit</td>
+                        <td class="num">@N(component.Qty, Print.QtyDecimals)</td>
+                        <td></td>
+                        @if (Print.ShowDiscount)
+                        {
+                            <td></td>
+                        }
+                        <td></td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
@@ -102,6 +119,8 @@
         .parties .name { font-weight: 700; font-size: 11pt; }
         table.fields { width: auto; }
         table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+        tr.component td { color: #444; font-size: 8.5pt; }
+        tr.component td:nth-child(2) { padding-left: 16px; }
         table.totals { width: 45%; margin: 12px 0 0 auto; }
         table.totals th { background: none; text-align: right; }
         table.totals tr.total th, table.totals tr.total td { font-weight: 700; border-top: 2px solid #333; }

@@ -90,7 +90,9 @@ public sealed record SalesInvoiceDto(
 
 /// <summary>
 /// One line. ShipNo/ShipSeq name the shipment line it bills, SoNo/SoSeq the order line. ShippedQty, CancelledQty and UnshippedQty
-/// are a BILL_THEN_SHIP line's progress (SD-BR-143, SD-BR-147). StdPrc is the item's standard sales price.
+/// are a BILL_THEN_SHIP line's progress (SD-BR-143, SD-BR-147). StdPrc is the item's standard sales price. LocationId/LocationCode
+/// and LotId/LotNo are the stock key a BILL_THEN_SHIP line moved to the consignment warehouse (SD-BR-142, MM-BR-716). ShowComponents
+/// is the item's show-components flag; Components are the BOM rows of a Kit or Set line when it is on (SD-BR-517).
 /// </summary>
 public sealed record SalesInvoiceLineDto(
     long Id,
@@ -120,7 +122,14 @@ public sealed record SalesInvoiceLineDto(
     int? ShipSeq,
     decimal ShippedQty,
     decimal CancelledQty,
-    decimal UnshippedQty);
+    decimal UnshippedQty,
+    long? LocationId = null,
+    string? LocationCode = null,
+    bool ShowComponents = false,
+    IReadOnlyList<SalesInvoiceComponentDto>? Components = null);
+
+/// <summary>A component row under a Kit or Set line: the BOM qty × the line qty, without amounts (SD-BR-517).</summary>
+public sealed record SalesInvoiceComponentDto(long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal Qty);
 
 /// <summary>A Credit Memo an unshipped cancellation made (SD-BR-145): its amounts are negative, Applied when total ≠ balance.</summary>
 public sealed record SalesInvoiceCancellationDto(long CreditMemoId, string CmNo, DateOnly CmDt, decimal TotDnAmt, decimal BalAmt, bool Applied);
@@ -164,11 +173,12 @@ public sealed record SaveSalesInvoiceRequest(
 /// One line. ShipmentLineId bills a SHIP_THEN_BILL shipment line (SD-BR-115), SalesOrderLineId a BILL_THEN_SHIP order line
 /// (SD-BR-141): their item, price and discount come from the source. Neither is a direct line of an item that keeps no stock, whose
 /// DnPrc is required (SD-BR-116). TaxCodeId defaults to the source's or the customer's (SD-BR-132). LotId or LotNo picks the lot a
-/// lot-managed BILL_THEN_SHIP line moves (SD-BR-142).
+/// lot-managed BILL_THEN_SHIP line moves (SD-BR-142); LocationId the Location it moves from, for a Location-managed item
+/// (MM-BR-713). Null is '*'.
 /// </summary>
 public sealed record SaveSalesInvoiceLineRequest(
     long? Id, long ItemId, string? ItemName, decimal DnQty, decimal? DnPrc, string? DcCd, long? TaxCodeId, long? WarehouseId, long? LotId,
-    string? LotNo, long? ShipmentLineId, long? SalesOrderLineId);
+    string? LotNo, long? ShipmentLineId, long? SalesOrderLineId, long? LocationId = null);
 
 /// <summary>Void or delete with the updatedAt the screen read.</summary>
 public sealed record VoidSalesInvoiceRequest(DateTimeOffset UpdatedAt);

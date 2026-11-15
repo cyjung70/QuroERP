@@ -17,16 +17,19 @@ public sealed record SalesInvoiceRow(
     decimal TotDnAmt, decimal TotBaseAmt, decimal BalAmt, long? ShipmentId, string? ShipNo, DateTimeOffset UpdatedAt, DateTimeOffset? CreatedAt,
     string? CreatedBy, string? UpdatedBy);
 
-/// <summary>sd_sales_invoice_line row with item, warehouse, lot and the source order or shipment line.</summary>
+/// <summary>
+/// sd_sales_invoice_line row with item, warehouse, Location, lot and the source order or shipment line; the item's type and
+/// show-components flag (SD-BR-517).
+/// </summary>
 public sealed record SalesInvoiceLineRow(
     long Id, int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, long WarehouseId, string? WarehouseCode, long? LotId,
     string? LotNo, decimal DnQty, decimal DnPrc, decimal DnAmt, string? DcCd, decimal DcRate, decimal? StdPrc, long TaxCodeId, decimal SupplyAmt,
     decimal TaxAmt, long? SalesOrderLineId, string? SoNo, int? SoSeq, long? ShipmentLineId, string? ShipNo, int? ShipSeq, decimal ShippedQty,
-    decimal CancelledQty)
+    decimal CancelledQty, long? LocationId = null, string? LocationCode = null, string? ItemType = null, bool ShowComponents = false)
 {
     public StoredInvoiceLine ToStored() => new(
         Id, Seq, ItemId, ItemName, DnQty, DnPrc, DcCd, DcRate, TaxCodeId, WarehouseId, LotId, ShipmentLineId, SalesOrderLineId, ShippedQty,
-        CancelledQty);
+        CancelledQty, LocationId);
 }
 
 /// <summary>Header fields a save writes. SalesOrderId is the first order the lines come from.</summary>
@@ -99,8 +102,9 @@ public interface ISalesInvoiceRepository
         long id, IReadOnlyList<ShipmentInvoiceLineAmounts> amounts, ShipmentInvoiceTotals totals, string user, IDbTransaction transaction,
         CancellationToken cancellationToken);
 
-    /// <summary>Sets the lot of the lines by seq (SD-BR-142).</summary>
-    Task SetLineLotsAsync(long id, IReadOnlyDictionary<int, long> lotIdBySeq, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>Sets the Location and lot of the lines by seq, the key their stock left the line warehouse from (SD-BR-142).</summary>
+    Task SetLineKeysAsync(
+        long id, IReadOnlyDictionary<int, (long LocationId, long LotId)> keyBySeq, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Deletes the invoice and its lines.</summary>
     /// <returns>false when updated_at no longer equals <paramref name="updatedAt"/>.</returns>
