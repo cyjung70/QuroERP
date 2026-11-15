@@ -16,6 +16,7 @@ using QuroErp.Web.Mm.GoodsReceipts;
 using QuroErp.Web.Mm.Inventory;
 using QuroErp.Web.Mm.Locations;
 using QuroErp.Web.Mm.Lots;
+using QuroErp.Web.Mm.Pallets;
 using QuroErp.Web.Mm.SupplierInvoices;
 using QuroErp.Web.Mm.PurchaseOrders;
 using QuroErp.Web.Mm.Vendors;
@@ -47,6 +48,7 @@ public static class WebApiClients
         services.AddHttpClient<SalesPriceApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<WarehouseApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<LocationApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<PalletApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserProfileApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<RoleApiClient>(http => http.BaseAddress = apiBaseUrl);

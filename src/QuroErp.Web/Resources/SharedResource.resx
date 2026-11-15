@@ -713,6 +713,42 @@
   <data name="Mm.Location.OnhandQty" xml:space="preserve"><value>현재고</value></data>
   <data name="Mm.Location.Remarks" xml:space="preserve"><value>비고</value></data>
   <data name="Mm.Location.IncludeInactive" xml:space="preserve"><value>사용 안 함 포함</value></data>
+  <data name="Mm.Pallet.Title" xml:space="preserve"><value>Pallet</value></data>
+  <data name="Mm.Pallet.PalletNo" xml:space="preserve"><value>Pallet 번호</value></data>
+  <data name="Mm.Pallet.ItemId" xml:space="preserve"><value>품목</value></data>
+  <data name="Mm.Pallet.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Mm.Pallet.ItemName" xml:space="preserve"><value>품목명</value></data>
+  <data name="Mm.Pallet.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.Pallet.WarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.Pallet.WarehouseCode" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.Pallet.LocationCode" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.Pallet.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Mm.Pallet.Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Mm.Pallet.ParentPalletNo" xml:space="preserve"><value>원 Pallet</value></data>
+  <data name="Mm.Pallet.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
+  <data name="Mm.Pallet.ClearItem" xml:space="preserve"><value>품목 지우기</value></data>
+  <data name="Mm.Pallet.Split" xml:space="preserve"><value>분할</value></data>
+  <data name="Mm.Pallet.Merge" xml:space="preserve"><value>병합</value></data>
+  <data name="Mm.Pallet.History" xml:space="preserve"><value>이력</value></data>
+  <data name="Mm.Pallet.EventType" xml:space="preserve"><value>구분</value></data>
+  <data name="Mm.Pallet.EventDt" xml:space="preserve"><value>일자</value></data>
+  <data name="Mm.Pallet.RelatedPalletNo" xml:space="preserve"><value>관련 Pallet</value></data>
+  <data name="Mm.Pallet.RefKey" xml:space="preserve"><value>문서 번호</value></data>
+  <data name="Mm.Pallet.NoHistory" xml:space="preserve"><value>Pallet을 고르면 이력이 보입니다.</value></data>
+  <data name="Mm.Pallet.SplitHint" xml:space="preserve"><value>새 Pallet로 나눌 수량을 넣으세요. 0보다 크고 지금 수량 {0}보다 작아야 합니다.</value></data>
+  <data name="Mm.Pallet.SplitQty" xml:space="preserve"><value>나눌 수량</value></data>
+  <data name="Mm.Pallet.SplitDone" xml:space="preserve"><value>Pallet {0}에서 새 Pallet {1}을(를) 나눴습니다.</value></data>
+  <data name="Mm.Pallet.MergeHint" xml:space="preserve"><value>이 Pallet로 합칠 Pallet을 고르세요. 조회 결과 가운데 품목 {0}, Lot {1}, 창고 {2}, Location {3}이(가) 같은 ACTIVE Pallet입니다.</value></data>
+  <data name="Mm.Pallet.NoMergeCandidates" xml:space="preserve"><value>조회 결과에 합칠 수 있는 Pallet이 없습니다.</value></data>
+  <data name="Mm.Pallet.MergeDone" xml:space="preserve"><value>Pallet {0}(으)로 합쳤습니다. 수량 {1}</value></data>
+  <data name="Mm.Pallet.Status.ACTIVE" xml:space="preserve"><value>사용 중</value></data>
+  <data name="Mm.Pallet.Status.CLOSED" xml:space="preserve"><value>종료</value></data>
+  <data name="Mm.Pallet.Event.CREATE" xml:space="preserve"><value>생성</value></data>
+  <data name="Mm.Pallet.Event.MOVE" xml:space="preserve"><value>이동</value></data>
+  <data name="Mm.Pallet.Event.SHIP" xml:space="preserve"><value>출하</value></data>
+  <data name="Mm.Pallet.Event.SPLIT" xml:space="preserve"><value>분할</value></data>
+  <data name="Mm.Pallet.Event.MERGE" xml:space="preserve"><value>병합</value></data>
+  <data name="Mm.Pallet.Event.ADJUST" xml:space="preserve"><value>조정</value></data>
   <data name="Mm.Warehouse.UseYn" xml:space="preserve"><value>사용</value></data>
   <data name="Mm.Warehouse.WarehouseCode" xml:space="preserve"><value>창고 코드</value></data>
   <data name="Mm.Warehouse.WarehouseName" xml:space="preserve"><value>창고 이름</value></data>

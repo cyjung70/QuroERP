@@ -134,6 +134,28 @@ public sealed class DemoScriptTests : IDisposable
             """).Should().Be(0);
     }
 
+    [DatabaseFact, Trait("Id", "DB-IT-11"), Trait("Rule", "MM-BR-916")]
+    public void UpgradeWithDemo_AddsActivePalletsOfTheCableLots_WithinTheirBalances()
+    {
+        var result = DatabaseMigrator.Upgrade(_connectionString, includeDemo: true, _schema, new NoOpUpgradeLog());
+
+        result.Successful.Should().BeTrue(result.Error?.Message);
+        using var connection = new NpgsqlConnection(_connectionString);
+        connection.Open();
+        Scalar(connection, """
+            SELECT count(*) FROM mm_pallet p JOIN mm_lot l ON l.id = p.lot_id
+            JOIN mm_pallet_event e ON e.pallet_id = p.id AND e.event_type = 'CREATE' AND e.qty = p.qty
+            WHERE p.status = 'ACTIVE'
+              AND (p.pallet_no, l.lot_no, p.qty) IN (('PL2611990001', 'L2611A', 4), ('PL2611990002', 'L2611A', 4), ('PL2611990003', 'L2611B', 3))
+            """).Should().Be(3, "the Pallet screen merges two Pallets of one lot and refuses the other lot (0917)");
+        Scalar(connection, """
+            SELECT count(*) FROM (SELECT item_id, warehouse_id, location_id, lot_id, sum(qty) AS qty FROM mm_pallet
+                                  WHERE status = 'ACTIVE' GROUP BY item_id, warehouse_id, location_id, lot_id) p
+            LEFT JOIN mm_onhand o USING (item_id, warehouse_id, location_id, lot_id)
+            WHERE coalesce(o.onhand_qty, 0) < p.qty
+            """).Should().Be(0);
+    }
+
     public void Dispose()
     {
         if (_connectionString.Length > 0)

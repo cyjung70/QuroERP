@@ -1,0 +1,33 @@
+# MM-UC-035 Pallets (TASK-MM-054). Read only: Pallets change by split and merge, the screen's own commands (MM-BR-914, MM-BR-915).
+# The status is shown in the user's language; the history of the current row is under the grid (MM-BR-916).
+screen:
+  id: mm.pallet.list
+  module: MM
+  title: Mm.Pallet.Title
+  version: 1
+  api: /api/mm/pallets
+  key: id
+  layout: grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[2]: query,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: pallets
+    bind: pallets
+    rowKey: id
+    columns[9]{id,label,type,width,edit,req,fmt,source,hidden}:
+      palletNo,Mm.Pallet.PalletNo,text,140,false,false,"","",false
+      itemCd,Mm.Pallet.ItemCd,text,130,false,false,"","",false
+      itemName,Mm.Pallet.ItemName,text,200,false,false,"","",false
+      lotNo,Mm.Pallet.LotNo,text,120,false,false,"","",false
+      warehouseCode,Mm.Pallet.WarehouseCode,text,100,false,false,"","",false
+      locationCode,Mm.Pallet.LocationCode,text,100,false,false,"","",false
+      qty,Mm.Pallet.Qty,number,100,false,false,"","",false
+      statusName,Mm.Pallet.Status,text,90,false,false,"","",false
+      parentPalletNo,Mm.Pallet.ParentPalletNo,text,140,false,false,"","",false
