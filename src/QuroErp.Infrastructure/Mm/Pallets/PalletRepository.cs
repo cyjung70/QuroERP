@@ -181,16 +181,16 @@ internal sealed class PalletRepository : IPalletRepository
             SelectReceiptLabels, new { Id = goodsReceiptId }, transaction, cancellationToken: cancellationToken))];
 
     public async Task<IReadOnlyList<PalletRow>> SearchAsync(PalletFilter filter, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        [.. await transaction.Connection!.QueryAsync<PalletRow>(new CommandDefinition(
-            Search, filter, transaction, cancellationToken: cancellationToken))];
+        [.. (await transaction.Connection!.QueryAsync<StoredRow>(new CommandDefinition(
+            Search, filter, transaction, cancellationToken: cancellationToken))).Select(ToRow)];
 
-    public Task<PalletRow?> FindAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        transaction.Connection!.QuerySingleOrDefaultAsync<PalletRow?>(new CommandDefinition(
-            SelectById, new { Id = id }, transaction, cancellationToken: cancellationToken));
+    public async Task<PalletRow?> FindAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        ToRowOrNull(await transaction.Connection!.QuerySingleOrDefaultAsync<StoredRow?>(new CommandDefinition(
+            SelectById, new { Id = id }, transaction, cancellationToken: cancellationToken)));
 
-    public Task<PalletRow?> FindByNoAsync(string palletNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        transaction.Connection!.QuerySingleOrDefaultAsync<PalletRow?>(new CommandDefinition(
-            SelectByNo, new { PalletNo = palletNo }, transaction, cancellationToken: cancellationToken));
+    public async Task<PalletRow?> FindByNoAsync(string palletNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        ToRowOrNull(await transaction.Connection!.QuerySingleOrDefaultAsync<StoredRow?>(new CommandDefinition(
+            SelectByNo, new { PalletNo = palletNo }, transaction, cancellationToken: cancellationToken)));
 
     public async Task<IReadOnlyList<PalletEventRow>> FindEventsAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
         [.. await transaction.Connection!.QueryAsync<PalletEventRow>(new CommandDefinition(
@@ -198,8 +198,8 @@ internal sealed class PalletRepository : IPalletRepository
 
     public async Task<IReadOnlyList<PalletRow>> LockAsync(
         IReadOnlyCollection<long> ids, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        [.. await transaction.Connection!.QueryAsync<PalletRow>(new CommandDefinition(
-            Lock, new { Ids = ids.ToArray() }, transaction, cancellationToken: cancellationToken))];
+        [.. (await transaction.Connection!.QueryAsync<StoredRow>(new CommandDefinition(
+            Lock, new { Ids = ids.ToArray() }, transaction, cancellationToken: cancellationToken))).Select(ToRow)];
 
     public Task<long> SplitAsync(
         long sourceId, string palletNo, decimal qty, DateOnly eventDt, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -213,4 +213,15 @@ internal sealed class PalletRepository : IPalletRepository
         transaction.Connection!.ExecuteAsync(new CommandDefinition(
             MergeSql, new { TargetId = targetId, SourceIds = sourceIds.ToArray(), EventDt = eventDt, User = user }, transaction,
             cancellationToken: cancellationToken));
+
+    // PalletRow as the driver gives it: updated_at comes as a DateTime in UTC
+    private sealed record StoredRow(
+        long Id, string PalletNo, long ItemId, string ItemCd, string? ItemName, long LotId, string LotNo, long WarehouseId, string WarehouseCode,
+        long LocationId, string LocationCode, decimal Qty, string Status, string? ParentPalletNo, DateTime UpdatedAt);
+
+    private static PalletRow ToRow(StoredRow r) =>
+        new(r.Id, r.PalletNo, r.ItemId, r.ItemCd, r.ItemName, r.LotId, r.LotNo, r.WarehouseId, r.WarehouseCode, r.LocationId, r.LocationCode,
+            r.Qty, r.Status, r.ParentPalletNo, new DateTimeOffset(DateTime.SpecifyKind(r.UpdatedAt, DateTimeKind.Utc)));
+
+    private static PalletRow? ToRowOrNull(StoredRow? r) => r is null ? null : ToRow(r);
 }
