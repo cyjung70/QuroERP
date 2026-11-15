@@ -1089,7 +1089,18 @@
   <data name="Mm.GoodsReceipt.Unit" xml:space="preserve"><value>Unit</value></data>
   <data name="Mm.GoodsReceipt.LineWarehouseCode" xml:space="preserve"><value>Warehouse</value></data>
   <data name="Mm.GoodsReceipt.LotNo" xml:space="preserve"><value>Lot</value></data>
-  <data name="Mm.GoodsReceipt.OnHandQty" xml:space="preserve"><value>Lot Balance</value></data>
+  <data name="MM-E-364" xml:space="preserve"><value>Line {0}: the Lot attributes are not valid. The supplier Lot number has up to 30 characters, the expiry date is not before the manufacture date, and only a lot-managed item has them.</value></data>
+  <data name="MM-E-910" xml:space="preserve"><value>Line {0}: the Pallet qty must be above 0, and only an inventory item makes Pallets.</value></data>
+  <data name="MM-E-911" xml:space="preserve"><value>Pallet {0} was already moved, shipped, split, merged or adjusted, so its receipt line cannot be deleted.</value></data>
+  <data name="Mm.GoodsReceipt.LocationCode" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.GoodsReceipt.LocationName" xml:space="preserve"><value>Location Name</value></data>
+  <data name="Mm.GoodsReceipt.FindLocation" xml:space="preserve"><value>Find Location</value></data>
+  <data name="Mm.GoodsReceipt.SupplierLotNo" xml:space="preserve"><value>Supplier Lot</value></data>
+  <data name="Mm.GoodsReceipt.MfgDt" xml:space="preserve"><value>Mfg Date</value></data>
+  <data name="Mm.GoodsReceipt.ExpiryDt" xml:space="preserve"><value>Expiry Date</value></data>
+  <data name="Mm.GoodsReceipt.PalletQty" xml:space="preserve"><value>Qty per Pallet</value></data>
+  <data name="Mm.GoodsReceipt.PalletNos" xml:space="preserve"><value>Pallets</value></data>
+  <data name="Mm.GoodsReceipt.PalletLabels" xml:space="preserve"><value>Pallet Labels</value></data>
   <data name="Mm.GoodsReceipt.GrQty" xml:space="preserve"><value>Qty</value></data>
   <data name="Mm.GoodsReceipt.GrPrc" xml:space="preserve"><value>Unit Price</value></data>
   <data name="Mm.GoodsReceipt.GrAmt" xml:space="preserve"><value>Amount</value></data>
@@ -1102,7 +1113,6 @@
   <data name="Mm.GoodsReceipt.PoReceivedQty" xml:space="preserve"><value>Received</value></data>
   <data name="Mm.GoodsReceipt.RemainingQty" xml:space="preserve"><value>Remaining</value></data>
   <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>Find Item</value></data>
-  <data name="Mm.GoodsReceipt.FindLot" xml:space="preserve"><value>Find Lot</value></data>
   <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>Not saved. Check the received quantities.</value></data>
   <data name="Menu.G2MM03" xml:space="preserve"><value>Supplier Invoices</value></data>
   <data name="Mm.SupplierInvoice.Title" xml:space="preserve"><value>Supplier Invoice</value></data>

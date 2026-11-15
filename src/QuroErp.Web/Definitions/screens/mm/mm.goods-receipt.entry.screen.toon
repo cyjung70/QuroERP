@@ -1,7 +1,9 @@
-# MM-UC-004 goods receipt (TASK-MM-008), screen type SM on the entry frame. The item, warehouse, lot and tax code columns are
-# lookups; the item fills its name, unit and standard purchase price and the page keeps the ids of the picked codes. Lines
-# imported from a purchase order carry its number, line, ordered and received quantities. Amounts and tax are display values
-# the page calculates with the document decimals; the API calculates the stored ones. Saved lines are read-only (MM-BR-107).
+# MM-UC-004 goods receipt (TASK-MM-008, TASK-CORE-073), screen type SM on the entry frame. The item, warehouse, Location and tax
+# code columns are lookups; the item fills its name, unit and standard purchase price and the page keeps the ids of the picked
+# codes. The save makes the Lot of a lot-managed item (MM-BR-353), so the Lot is shown only; the line gives the Lot attributes
+# (MM-BR-364) and the Pallet qty (MM-BR-910). Lines imported from a purchase order carry its number, line, ordered and received
+# quantities. Amounts and tax are display values the page calculates with the document decimals; the API calculates the stored
+# ones. Saved lines are read-only except their Lot attributes (MM-BR-107, MM-BR-364).
 screen:
   id: mm.goods-receipt.entry
   module: MM
@@ -34,14 +36,20 @@ grids[1]:
     bind: lines
     rowKey: id
     deletedRows: strike
-    columns[15]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+    columns[21]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
       seq,Mm.GoodsReceipt.Seq,number,50,false,false,N0,"",false,false
       itemCd,Mm.GoodsReceipt.ItemCd,text,130,true,true,"",mmGrItem,false,false
       itemName,Mm.GoodsReceipt.ItemName,text,200,false,false,"","",false,false
       unit,Mm.GoodsReceipt.Unit,text,60,false,false,"","",false,false
       warehouseCode,Mm.GoodsReceipt.LineWarehouseCode,text,100,true,true,"",mmPoWarehouse,false,false
-      lotNo,Mm.GoodsReceipt.LotNo,text,120,true,false,"",mmGrLot,false,false
+      locationCode,Mm.GoodsReceipt.LocationCode,text,100,true,false,"",mmGrLocation,false,false
+      lotNo,Mm.GoodsReceipt.LotNo,text,110,false,false,"","",false,false
+      supplierLotNo,Mm.GoodsReceipt.SupplierLotNo,text,120,true,false,"","",false,false
+      mfgDt,Mm.GoodsReceipt.MfgDt,date,110,true,false,"","",false,false
+      expiryDt,Mm.GoodsReceipt.ExpiryDt,date,110,true,false,"","",false,false
       grQty,Mm.GoodsReceipt.GrQty,number,90,true,true,N2,"",false,false
+      palletQty,Mm.GoodsReceipt.PalletQty,number,90,true,false,N2,"",false,false
+      palletNos,Mm.GoodsReceipt.PalletNos,text,160,false,false,"","",false,false
       grPrc,Mm.GoodsReceipt.GrPrc,number,110,true,true,N2,"",false,false
       grAmt,Mm.GoodsReceipt.GrAmt,number,120,false,false,N2,"",false,false
       taxCode,Mm.GoodsReceipt.LineTaxCode,text,90,true,false,"",mmPoTaxCode,false,false
@@ -50,9 +58,10 @@ grids[1]:
       poSeq,Mm.GoodsReceipt.PoSeq,number,50,false,false,N0,"",false,false
       poQty,Mm.GoodsReceipt.PoQty,number,90,false,false,N2,"",false,false
       poReceivedQty,Mm.GoodsReceipt.PoReceivedQty,number,90,false,false,N2,"",false,false
-    rules[3]{on,action,target,expr}:
+    rules[4]{on,action,target,expr}:
       itemCd.change,lookup,"itemName|unit|grPrc","mmGrItem.all()"
       warehouseCode.change,lookup,"","mmPoWarehouse.all()"
+      locationCode.change,lookup,"","mmGrLocation.all()"
       taxCode.change,lookup,"","mmPoTaxCode.all()"
     validate[1]{target,rule,msg}:
       itemCd,requires vendorId,Common.SelectPartnerFirst

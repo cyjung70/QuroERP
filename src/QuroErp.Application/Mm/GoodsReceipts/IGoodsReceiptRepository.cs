@@ -1,6 +1,7 @@
 using System.Data;
 using QuroErp.Contracts.Mm.GoodsReceipts;
 using QuroErp.Domain.Mm.GoodsReceipts;
+using QuroErp.Domain.Mm.Lots;
 using QuroErp.Domain.Mm.PurchaseOrders;
 
 namespace QuroErp.Application.Mm.GoodsReceipts;
@@ -11,16 +12,27 @@ public sealed record GoodsReceiptRow(
     string CurrencyCode, decimal ExchangeRate, decimal SupplyAmt, decimal TaxAmt, decimal TotGrAmt, decimal TotBaseAmt,
     DateTimeOffset UpdatedAt, DateTimeOffset? CreatedAt, string? CreatedBy, string? UpdatedBy);
 
-/// <summary>mm_goods_receipt_line row with the codes it names and the PO line it came from.</summary>
+/// <summary>
+/// mm_goods_receipt_line row with the codes it names, the PO line it came from, its Location and the attributes of its Lot
+/// (MM-BR-364). Lot attributes are null for Lot '*'.
+/// </summary>
 public sealed record GoodsReceiptLineRow(
     long Id, int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, long WarehouseId, string? WarehouseCode, long? LotId,
     string? LotNo, decimal GrQty, decimal GrPrc, decimal GrAmt, long TaxCodeId, string? TaxCode, decimal SupplyAmt, decimal TaxAmt,
     bool Deductible, long? PurchaseOrderLineId, string? PoNo, int? PoSeq, decimal? PoQty, decimal? PoReceivedQty, decimal InvoicedQty,
-    decimal ReturnedQty)
+    decimal ReturnedQty, long? LocationId, string? LocationCode, string? SupplierLotNo, DateOnly? MfgDt, DateOnly? ExpiryDt,
+    decimal? PalletQty)
 {
     public StoredGoodsReceiptLine ToStored() => new(
-        Id, Seq, ItemId, ItemName, WarehouseId, LotId, GrQty, GrPrc, TaxCodeId, Deductible, PurchaseOrderLineId, InvoicedQty, ReturnedQty);
+        Id, Seq, ItemId, ItemName, WarehouseId, LotId, GrQty, GrPrc, TaxCodeId, Deductible, PurchaseOrderLineId, InvoicedQty, ReturnedQty,
+        LocationId, PalletQty, new LotAttributes(SupplierLotNo, MfgDt, ExpiryDt));
 }
+
+/// <summary>
+/// The Lot attributes a receipt line gives its Lot (MM-BR-364). GoodsReceiptLineId links a new Lot to the line that made it
+/// (MM-BR-367); null keeps the link.
+/// </summary>
+public sealed record ReceiptLotWrite(long LotId, LotAttributes Attributes, long? GoodsReceiptLineId);
 
 /// <summary>A row of the receipt list with the line quantities its status is computed from (MM-BR-105).</summary>
 public sealed record GoodsReceiptSummaryRow(
@@ -48,6 +60,10 @@ public interface IGoodsReceiptRepository
 
     /// <summary>Item type of each item that has one.</summary>
     Task<IReadOnlyDictionary<long, string>> FindItemTypesAsync(
+        IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The given items with lot management (MM-BR-364).</summary>
+    Task<IReadOnlySet<long>> FindLotManagedItemsAsync(
         IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>The given warehouses that are in use.</summary>
@@ -96,9 +112,19 @@ public interface IGoodsReceiptRepository
         long id, GoodsReceiptWrite receipt, IReadOnlyCollection<long> deletedLineIds, DateTimeOffset updatedAt, string user,
         IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>The lot each new line's GR movement used (MM-BR-353).</summary>
-    Task SetLineLotsAsync(
-        long id, IReadOnlyDictionary<int, long> lotBySeq, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>The Location and Lot each new line's GR movement used (MM-BR-713, MM-BR-353).</summary>
+    Task SetLineKeysAsync(
+        long id, IReadOnlyDictionary<int, (long LocationId, long LotId)> keyBySeq, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Writes the attributes of Lots other than '*' (MM-BR-364) and links new Lots to their line.</summary>
+    Task SetLotAttributesAsync(IReadOnlyList<ReceiptLotWrite> lots, string user, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Unlinks the Lots the given lines made, before the lines are deleted (mm_lot.goods_receipt_line_id).</summary>
+    Task UnlinkLotsAsync(IReadOnlyCollection<long> lineIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Sets updated_at and updated_by only: a save that changed Lot attributes alone (MM-BR-364).</summary>
+    /// <returns>False when the header changed after updatedAt.</returns>
+    Task<bool> TouchAsync(long id, DateTimeOffset updatedAt, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Original GR movements of the given lines (ref_key = GR number, ref_seq = line) that are not reversed yet (MM-BR-601).</summary>
     Task<IReadOnlyList<long>> FindOpenMovementIdsAsync(

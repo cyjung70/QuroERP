@@ -2,6 +2,8 @@ using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Bc.SetItems;
 using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
+using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Domain.Mm.Lots;
 using QuroErp.Domain.Mm.PurchaseOrders;
 
 namespace QuroErp.Domain.Mm.GoodsReceipts;
@@ -13,23 +15,32 @@ namespace QuroErp.Domain.Mm.GoodsReceipts;
 public sealed record GoodsReceiptHeader(
     long VendorId, DateOnly GrDt, long WarehouseId, string? RefNo, string? Remarks, string CurrencyCode, decimal ExchangeRate);
 
-/// <summary>A new line the user enters, with the header warehouse and vendor tax code already applied as defaults.</summary>
+/// <summary>
+/// A line the user enters, with the header warehouse and vendor tax code already applied as defaults. LocationId null is
+/// Location '*' (MM-BR-713). The user does not name the Lot: a lot-managed item gets a new one with these attributes (MM-BR-353,
+/// MM-BR-364). PalletQty null makes no Pallet (MM-BR-910).
+/// </summary>
 public sealed record GoodsReceiptLineInput(
-    long ItemId, string? ItemName, long? WarehouseId, long? LotId, string? LotNo, decimal GrQty, decimal GrPrc, long TaxCodeId,
-    bool Deductible, long? PurchaseOrderLineId);
+    long ItemId, string? ItemName, long? WarehouseId, decimal GrQty, decimal GrPrc, long TaxCodeId, bool Deductible,
+    long? PurchaseOrderLineId, long? LocationId = null, decimal? PalletQty = null, LotAttributes? Lot = null);
 
-/// <summary>A saved line. Saved lines never change (MM-BR-107); InvoicedQty and ReturnedQty lock the receipt (MM-BR-104).</summary>
+/// <summary>
+/// A saved line. Saved lines never change (MM-BR-107) except their Lot attributes (MM-BR-364); InvoicedQty and ReturnedQty lock
+/// the receipt (MM-BR-104). Lot is the attributes to keep: the saved ones, or the ones a save asks for.
+/// </summary>
 public sealed record StoredGoodsReceiptLine(
     long Id, int Seq, long ItemId, string? ItemName, long WarehouseId, long? LotId, decimal GrQty, decimal GrPrc, long TaxCodeId,
-    bool Deductible, long? PurchaseOrderLineId, decimal InvoicedQty, decimal ReturnedQty);
+    bool Deductible, long? PurchaseOrderLineId, decimal InvoicedQty, decimal ReturnedQty, long? LocationId = null,
+    decimal? PalletQty = null, LotAttributes? Lot = null);
 
 /// <summary>
 /// A line with the amounts the server computed: GrAmt = round(qty × price) (MM-BR-112), supply and tax (MM-BR-162) and, for new
-/// lines, the stock amount in base currency (MM-BR-164). Id is null for a new line.
+/// lines, the stock amount in base currency (MM-BR-164). Id is null for a new line. Lot is the checked Lot attributes (MM-BR-364).
 /// </summary>
 public sealed record GoodsReceiptLine(
-    long? Id, int Seq, long ItemId, string? ItemName, long WarehouseId, long? LotId, string? LotNo, decimal GrQty, decimal GrPrc,
-    decimal GrAmt, long TaxCodeId, decimal SupplyAmt, decimal TaxAmt, bool Deductible, long? PurchaseOrderLineId, decimal StockAmt)
+    long? Id, int Seq, long ItemId, string? ItemName, long WarehouseId, long? LotId, decimal GrQty, decimal GrPrc, decimal GrAmt,
+    long TaxCodeId, decimal SupplyAmt, decimal TaxAmt, bool Deductible, long? PurchaseOrderLineId, decimal StockAmt,
+    long? LocationId = null, decimal? PalletQty = null, LotAttributes? Lot = null)
 {
     /// <summary>Unit cost in base currency for the GR stock movement: stock amount / qty (MM-BR-111, MM-BR-164).</summary>
     public decimal StockPrice => StockAmt / GrQty;
@@ -49,10 +60,13 @@ public sealed record ReceiptPoLine(
     long Id, long PurchaseOrderId, string PoNo, int PoSeq, string Status, long VendorId, string CurrencyCode, decimal ExchangeRate,
     decimal PoQty, decimal ReceivedQty);
 
-/// <summary>What the rules need from masters: item types, usable warehouses, tax codes and the PO lines the new lines name.</summary>
+/// <summary>
+/// What the rules need from masters: item types, usable warehouses, tax codes, the PO lines the new lines name and the
+/// lot-managed items among the lines (MM-BR-364).
+/// </summary>
 public sealed record GoodsReceiptMasters(
     IReadOnlyDictionary<long, string> ItemTypes, IReadOnlySet<long> UsableWarehouses, IReadOnlyDictionary<long, ReceiptTaxCode> TaxCodes,
-    IReadOnlyDictionary<long, ReceiptPoLine> PoLines);
+    IReadOnlyDictionary<long, ReceiptPoLine> PoLines, IReadOnlySet<long>? LotManagedItems = null);
 
 /// <summary>Company settings for amounts: base currency, tax unit (BC-BR-543) and the MM rounding mode (BC-BR-424).</summary>
 public sealed record GoodsReceiptSettings(string BaseCurrencyCode, string TaxCalcMode, RoundingMode RoundingMode = RoundingMode.HalfUp);
@@ -137,13 +151,38 @@ public static class GoodsReceiptRules
     public const string RequiredCode = "Common-E-005";
 
     /// <summary>Item types a receipt can take (MM-BR-115). Assets are Enterprise.</summary>
-    public static IReadOnlyList<string> ReceivableItemTypes { get; } = ["INVENTORY", "SERVICE"];
+    public static IReadOnlyList<string> ReceivableItemTypes { get; } = [StockItemType, "SERVICE"];
+
+    /// <summary>The item type of the receipt with stock, so with a Location, Lot and Pallets (MM-BR-008, MM-BR-910).</summary>
+    public const string StockItemType = "INVENTORY";
 
     /// <summary>MM-BR-104, MM-BR-790: no line matched by a supplier invoice and no vendor return.</summary>
     /// <exception cref="DomainException">MM-E-104.</exception>
     public static void EnsureEditable(string grNo, IEnumerable<StoredGoodsReceiptLine> lines)
     {
-        if (lines.Any(l => l.InvoicedQty != 0 || l.ReturnedQty != 0))
+        if (IsLocked(lines))
+        {
+            throw new DomainException(LockedCode, grNo);
+        }
+    }
+
+    /// <summary>MM-BR-104, MM-BR-790: a line is matched by a supplier invoice or returned.</summary>
+    public static bool IsLocked(IEnumerable<StoredGoodsReceiptLine> lines) => lines.Any(l => l.InvoicedQty != 0 || l.ReturnedQty != 0);
+
+    /// <summary>
+    /// MM-BR-104 with MM-BR-364: a locked receipt takes only Lot attribute changes, so the header stays, every saved line comes
+    /// back unchanged and nothing is added.
+    /// </summary>
+    /// <param name="lines">The lines of the save: the saved line id (null for a new line) and the line.</param>
+    /// <exception cref="DomainException">MM-E-104.</exception>
+    public static void EnsureLotAttributesOnly(
+        string grNo, GoodsReceiptHeader stored, GoodsReceiptHeader header, IReadOnlyList<StoredGoodsReceiptLine> storedLines,
+        IReadOnlyList<(long? Id, GoodsReceiptLineInput Line)> lines)
+    {
+        var byId = storedLines.ToDictionary(l => l.Id);
+        if (header != stored || lines.Count != storedLines.Count
+            || lines.Any(l => l.Id is not { } id || !byId.TryGetValue(id, out var saved) || IsChanged(saved, l.Line))
+            || lines.Select(l => l.Id).Distinct().Count() != lines.Count)
         {
             throw new DomainException(LockedCode, grNo);
         }
@@ -170,18 +209,24 @@ public static class GoodsReceiptRules
         }
     }
 
-    /// <summary>MM-BR-107: a saved line comes back as it was; to change it, delete it and add a new one.</summary>
+    /// <summary>
+    /// MM-BR-107: a saved line comes back as it was; to change it, delete it and add a new one. Its Lot attributes may change
+    /// (MM-BR-364). A missing warehouse or Location keeps the saved one.
+    /// </summary>
     /// <exception cref="DomainException">MM-E-107.</exception>
     public static void EnsureUnchanged(StoredGoodsReceiptLine stored, GoodsReceiptLineInput line)
     {
-        if (line.ItemId != stored.ItemId || line.GrQty != stored.GrQty || line.GrPrc != stored.GrPrc
-            || (line.WarehouseId ?? stored.WarehouseId) != stored.WarehouseId || line.TaxCodeId != stored.TaxCodeId
-            || line.Deductible != stored.Deductible || line.PurchaseOrderLineId != stored.PurchaseOrderLineId
-            || (line.LotId is { } lotId && lotId != stored.LotId))
+        if (IsChanged(stored, line))
         {
             throw new DomainException(LineChangedCode, stored.Seq);
         }
     }
+
+    private static bool IsChanged(StoredGoodsReceiptLine stored, GoodsReceiptLineInput line) =>
+        line.ItemId != stored.ItemId || line.GrQty != stored.GrQty || line.GrPrc != stored.GrPrc
+        || (line.WarehouseId ?? stored.WarehouseId) != stored.WarehouseId || line.TaxCodeId != stored.TaxCodeId
+        || line.Deductible != stored.Deductible || line.PurchaseOrderLineId != stored.PurchaseOrderLineId
+        || (line.LocationId is { } locationId && locationId != stored.LocationId) || line.PalletQty != stored.PalletQty;
 
     /// <summary>
     /// MM-BR-161: the currency and rate of a receipt with PO lines are the PO's; without PO lines the requested ones (the vendor's
@@ -211,8 +256,8 @@ public static class GoodsReceiptRules
     /// </summary>
     /// <param name="storedWarehouseId">The saved header warehouse, which may stay after it is set not in use (MM-BR-704).</param>
     /// <exception cref="DomainException">
-    /// MM-E-101, 103, 115, 703, MM-E-024, MM-E-161; Common-E-005, Common-E-006; BC-E-412 for an unknown currency; BC-E-423 for a
-    /// rate with more than 10 decimals.
+    /// MM-E-101, 103, 115, 364, 703, 910, MM-E-024, MM-E-161; Common-E-005, Common-E-006; BC-E-412 for an unknown currency;
+    /// BC-E-423 for a rate with more than 10 decimals.
     /// </exception>
     public static (IReadOnlyList<GoodsReceiptLine> Lines, GoodsReceiptTotals Totals) Calculate(
         GoodsReceiptHeader header, IReadOnlyList<StoredGoodsReceiptLine> kept, IReadOnlyList<GoodsReceiptLineInput> added, int nextSeq,
@@ -221,14 +266,15 @@ public static class GoodsReceiptRules
         CheckHeader(header, storedWarehouseId, masters, settings, rounder);
         var lines = new List<GoodsReceiptLine>(kept.Count + added.Count);
         lines.AddRange(kept.Select(l => new GoodsReceiptLine(
-            l.Id, l.Seq, l.ItemId, l.ItemName, l.WarehouseId, l.LotId, null, l.GrQty, l.GrPrc, 0m, l.TaxCodeId, 0m, 0m, l.Deductible,
-            l.PurchaseOrderLineId, 0m)));
+            l.Id, l.Seq, l.ItemId, l.ItemName, l.WarehouseId, l.LotId, l.GrQty, l.GrPrc, 0m, l.TaxCodeId, 0m, 0m, l.Deductible,
+            l.PurchaseOrderLineId, 0m, l.LocationId, l.PalletQty, LotAttributesOf(l.Seq, l.ItemId, l.Lot, masters))));
         foreach (var (line, seq) in added.Select((l, i) => (l, nextSeq + i)))
         {
             CheckLine(line, seq, header, masters);
             lines.Add(new GoodsReceiptLine(
-                null, seq, line.ItemId, line.ItemName, line.WarehouseId!.Value, line.LotId, line.LotNo, line.GrQty, line.GrPrc, 0m,
-                line.TaxCodeId, 0m, 0m, line.Deductible, line.PurchaseOrderLineId, 0m));
+                null, seq, line.ItemId, line.ItemName, line.WarehouseId!.Value, null, line.GrQty, line.GrPrc, 0m, line.TaxCodeId, 0m, 0m,
+                line.Deductible, line.PurchaseOrderLineId, 0m, line.LocationId, line.PalletQty,
+                LotAttributesOf(seq, line.ItemId, line.Lot, masters)));
         }
 
         foreach (var taxCodeId in kept.Select(l => l.TaxCodeId).Where(id => !masters.TaxCodes.ContainsKey(id)))
@@ -304,6 +350,12 @@ public static class GoodsReceiptRules
         return allInvoiced ? GoodsReceiptStatus.Closed : GoodsReceiptStatus.PartiallyInvoiced;
     }
 
+    /// <summary>MM-BR-364: the checked Lot attributes of a line; only a lot-managed item has any.</summary>
+    private static LotAttributes LotAttributesOf(int seq, long itemId, LotAttributes? lot, GoodsReceiptMasters masters) =>
+        lot is null
+            ? LotAttributes.None
+            : LotRules.CheckAttributes(seq, masters.LotManagedItems?.Contains(itemId) == true, lot.SupplierLotNo, lot.MfgDt, lot.ExpiryDt);
+
     private static bool IsVat(string kind) => kind is TaxKind.VatStandard or TaxKind.VatZero or TaxKind.VatExempt;
 
     private static void CheckHeader(
@@ -342,6 +394,8 @@ public static class GoodsReceiptRules
         {
             throw new DomainException(PriceCode, seq);
         }
+        // MM-BR-910: Pallets hold stock, so a Service line has none
+        PalletRules.EnsurePalletQty(seq, line.PalletQty, itemType == StockItemType);
         // MM-BR-703: the line warehouse, the header's by default; MM-BR-704: only warehouses in use for new lines
         if (line.WarehouseId is not { } warehouseId)
         {

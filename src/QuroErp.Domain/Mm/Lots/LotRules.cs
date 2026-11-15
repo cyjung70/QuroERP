@@ -27,7 +27,32 @@ public static partial class LotRules
     /// </summary>
     public const string NegativeCode = "MM-E-356";
 
+    /// <summary>
+    /// Lot attributes of a receipt line are wrong: a supplier Lot number over 30 characters, an expiry date before the
+    /// manufacture date, or attributes on an item without lot management (MM-BR-364). Arg: line.
+    /// </summary>
+    public const string AttributesCode = "MM-E-364";
+
     public const int NumberMaxLength = 30;
+
+    public const int SupplierLotNoMaxLength = 30;
+
+    /// <summary>
+    /// MM-BR-364: the supplier Lot number (trimmed, empty is none), manufacture date and expiry date a purchase receipt line
+    /// gives its Lot. Only a lot-managed item has them; the expiry is not before the manufacture date.
+    /// </summary>
+    /// <exception cref="DomainException">MM-E-364 with the line.</exception>
+    public static LotAttributes CheckAttributes(int seq, bool lotManaged, string? supplierLotNo, DateOnly? mfgDt, DateOnly? expiryDt)
+    {
+        var attributes = new LotAttributes(string.IsNullOrWhiteSpace(supplierLotNo) ? null : supplierLotNo.Trim(), mfgDt, expiryDt);
+        if ((!lotManaged && !attributes.IsEmpty)
+            || attributes.SupplierLotNo?.Length > SupplierLotNoMaxLength
+            || (mfgDt is { } mfg && expiryDt is { } expiry && expiry < mfg))
+        {
+            throw new DomainException(AttributesCode, seq);
+        }
+        return attributes;
+    }
 
     /// <summary>
     /// A lot number a user typed: trimmed and upper case. Empty means "number it for me" and returns null (MM-BR-353).

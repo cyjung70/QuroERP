@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<SalesInvoicePrintService>();
         services.AddScoped<PurchaseOrderService>();
         services.AddScoped<GoodsReceiptService>();
+        services.AddScoped<GoodsReceiptLabelService>();
         services.AddScoped<SupplierInvoiceService>();
         services.AddScoped<PurchaseOrderPrintService>();
         services.AddScoped<RoleService>();

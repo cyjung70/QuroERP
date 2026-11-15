@@ -2,6 +2,7 @@ using System.Globalization;
 using QuroErp.Contracts.Mm.GoodsReceipts;
 using QuroErp.Web.Auth;
 using QuroErp.Web.Common;
+using QuroErp.Web.Mm.PurchaseOrders;
 
 namespace QuroErp.Web.Mm.GoodsReceipts;
 
@@ -66,6 +67,15 @@ public sealed class GoodsReceiptApiClient(HttpClient http, AccessTokenProvider t
     {
         var uri = $"{ReceiptUri(id)}?updatedAt={Uri.EscapeDataString(updatedAt.ToString("O", CultureInfo.InvariantCulture))}";
         using var response = await http.SendAuthorizedAsync(tokens, new HttpRequestMessage(HttpMethod.Delete, uri), cancellationToken);
+    }
+
+    /// <summary>The labels of the receipt's ACTIVE Pallets as a PDF; each print is kept in the label history (MM-BR-918, MM-BR-919).</summary>
+    /// <exception cref="ApiProblemException">404 Common-E-006 when the receipt has no ACTIVE Pallet.</exception>
+    public async Task<DownloadedFile> PalletLabelsAsync(long id, string grNo, CancellationToken cancellationToken)
+    {
+        var uri = $"{ReceiptUri(id)}/{GoodsReceiptRoutes.PalletLabels}";
+        using var response = await http.SendAuthorizedAsync(tokens, new HttpRequestMessage(HttpMethod.Get, uri), cancellationToken);
+        return new DownloadedFile(await response.Content.ReadAsByteArrayAsync(cancellationToken), grNo + "-pallets.pdf");
     }
 
     private static void Add(List<string> parameters, string name, string? value)

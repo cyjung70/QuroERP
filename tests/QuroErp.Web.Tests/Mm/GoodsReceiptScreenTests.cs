@@ -13,7 +13,7 @@ using QuroErp.Contracts.Bc.Tax;
 using QuroErp.Contracts.Bc.UserProfiles;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Contracts.Mm.GoodsReceipts;
-using QuroErp.Contracts.Mm.Lots;
+using QuroErp.Contracts.Mm.Locations;
 using QuroErp.Contracts.Mm.Vendors;
 using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Web.Auth;
@@ -26,7 +26,7 @@ using QuroErp.Web.Components.Pages.Mm;
 using QuroErp.Web.Components.Pages.Mm.Models;
 using QuroErp.Web.Components.Screens;
 using QuroErp.Web.Mm.GoodsReceipts;
-using QuroErp.Web.Mm.Lots;
+using QuroErp.Web.Mm.Locations;
 using QuroErp.Web.Mm.Vendors;
 using QuroErp.Web.Mm.Warehouses;
 using QuroErp.Web.Tests.Screens;
@@ -55,7 +55,7 @@ public class GoodsReceiptScreenTests : BunitContext
         Services.AddHttpClient<GoodsReceiptApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<VendorApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<ItemApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
-        Services.AddHttpClient<LotApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
+        Services.AddHttpClient<LocationApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<ExchangeRateApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<LocalizationApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<TaxCodeApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
@@ -193,8 +193,8 @@ public class GoodsReceiptScreenTests : BunitContext
 
     [Theory, Trait("Id", "MM-UT-105"), Trait("Rule", "MM-BR-105"), Trait("Rule", "MM-BR-104")]
     [InlineData("OP", 0, "brand", "미대사", "save,add-row,mark-delete,import-po,delete")]
-    [InlineData("PA", 3, "warn", "부분 대사", "")]
-    [InlineData("CL", 6, "ok", "대사 완료", "")]
+    [InlineData("PA", 3, "warn", "부분 대사", "save")]
+    [InlineData("CL", 6, "ok", "대사 완료", "save")]
     [InlineData("VO", 0, "danger", "무효", "")]
     public void Status_SetsTheChipAndTheEnabledButtons(string status, int invoiced, string chip, string text, string enabled)
     {
@@ -209,8 +209,8 @@ public class GoodsReceiptScreenTests : BunitContext
             .Should().Contain(["goods-receipt-line-import-po", "goods-receipt-toolbar-delete"], "disabled buttons stay");
     }
 
-    [Fact, Trait("Id", "MM-UT-353"), Trait("Rule", "MM-BR-353"), Trait("Rule", "MM-BR-362")]
-    public async Task LotItem_TakesATypedLot_OrAnExistingOne_AndOtherItemsHaveNone()
+    [Fact, Trait("Id", "MM-UT-364"), Trait("Rule", "MM-BR-364"), Trait("Rule", "MM-BR-713"), Trait("Rule", "MM-BR-910")]
+    public async Task NewLine_TakesLotAttributesLocationAndPalletQty_OnlyWhereTheItemManagesThem()
     {
         var page = RenderAs("admin");
         PickVendor(page);
@@ -218,29 +218,93 @@ public class GoodsReceiptScreenTests : BunitContext
         var lines = Lines(page);
         Button(page, "add-row").Click();
         (await lines.EditAsync(0, "itemCd", "resin")).Should().BeTrue();
-        await lines.EditAsync(0, "grQty", "5");
+        await lines.EditAsync(0, "grQty", "25");
         page.WaitForAssertion(() => Frame(page).Lines.GetItem(lines.KeyOf(0)).LotManaged.Should().BeTrue());
+        lines.IsReadOnly(0, "lotNo").Should().BeTrue("the receipt numbers the Lot (MM-BR-362)");
 
-        lines.Select(0);
-        var picking = lines.F4Async(0, "lotNo", "l-0");
-        page.WaitForAssertion(() => page.LookupRows("goods-receipt-line-lookup").Should().HaveCount(2));
-        page.LookupRows("goods-receipt-line-lookup").Select(r => r.TextContent).Should()
-            .SatisfyRespectively(r => r.Should().Contain("L-0"), r => r.Should().Contain("L-01").And.Contain("4"));
-        page.PickLookupRow<LookupRow, GoodsReceipt>("goods-receipt-line-lookup", 1);
-        await picking;
-        page.WaitForAssertion(() => Frame(page).Lines.GetItem(lines.KeyOf(0)).LotNo.Should().Be("L-01"));
-        _api.Requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/api/mm/lots" && r.RequestUri.Query.Contains("itemId=14", StringComparison.Ordinal));
+        (await lines.EditAsync(0, "locationCode", "A1")).Should().BeTrue();
+        (await lines.EditAsync(0, "supplierLotNo", "S-77")).Should().BeTrue();
+        Frame(page).Lines.SetValue(lines.KeyOf(0), nameof(GoodsReceiptLine.ExpiryDt), new DateOnly(2027, 5, 31));
+        (await lines.EditAsync(0, "palletQty", "10")).Should().BeTrue();
 
         Button(page, "add-row").Click();
         (await lines.EditAsync(1, "itemCd", "bolt")).Should().BeTrue();
         await lines.EditAsync(1, "grQty", "1");
-        await lines.EditAsync(1, "lotNo", "X1");
-        Frame(page).Lines.GetItem(lines.KeyOf(1)).LotNo.Should().BeNull("only a lot-managed item has a lot");
+        (await lines.EditAsync(1, "supplierLotNo", "X1")).Should().BeFalse("only a lot-managed item has Lot attributes");
+        (await lines.EditAsync(1, "locationCode", "A1")).Should().BeFalse("only a Location-managed item takes a Location");
+        (await lines.EditAsync(1, "palletQty", "")).Should().BeTrue("a stock item can make Pallets");
+
+        Button(page, "add-row").Click();
+        (await lines.EditAsync(2, "itemCd", "freight")).Should().BeTrue();
+        await lines.EditAsync(2, "grQty", "1");
+        (await lines.EditAsync(2, "palletQty", "5")).Should().BeFalse("a service has no stock");
 
         Button(page, "save").Click();
 
         page.WaitForAssertion(() => _api.Saved.Should().ContainSingle());
-        _api.Saved[0].Lines.Select(l => (l.ItemId, l.LotNo)).Should().Equal((14L, "L-01"), (11L, (string?)null));
+        _api.Saved[0].Lines.Select(l => (l.ItemId, l.LocationId, l.SupplierLotNo, l.ExpiryDt, l.PalletQty)).Should().Equal(
+            (14L, (long?)51L, "S-77", (DateOnly?)new DateOnly(2027, 5, 31), (decimal?)10m),
+            (11L, (long?)null, (string?)null, (DateOnly?)null, (decimal?)null),
+            (12L, (long?)null, (string?)null, (DateOnly?)null, (decimal?)null));
+        _api.Requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/" + LocationRoutes.Options
+                                            && r.RequestUri.Query.Contains("warehouseId=1", StringComparison.Ordinal));
+    }
+
+    [Fact, Trait("Id", "MM-UC-004-T01"), Trait("Rule", "MM-BR-114")]
+    public async Task F4OnTheItemCode_OpensTheItemLookup_AndThePickFillsTheLine()
+    {
+        var page = RenderAs("admin");
+        PickVendor(page);
+        page.WaitForAssertion(() => page.Field("goods-receipt-header-exchange-rate").Value.Should().Be("1382.5"));
+        var lines = Lines(page);
+        Button(page, "add-row").Click();
+
+        var picking = lines.F4Async(0, "itemCd", "");
+        page.WaitForAssertion(() => page.LookupRows("goods-receipt-line-lookup").Should().NotBeEmpty());
+        page.PickLookupRow<LookupRow, GoodsReceipt>("goods-receipt-line-lookup", 0);
+        (await picking).Should().BeTrue();
+
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(lines.KeyOf(0)).ItemId.Should().Be(11));
+    }
+
+    [Fact, Trait("Id", "MM-UT-364"), Trait("Rule", "MM-BR-364"), Trait("Rule", "MM-BR-104")]
+    public async Task InvoicedReceipt_SavesOnlyTheLotAttributes()
+    {
+        _api.Receipt = Receipt("PA", 3, lot: true);
+        var page = Open();
+        var lines = Lines(page);
+
+        lines.Edit(0, "grQty", "9").Should().BeFalse();
+        lines.Edit(0, "locationCode", "A1").Should().BeFalse();
+        page.Field("goods-receipt-header-remarks").IsReadOnly.Should().BeTrue("an invoiced receipt keeps its header");
+        Button(page, "add-row").HasAttribute("disabled").Should().BeTrue();
+        lines.Select(0);
+        Button(page, "mark-delete").HasAttribute("disabled").Should().BeTrue("an invoiced line stays");
+
+        (await lines.EditAsync(0, "supplierLotNo", "S-99")).Should().BeTrue();
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => _api.Saved.Should().ContainSingle());
+        _api.Saved[0].Lines.Should().ContainSingle().Which.Should().Match<SaveGoodsReceiptLineRequest>(l => l.Id == 9501 && l.SupplierLotNo == "S-99");
+    }
+
+    [Fact, Trait("Id", "MM-UT-918"), Trait("Rule", "MM-BR-918")]
+    public void PalletLabels_DownloadThePdf_OfASavedReceiptWithPallets()
+    {
+        _api.Receipt = Receipt(pallets: ["PL2611000001", "PL2611000002"]);
+        var page = Open();
+        Lines(page).Text(0, "palletNos").Should().Be("PL2611000001, PL2611000002");
+
+        Button(page, "pallet-labels").Click();
+
+        page.WaitForAssertion(() => _api.Requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/api/mm/goods-receipts/601/pallet-labels"));
+    }
+
+    [Fact, Trait("Id", "MM-UT-918"), Trait("Rule", "MM-BR-918")]
+    public void PalletLabels_AreOff_WithoutPallets()
+    {
+        Button(Open(), "pallet-labels").HasAttribute("disabled").Should().BeTrue();
+        Button(RenderAs("admin"), "pallet-labels").HasAttribute("disabled").Should().BeTrue("a new receipt has no Pallets yet");
     }
 
     [Fact, Trait("Id", "MM-UT-112"), Trait("Rule", "MM-BR-112")]
@@ -297,6 +361,8 @@ public class GoodsReceiptScreenTests : BunitContext
         page.Find("[data-testid=goods-receipt-status-chip]").TextContent.Should().Be("Open");
         Button(page, "import-po").TextContent.Should().Be("Import PO Lines");
         Lines(page).Headers.Select(h => h.Title).Should().Contain(["Item Code", "Lot", "Unit Price", "PO No.", "Received"]);
+        Button(page, "pallet-labels").TextContent.Should().Be("Pallet Labels");
+        Lines(page).Headers.Select(h => h.Title).Should().Contain(["Location", "Supplier Lot", "Expiry Date", "Qty per Pallet", "Pallets"]);
         page.Find("[data-testid=goods-receipt-totals-total]").TextContent.Should().Contain("59.40");
     }
 
@@ -348,12 +414,13 @@ public class GoodsReceiptScreenTests : BunitContext
 
     private static void Configure(HttpClient http) => http.BaseAddress = new Uri("http://api.test");
 
-    // One line of 6 × 9 USD from PO line 8001, VAT 10 %
-    private static GoodsReceiptDto Receipt(string status = "OP", decimal invoiced = 0) => new(
+    // One line of 6 × 9 USD from PO line 8001, VAT 10 %; with lot, a Resin line in its own Lot
+    private static GoodsReceiptDto Receipt(string status = "OP", decimal invoiced = 0, bool lot = false, IReadOnlyList<string>? pallets = null) => new(
         601, "GR2611000001", status, 701, "ACME", new DateOnly(2026, 11, 4), 1, "INV-77", "Dock 2", "USD", 1390m,
         54m, 5.4m, 59.4m, 82566m,
-        [new GoodsReceiptLineDto(9501, 1, 11, "BOLT", "Hex Bolt", "EA", 1, "MAIN", null, null, 6m, 9m, 54m, 1, "VAT10", 54m, 5.4m, true,
-            8001, "PO2611000001", 1, 10m, 10m, invoiced, 0m)],
+        [new GoodsReceiptLineDto(9501, 1, lot ? 14 : 11, lot ? "RESIN" : "BOLT", lot ? "Resin" : "Hex Bolt", "EA", 1, "MAIN",
+            lot ? 41 : 1, lot ? "GR2611000001-1" : "*", 6m, 9m, 54m, 1, "VAT10", 54m, 5.4m, true,
+            8001, "PO2611000001", 1, 10m, 10m, invoiced, 0m, null, "*", lot ? "S-1" : null, null, null, pallets is null ? null : 3m, pallets)],
         AuditTimes.Updated, AuditTimes.Created, "setup", "kim");
 
     /// <summary>Goods receipt, vendor, item, lot, rate, localization, tax code, warehouse and profile API.</summary>
@@ -368,7 +435,7 @@ public class GoodsReceiptScreenTests : BunitContext
             Item(11, "BOLT", "Hex Bolt", "INVENTORY", "EA", 0.45m),
             Item(12, "FREIGHT", "Freight", "SERVICE", "LOT", 75m),
             Item(13, "KIT", "Kit", "SET", "EA", 10m),
-            Item(14, "RESIN", "Resin", "INVENTORY", "KG", 3.2m, lotManaged: true),
+            Item(14, "RESIN", "Resin", "INVENTORY", "KG", 3.2m, lotManaged: true, locationManaged: true),
         ];
 
         public List<HttpRequestMessage> Requests { get; } = [];
@@ -417,8 +484,10 @@ public class GoodsReceiptScreenTests : BunitContext
                     return Json(new ItemListDto([.. Items.Where(i =>
                         (string.IsNullOrEmpty(code) || i.ItemCd.StartsWith(code, StringComparison.OrdinalIgnoreCase))
                         && (string.IsNullOrEmpty(name) || (i.ItemName ?? "").Contains(name, StringComparison.OrdinalIgnoreCase)))], Items.Length));
-                case "/" + LotRoutes.Base:
-                    return Json(new List<LotBalanceDto> { new(31, "L-01", 4m), new(32, "M-02", 2m) });
+                case "/" + LocationRoutes.Options:
+                    return Json(new List<LocationOptionDto> { new(50, "*", "System"), new(51, "A1", "Shelf A1") });
+                case "/api/mm/goods-receipts/601/pallet-labels":
+                    return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent("%PDF-1.7"u8.ToArray()) };
                 case "/api/mm/goods-receipts/open-po-lines":
                     return Json(new List<OpenPoLineDto>
                     {
@@ -443,8 +512,9 @@ public class GoodsReceiptScreenTests : BunitContext
                     {
                         Lines = [.. saved.Lines.Select((l, i) => new GoodsReceiptLineDto(
                             l.Id ?? 9600 + i, i + 1, l.ItemId, Items.First(x => x.Id == l.ItemId).ItemCd, l.ItemName, "EA", l.WarehouseId ?? 1, "MAIN",
-                            l.LotNo is null ? null : 40 + i, l.LotNo, l.GrQty, l.GrPrc, l.GrQty * l.GrPrc, l.TaxCodeId ?? 1, "VAT10",
-                            l.GrQty * l.GrPrc, 0m, l.Deductible, l.PurchaseOrderLineId, null, null, null, null, 0m, 0m))],
+                            null, "*", l.GrQty, l.GrPrc, l.GrQty * l.GrPrc, l.TaxCodeId ?? 1, "VAT10",
+                            l.GrQty * l.GrPrc, 0m, l.Deductible, l.PurchaseOrderLineId, null, null, null, null, 0m, 0m,
+                            l.LocationId, null, l.SupplierLotNo, l.MfgDt, l.ExpiryDt, l.PalletQty))],
                     });
                 case "/api/mm/goods-receipts/601":
                     return Json(Receipt);
@@ -453,9 +523,11 @@ public class GoodsReceiptScreenTests : BunitContext
             }
         }
 
-        private static ItemDto Item(long id, string code, string name, string type, string unit, decimal price, bool lotManaged = false) => new(
+        private static ItemDto Item(long id, string code, string name, string type, string unit, decimal price, bool lotManaged = false,
+            bool locationManaged = false) => new(
             id, code, name, null, null, type, unit, null, "Y", price, 0m, null, null, 0m, null, null, null, null, null, null, true, "TAXABLE",
-            "", 0m, 0m, 0m, AuditTimes.Created, "setup", AuditTimes.Updated, "kim", lotManaged, lotManaged ? new DateOnly(2026, 1, 1) : null);
+            "", 0m, 0m, 0m, AuditTimes.Created, "setup", AuditTimes.Updated, "kim", lotManaged, lotManaged ? new DateOnly(2026, 1, 1) : null,
+            locationManaged);
 
         private static HttpResponseMessage Json<T>(T value) => new(HttpStatusCode.OK) { Content = JsonContent.Create(value) };
 

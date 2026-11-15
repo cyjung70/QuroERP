@@ -67,6 +67,7 @@ public class ScreenPolicyCoverageTests
             "RoleController.GetMenus", "RoleController.GetUnassignedMenus",
             "PurchaseOrderController.Search", "PurchaseOrderController.Get",
             "GoodsReceiptController.Search", "GoodsReceiptController.Get", "GoodsReceiptController.OpenPoLines",
+            "GoodsReceiptController.PalletLabels",
             "SupplierInvoiceController.Search", "SupplierInvoiceController.Get", "SupplierInvoiceController.OpenReceiptLines",
             "PurchaseOrderController.PrintPdf", "PurchaseOrderController.PrintXlsx",
             "SalesOrderController.Search", "SalesOrderController.Get", "SalesOrderController.LineDefaults", "SalesOrderController.DiscountRates",

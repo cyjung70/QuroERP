@@ -1089,7 +1089,18 @@
   <data name="Mm.GoodsReceipt.Unit" xml:space="preserve"><value>단위</value></data>
   <data name="Mm.GoodsReceipt.LineWarehouseCode" xml:space="preserve"><value>창고</value></data>
   <data name="Mm.GoodsReceipt.LotNo" xml:space="preserve"><value>로트</value></data>
-  <data name="Mm.GoodsReceipt.OnHandQty" xml:space="preserve"><value>로트 잔고</value></data>
+  <data name="MM-E-364" xml:space="preserve"><value>{0}행: Lot 속성이 올바르지 않습니다. 공급자 Lot 번호는 30자까지이고, 유효기한은 제조일자보다 앞설 수 없으며, Lot 관리 품목만 넣을 수 있습니다.</value></data>
+  <data name="MM-E-910" xml:space="preserve"><value>{0}행: Pallet 수량은 0보다 커야 하고, 재고 품목만 Pallet을 만듭니다.</value></data>
+  <data name="MM-E-911" xml:space="preserve"><value>Pallet {0}은(는) 이미 이동·출하·분할·병합·조정되어 입고 줄을 삭제할 수 없습니다.</value></data>
+  <data name="Mm.GoodsReceipt.LocationCode" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.GoodsReceipt.LocationName" xml:space="preserve"><value>Location 이름</value></data>
+  <data name="Mm.GoodsReceipt.FindLocation" xml:space="preserve"><value>Location 찾기</value></data>
+  <data name="Mm.GoodsReceipt.SupplierLotNo" xml:space="preserve"><value>공급자 Lot</value></data>
+  <data name="Mm.GoodsReceipt.MfgDt" xml:space="preserve"><value>제조일자</value></data>
+  <data name="Mm.GoodsReceipt.ExpiryDt" xml:space="preserve"><value>유효기한</value></data>
+  <data name="Mm.GoodsReceipt.PalletQty" xml:space="preserve"><value>Pallet 수량</value></data>
+  <data name="Mm.GoodsReceipt.PalletNos" xml:space="preserve"><value>Pallet 번호</value></data>
+  <data name="Mm.GoodsReceipt.PalletLabels" xml:space="preserve"><value>Pallet 라벨</value></data>
   <data name="Mm.GoodsReceipt.GrQty" xml:space="preserve"><value>수량</value></data>
   <data name="Mm.GoodsReceipt.GrPrc" xml:space="preserve"><value>단가</value></data>
   <data name="Mm.GoodsReceipt.GrAmt" xml:space="preserve"><value>금액</value></data>
@@ -1102,7 +1113,6 @@
   <data name="Mm.GoodsReceipt.PoReceivedQty" xml:space="preserve"><value>입고 누계</value></data>
   <data name="Mm.GoodsReceipt.RemainingQty" xml:space="preserve"><value>남은 수량</value></data>
   <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
-  <data name="Mm.GoodsReceipt.FindLot" xml:space="preserve"><value>로트 찾기</value></data>
   <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>저장하지 않았습니다. 입고 수량을 확인하세요.</value></data>
   <data name="Menu.G2MM03" xml:space="preserve"><value>공급자 송장</value></data>
   <data name="Mm.SupplierInvoice.Title" xml:space="preserve"><value>공급자 송장</value></data>

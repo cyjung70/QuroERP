@@ -1,0 +1,16 @@
+# Receiving Location of a goods receipt line (TASK-CORE-073, MM-BR-713, MM-BR-717): the Locations in use of the line's
+# warehouse, '*' first. Only a Location-managed item takes another Location than '*'. The goods receipt screen answers it from
+# the Location options API with the current line.
+lookup:
+  id: mmGrLocation
+  title: Mm.GoodsReceipt.FindLocation
+  version: 1
+  api: /api/mm/locations/options
+  key: locationCode
+  text: locationName
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[2]{id,label,type,width,fmt}:
+  locationCode,Mm.GoodsReceipt.LocationCode,text,110,""
+  locationName,Mm.GoodsReceipt.LocationName,text,200,""
