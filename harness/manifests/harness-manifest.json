@@ -504,7 +504,7 @@
     },
     {
       "path": "docs/specifications/MM/pallet.md",
-      "sha256": "c9754e16c5de66ce694664a0ec62e2c0e185019947ce297617f5964d0e0c09ee"
+      "sha256": "dffd09e7b0fede26c54deb937f64fb16e57f3fecbcabf2bf6f93ffd823e1b811"
     },
     {
       "path": "docs/specifications/MM/pda-move.md",
