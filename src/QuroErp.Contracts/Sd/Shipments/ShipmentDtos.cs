@@ -21,6 +21,9 @@ public static class ShipmentRoutes
     /// <summary>GET {Base}/{id}/print.pdf: the delivery note.</summary>
     public const string Print = "print.pdf";
 
+    /// <summary>GET {Base}/pallets (query <see cref="ShipmentPalletQuery"/>): ACTIVE Pallets a line can ship (MM-BR-913).</summary>
+    public const string Pallets = "pallets";
+
     /// <summary>Most rows the list returns, newest first.</summary>
     public const int MaxListSize = 200;
 }
@@ -76,6 +79,10 @@ public sealed record ShipmentDto(
 /// One line. ShipPrc, DcCd, DcRate and TaxCodeId come from the order or invoice line (SD-BR-167, SD-BR-175), or as entered for a
 /// direct line (SD-BR-173). BilledQty is billed (SD-BR-108). OnhandQty is the line warehouse's on-hand qty now. SoNo/SoSeq and
 /// DnNo/DnSeq name the source line. RemainingQty is what the source line still has to ship; null for a direct line.
+/// LocationId/LocationCode and LotId/LotNo are the stock key the line issued (MM-BR-713, MM-BR-716); PalletId/PalletNo the Pallet
+/// it shipped (MM-BR-913). Components are the rows shown under a Kit or Set line (SD-BR-517, SD-BR-518): a Kit line's components
+/// with the Locations and Lots the save assigned, a Set line's components when ShowComponents is on. ShowComponents is the item's
+/// setting, which the delivery note follows.
 /// </summary>
 public sealed record ShipmentLineDto(
     long Id,
@@ -101,7 +108,28 @@ public sealed record ShipmentLineDto(
     long? SalesInvoiceLineId,
     string? DnNo,
     int? DnSeq,
-    decimal? RemainingQty = null);
+    decimal? RemainingQty = null,
+    long? LocationId = null,
+    string? LocationCode = null,
+    long? PalletId = null,
+    string? PalletNo = null,
+    bool ShowComponents = false,
+    IReadOnlyList<ShipmentComponentDto>? Components = null);
+
+/// <summary>
+/// A component row under a Kit or Set line, without amounts (SD-BR-517). Qty is what the component shipped. LocationCode and LotNo
+/// are the FIFO assignment of a Kit component (SD-BR-518); null for a Set's components, which do not move.
+/// </summary>
+public sealed record ShipmentComponentDto(
+    long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal Qty, string? LocationCode = null, string? LotNo = null);
+
+/// <summary>Pallet lookup of a shipment line: the warehouse's ACTIVE Pallets, by number start or item.</summary>
+public sealed record ShipmentPalletQuery(long? WarehouseId, string? PalletNo, long? ItemId);
+
+/// <summary>An ACTIVE Pallet a shipment line can ship whole (MM-BR-913).</summary>
+public sealed record ShipmentPalletDto(
+    long Id, string PalletNo, long ItemId, string ItemCd, string? ItemName, string? Unit, long WarehouseId, string WarehouseCode,
+    long LocationId, string LocationCode, long LotId, string LotNo, decimal Qty);
 
 /// <summary>
 /// New or changed shipment. Lines are the whole list: saved lines come back unchanged with their Id (SD-BR-171), lines left out
@@ -133,11 +161,14 @@ public sealed record SaveShipmentRequest(
 /// <summary>
 /// One line. SalesOrderLineId ships an order line (SD-BR-172), SalesInvoiceLineId a BILL_THEN_SHIP invoice line (SD-BR-175);
 /// neither is a direct line, whose ShipPrc and TaxCodeId are required (SD-BR-173). WarehouseId defaults to the header warehouse.
-/// LotId or LotNo picks the lot of a lot-managed item (MM-BR-355).
+/// LotId or LotNo picks the lot of a lot-managed item (MM-BR-355); LocationId the Location of a Location-managed item, null is '*'
+/// (MM-BR-713). The screen fills both from the FIFO suggestion (MM-BR-716). PalletId ships one whole ACTIVE Pallet: the line takes
+/// its warehouse, Location and Lot, and the qty must be the Pallet qty (MM-BR-913). A Kit line names none of them: the save assigns
+/// its components' Locations and Lots (SD-BR-518).
 /// </summary>
 public sealed record SaveShipmentLineRequest(
     long? Id, long ItemId, string? ItemName, long? WarehouseId, decimal ShipQty, decimal? ShipPrc, long? TaxCodeId, long? LotId, string? LotNo,
-    long? SalesOrderLineId, long? SalesInvoiceLineId);
+    long? SalesOrderLineId, long? SalesInvoiceLineId, long? LocationId = null, long? PalletId = null);
 
 /// <summary>Void with the updatedAt the screen read.</summary>
 public sealed record VoidShipmentRequest(DateTimeOffset UpdatedAt);

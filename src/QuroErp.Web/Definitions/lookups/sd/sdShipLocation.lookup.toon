@@ -1,0 +1,16 @@
+# Locations of a shipment line (TASK-CORE-074): the Locations of the line's item in the line's warehouse with a balance above
+# zero at the end of the ship date, with the qty there (MM-BR-713, MM-BR-716). The shipment screen answers it from the lot API
+# for the current line.
+lookup:
+  id: sdShipLocation
+  title: Sd.Shipment.FindLocation
+  version: 1
+  api: /api/mm/lots
+  key: locationCode
+  text: locationCode
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[2]{id,label,type,width,fmt}:
+  locationCode,Sd.Shipment.LocationCode,text,120,""
+  onHandQty,Sd.Shipment.LocationOnhandQty,number,110,""

@@ -1,5 +1,6 @@
-@* Delivery note of a shipment: the lines shipped with warehouse, lot and quantity, and a box for the receiver's signature. No
-   amounts, like the picking list. Values use Razor output only. *@
+@* Delivery note of a shipment: the lines shipped with warehouse, Location, lot and quantity, the components of Kit and Set lines
+   whose item shows them (SD-BR-517), and a box for the receiver's signature. No amounts, like the picking list. Values use Razor
+   output only. *@
 @using QuroErp.Application.Sd.Shipments
 
 <PrintLayout Company="Print.Company" Title="@T("Print.DeliveryNote.Title")" DocumentNo="@Print.Shipment.ShipNo" Culture="Culture">
@@ -42,6 +43,7 @@
                 <th>@T("Print.SalesOrder.ItemName")</th>
                 <th>@T("Print.SalesOrder.Unit")</th>
                 <th>@T("Print.DeliveryNote.Warehouse")</th>
+                <th>@T("Print.DeliveryNote.Location")</th>
                 <th>@T("Print.DeliveryNote.LotNo")</th>
                 <th class="num">@T("Print.SalesOrder.Qty")</th>
             </tr>
@@ -55,9 +57,24 @@
                     <td>@line.ItemName</td>
                     <td>@line.Unit</td>
                     <td class="mono">@line.WarehouseCode</td>
+                    <td class="mono">@line.LocationCode</td>
                     <td class="mono">@line.LotNo</td>
                     <td class="num">@line.ShipQty.ToString("N" + Print.QtyDecimals, Culture)</td>
                 </tr>
+                @* SD-BR-517: the components under their Kit or Set line, without amounts *@
+                @foreach (var component in line.Components ?? [])
+                {
+                    <tr class="component">
+                        <td></td>
+                        <td class="mono">@component.ItemCd</td>
+                        <td>@component.ItemName</td>
+                        <td>@component.Unit</td>
+                        <td></td>
+                        <td class="mono">@component.LocationCode</td>
+                        <td class="mono">@component.LotNo</td>
+                        <td class="num">@component.Qty.ToString("N" + Print.QtyDecimals, Culture)</td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
@@ -81,6 +98,8 @@
         .parties .name { font-weight: 700; font-size: 11pt; }
         table.fields { width: auto; }
         table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+        tr.component td { color: #444; font-size: 8.5pt; }
+        tr.component td:nth-child(2) { padding-left: 16px; }
         .remarks { margin-top: 16px; }
         .remarks .text { white-space: pre-wrap; }
         .received { margin-top: 32px; display: flex; gap: 32px; }

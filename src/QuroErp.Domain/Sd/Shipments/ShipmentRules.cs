@@ -7,16 +7,26 @@ namespace QuroErp.Domain.Sd.Shipments;
 
 /// <summary>
 /// A shipment line as the request sends it, with the defaults applied. A line names at most one source: a sales order line
-/// (SD-BR-172), a BILL_THEN_SHIP invoice line (SD-BR-175), or neither for a line entered directly (SD-BR-173).
+/// (SD-BR-172), a BILL_THEN_SHIP invoice line (SD-BR-175), or neither for a line entered directly (SD-BR-173). LocationId null
+/// is Location '*' (MM-BR-713). PalletId ships one whole Pallet (MM-BR-913).
 /// </summary>
 public sealed record ShipmentLineInput(
     long? Id, long ItemId, string? ItemName, long? WarehouseId, decimal ShipQty, decimal ShipPrc, long TaxCodeId, long? LotId, string? LotNo,
-    long? SalesOrderLineId, long? SalesInvoiceLineId);
+    long? SalesOrderLineId, long? SalesInvoiceLineId, long? LocationId = null, long? PalletId = null);
 
 /// <summary>A saved shipment line.</summary>
 public sealed record StoredShipmentLine(
     long Id, int Seq, long ItemId, string? ItemName, long WarehouseId, decimal ShipQty, decimal ShipPrc, string? DcCd, decimal DcRate,
-    long TaxCodeId, long? LotId, decimal BilledQty, long? SalesOrderLineId, long? SalesInvoiceLineId);
+    long TaxCodeId, long? LotId, decimal BilledQty, long? SalesOrderLineId, long? SalesInvoiceLineId, long? LocationId = null,
+    long? PalletId = null);
+
+/// <summary>A Pallet a shipment line names, read and locked for the save (MM-BR-911, MM-BR-913).</summary>
+public sealed record ShipmentPallet(
+    long Id, string PalletNo, long ItemId, long LotId, long WarehouseId, long LocationId, decimal Qty, string Status)
+{
+    /// <summary>The Pallet holds stock (MM-BR-911).</summary>
+    public const string Active = "ACTIVE";
+}
 
 /// <summary>A sales order line a shipment line ships, read with its order (locked for the save).</summary>
 public sealed record ShipmentOrderLine(
@@ -35,11 +45,13 @@ public sealed record ShipmentInvoiceLine(
 
 /// <summary>
 /// A new shipment line with the values the save stores: price, discount and tax code from its source (SD-BR-167, SD-BR-175) or as
-/// entered (SD-BR-173), the warehouse (MM-BR-703, the consignment warehouse for BILL_THEN_SHIP, SD-BR-176) and the billed qty.
+/// entered (SD-BR-173), the warehouse (MM-BR-703, the consignment warehouse for BILL_THEN_SHIP, SD-BR-176), the Location and
+/// Pallet (MM-BR-713, MM-BR-913) and the billed qty.
 /// </summary>
 public sealed record ShipmentLine(
     int Seq, long ItemId, string? ItemName, long WarehouseId, decimal ShipQty, decimal ShipPrc, string? DcCd, decimal DcRate, long TaxCodeId,
-    long? LotId, string? LotNo, decimal BilledQty, long? SalesOrderLineId, long? SalesInvoiceLineId);
+    long? LotId, string? LotNo, decimal BilledQty, long? SalesOrderLineId, long? SalesInvoiceLineId, long? LocationId = null,
+    long? PalletId = null);
 
 /// <summary>
 /// Shipment input checked on the server before save (SD-UC-051, docs/business-rules/SD/shipment.md). Stock checks are the
@@ -79,6 +91,12 @@ public static class ShipmentRules
 
     /// <summary>The line has no warehouse (MM-BR-703). Arg: line number.</summary>
     public const string WarehouseCode = "MM-E-703";
+
+    /// <summary>
+    /// A Pallet line does not ship its whole ACTIVE Pallet as it is (MM-BR-913): the Pallet is not ACTIVE, is on another line,
+    /// holds another item, is in another warehouse than the line must use, or the qty differs. Args: line number, Pallet number.
+    /// </summary>
+    public const string PalletCode = "MM-E-913";
 
     /// <summary>A required field is empty. Arg: field name.</summary>
     public const string RequiredCode = "Common-E-005";
@@ -135,16 +153,60 @@ public static class ShipmentRules
         }
     }
 
-    /// <summary>SD-BR-171: a saved line comes back as it was; the item, warehouse, qty, price, tax code and lot cannot change.</summary>
+    /// <summary>
+    /// SD-BR-171: a saved line comes back as it was; the item, warehouse, qty, price, tax code, Location, Lot and Pallet cannot
+    /// change. A Location, Lot or Pallet the request leaves out keeps the stored one.
+    /// </summary>
     /// <param name="input">The request line with the stored values as defaults.</param>
     /// <exception cref="DomainException">SD-E-107 with the line number.</exception>
     public static void EnsureUnchanged(StoredShipmentLine stored, ShipmentLineInput input)
     {
         if (input.ItemId != stored.ItemId || input.WarehouseId != stored.WarehouseId || input.ShipQty != stored.ShipQty
             || input.ShipPrc != stored.ShipPrc || input.TaxCodeId != stored.TaxCodeId || (input.LotId is not null && input.LotId != stored.LotId)
+            || (input.LocationId is not null && input.LocationId != stored.LocationId)
+            || (input.PalletId is not null && input.PalletId != stored.PalletId)
             || input.SalesOrderLineId != stored.SalesOrderLineId || input.SalesInvoiceLineId != stored.SalesInvoiceLineId)
         {
             throw new DomainException(LineChangedCode, stored.Seq);
+        }
+    }
+
+    /// <summary>
+    /// MM-BR-913: a Pallet line takes its Pallet's warehouse, Location and Lot, whatever the request says. Lines without a
+    /// Pallet, or whose Pallet is not among <paramref name="pallets"/>, are returned as they are (<see cref="EnsurePallets"/>
+    /// refuses them).
+    /// </summary>
+    public static IReadOnlyList<ShipmentLineInput> WithPallets(
+        IReadOnlyList<ShipmentLineInput> added, IReadOnlyDictionary<long, ShipmentPallet> pallets) =>
+        [.. added.Select(l => l.PalletId is { } id && pallets.TryGetValue(id, out var p)
+            ? l with { WarehouseId = p.WarehouseId, LocationId = p.LocationId, LotId = p.LotId, LotNo = null }
+            : l)];
+
+    /// <summary>
+    /// MM-BR-913: each Pallet line ships one whole ACTIVE Pallet: the Pallet exists, is on no other line, holds the line's item
+    /// and is in the line's warehouse (a BILL_THEN_SHIP line ships from the consignment warehouse, SD-BR-176), and the qty is the
+    /// Pallet qty.
+    /// </summary>
+    /// <param name="lines">The checked new lines (<see cref="Lines"/>) of inputs that went through <see cref="WithPallets"/>.</param>
+    /// <exception cref="DomainException">MM-E-913 with the line number and the Pallet number (its id when it does not exist).</exception>
+    public static void EnsurePallets(IEnumerable<ShipmentLine> lines, IReadOnlyDictionary<long, ShipmentPallet> pallets)
+    {
+        var used = new HashSet<long>();
+        foreach (var line in lines)
+        {
+            if (line.PalletId is not { } id)
+            {
+                continue;
+            }
+            if (!pallets.TryGetValue(id, out var pallet))
+            {
+                throw new DomainException(PalletCode, line.Seq, id);
+            }
+            if (pallet.Status != ShipmentPallet.Active || !used.Add(id) || pallet.ItemId != line.ItemId
+                || pallet.WarehouseId != line.WarehouseId || pallet.Qty != line.ShipQty)
+            {
+                throw new DomainException(PalletCode, line.Seq, pallet.PalletNo);
+            }
         }
     }
 
@@ -213,7 +275,7 @@ public static class ShipmentRules
                     ? FromOrder(input, seq, Source(orderLines, orderLineId, customerId, l => l.CustomerId))
                     : new ShipmentLine(
                         seq, input.ItemId, input.ItemName, input.WarehouseId ?? 0, input.ShipQty, input.ShipPrc, null, 0m, input.TaxCodeId,
-                        input.LotId, input.LotNo, 0m, null, null);
+                        input.LotId, input.LotNo, 0m, null, null, input.LocationId, input.PalletId);
             if (!itemIds.Contains(line.ItemId))
             {
                 throw new DomainException(SalesOrderEntryRules.ItemCode, seq);
@@ -294,10 +356,10 @@ public static class ShipmentRules
 
     private static ShipmentLine FromOrder(ShipmentLineInput input, int seq, ShipmentOrderLine order) => new(
         seq, order.ItemId, input.ItemName ?? order.ItemName, input.WarehouseId ?? 0, input.ShipQty, order.SoPrc, order.DcCd, order.DcRate,
-        order.TaxCodeId, input.LotId, input.LotNo, 0m, order.Id, null);
+        order.TaxCodeId, input.LotId, input.LotNo, 0m, order.Id, null, input.LocationId, input.PalletId);
 
     // SD-BR-175: the consignment warehouse whatever the request says; the order line comes from the invoice line (SD-BR-176)
     private static ShipmentLine FromInvoice(ShipmentLineInput input, int seq, ShipmentInvoiceLine invoice, long? consignmentWarehouseId) => new(
         seq, invoice.ItemId, input.ItemName ?? invoice.ItemName, consignmentWarehouseId ?? 0, input.ShipQty, invoice.DnPrc, invoice.DcCd,
-        invoice.DcRate, invoice.TaxCodeId, input.LotId, input.LotNo, 0m, invoice.SalesOrderLineId, invoice.Id);
+        invoice.DcRate, invoice.TaxCodeId, input.LotId, input.LotNo, 0m, invoice.SalesOrderLineId, invoice.Id, input.LocationId, input.PalletId);
 }

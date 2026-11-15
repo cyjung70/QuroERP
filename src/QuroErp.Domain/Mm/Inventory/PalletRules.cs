@@ -14,6 +14,9 @@ public static class PalletRules
     /// </summary>
     public const string ChangedCode = "MM-E-911";
 
+    /// <summary>What a Pallet line's shipment writes on the Pallet and what a line delete or Void writes back (MM-BR-913).</summary>
+    public const string ShipEvent = "SHIP";
+
     /// <summary>
     /// A decrease that is not a Pallet line leaves the key with less than its ACTIVE Pallets hold. Args: item code, warehouse
     /// code, Location code, lot number, the key balance after the decrease, the Pallet quantity.

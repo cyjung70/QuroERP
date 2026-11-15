@@ -1,0 +1,18 @@
+# Pallets of a shipment line (TASK-CORE-074): the ACTIVE Pallets of the line's warehouse by Pallet number start, only those of
+# the line's item for an imported line (MM-BR-913). A picked or scanned Pallet fills the line's item, Location, Lot and qty.
+lookup:
+  id: sdShipPallet
+  title: Sd.Shipment.FindPallet
+  version: 1
+  api: /api/sd/shipments/pallets
+  key: palletNo
+  text: palletNo
+  minChars: 0
+queries[1]{id,params}:
+  all,""
+columns[5]{id,label,type,width,fmt}:
+  palletNo,Sd.Shipment.PalletNo,text,140,""
+  itemCd,Sd.Shipment.ItemCd,text,130,""
+  locationCode,Sd.Shipment.LocationCode,text,110,""
+  lotNo,Sd.Shipment.LotNo,text,120,""
+  qty,Sd.Shipment.PalletQty,number,100,""

@@ -73,6 +73,7 @@
   <data name="Print.DeliveryNote.InvoiceNo" xml:space="preserve"><value>송장 번호</value></data>
   <data name="Print.DeliveryNote.Warehouse" xml:space="preserve"><value>창고</value></data>
   <data name="Print.DeliveryNote.LotNo" xml:space="preserve"><value>로트</value></data>
+  <data name="Print.DeliveryNote.Location" xml:space="preserve"><value>Location</value></data>
   <data name="Print.DeliveryNote.ReceivedBy" xml:space="preserve"><value>인수자</value></data>
   <data name="Print.DeliveryNote.ReceivedDt" xml:space="preserve"><value>인수일</value></data>
   <data name="Print.SalesInvoice.Title" xml:space="preserve"><value>송장</value></data>

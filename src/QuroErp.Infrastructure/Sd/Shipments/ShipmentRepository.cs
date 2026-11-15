@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using QuroErp.Application.Sd.Shipments;
 using QuroErp.Contracts.Sd.Shipments;
+using QuroErp.Domain.Mm.Inventory;
 using QuroErp.Domain.Sd.Shipments;
 
 using QuroErp.Infrastructure.Mm.Inventory;
@@ -58,11 +59,14 @@ internal sealed class ShipmentRepository : IShipmentRepository
                coalesce((SELECT sum(h.onhand_qty) FROM mm_onhand h WHERE h.item_id = l.item_id AND h.warehouse_id = l.warehouse_id), 0) AS onhand_qty,
                l.sales_order_line_id, o.so_no, ol.seq AS so_seq, l.sales_invoice_line_id, d.dn_no, dl.seq AS dn_seq,
                CASE WHEN l.sales_invoice_line_id IS NOT NULL THEN coalesce(dl.dn_qty, 0) - dl.shipped_qty - dl.cancelled_qty
-                    WHEN l.sales_order_line_id IS NOT NULL THEN coalesce(ol.so_qty, 0) - ol.ship_qty END AS remaining_qty
+                    WHEN l.sales_order_line_id IS NOT NULL THEN coalesce(ol.so_qty, 0) - ol.ship_qty END AS remaining_qty,
+               l.location_id, loc.location_code, l.pallet_id, p.pallet_no, i.type AS item_type, coalesce(i.show_components, true) AS show_components
         FROM sd_shipment_line l
         LEFT JOIN bc_item i ON i.id = l.item_id
         LEFT JOIN bc_warehouse w ON w.id = l.warehouse_id
         LEFT JOIN mm_lot t ON t.id = l.lot_id
+        LEFT JOIN bc_location loc ON loc.id = l.location_id
+        LEFT JOIN mm_pallet p ON p.id = l.pallet_id
         LEFT JOIN sd_sales_order_line ol ON ol.id = l.sales_order_line_id
         LEFT JOIN sd_sales_order o ON o.id = ol.sales_order_id
         LEFT JOIN sd_sales_invoice_line dl ON dl.id = l.sales_invoice_line_id
@@ -146,17 +150,81 @@ internal sealed class ShipmentRepository : IShipmentRepository
 
     private const string DeleteLines = "DELETE FROM sd_shipment_line WHERE shipment_id = @Id AND id = ANY(@Ids)";
 
-    // Location '*' until the shipment takes a Location (TASK-CORE-074); Lot '*' until the stock posting sets the line's lot
+    // Location and Lot '*' when the line names none; the stock posting then sets the key the line issued (MM-BR-713, MM-BR-355)
     private const string InsertLine = $"""
         {StockKeys.EnsureStarRows}
         INSERT INTO sd_shipment_line (shipment_id, seq, item_id, item_name, warehouse_id, location_id, ship_qty, ship_prc, dc_cd, dc_rate,
-                                      billed_qty, sales_order_line_id, tax_code_id, lot_id, sales_invoice_line_id, created_by, updated_by)
-        VALUES (@Id, @Seq, @ItemId, @ItemName, @WarehouseId, {StockKeys.StarLocationId}, @ShipQty, @ShipPrc, @DcCd, @DcRate, @BilledQty,
-                @SalesOrderLineId, @TaxCodeId, coalesce(@LotId, {StockKeys.StarLotId}), @SalesInvoiceLineId, @User, @User)
+                                      billed_qty, sales_order_line_id, tax_code_id, lot_id, sales_invoice_line_id, pallet_id, created_by,
+                                      updated_by)
+        VALUES (@Id, @Seq, @ItemId, @ItemName, @WarehouseId, coalesce(@LocationId, {StockKeys.StarLocationId}), @ShipQty, @ShipPrc, @DcCd,
+                @DcRate, @BilledQty, @SalesOrderLineId, @TaxCodeId, coalesce(@LotId, {StockKeys.StarLotId}), @SalesInvoiceLineId, @PalletId,
+                @User, @User)
         RETURNING id
         """;
 
-    private const string SetLineLot = "UPDATE sd_shipment_line SET lot_id = @LotId WHERE shipment_id = @Id AND seq = @Seq";
+    private const string SetLineKey = """
+        UPDATE sd_shipment_line SET location_id = @LocationId, lot_id = @LotId WHERE shipment_id = @Id AND seq = @Seq
+        """;
+
+    private const string LockPallets = """
+        SELECT id, pallet_no, item_id, lot_id, warehouse_id, location_id, qty, status
+        FROM mm_pallet
+        WHERE id = ANY(@Ids)
+        ORDER BY id
+        FOR UPDATE
+        """;
+
+    // MM-BR-913, MM-BR-916: the SHIP event takes the qty before the UPDATE (same snapshot)
+    private const string ShipPallet = """
+        WITH event AS (
+          INSERT INTO mm_pallet_event (pallet_id, event_type, event_dt, qty, ref_key, ref_seq, created_by, updated_by)
+          SELECT id, @EventType, @EventDt, -qty, @RefKey, @Seq, @User, @User FROM mm_pallet WHERE id = @PalletId
+        )
+        UPDATE mm_pallet SET qty = 0, status = 'CLOSED', updated_at = now(), updated_by = @User WHERE id = @PalletId
+        """;
+
+    private const string ReturnPallet = """
+        WITH event AS (
+          INSERT INTO mm_pallet_event (pallet_id, event_type, event_dt, qty, ref_key, ref_seq, created_by, updated_by)
+          VALUES (@PalletId, @EventType, @EventDt, @Qty, @RefKey, @Seq, @User, @User)
+        )
+        UPDATE mm_pallet SET qty = @Qty, status = 'ACTIVE', updated_at = now(), updated_by = @User WHERE id = @PalletId
+        """;
+
+    private const string SelectPallets = """
+        SELECT p.id, p.pallet_no, p.item_id, i.item_cd, i.item_name, i.unit, p.warehouse_id, w.warehouse_code, p.location_id, loc.location_code,
+               p.lot_id, t.lot_no, p.qty
+        FROM mm_pallet p
+        JOIN bc_item i ON i.id = p.item_id
+        JOIN bc_warehouse w ON w.id = p.warehouse_id
+        JOIN bc_location loc ON loc.id = p.location_id
+        JOIN mm_lot t ON t.id = p.lot_id
+        WHERE p.status = 'ACTIVE' AND p.warehouse_id = @WarehouseId
+          AND (@PalletNo::varchar IS NULL OR p.pallet_no LIKE @PalletNo || '%')
+          AND (@ItemId::bigint IS NULL OR p.item_id = @ItemId)
+        ORDER BY p.pallet_no
+        LIMIT @Limit
+        """;
+
+    // SD-BR-518: the components a Kit line issued and has not taken back, with their Location and Lot
+    private const string SelectKitComponents = """
+        SELECT m.ref_seq AS seq, m.item_id, i.item_cd, i.item_name, i.unit, -m.qty AS qty, loc.location_code, t.lot_no
+        FROM mm_goods_movement m
+        JOIN bc_item i ON i.id = m.item_id
+        LEFT JOIN bc_location loc ON loc.id = m.location_id
+        LEFT JOIN mm_lot t ON t.id = m.lot_id
+        WHERE m.mov_type = 'DN' AND m.ref_key = @ShipNo AND m.set_item_id IS NOT NULL AND m.parent_movement_id IS NULL
+          AND NOT EXISTS (SELECT 1 FROM mm_goods_movement r WHERE r.parent_movement_id = m.id)
+        ORDER BY m.ref_seq, m.id
+        """;
+
+    private const string SelectBom = """
+        SELECT b.parent_item_id AS set_item_id, b.child_item_id AS item_id, i.item_cd, i.item_name, i.unit, b.child_qty
+        FROM sd_bom b
+        JOIN bc_item i ON i.id = b.child_item_id
+        WHERE b.parent_item_id = ANY(@Ids)
+        ORDER BY b.parent_item_id, b.seq
+        """;
 
     private const string SetStatus = """
         UPDATE sd_shipment SET status = @Status, sales_invoice_id = @SalesInvoiceId, updated_at = now(), updated_by = @User WHERE id = @Id
@@ -292,11 +360,13 @@ internal sealed class ShipmentRepository : IShipmentRepository
         """;
 
     private const string SelectPrintLines = """
-        SELECT l.seq, i.item_cd, coalesce(l.item_name, i.item_name) AS item_name, i.unit, w.warehouse_code, t.lot_no, l.ship_qty
+        SELECT l.seq, i.item_cd, coalesce(l.item_name, i.item_name) AS item_name, i.unit, w.warehouse_code, t.lot_no, l.ship_qty,
+               loc.location_code
         FROM sd_shipment_line l
         LEFT JOIN bc_item i ON i.id = l.item_id
         LEFT JOIN bc_warehouse w ON w.id = l.warehouse_id
         LEFT JOIN mm_lot t ON t.id = l.lot_id
+        LEFT JOIN bc_location loc ON loc.id = l.location_id
         WHERE l.shipment_id = @Id
         ORDER BY l.seq
         """;
@@ -413,14 +483,61 @@ internal sealed class ShipmentRepository : IShipmentRepository
         return await InsertLinesAsync(id, added, user, transaction, cancellationToken);
     }
 
-    public async Task SetLineLotsAsync(long id, IReadOnlyDictionary<int, long> lotIdBySeq, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task SetLineKeysAsync(
+        long id, IReadOnlyDictionary<int, (long LocationId, long LotId)> keyBySeq, IDbTransaction transaction, CancellationToken cancellationToken)
     {
-        foreach (var (seq, lotId) in lotIdBySeq)
+        foreach (var (seq, (locationId, lotId)) in keyBySeq.OrderBy(k => k.Key))
         {
             await transaction.Connection!.ExecuteAsync(new CommandDefinition(
-                SetLineLot, new { Id = id, Seq = seq, LotId = lotId }, transaction, cancellationToken: cancellationToken));
+                SetLineKey, new { Id = id, Seq = seq, LocationId = locationId, LotId = lotId }, transaction, cancellationToken: cancellationToken));
         }
     }
+
+    public async Task<IReadOnlyList<ShipmentPallet>> LockPalletsAsync(
+        IReadOnlyCollection<long> palletIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<ShipmentPallet>(new CommandDefinition(
+            LockPallets, new { Ids = palletIds.ToArray() }, transaction, cancellationToken: cancellationToken))).AsList();
+
+    public Task ShipPalletsAsync(
+        IReadOnlyList<ShipmentPalletShip> pallets, DateOnly eventDt, string refKey, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken) =>
+        PalletEventsAsync(ShipPallet, pallets, eventDt, refKey, user, transaction, cancellationToken);
+
+    public Task ReturnPalletsAsync(
+        IReadOnlyList<ShipmentPalletShip> pallets, DateOnly eventDt, string refKey, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken) =>
+        PalletEventsAsync(ReturnPallet, pallets, eventDt, refKey, user, transaction, cancellationToken);
+
+    // Pallet rows in id order, as the lock takes them
+    private static async Task PalletEventsAsync(
+        string sql, IReadOnlyList<ShipmentPalletShip> pallets, DateOnly eventDt, string refKey, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        foreach (var p in pallets.OrderBy(p => p.PalletId))
+        {
+            await transaction.Connection!.ExecuteAsync(new CommandDefinition(
+                sql,
+                new { p.PalletId, p.Seq, p.Qty, EventType = PalletRules.ShipEvent, EventDt = eventDt, RefKey = refKey, User = user },
+                transaction, cancellationToken: cancellationToken));
+        }
+    }
+
+    public async Task<IReadOnlyList<ShipmentPalletDto>> FindPalletsAsync(
+        ShipmentPalletQuery query, int limit, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<ShipmentPalletDto>(new CommandDefinition(
+            SelectPallets,
+            new { query.WarehouseId, PalletNo = query.PalletNo is null ? null : EscapeLike(query.PalletNo), query.ItemId, Limit = limit },
+            transaction, cancellationToken: cancellationToken))).AsList();
+
+    public async Task<IReadOnlyList<ShipmentKitComponentRow>> FindKitComponentsAsync(
+        string shipNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<ShipmentKitComponentRow>(new CommandDefinition(
+            SelectKitComponents, new { ShipNo = shipNo }, transaction, cancellationToken: cancellationToken))).AsList();
+
+    public async Task<IReadOnlyList<ShipmentBomRow>> FindBomAsync(
+        IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        (await transaction.Connection!.QueryAsync<ShipmentBomRow>(new CommandDefinition(
+            SelectBom, new { Ids = itemIds.ToArray() }, transaction, cancellationToken: cancellationToken))).AsList();
 
     public Task SetStatusAsync(long id, string status, long? salesInvoiceId, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
         transaction.Connection!.ExecuteAsync(new CommandDefinition(
@@ -547,8 +664,9 @@ internal sealed class ShipmentRepository : IShipmentRepository
             SelectUnshippedInvoiceLines, new { CustomerId = customerId }, transaction, cancellationToken: cancellationToken))).AsList();
 
     public async Task<IReadOnlyList<ShipmentPrintLine>> FindPrintLinesAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        (await transaction.Connection!.QueryAsync<ShipmentPrintLine>(
-            new CommandDefinition(SelectPrintLines, new { Id = id }, transaction, cancellationToken: cancellationToken))).AsList();
+        [.. (await transaction.Connection!.QueryAsync<PrintRow>(
+                new CommandDefinition(SelectPrintLines, new { Id = id }, transaction, cancellationToken: cancellationToken)))
+            .Select(r => new ShipmentPrintLine(r.Seq, r.ItemCd, r.ItemName, r.Unit, r.WarehouseCode, r.LotNo, r.ShipQty, r.LocationCode))];
 
     private static async Task<IReadOnlyDictionary<int, long>> InsertLinesAsync(
         long id, IReadOnlyList<ShipmentLine> lines, string user, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -574,6 +692,8 @@ internal sealed class ShipmentRepository : IShipmentRepository
                     l.TaxCodeId,
                     l.LotId,
                     l.SalesInvoiceLineId,
+                    l.LocationId,
+                    l.PalletId,
                     User = user,
                 },
                 transaction, cancellationToken: cancellationToken));
@@ -650,6 +770,9 @@ internal sealed class ShipmentRepository : IShipmentRepository
         parameters.AddDynamicParams(keys);
         return parameters;
     }
+
+    private sealed record PrintRow(
+        int Seq, string? ItemCd, string? ItemName, string? Unit, string? WarehouseCode, string? LotNo, decimal ShipQty, string? LocationCode);
 
     // Npgsql reads timestamptz as a UTC DateTime; Dapper does not convert it to DateTimeOffset for constructor binding
     private sealed record Row(
