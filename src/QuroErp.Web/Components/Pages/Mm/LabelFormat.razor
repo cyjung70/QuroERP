@@ -1,0 +1,207 @@
+@page "/mm/label-format"
+@rendermode InteractiveServer
+@using Quro.Grid
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.Labels
+@inject LabelFormatApiClient Api
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
+
+@* MM-UC-036 label formats, screen type M. The four formats (one per label type) are listed when the screen opens; change the
+   output kind, size, dpi, fields and use, and save them together. Rows are never added or deleted (MM-BR-917). The fields and
+   their order are chosen in a dialog; the preview downloads a sample label in the saved format (MM-BR-918). The API checks
+   every rule. *@
+
+<PageTitle>@L["Mm.LabelFormat.Title"]</PageTitle>
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="LabelFormatRow" Title="@L["Mm.LabelFormat.Title"]" TestId="label-format" Path="@L["Menu.G2MM"]"
+                   LoadOnStart Definition="mm.label-format.list" Load="LoadAsync" Save="SaveAsync" CreateRow="() => new LabelFormatRow()"
+                   CanWrite="_canEdit" CanAddRow="() => false" CanDeleteRows="false">
+        <Columns>
+            <Quro.Grid.QuroColumn Field="outputKind" ReadOnly="!_canEdit" HeaderKey="Mm.LabelFormat.OutputKind" Type="CellType.Combo" Options="OutputKinds" Required="true" Width="100" />
+            <Quro.Grid.QuroColumn Field="widthMm" ReadOnly="!_canEdit" HeaderKey="Mm.LabelFormat.WidthMm" Type="CellType.Number" Required="true" Width="100" />
+            <Quro.Grid.QuroColumn Field="heightMm" ReadOnly="!_canEdit" HeaderKey="Mm.LabelFormat.HeightMm" Type="CellType.Number" Required="true" Width="100" />
+            <Quro.Grid.QuroColumn Field="dpi" ReadOnly="!_canEdit" HeaderKey="Mm.LabelFormat.Dpi" Type="CellType.Combo" Options="Dpis" Required="true" Width="90" />
+            <Quro.Grid.QuroColumn Field="fieldNames" HeaderKey="Mm.LabelFormat.Fields" Width="360" Compute="r => FieldNames((LabelFormatRow)r)" />
+            <Quro.Grid.QuroColumn Field="useYn" ReadOnly="!_canEdit" HeaderKey="Mm.LabelFormat.UseYn" Type="CellType.Check" Width="80" />
+        </Columns>
+        <ExtraCommands>
+            <button type="button" disabled="@(!_canEdit || Current is null)" data-testid="label-format-toolbar-fields" @onclick="OpenFields">@L["Mm.LabelFormat.ChooseFields"]</button>
+            <button type="button" disabled="@(Current is null || _previewBusy)" title="@L["Mm.LabelFormat.PreviewHint"]" data-testid="label-format-toolbar-preview" @onclick="PreviewAsync">@L["Mm.LabelFormat.Preview"]</button>
+        </ExtraCommands>
+    </QuroMultiGrid>
+
+    @if (_previewError is not null)
+    {
+        <p class="page-error" role="alert" data-testid="label-format-preview-message">@_previewError</p>
+    }
+
+    @if (_fieldsKey is not null)
+    {
+        <div class="quro-dialog-backdrop">
+            <div class="quro-dialog" role="dialog" aria-modal="true" aria-label="@L["Mm.LabelFormat.ChooseFields"]" data-testid="label-format-fields">
+                <h2>@L["Mm.LabelFormat.ChooseFields"] — @_fieldsType</h2>
+                <p>@L["Mm.LabelFormat.ChooseFieldsHint"]</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>@L["Common.Select"]</th>
+                            <th>@L["Mm.LabelFormat.Field"]</th>
+                            <th>@L["Mm.LabelFormat.Order"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < _fieldOrder.Count; i++)
+                        {
+                            var index = i;
+                            var field = _fieldOrder[i];
+                            var id = field.ToLowerInvariant();
+                            <tr data-testid="label-format-fields-row">
+                                <td>
+                                    <input type="checkbox" aria-label="@FieldName(field)" checked="@_picked.Contains(field)"
+                                           data-testid="label-format-fields-check-@id" @onchange="e => Pick(field, e.Value is true)" />
+                                </td>
+                                <td>@FieldName(field)</td>
+                                <td>
+                                    <button type="button" aria-label="@L["Mm.LabelFormat.MoveUp"]" disabled="@(index == 0)"
+                                            data-testid="label-format-fields-up-@id" @onclick="() => Move(index, -1)">↑</button>
+                                    <button type="button" aria-label="@L["Mm.LabelFormat.MoveDown"]" disabled="@(index == _fieldOrder.Count - 1)"
+                                            data-testid="label-format-fields-down-@id" @onclick="() => Move(index, 1)">↓</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="quro-dialog-actions">
+                    <button type="button" class="quro-primary" disabled="@(_picked.Count == 0)" data-testid="label-format-fields-ok" @onclick="ApplyFields">@L["Mm.LabelFormat.ApplyFields"]</button>
+                    <button type="button" data-testid="label-format-fields-close" @onclick="CloseFields">@L["Common.Close"]</button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private const string ScreenPath = "/mm/label-format";
+    private const string UnavailableCode = "BC-E-003";
+
+    private static readonly IReadOnlyList<ComboOption> OutputKinds = [new("ZPL", "ZPL"), new("PDF", "PDF")];
+    private static readonly IReadOnlyList<ComboOption> Dpis = [new("203", "203"), new("300", "300")];
+
+    private QuroMultiGrid<LabelFormatRow>? _grid;
+    private bool _canEdit;
+    private bool _ready;
+
+    private int? _fieldsKey;
+    private string? _fieldsType;
+    private List<string> _fieldOrder = [];
+    private readonly HashSet<string> _picked = [];
+
+    private bool _previewBusy;
+    private string? _previewError;
+
+    private LabelFormatRow? Current => _grid?.Data.CurrentRowKey is { } key ? _grid.Data.GetItem(key) : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
+        _ready = true;
+    }
+
+    private async Task<IReadOnlyList<LabelFormatRow>> LoadAsync()
+    {
+        _previewError = null;
+        return [.. (await Api.ListAsync(CancellationToken.None)).Select(LabelFormatRow.From)];
+    }
+
+    private Task SaveAsync(BatchChanges<LabelFormatRow> changes) => Api.SaveAsync(LabelFormatRow.ToRequest(changes), CancellationToken.None);
+
+    private string FieldName(string field) =>
+        L[$"Mm.LabelFormat.Field.{field}"] is { ResourceNotFound: false } name ? name.Value : field;
+
+    private string FieldNames(LabelFormatRow row) => string.Join(", ", row.FieldList.Select(FieldName));
+
+    // The chosen fields in their order first, then the others the label type can print
+    private void OpenFields()
+    {
+        if (_grid?.Data.CurrentRowKey is not { } key)
+        {
+            return;
+        }
+        var row = _grid.Data.GetItem(key);
+        var chosen = row.FieldList;
+        _fieldsKey = key;
+        _fieldsType = row.LabelType;
+        _fieldOrder = [.. chosen, .. row.AvailableFields.Where(f => !chosen.Contains(f))];
+        _picked.Clear();
+        _picked.UnionWith(chosen);
+    }
+
+    private void Pick(string field, bool picked)
+    {
+        if (picked)
+        {
+            _picked.Add(field);
+        }
+        else
+        {
+            _picked.Remove(field);
+        }
+    }
+
+    private void Move(int index, int step)
+    {
+        var to = index + step;
+        if (to >= 0 && to < _fieldOrder.Count)
+        {
+            (_fieldOrder[index], _fieldOrder[to]) = (_fieldOrder[to], _fieldOrder[index]);
+        }
+    }
+
+    // The row takes the checked fields in the dialog's order and shows as changed; the API checks them on save (MM-BR-917)
+    private void ApplyFields()
+    {
+        if (_fieldsKey is { } key && _grid is not null)
+        {
+            _grid.Data.SetValue(key, nameof(LabelFormatRow.Fields), LabelFormatRow.Join(_fieldOrder.Where(_picked.Contains)));
+        }
+        CloseFields();
+    }
+
+    private void CloseFields()
+    {
+        _fieldsKey = null;
+        _fieldsType = null;
+    }
+
+    // The sample follows the saved format, not unsaved changes on the grid
+    private async Task PreviewAsync()
+    {
+        if (Current is not { } row)
+        {
+            return;
+        }
+        _previewBusy = true;
+        _previewError = null;
+        try
+        {
+            var pdf = await Api.PreviewAsync(row.LabelType, CancellationToken.None);
+            await QuroExcel.DownloadAsync(JS, $"label-{row.LabelType.ToLowerInvariant()}.pdf", pdf);
+        }
+        catch (ApiProblemException e)
+        {
+            _previewError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _previewError = Messages.Get(UnavailableCode);
+        }
+        _previewBusy = false;
+    }
+}

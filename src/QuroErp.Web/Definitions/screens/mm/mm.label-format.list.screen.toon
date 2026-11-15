@@ -1,0 +1,26 @@
+# MM-UC-036 label formats (TASK-MM-056): one row per label type, never added or deleted (MM-BR-917). The output kind and dpi
+# have no common code and the fields are chosen in a dialog, so the screen declares those columns after the label type.
+screen:
+  id: mm.label-format.list
+  module: MM
+  title: Mm.LabelFormat.Title
+  version: 1
+  api: /api/mm/label-formats
+  key: id
+  layout: grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[7]: query,new,save,addRow,deleteRow,undoRow,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: labelFormats
+    bind: labelFormats
+    rowKey: labelType
+    deletedRows: strike
+    columns[1]{id,label,type,width,edit,req,fmt,source,hidden}:
+      labelType,Mm.LabelFormat.LabelType,text,110,false,false,"","",false
