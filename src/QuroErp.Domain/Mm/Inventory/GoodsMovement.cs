@@ -46,7 +46,10 @@ public sealed class GoodsMovement
 
     public decimal Prc { get; }
 
-    /// <summary>Stock value change: qty × prc with the sign of qty, or the price difference of a PV (MM-BR-606).</summary>
+    /// <summary>
+    /// Stock value change: qty × prc with the sign of qty, the price difference of a PV (MM-BR-606), or the amount a Set receipt
+    /// was given (SD-BR-515).
+    /// </summary>
     public decimal Amount { get; }
 
     public string? RefKey { get; }
@@ -107,7 +110,8 @@ public sealed class GoodsMovement
         {
             throw new DomainException(InvalidMovement, movType, qty);
         }
-        return new GoodsMovement(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, null, setItemId, qty * prc);
+        // A Set receipt keeps the components' issue amount, which its rounded unit price does not repeat (SD-BR-515)
+        return new GoodsMovement(movType, documentDt, itemId, warehouseId, qty, prc, refKey, refSeq, null, setItemId, amount ?? qty * prc);
     }
 
     /// <summary>Rebuilds a saved row. Without the stored amount it is qty × prc.</summary>
