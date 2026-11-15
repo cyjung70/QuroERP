@@ -36,5 +36,5 @@
     "출하 화면 라인 그리드 Location·Lot·Pallet 열 (명세 화면 항목). 끝난 출하 API·화면을 고친다. 기존 테스트가 통과한다"
   ],
   "estimateHours": 3,
-  "status": "todo"
+  "status": "done"
 }
