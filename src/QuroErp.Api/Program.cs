@@ -39,7 +39,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(o => o.SwaggerEndpoint("/swagger/v1/swagger.json", "QuroERP API"));
 }
 
-app.UseHttpsRedirection();
+// Outside Development only: locally the API also answers on http, so Swagger UI opened on http can read its document
+// without being sent to the https port (a cross-origin redirect the browser rejects as "Failed to fetch")
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // 401·403 등 본문 없는 오류를 ProblemDetails로 돌려준다 (api.md "오류")
 app.UseStatusCodePages();

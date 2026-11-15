@@ -1140,6 +1140,7 @@
   <data name="MM-E-913" xml:space="preserve"><value>Line {0}: Pallet {1} cannot be shipped. It must be ACTIVE, its item, warehouse and qty must match the line, and one Pallet goes on one line only.</value></data>
   <data name="MM-E-914" xml:space="preserve"><value>Pallet {0} cannot be split. It must be ACTIVE, and the split qty must be above 0 and below its qty {1}.</value></data>
   <data name="MM-E-915" xml:space="preserve"><value>Pallet {0} cannot be merged. Choose one or more Pallets other than the target, each once; all must be ACTIVE with the same item, Lot, warehouse and Location.</value></data>
+  <data name="MM-E-917" xml:space="preserve"><value>The {0} label format cannot be saved. The output kind must be ZPL or PDF, the width and height must be above 0, the dpi must be 203 or 300, and the fields must be one or more of the fields of that label type, each once.</value></data>
   <data name="Mm.GoodsReceipt.LocationCode" xml:space="preserve"><value>Location</value></data>
   <data name="Mm.GoodsReceipt.LocationName" xml:space="preserve"><value>Location Name</value></data>
   <data name="Mm.GoodsReceipt.FindLocation" xml:space="preserve"><value>Find Location</value></data>
