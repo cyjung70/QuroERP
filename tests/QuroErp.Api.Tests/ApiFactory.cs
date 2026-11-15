@@ -40,6 +40,8 @@ using QuroErp.Api.Tests.Mm.Vendors;
 using QuroErp.Api.Tests.Mm.Locations;
 using QuroErp.Api.Tests.Mm.Lots;
 using QuroErp.Api.Tests.Mm.Pallets;
+using QuroErp.Api.Tests.Mm.Labels;
+using QuroErp.Application.Mm.Labels;
 using QuroErp.Application.Common.DocumentNumbers;
 using QuroErp.Application.Mm.Locations;
 using QuroErp.Application.Mm.Lots;
@@ -232,6 +234,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ILocationRepository>(Locations);
             services.AddSingleton<ILotRepository>(new InMemoryLotRepository());
             services.AddSingleton<IPalletRepository>(Pallets);
+            services.AddSingleton<ILabelFormatRepository>(new InMemoryLabelFormatRepository());
+            services.AddSingleton<ILabelPdfRenderer>(new FakeLabelPdfRenderer());
             services.AddSingleton<IDocumentNumberRepository>(new Common.InMemoryDocumentNumberRepository());
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             // /health without PostgreSQL or Chromium: one check whose status the test sets
