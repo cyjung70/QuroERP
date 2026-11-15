@@ -974,6 +974,52 @@
   <data name="Sd.Shipment.RemainingQty" xml:space="preserve"><value>Remaining qty</value></data>
   <data name="Sd.Shipment.ImportLines" xml:space="preserve"><value>Import</value></data>
   <data name="Sd.Shipment.Path" xml:space="preserve"><value>SD &gt; Sales</value></data>
+  <data name="Sd.Assembly.Title" xml:space="preserve"><value>Set Assembly</value></data>
+  <data name="Sd.Assembly.Path" xml:space="preserve"><value>SD &gt; Sales</value></data>
+  <data name="Sd.Assembly.AssemblyNo" xml:space="preserve"><value>Assembly no.</value></data>
+  <data name="Sd.Assembly.Kind" xml:space="preserve"><value>Kind</value></data>
+  <data name="Sd.Assembly.Kind.ASSEMBLE" xml:space="preserve"><value>Assembly</value></data>
+  <data name="Sd.Assembly.Kind.DISASSEMBLE" xml:space="preserve"><value>Disassembly</value></data>
+  <data name="Sd.Assembly.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Sd.Assembly.Status.OP" xml:space="preserve"><value>Open</value></data>
+  <data name="Sd.Assembly.Status.VO" xml:space="preserve"><value>Void</value></data>
+  <data name="Sd.Assembly.AssemblyDt" xml:space="preserve"><value>Assembly date</value></data>
+  <data name="Sd.Assembly.SetItemId" xml:space="preserve"><value>Set item</value></data>
+  <data name="Sd.Assembly.FindSet" xml:space="preserve"><value>Find Set item</value></data>
+  <data name="Sd.Assembly.NotASet" xml:space="preserve"><value>{0} is not a Set item. Only items of type SET are assembled.</value></data>
+  <data name="Sd.Assembly.Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Sd.Assembly.QtyLeft" xml:space="preserve"><value>Qty left</value></data>
+  <data name="Sd.Assembly.WarehouseId" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Sd.Assembly.WarehouseName" xml:space="preserve"><value>Warehouse name</value></data>
+  <data name="Sd.Assembly.FindWarehouse" xml:space="preserve"><value>Find warehouse</value></data>
+  <data name="Sd.Assembly.LocationId" xml:space="preserve"><value>Receiving Location</value></data>
+  <data name="Sd.Assembly.SetLotNo" xml:space="preserve"><value>Set Lot</value></data>
+  <data name="Sd.Assembly.SourceAssemblyNo" xml:space="preserve"><value>Source assembly no.</value></data>
+  <data name="Sd.Assembly.Remarks" xml:space="preserve"><value>Remarks</value></data>
+  <data name="Sd.Assembly.FindFrom" xml:space="preserve"><value>Date from</value></data>
+  <data name="Sd.Assembly.FindTo" xml:space="preserve"><value>Date to</value></data>
+  <data name="Sd.Assembly.Seq" xml:space="preserve"><value>Seq</value></data>
+  <data name="Sd.Assembly.ItemCd" xml:space="preserve"><value>Component code</value></data>
+  <data name="Sd.Assembly.ItemName" xml:space="preserve"><value>Component name</value></data>
+  <data name="Sd.Assembly.ComponentQty" xml:space="preserve"><value>Qty per Set</value></data>
+  <data name="Sd.Assembly.LineQty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Sd.Assembly.LocationCode" xml:space="preserve"><value>Location</value></data>
+  <data name="Sd.Assembly.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Sd.Assembly.Prc" xml:space="preserve"><value>Unit price</value></data>
+  <data name="Sd.Assembly.Amt" xml:space="preserve"><value>Amount</value></data>
+  <data name="Sd.Assembly.ShortCount" xml:space="preserve"><value>Short components</value></data>
+  <data name="Sd.Assembly.ShortCell" xml:space="preserve"><value>Not enough stock.</value></data>
+  <data name="Sd.Assembly.ShortStock" xml:space="preserve"><value>Some components are short, so the Set cannot be assembled. The marked rows show how much more stock is needed.</value></data>
+  <data name="Sd.Assembly.LinesHint" xml:space="preserve"><value>The system picks the components' Locations and Lots in FIFO order.</value></data>
+  <data name="Sd.Assembly.Void" xml:space="preserve"><value>Void</value></data>
+  <data name="Sd.Assembly.ConfirmVoid" xml:space="preserve"><value>Void this document? Its stock movements are reversed.</value></data>
+  <data name="Sd.Assembly.Disassemble" xml:space="preserve"><value>Disassemble</value></data>
+  <data name="Sd.Assembly.DisassembleHint" xml:space="preserve"><value>Qty left to disassemble: {0}. The components come back to the Lots and at the prices the assembly used.</value></data>
+  <data name="Sd.Assembly.DisassembleQty" xml:space="preserve"><value>Qty to disassemble</value></data>
+  <data name="Sd.Assembly.DisassemblyDt" xml:space="preserve"><value>Disassembly date</value></data>
+  <data name="Sd.Assembly.ReceiveLocationId" xml:space="preserve"><value>Receiving Location</value></data>
+  <data name="Menu.G3SD04" xml:space="preserve"><value>Sales Invoices</value></data>
+  <data name="Menu.G3SD05" xml:space="preserve"><value>Set Assembly</value></data>
   <data name="Sd.Shipment.Title" xml:space="preserve"><value>Shipment</value></data>
   <data name="Sd.Shipment.ShipNo" xml:space="preserve"><value>Ship no.</value></data>
   <data name="Sd.Shipment.ShipDt" xml:space="preserve"><value>Ship date</value></data>

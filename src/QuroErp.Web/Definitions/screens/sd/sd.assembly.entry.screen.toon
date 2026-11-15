@@ -1,0 +1,41 @@
+# SD-UC-055 Set assembly and disassembly (TASK-SD-073), screen type SM on the entry frame. The lines are read only: a new assembly
+# shows the components' FIFO Locations and Lots from the preview (SD-BR-518), a saved one the parts it took or gave back
+# (SD-BR-515, SD-BR-516). A short component has a row with its short qty and no Location or Lot. Amounts are display values; the
+# API calculates the stored ones.
+screen:
+  id: sd.assembly.entry
+  module: SD
+  title: Sd.Assembly.Title
+  version: 1
+  api: /api/sd/assemblies
+  key: id
+  layout: form-grid
+  perm:
+    read: SD.Read
+    write: SD.Write
+toolbar[3]: query,new,save
+# The page draws the header (Set lookup, warehouse lookup, Location combo); these are the fields the frame binds by id
+form:
+  cols: 4
+  fields[6]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+    assemblyNo,Sd.Assembly.AssemblyNo,text,auto,"",upper,"","",1,""
+    setItemCd,Sd.Assembly.SetItemId,text,req,"",upper,"","",1,""
+    assemblyDt,Sd.Assembly.AssemblyDt,date,req,"","","","",1,""
+    remarks,Sd.Assembly.Remarks,textarea,opt,"","","","",4,""
+    updatedAt,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: lines
+    bind: lines
+    rowKey: seq
+    deletedRows: strike
+    columns[9]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+      seq,Sd.Assembly.Seq,number,50,false,false,N0,"",false,false
+      itemCd,Sd.Assembly.ItemCd,text,130,false,false,"","",false,false
+      itemName,Sd.Assembly.ItemName,text,200,false,false,"","",false,false
+      componentQty,Sd.Assembly.ComponentQty,number,90,false,false,N2,"",false,false
+      qty,Sd.Assembly.LineQty,number,90,false,false,N2,"",false,false
+      locationCode,Sd.Assembly.LocationCode,text,100,false,false,"","",false,false
+      lotNo,Sd.Assembly.LotNo,text,120,false,false,"","",false,false
+      prc,Sd.Assembly.Prc,number,110,false,false,N2,"",false,false
+      amt,Sd.Assembly.Amt,number,120,false,false,N2,"",false,false
