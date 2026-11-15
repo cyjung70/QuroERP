@@ -198,7 +198,7 @@ public sealed class SalesInvoiceLine
     /// <summary>The source line: shipment number-line or order number-line; empty for a direct line.</summary>
     public string? Source { get; set; }
 
-    /// <summary>The item type of a new bill-first line; a Kit's components are allocated by the system (SD-BR-518).</summary>
+    /// <summary>The item type; a Kit's components are allocated by the system and its own keys show blank (SD-BR-518).</summary>
     public string? ItemType { get; set; }
 
     /// <summary>The Location and Lot came from the FIFO suggestion, so a new qty asks again (MM-BR-716).</summary>
@@ -295,6 +295,9 @@ public sealed class SalesInvoiceLine
     public static SalesInvoiceLine From(SalesInvoiceLineDto line, IReadOnlyDictionary<long, string> taxCodes)
     {
         var billFirst = line.ShipmentLineId is null && line.SalesOrderLineId is not null;
+
+        // A Kit line stores the system '*' keys; the screen shows them blank (SD-BR-518).
+        var kit = line.ItemType == KitType;
         return new()
         {
             Id = line.Id,
@@ -306,10 +309,11 @@ public sealed class SalesInvoiceLine
             WarehouseId = line.WarehouseId,
             WarehouseCode = line.WarehouseCode,
             LocationId = line.LocationId,
-            LocationCode = line.LocationCode,
+            LocationCode = kit && line.LocationCode == System ? null : line.LocationCode,
             LotId = line.LotId,
-            LotNo = line.LotNo,
+            LotNo = kit && line.LotNo == System ? null : line.LotNo,
             DnQty = line.DnQty,
+            ItemType = line.ItemType,
             DnPrc = line.DnPrc,
             DcCd = line.DcCd,
             DcRate = line.DcRate,

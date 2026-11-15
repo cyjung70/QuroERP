@@ -214,7 +214,7 @@ public class SalesInvoiceScreenTests : BunitContext
             ((long?)21L, "L1", 2m, (long?)5001L), (null, "L2", 1m, 5001L), (null, null, 1m, 5001L));
     }
 
-    [Fact, Trait("Id", "SD-UT-517"), Trait("Rule", "SD-BR-517")]
+    [Fact, Trait("Id", "SD-UT-517"), Trait("Rule", "SD-BR-517"), Trait("Rule", "SD-BR-518")]
     public void KitLine_ShowsItsComponentRows_ReadOnly_AndNotSaved()
     {
         _api.Invoice = Invoice() with
@@ -223,7 +223,8 @@ public class SalesInvoiceScreenTests : BunitContext
             [
                 Invoice().Lines[0] with
                 {
-                    ItemId = 12, ItemCd = "PANEL", ItemName = "Panel Kit", ShowComponents = true,
+                    ItemId = 12, ItemCd = "PANEL", ItemName = "Panel Kit", ShowComponents = true, ItemType = "KIT",
+                    LocationId = 20, LocationCode = "*", LotId = 30, LotNo = "*",
                     Components = [new SalesInvoiceComponentDto(11, "BOLT", "Hex Bolt", "EA", 8m)],
                 },
             ],
@@ -231,6 +232,9 @@ public class SalesInvoiceScreenTests : BunitContext
         var page = RenderAs("admin", "DN0000001");
         var lines = Lines(page);
         page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
+
+        var kit = Frame(page).Lines.GetItem(lines.KeyOf(0));
+        (kit.LocationCode, kit.LotNo).Should().Be(((string?)null, (string?)null), "a Kit line's '*' keys show blank");
 
         var component = Frame(page).Lines.GetItem(lines.KeyOf(1));
         (component.IsComponent, component.ItemCd, component.ItemName, component.DnQty, component.DnPrc, component.DnAmt)

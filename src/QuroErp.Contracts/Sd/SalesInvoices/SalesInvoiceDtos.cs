@@ -92,7 +92,8 @@ public sealed record SalesInvoiceDto(
 /// One line. ShipNo/ShipSeq name the shipment line it bills, SoNo/SoSeq the order line. ShippedQty, CancelledQty and UnshippedQty
 /// are a BILL_THEN_SHIP line's progress (SD-BR-143, SD-BR-147). StdPrc is the item's standard sales price. LocationId/LocationCode
 /// and LotId/LotNo are the stock key a BILL_THEN_SHIP line moved to the consignment warehouse (SD-BR-142, MM-BR-716). ShowComponents
-/// is the item's show-components flag; Components are the BOM rows of a Kit or Set line when it is on (SD-BR-517).
+/// is the item's show-components flag; Components are the BOM rows of a Kit or Set line when it is on (SD-BR-517). ItemType is the
+/// item's type, so the screen can show a Kit line's stored '*' keys as blank (SD-BR-518).
 /// </summary>
 public sealed record SalesInvoiceLineDto(
     long Id,
@@ -126,7 +127,8 @@ public sealed record SalesInvoiceLineDto(
     long? LocationId = null,
     string? LocationCode = null,
     bool ShowComponents = false,
-    IReadOnlyList<SalesInvoiceComponentDto>? Components = null);
+    IReadOnlyList<SalesInvoiceComponentDto>? Components = null,
+    string? ItemType = null);
 
 /// <summary>A component row under a Kit or Set line: the BOM qty × the line qty, without amounts (SD-BR-517).</summary>
 public sealed record SalesInvoiceComponentDto(long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal Qty);

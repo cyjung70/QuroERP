@@ -671,7 +671,7 @@ public sealed class SalesInvoiceService(
                 l.Id, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.Unit, l.WarehouseId, l.WarehouseCode, l.LotId, l.LotNo, l.DnQty, l.DnPrc, l.DnAmt,
                 l.DcCd, l.DcRate, l.StdPrc, l.TaxCodeId, l.SupplyAmt, l.TaxAmt, l.SalesOrderLineId, l.SoNo, l.SoSeq, l.ShipmentLineId, l.ShipNo,
                 l.ShipSeq, l.ShippedQty, l.CancelledQty, IsBillFirst(l.ToStored()) ? l.DnQty - l.ShippedQty - l.CancelledQty : 0m,
-                l.LocationId, l.LocationCode, l.ShowComponents, components.GetValueOrDefault(l.Seq)))],
+                l.LocationId, l.LocationCode, l.ShowComponents, components.GetValueOrDefault(l.Seq), l.ItemType))],
             [.. cancellations.Select(x => new SalesInvoiceCancellationDto(x.Id, x.CmNo, x.CmDt, x.TotDnAmt, x.BalAmt, x.TotDnAmt != x.BalAmt))],
             r.UpdatedAt, r.CreatedAt, r.CreatedBy, r.UpdatedBy);
     }
