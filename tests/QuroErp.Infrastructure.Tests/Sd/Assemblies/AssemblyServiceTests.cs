@@ -193,6 +193,8 @@ public class AssemblyServiceTests(AuthSchemaFixture db)
         await ReceiveAsync(m.C1, 20m, 50m);
         await ReceiveAsync(m.C2, 10m, 30m);
         var assembly = await Service.AssembleAsync(new SaveAssemblyRequest(m.Set, 2m, Day, m.Main, null), "kim", None);
+        // Another Set Lot keeps the item's total above zero, so only the Lot balance can refuse
+        await Service.AssembleAsync(new SaveAssemblyRequest(m.Set, 2m, Day, m.Main, null), "kim", None);
         var setLot = (await QueryAsync<long>(
             "SELECT id FROM mm_lot WHERE item_id = @Item AND lot_no = @No", new { Item = m.Set, No = assembly.SetLotNo })).Single();
         await PostAsync(new StockMovementRequest("GI", Day, m.Set, m.Main, -2m, RefKey: "GI-TEST", RefSeq: 1, LotId: setLot));
@@ -203,7 +205,23 @@ public class AssemblyServiceTests(AuthSchemaFixture db)
         (await CountAsync("SELECT count(*) FROM mm_assembly WHERE source_assembly_id = @Id", assembly.Id)).Should().Be(0);
     }
 
-    [DatabaseFact, Trait("Id", "SD-UC-055-T08"), Trait("Id", "SD-UC-055-T10"), Trait("Rule", "MM-BR-001"), Trait("Rule", "MM-BR-009")]
+    // The component is there on the assembly date, but a later issue already took it, so the on-hand now would go below zero
+    [DatabaseFact, Trait("Id", "SD-UC-055-T08"), Trait("Rule", "MM-BR-001")]
+    public async Task Deny_RefusesAnAssemblyThatMakesTheOnHandNegative()
+    {
+        await ModeAsync(Deny);
+        var m = await MastersAsync();
+        await ReceiveAsync(m.C1, 10m, 50m);
+        await ReceiveAsync(m.C2, 10m, 30m);
+        await PostAsync(new StockMovementRequest("GI", new DateOnly(2026, 11, 20), m.C1, m.Main, -8m, RefKey: "GI-TEST", RefSeq: 1));
+
+        var act = () => Service.AssembleAsync(new SaveAssemblyRequest(m.Set, 3m, Day, m.Main, null), "kim", None);
+
+        (await act.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(StockPolicy.InsufficientStock);
+        (await CountAsync("SELECT count(*) FROM mm_assembly WHERE set_item_id = @Id", m.Set)).Should().Be(0);
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UC-055-T10"), Trait("Rule", "MM-BR-009")]
     public async Task Deny_RefusesABackDatedAssemblyThatMakesALaterDateNegative()
     {
         await ModeAsync(Deny);
@@ -211,6 +229,7 @@ public class AssemblyServiceTests(AuthSchemaFixture db)
         await ReceiveAsync(m.C1, 10m, 50m);
         await ReceiveAsync(m.C2, 10m, 30m);
         await PostAsync(new StockMovementRequest("GI", new DateOnly(2026, 11, 20), m.C1, m.Main, -8m, RefKey: "GI-TEST", RefSeq: 1));
+        await ReceiveAsync(m.C1, 10m, 50m, date: new DateOnly(2026, 11, 25));
 
         var act = () => Service.AssembleAsync(new SaveAssemblyRequest(m.Set, 3m, Day, m.Main, null), "kim", None);
 
