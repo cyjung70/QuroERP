@@ -974,6 +974,52 @@
   <data name="Sd.Shipment.RemainingQty" xml:space="preserve"><value>남은 수량</value></data>
   <data name="Sd.Shipment.ImportLines" xml:space="preserve"><value>가져오기</value></data>
   <data name="Sd.Shipment.Path" xml:space="preserve"><value>SD &gt; 판매</value></data>
+  <data name="Sd.Assembly.Title" xml:space="preserve"><value>Set 조립</value></data>
+  <data name="Sd.Assembly.Path" xml:space="preserve"><value>SD &gt; 판매</value></data>
+  <data name="Sd.Assembly.AssemblyNo" xml:space="preserve"><value>조립 번호</value></data>
+  <data name="Sd.Assembly.Kind" xml:space="preserve"><value>구분</value></data>
+  <data name="Sd.Assembly.Kind.ASSEMBLE" xml:space="preserve"><value>조립</value></data>
+  <data name="Sd.Assembly.Kind.DISASSEMBLE" xml:space="preserve"><value>해체</value></data>
+  <data name="Sd.Assembly.Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Sd.Assembly.Status.OP" xml:space="preserve"><value>정상</value></data>
+  <data name="Sd.Assembly.Status.VO" xml:space="preserve"><value>취소</value></data>
+  <data name="Sd.Assembly.AssemblyDt" xml:space="preserve"><value>조립일</value></data>
+  <data name="Sd.Assembly.SetItemId" xml:space="preserve"><value>Set 품목</value></data>
+  <data name="Sd.Assembly.FindSet" xml:space="preserve"><value>Set 품목 찾기</value></data>
+  <data name="Sd.Assembly.NotASet" xml:space="preserve"><value>{0}은(는) Set 품목이 아닙니다. 유형이 SET인 품목만 조립합니다.</value></data>
+  <data name="Sd.Assembly.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Sd.Assembly.QtyLeft" xml:space="preserve"><value>해체 가능 수량</value></data>
+  <data name="Sd.Assembly.WarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Sd.Assembly.WarehouseName" xml:space="preserve"><value>창고명</value></data>
+  <data name="Sd.Assembly.FindWarehouse" xml:space="preserve"><value>창고 찾기</value></data>
+  <data name="Sd.Assembly.LocationId" xml:space="preserve"><value>받는 Location</value></data>
+  <data name="Sd.Assembly.SetLotNo" xml:space="preserve"><value>Set Lot</value></data>
+  <data name="Sd.Assembly.SourceAssemblyNo" xml:space="preserve"><value>원 조립 번호</value></data>
+  <data name="Sd.Assembly.Remarks" xml:space="preserve"><value>비고</value></data>
+  <data name="Sd.Assembly.FindFrom" xml:space="preserve"><value>조립일 시작</value></data>
+  <data name="Sd.Assembly.FindTo" xml:space="preserve"><value>조립일 끝</value></data>
+  <data name="Sd.Assembly.Seq" xml:space="preserve"><value>순번</value></data>
+  <data name="Sd.Assembly.ItemCd" xml:space="preserve"><value>구성품 코드</value></data>
+  <data name="Sd.Assembly.ItemName" xml:space="preserve"><value>구성품명</value></data>
+  <data name="Sd.Assembly.ComponentQty" xml:space="preserve"><value>Set당 수량</value></data>
+  <data name="Sd.Assembly.LineQty" xml:space="preserve"><value>수량</value></data>
+  <data name="Sd.Assembly.LocationCode" xml:space="preserve"><value>Location</value></data>
+  <data name="Sd.Assembly.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Sd.Assembly.Prc" xml:space="preserve"><value>단가</value></data>
+  <data name="Sd.Assembly.Amt" xml:space="preserve"><value>금액</value></data>
+  <data name="Sd.Assembly.ShortCount" xml:space="preserve"><value>재고 부족 구성품</value></data>
+  <data name="Sd.Assembly.ShortCell" xml:space="preserve"><value>재고가 모자랍니다.</value></data>
+  <data name="Sd.Assembly.ShortStock" xml:space="preserve"><value>재고가 모자란 구성품이 있어 조립할 수 없습니다. 표시한 줄의 수량만큼 재고가 더 필요합니다.</value></data>
+  <data name="Sd.Assembly.LinesHint" xml:space="preserve"><value>구성품의 Location·Lot은 시스템이 FIFO로 정합니다.</value></data>
+  <data name="Sd.Assembly.Void" xml:space="preserve"><value>취소</value></data>
+  <data name="Sd.Assembly.ConfirmVoid" xml:space="preserve"><value>취소할까요? 이 문서의 재고 이동이 반대로 기록됩니다.</value></data>
+  <data name="Sd.Assembly.Disassemble" xml:space="preserve"><value>해체</value></data>
+  <data name="Sd.Assembly.DisassembleHint" xml:space="preserve"><value>해체할 수 있는 수량: {0}. 구성품은 조립 때 쓴 Lot·단가로 돌아옵니다.</value></data>
+  <data name="Sd.Assembly.DisassembleQty" xml:space="preserve"><value>해체 수량</value></data>
+  <data name="Sd.Assembly.DisassemblyDt" xml:space="preserve"><value>해체일</value></data>
+  <data name="Sd.Assembly.ReceiveLocationId" xml:space="preserve"><value>구성품 받는 Location</value></data>
+  <data name="Menu.G3SD04" xml:space="preserve"><value>매출 송장</value></data>
+  <data name="Menu.G3SD05" xml:space="preserve"><value>Set 조립</value></data>
   <data name="Sd.Shipment.Title" xml:space="preserve"><value>출하</value></data>
   <data name="Sd.Shipment.ShipNo" xml:space="preserve"><value>출하 번호</value></data>
   <data name="Sd.Shipment.ShipDt" xml:space="preserve"><value>출하일</value></data>

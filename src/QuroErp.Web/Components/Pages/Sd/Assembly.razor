@@ -1,0 +1,462 @@
+@page "/sd/assembly"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Data
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Bc.Localization
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.Locations
+@using QuroErp.Contracts.Mm.Warehouses
+@using QuroErp.Contracts.Sd.Assemblies
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Bc.UserProfiles
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Components.Pages.Sd.Models
+@using QuroErp.Web.Mm.Locations
+@using QuroErp.Web.Mm.Warehouses
+@using QuroErp.Web.Sd.Assemblies
+@inject AssemblyApiClient Api
+@inject ItemApiClient ItemApi
+@inject LocalizationApiClient LocalizationApi
+@inject WarehouseApiClient WarehouseApi
+@inject UserProfileApiClient ProfileApi
+@inject LocationApiClient LocationApi
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
+
+@* SD-UC-055 Set assembly and disassembly, screen type SM on the entry frame (entry-frame.md). The API checks every rule and posts
+   the stock (SD-BR-514~516, MM-BR-001~010); this screen shows the components' FIFO Locations and Lots before the save
+   (SD-BR-518) and the saved parts after it. The lines are read only: the system picks the component Locations and Lots and the Set
+   Lot. A saved row does not change; it is voided, and an open assembly can be disassembled. *@
+
+<PageTitle>@L["Sd.Assembly.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="assembly-load-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroHeaderDetail @ref="_frame" THeader="AssemblyHeader" TLine="AssemblyLine" Title="@L["Sd.Assembly.Title"]"
+                      TestId="assembly" Path="@L["Sd.Assembly.Path"]" PolicyScreen="Sd.Assembly" ReadOnly="!_canEdit"
+                      FindKeywordLabel="@L["Sd.Assembly.AssemblyNo"]" DocumentNo="a => a.AssemblyNo"
+                      Find="FindAsync" Load="LoadAsync" Create="CreateHeader" CreateLine="_ => new AssemblyLine()" Save="SaveAsync"
+                      Definition="sd.assembly.entry" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
+                      ColumnFormats="Formats" CanAddLine="false" IsLineLocked="_ => true" IsLineRemovable="_ => false"
+                      CanSave="AssemblyStatus.CanSave" LinesHint="LinesHint">
+        <FindFilters>
+            <QuroDate Label="@L["Sd.Assembly.FindFrom"]" @bind-Value="_findFrom" TestId="assembly-find-from" />
+            <QuroDate Label="@L["Sd.Assembly.FindTo"]" @bind-Value="_findTo" TestId="assembly-find-to" />
+            <QuroSelect Label="@L["Sd.Assembly.Kind"]" @bind-Value="_findKind" Options="_kindOptions" TestId="assembly-find-kind" />
+        </FindFilters>
+        <FindColumns>
+            <QuroColumn TRow="AssemblyHeader" Title="@L["Sd.Assembly.AssemblyNo"]" Value="a => a.AssemblyNo" />
+            <QuroColumn TRow="AssemblyHeader" Title="@L["Sd.Assembly.Kind"]" Value="a => KindText(a.Kind)" />
+            <QuroColumn TRow="AssemblyHeader" Title="@L["Sd.Assembly.AssemblyDt"]" Value="a => a.AssemblyDt" />
+            <QuroColumn TRow="AssemblyHeader" Title="@L["Sd.Assembly.SetItemId"]" Value="a => a.SetItemCd" />
+            <QuroColumn TRow="AssemblyHeader" Title="@L["Sd.Assembly.Qty"]" Value="a => QtyText(a.Qty)" />
+            <QuroColumn TRow="AssemblyHeader" Title="@L["Sd.Assembly.QtyLeft"]" Value="a => QtyText(a.QtyLeft)" />
+            <QuroColumn TRow="AssemblyHeader" Title="@L["Sd.Assembly.Status"]" Value="a => StatusText(a.Status)" />
+        </FindColumns>
+        <StatusChip Context="a">
+            <QuroStatusChip Code="@(a.Kind ?? "")" Kind="ChipKind.Brand" Text="@KindText(a.Kind)" />
+            <QuroStatusChip Code="@(a.Status ?? "")" Kind="AssemblyStatus.ChipOf(a.Status)" Text="@StatusText(a.Status)" />
+        </StatusChip>
+        <StatusCommands Context="a">
+            <button type="button" disabled="@(!_canEdit || !AssemblyStatus.CanDisassemble(a))" data-testid="assembly-toolbar-disassemble"
+                    @onclick="OpenDisassemble">@L["Sd.Assembly.Disassemble"]</button>
+        </StatusCommands>
+        <OutputCommands Context="a">
+            <button type="button" class="quro-danger-text" disabled="@(!_canEdit || !AssemblyStatus.CanVoid(a))"
+                    data-testid="assembly-toolbar-void" @onclick="VoidAsync">@L["Sd.Assembly.Void"]</button>
+        </OutputCommands>
+        <HeaderFields Context="a">
+            @* 1: Set (2), qty, date *@
+            <div class="quro-lookup-field quro-span-2">
+                <QuroText Label="@L["Sd.Assembly.SetItemId"]" Field="SetItemCd" Required TextCase="TextCase.Upper"
+                          TestId="assembly-header-set-item-cd" />
+                <button type="button" aria-label="@L["Sd.Assembly.FindSet"]" disabled="@(!CanChange(a))"
+                        data-testid="assembly-header-set-item-lookup" @onclick="() => _setLookupOpen = true">…</button>
+                <span class="quro-lookup-name" data-testid="assembly-header-set-item-name">@a.SetItemName</span>
+            </div>
+            <QuroNumber Label="@L["Sd.Assembly.Qty"]" Field="Qty" Required TestId="assembly-header-qty" />
+            <QuroDate Label="@L["Sd.Assembly.AssemblyDt"]" Field="AssemblyDt" Required TestId="assembly-header-assembly-dt" />
+            @* 2: warehouse, receiving Location, Set Lot, source assembly *@
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Sd.Assembly.WarehouseId"]" Field="WarehouseCode" Required TextCase="TextCase.Upper"
+                          TestId="assembly-header-warehouse-code" />
+                <button type="button" aria-label="@L["Sd.Assembly.FindWarehouse"]" disabled="@(!CanChange(a))"
+                        data-testid="assembly-header-warehouse-lookup" @onclick="() => _warehouseLookupOpen = true">…</button>
+            </div>
+            <QuroSelect Label="@L["Sd.Assembly.LocationId"]" Field="LocationCode" Options="_locationOptions" TestId="assembly-header-location-code" />
+            <QuroText Label="@L["Sd.Assembly.SetLotNo"]" Field="SetLotNo" LockMode="LockMode.Always" TestId="assembly-header-set-lot-no" />
+            <QuroText Label="@L["Sd.Assembly.SourceAssemblyNo"]" Field="SourceAssemblyNo" LockMode="LockMode.Always"
+                      TestId="assembly-header-source-assembly-no" />
+            <QuroText Label="@L["Sd.Assembly.Remarks"]" Field="Remarks" Rows="2" Span="4" TestId="assembly-header-remarks" />
+        </HeaderFields>
+        <Totals Context="lines">
+            @* The components' amount: the preview at the moving average cost now, or what the saved row took or gave back *@
+            <div class="quro-totals-row" data-testid="assembly-totals-short-count">
+                <span>@L["Sd.Assembly.ShortCount"]</span><b>@lines.Where(l => l.ShortQty > 0).Select(l => l.ItemId).Distinct().Count()</b>
+            </div>
+            <div class="quro-totals-total" data-testid="assembly-totals-amt">
+                <span>@L["Sd.Assembly.Amt"]</span>
+                <span><b>@AmountText(lines.Sum(l => l.Amt))</b><small>@_decimals.BaseCurrencyCode</small></span>
+            </div>
+        </Totals>
+    </QuroHeaderDetail>
+
+    <QuroLookupDialog TItem="ItemDto" Title="@L["Sd.Assembly.FindSet"]" TestId="assembly-set-lookup"
+                      @bind-Visible="_setLookupOpen" Search="FindSetsAsync" OnSelected="SelectSet">
+        <Columns>
+            <QuroColumn TRow="ItemDto" Title="@L["Sd.Assembly.ItemCd"]" Value="i => i.ItemCd" />
+            <QuroColumn TRow="ItemDto" Title="@L["Sd.Assembly.ItemName"]" Value="i => i.ItemName" />
+        </Columns>
+    </QuroLookupDialog>
+
+    <QuroLookupDialog TItem="WarehouseOptionDto" Title="@L["Sd.Assembly.FindWarehouse"]" TestId="assembly-warehouse-lookup"
+                      @bind-Visible="_warehouseLookupOpen" Search="FindWarehousesAsync" OnSelected="SelectWarehouse">
+        <Columns>
+            <QuroColumn TRow="WarehouseOptionDto" Title="@L["Sd.Assembly.WarehouseId"]" Value="w => w.WarehouseCode" />
+            <QuroColumn TRow="WarehouseOptionDto" Title="@L["Sd.Assembly.WarehouseName"]" Value="w => w.WarehouseName" />
+        </Columns>
+    </QuroLookupDialog>
+
+    @if (_disassembleOpen && _frame is not null)
+    {
+        <div class="quro-dialog-backdrop">
+            <div class="quro-dialog" role="dialog" aria-modal="true" aria-label="@L["Sd.Assembly.Disassemble"]" data-testid="assembly-disassemble">
+                <h2>@L["Sd.Assembly.Disassemble"] — @_frame.Header.AssemblyNo</h2>
+                <p>@L["Sd.Assembly.DisassembleHint", QtyText(_frame.Header.QtyLeft)]</p>
+                <QuroNumber Label="@L["Sd.Assembly.DisassembleQty"]" @bind-Value="_disassembleQty" Required TestId="assembly-disassemble-qty" />
+                <QuroDate Label="@L["Sd.Assembly.DisassemblyDt"]" @bind-Value="_disassemblyDt" Required TestId="assembly-disassemble-dt" />
+                <QuroSelect Label="@L["Sd.Assembly.ReceiveLocationId"]" @bind-Value="_disassembleLocation" Options="_disassembleLocations"
+                            TestId="assembly-disassemble-location" />
+                <div class="quro-dialog-actions">
+                    <button type="button" class="quro-primary" disabled="@(_disassembleQty is not > 0)" data-testid="assembly-disassemble-ok"
+                            @onclick="DisassembleAsync">@L["Sd.Assembly.Disassemble"]</button>
+                    <button type="button" data-testid="assembly-disassemble-close" @onclick="() => _disassembleOpen = false">@L["Common.Close"]</button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private const string ScreenPath = "/sd/assembly";
+    private const string UnavailableCode = "BC-E-003";
+    private const string NotFoundCode = "Common-E-006";
+    private const string NormalWarehouse = "NORMAL";
+    private const string SetType = "SET";
+    private const string Star = "*";
+    private const string ShortKey = "Sd.Assembly.ShortCell";
+    private static readonly string[] UpperCase = ["setItemCd", "warehouseCode"];
+
+    private QuroHeaderDetail<AssemblyHeader, AssemblyLine>? _frame;
+    private LocalizationDto? _localization;
+    private PurchaseOrderDecimals _decimals = new("USD", 2, 2, 2, PurchaseOrderCalculator.HalfUp, PurchaseOrderCalculator.LineMode, "USD", 2);
+    private IReadOnlyList<WarehouseOptionDto> _allWarehouses = [];
+    private IReadOnlyList<WarehouseOptionDto> _warehouses = [];
+    private IReadOnlyList<LocationOptionDto> _locations = [];
+    private IReadOnlyList<CodeItemDto> _locationOptions = [];
+    private IReadOnlyList<LocationOptionDto> _sourceLocations = [];
+    private IReadOnlyList<CodeItemDto> _disassembleLocations = [];
+    private IReadOnlyList<CodeItemDto> _kindOptions = [];
+    private DateOnly? _findFrom;
+    private DateOnly? _findTo;
+    private string? _findKind;
+    private string? _defaultWarehouseCode;
+    private decimal? _disassembleQty;
+    private DateOnly? _disassemblyDt;
+    private string? _disassembleLocation;
+    private bool _canEdit;
+    private bool _ready;
+    private bool _setLookupOpen;
+    private bool _warehouseLookupOpen;
+    private bool _disassembleOpen;
+    private bool _applying;
+    private string? _loadError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
+        _kindOptions = [.. AssemblyStatus.Kinds.Select(k => new CodeItemDto(k, KindText(k)))];
+        try
+        {
+            var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            _localization = await LocalizationApi.GetAsync(lang, CancellationToken.None);
+            _decimals = PurchaseOrderDecimals.Of(_localization, null);
+            _allWarehouses = await WarehouseApi.GetOptionsAsync(CancellationToken.None);
+            _warehouses = [.. _allWarehouses.Where(w => w.UseYn && w.WarehouseType == NormalWarehouse)];
+
+            // The user's default warehouse, else the company default warehouse (MM-BR-702, MM-BR-703)
+            var profile = await ProfileApi.GetAsync(CancellationToken.None);
+            var companyDefault = (await WarehouseApi.SearchAsync(false, CancellationToken.None)).FirstOrDefault(w => w.IsDefault)?.Id;
+            var warehouse = _warehouses.FirstOrDefault(w => w.Id == profile.DefaultWarehouseId) ?? _warehouses.FirstOrDefault(w => w.Id == companyDefault);
+            _defaultWarehouseCode = warehouse?.WarehouseCode;
+            await LoadLocationsAsync(warehouse?.Id);
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // A new assembly is dated today in the user's default warehouse, received at Location '*'
+    private AssemblyHeader CreateHeader() => new()
+    {
+        Kind = AssemblyStatus.Assemble,
+        AssemblyDt = DateOnly.FromDateTime(DateTime.Today),
+        WarehouseCode = _defaultWarehouseCode,
+        LocationCode = Star,
+    };
+
+    private IReadOnlyDictionary<string, string> Formats => new Dictionary<string, string>
+    {
+        ["componentQty"] = N(_decimals.Qty),
+        ["qty"] = N(_decimals.Qty),
+        ["prc"] = N(_decimals.Price),
+        ["amt"] = N(_decimals.Amount),
+    };
+
+    private static string N(int decimals) => "N" + decimals.ToString(CultureInfo.InvariantCulture);
+
+    // The find dialog (F3): period and kind go to the list API; the number filters here
+    private async Task<IReadOnlyList<AssemblyHeader>> FindAsync(string? keyword)
+    {
+        var rows = await Api.SearchAsync(new AssemblySearchQuery { From = _findFrom, To = _findTo, Kind = _findKind }, CancellationToken.None);
+        var text = keyword?.Trim();
+        return [.. rows.Where(r => string.IsNullOrEmpty(text) || r.AssemblyNo.Contains(text, StringComparison.OrdinalIgnoreCase))
+            .Select(AssemblyHeader.From)];
+    }
+
+    private async Task<HeaderLines<AssemblyHeader, AssemblyLine>?> LoadAsync(AssemblyHeader picked) =>
+        await DocumentAsync(picked.Id);
+
+    private async Task<HeaderLines<AssemblyHeader, AssemblyLine>> DocumentAsync(long id)
+    {
+        var assembly = await Api.GetAsync(id, CancellationToken.None);
+        return new HeaderLines<AssemblyHeader, AssemblyLine>(AssemblyHeader.From(assembly), [.. assembly.Lines.Select(AssemblyLine.From)]);
+    }
+
+    // SD-BR-514: the API allocates the components again in the save's transaction, so the preview lines are not sent
+    private async Task<HeaderLines<AssemblyHeader, AssemblyLine>> SaveAsync(AssemblyHeader a, bool isNew, BatchChanges<AssemblyLine> changes)
+    {
+        var request = new SaveAssemblyRequest(
+            a.SetItemId, a.Qty, a.AssemblyDt, WarehouseOf(a.WarehouseCode)?.Id, LocationIdOf(_locations, a.LocationCode), Clean(a.Remarks));
+        var created = await Api.AssembleAsync(request, CancellationToken.None);
+        return await DocumentAsync(created.Id);
+    }
+
+    // MM-BR-601: void reverses the movements, after a question; an assembly with a disassembly is refused (SD-E-516)
+    private Task VoidAsync() => _frame!.RunStatusAsync(
+        async a =>
+        {
+            await Api.VoidAsync(a.Id, a.UpdatedAt!.Value, CancellationToken.None);
+            return await DocumentAsync(a.Id);
+        },
+        L["Sd.Assembly.ConfirmVoid"]);
+
+    // SD-BR-516: the qty left by default, today, and the receiving Location '*' of the assembly's warehouse
+    private async Task OpenDisassemble()
+    {
+        var a = _frame!.Header;
+        await _frame.RunCommandAsync(async () =>
+        {
+            _sourceLocations = await LocationOptionsAsync(WarehouseOf(a.WarehouseCode)?.Id);
+            _disassembleLocations = Options(_sourceLocations);
+            _disassembleQty = a.QtyLeft;
+            _disassemblyDt = DateOnly.FromDateTime(DateTime.Today);
+            _disassembleLocation = Star;
+            _disassembleOpen = true;
+        });
+    }
+
+    // The new disassembly opens; an API error shows in the message line
+    private Task DisassembleAsync()
+    {
+        _disassembleOpen = false;
+        var request = new DisassembleRequest(_disassembleQty, _disassemblyDt, LocationIdOf(_sourceLocations, _disassembleLocation));
+        return _frame!.RunStatusAsync(async a => await DocumentAsync((await Api.DisassembleAsync(a.Id, request, CancellationToken.None)).Id));
+    }
+
+    // A typed Set or warehouse code is matched exactly; a change of the Set, qty, date or warehouse shows the allocation again
+    private void HeaderChanged(string field)
+    {
+        if (_applying || _frame is null || _frame.Header.IsSaved)
+        {
+            return;
+        }
+        if (Is(field, nameof(AssemblyHeader.SetItemCd)))
+        {
+            var code = _frame.Header.SetItemCd?.Trim();
+            _ = InvokeAsync(() => _frame.RunCommandAsync(() => FindSetAsync(code)));
+        }
+        else if (Is(field, nameof(AssemblyHeader.WarehouseCode)))
+        {
+            _ = InvokeAsync(() => _frame.RunCommandAsync(() => ChangeWarehouseAsync(_frame.Header.WarehouseCode?.Trim())));
+        }
+        else if (Is(field, nameof(AssemblyHeader.Qty)) || Is(field, nameof(AssemblyHeader.AssemblyDt)))
+        {
+            _ = InvokeAsync(() => _frame.RunCommandAsync(PreviewAsync));
+        }
+    }
+
+    private async Task FindSetAsync(string? code)
+    {
+        var item = string.IsNullOrEmpty(code) ? null : await ItemApi.FindByCodeAsync(code, CancellationToken.None);
+        if (item is null || item.ItemType != SetType)
+        {
+            UseSet(null, null);
+            await PreviewAsync();
+            if (!string.IsNullOrEmpty(code))
+            {
+                throw new ApiProblemException(new ApiProblem(404, item is null ? NotFoundCode : "Sd.Assembly.NotASet", [code]));
+            }
+            return;
+        }
+        UseSet(item.Id, item.ItemName);
+        await PreviewAsync();
+    }
+
+    private void UseSet(long? id, string? name)
+    {
+        var a = _frame!.Header;
+        a.SetItemId = id;
+        a.SetItemName = name;
+    }
+
+    // Only general warehouses in use assemble (MM-BR-703); the Location goes back to '*'
+    private async Task ChangeWarehouseAsync(string? code)
+    {
+        var warehouse = string.IsNullOrEmpty(code) ? null : _warehouses.FirstOrDefault(w => Is(w.WarehouseCode, code));
+        if (warehouse is null && !string.IsNullOrEmpty(code))
+        {
+            SetQuietly(nameof(AssemblyHeader.WarehouseCode), null);
+        }
+        await LoadLocationsAsync(warehouse?.Id);
+        SetQuietly(nameof(AssemblyHeader.LocationCode), Star);
+        await PreviewAsync();
+        if (warehouse is null && !string.IsNullOrEmpty(code))
+        {
+            throw new ApiProblemException(new ApiProblem(404, NotFoundCode, [code]));
+        }
+    }
+
+    // SD-BR-518: the FIFO parts of each component at the moving average cost now; a short component's row is marked
+    private async Task PreviewAsync()
+    {
+        var a = _frame!.Header;
+        var warehouseId = WarehouseOf(a.WarehouseCode)?.Id;
+        IReadOnlyList<AssemblyLine> rows = [];
+        if (a.SetItemId is { } setItemId && a.Qty is > 0 && warehouseId is not null)
+        {
+            var preview = await Api.PreviewAsync(
+                new AssemblyPreviewQuery { SetItemId = setItemId, Qty = a.Qty, WarehouseId = warehouseId, AssemblyDt = a.AssemblyDt }, CancellationToken.None);
+            rows = [.. AssemblyLine.Rows(preview)];
+        }
+        var lines = _frame.Lines;
+        foreach (var key in lines.RowKeys.ToList())
+        {
+            lines.DeleteRow(key);
+        }
+        _frame.AppendLines(rows);
+        foreach (var key in lines.RowKeys.Where(k => lines.GetItem(k).ShortQty > 0))
+        {
+            lines.SetCellMark(key, "qty", new CellMark(CellMarkLevel.Warning, ShortKey));
+        }
+        if (rows.Any(r => r.ShortQty > 0))
+        {
+            _frame.ShowMessage(L["Sd.Assembly.ShortStock"], isError: true);
+        }
+    }
+
+    private Task<IReadOnlyList<ItemDto>> FindSetsAsync(string? keyword) => FindSetsCoreAsync(keyword);
+
+    // The item search has no type filter, so the Sets of the first result page are shown
+    private async Task<IReadOnlyList<ItemDto>> FindSetsCoreAsync(string? keyword) =>
+        [.. (await ItemApi.LookupAsync(keyword, CancellationToken.None)).Where(i => i.ItemType == SetType)];
+
+    private Task SelectSet(ItemDto item)
+    {
+        SetQuietly(nameof(AssemblyHeader.SetItemCd), item.ItemCd);
+        UseSet(item.Id, item.ItemName);
+        return _frame!.RunCommandAsync(PreviewAsync);
+    }
+
+    private Task<IReadOnlyList<WarehouseOptionDto>> FindWarehousesAsync(string? keyword)
+    {
+        var text = keyword?.Trim();
+        return Task.FromResult<IReadOnlyList<WarehouseOptionDto>>([.. _warehouses.Where(w => string.IsNullOrEmpty(text)
+            || w.WarehouseCode.Contains(text, StringComparison.OrdinalIgnoreCase)
+            || w.WarehouseName.Contains(text, StringComparison.OrdinalIgnoreCase))]);
+    }
+
+    private Task SelectWarehouse(WarehouseOptionDto warehouse)
+    {
+        SetQuietly(nameof(AssemblyHeader.WarehouseCode), warehouse.WarehouseCode);
+        return _frame!.RunCommandAsync(() => ChangeWarehouseAsync(warehouse.WarehouseCode));
+    }
+
+    private async Task LoadLocationsAsync(long? warehouseId)
+    {
+        _locations = await LocationOptionsAsync(warehouseId);
+        _locationOptions = Options(_locations);
+    }
+
+    // The warehouse's Locations in use, '*' first (MM-BR-713)
+    private async Task<IReadOnlyList<LocationOptionDto>> LocationOptionsAsync(long? warehouseId) =>
+        warehouseId is { } id ? await LocationApi.GetOptionsAsync(id, CancellationToken.None) : [];
+
+    private static IReadOnlyList<CodeItemDto> Options(IReadOnlyList<LocationOptionDto> locations) =>
+        [new CodeItemDto(Star, Star), .. locations.Where(l => l.LocationCode != Star)
+            .Select(l => new CodeItemDto(l.LocationCode, string.IsNullOrEmpty(l.LocationName) ? l.LocationCode : $"{l.LocationCode} {l.LocationName}"))];
+
+    // '*' is sent as null, which the API reads as the warehouse's Location '*'
+    private static long? LocationIdOf(IReadOnlyList<LocationOptionDto> locations, string? code) =>
+        string.IsNullOrEmpty(code) || code == Star ? null : locations.FirstOrDefault(l => l.LocationCode == code)?.Id;
+
+    private void SetQuietly(string field, object? value)
+    {
+        var applying = _applying;
+        _applying = true;
+        try
+        {
+            _frame!.SetHeaderValue(field, value);
+        }
+        finally
+        {
+            _applying = applying;
+        }
+    }
+
+    private bool CanChange(AssemblyHeader a) => _canEdit && !a.IsSaved;
+
+    private string? LinesHint(AssemblyHeader a) => a.IsSaved ? null : L["Sd.Assembly.LinesHint"].Value;
+
+    private string KindText(string? kind) => kind is null ? "" : L["Sd.Assembly.Kind." + kind].Value;
+
+    private string StatusText(string? status) => status is null ? "" : L["Sd.Assembly.Status." + status].Value;
+
+    private string QtyText(decimal? qty) => qty?.ToString(N(_decimals.Qty), CultureInfo.CurrentCulture) ?? "";
+
+    private string AmountText(decimal amount) => amount.ToString(N(_decimals.Amount), CultureInfo.CurrentCulture);
+
+    private WarehouseOptionDto? WarehouseOf(string? code) =>
+        code is null ? null : _allWarehouses.FirstOrDefault(w => Is(w.WarehouseCode, code));
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+}
