@@ -1,0 +1,382 @@
+@page "/mm/pallet"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.Pallets
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.Pallets
+@using QuroErp.Web.Mm.Warehouses
+@inject PalletApiClient Api
+@inject ItemApiClient ItemApi
+@inject WarehouseApiClient WarehouseApi
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
+
+@* MM-UC-035 Pallets, screen type M. Search by Pallet number (a scanner types it and Enter), item, warehouse and status; the grid
+   is read only. Split puts a part of the current Pallet on a new Pallet (MM-BR-914); merge empties other ACTIVE Pallets of the
+   same item, Lot, warehouse and Location into the current one (MM-BR-915). Neither moves stock. The history of the current row is
+   under the grid (MM-BR-916). The API checks every rule. *@
+
+<PageTitle>@L["Mm.Pallet.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="pallet-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="PalletRow" Title="@L["Mm.Pallet.Title"]" TestId="pallet" Path="@L["Menu.G2MM"]" LoadOnStart
+                   Definition="mm.pallet.list" Load="LoadAsync" CanWrite="false" OnReset="ResetSearch">
+        <SearchContent>
+            <QuroText Label="@L["Mm.Pallet.PalletNo"]" @bind-Value="_palletNo" TextCase="TextCase.Upper" TestId="pallet-search-pallet-no" />
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Mm.Pallet.ItemId"]" Value="@_itemText" LockMode="LockMode.Always" TestId="pallet-search-item" />
+                <button type="button" aria-label="@L["Mm.Pallet.FindItem"]" data-testid="pallet-search-item-lookup" @onclick="() => _itemLookupOpen = true">…</button>
+                <button type="button" aria-label="@L["Mm.Pallet.ClearItem"]" disabled="@(_itemId is null)" data-testid="pallet-search-item-clear" @onclick="ClearItem">×</button>
+            </div>
+            <QuroSelect Label="@L["Mm.Pallet.WarehouseId"]" @bind-Value="_warehouseId" Options="_warehouses" TestId="pallet-search-warehouse" />
+            <QuroSelect Label="@L["Mm.Pallet.Status"]" @bind-Value="_status" Options="_statuses" TestId="pallet-search-status" />
+        </SearchContent>
+        <ExtraCommands>
+            <button type="button" disabled="@(!_canEdit || Current is not { IsActive: true })" data-testid="pallet-toolbar-split" @onclick="OpenSplit">@L["Mm.Pallet.Split"]</button>
+            <button type="button" disabled="@(!_canEdit || Current is not { IsActive: true })" data-testid="pallet-toolbar-merge" @onclick="OpenMerge">@L["Mm.Pallet.Merge"]</button>
+        </ExtraCommands>
+    </QuroMultiGrid>
+
+    <section class="quro-panel quro-pallet-history" aria-label="@L["Mm.Pallet.History"]" data-testid="pallet-history">
+        <h2>@L["Mm.Pallet.History"]@(_history is null ? "" : $" — {_history.PalletNo}")</h2>
+        @if (_historyError is not null)
+        {
+            <p class="page-error" role="alert" data-testid="pallet-history-message">@_historyError</p>
+        }
+        else if (_history?.Events is { Count: > 0 } events)
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>@L["Mm.Pallet.EventType"]</th>
+                        <th>@L["Mm.Pallet.EventDt"]</th>
+                        <th>@L["Mm.Pallet.Qty"]</th>
+                        <th>@L["Mm.Pallet.RelatedPalletNo"]</th>
+                        <th>@L["Mm.Pallet.RefKey"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in events)
+                    {
+                        <tr data-testid="pallet-history-row">
+                            <td>@L[$"Mm.Pallet.Event.{e.EventType}"]</td>
+                            <td>@e.EventDt.ToString("d", CultureInfo.CurrentCulture)</td>
+                            <td class="quro-number">@Qty(e.Qty)</td>
+                            <td>@e.RelatedPalletNo</td>
+                            <td>@e.RefKey</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p data-testid="pallet-history-empty">@L["Mm.Pallet.NoHistory"]</p>
+        }
+    </section>
+
+    @if (_split is { } split)
+    {
+        <div class="quro-dialog-backdrop">
+            <div class="quro-dialog" role="dialog" aria-modal="true" aria-label="@L["Mm.Pallet.Split"]" data-testid="pallet-split">
+                <h2>@L["Mm.Pallet.Split"] — @split.PalletNo</h2>
+                <p>@L["Mm.Pallet.SplitHint", Qty(split.Qty)]</p>
+                <QuroNumber Label="@L["Mm.Pallet.SplitQty"]" @bind-Value="_splitQty" Required TestId="pallet-split-qty" />
+                @if (_dialogError is not null)
+                {
+                    <p class="page-error" role="alert" data-testid="pallet-split-message">@_dialogError</p>
+                }
+                <div class="quro-dialog-actions">
+                    <button type="button" class="quro-primary" disabled="@(_dialogBusy || _splitQty is null)" data-testid="pallet-split-ok" @onclick="SplitAsync">@L["Mm.Pallet.Split"]</button>
+                    <button type="button" data-testid="pallet-split-close" @onclick="CloseDialog">@L["Common.Close"]</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_mergeTarget is { } target)
+    {
+        <div class="quro-dialog-backdrop">
+            <div class="quro-dialog" role="dialog" aria-modal="true" aria-label="@L["Mm.Pallet.Merge"]" data-testid="pallet-merge">
+                <h2>@L["Mm.Pallet.Merge"] — @target.PalletNo</h2>
+                <p>@L["Mm.Pallet.MergeHint", target.ItemCd ?? "", target.LotNo ?? "", target.WarehouseCode ?? "", target.LocationCode ?? ""]</p>
+                @if (_candidates.Count == 0)
+                {
+                    <p data-testid="pallet-merge-empty">@L["Mm.Pallet.NoMergeCandidates"]</p>
+                }
+                else
+                {
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>@L["Common.Select"]</th>
+                                <th>@L["Mm.Pallet.PalletNo"]</th>
+                                <th>@L["Mm.Pallet.Qty"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var candidate in _candidates)
+                            {
+                                var row = candidate;
+                                <tr data-testid="pallet-merge-row">
+                                    <td>
+                                        <input type="checkbox" aria-label="@L["Common.Select"]" checked="@_picked.Contains(row.Id)"
+                                               data-testid="pallet-merge-check-@row.Id" @onchange="e => Pick(row.Id, e.Value is true)" />
+                                    </td>
+                                    <td>@row.PalletNo</td>
+                                    <td class="quro-number">@Qty(row.Qty)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                @if (_dialogError is not null)
+                {
+                    <p class="page-error" role="alert" data-testid="pallet-merge-message">@_dialogError</p>
+                }
+                <div class="quro-dialog-actions">
+                    <button type="button" class="quro-primary" disabled="@(_dialogBusy || _picked.Count == 0)" data-testid="pallet-merge-ok" @onclick="MergeAsync">@L["Mm.Pallet.Merge"]</button>
+                    <button type="button" data-testid="pallet-merge-close" @onclick="CloseDialog">@L["Common.Close"]</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <QuroLookupDialog TItem="ItemDto" Title="@L["Mm.Pallet.FindItem"]" TestId="pallet-search-item-dialog"
+                      @bind-Visible="_itemLookupOpen" Search="FindItemsAsync" OnSelected="PickItem">
+        <Columns>
+            <QuroColumn TRow="ItemDto" Title="@L["Mm.Pallet.ItemCd"]" Value="i => i.ItemCd" />
+            <QuroColumn TRow="ItemDto" Title="@L["Mm.Pallet.ItemName"]" Value="i => i.ItemName" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string ScreenPath = "/mm/pallet";
+    private const string UnavailableCode = "BC-E-003";
+
+    private QuroMultiGrid<PalletRow>? _grid;
+    private bool _subscribed;
+    private IReadOnlyList<CodeItemDto> _warehouses = [];
+    private IReadOnlyList<CodeItemDto> _statuses = [];
+    private string? _palletNo;
+    private long? _itemId;
+    private string? _itemText;
+    private bool _itemLookupOpen;
+    private string? _warehouseId;
+    private string? _status = PalletRow.Active;
+    private bool _canEdit;
+    private bool _ready;
+    private string? _loadError;
+
+    private PalletDto? _history;
+    private string? _historyError;
+    private long? _historyId;
+
+    private PalletRow? _split;
+    private decimal? _splitQty;
+    private PalletRow? _mergeTarget;
+    private IReadOnlyList<PalletRow> _candidates = [];
+    private readonly HashSet<long> _picked = [];
+    private string? _dialogError;
+    private bool _dialogBusy;
+
+    private PalletRow? Current => _grid?.Data.CurrentRowKey is { } key ? _grid.Data.GetItem(key) : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
+        _statuses = [new(PalletRow.Active, L["Mm.Pallet.Status.ACTIVE"]), new("CLOSED", L["Mm.Pallet.Status.CLOSED"])];
+        try
+        {
+            var warehouses = (await WarehouseApi.GetOptionsAsync(CancellationToken.None)).Where(w => w.UseYn).ToList();
+            _warehouses = [.. warehouses.Select(w => new CodeItemDto(w.Id.ToString(CultureInfo.InvariantCulture), $"{w.WarehouseCode} {w.WarehouseName}"))];
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        // The history follows the grid's current row
+        if (!_subscribed && _grid is not null)
+        {
+            _subscribed = true;
+            _grid.Data.CurrentRowChanged += (_, _) => _ = InvokeAsync(LoadHistoryAsync);
+        }
+    }
+
+    private async Task<IReadOnlyList<PalletRow>> LoadAsync()
+    {
+        var query = new PalletSearchQuery
+        {
+            PalletNo = _palletNo,
+            ItemId = _itemId,
+            WarehouseId = long.TryParse(_warehouseId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var warehouseId) ? warehouseId : null,
+            Status = _status,
+        };
+        var pallets = await Api.SearchAsync(query, CancellationToken.None);
+        _historyId = null;
+        _history = null;
+        _historyError = null;
+        return [.. pallets.Select(p => PalletRow.From(p, L[$"Mm.Pallet.Status.{p.Status}"]))];
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        var current = Current;
+        if (current?.Id == _historyId)
+        {
+            return;
+        }
+        _historyId = current?.Id;
+        _history = null;
+        _historyError = null;
+        if (current is not null)
+        {
+            try
+            {
+                var pallet = await Api.GetAsync(current.Id, CancellationToken.None);
+                if (_historyId == pallet.Id)
+                {
+                    _history = pallet;
+                }
+            }
+            catch (ApiProblemException e)
+            {
+                _historyError = Messages.Get(e.Problem);
+            }
+            catch (HttpRequestException)
+            {
+                _historyError = Messages.Get(UnavailableCode);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void OpenSplit()
+    {
+        _split = Current;
+        _splitQty = null;
+        _dialogError = null;
+    }
+
+    private void OpenMerge()
+    {
+        _mergeTarget = Current;
+        _candidates = _mergeTarget is null ? [] : [.. _grid!.Items.Where(p => p.CanMergeInto(_mergeTarget))];
+        _picked.Clear();
+        _dialogError = null;
+    }
+
+    private void Pick(long id, bool picked)
+    {
+        if (picked)
+        {
+            _picked.Add(id);
+        }
+        else
+        {
+            _picked.Remove(id);
+        }
+    }
+
+    private void CloseDialog()
+    {
+        _split = null;
+        _mergeTarget = null;
+        _dialogError = null;
+    }
+
+    // MM-BR-914: the API refuses a qty that is not above 0 and below the Pallet qty, and a Pallet changed since it was read
+    private async Task SplitAsync()
+    {
+        var split = _split!;
+        await RunDialogAsync(async () =>
+        {
+            var created = await Api.SplitAsync(split.Id, new SplitPalletRequest(_splitQty!.Value, split.UpdatedAt), CancellationToken.None);
+            return L["Mm.Pallet.SplitDone", split.PalletNo, created.PalletNo].Value;
+        });
+    }
+
+    // MM-BR-915: the API checks every Pallet as it is now
+    private async Task MergeAsync()
+    {
+        var target = _mergeTarget!;
+        var sources = _candidates.Where(c => _picked.Contains(c.Id)).Select(c => c.Id).ToList();
+        await RunDialogAsync(async () =>
+        {
+            var merged = await Api.MergeAsync(new MergePalletsRequest(target.Id, sources), CancellationToken.None);
+            return L["Mm.Pallet.MergeDone", merged.PalletNo, Qty(merged.Qty)].Value;
+        });
+    }
+
+    // A refused change keeps the dialog open with the API message; a done one closes it and searches again with the notice
+    private async Task RunDialogAsync(Func<Task<string>> change)
+    {
+        _dialogBusy = true;
+        _dialogError = null;
+        string? notice = null;
+        try
+        {
+            notice = await change();
+        }
+        catch (ApiProblemException e)
+        {
+            _dialogError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _dialogError = Messages.Get(UnavailableCode);
+        }
+        _dialogBusy = false;
+        if (notice is not null)
+        {
+            CloseDialog();
+            await _grid!.RunActionAsync(() => Task.FromResult<string?>(notice));
+        }
+    }
+
+    private Task<IReadOnlyList<ItemDto>> FindItemsAsync(string? keyword) => ItemApi.LookupAsync(keyword, CancellationToken.None);
+
+    private void PickItem(ItemDto item)
+    {
+        _itemId = item.Id;
+        _itemText = $"{item.ItemCd} {item.ItemName}";
+    }
+
+    private void ClearItem()
+    {
+        _itemId = null;
+        _itemText = null;
+    }
+
+    private void ResetSearch()
+    {
+        _palletNo = null;
+        ClearItem();
+        _warehouseId = null;
+        _status = PalletRow.Active;
+    }
+
+    private static string Qty(decimal qty) => qty.ToString("#,0.######", CultureInfo.CurrentCulture);
+}
