@@ -28,9 +28,10 @@ public sealed class ShipmentController(ShipmentService service, ShipmentPrintSer
     public Task<ShipmentDto> Get(long id, CancellationToken cancellationToken) => service.GetAsync(id, cancellationToken);
 
     /// <summary>
-    /// 201 with a new shipment and its number (SD-BR-164); stock is issued and a SHIP_AND_BILL shipment makes its invoice
-    /// (SD-BR-163, SD-BR-167). 422 SD-E-161, 162, 114, 170, 174, 175, the inventory checks, Common-E-005/006; 422 SD-W-309 with
-    /// confirmField (SD-BR-309).
+    /// 201 with a new shipment and its number (SD-BR-164); stock is issued from the lines' Locations and Lots, Kit components in
+    /// FIFO order, and Pallet lines close their Pallets; a SHIP_AND_BILL shipment makes its invoice (SD-BR-163, SD-BR-167,
+    /// SD-BR-518, MM-BR-913). 422 SD-E-161, 162, 114, 170, 174, 175, 518, MM-E-913, the inventory checks, Common-E-005/006; 422
+    /// SD-W-309 with confirmField (SD-BR-309).
     /// </summary>
     [HttpPost, Authorize(Policy = Screen)]
     public async Task<ActionResult<ShipmentDto>> Create(SaveShipmentRequest request, CancellationToken cancellationToken)
@@ -64,6 +65,14 @@ public sealed class ShipmentController(ShipmentService service, ShipmentPrintSer
     [HttpGet(ShipmentRoutes.UnshippedInvoiceLines), Authorize(Policy = Screen)]
     public Task<IReadOnlyList<UnshippedInvoiceLineDto>> UnshippedInvoiceLines([FromQuery] long customerId, CancellationToken cancellationToken) =>
         service.UnshippedInvoiceLinesAsync(customerId, cancellationToken);
+
+    /// <summary>
+    /// The warehouse's ACTIVE Pallets a line can ship whole (MM-BR-913), by Pallet number start or item, in number order, at most
+    /// 200. 422 Common-E-005 without warehouseId.
+    /// </summary>
+    [HttpGet(ShipmentRoutes.Pallets), Authorize(Policy = Screen)]
+    public Task<IReadOnlyList<ShipmentPalletDto>> Pallets([FromQuery] ShipmentPalletQuery query, CancellationToken cancellationToken) =>
+        service.PalletsAsync(query, cancellationToken);
 
     /// <summary>The delivery note as PDF in the request language. 404 Common-E-006.</summary>
     [HttpGet("{id:long}/" + ShipmentRoutes.Print), Authorize(Policy = Screen)]

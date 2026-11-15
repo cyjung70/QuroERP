@@ -954,6 +954,13 @@
   <data name="Sd.Shipment.LotNo" xml:space="preserve"><value>Lot</value></data>
   <data name="Sd.Shipment.FindLot" xml:space="preserve"><value>Find lot</value></data>
   <data name="Sd.Shipment.LotOnhandQty" xml:space="preserve"><value>Lot on hand</value></data>
+  <data name="Sd.Shipment.LocationCode" xml:space="preserve"><value>Location</value></data>
+  <data name="Sd.Shipment.FindLocation" xml:space="preserve"><value>Find Location</value></data>
+  <data name="Sd.Shipment.LocationOnhandQty" xml:space="preserve"><value>Location on hand</value></data>
+  <data name="Sd.Shipment.PalletNo" xml:space="preserve"><value>Pallet</value></data>
+  <data name="Sd.Shipment.FindPallet" xml:space="preserve"><value>Find Pallet</value></data>
+  <data name="Sd.Shipment.PalletQty" xml:space="preserve"><value>Pallet qty</value></data>
+  <data name="Sd.Shipment.StockShort" xml:space="preserve"><value>Item {0} is short by {1}. Check the line with no Location or lot.</value></data>
   <data name="Sd.Shipment.ShipQty" xml:space="preserve"><value>Ship qty</value></data>
   <data name="Sd.Shipment.ShipPrc" xml:space="preserve"><value>Unit price</value></data>
   <data name="Sd.Shipment.ShipAmt" xml:space="preserve"><value>Shipment amount</value></data>
@@ -1092,6 +1099,7 @@
   <data name="MM-E-364" xml:space="preserve"><value>Line {0}: the Lot attributes are not valid. The supplier Lot number has up to 30 characters, the expiry date is not before the manufacture date, and only a lot-managed item has them.</value></data>
   <data name="MM-E-910" xml:space="preserve"><value>Line {0}: the Pallet qty must be above 0, and only an inventory item makes Pallets.</value></data>
   <data name="MM-E-911" xml:space="preserve"><value>Pallet {0} was already moved, shipped, split, merged or adjusted, so its receipt line cannot be deleted.</value></data>
+  <data name="MM-E-913" xml:space="preserve"><value>Line {0}: Pallet {1} cannot be shipped. It must be ACTIVE, its item, warehouse and qty must match the line, and one Pallet goes on one line only.</value></data>
   <data name="Mm.GoodsReceipt.LocationCode" xml:space="preserve"><value>Location</value></data>
   <data name="Mm.GoodsReceipt.LocationName" xml:space="preserve"><value>Location Name</value></data>
   <data name="Mm.GoodsReceipt.FindLocation" xml:space="preserve"><value>Find Location</value></data>

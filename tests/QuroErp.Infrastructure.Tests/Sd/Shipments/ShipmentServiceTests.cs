@@ -497,6 +497,109 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
             .Should().Contain("USD");
     }
 
+    [DatabaseFact, Trait("Id", "MM-UT-913"), Trait("Rule", "MM-BR-913"), Trait("Rule", "MM-BR-716")]
+    public async Task PalletLine_ShipsTheWholePallet_ClosesIt_AndADeleteOrVoidReopensIt()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipThenBill);
+        var (location, code) = await LocationAsync(m, m.Item);
+        await ReceiveAsync(m.Item, m.Main, 10m, location: location);
+        var pallet = await PalletAsync(m, m.Item, location, 6m);
+
+        var partly = () => Service.CreateAsync(Request(m, Direct(m.Item, 5m) with { PalletId = pallet }), "kim", None);
+        (await partly.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(ShipmentRules.PalletCode, "a Pallet ships whole");
+
+        var sh = await Service.CreateAsync(Request(m, Direct(m.Item, 6m) with { PalletId = pallet }), "kim", None);
+
+        sh.Lines.Single().Should().Match<ShipmentLineDto>(l => l.PalletId == pallet && l.PalletNo == "P" + m.Key && l.LocationId == location
+                                                               && l.LocationCode == code);
+        (await PalletStateAsync(pallet)).Should().Be(("CLOSED", 0m));
+        (await QueryAsync<(long? PalletId, long LocationId, decimal Qty)>(
+                "SELECT pallet_id, location_id, qty FROM mm_goods_movement WHERE ref_key = @No", new { No = sh.ShipNo }))
+            .Should().Equal(((long?)pallet, location, -6m));
+        var twice = () => Service.CreateAsync(Request(m, Direct(m.Item, 6m) with { PalletId = pallet }), "kim", None);
+        (await twice.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(ShipmentRules.PalletCode, "a CLOSED Pallet holds nothing");
+
+        // Deleting the line gives the stock and the Pallet back
+        await Service.UpdateAsync(sh.Id, Saved(sh), "kim", None);
+        (await PalletStateAsync(pallet)).Should().Be(("ACTIVE", 6m));
+
+        var again = await Service.CreateAsync(Request(m, Direct(m.Item, 6m) with { PalletId = pallet }), "kim", None);
+        (await PalletStateAsync(pallet)).Should().Be(("CLOSED", 0m));
+        await Service.VoidAsync(again.Id, again.UpdatedAt, "kim", None);
+
+        (await PalletStateAsync(pallet)).Should().Be(("ACTIVE", 6m));
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(10m);
+        (await QueryAsync<decimal>("SELECT qty FROM mm_pallet_event WHERE pallet_id = @Id AND event_type = 'SHIP' ORDER BY id", new { Id = pallet }))
+            .Should().Equal(-6m, 6m, -6m, 6m);
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-716"), Trait("Rule", "MM-BR-713")]
+    public async Task LocationLine_IssuesFromItsLocation_AndReadsItsCode()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipAndBill);
+        var (location, code) = await LocationAsync(m, m.Item);
+        await ReceiveAsync(m.Item, m.Main, 5m, location: location);
+
+        var sh = await Service.CreateAsync(Request(m, Direct(m.Item, 2m) with { LocationId = location }), "kim", None);
+
+        sh.Lines.Single().Should().Match<ShipmentLineDto>(l => l.LocationId == location && l.LocationCode == code && l.PalletId == null);
+        (await QueryAsync<long>("SELECT location_id FROM mm_goods_movement WHERE ref_key = @No", new { No = sh.ShipNo })).Should().Equal(location);
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UT-518"), Trait("Rule", "SD-BR-518"), Trait("Rule", "SD-BR-517")]
+    public async Task KitLine_ShowsItsFifoComponentAllocation_AndShortComponentStockIsSdE518()
+    {
+        await ModeAsync("ALLOW_IN_MONTH");
+        var m = await MastersAsync(ShipThenBill);
+        await ReceiveAsync(m.LotItem, m.Main, 3m, "A1");
+        await ReceiveAsync(m.LotItem, m.Main, 2m, "B1");
+        await ReceiveAsync(m.Item, m.Main, 20m);
+        var kit = await SetItemAsync(m.Key, (m.LotItem, 1m), (m.Item, 2m));
+
+        var short_ = () => Service.CreateAsync(Request(m, Direct(kit, 6m)), "kim", None);
+        (await short_.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(SetComponent.NotEnoughStock);
+
+        var sh = await Service.CreateAsync(Request(m, Direct(kit, 4m)), "kim", None);
+
+        var line = sh.Lines.Single();
+        (line.LotNo, line.LocationId).Should().Be(((string?)null, (long?)null), "a Kit line keeps no stock key of its own");
+        line.Components!.Select(c => (c.ItemId, c.Qty, c.LotNo)).Should().BeEquivalentTo(
+            [(m.LotItem, 3m, "A1"), (m.LotItem, 1m, "B1"), (m.Item, 8m, "*")]);
+    }
+
+    // A Location of the default warehouse for the item, which is made Location-managed (MM-BR-713)
+    private async Task<(long Id, string Code)> LocationAsync(Masters m, long item)
+    {
+        var code = "A" + m.Key;
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        await connection.ExecuteAsync("UPDATE bc_item SET location_managed = true WHERE id = @Item", new { Item = item });
+        var id = await connection.ExecuteScalarAsync<long>(
+            "INSERT INTO bc_location (warehouse_id, location_code, created_by, updated_by) VALUES (@Main, @Code, 't', 't') RETURNING id",
+            new { m.Main, Code = code });
+        return (id, code);
+    }
+
+    // An ACTIVE Pallet P{key} of the item's Lot '*' in the Location, made by a CREATE event (MM-BR-911)
+    private async Task<long> PalletAsync(Masters m, long item, long location, decimal qty)
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        return await connection.ExecuteScalarAsync<long>(
+            """
+            WITH p AS (INSERT INTO mm_pallet (pallet_no, item_id, lot_id, warehouse_id, location_id, qty, created_by, updated_by)
+                       SELECT @No, @Item, id, @Main, @Location, @Qty, 't', 't' FROM mm_lot WHERE item_id = @Item AND lot_no = '*'
+                       RETURNING id),
+                 e AS (INSERT INTO mm_pallet_event (pallet_id, event_type, event_dt, qty, created_by, updated_by)
+                       SELECT id, 'CREATE', @Date, @Qty, 't', 't' FROM p)
+            SELECT id FROM p
+            """,
+            new { No = "P" + m.Key, Item = item, m.Main, Location = location, Qty = qty, Date = ShipDt });
+    }
+
+    private async Task<(string Status, decimal Qty)> PalletStateAsync(long id) =>
+        (await QueryAsync<(string, decimal)>("SELECT status, qty FROM mm_pallet WHERE id = @Id", new { Id = id })).Single();
+
     private static SaveShipmentRequest Request(Masters m, params SaveShipmentLineRequest[] lines) =>
         new(m.Customer, ShipDt, null, null, null, null, "Ship " + m.Key, "1 Main St", null, "Dallas", "TX", "75001", "USA", null, null, lines, null);
 
@@ -625,10 +728,13 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
     }
 
     // Receives stock at a cost of 50 on the ship date (or the date given)
-    private async Task ReceiveAsync(long item, long warehouse, decimal qty, string? lotNo = null, DateOnly? date = null, decimal price = 50m)
+    private async Task ReceiveAsync(
+        long item, long warehouse, decimal qty, string? lotNo = null, DateOnly? date = null, decimal price = 50m, long? location = null)
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
-        await Inventory.PostAsync([new StockMovementRequest("GR", date ?? ShipDt, item, warehouse, qty, price, "GR-TEST", 1, LotNo: lotNo)], "kim", uow.Transaction, None);
+        await Inventory.PostAsync(
+            [new StockMovementRequest("GR", date ?? ShipDt, item, warehouse, qty, price, "GR-TEST", 1, LotNo: lotNo, LocationId: location)],
+            "kim", uow.Transaction, None);
         await uow.CommitAsync(None);
     }
 

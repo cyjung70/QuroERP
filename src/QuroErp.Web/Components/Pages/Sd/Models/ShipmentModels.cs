@@ -1,4 +1,5 @@
 using System.Globalization;
+using QuroErp.Contracts.Mm.Lots;
 using QuroErp.Contracts.Sd.Shipments;
 using QuroErp.Web.Components.Screens;
 
@@ -144,8 +145,12 @@ public sealed class ShipmentLine
     public string? Unit { get; set; }
     public long? WarehouseId { get; set; }
     public string? WarehouseCode { get; set; }
+    public long? LocationId { get; set; }
+    public string? LocationCode { get; set; }
     public long? LotId { get; set; }
     public string? LotNo { get; set; }
+    public long? PalletId { get; set; }
+    public string? PalletNo { get; set; }
     public decimal? ShipQty { get; set; }
     public decimal? ShipPrc { get; set; }
     public decimal? DcRate { get; set; }
@@ -158,26 +163,102 @@ public sealed class ShipmentLine
     public long? SalesInvoiceLineId { get; set; }
     public string? DnNo { get; set; }
 
+    /// <summary>The item type of a new line; a Kit's components are allocated by the system (SD-BR-518).</summary>
+    public string? ItemType { get; set; }
+
+    /// <summary>The Location and Lot came from the FIFO suggestion, so a new qty asks again (MM-BR-716).</summary>
+    public bool Suggested { get; set; }
+
+    /// <summary>A read-only component row under its saved Kit or Set line (SD-BR-517). It is not saved and not counted.</summary>
+    public bool IsComponent { get; set; }
+
     /// <summary>A saved line is not changed: it is deleted and added again (SD-BR-171).</summary>
     public bool IsSaved => Id != 0;
+
+    /// <summary>A line that is never changed: a saved line or a component row.</summary>
+    public bool IsLocked => IsSaved || IsComponent;
+
+    public bool IsKit => ItemType == KitType;
+
+    /// <summary>The Kit item type (ITEM_TYPE).</summary>
+    public const string KitType = "KIT";
 
     /// <summary>
     /// A line that may be marked for delete: any line, except a billed line of a ship-then-bill shipment (SD-BR-168) and the lines of
     /// a ship-and-bill shipment whose invoice was paid (SD-BR-104, SD-BR-167). Bill-first shipments are free (SD-BR-177).
     /// </summary>
-    public bool IsRemovable(ShipmentHeader? shipment) => shipment is null
-        || (!shipment.InvoiceLocksShipment && (shipment.BillingFlow != ShipmentFlows.ShipThenBill || BilledQty == 0));
+    public bool IsRemovable(ShipmentHeader? shipment) => !IsComponent && (shipment is null
+        || (!shipment.InvoiceLocksShipment && (shipment.BillingFlow != ShipmentFlows.ShipThenBill || BilledQty == 0)));
+
+    public bool IsImported => SalesOrderLineId is not null || SalesInvoiceLineId is not null;
 
     /// <summary>
     /// The item and price of an imported line are the source line's (SD-BR-167, SD-BR-175), and a bill-first line stays in the
-    /// consignment warehouse (SD-BR-176). A direct line has none of these locks (SD-BR-173).
+    /// consignment warehouse (SD-BR-176). A direct line has none of these locks (SD-BR-173). A Pallet line takes the Pallet's
+    /// item, warehouse, Location, Lot and qty (MM-BR-913); a Kit line leaves its Location, Lot and Pallet to the system (SD-BR-518).
     /// </summary>
-    public bool IsCellLocked(string field)
+    public bool IsCellLocked(string field) =>
+        (IsImported && (Is(field, nameof(ItemCd)) || Is(field, nameof(ShipPrc))))
+        || (SalesInvoiceLineId is not null && Is(field, nameof(WarehouseCode)))
+        || (PalletId is not null && (Is(field, nameof(ItemCd)) || Is(field, nameof(WarehouseCode)) || Is(field, nameof(LocationCode))
+                                     || Is(field, nameof(LotNo)) || Is(field, nameof(ShipQty))))
+        || (IsKit && (Is(field, nameof(LocationCode)) || Is(field, nameof(LotNo)) || Is(field, nameof(PalletNo))));
+
+    /// <summary>The system Location and Lot '*' (MM-BR-713).</summary>
+    public const string System = "*";
+
+    /// <summary>The start of a component row's item name, so it reads as part of the line above.</summary>
+    public const string ComponentMark = "└ ";
+
+    /// <summary>A saved line with the component rows under it (SD-BR-517).</summary>
+    public static IEnumerable<ShipmentLine> Rows(ShipmentLineDto line)
     {
-        var imported = SalesOrderLineId is not null || SalesInvoiceLineId is not null;
-        return (imported && (Is(field, nameof(ItemCd)) || Is(field, nameof(ShipPrc))))
-            || (SalesInvoiceLineId is not null && Is(field, nameof(WarehouseCode)));
+        yield return From(line);
+        foreach (var component in line.Components ?? [])
+        {
+            yield return new ShipmentLine
+            {
+                IsComponent = true,
+                ItemId = component.ItemId,
+                ItemCd = component.ItemCd,
+                ItemName = ComponentMark + component.ItemName,
+                Unit = component.Unit,
+                WarehouseCode = line.WarehouseCode,
+                LocationCode = component.LocationCode,
+                LotNo = component.LotNo,
+                ShipQty = component.Qty,
+            };
+        }
     }
+
+    /// <summary>
+    /// A copy of a new line for one part of the FIFO suggestion (MM-BR-716): the same source, item, warehouse and price with this
+    /// qty, Location and Lot. A null part is the short qty, with no Location or Lot.
+    /// </summary>
+    public ShipmentLine Part(StockSuggestionDto? part, decimal qty) => new()
+    {
+        ItemId = ItemId,
+        ItemCd = ItemCd,
+        ItemName = ItemName,
+        Unit = Unit,
+        WarehouseId = WarehouseId,
+        WarehouseCode = WarehouseCode,
+        LocationId = part?.LocationId,
+        LocationCode = part?.LocationCode,
+        LotId = part is null || part.LotNo == System ? null : part.LotId,
+        LotNo = part is null || part.LotNo == System ? null : part.LotNo,
+        ShipQty = qty,
+        ShipPrc = ShipPrc,
+        DcRate = DcRate,
+        TaxCodeId = TaxCodeId,
+        RemainingQty = RemainingQty,
+        SalesOrderLineId = SalesOrderLineId,
+        SoNo = SoNo,
+        SalesInvoiceLineId = SalesInvoiceLineId,
+        DnNo = DnNo,
+        ItemType = ItemType,
+        Suggested = part is not null,
+    };
 
     public static ShipmentLine From(ShipmentLineDto line) => new()
     {
@@ -189,8 +270,12 @@ public sealed class ShipmentLine
         Unit = line.Unit,
         WarehouseId = line.WarehouseId,
         WarehouseCode = line.WarehouseCode,
+        LocationId = line.LocationId,
+        LocationCode = line.LocationCode,
         LotId = line.LotId,
         LotNo = line.LotNo,
+        PalletId = line.PalletId,
+        PalletNo = line.PalletNo,
         ShipQty = line.ShipQty,
         ShipPrc = line.ShipPrc,
         DcRate = line.DcRate,
@@ -242,15 +327,17 @@ public sealed class ShipmentLine
 
     /// <summary>
     /// Saved lines go back with their id and stored values; price and tax code are sent for direct lines only, the others take the
-    /// source line's (SD-BR-173). A lot number typed or picked is sent by number.
+    /// source line's (SD-BR-173). A lot number typed or picked is sent by number; the Location by id, which the page resolves
+    /// from the code before the save (null is '*'), and a Pallet by id (MM-BR-913).
     /// </summary>
     public SaveShipmentLineRequest ToRequest()
     {
         var direct = SalesOrderLineId is null && SalesInvoiceLineId is null;
-        var lotNo = string.IsNullOrWhiteSpace(LotNo) ? null : LotNo.Trim().ToUpperInvariant();
+        var lotNo = string.IsNullOrWhiteSpace(LotNo) || LotNo.Trim() == System ? null : LotNo.Trim().ToUpperInvariant();
         return new(
             Id == 0 ? null : Id, ItemId ?? 0, ItemName, WarehouseId, ShipQty ?? 0, direct || IsSaved ? ShipPrc : null,
-            direct || IsSaved ? TaxCodeId : null, lotNo is null ? null : LotId, lotNo, SalesOrderLineId, SalesInvoiceLineId);
+            direct || IsSaved ? TaxCodeId : null, lotNo is null ? null : LotId, lotNo, SalesOrderLineId, SalesInvoiceLineId,
+            LocationId, PalletId);
     }
 
     private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);

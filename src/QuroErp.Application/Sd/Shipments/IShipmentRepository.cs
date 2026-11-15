@@ -15,15 +15,30 @@ public sealed record ShipmentRow(
     DateOnly ShipDt, long WarehouseId, string CurrencyCode, decimal ExchangeRate, string? ShipVia, ShipmentShipTo ShipTo, string? Remarks,
     long? SalesInvoiceId, string? SalesInvoiceNo, DateTimeOffset UpdatedAt, DateTimeOffset? CreatedAt, string? CreatedBy, string? UpdatedBy);
 
-/// <summary>sd_shipment_line row with item, warehouse, lot, on-hand qty now and the source order or invoice line.</summary>
+/// <summary>
+/// sd_shipment_line row with item, warehouse, Location, lot, Pallet, on-hand qty now and the source order or invoice line.
+/// ItemType and ShowComponents tell a Kit or Set line and whether its components show (SD-BR-517).
+/// </summary>
 public sealed record ShipmentLineRow(
     long Id, int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, long WarehouseId, string? WarehouseCode, long? LotId,
     string? LotNo, decimal ShipQty, decimal ShipPrc, string? DcCd, decimal DcRate, long TaxCodeId, decimal BilledQty, decimal OnhandQty,
-    long? SalesOrderLineId, string? SoNo, int? SoSeq, long? SalesInvoiceLineId, string? DnNo, int? DnSeq, decimal? RemainingQty)
+    long? SalesOrderLineId, string? SoNo, int? SoSeq, long? SalesInvoiceLineId, string? DnNo, int? DnSeq, decimal? RemainingQty,
+    long? LocationId, string? LocationCode, long? PalletId, string? PalletNo, string? ItemType, bool ShowComponents)
 {
     public StoredShipmentLine ToStored() => new(
-        Id, Seq, ItemId, ItemName, WarehouseId, ShipQty, ShipPrc, DcCd, DcRate, TaxCodeId, LotId, BilledQty, SalesOrderLineId, SalesInvoiceLineId);
+        Id, Seq, ItemId, ItemName, WarehouseId, ShipQty, ShipPrc, DcCd, DcRate, TaxCodeId, LotId, BilledQty, SalesOrderLineId, SalesInvoiceLineId,
+        LocationId, PalletId);
 }
+
+/// <summary>A component a Kit line issued (SD-BR-518): the open DN movement of the component with its Location and Lot.</summary>
+public sealed record ShipmentKitComponentRow(
+    int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal Qty, string? LocationCode, string? LotNo);
+
+/// <summary>A component of a Kit or Set item (sd_bom) with its qty per parent, in BOM order.</summary>
+public sealed record ShipmentBomRow(long SetItemId, long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal ChildQty);
+
+/// <summary>A Pallet line's Pallet and the line that shipped it, for the SHIP events (MM-BR-913).</summary>
+public sealed record ShipmentPalletShip(long PalletId, int Seq, decimal Qty);
 
 /// <summary>What the amount of a listed shipment is calculated from.</summary>
 public sealed record ShipmentAmountLineRow(long ShipmentId, int Seq, decimal ShipQty, decimal ShipPrc, decimal DcRate, long TaxCodeId);
@@ -59,8 +74,13 @@ public sealed record OpenOrderLineRow(
     string? ShipPhone, long SalesOrderLineId, int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal SoQty, decimal ShipQty,
     decimal SoPrc, string? DcCd, decimal DcRate, long TaxCodeId);
 
-/// <summary>A delivery note line: the item, its location and the shipped qty.</summary>
-public sealed record ShipmentPrintLine(int Seq, string? ItemCd, string? ItemName, string? Unit, string? WarehouseCode, string? LotNo, decimal ShipQty);
+/// <summary>
+/// A delivery note line: the item, its warehouse, Location and lot and the shipped qty. Components are the rows printed under a Kit
+/// or Set line whose item shows its components (SD-BR-517).
+/// </summary>
+public sealed record ShipmentPrintLine(
+    int Seq, string? ItemCd, string? ItemName, string? Unit, string? WarehouseCode, string? LotNo, decimal ShipQty, string? LocationCode = null,
+    IReadOnlyList<ShipmentComponentDto>? Components = null);
 
 /// <summary>Shipments (SD-UC-051). Callers pass their own transaction.</summary>
 public interface IShipmentRepository
@@ -122,8 +142,38 @@ public interface IShipmentRepository
         long id, ShipmentHeader header, IReadOnlyCollection<long> deletedLineIds, IReadOnlyList<ShipmentLine> added, DateTimeOffset updatedAt,
         string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Sets the lot of the lines by seq (MM-BR-355).</summary>
-    Task SetLineLotsAsync(long id, IReadOnlyDictionary<int, long> lotIdBySeq, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>Sets the Location and lot the lines issued, by seq (MM-BR-355, MM-BR-713).</summary>
+    Task SetLineKeysAsync(
+        long id, IReadOnlyDictionary<int, (long LocationId, long LotId)> keyBySeq, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The Pallets with these ids, locked until the transaction ends, in id order.</summary>
+    Task<IReadOnlyList<ShipmentPallet>> LockPalletsAsync(
+        IReadOnlyCollection<long> palletIds, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Ships whole Pallets: a SHIP event of minus the qty each, then qty 0 and CLOSED (MM-BR-913, MM-BR-916).</summary>
+    Task ShipPalletsAsync(
+        IReadOnlyList<ShipmentPalletShip> pallets, DateOnly eventDt, string refKey, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Takes a Pallet shipment back (a line delete or Void, MM-BR-913): a SHIP event of plus the line qty, then that qty and
+    /// ACTIVE again where the Pallet was.
+    /// </summary>
+    Task ReturnPalletsAsync(
+        IReadOnlyList<ShipmentPalletShip> pallets, DateOnly eventDt, string refKey, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken);
+
+    /// <summary>ACTIVE Pallets of the warehouse whose number starts with palletNo or that hold the item, in number order.</summary>
+    Task<IReadOnlyList<ShipmentPalletDto>> FindPalletsAsync(
+        ShipmentPalletQuery query, int limit, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The open component movements of the shipment's Kit lines, by line and movement order (SD-BR-518).</summary>
+    Task<IReadOnlyList<ShipmentKitComponentRow>> FindKitComponentsAsync(
+        string shipNo, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The components of these Kit or Set items, in BOM order (SD-BR-517).</summary>
+    Task<IReadOnlyList<ShipmentBomRow>> FindBomAsync(
+        IReadOnlyCollection<long> itemIds, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Sets the status and the SHIP_AND_BILL invoice of the shipment.</summary>
     Task SetStatusAsync(long id, string status, long? salesInvoiceId, string user, IDbTransaction transaction, CancellationToken cancellationToken);

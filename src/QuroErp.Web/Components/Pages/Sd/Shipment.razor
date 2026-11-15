@@ -8,6 +8,8 @@
 @using QuroErp.Contracts.Bc.Tax
 @using QuroErp.Contracts.Common
 @using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.Locations
+@using QuroErp.Contracts.Mm.Lots
 @using QuroErp.Contracts.Mm.Warehouses
 @using QuroErp.Contracts.Sd.Customers
 @using QuroErp.Contracts.Sd.SalesOrders
@@ -19,6 +21,7 @@
 @using QuroErp.Web.Common
 @using QuroErp.Web.Components.Pages.Mm.Models
 @using QuroErp.Web.Components.Pages.Sd.Models
+@using QuroErp.Web.Mm.Locations
 @using QuroErp.Web.Mm.Lots
 @using QuroErp.Web.Mm.PurchaseOrders
 @using QuroErp.Web.Mm.Warehouses
@@ -36,6 +39,7 @@
 @inject WarehouseApiClient WarehouseApi
 @inject UserProfileApiClient ProfileApi
 @inject LotApiClient LotApi
+@inject LocationApiClient LocationApi
 @inject IQuroConfirm Confirm
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
@@ -44,7 +48,9 @@
 
 @* SD-UC-051 shipment, screen type SM on the entry frame (entry-frame.md). The API checks every rule, issues the stock and makes the
    invoice of a ship-and-bill shipment (SD-BR-161~177, MM-BR-001~010, MM-BR-353~362); this screen imports order and bill-first
-   invoice lines, shows defaults, locks and display amounts. Saved lines are deleted and added again, never changed (SD-BR-171). *@
+   invoice lines, shows defaults, locks and display amounts. Saved lines are deleted and added again, never changed (SD-BR-171).
+   A new line takes its Locations and Lots from the FIFO suggestion (MM-BR-716), a Pallet line ships the whole Pallet (MM-BR-913),
+   and saved Kit and Set lines show their component rows (SD-BR-517, SD-BR-518). *@
 
 <PageTitle>@L["Sd.Shipment.Title"]</PageTitle>
 
@@ -61,7 +67,7 @@
                       DocumentNo="s => s.ShipNo" Audit="s => s.ToAudit()"
                       Find="FindAsync" Load="LoadAsync" Initial="Initial" Create="CreateHeader" CreateLine="CreateLine" Save="SaveAsync"
                       Definition="sd.shipment.entry" Lookup="LookupAsync" UpperCaseFields="UpperCase" OnHeaderChanged="HeaderChanged"
-                      ColumnFormats="ShipmentFormats.Of(_decimals)" IsLineLocked="l => l.IsSaved"
+                      ColumnFormats="ShipmentFormats.Of(_decimals)" IsLineLocked="l => l.IsLocked"
                       IsLineRemovable="l => l.IsRemovable(_frame?.Header)" IsCellLocked="(l, field) => l.IsCellLocked(field)"
                       CanSave="ShipmentStatus.CanSave" OnPdf="DeliveryNotePdfAsync" LinesHint="LinesHint">
         <FindFilters>
@@ -137,12 +143,13 @@
             <QuroText Label="@L["Sd.Shipment.Remarks"]" Field="Remarks" Rows="3" Span="4" TestId="shipment-header-remarks" />
         </HeaderFields>
         <Totals Context="lines">
-            @* Line count, total qty and the amount after discount without tax, not stored; the marked lines are left out by the frame *@
-            <div class="quro-totals-row" data-testid="shipment-totals-line-count"><span>@L["Sd.Shipment.LineCount"]</span><b>@lines.Count</b></div>
-            <div class="quro-totals-row" data-testid="shipment-totals-total-qty"><span>@L["Sd.Shipment.TotalQty"]</span><b>@TotalQtyText(lines)</b></div>
+            @* Line count, total qty and the amount after discount without tax, not stored; the marked lines are left out by the frame
+               and the component rows here *@
+            <div class="quro-totals-row" data-testid="shipment-totals-line-count"><span>@L["Sd.Shipment.LineCount"]</span><b>@ShipLines(lines).Count</b></div>
+            <div class="quro-totals-row" data-testid="shipment-totals-total-qty"><span>@L["Sd.Shipment.TotalQty"]</span><b>@TotalQtyText(ShipLines(lines))</b></div>
             <div class="quro-totals-total" data-testid="shipment-totals-ship-amt">
                 <span>@L["Sd.Shipment.ShipAmt"]</span>
-                <span><b>@ShipAmtText(lines)</b><small>@_decimals.CurrencyCode</small></span>
+                <span><b>@ShipAmtText(ShipLines(lines))</b><small>@_decimals.CurrencyCode</small></span>
             </div>
         </Totals>
     </QuroHeaderDetail>
@@ -186,7 +193,7 @@
     private const string CreditLimitField = "confirmCreditLimit";
     private const string TooManyDecimalsCode = "BC-E-423";
     private const string CheckCellKey = "Sd.Shipment.CheckThisCell";
-    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "lotNo"];
+    private static readonly string[] UpperCase = ["itemCd", "warehouseCode", "locationCode", "lotNo", "palletNo"];
 
     private QuroHeaderDetail<ShipmentHeader, ShipmentLine>? _frame;
     private QuroDataSet<ShipmentLine>? _watchedLines;
@@ -202,6 +209,9 @@
     private DateOnly? _findFrom;
     private DateOnly? _findTo;
     private readonly Dictionary<string, long> _itemIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<long, ItemDto> _items = [];
+    private readonly Dictionary<long, IReadOnlyList<LocationOptionDto>> _locations = [];
+    private IReadOnlyList<LotBalanceDto> _lotBalances = [];
     private string? _defaultWarehouseCode;
     private bool _canEdit;
     private bool _ready;
@@ -319,7 +329,7 @@
         }
         return new HeaderLines<ShipmentHeader, ShipmentLine>(
             ShipmentHeader.From(shipment, _allWarehouses.ToDictionary(w => w.Id, w => w.WarehouseCode)),
-            [.. shipment.Lines.OrderBy(l => l.Seq).Select(ShipmentLine.From)]);
+            [.. shipment.Lines.OrderBy(l => l.Seq).SelectMany(ShipmentLine.Rows)]);
     }
 
     // The lines kept, in screen order, go in one request (lines left out are deleted). Going over the credit limit is asked once;
@@ -328,6 +338,7 @@
     {
         var lines = ActiveLines();
         CheckLineDecimals();
+        await ResolveLocationsAsync(lines);
         var warehouseId = WarehouseOf(s.WarehouseCode)?.Id;
         bool? confirmCreditLimit = null;
         while (true)
@@ -359,7 +370,7 @@
         foreach (var key in lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted))
         {
             var line = lines.GetItem(key);
-            if (line.IsSaved)
+            if (line.IsLocked)
             {
                 continue;
             }
@@ -637,9 +648,20 @@
             _applying = false;
         }
         _frame.ShowMessage(string.Format(CultureInfo.CurrentCulture, L["Sd.Shipment.LinesAdded"], added.Count), isError: false);
+
+        // MM-BR-716: each imported line then takes its FIFO Locations and Lots, one after the other
+        var keys = _frame.Lines.RowKeys.TakeLast(added.Count).ToList();
+        Later(async () =>
+        {
+            foreach (var key in keys)
+            {
+                await SuggestAsync(key);
+            }
+        });
     }
 
-    // Line lookups: items in use, general warehouses, tax codes in use and the lots of the current line
+    // Line lookups: items in use, general warehouses, tax codes in use, the Locations and lots of the current line and the
+    // warehouse's Pallets
     private async Task<IReadOnlyList<LookupRow>> LookupAsync(LookupQuery query)
     {
         switch (query.LookupId)
@@ -649,29 +671,70 @@
                     ? [.. (await Task.WhenAll(codes.Select(c => ItemApi.FindByCodeAsync(c, CancellationToken.None)))).OfType<ItemDto>()]
                     : await ItemApi.LookupAsync(query.Keyword, CancellationToken.None);
                 var inUse = items.Where(i => i.ValidFlag != ItemNotInUse).ToList();
-                inUse.ForEach(i => _itemIds[i.ItemCd] = i.Id);
+                inUse.ForEach(i =>
+                {
+                    _itemIds[i.ItemCd] = i.Id;
+                    _items[i.Id] = i;
+                });
                 return [.. inUse.Select(i => LookupRow.Of(
                     ("itemCd", i.ItemCd), ("itemName", i.ItemName), ("unit", i.Unit), ("stdPrc", i.SoUsdPrc)))];
             case "sdShipWarehouse":
                 return [.. _warehouses.Where(w => Matches(query, w.WarehouseCode, w.WarehouseName)).Select(w => LookupRow.Of(
                     ("warehouseCode", w.WarehouseCode), ("warehouseName", w.WarehouseName)))];
+            case "sdShipLocation":
+                return [.. (await BalancesAsync()).GroupBy(b => b.LocationCode, StringComparer.OrdinalIgnoreCase)
+                    .Where(g => Matches(query, g.Key, null))
+                    .Select(g => LookupRow.Of(("locationCode", g.Key), ("onHandQty", g.Sum(b => b.OnHandQty))))];
             case "sdShipLot":
                 return await LotsAsync(query);
+            case "sdShipPallet":
+                return await PalletsAsync(query);
             default:
                 return [];
         }
     }
 
-    // MM-BR-362: lots of the current line's item in its warehouse with a balance above zero at the end of the ship date
-    private async Task<IReadOnlyList<LookupRow>> LotsAsync(LookupQuery query)
+    // MM-BR-362: (Location, lot) balances of the current line's item in its warehouse above zero at the end of the ship date
+    private async Task<IReadOnlyList<LotBalanceDto>> BalancesAsync()
     {
         var lines = _frame!.Lines;
         if (lines.CurrentRowKey is not { } key || lines.GetItem(key) is not { ItemId: { } itemId, WarehouseId: { } warehouseId })
         {
             return [];
         }
-        var lots = await LotApi.SearchAsync(itemId, warehouseId, Header().ShipDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
-        return [.. lots.Where(l => Matches(query, l.LotNo, null)).Select(l => LookupRow.Of(("lotNo", l.LotNo), ("onHandQty", l.OnHandQty)))];
+        _lotBalances = await LotApi.SearchAsync(itemId, warehouseId, Header().ShipDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        return _lotBalances;
+    }
+
+    // The lots of the line, in its Location when it has one
+    private async Task<IReadOnlyList<LookupRow>> LotsAsync(LookupQuery query)
+    {
+        var location = _frame!.Lines.CurrentRowKey is { } key ? _frame.Lines.GetItem(key).LocationCode?.Trim() : null;
+        return [.. (await BalancesAsync())
+            .Where(b => (string.IsNullOrEmpty(location) || Is(b.LocationCode, location)) && Matches(query, b.LotNo, null))
+            .Select(b => LookupRow.Of(("lotNo", b.LotNo), ("locationCode", b.LocationCode), ("onHandQty", b.OnHandQty)))];
+    }
+
+    // MM-BR-913: the ACTIVE Pallets of the line's warehouse; an imported line only those of its item
+    private async Task<IReadOnlyList<LookupRow>> PalletsAsync(LookupQuery query)
+    {
+        var lines = _frame!.Lines;
+        if (lines.CurrentRowKey is not { } key)
+        {
+            return [];
+        }
+        var line = lines.GetItem(key);
+        if ((line.WarehouseId ?? WarehouseOf(Header().WarehouseCode)?.Id) is not { } warehouseId)
+        {
+            return [];
+        }
+        var itemId = line.IsImported ? line.ItemId : null;
+        IReadOnlyList<ShipmentPalletDto> pallets = query.Codes is { } codes
+            ? [.. (await Task.WhenAll(codes.Select(c => Api.PalletsAsync(new ShipmentPalletQuery(warehouseId, c, itemId), CancellationToken.None))))
+                .SelectMany(p => p).Where(p => codes.Contains(p.PalletNo, StringComparer.OrdinalIgnoreCase))]
+            : await Api.PalletsAsync(new ShipmentPalletQuery(warehouseId, query.Keyword?.Trim(), itemId), CancellationToken.None);
+        return [.. pallets.Select(p => LookupRow.Of(("palletNo", p.PalletNo), ("itemCd", p.ItemCd), ("locationCode", p.LocationCode),
+            ("lotNo", p.LotNo), ("qty", p.Qty)))];
     }
 
     private static bool Matches(LookupQuery query, string code, string? name) =>
@@ -698,30 +761,303 @@
         {
             MarkCell(e.RowKey, nameof(ShipmentLine.ShipPrc), HasTooManyDecimals(line.ShipPrc, _decimals.Price));
         }
+        var rowKey = e.RowKey;
         if (Is(e.Field, nameof(ShipmentLine.ItemCd)))
         {
             long? itemId = line.ItemCd is { } code && _itemIds.TryGetValue(code, out var id) ? id : null;
-            lines.SetValue(e.RowKey, nameof(ShipmentLine.ItemId), itemId);
-            lines.SetValue(e.RowKey, nameof(ShipmentLine.LotNo), null);
-            if (itemId is not null && !_applying && line.SalesOrderLineId is null && line.SalesInvoiceLineId is null)
+            lines.SetValue(rowKey, nameof(ShipmentLine.ItemId), itemId);
+            line.ItemType = itemId is { } known && _items.TryGetValue(known, out var item) ? item.ItemType : null;
+            lines.SetValue(rowKey, nameof(ShipmentLine.LotNo), null);
+            if (!_applying)
+            {
+                ClearLocation(rowKey);
+            }
+            if (itemId is not null && !_applying && !line.IsImported)
             {
                 // After the grid finishes the edit: the change event comes in the middle of it
-                var rowKey = e.RowKey;
-                _ = InvokeAsync(async () =>
+                Later(async () =>
                 {
-                    await Task.Yield();
                     await ApplyLineDefaultsAsync(rowKey);
+                    await SuggestAsync(rowKey);
                 });
             }
         }
         else if (Is(e.Field, nameof(ShipmentLine.WarehouseCode)))
         {
-            lines.SetValue(e.RowKey, nameof(ShipmentLine.WarehouseId), WarehouseOf(line.WarehouseCode)?.Id);
-            lines.SetValue(e.RowKey, nameof(ShipmentLine.LotNo), null);
+            lines.SetValue(rowKey, nameof(ShipmentLine.WarehouseId), WarehouseOf(line.WarehouseCode)?.Id);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LotNo), null);
+            if (!_applying)
+            {
+                ClearLocation(rowKey);
+                Later(() => SuggestAsync(rowKey));
+            }
+        }
+        else if (Is(e.Field, nameof(ShipmentLine.ShipQty)))
+        {
+            // A suggested or empty Location and Lot follow the new qty; ones the user picked stay (MM-BR-716)
+            if (!_applying && !line.IsSaved && (line.Suggested || (string.IsNullOrEmpty(line.LocationCode) && string.IsNullOrEmpty(line.LotNo))))
+            {
+                Later(() => SuggestAsync(rowKey));
+            }
+        }
+        else if (Is(e.Field, nameof(ShipmentLine.LocationCode)))
+        {
+            lines.SetValue(rowKey, nameof(ShipmentLine.LocationId), null);
+            if (!_applying)
+            {
+                line.Suggested = false;
+            }
         }
         else if (Is(e.Field, nameof(ShipmentLine.LotNo)))
         {
-            lines.SetValue(e.RowKey, nameof(ShipmentLine.LotId), null);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LotId), null);
+            if (!_applying)
+            {
+                line.Suggested = false;
+                FillLotLocation(rowKey, line);
+            }
+        }
+        else if (Is(e.Field, nameof(ShipmentLine.PalletNo)) && !_applying)
+        {
+            var palletNo = line.PalletNo?.Trim().ToUpperInvariant();
+            if (string.IsNullOrEmpty(palletNo))
+            {
+                lines.SetValue(rowKey, nameof(ShipmentLine.PalletId), null);
+            }
+            else
+            {
+                Later(() => ApplyPalletAsync(rowKey, palletNo));
+            }
+        }
+    }
+
+    // Runs after the grid finishes the edit: the change event comes in the middle of it
+    private void Later(Func<Task> action) => _ = InvokeAsync(async () =>
+    {
+        await Task.Yield();
+        await action();
+    });
+
+    private void ClearLocation(int rowKey)
+    {
+        var lines = _frame!.Lines;
+        lines.SetValue(rowKey, nameof(ShipmentLine.LocationCode), null);
+        lines.SetValue(rowKey, nameof(ShipmentLine.LocationId), null);
+        lines.GetItem(rowKey).Suggested = false;
+    }
+
+    // A lot picked without a Location takes the lot's Location when the lot is in one Location only
+    private void FillLotLocation(int rowKey, ShipmentLine line)
+    {
+        if (!string.IsNullOrEmpty(line.LocationCode) || line.LotNo is not { Length: > 0 } lotNo)
+        {
+            return;
+        }
+        var balances = _lotBalances.Where(b => Is(b.LotNo, lotNo)).ToList();
+        if (balances.Select(b => b.LocationCode).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 1)
+        {
+            return;
+        }
+        Quietly(() =>
+        {
+            _frame!.Lines.SetValue(rowKey, nameof(ShipmentLine.LocationCode), balances[0].LocationCode);
+            _frame.Lines.SetValue(rowKey, nameof(ShipmentLine.LocationId), balances[0].LocationId);
+        });
+    }
+
+    private void Quietly(Action action)
+    {
+        var applying = _applying;
+        _applying = true;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            _applying = applying;
+        }
+    }
+
+    // MM-BR-716: a new line of a lot- or Location-managed item takes the (Location, Lot) parts of the FIFO suggestion. Each part
+    // after the first is a line under it, and a short qty stays on a line with no Location or Lot, with a warning (the save then
+    // fails on the stock check). Pallet lines and Kit lines are left alone: a Kit's components are allocated by the API (SD-BR-518)
+    private async Task SuggestAsync(int rowKey)
+    {
+        var lines = _frame!.Lines;
+        if (!IsNewRow(rowKey))
+        {
+            return;
+        }
+        var line = lines.GetItem(rowKey);
+        if (line.IsLocked || line.PalletId is not null || line.ItemId is not { } itemId || line.WarehouseId is not { } warehouseId
+            || line.ShipQty is not { } qty || qty <= 0)
+        {
+            return;
+        }
+        StockSuggestionResultDto result;
+        try
+        {
+            if (await ItemOfAsync(itemId, line.ItemCd) is not { } item || item.ItemType == ShipmentLine.KitType
+                || !(item.LotManaged || item.LocationManaged))
+            {
+                return;
+            }
+            result = await LotApi.SuggestAsync(itemId, warehouseId, qty, Header().ShipDt ?? DateOnly.FromDateTime(DateTime.Today), CancellationToken.None);
+        }
+        catch (ApiProblemException e)
+        {
+            _frame.ShowMessage(Messages.Get(e.Problem), isError: true);
+            return;
+        }
+        catch (HttpRequestException)
+        {
+            _frame.ShowMessage(Messages.Get(UnavailableCode), isError: true);
+            return;
+        }
+        // The line may have changed while the API answered
+        if (!IsNewRow(rowKey) || lines.GetItem(rowKey) is not { } current || current.ItemId != itemId || current.WarehouseId != warehouseId
+            || current.ShipQty != qty || current.PalletId is not null)
+        {
+            return;
+        }
+        var parts = result.Lines.Select(p => current.Part(p, p.Qty)).ToList();
+        if (result.ShortQty > 0)
+        {
+            parts.Add(current.Part(null, result.ShortQty));
+        }
+        if (parts.Count == 0)
+        {
+            return;
+        }
+        var last = rowKey;
+        Quietly(() =>
+        {
+            var first = parts[0];
+            lines.SetValue(rowKey, nameof(ShipmentLine.LocationCode), first.LocationCode);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LocationId), first.LocationId);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LotNo), first.LotNo);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LotId), first.LotId);
+            lines.SetValue(rowKey, nameof(ShipmentLine.ShipQty), first.ShipQty);
+            current.Suggested = first.Suggested;
+            foreach (var part in parts.Skip(1))
+            {
+                last = lines.AddRow(part, last);
+            }
+        });
+        if (result.ShortQty > 0)
+        {
+            MarkCell(last, nameof(ShipmentLine.LocationCode), true);
+            _frame.ShowMessage(string.Format(CultureInfo.CurrentCulture, L["Sd.Shipment.StockShort"], current.ItemCd,
+                result.ShortQty.ToString("N" + _decimals.Qty.ToString(CultureInfo.InvariantCulture), CultureInfo.CurrentCulture)), isError: false);
+        }
+        StateHasChanged();
+    }
+
+    private bool IsNewRow(int rowKey) =>
+        _frame!.Lines.RowKeys.Contains(rowKey) && _frame.Lines.GetState(rowKey) is not (RowState.Normal or RowState.Deleted);
+
+    private async Task<ItemDto?> ItemOfAsync(long itemId, string? itemCd)
+    {
+        if (_items.TryGetValue(itemId, out var item))
+        {
+            return item;
+        }
+        if (itemCd is null || await ItemApi.FindByCodeAsync(itemCd, CancellationToken.None) is not { } found)
+        {
+            return null;
+        }
+        _items[found.Id] = found;
+        return found;
+    }
+
+    // MM-BR-913: a Pallet line ships the whole Pallet. The Pallet's item, warehouse, Location, Lot and qty fill the line and stay
+    // locked while the Pallet is on it; a direct line then takes the item's price
+    private async Task ApplyPalletAsync(int rowKey, string palletNo)
+    {
+        var lines = _frame!.Lines;
+        if (!IsNewRow(rowKey))
+        {
+            return;
+        }
+        var line = lines.GetItem(rowKey);
+        ShipmentPalletDto? pallet = null;
+        try
+        {
+            if ((line.WarehouseId ?? WarehouseOf(Header().WarehouseCode)?.Id) is { } warehouseId)
+            {
+                var found = await Api.PalletsAsync(new ShipmentPalletQuery(warehouseId, palletNo, line.IsImported ? line.ItemId : null), CancellationToken.None);
+                pallet = found.FirstOrDefault(p => Is(p.PalletNo, palletNo));
+            }
+        }
+        catch (ApiProblemException e)
+        {
+            _frame.ShowMessage(Messages.Get(e.Problem), isError: true);
+            return;
+        }
+        catch (HttpRequestException)
+        {
+            _frame.ShowMessage(Messages.Get(UnavailableCode), isError: true);
+            return;
+        }
+        if (!IsNewRow(rowKey) || lines.GetItem(rowKey) is not { } current || !Is(current.PalletNo?.Trim() ?? "", palletNo))
+        {
+            return;
+        }
+        if (pallet is null)
+        {
+            Quietly(() =>
+            {
+                lines.SetValue(rowKey, nameof(ShipmentLine.PalletNo), null);
+                lines.SetValue(rowKey, nameof(ShipmentLine.PalletId), null);
+            });
+            _frame.ShowMessage(Messages.Get(new ApiProblem(404, NotFoundCode, [palletNo])), isError: true);
+            return;
+        }
+        _itemIds[pallet.ItemCd] = pallet.ItemId;
+        Quietly(() =>
+        {
+            lines.SetValue(rowKey, nameof(ShipmentLine.PalletId), pallet.Id);
+            if (!current.IsImported)
+            {
+                lines.SetValue(rowKey, nameof(ShipmentLine.ItemCd), pallet.ItemCd);
+                lines.SetValue(rowKey, nameof(ShipmentLine.ItemName), pallet.ItemName);
+                lines.SetValue(rowKey, nameof(ShipmentLine.Unit), pallet.Unit);
+            }
+            lines.SetValue(rowKey, nameof(ShipmentLine.WarehouseCode), pallet.WarehouseCode);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LocationCode), pallet.LocationCode);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LocationId), pallet.LocationId);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LotNo), pallet.LotNo == ShipmentLine.System ? null : pallet.LotNo);
+            lines.SetValue(rowKey, nameof(ShipmentLine.LotId), pallet.LotNo == ShipmentLine.System ? null : pallet.LotId);
+            lines.SetValue(rowKey, nameof(ShipmentLine.ShipQty), pallet.Qty);
+            current.Suggested = false;
+        });
+        MarkCell(rowKey, nameof(ShipmentLine.LocationCode), false);
+        if (!current.IsImported)
+        {
+            await ApplyLineDefaultsAsync(rowKey);
+        }
+        StateHasChanged();
+    }
+
+    // The Location ids of new lines from their codes in the line warehouse; '*' or none is null, which the API reads as '*'
+    // (MM-BR-713). A Pallet line keeps its Pallet's Location
+    private async Task ResolveLocationsAsync(IEnumerable<ShipmentLine> lines)
+    {
+        foreach (var line in lines.Where(l => !l.IsLocked && l.PalletId is null))
+        {
+            var code = line.LocationCode?.Trim();
+            if (string.IsNullOrEmpty(code) || code == ShipmentLine.System || line.WarehouseId is not { } warehouseId)
+            {
+                line.LocationId = null;
+                continue;
+            }
+            if (!_locations.TryGetValue(warehouseId, out var options))
+            {
+                options = await LocationApi.GetOptionsAsync(warehouseId, CancellationToken.None);
+                _locations[warehouseId] = options;
+            }
+            line.LocationId = options.FirstOrDefault(o => Is(o.LocationCode, code))?.Id ?? line.LocationId;
         }
     }
 
@@ -801,11 +1137,14 @@
         }
     }
 
+    // The lines kept, without the component rows (SD-BR-517)
     private List<ShipmentLine> ActiveLines()
     {
         var lines = _frame!.Lines;
-        return [.. lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).Select(lines.GetItem)];
+        return ShipLines(lines.RowKeys.Where(k => lines.GetState(k) != RowState.Deleted).Select(lines.GetItem));
     }
+
+    private static List<ShipmentLine> ShipLines(IEnumerable<ShipmentLine> lines) => [.. lines.Where(l => !l.IsComponent)];
 
     // The header as the frame holds it (the inputs write to this object)
     private ShipmentHeader Header() => _frame!.Header;

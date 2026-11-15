@@ -83,6 +83,18 @@ public sealed class ShipmentApiClient(HttpClient http, AccessTokenProvider token
         return await response.Content.ReadFromJsonAsync<List<UnshippedInvoiceLineDto>>(cancellationToken) ?? [];
     }
 
+    /// <summary>The warehouse's ACTIVE Pallets by Pallet number start or item, in number order (MM-BR-913).</summary>
+    public async Task<IReadOnlyList<ShipmentPalletDto>> PalletsAsync(ShipmentPalletQuery query, CancellationToken cancellationToken)
+    {
+        var parameters = new List<string>();
+        Add(parameters, "warehouseId", query.WarehouseId?.ToString(CultureInfo.InvariantCulture));
+        Add(parameters, "palletNo", query.PalletNo?.Trim());
+        Add(parameters, "itemId", query.ItemId?.ToString(CultureInfo.InvariantCulture));
+        using var response = await http.SendAuthorizedAsync(
+            tokens, new HttpRequestMessage(HttpMethod.Get, Uri($"{ShipmentRoutes.Base}/{ShipmentRoutes.Pallets}", parameters)), cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<ShipmentPalletDto>>(cancellationToken) ?? [];
+    }
+
     /// <summary>The delivery note as PDF in the user's language.</summary>
     public async Task<DownloadedFile> DeliveryNotePdfAsync(long id, string shipNo, CancellationToken cancellationToken)
     {

@@ -149,6 +149,24 @@ public sealed class ShipmentService(
         return rows;
     }
 
+    /// <summary>
+    /// MM-BR-913: the ACTIVE Pallets of a warehouse a line can ship, by number start or item, at most
+    /// <see cref="ShipmentRoutes.MaxListSize"/>.
+    /// </summary>
+    /// <exception cref="DomainException">Common-E-005 without a warehouse.</exception>
+    public async Task<IReadOnlyList<ShipmentPalletDto>> PalletsAsync(ShipmentPalletQuery query, CancellationToken cancellationToken)
+    {
+        if (query.WarehouseId is not > 0)
+        {
+            throw new DomainException(ShipmentRules.RequiredCode, "warehouseId");
+        }
+        await using var uow = await unitOfWork.BeginAsync(cancellationToken);
+        var rows = await shipments.FindPalletsAsync(
+            query with { PalletNo = Clean(query.PalletNo)?.ToUpperInvariant() }, ShipmentRoutes.MaxListSize, uow.Transaction, cancellationToken);
+        await uow.CommitAsync(cancellationToken);
+        return rows;
+    }
+
     /// <summary>Saves a new shipment with the next SH number (SD-BR-164), issues its stock and, for SHIP_AND_BILL, makes its invoice.</summary>
     /// <exception cref="DomainException">
     /// SD-E-004, 031, 035, 114, 161, 162, 170, 174, 175, MM-E-703, MM-E-710; the inventory checks (MM-E-001, 002, 009, 010, 355,
@@ -273,6 +291,16 @@ public sealed class ShipmentService(
             : (await shipments.LockOrderLinesAsync(ids, transaction, cancellationToken)).ToDictionary(l => l.Id);
     }
 
+    // Pallets in id order, after the orders and invoices, as every save takes them
+    private async Task<IReadOnlyDictionary<long, ShipmentPallet>> LockPalletsAsync(
+        IEnumerable<long?> palletIds, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var ids = palletIds.OfType<long>().Distinct().ToList();
+        return ids.Count == 0
+            ? new Dictionary<long, ShipmentPallet>()
+            : (await shipments.LockPalletsAsync(ids, transaction, cancellationToken)).ToDictionary(p => p.Id);
+    }
+
     private async Task<IReadOnlyDictionary<long, ShipmentInvoiceLine>> LockInvoiceLinesAsync(
         IEnumerable<long?> salesInvoiceLineIds, IDbTransaction transaction, CancellationToken cancellationToken)
     {
@@ -357,7 +385,10 @@ public sealed class ShipmentService(
             : request.WarehouseId ?? stored?.WarehouseId
               ?? await shipments.FindDefaultWarehouseAsync(user, transaction, cancellationToken)
               ?? throw new DomainException(ShipmentRules.WarehouseCode, 0);
-        var added = addedRequests.Select(l => Input(l, warehouseId, l.TaxCodeId ?? customer.Fields.TaxCodeId ?? 0)).ToList();
+        // MM-BR-913: a Pallet line takes its locked Pallet's warehouse, Location and Lot
+        var pallets = await LockPalletsAsync(addedRequests.Select(l => l.PalletId).Concat(deleted.Select(l => l.PalletId)), transaction, cancellationToken);
+        var added = ShipmentRules.WithPallets(
+            [.. addedRequests.Select(l => Input(l, warehouseId, l.TaxCodeId ?? customer.Fields.TaxCodeId ?? 0))], pallets);
         if (billingFlow != Customer.BillThenShip)
         {
             WarehouseRules.EnsureUserSelectable(
@@ -377,6 +408,7 @@ public sealed class ShipmentService(
         var lines = ShipmentRules.Lines(
             added, nextSeq, billingFlow, request.CustomerId, orderLines, invoiceLines, itemCodes.Keys.ToHashSet(), usable, rates.Keys.ToHashSet(),
             consignment?.Id, currencyCode, decimalPolicy);
+        ShipmentRules.EnsurePallets(lines, pallets);
         ShipmentRules.EnsureRemaining(lines, deleted, orderLines);
         ShipmentRules.EnsureUnshipped(lines, deleted, invoiceLines, ShipmentStatus.Void);
 
@@ -464,17 +496,28 @@ public sealed class ShipmentService(
         await ReverseAsync(shipNo, stored, save.Deleted, header.ShipDt, user, transaction, cancellationToken);
         if (save.Added.Count > 0)
         {
-            // Service items have no stock; the inventory service skips them and expands sets (MM-BR-007, MM-BR-008)
+            // Service items have no stock; the inventory service skips them and expands Kits, whose components it assigns in FIFO
+            // order (MM-BR-007, SD-BR-518). A Pallet line issues its Pallet's key (MM-BR-913)
             var posted = await inventory.PostAsync(
                 [.. save.Added.Select(l => new StockMovementRequest(
-                    MovementType.Delivery, header.ShipDt, l.ItemId, l.WarehouseId, -l.ShipQty, null, shipNo, l.Seq, l.LotId, l.LotNo))],
+                    MovementType.Delivery, header.ShipDt, l.ItemId, l.WarehouseId, -l.ShipQty, null, shipNo, l.Seq, l.LotId, l.LotNo,
+                    LocationId: l.LocationId, PalletId: l.PalletId))],
                 user, transaction, cancellationToken);
             await EnsureCostAsync(posted, save.ItemCodes, transaction, cancellationToken);
-            var lots = posted.Where(m => m.LotId is not null && m.RefSeq is not null).GroupBy(m => m.RefSeq!.Value)
-                .ToDictionary(g => g.Key, g => g.First().LotId!.Value);
-            if (lots.Count > 0)
+            // The line keeps the key its own item issued; a Kit line's components keep theirs in the movements
+            var itemBySeq = save.Added.ToDictionary(l => l.Seq, l => l.ItemId);
+            var keys = posted
+                .Where(m => m.RefSeq is { } seq && itemBySeq.GetValueOrDefault(seq) == m.ItemId && m.LocationId is not null && m.LotId is not null)
+                .GroupBy(m => m.RefSeq!.Value)
+                .ToDictionary(g => g.Key, g => (g.First().LocationId!.Value, g.First().LotId!.Value));
+            if (keys.Count > 0)
             {
-                await shipments.SetLineLotsAsync(id, lots, transaction, cancellationToken);
+                await shipments.SetLineKeysAsync(id, keys, transaction, cancellationToken);
+            }
+            var shipped = save.Added.Where(l => l.PalletId is not null).Select(l => new ShipmentPalletShip(l.PalletId!.Value, l.Seq, l.ShipQty)).ToList();
+            if (shipped.Count > 0)
+            {
+                await shipments.ShipPalletsAsync(shipped, header.ShipDt, shipNo, user, transaction, cancellationToken);
             }
         }
         await TakeBackQtyAsync(header.BillingFlow, save.Added, save.Deleted, save.OrderLines, user, transaction, cancellationToken);
@@ -489,7 +532,8 @@ public sealed class ShipmentService(
         await shipments.SetStatusAsync(id, status, invoiceId, user, transaction, cancellationToken);
     }
 
-    // MM-BR-601: a reversal is dated the day it is made, never before the shipment itself. Service lines have no movement
+    // MM-BR-601: a reversal is dated the day it is made, never before the shipment itself. Service lines have no movement. A
+    // Pallet line's Pallet is ACTIVE again where it was, after its stock is back (MM-BR-913, MM-BR-916)
     private async Task ReverseAsync(
         string shipNo, ShipmentRow? stored, IReadOnlyList<StoredShipmentLine> lines, DateOnly shipDt, string user, IDbTransaction transaction,
         CancellationToken cancellationToken)
@@ -498,13 +542,19 @@ public sealed class ShipmentService(
         {
             return;
         }
+        var today = clock.Today();
+        var reversalDt = today < shipDt ? shipDt : today;
         // A migrated shipment's stock was issued under its invoice number (0303)
         string[] refKeys = stored?.SalesInvoiceNo is { } dnNo && stored.Id == stored.SalesInvoiceId ? [shipNo, dnNo] : [shipNo];
         var movementIds = await shipments.FindOpenMovementIdsAsync(refKeys, [.. lines.Select(l => l.Seq)], transaction, cancellationToken);
         if (movementIds.Count > 0)
         {
-            var today = clock.Today();
-            await inventory.ReverseAsync(movementIds, today < shipDt ? shipDt : today, user, transaction, cancellationToken);
+            await inventory.ReverseAsync(movementIds, reversalDt, user, transaction, cancellationToken);
+        }
+        var returned = lines.Where(l => l.PalletId is not null).Select(l => new ShipmentPalletShip(l.PalletId!.Value, l.Seq, l.ShipQty)).ToList();
+        if (returned.Count > 0)
+        {
+            await shipments.ReturnPalletsAsync(returned, reversalDt, shipNo, user, transaction, cancellationToken);
         }
     }
 
@@ -617,6 +667,7 @@ public sealed class ShipmentService(
         var invoice = r.BillingFlow == Customer.ShipAndBill && r.SalesInvoiceId is { } invoiceId
             ? await shipments.FindInvoiceAsync(invoiceId, forUpdate: false, transaction, cancellationToken)
             : null;
+        var components = await ComponentsAsync(r.ShipNo, lines, transaction, cancellationToken);
         return new ShipmentDto(
             r.Id, r.ShipNo, r.Status, r.BillingFlow, r.CustomerId, r.CustomerName, r.SalesOrderId, r.SoNo, r.ShipDt, r.WarehouseId, r.CurrencyCode,
             r.ExchangeRate, r.ShipVia, s.ShipName, s.ShipAddr1, s.ShipAddr2, s.ShipCity, s.ShipState, s.ShipZipCode, s.ShipCountry, s.ShipPhone,
@@ -624,9 +675,37 @@ public sealed class ShipmentService(
             [.. lines.Select(l => new ShipmentLineDto(
                 l.Id, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.Unit, l.WarehouseId, l.WarehouseCode, l.LotId, l.LotNo, l.ShipQty, l.ShipPrc, l.DcCd,
                 l.DcRate, l.TaxCodeId, l.BilledQty, l.OnhandQty, l.SalesOrderLineId, l.SoNo, l.SoSeq, l.SalesInvoiceLineId, l.DnNo, l.DnSeq,
-                l.RemainingQty))],
+                l.RemainingQty, l.LocationId, l.LocationCode, l.PalletId, l.PalletNo, l.ShowComponents, components.GetValueOrDefault(l.Seq)))],
             r.UpdatedAt, r.CreatedAt, r.CreatedBy, r.UpdatedBy,
             invoice is not null && !ShipmentRules.IsInvoiceOpen(invoice.TotDnAmt, invoice.BalAmt));
+    }
+
+    // SD-BR-517, SD-BR-518: the rows under a Kit or Set line. A Kit line shows the components its save issued with their
+    // Locations and Lots, or its BOM when nothing is open any more (a void shipment, a migrated one); a Set line shows its BOM
+    // when the item shows its components
+    private async Task<Dictionary<int, IReadOnlyList<ShipmentComponentDto>>> ComponentsAsync(
+        string shipNo, IReadOnlyList<ShipmentLineRow> lines, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        var kits = lines.Where(l => l.ItemType == ItemStock.Kit).ToList();
+        var sets = lines.Where(l => l.ItemType == ItemStock.Set && l.ShowComponents).ToList();
+        if (kits.Count == 0 && sets.Count == 0)
+        {
+            return [];
+        }
+        IReadOnlyList<ShipmentKitComponentRow> kitRows = kits.Count == 0
+            ? []
+            : await shipments.FindKitComponentsAsync(shipNo, transaction, cancellationToken);
+        var issued = kitRows.ToLookup(c => c.Seq);
+        var bom = (await shipments.FindBomAsync([.. kits.Concat(sets).Select(l => l.ItemId).Distinct()], transaction, cancellationToken))
+            .ToLookup(b => b.SetItemId);
+        var components = new Dictionary<int, IReadOnlyList<ShipmentComponentDto>>();
+        foreach (var line in kits.Concat(sets))
+        {
+            components[line.Seq] = line.ItemType == ItemStock.Kit && issued.Contains(line.Seq)
+                ? [.. issued[line.Seq].Select(c => new ShipmentComponentDto(c.ItemId, c.ItemCd, c.ItemName, c.Unit, c.Qty, c.LocationCode, c.LotNo))]
+                : [.. bom[line.ItemId].Select(b => new ShipmentComponentDto(b.ItemId, b.ItemCd, b.ItemName, b.Unit, b.ChildQty * line.ShipQty))];
+        }
+        return components;
     }
 
     private static Dictionary<long, decimal> Sum(IEnumerable<(long Key, decimal Qty)> changes) =>
@@ -638,7 +717,8 @@ public sealed class ShipmentService(
 
     private static ShipmentLineInput Input(SaveShipmentLineRequest line, long defaultWarehouseId, long defaultTaxCodeId) => new(
         line.Id, line.ItemId, Clean(line.ItemName), line.WarehouseId ?? defaultWarehouseId, line.ShipQty, line.ShipPrc ?? 0m,
-        line.TaxCodeId ?? defaultTaxCodeId, line.LotId, Clean(line.LotNo)?.ToUpperInvariant(), line.SalesOrderLineId, line.SalesInvoiceLineId);
+        line.TaxCodeId ?? defaultTaxCodeId, line.LotId, Clean(line.LotNo)?.ToUpperInvariant(), line.SalesOrderLineId, line.SalesInvoiceLineId,
+        line.LocationId, line.PalletId);
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

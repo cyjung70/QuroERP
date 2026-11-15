@@ -258,6 +258,75 @@ public class ShipmentRulesTests
         act.Should().Throw<DomainException>().Which.Args.Should().Equal("shipQty", 0);
     }
 
+    [Fact, Trait("Id", "MM-UT-913"), Trait("Rule", "MM-BR-913")]
+    public void APalletLine_TakesThePalletsWarehouseLocationAndLot_WhateverTheRequestSays()
+    {
+        var pallets = Pallets(Pallet());
+        var onPallet = Direct(qty: 7m) with { PalletId = 77, WarehouseId = Consignment, LocationId = 1, LotId = 2, LotNo = "OTHER" };
+        var plain = Direct();
+
+        var lines = ShipmentRules.WithPallets([onPallet, plain], pallets);
+
+        lines[0].Should().Be(onPallet with { WarehouseId = Main, LocationId = 21, LotId = 31, LotNo = null });
+        lines[1].Should().Be(plain);
+        ShipmentRules.WithPallets([Direct() with { PalletId = 99 }], pallets).Single().PalletId.Should().Be(99, "EnsurePallets refuses it");
+    }
+
+    [Fact, Trait("Id", "MM-UT-913"), Trait("Rule", "MM-BR-913")]
+    public void APalletLine_ShipsTheWholeActivePallet()
+    {
+        var lines = Lines(ShipAndBill, ShipmentRules.WithPallets([Direct(qty: 7m) with { PalletId = 77 }], Pallets(Pallet())).ToArray());
+
+        lines.Single().Should().Match<ShipmentLine>(l => l.PalletId == 77 && l.LocationId == 21 && l.LotId == 31);
+        ShipmentRules.EnsurePallets(lines, Pallets(Pallet()));
+    }
+
+    [Theory, Trait("Id", "MM-UT-913"), Trait("Rule", "MM-BR-913")]
+    [InlineData("CLOSED", Item, Main, 7)]
+    [InlineData("ACTIVE", 2, Main, 7)]
+    [InlineData("ACTIVE", Item, Consignment, 7)]
+    [InlineData("ACTIVE", Item, Main, 6)]
+    public void APalletThatIsNotShippedWhole_IsMmE913WithTheLineAndPallet(string status, long item, long warehouse, decimal qty)
+    {
+        var pallet = Pallet() with { Status = status, ItemId = item, WarehouseId = warehouse, Qty = qty };
+        var lines = Lines(ShipAndBill, Direct(qty: 7m) with { PalletId = 77 });
+
+        var act = () => ShipmentRules.EnsurePallets(lines, Pallets(pallet));
+
+        var error = act.Should().Throw<DomainException>().Which;
+        (error.Code, error.Args[0], error.Args[1]).Should().Be(("MM-E-913", (object)3, (object)"P0001"));
+    }
+
+    [Fact, Trait("Id", "MM-UT-913"), Trait("Rule", "MM-BR-913")]
+    public void OnePallet_GoesOnOneLineOnly_AndAMissingPalletIsNamedByItsId()
+    {
+        var twice = Lines(ShipAndBill, Direct(qty: 7m) with { PalletId = 77 }, Direct(qty: 7m) with { PalletId = 77 });
+
+        var act = () => ShipmentRules.EnsurePallets(twice, Pallets(Pallet()));
+        act.Should().Throw<DomainException>().Which.Args.Should().Equal(4, "P0001");
+
+        var missing = () => ShipmentRules.EnsurePallets(Lines(ShipAndBill, Direct(qty: 7m) with { PalletId = 99 }), Pallets(Pallet()));
+        missing.Should().Throw<DomainException>().Which.Args.Should().Equal(3, 99L);
+    }
+
+    [Fact, Trait("Id", "SD-UT-171"), Trait("Rule", "MM-BR-913")]
+    public void ASavedLine_KeepsItsLocationAndPallet()
+    {
+        var stored = Stored(2, 3m) with { LocationId = 21, PalletId = 77 };
+        var same = new ShipmentLineInput(stored.Id, Item, null, Main, 3m, 100m, Vat10, null, null, null, null, 21, 77);
+
+        ShipmentRules.EnsureUnchanged(stored, same);
+        var otherLocation = () => ShipmentRules.EnsureUnchanged(stored, same with { LocationId = 22 });
+        var otherPallet = () => ShipmentRules.EnsureUnchanged(stored, same with { PalletId = 78 });
+
+        otherLocation.Should().Throw<DomainException>().Which.Args.Should().Equal(2);
+        otherPallet.Should().Throw<DomainException>().Which.Args.Should().Equal(2);
+    }
+
+    private static ShipmentPallet Pallet() => new(77, "P0001", Item, 31, Main, 21, 7m, ShipmentPallet.Active);
+
+    private static Dictionary<long, ShipmentPallet> Pallets(params ShipmentPallet[] pallets) => pallets.ToDictionary(p => p.Id);
+
     private static IReadOnlyList<ShipmentLine> Lines(string billingFlow, params ShipmentLineInput[] added) =>
         ShipmentRules.Lines(added, 3, billingFlow, Customer, Orders(), Invoices(), Items, Warehouses, TaxCodes, Consignment, "USD", Decimals);
 

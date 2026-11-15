@@ -29,6 +29,7 @@ public class ShipmentApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
             await client.GetAsync($"{ShipmentRoutes.Base}/{ShipmentRoutes.OpenOrderLines}?customerId=1"),
             await client.GetAsync($"{ShipmentRoutes.Base}/{ShipmentRoutes.UnbilledLines}?customerId=1&currencyCode=USD"),
             await client.GetAsync($"{ShipmentRoutes.Base}/{ShipmentRoutes.UnshippedInvoiceLines}?customerId=1"),
+            await client.GetAsync($"{ShipmentRoutes.Base}/{ShipmentRoutes.Pallets}?warehouseId=1"),
             await client.GetAsync($"{ShipmentRoutes.Base}/1/{ShipmentRoutes.Print}"),
         };
 

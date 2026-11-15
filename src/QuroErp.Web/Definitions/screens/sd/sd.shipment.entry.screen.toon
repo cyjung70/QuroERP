@@ -2,7 +2,8 @@
 # invoice (SD-BR-175) or are entered directly (SD-BR-173): a picked item takes the sales order line defaults (price, tax code).
 # The warehouse column defaults to the header warehouse (MM-BR-703); the lot column picks a lot with a balance on the ship date
 # (MM-BR-355, MM-BR-362). Saved lines are not changed but deleted and added again (SD-BR-171). Amounts are display values; the
-# API calculates the stored ones.
+# API calculates the stored ones. TASK-CORE-074: Location and Lot default to the FIFO suggestion and a line splits per part
+# (MM-BR-716); a Pallet fills and locks its line (MM-BR-913); saved Kit and Set lines show component rows (SD-BR-517).
 screen:
   id: sd.shipment.entry
   module: SD
@@ -32,14 +33,16 @@ grids[1]:
     bind: lines
     rowKey: id
     deletedRows: strike
-    columns[13]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
+    columns[15]{id,label,type,width,edit,req,fmt,lookup,sum,hidden}:
       seq,Sd.Shipment.Seq,number,50,false,false,N0,"",false,false
       soNo,Sd.Shipment.SoNo,text,120,false,false,"","",false,false
       dnNo,Sd.Shipment.DnNo,text,120,false,false,"","",false,false
+      palletNo,Sd.Shipment.PalletNo,text,130,true,false,"",sdShipPallet,false,false
       itemCd,Sd.Shipment.ItemCd,text,130,true,true,"",sdSoItem,false,false
       itemName,Sd.Shipment.ItemName,text,200,false,false,"","",false,false
       unit,Sd.Shipment.Unit,text,60,false,false,"","",false,false
       warehouseCode,Sd.Shipment.LineWarehouseId,text,100,true,true,"",sdShipWarehouse,false,false
+      locationCode,Sd.Shipment.LocationCode,text,100,true,false,"",sdShipLocation,false,false
       lotNo,Sd.Shipment.LotNo,text,120,true,false,"",sdShipLot,false,false
       shipQty,Sd.Shipment.ShipQty,number,90,true,true,N2,"",false,false
       shipPrc,Sd.Shipment.ShipPrc,number,110,true,true,N2,"",false,false

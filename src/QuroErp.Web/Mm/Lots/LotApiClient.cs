@@ -16,4 +16,16 @@ public sealed class LotApiClient(HttpClient http, AccessTokenProvider tokens)
         using var response = await http.SendAuthorizedAsync(tokens, new HttpRequestMessage(HttpMethod.Get, uri), cancellationToken);
         return await response.Content.ReadFromJsonAsync<List<LotBalanceDto>>(cancellationToken) ?? [];
     }
+
+    /// <summary>
+    /// The (Location, Lot) parts qty of the item should leave the warehouse from, in FIFO order, and the short qty
+    /// (api/mm/stock-suggestions, MM-BR-716).
+    /// </summary>
+    public async Task<StockSuggestionResultDto> SuggestAsync(long itemId, long warehouseId, decimal qty, DateOnly date, CancellationToken cancellationToken)
+    {
+        var uri = string.Create(CultureInfo.InvariantCulture,
+            $"{LotRoutes.Suggestions}?itemId={itemId}&warehouseId={warehouseId}&qty={qty}&date={date:yyyy-MM-dd}");
+        using var response = await http.SendAuthorizedAsync(tokens, new HttpRequestMessage(HttpMethod.Get, uri), cancellationToken);
+        return await response.Content.ReadFromJsonAsync<StockSuggestionResultDto>(cancellationToken) ?? new StockSuggestionResultDto([], qty);
+    }
 }

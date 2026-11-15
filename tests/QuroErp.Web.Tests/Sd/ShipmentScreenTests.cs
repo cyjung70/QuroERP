@@ -29,6 +29,8 @@ using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Sd;
 using QuroErp.Web.Components.Pages.Sd.Models;
 using QuroErp.Web.Components.Screens;
+using QuroErp.Contracts.Mm.Locations;
+using QuroErp.Web.Mm.Locations;
 using QuroErp.Web.Mm.Lots;
 using QuroErp.Web.Mm.Warehouses;
 using QuroErp.Web.Sd.Customers;
@@ -42,6 +44,7 @@ namespace QuroErp.Web.Tests.Sd;
 public class ShipmentScreenTests : BunitContext
 {
     private const string Screen = "shipment";
+    private static readonly string[] PalletKeyFields = ["warehouseCode", "locationCode", "lotNo"];
     private readonly FakeShipmentApi _api = new();
     private readonly FakeConfirm _confirm = new();
     private readonly BunitAuthorizationContext _auth;
@@ -67,6 +70,7 @@ public class ShipmentScreenTests : BunitContext
         Services.AddHttpClient<WarehouseApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<UserProfileApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<LotApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
+        Services.AddHttpClient<LocationApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<CodeApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<FieldPolicyApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddScoped<FieldPolicyCache>();
@@ -218,7 +222,8 @@ public class ShipmentScreenTests : BunitContext
         var page = Open();
 
         Lines(page).Headers.Select(h => h.Field).Should().Equal(
-            "seq", "soNo", "dnNo", "itemCd", "itemName", "unit", "warehouseCode", "lotNo", "shipQty", "shipPrc", "remainingQty", "onhandQty", "billedQty");
+            "seq", "soNo", "dnNo", "palletNo", "itemCd", "itemName", "unit", "warehouseCode", "locationCode", "lotNo", "shipQty", "shipPrc",
+            "remainingQty", "onhandQty", "billedQty");
         Lines(page).IsReadOnly(0, "itemName").Should().BeTrue();
         var line = Frame(page).Lines.GetItem(Lines(page).KeyOf(0));
         (line.SoNo, line.RemainingQty).Should().Be(("SO2611000001", 2m));
@@ -494,6 +499,124 @@ public class ShipmentScreenTests : BunitContext
         _api.Requests.Should().Contain(r => r.RequestUri!.PathAndQuery == "/api/mm/lots?itemId=11&warehouseId=1&date=2026-11-05");
     }
 
+    [Fact, Trait("Id", "MM-UT-716"), Trait("Rule", "MM-BR-716")]
+    public async Task LotManagedLine_TakesTheFifoParts_SplitsPerPart_AndKeepsTheShortQtyOnAnEmptyLine()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        var lines = Lines(page);
+        Button(page, "add-row").Click();
+        (await lines.EditAsync(0, "itemCd", "resin")).Should().BeTrue();
+        var key = lines.KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(key).LotNo.Should().Be("L1"));
+        Frame(page).Lines.GetItem(key).LocationCode.Should().Be("A1", "qty 1 fits in the first FIFO part");
+
+        (await lines.EditAsync(0, "shipQty", "5")).Should().BeTrue();
+
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(3));
+        var rows = Enumerable.Range(0, 3).Select(i => Frame(page).Lines.GetItem(lines.KeyOf(i))).ToList();
+        rows.Select(l => (l.LocationCode, l.LotNo, l.ShipQty)).Should().Equal(
+            ("A1", "L1", 3m), ("*", "L2", 1m), (null, null, 1m));
+        rows.Select(l => l.ShipPrc).Should().AllBeEquivalentTo(22m, "the parts keep the line's price");
+        Frame(page).Lines.GetCellMark(lines.KeyOf(2), "locationCode")!.Level.Should().Be(CellMarkLevel.Warning);
+        page.Find("[data-testid=shipment-message]").TextContent.Should().Contain("RESIN").And.Contain("1.00");
+        rows[0].ToRequest().Should().Match<SaveShipmentLineRequest>(r => r.LocationId == 21 && r.LotId == 1 && r.LotNo == "L1");
+        rows[1].ToRequest().LotNo.Should().Be("L2");
+    }
+
+    [Fact, Trait("Id", "MM-UT-716"), Trait("Rule", "MM-BR-716")]
+    public async Task UnmanagedItem_AsksNoSuggestion()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        var lines = Lines(page);
+        Button(page, "add-row").Click();
+
+        (await lines.EditAsync(0, "itemCd", "panel")).Should().BeTrue();
+
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(lines.KeyOf(0)).ShipPrc.Should().Be(22m));
+        _api.Requests.Should().NotContain(r => r.RequestUri!.AbsolutePath == "/" + LotRoutes.Suggestions);
+    }
+
+    [Fact, Trait("Id", "MM-UT-913"), Trait("Rule", "MM-BR-913")]
+    public async Task Pallet_FillsTheLine_AndLocksItsItemWarehouseLocationLotAndQty()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        var lines = Lines(page);
+        Button(page, "add-row").Click();
+
+        (await lines.EditAsync(0, "palletNo", "p0001")).Should().BeTrue();
+
+        var key = lines.KeyOf(0);
+        page.WaitForAssertion(() => Frame(page).Lines.GetItem(key).ShipPrc.Should().Be(22m));
+        var line = Frame(page).Lines.GetItem(key);
+        (line.PalletId, line.ItemCd, line.ItemId, line.WarehouseCode, line.LocationCode, line.LotNo, line.ShipQty)
+            .Should().Be(((long?)3001, "BOLT", (long?)11, "MAIN", "A1", "L1", (decimal?)7m));
+        (await lines.EditAsync(0, "itemCd", "PANEL")).Should().BeFalse("the item is the Pallet's");
+        (await lines.EditAsync(0, "shipQty", "3")).Should().BeFalse("the whole Pallet ships");
+        PalletKeyFields.Should().OnlyContain(f => line.IsCellLocked(f));
+        line.ToRequest().Should().Match<SaveShipmentLineRequest>(r => r.PalletId == 3001 && r.LocationId == 21 && r.ShipQty == 7m);
+        _api.Requests.Should().Contain(r => r.RequestUri!.PathAndQuery == "/api/sd/shipments/pallets?warehouseId=1&palletNo=P0001");
+    }
+
+    [Fact, Trait("Id", "MM-UT-913"), Trait("Rule", "MM-BR-913")]
+    public async Task UnknownPallet_FillsNothing()
+    {
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+        var lines = Lines(page);
+        Button(page, "add-row").Click();
+
+        await lines.EditAsync(0, "palletNo", "p9999");
+
+        var line = Frame(page).Lines.GetItem(lines.KeyOf(0));
+        (line.PalletId, line.ItemCd).Should().Be(((long?)null, (string?)null), "the warehouse has no such ACTIVE Pallet");
+    }
+
+    [Fact, Trait("Id", "SD-UT-517"), Trait("Rule", "SD-BR-517"), Trait("Rule", "SD-BR-518")]
+    public void KitLine_ShowsItsComponentRows_ReadOnly_NotCounted_AndNotSaved()
+    {
+        _api.Shipment = Shipment() with
+        {
+            Lines =
+            [
+                new ShipmentLineDto(9001, 1, 14, "KIT1", "Kit", "EA", 1, "MAIN", null, null, 2m, 50m, null, 0m, 1, 0m, 0m, null, null, null, null, null,
+                    null, Components: [new ShipmentComponentDto(11, "BOLT", "Hex Bolt", "EA", 4m, "A1", "L1")]),
+            ],
+        };
+        var page = RenderAs("admin", "SH0000001");
+        var lines = Lines(page);
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
+
+        var component = Frame(page).Lines.GetItem(lines.KeyOf(1));
+        (component.IsComponent, component.ItemCd, component.ItemName, component.LocationCode, component.LotNo, component.ShipQty)
+            .Should().Be((true, "BOLT", "└ Hex Bolt", "A1", "L1", (decimal?)4m));
+        page.Find("[data-testid=shipment-totals-line-count]").TextContent.Should().Contain("1");
+        page.Find("[data-testid=shipment-totals-total-qty]").TextContent.Should().Contain("2.00");
+        Frame(page).Lines.MoveTo(lines.KeyOf(1));
+        page.Render();
+        Button(page, "mark-delete").HasAttribute("disabled").Should().BeTrue("a component row goes with its line");
+
+        page.Field("shipment-header-remarks").Change("Kit");
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => _api.Saved.Should().ContainSingle());
+        _api.Saved[0].Lines.Should().ContainSingle().Which.Id.Should().Be(9001);
+    }
+
+    [Theory, Trait("Id", "SD-UT-518"), Trait("Rule", "SD-BR-518")]
+    [InlineData("locationCode", true)]
+    [InlineData("lotNo", true)]
+    [InlineData("palletNo", true)]
+    [InlineData("shipQty", false)]
+    public void KitLine_LeavesItsLocationLotAndPallet_ToTheSystem(string field, bool locked) =>
+        new ShipmentLine { ItemType = "KIT" }.IsCellLocked(field).Should().Be(locked);
+
     [Fact, Trait("Id", "SD-UT-309"), Trait("Rule", "SD-BR-309")]
     public void CreditLimitWarning_Yes_SavesAgainWithTheAnswer()
     {
@@ -743,6 +866,8 @@ public class ShipmentScreenTests : BunitContext
         [
             Item(11, "BOLT", "Hex Bolt", "EA", 12m),
             Item(12, "PANEL", "Panel", "EA", 25m),
+            Item(13, "RESIN", "Resin", "KG", 30m) with { LotManaged = true, LocationManaged = true },
+            Item(14, "KIT1", "Kit", "EA", 50m) with { ItemType = "KIT" },
         ];
 
         public List<HttpRequestMessage> Requests { get; } = [];
@@ -795,6 +920,14 @@ public class ShipmentScreenTests : BunitContext
                     return Json(new UserProfileDto("kim", "Kim", null, null, "ko", 1, "MAIN", "Main Store", AuditTimes.Updated));
                 case "/" + LotRoutes.Base:
                     return Json(new List<LotBalanceDto> { new(1, "L2611A", 30m), new(2, "L2611B", 20m) });
+                case "/" + LotRoutes.Suggestions:
+                    return Json(Suggest(decimal.Parse(query["qty"]!, CultureInfo.InvariantCulture)));
+                case "/" + LocationRoutes.Options:
+                    return Json(new List<LocationOptionDto> { new(20, "*", null), new(21, "A1", "Aisle 1") });
+                case "/api/sd/shipments/pallets":
+                    return Json(string.Equals(query["palletNo"], "P0001", StringComparison.OrdinalIgnoreCase)
+                        ? new List<ShipmentPalletDto> { new(3001, "P0001", 11, "BOLT", "Hex Bolt", "EA", 1, "MAIN", 21, "A1", 1, "L1", 7m) }
+                        : []);
                 case "/api/sd/customers":
                     return Json(new CustomerListDto([Acme], 1));
                 case "/" + ItemRoutes.Base:
@@ -853,6 +986,19 @@ public class ShipmentScreenTests : BunitContext
                 new(5001, 1, 11, "BOLT", "Hex Bolt", "EA", 10m, 4m, 6m, 10m, null, 0m, 1),
                 new(5002, 2, 12, "PANEL", "Panel", "EA", 2m, 0m, 2m, 25m, null, 0m, 1),
             ]);
+
+        // FIFO stock of RESIN in MAIN: 3 in A1 lot L1, then 1 in '*' lot L2; the rest is short
+        private static StockSuggestionResultDto Suggest(decimal qty)
+        {
+            var first = Math.Min(qty, 3m);
+            var second = Math.Min(qty - first, 1m);
+            var parts = new List<StockSuggestionDto> { new(21, "A1", 1, "L1", first) };
+            if (second > 0)
+            {
+                parts.Add(new StockSuggestionDto(20, "*", 2, "L2", second));
+            }
+            return new StockSuggestionResultDto(parts, qty - first - second);
+        }
 
         private static IReadOnlyList<CodeItemDto> Codes(string major) => major switch
         {

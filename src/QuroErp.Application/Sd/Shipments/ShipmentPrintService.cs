@@ -13,7 +13,8 @@ using QuroErp.Domain.Bc.Localization;
 namespace QuroErp.Application.Sd.Shipments;
 
 /// <summary>
-/// What the delivery note prints: the stored shipment as read by the API, its lines with warehouse and lot, the company head,
+/// What the delivery note prints: the stored shipment as read by the API, its lines with warehouse, Location and lot and the
+/// component rows of Kit and Set lines whose item shows them (SD-BR-517), the company head,
 /// bill-to and ship-to and the SD quantity decimals. It has no amounts, like the picking list.
 /// </summary>
 public sealed record ShipmentPrint(
@@ -51,6 +52,10 @@ public sealed class ShipmentPrintService(
         var place = await localization.FindCompanyAsync(tx, cancellationToken);
         var settings = await localization.FindDecimalSettingsAsync(tx, cancellationToken);
         await uow.CommitAsync(cancellationToken);
+
+        // SD-BR-517: a Kit or Set line prints its components when its item shows them
+        var shown = shipment.Lines.Where(l => l.ShowComponents && l.Components is { Count: > 0 }).ToDictionary(l => l.Seq, l => l.Components!);
+        lines = [.. lines.Select(l => shown.TryGetValue(l.Seq, out var components) ? l with { Components = components } : l)];
 
         var c = customer?.Fields;
         var print = new ShipmentPrint(
