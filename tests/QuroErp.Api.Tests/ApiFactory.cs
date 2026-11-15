@@ -165,6 +165,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Pallets of item BOLT on MAIN A-01 (MM-UC-035).</summary>
     public InMemoryPalletRepository Pallets { get; } = new();
 
+    public InMemoryLabelPrintRepository LabelPrints { get; } = new();
+
     /// <summary>My info rows of kim (7) and profile (16). Languages ko and en and warehouse 1 are in use.</summary>
     public InMemoryUserProfileRepository UserProfiles { get; } = new();
 
@@ -236,6 +238,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IPalletRepository>(Pallets);
             services.AddSingleton<ILabelFormatRepository>(new InMemoryLabelFormatRepository());
             services.AddSingleton<ILabelPdfRenderer>(new FakeLabelPdfRenderer());
+            services.AddSingleton<ILabelTargetRepository>(new InMemoryLabelTargetRepository());
+            services.AddSingleton(LabelPrints);
+            services.AddSingleton<ILabelPrintRepository>(LabelPrints);
+            services.AddSingleton<ILabelPrintHistoryRepository>(LabelPrints);
             services.AddSingleton<IDocumentNumberRepository>(new Common.InMemoryDocumentNumberRepository());
             services.AddSingleton<IUserProfileRepository>(UserProfiles);
             // /health without PostgreSQL or Chromium: one check whose status the test sets

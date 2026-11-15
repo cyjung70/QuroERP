@@ -23,6 +23,9 @@ public interface ILabelPdfRenderer
 /// <summary>The printed output: ZPL text for a Zebra printer or a PDF.</summary>
 public sealed record LabelOutput(string OutputKind, string ContentType, byte[] Content);
 
+/// <summary>A label and how many copies of it to print.</summary>
+public sealed record LabelCopies(Label Label, int Copies);
+
 /// <summary>
 /// Prints labels in the format's output kind and keeps the history (MM-BR-917~919). The label print API and screens (TASK-MM-057,
 /// TASK-MM-058) read the data and call this.
@@ -53,6 +56,39 @@ public sealed class LabelPrintService(ILabelPdfRenderer pdf, ILabelPrintReposito
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
         await history.AddAsync(
             [.. labels.Select(l => new LabelPrintRow(l.LabelType, l.RefId, copies, output.OutputKind, printerName, user))],
+            uow.Transaction, cancellationToken);
+        await uow.CommitAsync(cancellationToken);
+        return output;
+    }
+
+    /// <summary>
+    /// Renders each label its own number of times, in order: every copy of a Pallet is its Pallet label, then its DataMatrix
+    /// label (MM-BR-918). One history row per label keeps its copies (MM-BR-919).
+    /// </summary>
+    /// <exception cref="ArgumentException">No label, a label of another type than the format, or copies not above zero.</exception>
+    public async Task<LabelOutput> PrintEachAsync(
+        LabelFormat format, IReadOnlyList<LabelCopies> labels, string? printerName, string user, CancellationToken cancellationToken)
+    {
+        if (labels.Count == 0)
+        {
+            throw new ArgumentException("There is no label to print.", nameof(labels));
+        }
+        if (labels.Any(l => l.Copies <= 0))
+        {
+            throw new ArgumentException("Copies must be above zero.", nameof(labels));
+        }
+        if (labels.Any(l => l.Label.LabelType != format.LabelType))
+        {
+            throw new ArgumentException($"Every label must be a {format.LabelType} label.", nameof(labels));
+        }
+        IReadOnlyList<LabelPage> pages = [.. labels.SelectMany(l => Enumerable.Repeat(l.Label, l.Copies)).SelectMany(l => LabelPages.For([l]))];
+        var output = format.OutputKind == LabelType.Zpl
+            ? new LabelOutput(LabelType.Zpl, ZplContentType, Encoding.UTF8.GetBytes(ZplLabelWriter.Write(format, pages, 1)))
+            : new LabelOutput(LabelType.Pdf, PdfContentType, await pdf.RenderAsync(format, pages, 1, cancellationToken));
+
+        await using var uow = await unitOfWork.BeginAsync(cancellationToken);
+        await history.AddAsync(
+            [.. labels.Select(l => new LabelPrintRow(l.Label.LabelType, l.Label.RefId, l.Copies, output.OutputKind, printerName, user))],
             uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return output;
