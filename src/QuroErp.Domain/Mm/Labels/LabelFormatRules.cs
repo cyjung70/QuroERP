@@ -75,30 +75,15 @@ public static class LabelFormatRules
     /// <exception cref="ArgumentException">An unknown label type.</exception>
     public static Label Sample(string labelType)
     {
-        const string palletNo = "PL2611000001", itemCd = "ITEM-001", itemName = "Sample Item", lotNo = "261101-001";
-        const string warehouseCode = "MAIN", locationCode = "A-01-01";
-        const decimal qty = 10m;
+        const string itemCd = "ITEM-001", itemName = "Sample Item", lotNo = "261101-001";
         var expiry = new DateOnly(2027, 12, 31);
-        Dictionary<string, string?> values = new(StringComparer.Ordinal)
+        return labelType switch
         {
-            [LabelField.PalletNo] = palletNo,
-            [LabelField.ItemCd] = itemCd,
-            [LabelField.ItemName] = itemName,
-            [LabelField.LotNo] = lotNo,
-            [LabelField.Qty] = "10",
-            [LabelField.ExpiryDt] = "2027-12-31",
-            [LabelField.WarehouseCode] = warehouseCode,
-            [LabelField.LocationCode] = locationCode,
-        };
-        var code = labelType switch
-        {
-            LabelType.Pallet => LabelCode.ForPallet(palletNo, itemCd, lotNo, qty, expiry),
-            LabelType.Item => LabelCode.ForItem(itemCd),
-            LabelType.Lot => LabelCode.ForLot(itemCd, lotNo),
-            LabelType.Location => LabelCode.ForLocation(warehouseCode, locationCode),
+            LabelType.Pallet => LabelValues.Pallet(0, "PL2611000001", itemCd, itemName, lotNo, 10m, expiry),
+            LabelType.Item => LabelValues.Item(0, itemCd, itemName),
+            LabelType.Lot => LabelValues.Lot(0, itemCd, itemName, lotNo, expiry),
+            LabelType.Location => LabelValues.Location(0, "MAIN", "A-01-01"),
             _ => throw new ArgumentException($"Unknown label type {labelType}.", nameof(labelType)),
         };
-        var fields = FieldsOf(labelType);
-        return new Label(labelType, 0, values.Where(v => fields.Contains(v.Key)).ToDictionary(v => v.Key, v => v.Value), code);
     }
 }

@@ -95,6 +95,7 @@ public static class DependencyInjection
         services.AddScoped<LotService>();
         services.AddScoped<LabelPrintService>();
         services.AddScoped<LabelFormatService>();
+        services.AddScoped<LabelPrintRequestService>();
         return services;
     }
 }

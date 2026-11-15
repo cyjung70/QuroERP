@@ -1,4 +1,3 @@
-using System.Globalization;
 using QuroErp.Application.Common;
 using QuroErp.Application.Common.Persistence;
 using QuroErp.Application.Mm.Labels;
@@ -43,16 +42,6 @@ public sealed class GoodsReceiptLabelService(
     }
 
     /// <summary>A Pallet label with the values of the PALLET format fields (bc_label_format seed) and its DataMatrix.</summary>
-    public static Label Label(PalletLabelRow row) => new(
-        LabelType.Pallet, row.Id,
-        new Dictionary<string, string?>
-        {
-            ["palletNo"] = row.PalletNo,
-            ["itemCd"] = row.ItemCd,
-            ["itemName"] = row.ItemName,
-            ["lotNo"] = row.LotNo,
-            ["qty"] = row.Qty.ToString("0.############", CultureInfo.InvariantCulture),
-            ["expiryDt"] = row.ExpiryDt?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-        },
-        LabelCode.ForPallet(row.PalletNo, row.ItemCd, row.LotNo, row.Qty, row.ExpiryDt));
+    public static Label Label(PalletLabelRow row) =>
+        LabelValues.Pallet(row.Id, row.PalletNo, row.ItemCd, row.ItemName, row.LotNo, row.Qty, row.ExpiryDt);
 }
