@@ -6,6 +6,84 @@ namespace QuroErp.Infrastructure.Mm.Pallets;
 
 internal sealed class PalletRepository : IPalletRepository
 {
+    // PalletRow in constructor order
+    private const string SelectPallet = """
+        SELECT p.id, p.pallet_no, p.item_id, coalesce(i.item_cd, '') AS item_cd, i.item_name, p.lot_id, lot.lot_no, p.warehouse_id,
+               w.warehouse_code, p.location_id, loc.location_code, p.qty, p.status, parent.pallet_no AS parent_pallet_no, p.updated_at
+        FROM mm_pallet p
+        JOIN bc_item i ON i.id = p.item_id
+        JOIN mm_lot lot ON lot.id = p.lot_id
+        JOIN bc_warehouse w ON w.id = p.warehouse_id
+        JOIN bc_location loc ON loc.id = p.location_id
+        LEFT JOIN mm_pallet parent ON parent.id = p.parent_pallet_id
+        """;
+
+    private const string Search = SelectPallet + """
+
+        WHERE (@PalletNo::varchar IS NULL OR p.pallet_no LIKE @PalletNo || '%')
+          AND (@ItemId::bigint IS NULL OR p.item_id = @ItemId)
+          AND (@LotNo::varchar IS NULL OR lot.lot_no = @LotNo)
+          AND (@WarehouseId::bigint IS NULL OR p.warehouse_id = @WarehouseId)
+          AND (@LocationId::bigint IS NULL OR p.location_id = @LocationId)
+          AND (@Status::varchar IS NULL OR p.status = @Status)
+        ORDER BY p.pallet_no
+        LIMIT @Limit
+        """;
+
+    private const string SelectById = SelectPallet + "\nWHERE p.id = @Id";
+
+    private const string SelectByNo = SelectPallet + "\nWHERE p.pallet_no = @PalletNo";
+
+    private const string Lock = SelectPallet + "\nWHERE p.id = ANY(@Ids) ORDER BY p.id FOR UPDATE OF p";
+
+    private const string SelectEvents = """
+        SELECT e.event_type, e.event_dt, e.qty, r.pallet_no AS related_pallet_no, e.ref_key
+        FROM mm_pallet_event e
+        LEFT JOIN mm_pallet r ON r.id = e.related_pallet_id
+        WHERE e.pallet_id = @Id
+        ORDER BY e.id
+        """;
+
+    // MM-BR-914: the new Pallet on the source's key, the source keeps the rest, and a SPLIT event on each side
+    private const string SplitSql = """
+        WITH source AS (
+          UPDATE mm_pallet SET qty = qty - @Qty, updated_at = now(), updated_by = @User
+          WHERE id = @Id
+          RETURNING id, item_id, lot_id, warehouse_id, location_id
+        ),
+        pallet AS (
+          INSERT INTO mm_pallet (pallet_no, item_id, lot_id, warehouse_id, location_id, qty, parent_pallet_id, created_by, updated_by)
+          SELECT @PalletNo, item_id, lot_id, warehouse_id, location_id, @Qty, id, @User, @User FROM source
+          RETURNING id, parent_pallet_id
+        ),
+        event AS (
+          INSERT INTO mm_pallet_event (pallet_id, event_type, event_dt, qty, related_pallet_id, created_by, updated_by)
+          SELECT parent_pallet_id, 'SPLIT', @EventDt, -@Qty, id, @User, @User FROM pallet
+          UNION ALL
+          SELECT id, 'SPLIT', @EventDt, @Qty, parent_pallet_id, @User, @User FROM pallet
+        )
+        SELECT id FROM pallet
+        """;
+
+    // MM-BR-915: the events take the qty before the change (the CTEs and the updates read the same snapshot)
+    private const string MergeSql = """
+        WITH sources AS (
+          SELECT id, qty FROM mm_pallet WHERE id = ANY(@SourceIds)
+        ),
+        event AS (
+          INSERT INTO mm_pallet_event (pallet_id, event_type, event_dt, qty, related_pallet_id, created_by, updated_by)
+          SELECT id, 'MERGE', @EventDt, -qty, @TargetId, @User, @User FROM sources
+          UNION ALL
+          SELECT @TargetId, 'MERGE', @EventDt, qty, id, @User, @User FROM sources
+        ),
+        closed AS (
+          UPDATE mm_pallet SET qty = 0, status = 'CLOSED', updated_at = now(), updated_by = @User
+          WHERE id = ANY(@SourceIds)
+        )
+        UPDATE mm_pallet SET qty = qty + (SELECT coalesce(sum(qty), 0) FROM sources), updated_at = now(), updated_by = @User
+        WHERE id = @TargetId
+        """;
+
     // MM-BR-910, MM-BR-916: the Pallet and its CREATE event with its qty
     private const string Insert = """
         WITH pallet AS (
@@ -101,4 +179,49 @@ internal sealed class PalletRepository : IPalletRepository
         long goodsReceiptId, IDbTransaction transaction, CancellationToken cancellationToken) =>
         [.. await transaction.Connection!.QueryAsync<PalletLabelRow>(new CommandDefinition(
             SelectReceiptLabels, new { Id = goodsReceiptId }, transaction, cancellationToken: cancellationToken))];
+
+    public async Task<IReadOnlyList<PalletRow>> SearchAsync(PalletFilter filter, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        [.. (await transaction.Connection!.QueryAsync<StoredRow>(new CommandDefinition(
+            Search, filter, transaction, cancellationToken: cancellationToken))).Select(ToRow)];
+
+    public async Task<PalletRow?> FindAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        ToRowOrNull(await transaction.Connection!.QuerySingleOrDefaultAsync<StoredRow?>(new CommandDefinition(
+            SelectById, new { Id = id }, transaction, cancellationToken: cancellationToken)));
+
+    public async Task<PalletRow?> FindByNoAsync(string palletNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        ToRowOrNull(await transaction.Connection!.QuerySingleOrDefaultAsync<StoredRow?>(new CommandDefinition(
+            SelectByNo, new { PalletNo = palletNo }, transaction, cancellationToken: cancellationToken)));
+
+    public async Task<IReadOnlyList<PalletEventRow>> FindEventsAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        [.. await transaction.Connection!.QueryAsync<PalletEventRow>(new CommandDefinition(
+            SelectEvents, new { Id = id }, transaction, cancellationToken: cancellationToken))];
+
+    public async Task<IReadOnlyList<PalletRow>> LockAsync(
+        IReadOnlyCollection<long> ids, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        [.. (await transaction.Connection!.QueryAsync<StoredRow>(new CommandDefinition(
+            Lock, new { Ids = ids.ToArray() }, transaction, cancellationToken: cancellationToken))).Select(ToRow)];
+
+    public Task<long> SplitAsync(
+        long sourceId, string palletNo, decimal qty, DateOnly eventDt, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteScalarAsync<long>(new CommandDefinition(
+            SplitSql, new { Id = sourceId, PalletNo = palletNo, Qty = qty, EventDt = eventDt, User = user }, transaction,
+            cancellationToken: cancellationToken));
+
+    public Task MergeAsync(
+        long targetId, IReadOnlyCollection<long> sourceIds, DateOnly eventDt, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken) =>
+        transaction.Connection!.ExecuteAsync(new CommandDefinition(
+            MergeSql, new { TargetId = targetId, SourceIds = sourceIds.ToArray(), EventDt = eventDt, User = user }, transaction,
+            cancellationToken: cancellationToken));
+
+    // PalletRow as the driver gives it: updated_at comes as a DateTime in UTC
+    private sealed record StoredRow(
+        long Id, string PalletNo, long ItemId, string ItemCd, string? ItemName, long LotId, string LotNo, long WarehouseId, string WarehouseCode,
+        long LocationId, string LocationCode, decimal Qty, string Status, string? ParentPalletNo, DateTime UpdatedAt);
+
+    private static PalletRow ToRow(StoredRow r) =>
+        new(r.Id, r.PalletNo, r.ItemId, r.ItemCd, r.ItemName, r.LotId, r.LotNo, r.WarehouseId, r.WarehouseCode, r.LocationId, r.LocationCode,
+            r.Qty, r.Status, r.ParentPalletNo, new DateTimeOffset(DateTime.SpecifyKind(r.UpdatedAt, DateTimeKind.Utc)));
+
+    private static PalletRow? ToRowOrNull(StoredRow? r) => r is null ? null : ToRow(r);
 }

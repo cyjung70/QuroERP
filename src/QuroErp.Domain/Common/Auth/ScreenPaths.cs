@@ -30,6 +30,7 @@ public static class ScreenPaths
     public const string Vendor = "/mm/vendor";
     public const string Warehouse = "/mm/warehouse";
     public const string Location = "/mm/location";
+    public const string Pallet = "/mm/pallet";
     public const string Customer = "/sd/customer";
     public const string SalesOrder = "/sd/sales-order";
     public const string Shipment = "/sd/shipment";
@@ -40,6 +41,6 @@ public static class ScreenPaths
     [
         Item, Code, CodeMajor, ItemBarcode, PurchasePrice, PurchaseOrder, GoodsReceipt, Company, Currency, User, CompanyMenu, RoleMenu,
         ExchangeRate, TaxCode, TaxArea, LocalizationSetting, SetItem, SalesPrice, AlternateItem, AlternateItemGroup, Vendor,
-        Warehouse, Customer, SalesOrder, Shipment, SupplierInvoice, SalesInvoice, Location,
+        Warehouse, Customer, SalesOrder, Shipment, SupplierInvoice, SalesInvoice, Location, Pallet,
     ];
 }
