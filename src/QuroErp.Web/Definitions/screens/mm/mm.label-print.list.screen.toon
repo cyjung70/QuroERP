@@ -1,0 +1,34 @@
+# MM-UC-037 barcode label print (TASK-MM-058). Nothing is saved: pick the targets and their copies, then print them as ZPL or PDF
+# (MM-BR-918); the API keeps the history (MM-BR-919).
+screen:
+  id: mm.label-print.list
+  module: MM
+  title: Mm.LabelPrint.Title
+  version: 1
+  api: /api/mm/label-prints
+  key: id
+  layout: grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[2]: query,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    id,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: targets
+    bind: targets
+    rowKey: id
+    columns[10]{id,label,type,width,edit,req,fmt,source,hidden}:
+      selected,Mm.LabelPrint.Selected,checkbox,60,true,false,"","",false
+      copies,Mm.LabelPrint.Copies,number,80,true,false,"","",false
+      code,Mm.LabelPrint.Code,text,140,false,false,"","",false
+      name,Mm.LabelPrint.Name,text,200,false,false,"","",false
+      itemCd,Mm.LabelPrint.ItemCd,text,130,false,false,"","",false
+      lotNo,Mm.LabelPrint.LotNo,text,120,false,false,"","",false
+      qty,Mm.LabelPrint.Qty,number,100,false,false,"","",false
+      expiryDt,Mm.LabelPrint.ExpiryDt,date,110,false,false,"","",false
+      warehouseCode,Mm.LabelPrint.WarehouseCode,text,100,false,false,"","",false
+      locationCode,Mm.LabelPrint.LocationCode,text,100,false,false,"","",false

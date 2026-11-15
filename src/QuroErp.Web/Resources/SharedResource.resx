@@ -1236,4 +1236,29 @@
   <data name="Mm.SupplierInvoice.Deductible" xml:space="preserve"><value>공제</value></data>
   <data name="Mm.SupplierInvoice.PvAmt" xml:space="preserve"><value>원가 조정</value></data>
   <data name="Mm.SupplierInvoice.PriceDifferenceNotSaved" xml:space="preserve"><value>저장하지 않았습니다. 송장 단가를 확인하세요.</value></data>
+  <data name="Mm.LabelPrint.Title" xml:space="preserve"><value>바코드 라벨 출력</value></data>
+  <data name="Mm.LabelPrint.LabelType" xml:space="preserve"><value>라벨 종류</value></data>
+  <data name="Mm.LabelPrint.LabelType.PALLET" xml:space="preserve"><value>Pallet</value></data>
+  <data name="Mm.LabelPrint.LabelType.ITEM" xml:space="preserve"><value>품목</value></data>
+  <data name="Mm.LabelPrint.LabelType.LOT" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.LabelPrint.LabelType.LOCATION" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.LabelPrint.GoodsReceiptId" xml:space="preserve"><value>입고 번호</value></data>
+  <data name="Mm.LabelPrint.ItemId" xml:space="preserve"><value>품목</value></data>
+  <data name="Mm.LabelPrint.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
+  <data name="Mm.LabelPrint.ClearItem" xml:space="preserve"><value>품목 지우기</value></data>
+  <data name="Mm.LabelPrint.WarehouseId" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.LabelPrint.Selected" xml:space="preserve"><value>선택</value></data>
+  <data name="Mm.LabelPrint.Copies" xml:space="preserve"><value>매수</value></data>
+  <data name="Mm.LabelPrint.Code" xml:space="preserve"><value>코드</value></data>
+  <data name="Mm.LabelPrint.Name" xml:space="preserve"><value>이름</value></data>
+  <data name="Mm.LabelPrint.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Mm.LabelPrint.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.LabelPrint.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Mm.LabelPrint.ExpiryDt" xml:space="preserve"><value>유효기한</value></data>
+  <data name="Mm.LabelPrint.WarehouseCode" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.LabelPrint.LocationCode" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.LabelPrint.OutputKind" xml:space="preserve"><value>출력 형식</value></data>
+  <data name="Mm.LabelPrint.Print" xml:space="preserve"><value>출력</value></data>
+  <data name="Mm.LabelPrint.Printed" xml:space="preserve"><value>{0}건을 {1} 파일로 저장했습니다.</value></data>
+  <data name="Mm.Pallet.PrintLabel" xml:space="preserve"><value>라벨 출력</value></data>
 </root>

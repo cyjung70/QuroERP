@@ -1236,4 +1236,29 @@
   <data name="Mm.SupplierInvoice.Deductible" xml:space="preserve"><value>Deductible</value></data>
   <data name="Mm.SupplierInvoice.PvAmt" xml:space="preserve"><value>Price Variance</value></data>
   <data name="Mm.SupplierInvoice.PriceDifferenceNotSaved" xml:space="preserve"><value>Not saved. Check the invoice prices.</value></data>
+  <data name="Mm.LabelPrint.Title" xml:space="preserve"><value>Barcode Label Printing</value></data>
+  <data name="Mm.LabelPrint.LabelType" xml:space="preserve"><value>Label Type</value></data>
+  <data name="Mm.LabelPrint.LabelType.PALLET" xml:space="preserve"><value>Pallet</value></data>
+  <data name="Mm.LabelPrint.LabelType.ITEM" xml:space="preserve"><value>Item</value></data>
+  <data name="Mm.LabelPrint.LabelType.LOT" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.LabelPrint.LabelType.LOCATION" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.LabelPrint.GoodsReceiptId" xml:space="preserve"><value>Goods Receipt No.</value></data>
+  <data name="Mm.LabelPrint.ItemId" xml:space="preserve"><value>Item</value></data>
+  <data name="Mm.LabelPrint.FindItem" xml:space="preserve"><value>Find item</value></data>
+  <data name="Mm.LabelPrint.ClearItem" xml:space="preserve"><value>Clear item</value></data>
+  <data name="Mm.LabelPrint.WarehouseId" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Mm.LabelPrint.Selected" xml:space="preserve"><value>Select</value></data>
+  <data name="Mm.LabelPrint.Copies" xml:space="preserve"><value>Copies</value></data>
+  <data name="Mm.LabelPrint.Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Mm.LabelPrint.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Mm.LabelPrint.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Mm.LabelPrint.LotNo" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.LabelPrint.Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Mm.LabelPrint.ExpiryDt" xml:space="preserve"><value>Expiry Date</value></data>
+  <data name="Mm.LabelPrint.WarehouseCode" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Mm.LabelPrint.LocationCode" xml:space="preserve"><value>Location</value></data>
+  <data name="Mm.LabelPrint.OutputKind" xml:space="preserve"><value>Output</value></data>
+  <data name="Mm.LabelPrint.Print" xml:space="preserve"><value>Print</value></data>
+  <data name="Mm.LabelPrint.Printed" xml:space="preserve"><value>Saved {0} label(s) as {1}.</value></data>
+  <data name="Mm.Pallet.PrintLabel" xml:space="preserve"><value>Print Label</value></data>
 </root>

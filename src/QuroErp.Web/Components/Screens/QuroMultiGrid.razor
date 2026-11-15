@@ -33,7 +33,7 @@
                     <style>@requiredStyle</style>
                 }
                 <QuroGrid @ref="_dataGrid" TItem="TRow" DataSet="_data" Definition="GridDefinition" Localizer="L" OptionsFor="OptionsFor"
-                          Culture="DisplayCulture.Current" ConfirmLeave="false" AddRowsOnPaste="CanEdit" LookupFor="LookupFor"
+                          Culture="DisplayCulture.Current" ConfirmLeave="false" AddRowsOnPaste="CanChangeRows"LookupFor="LookupFor"
                           ItemsProvider="LoadPage" PageSize="@(_definition.PageSize > 0 ? _definition.PageSize : 100)"
                           OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged"
                           OnRowAdded="OnRowAdded" OnRowDeleting="OnRowDeleting" OnPasting="OnPasting" OnPasted="OnPasted"
@@ -160,6 +160,14 @@
     public Func<BatchChanges<TRow>, Task>? Save { get; set; }
 
     /// <summary>
+    /// The definition's editable columns take input although nothing is saved, e.g. the rows and copies picked for a label print:
+    /// no new, save or row commands, rows are neither added nor deleted, and the input is not a change to confirm before a search
+    /// or leaving the screen. <see cref="CanWrite"/> still locks the cells.
+    /// </summary>
+    [Parameter]
+    public bool EditWithoutSave { get; set; }
+
+    /// <summary>
     /// Permission: false for a user without Full Access (BC-BR-214). New, save, the row commands and the grid are disabled, not hidden.
     /// Whether the grid edits at all stays the screen's function (a list without save has no new or save at all).
     /// </summary>
@@ -184,7 +192,7 @@
     [Parameter]
     public EventCallback<GridCellChange> OnCellChanged { get; set; }
 
-    public override bool IsDirty => _data.HasChanges;
+    public override bool IsDirty => !EditWithoutSave && _data.HasChanges;
 
     /// <summary>Rows on the grid that are not marked deleted, including new ones.</summary>
     public IEnumerable<TRow> Items => _data.RowKeys.Where(k => _data.GetState(k) != Quro.Grid.Data.RowState.Deleted).Select(_data.GetItem);
@@ -197,7 +205,10 @@
 
     private bool Editable => Save is not null && (CreateRow is not null || OnAddRequested.HasDelegate);
 
-    private bool CanEdit => Editable && CanWrite;
+    private bool CanEdit => (Editable || EditWithoutSave) && CanWrite;
+
+    // Rows come and go only on a grid that saves them
+    private bool CanChangeRows => Editable && CanWrite;
 
     // A view-only list or a user without Full Access gets every cell read-only; the package has no grid-wide lock yet (TODO(QuroGrid-R4))
     private GridDef? GridDefinition => CanEdit ? _applied : _locked;
@@ -362,7 +373,7 @@
     /// </summary>
     public async Task AddRowsAsync(Func<Task<IEnumerable<TRow>>> read)
     {
-        if (!CanEdit)
+        if (!CanChangeRows)
         {
             return;
         }
@@ -608,13 +619,13 @@
     // The package cannot cancel adding a row, so a row added to a locked grid is taken out again (TODO(QuroGrid-R4))
     private void OnRowAdded(RowAddedArgs<TRow> args)
     {
-        if (!CanEdit)
+        if (!CanChangeRows)
         {
             _data.DeleteRow(args.RowKey);
         }
     }
 
-    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanEdit || !CanDeleteRows || RowLocked(args.Item);
+    private void OnRowDeleting(RowDeletingArgs<TRow> args) => args.Cancel |= !CanChangeRows || !CanDeleteRows || RowLocked(args.Item);
 
     private void OnPasting(PastingArgs args)
     {
