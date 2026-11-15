@@ -84,6 +84,19 @@ public class SalesInvoiceRulesTests
         line.Should().Be(new SalesInvoiceLine(3, Stock, "Bolt", 1m, 80m, null, 0m, NoTax, Main, 9, "L1", null, 50));
     }
 
+    [Fact, Trait("Id", "SD-UT-142")]
+    public void OnlyABillFirstLine_TakesTheLocationItLeavesFrom()
+    {
+        var billFirst = Lines(Direct() with { ItemId = 0, SalesOrderLineId = 50, LocationId = 70 }).Single();
+        var shipment = SalesInvoiceRules.Lines(
+            [Direct() with { ShipmentLineId = 30, LocationId = 70 }], 3, false, Customer, Main, ShipmentLines, OrderLines, Masters).Single();
+        var direct = Lines(Direct() with { LocationId = 70 }).Single();
+
+        billFirst.LocationId.Should().Be(70);
+        shipment.LocationId.Should().BeNull();
+        direct.LocationId.Should().BeNull();
+    }
+
     [Fact, Trait("Id", "SD-UT-115")]
     public void SourceLineOfAnotherCustomerOrUnknown_IsCommonE006()
     {
@@ -181,6 +194,8 @@ public class SalesInvoiceRulesTests
         Throws(() => SalesInvoiceRules.EnsureUnchanged(stored, same with { DnQty = 4m }), "SD-E-107", 2);
         Throws(() => SalesInvoiceRules.EnsureUnchanged(stored, same with { DnPrc = 1m }), "SD-E-107", 2);
         Throws(() => SalesInvoiceRules.EnsureUnchanged(stored, same with { TaxCodeId = Vat10 }), "SD-E-107", 2);
+        SalesInvoiceRules.EnsureUnchanged(stored with { LocationId = 70 }, same with { LocationId = 70 });
+        Throws(() => SalesInvoiceRules.EnsureUnchanged(stored with { LocationId = 70 }, same with { LocationId = 71 }), "SD-E-107", 2);
     }
 
     [Fact, Trait("Id", "SD-UT-119")]

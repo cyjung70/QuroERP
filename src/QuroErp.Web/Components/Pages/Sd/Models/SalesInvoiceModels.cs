@@ -1,4 +1,5 @@
 using System.Globalization;
+using QuroErp.Contracts.Mm.Lots;
 using QuroErp.Contracts.Sd.SalesInvoices;
 using QuroErp.Contracts.Sd.Shipments;
 using QuroErp.Web.Components.Screens;
@@ -174,6 +175,8 @@ public sealed class SalesInvoiceLine
     public string? Unit { get; set; }
     public long? WarehouseId { get; set; }
     public string? WarehouseCode { get; set; }
+    public long? LocationId { get; set; }
+    public string? LocationCode { get; set; }
     public long? LotId { get; set; }
     public string? LotNo { get; set; }
     public decimal? DnQty { get; set; }
@@ -195,24 +198,106 @@ public sealed class SalesInvoiceLine
     /// <summary>The source line: shipment number-line or order number-line; empty for a direct line.</summary>
     public string? Source { get; set; }
 
+    /// <summary>The item type; a Kit's components are allocated by the system and its own keys show blank (SD-BR-518).</summary>
+    public string? ItemType { get; set; }
+
+    /// <summary>The Location and Lot came from the FIFO suggestion, so a new qty asks again (MM-BR-716).</summary>
+    public bool Suggested { get; set; }
+
+    /// <summary>A read-only component row under its saved Kit or Set line (SD-BR-517). It is not saved and not counted.</summary>
+    public bool IsComponent { get; set; }
+
     public bool IsSaved => Id != 0;
+
+    /// <summary>A line that is never changed: a saved line or a component row.</summary>
+    public bool IsLocked => IsSaved || IsComponent;
 
     /// <summary>A bill-first line bills an order line without a shipment line (SD-BR-141).</summary>
     public bool IsBillFirst => ShipmentLineId is null && SalesOrderLineId is not null;
 
-    public bool IsDirect => ShipmentLineId is null && SalesOrderLineId is null;
+    public bool IsDirect => !IsComponent && ShipmentLineId is null && SalesOrderLineId is null;
+
+    public bool IsKit => ItemType == KitType;
+
+    /// <summary>The Kit item type (ITEM_TYPE).</summary>
+    public const string KitType = "KIT";
+
+    /// <summary>The system Location and Lot '*' (MM-BR-713).</summary>
+    public const string System = "*";
+
+    /// <summary>The start of a component row's item name, so it reads as part of the line above.</summary>
+    public const string ComponentMark = "└ ";
 
     /// <summary>
-    /// A line that may be marked for delete: not a shipment line of a ship-and-bill invoice (SD-BR-136), not a bill-first line
-    /// with shipped or cancelled qty (SD-BR-144).
+    /// A line that may be marked for delete: not a component row, not a shipment line of a ship-and-bill invoice (SD-BR-136), not
+    /// a bill-first line with shipped or cancelled qty (SD-BR-144).
     /// </summary>
     public bool IsRemovable(string? billingFlow) =>
-        !(billingFlow == SalesInvoiceFlows.ShipAndBill && ShipmentLineId is not null)
+        !IsComponent
+        && !(billingFlow == SalesInvoiceFlows.ShipAndBill && ShipmentLineId is not null)
         && !(IsBillFirst && ((ShippedQty ?? 0) != 0 || (CancelledQty ?? 0) != 0));
+
+    /// <summary>
+    /// Only a bill-first line takes a Location and Lot: its stock moves to the consignment warehouse (SD-BR-142). A Kit line leaves
+    /// them to the system (SD-BR-518); shipment and direct lines have none.
+    /// </summary>
+    public bool IsCellLocked(string field) =>
+        (Is(field, nameof(LocationCode)) || Is(field, nameof(LotNo))) && (!IsBillFirst || IsKit);
+
+    /// <summary>A saved line with the component rows under it (SD-BR-517).</summary>
+    public static IEnumerable<SalesInvoiceLine> Rows(SalesInvoiceLineDto line, IReadOnlyDictionary<long, string> taxCodes)
+    {
+        yield return From(line, taxCodes);
+        foreach (var component in line.Components ?? [])
+        {
+            yield return new SalesInvoiceLine
+            {
+                IsComponent = true,
+                ItemId = component.ItemId,
+                ItemCd = component.ItemCd,
+                ItemName = ComponentMark + component.ItemName,
+                Unit = component.Unit,
+                WarehouseCode = line.WarehouseCode,
+                DnQty = component.Qty,
+            };
+        }
+    }
+
+    /// <summary>
+    /// A copy of a new bill-first line for one part of the FIFO suggestion (MM-BR-716): the same order line, item, warehouse and
+    /// price with this qty, Location and Lot. A null part is the short qty, with no Location or Lot.
+    /// </summary>
+    public SalesInvoiceLine Part(StockSuggestionDto? part, decimal qty) => new()
+    {
+        ItemId = ItemId,
+        ItemCd = ItemCd,
+        ItemName = ItemName,
+        Unit = Unit,
+        WarehouseId = WarehouseId,
+        WarehouseCode = WarehouseCode,
+        LocationId = part?.LocationId,
+        LocationCode = part?.LocationCode,
+        LotId = part is null || part.LotNo == System ? null : part.LotId,
+        LotNo = part is null || part.LotNo == System ? null : part.LotNo,
+        DnQty = qty,
+        DnPrc = DnPrc,
+        DcCd = DcCd,
+        DcRate = DcRate,
+        StdPrc = StdPrc,
+        TaxCodeId = TaxCodeId,
+        TaxCode = TaxCode,
+        SalesOrderLineId = SalesOrderLineId,
+        Source = Source,
+        ItemType = ItemType,
+        Suggested = part is not null,
+    };
 
     public static SalesInvoiceLine From(SalesInvoiceLineDto line, IReadOnlyDictionary<long, string> taxCodes)
     {
         var billFirst = line.ShipmentLineId is null && line.SalesOrderLineId is not null;
+
+        // A Kit line stores the system '*' keys; the screen shows them blank (SD-BR-518).
+        var kit = line.ItemType == KitType;
         return new()
         {
             Id = line.Id,
@@ -223,9 +308,12 @@ public sealed class SalesInvoiceLine
             Unit = line.Unit,
             WarehouseId = line.WarehouseId,
             WarehouseCode = line.WarehouseCode,
+            LocationId = line.LocationId,
+            LocationCode = kit && line.LocationCode == System ? null : line.LocationCode,
             LotId = line.LotId,
-            LotNo = line.LotNo,
+            LotNo = kit && line.LotNo == System ? null : line.LotNo,
             DnQty = line.DnQty,
+            ItemType = line.ItemType,
             DnPrc = line.DnPrc,
             DcCd = line.DcCd,
             DcRate = line.DcRate,
@@ -283,16 +371,20 @@ public sealed class SalesInvoiceLine
     /// <summary>
     /// Saved lines go back with their id and stored values. Price and discount are sent for direct lines only, the others take the
     /// source line's (SD-BR-406); the tax code can be changed on any new line (SD-BR-132). The warehouse and lot are sent for
-    /// bill-first and direct lines; a shipment line keeps the shipment's.
+    /// bill-first and direct lines; a shipment line keeps the shipment's. A new bill-first line sends its Location by id, which the
+    /// page resolves from the code before the save (null is '*'); a saved line sends its stored one.
     /// </summary>
     public SaveSalesInvoiceLineRequest ToRequest()
     {
         var own = IsDirect || IsSaved;
-        var lotNo = string.IsNullOrWhiteSpace(LotNo) ? null : LotNo.Trim().ToUpperInvariant();
+        var lotNo = string.IsNullOrWhiteSpace(LotNo) || LotNo.Trim() == System ? null : LotNo.Trim().ToUpperInvariant();
         return new(
             Id == 0 ? null : Id, ItemId ?? 0, ItemName, DnQty ?? 0, own ? DnPrc : null, own ? DcCd : null, TaxCodeId,
-            ShipmentLineId is null || IsSaved ? WarehouseId : null, lotNo is null ? null : LotId, lotNo, ShipmentLineId, SalesOrderLineId);
+            ShipmentLineId is null || IsSaved ? WarehouseId : null, lotNo is null ? null : LotId, lotNo, ShipmentLineId, SalesOrderLineId,
+            IsBillFirst || IsSaved ? LocationId : null);
     }
+
+    private static bool Is(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 
     private static string? SourceOf(string? number, int? seq) =>
         number is null ? null : seq is { } s ? string.Create(CultureInfo.InvariantCulture, $"{number}-{s}") : number;

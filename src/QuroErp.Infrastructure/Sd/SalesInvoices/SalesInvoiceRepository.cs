@@ -54,10 +54,12 @@ internal sealed class SalesInvoiceRepository : ISalesInvoiceRepository
         SELECT l.id, l.seq, coalesce(l.item_id, 0) AS item_id, i.item_cd, coalesce(l.item_name, i.item_name) AS item_name, i.unit, l.warehouse_id,
                w.warehouse_code, l.lot_id, t.lot_no, coalesce(l.dn_qty, 0) AS dn_qty, coalesce(l.dn_prc, 0) AS dn_prc, coalesce(l.dn_amt, 0) AS dn_amt,
                l.dc_cd, coalesce(l.dc_rate, 0) AS dc_rate, i.so_usd_prc AS std_prc, l.tax_code_id, l.supply_amt, l.tax_amt, l.sales_order_line_id,
-               o.so_no, ol.seq AS so_seq, l.shipment_line_id, s.ship_no, sl.seq AS ship_seq, l.shipped_qty, l.cancelled_qty
+               o.so_no, ol.seq AS so_seq, l.shipment_line_id, s.ship_no, sl.seq AS ship_seq, l.shipped_qty, l.cancelled_qty,
+               l.location_id, loc.location_code, i.type AS item_type, coalesce(i.show_components, true) AS show_components
         FROM sd_sales_invoice_line l
         LEFT JOIN bc_item i ON i.id = l.item_id
         LEFT JOIN bc_warehouse w ON w.id = l.warehouse_id
+        LEFT JOIN bc_location loc ON loc.id = l.location_id
         LEFT JOIN mm_lot t ON t.id = l.lot_id
         LEFT JOIN sd_sales_order_line ol ON ol.id = l.sales_order_line_id
         LEFT JOIN sd_sales_order o ON o.id = ol.sales_order_id
@@ -120,14 +122,15 @@ internal sealed class SalesInvoiceRepository : ISalesInvoiceRepository
 
     private const string DeleteLines = "DELETE FROM sd_sales_invoice_line WHERE sales_invoice_id = @Id AND id = ANY(@Ids)";
 
-    // Location '*' until the bill-first line takes one (TASK-CORE-075); Lot '*' until a bill-first posting sets the line's lot
+    // Location and Lot '*' unless the line names them; a bill-first posting then sets the key its stock left from
     private const string InsertLine = $"""
         {StockKeys.EnsureStarRows}
         INSERT INTO sd_sales_invoice_line (sales_invoice_id, seq, item_id, item_name, dn_qty, dn_prc, dn_amt, sales_order_line_id, dc_cd, dc_rate,
                                            warehouse_id, location_id, tax_code_id, supply_amt, tax_amt, shipment_line_id, lot_id, restock,
                                            created_by, updated_by)
-        VALUES (@Id, @Seq, @ItemId, @ItemName, @DnQty, @DnPrc, @DnAmt, @SalesOrderLineId, @DcCd, @DcRate, @WarehouseId, {StockKeys.StarLocationId},
-                @TaxCodeId, @SupplyAmt, @TaxAmt, @ShipmentLineId, coalesce(@LotId, {StockKeys.StarLotId}), false, @User, @User)
+        VALUES (@Id, @Seq, @ItemId, @ItemName, @DnQty, @DnPrc, @DnAmt, @SalesOrderLineId, @DcCd, @DcRate, @WarehouseId,
+                coalesce(@LocationId, {StockKeys.StarLocationId}), @TaxCodeId, @SupplyAmt, @TaxAmt, @ShipmentLineId,
+                coalesce(@LotId, {StockKeys.StarLotId}), false, @User, @User)
         RETURNING id
         """;
 
@@ -143,7 +146,9 @@ internal sealed class SalesInvoiceRepository : ISalesInvoiceRepository
         WHERE id = @Id
         """;
 
-    private const string SetLineLot = "UPDATE sd_sales_invoice_line SET lot_id = @LotId WHERE sales_invoice_id = @Id AND seq = @Seq";
+    private const string SetLineKey = """
+        UPDATE sd_sales_invoice_line SET location_id = @LocationId, lot_id = @LotId WHERE sales_invoice_id = @Id AND seq = @Seq
+        """;
 
     private const string DeleteHeader = "DELETE FROM sd_sales_invoice WHERE id = @Id AND type = 'IV' AND updated_at = @UpdatedAt";
 
@@ -366,12 +371,13 @@ internal sealed class SalesInvoiceRepository : ISalesInvoiceRepository
             cancellationToken: cancellationToken));
     }
 
-    public async Task SetLineLotsAsync(long id, IReadOnlyDictionary<int, long> lotIdBySeq, IDbTransaction transaction, CancellationToken cancellationToken)
+    public async Task SetLineKeysAsync(
+        long id, IReadOnlyDictionary<int, (long LocationId, long LotId)> keyBySeq, IDbTransaction transaction, CancellationToken cancellationToken)
     {
-        foreach (var (seq, lotId) in lotIdBySeq)
+        foreach (var (seq, (locationId, lotId)) in keyBySeq)
         {
             await transaction.Connection!.ExecuteAsync(new CommandDefinition(
-                SetLineLot, new { Id = id, Seq = seq, LotId = lotId }, transaction, cancellationToken: cancellationToken));
+                SetLineKey, new { Id = id, Seq = seq, LocationId = locationId, LotId = lotId }, transaction, cancellationToken: cancellationToken));
         }
     }
 
@@ -549,6 +555,7 @@ internal sealed class SalesInvoiceRepository : ISalesInvoiceRepository
                     w.TaxAmt,
                     l.ShipmentLineId,
                     l.LotId,
+                    l.LocationId,
                     User = user,
                 },
                 transaction, cancellationToken: cancellationToken));

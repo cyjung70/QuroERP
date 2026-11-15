@@ -245,6 +245,63 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
         (inv.Lines[0].CancelledQty, inv.Lines[0].UnshippedQty, inv.Cancellations.Count).Should().Be((0m, 2m, 0));
     }
 
+    [DatabaseFact, Trait("Id", "SD-UT-142"), Trait("Id", "SD-UT-145"), Trait("Id", "MM-UT-716"), Trait("Rule", "MM-BR-357"), Trait("Rule", "MM-BR-715")]
+    public async Task BillFirst_MovesItsLocationAndLot_ToConsignmentStar_AndACancellationBringsThemBack()
+    {
+        var m = await MastersAsync(BillThenShip);
+        var (location, code) = await LocationLotItemAsync(m);
+        await ReceiveAsync(m.Item, m.Main, 5m, "A1", location);
+        await ReceiveAsync(m.Item, m.Main, 4m, "B1");
+        var so = await OrderAsync(m, BillThenShip, 5m, 100m);
+
+        var inv = await Service.CreateAsync(Request(m, FromOrder(so.Line, 5m) with { LocationId = location, LotNo = "A1" }), "kim", None);
+
+        inv.Lines.Single().Should().Match<SalesInvoiceLineDto>(l => l.LocationId == location && l.LocationCode == code && l.LotNo == "A1");
+        (await KeysAsync(inv.DnNo)).Should().Equal((m.Main, code, "A1", -5m), (m.Consignment, "*", "A1", 5m));
+
+        var cm = await Service.CancelUnshippedAsync(
+            inv.Id, new CancelUnshippedRequest(DnDt, null, [new(inv.Lines[0].Id, 2m)], inv.UpdatedAt), "kim", None);
+
+        (await KeysAsync(cm.CmNo)).Should().Equal((m.Consignment, "*", "A1", -2m), (m.Main, code, "A1", 2m));
+        (await OnHandAsync(m.Item, m.Consignment)).Should().Be(3m);
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(6m);
+
+        // SD-BR-146: the undo reverses the cancellation's moves with their keys
+        await Service.UndoCancellationAsync(inv.Id, cm.CreditMemoId, null, "kim", None);
+        (await OnHandAsync(m.Item, m.Consignment)).Should().Be(5m);
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(4m);
+    }
+
+    [DatabaseFact, Trait("Id", "SD-UT-142"), Trait("Id", "SD-UT-517"), Trait("Rule", "MM-BR-357"), Trait("Rule", "SD-BR-518"), Trait("Rule", "SD-BR-517")]
+    public async Task BillFirstKit_KeepsItsComponentLots_BothWays_AndShowsItsBomComponents()
+    {
+        var m = await MastersAsync(BillThenShip);
+        var lotItem = await LotItemAsync(m.Key);
+        await ReceiveAsync(lotItem, m.Main, 3m, "A1");
+        await ReceiveAsync(lotItem, m.Main, 2m, "B1");
+        await ReceiveAsync(m.Item, m.Main, 20m);
+        var kit = await KitAsync(m.Key, (lotItem, 1m), (m.Item, 2m));
+        var so = await OrderAsync(m, BillThenShip, 4m, 100m, item: kit);
+
+        var inv = await Service.CreateAsync(Request(m, FromOrder(so.Line, 4m)), "kim", None);
+
+        var line = inv.Lines.Single();
+        (line.LocationCode, line.LotNo, line.ShowComponents).Should().Be(("*", "*", true), "a Kit line has no stock key of its own");
+        line.Components!.Select(c => (c.ItemId, c.Qty)).Should().Equal((lotItem, 4m), (m.Item, 8m));
+        (await LotOnHandAsync(lotItem, m.Consignment)).Should().Equal(("A1", 3m), ("B1", 1m));
+        (await LotOnHandAsync(m.Item, m.Consignment)).Should().Equal(("*", 8m));
+
+        await Service.CancelUnshippedAsync(inv.Id, new CancelUnshippedRequest(DnDt, null, [new(line.Id, 4m)], inv.UpdatedAt), "kim", None);
+
+        (await OnHandAsync(lotItem, m.Consignment)).Should().Be(0m);
+        (await LotOnHandAsync(lotItem, m.Main)).Should().Equal(("A1", 3m), ("B1", 2m));
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(20m);
+
+        // The item no longer shows its components (SD-BR-517)
+        await ExecuteAsync("UPDATE bc_item SET show_components = false WHERE id = @Id", kit);
+        (await Service.GetAsync(inv.Id, None)).Lines.Single().Components.Should().BeNull();
+    }
+
     [DatabaseFact, Trait("Id", "SD-UT-113"), Trait("Id", "SD-UT-136"), Trait("Id", "SD-UT-104"), Trait("Id", "SD-UT-116")]
     public async Task InvoiceOfAShipAndBillShipment_TakesDirectServiceLines_AndIsVoidedOnTheShipment()
     {
@@ -594,8 +651,51 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
     private async Task<string?> CustomerShipNameAsync(long customer) =>
         (await QueryAsync<string?>("SELECT ship_name FROM bc_customer WHERE id = @Id", new { Id = customer })).Single();
 
+    // The inventory item becomes lot- and Location-managed, with a Location A{key} in the default warehouse (MM-BR-713)
+    private async Task<(long Id, string Code)> LocationLotItemAsync(Masters m)
+    {
+        var code = "A" + m.Key;
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        await connection.ExecuteAsync(
+            "UPDATE bc_item SET lot_managed = true, lot_managed_from = '2026-10-01', location_managed = true WHERE id = @Item", new { m.Item });
+        var id = await connection.ExecuteScalarAsync<long>(
+            "INSERT INTO bc_location (warehouse_id, location_code, created_by, updated_by) VALUES (@Main, @Code, 't', 't') RETURNING id",
+            new { m.Main, Code = code });
+        return (id, code);
+    }
+
+    private async Task<long> LotItemAsync(string key)
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        return await connection.ExecuteScalarAsync<long>(
+            """
+            INSERT INTO bc_item (item_cd, item_name, type, lot_managed, lot_managed_from, created_by, updated_by)
+            VALUES ('L' || @Key, 'Cable', 'INVENTORY', true, '2026-10-01', 't', 't') RETURNING id
+            """,
+            new { Key = key });
+    }
+
+    // A Kit that shows its components, with this BOM (MM-BR-007, SD-BR-517)
+    private async Task<long> KitAsync(string key, params (long Item, decimal Qty)[] components)
+    {
+        await using var connection = new NpgsqlConnection(db.ConnectionString);
+        var id = await connection.ExecuteScalarAsync<long>(
+            """
+            INSERT INTO bc_item (item_cd, item_name, type, show_components, created_by, updated_by)
+            VALUES ('K' || @Key, 'Kit', 'KIT', true, 't', 't') RETURNING id
+            """,
+            new { Key = key });
+        foreach (var (component, seq) in components.Select((c, i) => (c, i + 1)))
+        {
+            await connection.ExecuteAsync(
+                "INSERT INTO sd_bom (parent_item_id, seq, child_item_id, child_qty, created_by, updated_by) VALUES (@Id, @Seq, @Item, @Qty, 't', 't')",
+                new { Id = id, Seq = seq, component.Item, component.Qty });
+        }
+        return id;
+    }
+
     // A USD order of the customer with one line of the item, without discount and, unless a tax code is given, without tax
-    private async Task<Order> OrderAsync(Masters m, string billingFlow, decimal qty, decimal price, long? taxCode = null)
+    private async Task<Order> OrderAsync(Masters m, string billingFlow, decimal qty, decimal price, long? taxCode = null, long? item = null)
     {
         var soNo = "SO" + Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
         await using var connection = new NpgsqlConnection(db.ConnectionString);
@@ -610,17 +710,37 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
                        SELECT id, 1, @Item, @Qty, @Price, @Qty * @Price, 0, @NoTax, 0, 't', 't' FROM o RETURNING id)
             SELECT (SELECT id FROM o), (SELECT id FROM l)
             """,
-            new { SoNo = soNo, m.Customer, SoDt = DnDt, Flow = billingFlow, m.Item, Qty = qty, Price = price, NoTax = taxCode ?? m.NoTax });
+            new { SoNo = soNo, m.Customer, SoDt = DnDt, Flow = billingFlow, Item = item ?? m.Item, Qty = qty, Price = price, NoTax = taxCode ?? m.NoTax });
         return new Order(ids.Id, soNo, ids.Line);
     }
 
-    // Receives stock at a cost of 50 on the invoice date
-    private async Task ReceiveAsync(long item, long warehouse, decimal qty)
+    // Receives stock at a cost of 50 on the invoice date, into the lot and Location given
+    private async Task ReceiveAsync(long item, long warehouse, decimal qty, string? lotNo = null, long? location = null)
     {
         await using var uow = await db.Get<IUnitOfWorkFactory>().BeginAsync(None);
-        await Inventory.PostAsync([new StockMovementRequest("GR", DnDt, item, warehouse, qty, 50m, "GR-TEST", 1)], "kim", uow.Transaction, None);
+        await Inventory.PostAsync(
+            [new StockMovementRequest("GR", DnDt, item, warehouse, qty, 50m, "GR-TEST", 1, LotNo: lotNo, LocationId: location)],
+            "kim", uow.Transaction, None);
         await uow.CommitAsync(None);
     }
+
+    // The stock key of each movement of a document, in id order: warehouse, Location, lot and qty
+    private async Task<List<(long Warehouse, string Location, string Lot, decimal Qty)>> KeysAsync(string no) =>
+        await QueryAsync<(long, string, string, decimal)>(
+            """
+            SELECT m.warehouse_id, c.location_code, t.lot_no, m.qty
+            FROM mm_goods_movement m JOIN bc_location c ON c.id = m.location_id JOIN mm_lot t ON t.id = m.lot_id
+            WHERE m.ref_key = @No ORDER BY m.id
+            """, new { No = no });
+
+    // The item's on-hand qty by lot in the warehouse, without the empty ones
+    private async Task<List<(string Lot, decimal Qty)>> LotOnHandAsync(long item, long warehouse) =>
+        await QueryAsync<(string, decimal)>(
+            """
+            SELECT t.lot_no, sum(o.onhand_qty) FROM mm_onhand o JOIN mm_lot t ON t.id = o.lot_id
+            WHERE o.item_id = @Item AND o.warehouse_id = @Warehouse
+            GROUP BY t.lot_no HAVING sum(o.onhand_qty) <> 0 ORDER BY t.lot_no
+            """, new { Item = item, Warehouse = warehouse });
 
     private async Task<decimal> OnHandAsync(long item, long warehouse) =>
         (await QueryAsync<decimal?>(

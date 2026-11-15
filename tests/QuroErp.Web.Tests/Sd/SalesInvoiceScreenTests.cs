@@ -6,6 +6,7 @@ using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Quro.Grid.Data;
 using QuroErp.Contracts.Bc.FieldPolicies;
 using QuroErp.Contracts.Bc.Items;
 using QuroErp.Contracts.Bc.Localization;
@@ -13,6 +14,7 @@ using QuroErp.Contracts.Bc.Tax;
 using QuroErp.Contracts.Bc.UserProfiles;
 using QuroErp.Contracts.Common.Auth;
 using QuroErp.Contracts.Common.Codes;
+using QuroErp.Contracts.Mm.Locations;
 using QuroErp.Contracts.Mm.Lots;
 using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Contracts.Sd.Customers;
@@ -29,6 +31,7 @@ using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Sd;
 using QuroErp.Web.Components.Pages.Sd.Models;
 using QuroErp.Web.Components.Screens;
+using QuroErp.Web.Mm.Locations;
 using QuroErp.Web.Mm.Lots;
 using QuroErp.Web.Mm.Warehouses;
 using QuroErp.Web.Sd.Customers;
@@ -67,6 +70,7 @@ public class SalesInvoiceScreenTests : BunitContext
         Services.AddHttpClient<WarehouseApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<UserProfileApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<LotApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
+        Services.AddHttpClient<LocationApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<CodeApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<FieldPolicyApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddScoped<FieldPolicyCache>();
@@ -179,6 +183,91 @@ public class SalesInvoiceScreenTests : BunitContext
         Button(page, "import-shipment").HasAttribute("disabled").Should().BeTrue("bill-first lines and shipment lines are never mixed");
         var request = line.ToRequest();
         (request.DnPrc, request.WarehouseId, request.SalesOrderLineId).Should().Be(((decimal?)null, (long?)1L, (long?)5001L));
+        _api.Requests.Should().NotContain(r => r.RequestUri!.AbsolutePath == "/" + LotRoutes.Suggestions, "PANEL keeps no lots or Locations");
+    }
+
+    [Fact, Trait("Id", "MM-UT-716"), Trait("Rule", "MM-BR-716"), Trait("Rule", "SD-BR-142")]
+    public void ImportedBillFirstLine_TakesTheFifoParts_SplitsPerPart_AndKeepsTheShortQtyOnAnEmptyLine()
+    {
+        _api.Managed.Add(12);
+        var page = RenderAs("admin");
+        PickCustomer(page);
+        page.WaitForAssertion(() => Frame(page).Header.CustomerId.Should().Be(801));
+
+        Button(page, "import-order").Click();
+        page.WaitForAssertion(() => page.LookupRows("sales-invoice-order-lookup").Should().HaveCount(1));
+        page.PickLookupRow<InvoiceOrderChoice, SalesInvoice>("sales-invoice-order-lookup", 0);
+
+        var lines = Lines(page);
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(3));
+        var rows = Enumerable.Range(0, 3).Select(i => Frame(page).Lines.GetItem(lines.KeyOf(i))).ToList();
+        rows.Select(l => (l.LocationCode, l.LotNo, l.DnQty, l.DnAmt)).Should().Equal(
+            ("A1", "L1", 2m, 50m), ("*", "L2", 1m, 25m), (null, null, 1m, 25m));
+        rows.Should().OnlyContain(l => l.SalesOrderLineId == 5001 && l.DnPrc == 25m && l.Source == "SO2611000002-1");
+        Frame(page).Lines.GetCellMark(lines.KeyOf(2), "locationCode")!.Level.Should().Be(CellMarkLevel.Warning);
+        page.Find("[data-testid=sales-invoice-message]").TextContent.Should().Contain("PANEL").And.Contain("1.00");
+
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => _api.Saved.Should().ContainSingle());
+        _api.Saved[0].Lines.Select(l => (l.LocationId, l.LotNo, l.DnQty, l.SalesOrderLineId)).Should().Equal(
+            ((long?)21L, "L1", 2m, (long?)5001L), (null, "L2", 1m, 5001L), (null, null, 1m, 5001L));
+    }
+
+    [Fact, Trait("Id", "SD-UT-517"), Trait("Rule", "SD-BR-517"), Trait("Rule", "SD-BR-518")]
+    public void KitLine_ShowsItsComponentRows_ReadOnly_AndNotSaved()
+    {
+        _api.Invoice = Invoice() with
+        {
+            Lines =
+            [
+                Invoice().Lines[0] with
+                {
+                    ItemId = 12, ItemCd = "PANEL", ItemName = "Panel Kit", ShowComponents = true, ItemType = "KIT",
+                    LocationId = 20, LocationCode = "*", LotId = 30, LotNo = "*",
+                    Components = [new SalesInvoiceComponentDto(11, "BOLT", "Hex Bolt", "EA", 8m)],
+                },
+            ],
+        };
+        var page = RenderAs("admin", "DN0000001");
+        var lines = Lines(page);
+        page.WaitForAssertion(() => lines.Rows.Should().HaveCount(2));
+
+        var kit = Frame(page).Lines.GetItem(lines.KeyOf(0));
+        (kit.LocationCode, kit.LotNo).Should().Be(((string?)null, (string?)null), "a Kit line's '*' keys show blank");
+
+        var component = Frame(page).Lines.GetItem(lines.KeyOf(1));
+        (component.IsComponent, component.ItemCd, component.ItemName, component.DnQty, component.DnPrc, component.DnAmt)
+            .Should().Be((true, "BOLT", "└ Hex Bolt", (decimal?)8m, (decimal?)null, (decimal?)null));
+        Frame(page).Lines.MoveTo(lines.KeyOf(1));
+        page.Render();
+        Button(page, "mark-delete").HasAttribute("disabled").Should().BeTrue("a component row goes with its line");
+
+        page.Field("sales-invoice-header-remarks").Change("Kit");
+        Button(page, "save").Click();
+
+        page.WaitForAssertion(() => _api.Saved.Should().ContainSingle());
+        _api.Saved[0].Lines.Should().ContainSingle().Which.Id.Should().Be(9001);
+    }
+
+    [Theory, Trait("Id", "SD-UT-142"), Trait("Rule", "SD-BR-142"), Trait("Rule", "SD-BR-518")]
+    [InlineData("BILL_FIRST", null, "locationCode", false)]
+    [InlineData("BILL_FIRST", null, "lotNo", false)]
+    [InlineData("BILL_FIRST", "KIT", "locationCode", true)]
+    [InlineData("BILL_FIRST", "KIT", "lotNo", true)]
+    [InlineData("SHIPMENT", null, "locationCode", true)]
+    [InlineData("DIRECT", null, "lotNo", true)]
+    [InlineData("BILL_FIRST", "KIT", "dnQty", false)]
+    public void OnlyABillFirstLine_TakesALocationAndLot_AndAKitLeavesThemToTheSystem(string source, string? itemType, string field, bool locked)
+    {
+        var line = new SalesInvoiceLine
+        {
+            ItemType = itemType,
+            SalesOrderLineId = source == "BILL_FIRST" ? 5001 : null,
+            ShipmentLineId = source == "SHIPMENT" ? 6001 : null,
+        };
+
+        line.IsCellLocked(field).Should().Be(locked);
     }
 
     [Fact, Trait("Id", "SD-UC-003-T04"), Trait("Rule", "SD-BR-116"), Trait("Rule", "SD-BR-401")]
@@ -602,6 +691,9 @@ public class SalesInvoiceScreenTests : BunitContext
 
         public List<HttpRequestMessage> Requests { get; } = [];
 
+        /// <summary>Items that keep lots and Locations (MM-BR-716).</summary>
+        public HashSet<long> Managed { get; } = [];
+
         public List<SaveSalesInvoiceRequest> Saved { get; } = [];
 
         public List<DateTimeOffset> Voided { get; } = [];
@@ -655,6 +747,10 @@ public class SalesInvoiceScreenTests : BunitContext
                     return Json(new UserProfileDto("kim", "Kim", null, null, "ko", 1, "MAIN", "Main Store", AuditTimes.Updated));
                 case "/" + LotRoutes.Base:
                     return Json(new List<LotBalanceDto> { new(1, "L2611A", 30m) });
+                case "/" + LotRoutes.Suggestions:
+                    return Json(Suggest(decimal.Parse(query["qty"]!, CultureInfo.InvariantCulture)));
+                case "/" + LocationRoutes.Options:
+                    return Json(new List<LocationOptionDto> { new(20, "*", null), new(21, "A1", "Aisle 1") });
                 case "/api/sd/customers":
                     return Json(new CustomerListDto([Acme], 1));
                 case "/api/sd/customers/801":
@@ -664,7 +760,8 @@ public class SalesInvoiceScreenTests : BunitContext
                     var name = query["itemName"];
                     return Json(new ItemListDto([.. Items.Where(i =>
                         (string.IsNullOrEmpty(code) || i.ItemCd.StartsWith(code, StringComparison.OrdinalIgnoreCase))
-                        && (string.IsNullOrEmpty(name) || (i.ItemName ?? "").Contains(name, StringComparison.OrdinalIgnoreCase)))], Items.Length));
+                        && (string.IsNullOrEmpty(name) || (i.ItemName ?? "").Contains(name, StringComparison.OrdinalIgnoreCase)))
+                        .Select(i => Managed.Contains(i.Id) ? i with { LotManaged = true, LocationManaged = true } : i)], Items.Length));
                 case "/api/sd/sales-orders/line-defaults":
                     var item = Items.First(i => i.ItemCd.Equals(query["itemCd"], StringComparison.OrdinalIgnoreCase));
                     return Json(new SalesOrderLineDefaultsDto(item.Id, item.ItemCd, item.ItemName, item.Unit, 1m, 22m, item.SoUsdPrc, null, 0m, 1, null));
@@ -725,6 +822,19 @@ public class SalesInvoiceScreenTests : BunitContext
                 default:
                     return new HttpResponseMessage(HttpStatusCode.NotFound);
             }
+        }
+
+        // FIFO stock in MAIN: 2 in A1 lot L1, then 1 in '*' lot L2; the rest is short
+        private static StockSuggestionResultDto Suggest(decimal qty)
+        {
+            var first = Math.Min(qty, 2m);
+            var second = Math.Min(qty - first, 1m);
+            var parts = new List<StockSuggestionDto> { new(21, "A1", 1, "L1", first) };
+            if (second > 0)
+            {
+                parts.Add(new StockSuggestionDto(20, "*", 2, "L2", second));
+            }
+            return new StockSuggestionResultDto(parts, qty - first - second);
         }
 
         private static IReadOnlyList<CodeItemDto> Codes(string major) => major switch
