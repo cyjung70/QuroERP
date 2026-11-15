@@ -524,7 +524,8 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         await Service.UpdateAsync(sh.Id, Saved(sh), "kim", None);
         (await PalletStateAsync(pallet)).Should().Be(("ACTIVE", 6m));
 
-        var again = await Service.CreateAsync(Request(m, Direct(m.Item, 6m) with { PalletId = pallet }), "kim", None);
+        // The stock came back on the reversal date (today), so the Pallet ships again from today
+        var again = await Service.CreateAsync(Request(m, Direct(m.Item, 6m) with { PalletId = pallet }) with { ShipDt = Today }, "kim", None);
         (await PalletStateAsync(pallet)).Should().Be(("CLOSED", 0m));
         await Service.VoidAsync(again.Id, again.UpdatedAt, "kim", None);
 
@@ -564,7 +565,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         var sh = await Service.CreateAsync(Request(m, Direct(kit, 4m)), "kim", None);
 
         var line = sh.Lines.Single();
-        (line.LotNo, line.LocationId).Should().Be(((string?)null, (long?)null), "a Kit line keeps no stock key of its own");
+        (line.LotNo, line.LocationCode).Should().Be(("*", "*"), "a Kit line has no stock key of its own, so it keeps the system keys");
         line.Components!.Select(c => (c.ItemId, c.Qty, c.LotNo)).Should().BeEquivalentTo(
             [(m.LotItem, 3m, "A1"), (m.LotItem, 1m, "B1"), (m.Item, 8m, "*")]);
     }
