@@ -7,6 +7,7 @@ using Bunit.TestDoubles;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using QuroErp.Contracts.Common.Auth;
+using QuroErp.Contracts.Mm.Labels;
 using QuroErp.Contracts.Mm.Pallets;
 using QuroErp.Contracts.Mm.Warehouses;
 using QuroErp.Web.Auth;
@@ -15,6 +16,7 @@ using QuroErp.Web.Common;
 using QuroErp.Web.Components.Pages.Mm;
 using QuroErp.Web.Components.Pages.Mm.Models;
 using QuroErp.Web.Components.Screens;
+using QuroErp.Web.Mm.Labels;
 using QuroErp.Web.Mm.Pallets;
 using QuroErp.Web.Mm.Warehouses;
 using QuroErp.Web.Tests.Screens;
@@ -43,6 +45,7 @@ public class PalletScreenTests : BunitContext
         Services.AddHttpClient<PalletApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<ItemApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddHttpClient<WarehouseApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
+        Services.AddHttpClient<LabelPrintApiClient>(Configure).ConfigurePrimaryHttpMessageHandler(() => _api);
         Services.AddScoped<IScreenAccess, ScreenAccess>();
         _auth = AddAuthorization();
     }
@@ -172,7 +175,39 @@ public class PalletScreenTests : BunitContext
         page.Find("[data-testid=pallet-toolbar-split]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=pallet-toolbar-merge]").HasAttribute("disabled").Should().BeTrue();
         page.Find("[data-testid=pallet-toolbar-search]").HasAttribute("disabled").Should().BeFalse();
-        access.Asked.Should().Equal("/mm/pallet");
+        page.Find("[data-testid=pallet-toolbar-print-label]").HasAttribute("disabled").Should().BeTrue();
+        access.Asked.Should().Equal("/mm/pallet", "/mm/label-print");
+    }
+
+    [Fact, Trait("Id", "MM-UC-037-T01"), Trait("Rule", "MM-BR-918")]
+    public void PrintLabel_PrintsOneCopyOfTheCurrentPallet_InTheFormatsOutputKind_AndSavesTheFile()
+    {
+        var page = RenderAs("admin");
+        Grid(page).Select(1);
+
+        page.Find("[data-testid=pallet-toolbar-print-label]").Click();
+
+        page.WaitForAssertion(() => _api.Prints.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new LabelPrintRequest("PALLET", [new LabelPrintTarget(2, 1)], null, null)));
+        JSInterop.Invocations.Should().Contain(i => i.Identifier == "quroDownload" && Equals(i.Arguments[0], "PL2611000002.zpl"));
+        page.FindAll("[data-testid=pallet-message-print]").Should().BeEmpty();
+    }
+
+    [Fact, Trait("Rule", "MM-BR-918")]
+    public void PrintLabel_IsDisabledOnAClosedRow_AndARefusedPrintShowsTheApiMessage()
+    {
+        _api.Problem = (HttpStatusCode.NotFound, """{"status":404,"code":"Common-E-006","args":["PALLET"]}""");
+        var page = RenderAs("admin");
+        page.Field("pallet-search-status").Change(null);
+        page.Find("[data-testid=pallet-toolbar-search]").Click();
+        page.WaitForAssertion(() => Grid(page).Rows.Should().HaveCount(4));
+
+        Grid(page).Select(3);
+        page.Find("[data-testid=pallet-toolbar-print-label]").HasAttribute("disabled").Should().BeTrue();
+        Grid(page).Select(0);
+        page.Find("[data-testid=pallet-toolbar-print-label]").Click();
+
+        page.WaitForAssertion(() => page.Find("[data-testid=pallet-message-print]").TextContent.Should().NotBeEmpty());
     }
 
     [Fact]
@@ -236,6 +271,8 @@ public class PalletScreenTests : BunitContext
 
         public List<MergePalletsRequest> Merges { get; } = [];
 
+        public List<LabelPrintRequest> Prints { get; } = [];
+
         public (HttpStatusCode Status, string Body)? Problem { get; set; }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -248,6 +285,11 @@ public class PalletScreenTests : BunitContext
             if (request.Method == HttpMethod.Post && Problem is { } problem)
             {
                 return new HttpResponseMessage(problem.Status) { Content = new StringContent(problem.Body, null, "application/problem+json") };
+            }
+            if (path == "/" + LabelPrintRoutes.Base && request.Method == HttpMethod.Post)
+            {
+                Prints.Add((await request.Content!.ReadFromJsonAsync<LabelPrintRequest>(cancellationToken))!);
+                return Json(new LabelPrintZplDto("ZPL", "^XA^XZ\n"));
             }
             if (path == "/" + PalletRoutes.Merge && request.Method == HttpMethod.Post)
             {

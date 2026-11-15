@@ -3,15 +3,19 @@
 @using System.Globalization
 @using QuroErp.Contracts.Bc.Items
 @using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.Labels
 @using QuroErp.Contracts.Mm.Pallets
 @using QuroErp.Web.Bc.Items
 @using QuroErp.Web.Common
 @using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.Labels
 @using QuroErp.Web.Mm.Pallets
 @using QuroErp.Web.Mm.Warehouses
 @inject PalletApiClient Api
 @inject ItemApiClient ItemApi
 @inject WarehouseApiClient WarehouseApi
+@inject LabelPrintApiClient LabelApi
+@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @inject ProblemMessages Messages
 @inject QuroErp.Web.Common.IScreenAccess ScreenAccess
@@ -19,7 +23,8 @@
 @* MM-UC-035 Pallets, screen type M. Search by Pallet number (a scanner types it and Enter), item, warehouse and status; the grid
    is read only. Split puts a part of the current Pallet on a new Pallet (MM-BR-914); merge empties other ACTIVE Pallets of the
    same item, Lot, warehouse and Location into the current one (MM-BR-915). Neither moves stock. The history of the current row is
-   under the grid (MM-BR-916). The API checks every rule. *@
+   under the grid (MM-BR-916). Print label saves one copy of the current ACTIVE Pallet's labels in its format's output kind
+   (MM-BR-918); it needs Full Access on the label print screen. The API checks every rule. *@
 
 <PageTitle>@L["Mm.Pallet.Title"]</PageTitle>
 
@@ -45,8 +50,15 @@
         <ExtraCommands>
             <button type="button" disabled="@(!_canEdit || Current is not { IsActive: true })" data-testid="pallet-toolbar-split" @onclick="OpenSplit">@L["Mm.Pallet.Split"]</button>
             <button type="button" disabled="@(!_canEdit || Current is not { IsActive: true })" data-testid="pallet-toolbar-merge" @onclick="OpenMerge">@L["Mm.Pallet.Merge"]</button>
+            <button type="button" disabled="@(!_canPrint || _printBusy || Current is not { IsActive: true })" data-testid="pallet-toolbar-print-label"
+                    @onclick="PrintLabelAsync">@L["Mm.Pallet.PrintLabel"]</button>
         </ExtraCommands>
     </QuroMultiGrid>
+
+    @if (_printError is not null)
+    {
+        <p class="page-error" role="alert" data-testid="pallet-message-print">@_printError</p>
+    }
 
     <section class="quro-panel quro-pallet-history" aria-label="@L["Mm.Pallet.History"]" data-testid="pallet-history">
         <h2>@L["Mm.Pallet.History"]@(_history is null ? "" : $" — {_history.PalletNo}")</h2>
@@ -164,7 +176,12 @@
 
 @code {
     private const string ScreenPath = "/mm/pallet";
+    private const string LabelPrintPath = "/mm/label-print";
     private const string UnavailableCode = "BC-E-003";
+
+    private bool _canPrint;
+    private bool _printBusy;
+    private string? _printError;
 
     private QuroMultiGrid<PalletRow>? _grid;
     private bool _subscribed;
@@ -198,6 +215,7 @@
     {
         // Write access of this screen (security.md "화면 쓰기 권한")
         _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
+        _canPrint = await ScreenAccess.CanWriteAsync(LabelPrintPath);
         _statuses = [new(PalletRow.Active, L["Mm.Pallet.Status.ACTIVE"]), new("CLOSED", L["Mm.Pallet.Status.CLOSED"])];
         try
         {
@@ -354,6 +372,32 @@
             CloseDialog();
             await _grid!.RunActionAsync(() => Task.FromResult<string?>(notice));
         }
+    }
+
+    // MM-BR-918: the Pallet label then its DataMatrix label; the API keeps the history (MM-BR-919)
+    private async Task PrintLabelAsync()
+    {
+        if (Current is not { IsActive: true } pallet)
+        {
+            return;
+        }
+        _printBusy = true;
+        _printError = null;
+        try
+        {
+            var request = new LabelPrintRequest("PALLET", [new LabelPrintTarget(pallet.Id, 1)], null, null);
+            var file = await LabelApi.PrintAsync(request, pallet.PalletNo, CancellationToken.None);
+            await QuroExcel.DownloadAsync(JS, file.FileName, file.Content);
+        }
+        catch (ApiProblemException e)
+        {
+            _printError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _printError = Messages.Get(UnavailableCode);
+        }
+        _printBusy = false;
     }
 
     private Task<IReadOnlyList<ItemDto>> FindItemsAsync(string? keyword) => ItemApi.LookupAsync(keyword, CancellationToken.None);

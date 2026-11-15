@@ -1,0 +1,235 @@
+@page "/mm/label-print"
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Common.Codes
+@using QuroErp.Contracts.Mm.GoodsReceipts
+@using QuroErp.Contracts.Mm.Labels
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.GoodsReceipts
+@using QuroErp.Web.Mm.Labels
+@using QuroErp.Web.Mm.Warehouses
+@inject LabelPrintApiClient Api
+@inject LabelFormatApiClient FormatApi
+@inject GoodsReceiptApiClient ReceiptApi
+@inject ItemApiClient ItemApi
+@inject WarehouseApiClient WarehouseApi
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+@inject QuroErp.Web.Common.IScreenAccess ScreenAccess
+
+@* MM-UC-037 barcode label print, screen type M. Search the targets of a label type by receipt number (a scanner types it and
+   Enter), item and warehouse (a Location list needs one). Tick the rows, set their copies and print: ZPL is saved as a .zpl file
+   for the Zebra printer, PDF as a .pdf; when the printer cannot be reached, print again as PDF. A Pallet copy is its label and its
+   DataMatrix label (MM-BR-918); the API keeps the history (MM-BR-919) and checks every rule. Nothing on the grid is saved. *@
+
+<PageTitle>@L["Mm.LabelPrint.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="label-print-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="LabelPrintRow" Title="@L["Mm.LabelPrint.Title"]" TestId="label-print" Path="@L["Menu.G2MM"]"
+                   Definition="mm.label-print.list" Load="LoadAsync" CanWrite="_canEdit" EditWithoutSave OnReset="ResetSearch">
+        <SearchContent>
+            <QuroSelect Label="@L["Mm.LabelPrint.LabelType"]" Value="@_labelType" ValueChanged="ChangeLabelType" Options="_labelTypes" Required
+                        TestId="label-print-search-label-type" />
+            <QuroText Label="@L["Mm.LabelPrint.GoodsReceiptId"]" @bind-Value="_grNo" TextCase="TextCase.Upper" TestId="label-print-search-gr-no" />
+            <div class="quro-lookup-field">
+                <QuroText Label="@L["Mm.LabelPrint.ItemId"]" Value="@_itemText" LockMode="LockMode.Always" TestId="label-print-search-item" />
+                <button type="button" aria-label="@L["Mm.LabelPrint.FindItem"]" data-testid="label-print-search-item-lookup" @onclick="() => _itemLookupOpen = true">…</button>
+                <button type="button" aria-label="@L["Mm.LabelPrint.ClearItem"]" disabled="@(_itemId is null)" data-testid="label-print-search-item-clear" @onclick="ClearItem">×</button>
+            </div>
+            <QuroSelect Label="@L["Mm.LabelPrint.WarehouseId"]" @bind-Value="_warehouseId" Options="_warehouses" Required="@(_labelType == LabelTypes.Location)"
+                        TestId="label-print-search-warehouse" />
+        </SearchContent>
+        <ExtraCommands>
+            @* The toolbar holds buttons, so the output kind is a bare select named by its resource label *@
+            <select value="@_outputKind" aria-label="@L["Mm.LabelPrint.OutputKind"]" title="@L["Mm.LabelPrint.OutputKind"]"
+                    data-testid="label-print-toolbar-output-kind" @onchange="e => _outputKind = e.Value as string">
+                @foreach (var kind in OutputKinds)
+                {
+                    <option value="@kind">@kind</option>
+                }
+            </select>
+            <button type="button" class="quro-primary" disabled="@(!_canEdit || _printBusy || !AnyPicked)" data-testid="label-print-toolbar-print"
+                    @onclick="PrintAsync">@L["Mm.LabelPrint.Print"]</button>
+        </ExtraCommands>
+    </QuroMultiGrid>
+
+    @if (_printError is not null)
+    {
+        <p class="page-error" role="alert" data-testid="label-print-print-message">@_printError</p>
+    }
+    else if (_printNotice is not null)
+    {
+        <p class="page-notice" role="status" data-testid="label-print-print-notice">@_printNotice</p>
+    }
+
+    <QuroLookupDialog TItem="ItemDto" Title="@L["Mm.LabelPrint.FindItem"]" TestId="label-print-search-item-dialog"
+                      @bind-Visible="_itemLookupOpen" Search="FindItemsAsync" OnSelected="PickItem">
+        <Columns>
+            <QuroColumn TRow="ItemDto" Title="@L["Mm.LabelPrint.ItemCd"]" Value="i => i.ItemCd" />
+            <QuroColumn TRow="ItemDto" Title="@L["Mm.LabelPrint.Name"]" Value="i => i.ItemName" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string ScreenPath = "/mm/label-print";
+    private const string UnavailableCode = "BC-E-003";
+    private const string NotFoundCode = "Common-E-006";
+
+    private static readonly string[] OutputKinds = ["ZPL", "PDF"];
+
+    private static class LabelTypes
+    {
+        public const string Pallet = "PALLET";
+        public const string Location = "LOCATION";
+        public static readonly string[] All = [Pallet, "ITEM", "LOT", Location];
+    }
+
+    private QuroMultiGrid<LabelPrintRow>? _grid;
+    private IReadOnlyList<CodeItemDto> _labelTypes = [];
+    private IReadOnlyList<CodeItemDto> _warehouses = [];
+    private Dictionary<string, string> _formatKinds = [];
+    private string? _labelType = LabelTypes.Pallet;
+    private string? _grNo;
+    private long? _itemId;
+    private string? _itemText;
+    private bool _itemLookupOpen;
+    private string? _warehouseId;
+    private string? _outputKind;
+    private bool _canEdit;
+    private bool _ready;
+    private string? _loadError;
+
+    // The label type of the rows on the grid, which a print sends even when the search condition has changed since
+    private string? _searchedType;
+    private bool _printBusy;
+    private string? _printError;
+    private string? _printNotice;
+
+    private bool AnyPicked => _grid?.Items.Any(r => r.Selected) == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Write access of this screen (security.md "화면 쓰기 권한")
+        _canEdit = await ScreenAccess.CanWriteAsync(ScreenPath);
+        _labelTypes = [.. LabelTypes.All.Select(t => new CodeItemDto(t, L[$"Mm.LabelPrint.LabelType.{t}"]))];
+        try
+        {
+            var warehouses = (await WarehouseApi.GetOptionsAsync(CancellationToken.None)).Where(w => w.UseYn).ToList();
+            _warehouses = [.. warehouses.Select(w => new CodeItemDto(w.Id.ToString(CultureInfo.InvariantCulture), $"{w.WarehouseCode} {w.WarehouseName}"))];
+            // The output kind starts as the label type's format (MM-BR-917)
+            _formatKinds = (await FormatApi.ListAsync(CancellationToken.None)).ToDictionary(f => f.LabelType, f => f.OutputKind);
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _outputKind = FormatKindOf(_labelType);
+        _ready = true;
+    }
+
+    private string FormatKindOf(string? labelType) =>
+        labelType is not null && _formatKinds.TryGetValue(labelType, out var kind) ? kind : OutputKinds[0];
+
+    private void ChangeLabelType(string? labelType)
+    {
+        _labelType = labelType;
+        _outputKind = FormatKindOf(labelType);
+    }
+
+    // A receipt number that matches no receipt is told as not found instead of listing every target
+    private async Task<IReadOnlyList<LabelPrintRow>> LoadAsync()
+    {
+        _printError = null;
+        _printNotice = null;
+        long? receiptId = null;
+        if (!string.IsNullOrWhiteSpace(_grNo))
+        {
+            var number = _grNo.Trim().ToUpperInvariant();
+            var found = (await ReceiptApi.SearchAsync(new GoodsReceiptSearchQuery(number, null, null, null), CancellationToken.None))
+                .FirstOrDefault(r => r.GrNo == number);
+            receiptId = found?.Id ?? throw new ApiProblemException(new ApiProblem(404, NotFoundCode, [number]));
+        }
+        var query = new LabelTargetQuery
+        {
+            LabelType = _labelType,
+            GoodsReceiptId = receiptId,
+            ItemId = _itemId,
+            WarehouseId = long.TryParse(_warehouseId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var warehouseId) ? warehouseId : null,
+        };
+        var targets = await Api.TargetsAsync(query, CancellationToken.None);
+        _searchedType = _labelType;
+        return [.. targets.Select(LabelPrintRow.From)];
+    }
+
+    // MM-BR-918: the API makes the labels in the order of the grid; the file is saved where the browser saves downloads
+    private async Task PrintAsync()
+    {
+        if (_grid is null || _searchedType is null)
+        {
+            return;
+        }
+        _printBusy = true;
+        _printError = null;
+        _printNotice = null;
+        try
+        {
+            var request = LabelPrintRow.ToRequest(_searchedType, _grid.Items, _outputKind);
+            var file = await Api.PrintAsync(request, FileName(_searchedType), CancellationToken.None);
+            await QuroExcel.DownloadAsync(JS, file.FileName, file.Content);
+            _printNotice = L["Mm.LabelPrint.Printed", request.Targets!.Count, file.FileName];
+        }
+        catch (ApiProblemException e)
+        {
+            _printError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _printError = Messages.Get(UnavailableCode);
+        }
+        _printBusy = false;
+    }
+
+    /// <summary>labels-pallet-20261116-143000: the type and the local time, so files of several prints don't overwrite each other.</summary>
+    internal static string FileName(string labelType) =>
+        $"labels-{labelType.ToLowerInvariant()}-{DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}";
+
+    private Task<IReadOnlyList<ItemDto>> FindItemsAsync(string? keyword) => ItemApi.LookupAsync(keyword, CancellationToken.None);
+
+    private void PickItem(ItemDto item)
+    {
+        _itemId = item.Id;
+        _itemText = $"{item.ItemCd} {item.ItemName}";
+    }
+
+    private void ClearItem()
+    {
+        _itemId = null;
+        _itemText = null;
+    }
+
+    private void ResetSearch()
+    {
+        _grNo = null;
+        ClearItem();
+        _warehouseId = null;
+        _searchedType = null;
+        _printError = null;
+        _printNotice = null;
+    }
+}
