@@ -1,0 +1,39 @@
+{
+  "id": "TASK-CORE-079",
+  "project": "core",
+  "title": "VAT 포함·별도 (KR): 문서 헤더 플래그, 계산, 기본값, 끝난 문서 API",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Application",
+    "Infrastructure",
+    "Api"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/tax.md",
+    "docs/business-rules/BC/tax.md",
+    "docs/architecture/database-tables.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-api",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-015",
+    "TASK-SD-005",
+    "TASK-MM-047"
+  ],
+  "acceptance": [
+    "마이그레이션: 견적·수주·매출 송장·발주·입고·공급자 송장 헤더에 `tax_included` boolean NOT NULL 기본 false, `bc_customer`·`bc_vendor`에 `tax_included` boolean NULL. `bc_tax_code.price_included`를 지운다 — 그 코드를 쓴 문서는 먼저 `tax_included = true`로 옮긴다 (BC-BR-504·555)",
+    "`ITaxCalculator`가 세금 코드 대신 문서의 `tax_included`로 역산한다. DOCUMENT·LINE, 영세율·면세, 반올림 HALF_UP·DOWN 단위 테스트 (예: 11,000 → 10,000 + 1,000, 10,001·DOWN → 9,092 + 909) (BC-BR-544)",
+    "끝난 문서 API(수주·매출 송장·발주·입고·공급자 송장·Debit Memo)가 `taxIncluded`를 받고 돌려준다. 견적·Credit Memo·반품은 아직 없으므로 그 태스크가 같은 BR로 만든다. US 회사 true면 400 BC-E-549. 기본값 앞 문서 → 거래처 → 회사 (BC-BR-549·550). 고객·공급자 API에 `taxIncluded`(null 허용)",
+    "바꾸면 단가 그대로 다시 계산, 반제가 있는 송장은 409 BC-E-551. Credit Memo·Debit Memo·반품은 원 문서 값, 다르면 400 BC-E-553. 단가표 단가는 과세 줄에 × (1 + 세율)로 넣는다 (BC-BR-551~553)",
+    "세금 코드 API에서 `priceIncluded`를 없앤다(보내면 400 BC-E-504). 메시지 en·ko. 기존 테스트가 통과한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

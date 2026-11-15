@@ -36,7 +36,13 @@
     "MM-BR-004",
     "MM-BR-005",
     "MM-BR-601",
-    "MM-BR-606"
+    "MM-BR-606",
+    "BC-BR-549",
+    "BC-BR-550",
+    "BC-BR-551",
+    "BC-BR-552",
+    "BC-BR-553",
+    "BC-BR-554"
   ],
   "skills": [
     "quro-api",
