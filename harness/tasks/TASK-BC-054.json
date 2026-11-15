@@ -4,6 +4,10 @@
   "title": "지역화 설정 화면 (S)",
   "module": "BC",
   "layer": [
+    "Api",
+    "Application",
+    "Domain",
+    "Infrastructure",
     "Blazor"
   ],
   "screenType": "S",
@@ -21,9 +25,17 @@
     "BC-BR-426",
     "BC-BR-427",
     "BC-BR-429",
-    "BC-BR-543"
+    "BC-BR-438",
+    "BC-BR-439",
+    "BC-BR-543",
+    "BC-BR-549",
+    "BC-BR-550",
+    "BC-BR-314",
+    "BC-BR-318"
   ],
   "skills": [
+    "quro-api",
+    "quro-dapper",
     "quro-blazor",
     "quro-unit-test",
     "quro-code-review"
@@ -35,8 +47,12 @@
   "acceptance": [
     "화면유형 공통 컴포넌트 사용",
     "명세 화면 필드 반영",
-    "ko·en 리소스"
+    "ko·en 리소스",
+    "API 보완: `bc_company.date_format`(NOT NULL, 국가 기본값으로 채움)·`tax_included_default`(boolean NOT NULL 기본 false) 마이그레이션. `GET /api/bc/localization`에 `taxIncludedDefault`, `dateFormat`은 저장 값. `PUT /api/bc/localization-setting`이 `defaultLangCode`·`timeZone`·`dateFormat`·`taxIncludedDefault`(US는 false만, 400 BC-E-549)를 받는다 (BC-BR-314·318·438·550)",
+    "회사 정보 API는 기본 언어·시간대를 더 받지 않는다(400 BC-E-439). 회사 정보 화면의 두 칸은 읽기 전용 + 지역화 설정 링크 (BC-BR-439). 기존 회사 정보 테스트를 고친다",
+    "화면: 기본값 영역(국가·기준 통화 읽기 전용, 기본 언어·시간대·날짜 형식 콤보), 세금 영역(계산 단위 radio, VAT 포함 기본값 checkbox — KR만), 언어·단가 자릿수·모듈 그리드. 쓰기 가능 여부는 `IScreenAccess`",
+    "날짜 형식을 바꾸면 모든 화면의 날짜 입력·표시가 새 형식을 쓴다 (`GET /api/bc/localization`, BC-BR-426·438). bUnit: US·KR 회사, 날짜 형식 3개, 권한 없음 조회만"
   ],
-  "estimateHours": 2,
+  "estimateHours": 3,
   "status": "todo"
 }

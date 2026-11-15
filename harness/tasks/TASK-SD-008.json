@@ -34,7 +34,13 @@
     "BC-BR-543",
     "BC-BR-544",
     "BC-BR-545",
-    "BC-BR-546"
+    "BC-BR-549",
+    "BC-BR-550",
+    "BC-BR-551",
+    "BC-BR-552",
+    "BC-BR-554",
+    "BC-BR-546",
+    "BC-BR-553"
   ],
   "skills": [
     "quro-blazor",

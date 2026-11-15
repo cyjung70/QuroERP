@@ -1,0 +1,33 @@
+{
+  "id": "TASK-CORE-080",
+  "project": "core",
+  "title": "VAT 포함·별도 (KR): 끝난 문서 화면·출력, 거래처 화면",
+  "module": "CORE",
+  "layer": [
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/tax.md",
+    "docs/business-rules/BC/tax.md",
+    "docs/architecture/field-policy.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-079",
+    "TASK-BC-054"
+  ],
+  "acceptance": [
+    "끝난 화면(수주·매출 송장·발주·입고·공급자 송장·Debit Memo) 헤더에 'VAT 포함' 체크박스 (명세 화면 항목). 필드 정책 KR 선택·US 숨김. 줄이 있을 때 바꾸면 확인 대화상자 뒤 다시 계산, 반제가 있는 송장은 비활성 (BC-BR-549~551)",
+    "VAT 포함 문서의 줄 단가·금액 열은 VAT 포함 금액, 합계 패널은 공급가액·세액·합계. 고객·공급자 화면에 'VAT 포함 기본값'(비우면 회사 값) (BC-BR-550·552)",
+    "출력: 견적서·수주서·송장·발주서는 VAT 포함 문서면 포함 금액과 'VAT 포함' 표시, 세금계산서는 항상 공급가액·세액 (BC-BR-554). 세금 코드 화면에서 '가격 포함' 열을 없앤다",
+    "bUnit: KR 포함·별도 전환과 다시 계산, US 숨김, 반제 있는 송장 비활성. 리소스 en·ko. 기존 bUnit이 통과한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

@@ -1,0 +1,40 @@
+{
+  "id": "TASK-TESTER-029",
+  "project": "tester",
+  "layer": [
+    "Tester"
+  ],
+  "skills": [
+    "quro-pytest"
+  ],
+  "estimateHours": 2,
+  "status": "todo",
+  "title": "SD VAT 포함·별도 테스트 (KR): 기본값, 역산, 전환, 반제 뒤 잠금, Credit Memo",
+  "module": "SD",
+  "scenarios": [
+    "tester/docs/scenarios/SD/SD-TS-023.md"
+  ],
+  "rules": [
+    "BC-BR-543",
+    "BC-BR-544",
+    "BC-BR-545",
+    "BC-BR-549",
+    "BC-BR-550",
+    "BC-BR-551",
+    "BC-BR-552",
+    "BC-BR-553"
+  ],
+  "dependsOn": [
+    "TASK-TESTER-002",
+    "TASK-CORE-079",
+    "TASK-BC-054",
+    "TASK-SD-007",
+    "TASK-SD-035"
+  ],
+  "acceptance": [
+    "tests/scenario/SD/test_vat_included.py: SD-TS-023, serial (country(\"KR\"), 7단계 뒤 VAT 포함 기본값을 되돌린다)",
+    "사전 데이터는 API로 만들고 업무 키에 run_id를 붙인다. tax_included는 DB SELECT로 확인한다",
+    "오류 단계는 error_lang으로 ko·en 두 번 실행",
+    "uv run pytest -m serial -k vat_included 통과, uv run ruff check 통과"
+  ]
+}
