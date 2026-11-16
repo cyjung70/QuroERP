@@ -42,5 +42,5 @@
     "PDF 출력: HTML 템플릿(`Reports/Templates/<module>/<Document>.razor`) → `IPdfRenderer` (TASK-CORE-033, reports.md)"
   ],
   "estimateHours": 2,
-  "status": "todo"
+  "status": "done"
 }
