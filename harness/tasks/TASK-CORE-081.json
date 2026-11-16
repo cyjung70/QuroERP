@@ -1,0 +1,35 @@
+{
+  "id": "TASK-CORE-081",
+  "project": "core",
+  "title": "권한 없음(403) 메시지 Common-E-007: API 코드와 화면 표시",
+  "module": "CORE",
+  "layer": [
+    "Api",
+    "Blazor"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/api.md",
+    "docs/architecture/i18n.md",
+    "docs/architecture/security.md",
+    "docs/business-rules/BC/menu-role.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-api",
+    "quro-blazor",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-076"
+  ],
+  "acceptance": [
+    "API: 권한 정책 거절·`Forbid()` 등 본문 없는 403 ProblemDetails에 `code` = `Common-E-007`(인자 없음)을 넣는다. 이미 코드가 있는 403(`AUTH-004`·`AUTH-005`)은 그대로 둔다 (api.md \"오류\", BC-BR-214)",
+    "Web: `ProblemMessages`가 코드가 없거나 리소스에 없는 403을 `Common-E-001`이 아니라 `Common-E-007`로 보인다. 화면은 공통 오류 표시(`ProblemMessages`)만 쓴다. 403을 따로 처리하거나 공통 경로를 거치지 않는 화면이 있으면 공통 경로로 바꾼다",
+    "리소스: ko \"이 작업을 할 권한이 없습니다. 관리자에게 권한을 요청하세요.\", en \"You do not have permission to do this. Ask your administrator for access.\"",
+    "테스트: API 통합 — 조회 전용 배정 사용자의 변경 요청, 배정 없는 메뉴 요청이 403 + `Common-E-007`; `AUTH-005` 403은 코드가 바뀌지 않는다. Web 단위 — 코드 없는 403·`Common-E-007`은 권한 메시지, 코드 없는 500은 `Common-E-001`. 기존 테스트가 통과한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

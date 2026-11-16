@@ -64,11 +64,11 @@
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "26bfb31bf876729547e21aa45891e64e0ee6e07b8bb2c1daa4f8e32ffe74be8e"
+      "sha256": "003faddf0801772f6165ed955fccd5530ada604fdb5b1d3fa8289b5c21ea7e74"
     },
     {
       "path": "docs/architecture/api.md",
-      "sha256": "fe537aefd6a1e89ae4c8bdbe3e78074a0516d7dded92f7ec44381f6207005617"
+      "sha256": "8e8caa146e55eba3b2870279b9bf2c2bc8998205dba5bb606996878dd137181c"
     },
     {
       "path": "docs/architecture/app-shell.md",
@@ -96,7 +96,7 @@
     },
     {
       "path": "docs/architecture/i18n.md",
-      "sha256": "6ba276d6844fe6c989826fed0b57744d7f6f964c7bc61453ff70e5b803e94fbe"
+      "sha256": "148b407c05ccfa21c40a1af0b566ea697e2197587bb19d3762f2aee315e33a1e"
     },
     {
       "path": "docs/architecture/inventory.md",
@@ -140,7 +140,7 @@
     },
     {
       "path": "docs/architecture/security.md",
-      "sha256": "08c49c8363b05c30565b4e4c1667e1655422aebb55d852e971e3b5acd57fbf5b"
+      "sha256": "062ffa56c5c644c8ffc03eb93cd60aaace6529c170be01badb603a65d23c6878"
     },
     {
       "path": "docs/architecture/subprojects.md",
@@ -164,7 +164,7 @@
     },
     {
       "path": "docs/business-rules/BC/menu-role.md",
-      "sha256": "f7fec97795e298771f036db950267080b3b14db62bac2e72d88fe1ae1c8f089e"
+      "sha256": "7e8f0a1e11a318c0f7700e6a0b290107fe3879f692a44ab263add828742fe1ac"
     },
     {
       "path": "docs/business-rules/BC/password.md",
@@ -1411,6 +1411,10 @@
       "sha256": "81d6142d5a77a17cb51133db62ba6f689c6b97332c3bb25b47771e08bc7dbc2f"
     },
     {
+      "path": "harness/tasks/TASK-CORE-081.json",
+      "sha256": "e76394e80ab50d61c210f1fa923d76daad947129e6cf50c22c80d6a42b85cb76"
+    },
+    {
       "path": "harness/tasks/TASK-MM-001.json",
       "sha256": "f2679b9142f363a3745efb1033978fbdb92c1a400b4ac13bd3225c6f221f90c0"
     },
@@ -2012,7 +2016,7 @@
     },
     {
       "path": "tester/docs/scenarios/BC/BC-TS-003.md",
-      "sha256": "d893c0906f17a1a9467dcd18441da77185c72882b70bb98abe6527f2546e93b5"
+      "sha256": "1e1d2758a6b69b17c528b5a77a8572540a6d490a87578f5ff2c94a7f23efafe9"
     },
     {
       "path": "tester/docs/scenarios/BC/BC-TS-004.md",
