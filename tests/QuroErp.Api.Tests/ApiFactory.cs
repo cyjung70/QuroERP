@@ -235,6 +235,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IVendorRepository>(Vendors);
             services.AddSingleton<ILocationRepository>(Locations);
             services.AddSingleton<ILotRepository>(new InMemoryLotRepository());
+            services.AddSingleton<ILotTraceRepository>(new InMemoryLotTraceRepository());
             services.AddSingleton<IPalletRepository>(Pallets);
             services.AddSingleton<ILabelFormatRepository>(new InMemoryLabelFormatRepository());
             services.AddSingleton<ILabelPdfRenderer>(new FakeLabelPdfRenderer());

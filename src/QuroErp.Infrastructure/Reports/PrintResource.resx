@@ -67,6 +67,27 @@
   <data name="Print.SetComponentList.Component" xml:space="preserve"><value>구성품</value></data>
   <data name="Print.SetComponentList.ComponentQty" xml:space="preserve"><value>구성품 수량</value></data>
   <data name="Print.SetComponentList.None" xml:space="preserve"><value>세트 품목 줄이 없습니다.</value></data>
+  <data name="Print.LotTrace.Title.forward" xml:space="preserve"><value>Lot 추적 (정전개)</value></data>
+  <data name="Print.LotTrace.Title.backward" xml:space="preserve"><value>Lot 추적 (역전개)</value></data>
+  <data name="Print.LotTrace.None" xml:space="preserve"><value>추적 결과가 없습니다.</value></data>
+  <data name="Print.LotTrace.Level" xml:space="preserve"><value>단계</value></data>
+  <data name="Print.LotTrace.DocType" xml:space="preserve"><value>구분</value></data>
+  <data name="Print.LotTrace.DocNo" xml:space="preserve"><value>문서 번호</value></data>
+  <data name="Print.LotTrace.DocDt" xml:space="preserve"><value>일자</value></data>
+  <data name="Print.LotTrace.Warehouse" xml:space="preserve"><value>창고</value></data>
+  <data name="Print.LotTrace.Party" xml:space="preserve"><value>거래처</value></data>
+  <data name="Print.LotTrace.Item" xml:space="preserve"><value>품목</value></data>
+  <data name="Print.LotTrace.ItemName" xml:space="preserve"><value>품명</value></data>
+  <data name="Print.LotTrace.LotNo" xml:space="preserve"><value>Lot 번호</value></data>
+  <data name="Print.LotTrace.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Print.LotTrace.Customer" xml:space="preserve"><value>고객</value></data>
+  <data name="Print.LotTrace.Period" xml:space="preserve"><value>기간</value></data>
+  <data name="Print.LotTrace.DocType.LOT" xml:space="preserve"><value>Lot</value></data>
+  <data name="Print.LotTrace.DocType.GR" xml:space="preserve"><value>입고</value></data>
+  <data name="Print.LotTrace.DocType.SHIP" xml:space="preserve"><value>출하</value></data>
+  <data name="Print.LotTrace.DocType.INV" xml:space="preserve"><value>매출 송장</value></data>
+  <data name="Print.LotTrace.DocType.ASM" xml:space="preserve"><value>Set 조립</value></data>
+  <data name="Print.LotTrace.DocType.MOVE" xml:space="preserve"><value>재고 이동</value></data>
   <data name="Print.DeliveryNote.Title" xml:space="preserve"><value>납품서</value></data>
   <data name="Print.DeliveryNote.ShipDt" xml:space="preserve"><value>출하일</value></data>
   <data name="Print.DeliveryNote.SoNo" xml:space="preserve"><value>수주 번호</value></data>

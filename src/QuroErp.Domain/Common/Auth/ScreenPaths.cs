@@ -33,6 +33,7 @@ public static class ScreenPaths
     public const string Pallet = "/mm/pallet";
     public const string LabelFormat = "/mm/label-format";
     public const string LabelPrint = "/mm/label-print";
+    public const string LotTrace = "/mm/lot-trace";
     public const string Customer = "/sd/customer";
     public const string SalesOrder = "/sd/sales-order";
     public const string Shipment = "/sd/shipment";
@@ -45,6 +46,6 @@ public static class ScreenPaths
         Item, Code, CodeMajor, ItemBarcode, PurchasePrice, PurchaseOrder, GoodsReceipt, Company, Currency, User, CompanyMenu, RoleMenu,
         ExchangeRate, TaxCode, TaxArea, LocalizationSetting, SetItem, SalesPrice, AlternateItem, AlternateItemGroup, Vendor,
         Warehouse, Customer, SalesOrder, Shipment, SupplierInvoice, SalesInvoice, Location, Pallet, LabelFormat, LabelPrint,
-        Assembly,
+        Assembly, LotTrace,
     ];
 }

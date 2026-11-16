@@ -140,6 +140,7 @@ public static class DependencyInjection
         services.AddSingleton<ISalesInvoiceRepository, SalesInvoiceRepository>();
         services.AddSingleton<ISalesInvoiceDocument, SalesInvoiceDocument>();
         services.AddSingleton<ILotRepository, LotRepository>();
+        services.AddSingleton<ILotTraceRepository, LotTraceRepository>();
         services.AddSingleton<ILabelPrintRepository, LabelPrintRepository>();
         services.AddSingleton<ILabelFormatRepository, LabelFormatRepository>();
         services.AddSingleton<ILabelTargetRepository, LabelTargetRepository>();
@@ -161,6 +162,7 @@ public static class DependencyInjection
         services.AddSingleton<IPdfRenderer>(sp => sp.GetRequiredService<PdfRenderer>());
         services.AddSingleton<IExcelWriter, ExcelWriter>();
         services.AddSingleton<IPurchaseOrderDocument, PurchaseOrderDocument>();
+        services.AddSingleton<ILotTraceDocument, LotTraceDocument>();
         services.AddSingleton<ILabelPdfRenderer, LabelPdfRenderer>();
         services.AddSingleton<IPrintTemplateResolver>(_ => new PrintTemplateResolver());
         services.AddHealthChecks()

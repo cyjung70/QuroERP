@@ -1,0 +1,267 @@
+@page "/mm/lot-trace"
+@rendermode InteractiveServer
+@using System.Globalization
+@using Quro.Grid.Definition
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Mm.Lots
+@using QuroErp.Contracts.Sd.Customers
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Bc.Localization
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pages.Mm.Models
+@using QuroErp.Web.Mm.Lots
+@using QuroErp.Web.Mm.PurchaseOrders
+@using QuroErp.Web.Sd.Customers
+@inject LotTraceApiClient Api
+@inject ItemApiClient ItemApi
+@inject CustomerApiClient CustomerApi
+@inject LocalizationApiClient LocalizationApi
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+@inject ProblemMessages Messages
+
+@* MM-UC-040 Lot trace, screen type M, read only. Forward: an item and Lot number (a scanner types it and Enter) give the Lot and
+   where it went, through a Set Lot it was assembled into (MM-BR-366, MM-BR-368). Backward: a shipment or invoice number, or a
+   customer and period, give the issues and where their Lots came from (MM-BR-367). The rows are a tree; Print gives the same
+   rows as PDF and Excel the same rows as a sheet (MM-BR-369). Lot '*' is not traced. The API checks every condition. *@
+
+<PageTitle>@L["Mm.LotTrace.Title"]</PageTitle>
+
+@if (_loadError is not null)
+{
+    <p class="page-error" role="alert" data-testid="lot-trace-message">@_loadError</p>
+}
+
+@if (_ready)
+{
+    <QuroMultiGrid @ref="_grid" TRow="LotTraceRow" Title="@L["Mm.LotTrace.Title"]" TestId="lot-trace" Path="@L["Menu.G2MM"]"
+                   Definition="mm.lot-trace.list" Adjust="WithQtyFormat" Load="LoadAsync" CanWrite="false" OnReset="ResetSearch"
+                   OnPrint="PrintAsync" TreeKeyField="key" TreeParentField="parentKey" TreeColumn="docTypeText">
+        <SearchContent>
+            <fieldset class="quro-radio-group" data-testid="lot-trace-search-direction">
+                <legend>@L["Mm.LotTrace.Direction"]</legend>
+                <label>
+                    <input type="radio" name="lot-trace-direction" checked="@(_direction == LotTraceRow.Forward)"
+                           data-testid="lot-trace-direction-forward" @onchange="() => SetDirection(LotTraceRow.Forward)" />
+                    @L["Mm.LotTrace.Direction.forward"]
+                </label>
+                <label>
+                    <input type="radio" name="lot-trace-direction" checked="@(_direction == LotTraceRow.Backward)"
+                           data-testid="lot-trace-direction-backward" @onchange="() => SetDirection(LotTraceRow.Backward)" />
+                    @L["Mm.LotTrace.Direction.backward"]
+                </label>
+            </fieldset>
+            @if (_direction == LotTraceRow.Forward)
+            {
+                <div class="quro-lookup-field">
+                    <QuroText Label="@L["Mm.LotTrace.ItemId"]" Value="@_itemText" LockMode="LockMode.Always" Required TestId="lot-trace-search-item" />
+                    <button type="button" aria-label="@L["Mm.LotTrace.FindItem"]" data-testid="lot-trace-search-item-lookup" @onclick="() => _itemLookupOpen = true">…</button>
+                </div>
+                <QuroText Label="@L["Mm.LotTrace.LotNo"]" @bind-Value="_lotNo" Required TestId="lot-trace-search-lot-no" />
+            }
+            else
+            {
+                <QuroText Label="@L["Mm.LotTrace.DocNo"]" @bind-Value="_docNo" TextCase="TextCase.Upper" TestId="lot-trace-search-doc-no" />
+                <div class="quro-lookup-field">
+                    <QuroText Label="@L["Mm.LotTrace.CustomerId"]" Value="@_customerText" LockMode="LockMode.Always" TestId="lot-trace-search-customer" />
+                    <button type="button" aria-label="@L["Mm.LotTrace.FindCustomer"]" data-testid="lot-trace-search-customer-lookup" @onclick="() => _customerLookupOpen = true">…</button>
+                    <button type="button" aria-label="@L["Mm.LotTrace.ClearCustomer"]" disabled="@(_customerId is null)" data-testid="lot-trace-search-customer-clear" @onclick="ClearCustomer">×</button>
+                </div>
+                <QuroDate Label="@L["Mm.LotTrace.From"]" @bind-Value="_from" TestId="lot-trace-search-from" />
+                <QuroDate Label="@L["Mm.LotTrace.To"]" @bind-Value="_to" TestId="lot-trace-search-to" />
+            }
+        </SearchContent>
+    </QuroMultiGrid>
+
+    @if (_printError is not null)
+    {
+        <p class="page-error" role="alert" data-testid="lot-trace-message-print">@_printError</p>
+    }
+
+    <QuroLookupDialog TItem="ItemDto" Title="@L["Mm.LotTrace.FindItem"]" TestId="lot-trace-search-item-dialog"
+                      @bind-Visible="_itemLookupOpen" Search="FindItemsAsync" OnSelected="PickItem">
+        <Columns>
+            <QuroColumn TRow="ItemDto" Title="@L["Mm.LotTrace.ItemCd"]" Value="i => i.ItemCd" />
+            <QuroColumn TRow="ItemDto" Title="@L["Mm.LotTrace.ItemName"]" Value="i => i.ItemName" />
+        </Columns>
+    </QuroLookupDialog>
+
+    <QuroLookupDialog TItem="CustomerDto" Title="@L["Mm.LotTrace.FindCustomer"]" TestId="lot-trace-search-customer-dialog"
+                      @bind-Visible="_customerLookupOpen" Search="FindCustomersAsync" OnSelected="PickCustomer">
+        <Columns>
+            <QuroColumn TRow="CustomerDto" Title="@L["Mm.LotTrace.CustomerName"]" Value="c => c.CName" />
+        </Columns>
+    </QuroLookupDialog>
+}
+
+@code {
+    private const string RequiredCode = "Common-E-005";
+    private const string UnavailableCode = "BC-E-003";
+    private const string QtyColumn = "qty";
+
+    private QuroMultiGrid<LotTraceRow>? _grid;
+    private string _direction = LotTraceRow.Forward;
+    private long? _itemId;
+    private string? _itemText;
+    private bool _itemLookupOpen;
+    private string? _lotNo;
+    private string? _docNo;
+    private long? _customerId;
+    private string? _customerText;
+    private bool _customerLookupOpen;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private string? _qtyFormat;
+    private bool _ready;
+    private string? _loadError;
+    private string? _printError;
+
+    // The conditions the shown rows were read with: Print sends the same ones (MM-BR-369)
+    private object? _searched;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var localization = await LocalizationApi.GetAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, CancellationToken.None);
+            _qtyFormat = $"N{PurchaseOrderDecimals.Of(localization, null).Qty.ToString(CultureInfo.InvariantCulture)}";
+        }
+        catch (ApiProblemException e)
+        {
+            _loadError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = Messages.Get(UnavailableCode);
+        }
+        _ready = true;
+    }
+
+    // Quantities show the MM qty decimals (BC-BR-423)
+    private GridDef WithQtyFormat(GridDef grid) => _qtyFormat is null ? grid : grid with
+    {
+        Columns = [.. grid.Columns.Select(c => c.Id == QtyColumn ? c with { Fmt = _qtyFormat } : c)],
+    };
+
+    private void SetDirection(string direction) => _direction = direction;
+
+    private async Task<IReadOnlyList<LotTraceRow>> LoadAsync()
+    {
+        _searched = null;
+        _printError = null;
+        IReadOnlyList<LotTraceRowDto> rows;
+        if (_direction == LotTraceRow.Forward)
+        {
+            var query = ForwardQuery();
+            rows = await Api.ForwardAsync(query, CancellationToken.None);
+            _searched = query;
+        }
+        else
+        {
+            var query = BackwardQuery();
+            rows = await Api.BackwardAsync(query, CancellationToken.None);
+            _searched = query;
+        }
+        return [.. rows.Select(r => LotTraceRow.From(r, L[$"Mm.LotTrace.DocType.{r.DocType}"]))];
+    }
+
+    // MM-BR-366: an item and a Lot number
+    private LotTraceForwardQuery ForwardQuery()
+    {
+        if (_itemId is null)
+        {
+            throw Required("Mm.LotTrace.ItemId");
+        }
+        if (string.IsNullOrWhiteSpace(_lotNo))
+        {
+            throw Required("Mm.LotTrace.LotNo");
+        }
+        return new LotTraceForwardQuery { ItemId = _itemId, LotNo = _lotNo.Trim() };
+    }
+
+    // MM-BR-367: a document number, or a customer with both dates
+    private LotTraceBackwardQuery BackwardQuery()
+    {
+        if (!string.IsNullOrWhiteSpace(_docNo))
+        {
+            return new LotTraceBackwardQuery { DocNo = _docNo.Trim().ToUpperInvariant() };
+        }
+        if (_customerId is null)
+        {
+            throw Required("Mm.LotTrace.DocNo");
+        }
+        if (_from is null)
+        {
+            throw Required("Mm.LotTrace.From");
+        }
+        if (_to is null)
+        {
+            throw Required("Mm.LotTrace.To");
+        }
+        return new LotTraceBackwardQuery { CustomerId = _customerId, From = _from, To = _to };
+    }
+
+    private ApiProblemException Required(string labelKey) => new(new ApiProblem(400, RequiredCode, [L[labelKey]]));
+
+    // The report of the rows on the screen, in the user's language
+    private async Task PrintAsync()
+    {
+        _printError = null;
+        if (_searched is null)
+        {
+            _printError = L["Mm.LotTrace.SearchFirst"];
+            return;
+        }
+        try
+        {
+            var file = _searched is LotTraceForwardQuery forward
+                ? await Api.ForwardFileAsync(forward, pdf: true, CancellationToken.None)
+                : await Api.BackwardFileAsync((LotTraceBackwardQuery)_searched, pdf: true, CancellationToken.None);
+            await QuroExcel.DownloadAsync(JS, file.FileName, file.Content);
+        }
+        catch (ApiProblemException e)
+        {
+            _printError = Messages.Get(e.Problem);
+        }
+        catch (HttpRequestException)
+        {
+            _printError = Messages.Get(UnavailableCode);
+        }
+    }
+
+    private Task<IReadOnlyList<ItemDto>> FindItemsAsync(string? keyword) => ItemApi.LookupAsync(keyword, CancellationToken.None);
+
+    private void PickItem(ItemDto item)
+    {
+        _itemId = item.Id;
+        _itemText = $"{item.ItemCd} {item.ItemName}";
+    }
+
+    private Task<IReadOnlyList<CustomerDto>> FindCustomersAsync(string? keyword) => CustomerApi.LookupAsync(keyword, CancellationToken.None);
+
+    private void PickCustomer(CustomerDto customer)
+    {
+        _customerId = customer.Id;
+        _customerText = customer.CName;
+    }
+
+    private void ClearCustomer()
+    {
+        _customerId = null;
+        _customerText = null;
+    }
+
+    private void ResetSearch()
+    {
+        _itemId = null;
+        _itemText = null;
+        _lotNo = null;
+        _docNo = null;
+        ClearCustomer();
+        _from = null;
+        _to = null;
+        _searched = null;
+        _printError = null;
+    }
+}
