@@ -1,0 +1,34 @@
+# MM-UC-040 Lot trace (TASK-MM-063), screen type M. Read only: the rows come from the API as a tree (key, parentKey) and the grid
+# shows them in tree mode. The type and document number are display texts made from the row; PDF and Excel give the same rows
+# (MM-BR-369).
+screen:
+  id: mm.lot-trace.list
+  module: MM
+  title: Mm.LotTrace.Title
+  version: 1
+  api: /api/mm/lot-trace
+  key: key
+  layout: grid
+  perm:
+    read: MM.Read
+    write: MM.Write
+toolbar[2]: query,exportXlsx
+# A grid screen still names its key as a form field; the M frame draws no form
+form:
+  cols: 1
+  fields[1]{id,label,type,mode,max,case,default,source,span,on}:
+    key,"",hidden,ro,"","","","",0,""
+grids[1]:
+  - id: rows
+    bind: rows
+    rowKey: key
+    columns[9]{id,label,type,width,edit,req,fmt,source,hidden}:
+      docTypeText,Mm.LotTrace.DocType,text,200,false,false,"","",false
+      docNoText,Mm.LotTrace.Document,text,150,false,false,"","",false
+      docDt,Mm.LotTrace.DocDt,date,100,false,false,"","",false
+      warehouseCode,Mm.LotTrace.Warehouse,text,100,false,false,"","",false
+      partyName,Mm.LotTrace.Party,text,180,false,false,"","",false
+      itemCd,Mm.LotTrace.ItemCd,text,130,false,false,"","",false
+      itemName,Mm.LotTrace.ItemName,text,180,false,false,"","",false
+      lotNo,Mm.LotTrace.LotNo,text,120,false,false,"","",false
+      qty,Mm.LotTrace.Qty,number,100,false,false,N2,"",false

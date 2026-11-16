@@ -67,6 +67,27 @@
   <data name="Print.SetComponentList.Component" xml:space="preserve"><value>Component</value></data>
   <data name="Print.SetComponentList.ComponentQty" xml:space="preserve"><value>Component Qty</value></data>
   <data name="Print.SetComponentList.None" xml:space="preserve"><value>There are no set item lines.</value></data>
+  <data name="Print.LotTrace.Title.forward" xml:space="preserve"><value>Lot Trace (Forward)</value></data>
+  <data name="Print.LotTrace.Title.backward" xml:space="preserve"><value>Lot Trace (Backward)</value></data>
+  <data name="Print.LotTrace.None" xml:space="preserve"><value>No trace results.</value></data>
+  <data name="Print.LotTrace.Level" xml:space="preserve"><value>Level</value></data>
+  <data name="Print.LotTrace.DocType" xml:space="preserve"><value>Type</value></data>
+  <data name="Print.LotTrace.DocNo" xml:space="preserve"><value>Document No.</value></data>
+  <data name="Print.LotTrace.DocDt" xml:space="preserve"><value>Date</value></data>
+  <data name="Print.LotTrace.Warehouse" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Print.LotTrace.Party" xml:space="preserve"><value>Party</value></data>
+  <data name="Print.LotTrace.Item" xml:space="preserve"><value>Item</value></data>
+  <data name="Print.LotTrace.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Print.LotTrace.LotNo" xml:space="preserve"><value>Lot No.</value></data>
+  <data name="Print.LotTrace.Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Print.LotTrace.Customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Print.LotTrace.Period" xml:space="preserve"><value>Period</value></data>
+  <data name="Print.LotTrace.DocType.LOT" xml:space="preserve"><value>Lot</value></data>
+  <data name="Print.LotTrace.DocType.GR" xml:space="preserve"><value>Goods Receipt</value></data>
+  <data name="Print.LotTrace.DocType.SHIP" xml:space="preserve"><value>Shipment</value></data>
+  <data name="Print.LotTrace.DocType.INV" xml:space="preserve"><value>Sales Invoice</value></data>
+  <data name="Print.LotTrace.DocType.ASM" xml:space="preserve"><value>Set Assembly</value></data>
+  <data name="Print.LotTrace.DocType.MOVE" xml:space="preserve"><value>Stock Movement</value></data>
   <data name="Print.DeliveryNote.Title" xml:space="preserve"><value>Delivery Note</value></data>
   <data name="Print.DeliveryNote.ShipDt" xml:space="preserve"><value>Ship Date</value></data>
   <data name="Print.DeliveryNote.SoNo" xml:space="preserve"><value>Order No.</value></data>

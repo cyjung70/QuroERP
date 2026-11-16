@@ -95,6 +95,8 @@ public static class DependencyInjection
         services.AddScoped<DocumentNumberService>();
         services.AddScoped<InventoryService>();
         services.AddScoped<LotService>();
+        services.AddScoped<LotTraceService>();
+        services.AddScoped<LotTracePrintService>();
         services.AddScoped<LabelPrintService>();
         services.AddScoped<LabelFormatService>();
         services.AddScoped<LabelPrintRequestService>();

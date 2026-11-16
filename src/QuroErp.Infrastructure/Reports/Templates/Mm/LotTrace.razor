@@ -1,0 +1,71 @@
+@* Lot trace report (MM-UC-040, MM-BR-369): the conditions, then the rows exactly as the screen shows them, each indented by its
+   level. Values use Razor output only. *@
+@using QuroErp.Application.Mm.Lots
+@using QuroErp.Infrastructure.Reports.Mm
+
+<PrintLayout Company="Print.Company" Title="@T("Print.LotTrace.Title." + Print.Direction)" Culture="Culture">
+    <table class="fields">
+        <tbody>
+            @foreach (var c in Print.Conditions)
+            {
+                <tr><th>@T(c.LabelKey)</th><td>@c.Value</td></tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Print.Rows.Count == 0)
+    {
+        <p>@T("Print.LotTrace.None")</p>
+    }
+    else
+    {
+        <table class="lines">
+            <thead>
+                <tr>
+                    <th>@T("Print.LotTrace.DocType")</th>
+                    <th>@T("Print.LotTrace.DocNo")</th>
+                    <th>@T("Print.LotTrace.DocDt")</th>
+                    <th>@T("Print.LotTrace.Warehouse")</th>
+                    <th>@T("Print.LotTrace.Party")</th>
+                    <th>@T("Print.LotTrace.Item")</th>
+                    <th>@T("Print.LotTrace.ItemName")</th>
+                    <th>@T("Print.LotTrace.LotNo")</th>
+                    <th class="num">@T("Print.LotTrace.Qty")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Print.Rows)
+                {
+                    <tr>
+                        <td style="padding-left: @(4 + r.Level * 14)px">@DocType(r)</td>
+                        <td class="mono">@DocNo(r)</td>
+                        <td>@r.DocDt?.ToString("d", Culture)</td>
+                        <td class="mono">@r.WarehouseCode</td>
+                        <td>@r.PartyName</td>
+                        <td class="mono">@r.ItemCd</td>
+                        <td>@r.ItemName</td>
+                        <td class="mono">@r.LotNo</td>
+                        <td class="num">@r.Qty?.ToString("N" + Print.QtyDecimals, Culture)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <style>
+        table.fields { width: auto; margin-bottom: 12px; }
+        table.fields th { background: none; padding-right: 12px; white-space: nowrap; }
+    </style>
+</PrintLayout>
+
+@code {
+    [Parameter, EditorRequired] public LotTracePrint Print { get; set; } = default!;
+
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+    private string T(string key) => PrintText.Get(key, Culture);
+
+    private string DocType(QuroErp.Contracts.Mm.Lots.LotTraceRowDto r) => LotTraceText.DocType(r, Culture);
+
+    private static string? DocNo(QuroErp.Contracts.Mm.Lots.LotTraceRowDto r) => LotTraceText.DocNo(r);
+}

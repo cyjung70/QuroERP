@@ -66,6 +66,7 @@ public static class WebApiClients
         services.AddHttpClient<SalesOrderApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<ShipmentApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<AssemblyApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<LotTraceApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<SalesInvoiceApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<LotApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<PurchaseOrderApiClient>(http => http.BaseAddress = apiBaseUrl);

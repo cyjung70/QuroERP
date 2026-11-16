@@ -741,6 +741,35 @@
   <data name="Mm.LabelFormat.Field.expiryDt" xml:space="preserve"><value>유효기한</value></data>
   <data name="Mm.LabelFormat.Field.warehouseCode" xml:space="preserve"><value>창고 코드</value></data>
   <data name="Mm.LabelFormat.Field.locationCode" xml:space="preserve"><value>Location 코드</value></data>
+  <data name="Mm.LotTrace.Title" xml:space="preserve"><value>Lot 추적</value></data>
+  <data name="Mm.LotTrace.Direction" xml:space="preserve"><value>방향</value></data>
+  <data name="Mm.LotTrace.Direction.forward" xml:space="preserve"><value>정전개</value></data>
+  <data name="Mm.LotTrace.Direction.backward" xml:space="preserve"><value>역전개</value></data>
+  <data name="Mm.LotTrace.ItemId" xml:space="preserve"><value>품목</value></data>
+  <data name="Mm.LotTrace.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
+  <data name="Mm.LotTrace.LotNo" xml:space="preserve"><value>Lot 번호</value></data>
+  <data name="Mm.LotTrace.DocNo" xml:space="preserve"><value>출하·송장 번호</value></data>
+  <data name="Mm.LotTrace.Document" xml:space="preserve"><value>문서 번호</value></data>
+  <data name="Mm.LotTrace.CustomerId" xml:space="preserve"><value>고객</value></data>
+  <data name="Mm.LotTrace.FindCustomer" xml:space="preserve"><value>고객 찾기</value></data>
+  <data name="Mm.LotTrace.ClearCustomer" xml:space="preserve"><value>고객 지우기</value></data>
+  <data name="Mm.LotTrace.CustomerName" xml:space="preserve"><value>고객명</value></data>
+  <data name="Mm.LotTrace.From" xml:space="preserve"><value>시작일</value></data>
+  <data name="Mm.LotTrace.To" xml:space="preserve"><value>종료일</value></data>
+  <data name="Mm.LotTrace.ItemCd" xml:space="preserve"><value>품목 코드</value></data>
+  <data name="Mm.LotTrace.ItemName" xml:space="preserve"><value>품명</value></data>
+  <data name="Mm.LotTrace.DocType" xml:space="preserve"><value>구분</value></data>
+  <data name="Mm.LotTrace.DocDt" xml:space="preserve"><value>일자</value></data>
+  <data name="Mm.LotTrace.Warehouse" xml:space="preserve"><value>창고</value></data>
+  <data name="Mm.LotTrace.Party" xml:space="preserve"><value>거래처</value></data>
+  <data name="Mm.LotTrace.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Mm.LotTrace.SearchFirst" xml:space="preserve"><value>먼저 조회하세요.</value></data>
+  <data name="Mm.LotTrace.DocType.LOT" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.LotTrace.DocType.GR" xml:space="preserve"><value>입고</value></data>
+  <data name="Mm.LotTrace.DocType.SHIP" xml:space="preserve"><value>출하</value></data>
+  <data name="Mm.LotTrace.DocType.INV" xml:space="preserve"><value>매출 송장</value></data>
+  <data name="Mm.LotTrace.DocType.ASM" xml:space="preserve"><value>Set 조립</value></data>
+  <data name="Mm.LotTrace.DocType.MOVE" xml:space="preserve"><value>재고 이동</value></data>
   <data name="Mm.Pallet.Title" xml:space="preserve"><value>Pallet</value></data>
   <data name="Mm.Pallet.PalletNo" xml:space="preserve"><value>Pallet 번호</value></data>
   <data name="Mm.Pallet.ItemId" xml:space="preserve"><value>품목</value></data>
@@ -1238,6 +1267,7 @@
   <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>품목 찾기</value></data>
   <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>저장하지 않았습니다. 입고 수량을 확인하세요.</value></data>
   <data name="Menu.G2MM03" xml:space="preserve"><value>공급자 송장</value></data>
+  <data name="Menu.G2MM07" xml:space="preserve"><value>Lot 추적</value></data>
   <data name="Mm.SupplierInvoice.Title" xml:space="preserve"><value>공급자 송장</value></data>
   <data name="Mm.SupplierInvoice.InvoiceNo" xml:space="preserve"><value>송장 번호</value></data>
   <data name="Mm.SupplierInvoice.Type" xml:space="preserve"><value>유형</value></data>

@@ -103,7 +103,7 @@ public static class DataGridPageExtensions
     /// </summary>
     public static string? TestIdOf(IElement element) =>
         element.GetAttribute("data-testid")
-        ?? (element.ClassList.Contains("quro-ui-input") || element.GetAttribute("role") == "grid"
+        ?? (element.ClassList.Contains("quro-ui-input") || element.GetAttribute("role") is "grid" or "treegrid"
             ? element.Closest("[data-testid]")?.GetAttribute("data-testid")
             : null);
 

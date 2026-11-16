@@ -37,7 +37,8 @@
                           ItemsProvider="LoadPage" PageSize="@(_definition.PageSize > 0 ? _definition.PageSize : 100)"
                           OnCellValueChanging="OnCellValueChanging" OnCellValueChanged="OnCellValueChanged"
                           OnRowAdded="OnRowAdded" OnRowDeleting="OnRowDeleting" OnPasting="OnPasting" OnPasted="OnPasted"
-                          OnPopupRequested="OnPopupRequested" RowReadOnly="IsRowReadOnly">
+                          OnPopupRequested="OnPopupRequested" RowReadOnly="IsRowReadOnly"
+                          TreeKeyField="@TreeKeyField" TreeParentField="@TreeParentField" TreeColumn="@TreeColumn">
                     @* The package puts declared columns after the definition's: the screen's own, then row state *@
                     @Columns
                     @if (Editable)
@@ -174,6 +175,19 @@
     [Parameter]
     public bool CanWrite { get; set; } = true;
 
+    /// <summary>
+    /// Tree display (QuroGrid tree mode): the row's own key field and its parent's key field, both properties of the row. With
+    /// both the rows show as a tree, all expanded; only with <see cref="Load"/>, not with <see cref="LoadPage"/>.
+    /// </summary>
+    [Parameter]
+    public string? TreeKeyField { get; set; }
+
+    [Parameter]
+    public string? TreeParentField { get; set; }
+
+    /// <summary>The column that draws the indent and the toggle; the first visible column when null.</summary>
+    [Parameter]
+    public string? TreeColumn { get; set; }
     /// <summary>Searches when the screen opens.</summary>
     [Parameter]
     public bool LoadOnStart { get; set; }

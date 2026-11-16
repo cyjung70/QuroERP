@@ -741,6 +741,35 @@
   <data name="Mm.LabelFormat.Field.expiryDt" xml:space="preserve"><value>Expiry Date</value></data>
   <data name="Mm.LabelFormat.Field.warehouseCode" xml:space="preserve"><value>Warehouse Code</value></data>
   <data name="Mm.LabelFormat.Field.locationCode" xml:space="preserve"><value>Location Code</value></data>
+  <data name="Mm.LotTrace.Title" xml:space="preserve"><value>Lot Trace</value></data>
+  <data name="Mm.LotTrace.Direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="Mm.LotTrace.Direction.forward" xml:space="preserve"><value>Forward</value></data>
+  <data name="Mm.LotTrace.Direction.backward" xml:space="preserve"><value>Backward</value></data>
+  <data name="Mm.LotTrace.ItemId" xml:space="preserve"><value>Item</value></data>
+  <data name="Mm.LotTrace.FindItem" xml:space="preserve"><value>Find item</value></data>
+  <data name="Mm.LotTrace.LotNo" xml:space="preserve"><value>Lot No.</value></data>
+  <data name="Mm.LotTrace.DocNo" xml:space="preserve"><value>Shipment / Invoice No.</value></data>
+  <data name="Mm.LotTrace.Document" xml:space="preserve"><value>Document No.</value></data>
+  <data name="Mm.LotTrace.CustomerId" xml:space="preserve"><value>Customer</value></data>
+  <data name="Mm.LotTrace.FindCustomer" xml:space="preserve"><value>Find customer</value></data>
+  <data name="Mm.LotTrace.ClearCustomer" xml:space="preserve"><value>Clear customer</value></data>
+  <data name="Mm.LotTrace.CustomerName" xml:space="preserve"><value>Customer Name</value></data>
+  <data name="Mm.LotTrace.From" xml:space="preserve"><value>From</value></data>
+  <data name="Mm.LotTrace.To" xml:space="preserve"><value>To</value></data>
+  <data name="Mm.LotTrace.ItemCd" xml:space="preserve"><value>Item Code</value></data>
+  <data name="Mm.LotTrace.ItemName" xml:space="preserve"><value>Item Name</value></data>
+  <data name="Mm.LotTrace.DocType" xml:space="preserve"><value>Type</value></data>
+  <data name="Mm.LotTrace.DocDt" xml:space="preserve"><value>Date</value></data>
+  <data name="Mm.LotTrace.Warehouse" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="Mm.LotTrace.Party" xml:space="preserve"><value>Party</value></data>
+  <data name="Mm.LotTrace.Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Mm.LotTrace.SearchFirst" xml:space="preserve"><value>Search first.</value></data>
+  <data name="Mm.LotTrace.DocType.LOT" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.LotTrace.DocType.GR" xml:space="preserve"><value>Goods Receipt</value></data>
+  <data name="Mm.LotTrace.DocType.SHIP" xml:space="preserve"><value>Shipment</value></data>
+  <data name="Mm.LotTrace.DocType.INV" xml:space="preserve"><value>Sales Invoice</value></data>
+  <data name="Mm.LotTrace.DocType.ASM" xml:space="preserve"><value>Set Assembly</value></data>
+  <data name="Mm.LotTrace.DocType.MOVE" xml:space="preserve"><value>Stock Movement</value></data>
   <data name="Mm.Pallet.Title" xml:space="preserve"><value>Pallets</value></data>
   <data name="Mm.Pallet.PalletNo" xml:space="preserve"><value>Pallet No.</value></data>
   <data name="Mm.Pallet.ItemId" xml:space="preserve"><value>Item</value></data>
@@ -1238,6 +1267,7 @@
   <data name="Mm.GoodsReceipt.FindItem" xml:space="preserve"><value>Find Item</value></data>
   <data name="Mm.GoodsReceipt.OverReceiptNotSaved" xml:space="preserve"><value>Not saved. Check the received quantities.</value></data>
   <data name="Menu.G2MM03" xml:space="preserve"><value>Supplier Invoices</value></data>
+  <data name="Menu.G2MM07" xml:space="preserve"><value>Lot Trace</value></data>
   <data name="Mm.SupplierInvoice.Title" xml:space="preserve"><value>Supplier Invoice</value></data>
   <data name="Mm.SupplierInvoice.InvoiceNo" xml:space="preserve"><value>Invoice No.</value></data>
   <data name="Mm.SupplierInvoice.Type" xml:space="preserve"><value>Type</value></data>
