@@ -194,20 +194,21 @@ public class LotTraceServiceTests(AuthSchemaFixture db)
     {
         var grNo = "GR" + Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
         var lotNo = "L" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        // The movement makes the Lot first: a receipt line of an item must name its Lot (ck_mm_goods_receipt_line_lot_id)
+        var posted = await PostAsync(new StockMovementRequest("GR", Day, m.Item, m.Main, qty, 5m, grNo, 1, LotNo: lotNo));
+        var lotId = posted[0].LotId!.Value;
         await using var connection = new NpgsqlConnection(db.ConnectionString);
         var line = await connection.QuerySingleAsync<long>(
             $"""
             WITH r AS (INSERT INTO mm_goods_receipt (gr_no, vendor_id, gr_dt, warehouse_id, currency_code, exchange_rate, business_place_id,
                                                      created_by, updated_by)
                        SELECT @GrNo, @Vendor, @Day, @Main, 'USD', 1, id, 't', 't' FROM bc_business_place WHERE is_default RETURNING id)
-            INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, gr_qty, gr_prc, gr_amt, warehouse_id, location_id, tax_code_id,
-                                               created_by, updated_by)
-            SELECT id, 1, @Item, @Qty, 5, @Qty * 5, @Main, {StarKeys.Location("@Main")}, @NoTax, 't', 't' FROM r
+            INSERT INTO mm_goods_receipt_line (goods_receipt_id, seq, item_id, gr_qty, gr_prc, gr_amt, warehouse_id, location_id, lot_id,
+                                               tax_code_id, created_by, updated_by)
+            SELECT id, 1, @Item, @Qty, 5, @Qty * 5, @Main, {StarKeys.Location("@Main")}, @Lot, @NoTax, 't', 't' FROM r
             RETURNING id
             """,
-            new { GrNo = grNo, m.Vendor, Day, m.Main, m.Item, Qty = qty, m.NoTax });
-        var posted = await PostAsync(new StockMovementRequest("GR", Day, m.Item, m.Main, qty, 5m, grNo, 1, LotNo: lotNo));
-        var lotId = posted[0].LotId!.Value;
+            new { GrNo = grNo, m.Vendor, Day, m.Main, m.Item, Qty = qty, Lot = lotId, m.NoTax });
         await connection.ExecuteAsync(
             "UPDATE mm_lot SET goods_receipt_line_id = @Line WHERE id = @Lot", new { Line = line, Lot = lotId });
         return new ReceivedLot(lotId, lotNo, grNo);
