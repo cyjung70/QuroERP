@@ -205,6 +205,7 @@
   <data name="quro.group.subtotal" xml:space="preserve"><value>Subtotal</value></data>
   <data name="quro.group.empty" xml:space="preserve"><value>(Blank)</value></data>
   <data name="Common-E-006" xml:space="preserve"><value>The requested data ({0}) was not found. Search again.</value></data>
+  <data name="Common-E-007" xml:space="preserve"><value>You do not have permission to do this. Ask your administrator for access.</value></data>
   <data name="MM-E-801" xml:space="preserve"><value>Item code '{0}' cannot be used. Enter up to 18 upper-case characters that no other item uses.</value></data>
   <data name="MM-E-802" xml:space="preserve"><value>Enter the required field {0}.</value></data>
   <data name="MM-E-803" xml:space="preserve"><value>{0} must be 0 or more.</value></data>
