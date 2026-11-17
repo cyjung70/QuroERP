@@ -1,0 +1,30 @@
+@inherits LayoutComponentBase
+@inject IStringLocalizer<SharedResource> L
+
+@* Layout of the PDA screens (screens.md "PDA 화면", TASK-CORE-071): no side menu or screen tabs, a slim top bar with the way back
+   to the menu and the user menu, and one 360px column. It renders on the server like MainLayout; a PDA page is interactive
+   itself and is never opened as a screen tab (ShellRoutes skips pages with this layout). *@
+
+<AuthorizeView>
+    <Authorized>
+        <div class="quro-pda" data-pda>
+            <header class="quro-pda-top">
+                <a class="quro-pda-home" href="/" data-testid="pda-home">@L["Pda.Menu"]</a>
+                <UserMenu />
+            </header>
+            <main class="quro-pda-body">
+                @Body
+            </main>
+        </div>
+        <SessionTimer />
+    </Authorized>
+    <NotAuthorized>
+        @Body
+    </NotAuthorized>
+</AuthorizeView>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

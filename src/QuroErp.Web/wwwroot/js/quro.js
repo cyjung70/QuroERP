@@ -385,3 +385,38 @@ window.quroListRowDoubleClick = (host, list) => {
     // A plain object: the caller asks for an IJSObjectReference, so Blazor makes the reference itself
     return { dispose: () => host.removeEventListener("dblclick", onDoubleClick) };
 };
+
+// PDA screens (screens.md "PDA 화면"): the scan input keeps the focus, and a rejected scan beeps and vibrates (MM-BR-923).
+window.quroPda = (() => {
+    let audio = null;
+    const editable = (element) => element?.matches?.("input:not([type=hidden]), select, textarea") ?? false;
+    return {
+        // Focuses the input now and again whenever it loses the focus to something that is not another input,
+        // e.g. a tap on a card or a button. A plain object: the caller disposes the returned reference when it goes.
+        keepFocus: (input) => {
+            const refocus = () => setTimeout(() => {
+                if (input.isConnected && !input.disabled && !editable(document.activeElement)) input.focus({ preventScroll: true });
+            }, 0);
+            input.addEventListener("focusout", refocus);
+            input.focus({ preventScroll: true });
+            return { dispose: () => input.removeEventListener("focusout", refocus) };
+        },
+        // A short low double beep and a vibration. Either may be missing on a device; the red message still shows.
+        reject: () => {
+            try { navigator.vibrate?.([200, 100, 200]); } catch { }
+            try {
+                audio ??= new (window.AudioContext || window.webkitAudioContext)();
+                [0, 0.3].forEach((start) => {
+                    const tone = audio.createOscillator();
+                    const gain = audio.createGain();
+                    tone.type = "square";
+                    tone.frequency.value = 440;
+                    gain.gain.value = 0.2;
+                    tone.connect(gain).connect(audio.destination);
+                    tone.start(audio.currentTime + start);
+                    tone.stop(audio.currentTime + start + 0.2);
+                });
+            } catch { }
+        },
+    };
+})();

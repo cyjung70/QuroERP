@@ -38,4 +38,20 @@ public partial class MigrationTests
         misplaced.Should().BeEmpty();
         others.Single().Should().Be(0);
     }
+
+    // 0728 (TASK-CORE-071): the PDA screens have menus of their own, granted like the PC screens (screens.md "PDA 화면")
+    [DatabaseFact, Trait("Id", "CORE-071-IT-01"), Trait("Rule", "BC-BR-214")]
+    public void Seed_PdaMenus_HaveTheirOwnPaths_WithAdminFullAccess()
+    {
+        var menus = Query<string>("""
+            SELECT m.menu_code || ' ' || m.program_id
+            FROM sys_menu m
+            JOIN sys_role_menu rm ON rm.menu_id = m.id AND rm.full_access = 'Y'
+            JOIN sys_role r ON r.id = rm.role_id AND r.role_code = 'admin'
+            WHERE m.program_id LIKE '%/pda-%' AND m.valid_flag = 'Y'
+            ORDER BY m.menu_code
+            """);
+
+        menus.Should().Equal("G2MM08 /mm/pda-receipt", "G2MM09 /mm/pda-move", "G3SD06 /sd/pda-issue");
+    }
 }

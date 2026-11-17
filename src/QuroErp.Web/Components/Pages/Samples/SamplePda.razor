@@ -1,0 +1,92 @@
+@page "/samples/pda"
+@layout PdaLayout
+@rendermode InteractiveServer
+@using QuroErp.Contracts.Mm.Labels
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@* PDA screen sample (TASK-CORE-071): the PDA layout, frame and scan input. Step 1 takes a Location label (LC), step 2 Pallet,
+   Lot and item labels or an item barcode, each a card. Save keeps nothing; it only says how many lines it would save.
+   Development only. The scans go to the real scan API. *@
+
+<PageTitle>@L["Samples.Pda.Title"]</PageTitle>
+
+@if (_enabled)
+{
+    <QuroPdaScreen Title="@L["Samples.Pda.Title"]" WritePath="@Path" LineCount="_lines.Count" OnSave="Save" Notice="@_notice" TestId="sample-pda">
+        <Header>
+            <div class="quro-pda-field">
+                <span>@L["Samples.Pda.Location"]</span>
+                <strong data-testid="sample-pda-location">@(_location ?? "-")</strong>
+            </div>
+        </Header>
+        <Scan>
+            <QuroScanInput Accept="Accept" OnScanned="OnScanned" Label="@StepText" TestId="sample-pda-scan" />
+        </Scan>
+        <Lines>
+            @foreach (var (line, index) in _lines.Select((l, i) => (l, i)))
+            {
+                <article class="quro-pda-card" data-testid="sample-pda-card">
+                    <span class="quro-pda-card-title">@line.Kind · @(line.ItemCd ?? "-")</span>
+                    <span class="quro-pda-card-meta">@line.ItemName</span>
+                    <span class="quro-pda-card-meta">@string.Join(" | ", line.Parts)</span>
+                    <button type="button" @onclick="() => _lines.RemoveAt(index)" data-testid="sample-pda-remove">@L["Common.Delete"]</button>
+                </article>
+            }
+        </Lines>
+        <Actions>
+            <button type="button" disabled="@(_location is null)" @onclick="ChangeLocation" data-testid="sample-pda-change-location">
+                @L["Samples.Pda.ChangeLocation"]
+            </button>
+        </Actions>
+    </QuroPdaScreen>
+}
+
+@code {
+    private const string Path = "/samples/pda";
+
+    private static readonly string[] LocationStep = [LabelKinds.Location];
+    private static readonly string[] GoodsStep = [LabelKinds.Pallet, LabelKinds.Lot, LabelKinds.Item];
+
+    private readonly List<LabelScanDto> _lines = [];
+    private bool _enabled;
+    private string? _location;
+    private string? _notice;
+
+    private IReadOnlyList<string> Accept => _location is null ? LocationStep : GoodsStep;
+
+    private string StepText => _location is null ? L["Samples.Pda.StepLocation"] : L["Samples.Pda.StepGoods"];
+
+    protected override void OnInitialized()
+    {
+        _enabled = Services.GetService<SampleStore>() is not null;
+        if (!_enabled)
+        {
+            Navigation.NotFound();
+        }
+    }
+
+    private void OnScanned(LabelScanDto scan)
+    {
+        _notice = null;
+        if (scan.Kind == LabelKinds.Location)
+        {
+            _location = string.Join(" / ", scan.Parts);
+            return;
+        }
+        _lines.Add(scan);
+    }
+
+    private void ChangeLocation()
+    {
+        _location = null;
+        _notice = null;
+    }
+
+    private void Save()
+    {
+        _notice = L["Samples.Pda.Saved", _lines.Count];
+        _lines.Clear();
+    }
+}

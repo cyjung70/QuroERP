@@ -1341,4 +1341,17 @@
   <data name="Mm.LabelPrint.Print" xml:space="preserve"><value>Print</value></data>
   <data name="Mm.LabelPrint.Printed" xml:space="preserve"><value>Saved {0} label(s) as {1}.</value></data>
   <data name="Mm.Pallet.PrintLabel" xml:space="preserve"><value>Print Label</value></data>
+  <data name="Menu.G2MM08" xml:space="preserve"><value>PDA Receipt</value></data>
+  <data name="Menu.G2MM09" xml:space="preserve"><value>PDA Move</value></data>
+  <data name="Menu.G3SD06" xml:space="preserve"><value>PDA Issue</value></data>
+  <data name="Pda.Menu" xml:space="preserve"><value>‹ Menu</value></data>
+  <data name="Pda.Scan" xml:space="preserve"><value>Scan</value></data>
+  <data name="Pda.ScanHint" xml:space="preserve"><value>Scan a barcode</value></data>
+  <data name="Pda.NoLines" xml:space="preserve"><value>No lines scanned yet.</value></data>
+  <data name="Samples.Pda.Title" xml:space="preserve"><value>PDA Sample</value></data>
+  <data name="Samples.Pda.Location" xml:space="preserve"><value>Location</value></data>
+  <data name="Samples.Pda.StepLocation" xml:space="preserve"><value>Scan a Location label</value></data>
+  <data name="Samples.Pda.StepGoods" xml:space="preserve"><value>Scan a Pallet, Lot or item</value></data>
+  <data name="Samples.Pda.ChangeLocation" xml:space="preserve"><value>Change Location</value></data>
+  <data name="Samples.Pda.Saved" xml:space="preserve"><value>Saved {0} lines (a sample, so nothing is kept).</value></data>
 </root>

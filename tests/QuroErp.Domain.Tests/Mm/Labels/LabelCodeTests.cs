@@ -8,6 +8,29 @@ namespace QuroErp.Domain.Tests.Mm.Labels;
 /// <summary>Own-format DataMatrix content, Pallet numbers and label page order (MM-BR-910, MM-BR-916, MM-BR-918, MM-BR-923).</summary>
 public class LabelCodeTests
 {
+    [Theory, Trait("Id", "MM-UT-923"), Trait("Rule", "MM-BR-923")]
+    [InlineData("PL|PL2610000001|A-100|261010-001|24.5|", "A-100")]
+    [InlineData("IT|A-100", "A-100")]
+    [InlineData("LT|A-100|261010-001", "A-100")]
+    [InlineData("LC|MAIN|A01", null)]
+    [InlineData("A-100", null)]
+    public void ItemCodeOf_IsTheItemTheLabelCarries(string scanned, string? expected)
+    {
+        LabelCode.ItemCodeOf(LabelCode.Parse(scanned)).Should().Be(expected);
+    }
+
+    [Fact, Trait("Id", "MM-UT-923"), Trait("Rule", "MM-BR-923")]
+    public void EnsureAccepted_AKindTheStepDoesNotTake_ThrowsMmE923_NoKindsTakeAll()
+    {
+        LabelCode.EnsureAccepted("LT", ["PL", "LT"], "LT|A|B");
+        LabelCode.EnsureAccepted("LC", [], "LC|MAIN|A01");
+        var act = () => LabelCode.EnsureAccepted("LC", ["PL", "LT"], "LC|MAIN|A01");
+
+        var error = act.Should().Throw<DomainException>().Which;
+        error.Code.Should().Be("MM-E-923");
+        error.Args.Should().Equal("LC|MAIN|A01");
+    }
+
     [Fact, Trait("Id", "MM-UT-918"), Trait("Rule", "MM-BR-918")]
     public void Build_ThenParse_GivesBackEveryKindAndValue()
     {

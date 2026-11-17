@@ -53,6 +53,7 @@ public static class WebApiClients
         services.AddHttpClient<PalletApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<LabelFormatApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<LabelPrintApiClient>(http => http.BaseAddress = apiBaseUrl);
+        services.AddHttpClient<LabelScanApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserProfileApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<UserApiClient>(http => http.BaseAddress = apiBaseUrl);
         services.AddHttpClient<RoleApiClient>(http => http.BaseAddress = apiBaseUrl);

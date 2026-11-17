@@ -145,6 +145,7 @@ public static class DependencyInjection
         services.AddSingleton<ILabelFormatRepository, LabelFormatRepository>();
         services.AddSingleton<ILabelTargetRepository, LabelTargetRepository>();
         services.AddSingleton<ILabelPrintHistoryRepository, LabelPrintHistoryRepository>();
+        services.AddSingleton<ILabelScanRepository, LabelScanRepository>();
         services.AddSingleton<IPalletRepository, PalletRepository>();
         services.AddSingleton<IRoleRepository, RoleRepository>();
         services.AddSingleton<IMenuRepository, MenuRepository>();
