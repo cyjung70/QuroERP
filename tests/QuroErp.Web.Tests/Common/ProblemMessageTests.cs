@@ -75,6 +75,31 @@ public class ProblemMessageTests(WebFactory factory) : IClassFixture<WebFactory>
         }
     }
 
+    [Theory, Trait("Rule", "BC-BR-214")]
+    [InlineData("ko", 403, null, "이 작업을 할 권한이 없습니다. 관리자에게 권한을 요청하세요.")]
+    [InlineData("en", 403, null, "You do not have permission to do this. Ask your administrator for access.")]
+    [InlineData("en", 403, "Common-E-007", "You do not have permission to do this. Ask your administrator for access.")]
+    [InlineData("en", 403, "XX-E-999", "You do not have permission to do this. Ask your administrator for access.")]
+    [InlineData("en", 403, "AUTH-005", "Please change your password to continue.")]
+    [InlineData("ko", 500, null, "요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요.")]
+    [InlineData("en", 500, null, "The request could not be processed. Please try again later.")]
+    public void Get_A403WithoutAKnownCode_ShowsThePermissionMessage_AndOtherStatusesTheUnknownOne(
+        string culture, int status, string? code, string expected)
+    {
+        var original = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = new CultureInfo(culture);
+        try
+        {
+            var messages = new ProblemMessages(factory.Services.GetRequiredService<IStringLocalizer<SharedResource>>());
+
+            messages.Get(new ApiProblem(status, code, [])).Should().Be(expected);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = original;
+        }
+    }
+
     [Theory, Trait("Id", "CORE-005-WT-01")]
     [InlineData("ko", "VALID_FLAG 코드 값 'X'이(가) 올바르지 않습니다.")]
     [InlineData("en", "'X' is not a valid VALID_FLAG code.")]
