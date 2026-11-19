@@ -240,6 +240,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ILabelFormatRepository>(new InMemoryLabelFormatRepository());
             services.AddSingleton<ILabelPdfRenderer>(new FakeLabelPdfRenderer());
             services.AddSingleton<ILabelTargetRepository>(new InMemoryLabelTargetRepository());
+            services.AddSingleton<ILabelScanRepository>(new InMemoryLabelScanRepository());
             services.AddSingleton(LabelPrints);
             services.AddSingleton<ILabelPrintRepository>(LabelPrints);
             services.AddSingleton<ILabelPrintHistoryRepository>(LabelPrints);

@@ -83,6 +83,27 @@ public static class LabelCode
         return new ScanValue(kind, values);
     }
 
+    /// <summary>The item code a label carries: the first value of IT and LT, the second of PL; null for LC and a plain value.</summary>
+    public static string? ItemCodeOf(ScanValue scan) => scan.Kind switch
+    {
+        Item or Lot => scan.Parts[0],
+        Pallet => scan.Parts[1],
+        _ => null,
+    };
+
+    /// <summary>
+    /// The scan fits the current step: its kind is one the step takes (MM-BR-923). A plain value found as an item counts as IT.
+    /// No kinds means the step takes every kind.
+    /// </summary>
+    /// <exception cref="DomainException">MM-E-923 with the scanned value.</exception>
+    public static void EnsureAccepted(string kind, IReadOnlyCollection<string> accepted, string scanned)
+    {
+        if (accepted.Count > 0 && !accepted.Contains(kind, StringComparer.Ordinal))
+        {
+            throw new DomainException(UnknownCode, scanned);
+        }
+    }
+
     private static string Join(string kind, params string[] values)
     {
         foreach (var value in values)

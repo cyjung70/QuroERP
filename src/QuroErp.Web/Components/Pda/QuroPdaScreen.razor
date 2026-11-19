@@ -1,0 +1,93 @@
+@using QuroErp.Web.Common
+@inject IScreenAccess ScreenAccess
+@inject IStringLocalizer<SharedResource> L
+
+@* Frame of a PDA screen (screens.md "PDA 화면", TASK-CORE-071), screen type SM in one 360px column: title and header (e.g. the
+   scanned document number) -> scan input -> scanned lines as cards -> save bar at the bottom. The page holds the lines and saves
+   through the same API as the PC screen; Save is enabled with write access on WritePath (security.md "화면 쓰기 권한"). *@
+
+<section class="quro-pda-screen" data-testid="@TestId">
+    <header class="quro-pda-head">
+        <h1 data-testid="@Id("title")">@Title</h1>
+        @Header
+    </header>
+    @Scan
+    @if (Error is not null)
+    {
+        <p class="quro-pda-alert" role="alert" data-testid="@Id("error")">@Error</p>
+    }
+    else if (Notice is not null)
+    {
+        <p class="quro-pda-notice" role="status" data-testid="@Id("notice")">@Notice</p>
+    }
+    <div class="quro-pda-lines" data-testid="@Id("lines")">
+        @if (LineCount == 0)
+        {
+            <p class="quro-pda-empty">@L["Pda.NoLines"]</p>
+        }
+        else
+        {
+            @Lines
+        }
+    </div>
+    <footer class="quro-pda-actions" data-testid="@Id("actions")">
+        @Actions
+        <button type="button" class="quro-pda-save" disabled="@(!CanSaveNow)" @onclick="OnSave" data-testid="@Id("save")">@L["Common.Save"]</button>
+    </footer>
+</section>
+
+@code {
+    private bool _canWrite;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    /// <summary>
+    /// The screen path whose write access enables Save: the PC screen of the API the PDA screen saves through, e.g.
+    /// <c>/mm/goods-receipt</c> (BC-BR-214).
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string WritePath { get; set; } = "";
+
+    /// <summary>Header values under the title, e.g. the scanned document number.</summary>
+    [Parameter]
+    public RenderFragment? Header { get; set; }
+
+    /// <summary>The scan input (QuroScanInput).</summary>
+    [Parameter]
+    public RenderFragment? Scan { get; set; }
+
+    /// <summary>The scanned lines, one <c>quro-pda-card</c> each.</summary>
+    [Parameter]
+    public RenderFragment? Lines { get; set; }
+
+    /// <summary>The number of lines; without lines the frame says so and Save stays off.</summary>
+    [Parameter]
+    public int LineCount { get; set; }
+
+    /// <summary>More buttons in the bottom bar before Save.</summary>
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public string? Error { get; set; }
+
+    [Parameter]
+    public string? Notice { get; set; }
+
+    /// <summary>Prefix of the <c>data-testid</c> values.</summary>
+    [Parameter]
+    public string TestId { get; set; } = "pda";
+
+    private bool CanSaveNow => _canWrite && LineCount > 0 && !Busy;
+
+    protected override async Task OnInitializedAsync() => _canWrite = await ScreenAccess.CanWriteAsync(WritePath);
+
+    private string Id(string part) => $"{TestId}-{part}";
+}

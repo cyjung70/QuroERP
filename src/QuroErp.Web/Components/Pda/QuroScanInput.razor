@@ -1,0 +1,129 @@
+@using QuroErp.Contracts.Mm.Labels
+@using QuroErp.Web.Common
+@using QuroErp.Web.Mm.Labels
+@implements IAsyncDisposable
+@inject LabelScanApiClient Scans
+@inject ProblemMessages Messages
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+
+@* Scan input of the PDA screens (screens.md "PDA 화면", TASK-CORE-071). It keeps the focus; the scanner's Enter confirms the value,
+   which the scan API reads as the own-format DataMatrix or an item barcode (MM-BR-918, MM-BR-923). A rejected value shows a red
+   message and beeps and vibrates; the input is cleared for the next scan either way. The screen decides only which kinds the
+   step takes (Accept) and can reject a read value for its own reasons with RejectAsync. *@
+
+<div class="quro-pda-scan @(_error is null ? null : "is-rejected")">
+    <label class="quro-pda-scan-label" for="@InputId">@(Label ?? L["Pda.Scan"])</label>
+    <input @ref="_input" id="@InputId" class="quro-pda-scan-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+           placeholder="@L["Pda.ScanHint"]" value="@_value" @oninput="e => _value = e.Value?.ToString()" @onkeydown="OnKeyDownAsync"
+           aria-invalid="@(_error is null ? "false" : "true")" data-testid="@Id("input")" />
+    @if (_error is not null)
+    {
+        <p class="quro-pda-alert" role="alert" data-testid="@Id("error")">@_error</p>
+    }
+</div>
+
+@code {
+    private const string UnavailableCode = "BC-E-003";
+
+    private ElementReference _input;
+    private IJSObjectReference? _focus;
+    private string? _value;
+    private string? _error;
+    private bool _reading;
+
+    /// <summary>The kinds the current step takes (PL, IT, LT, LC); empty takes every kind.</summary>
+    [Parameter]
+    public IReadOnlyList<string> Accept { get; set; } = [];
+
+    /// <summary>A value the API read and the step takes.</summary>
+    [Parameter]
+    public EventCallback<LabelScanDto> OnScanned { get; set; }
+
+    /// <summary>The label above the input; "Scan" by default.</summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>Prefix of the <c>data-testid</c> values.</summary>
+    [Parameter]
+    public string TestId { get; set; } = "pda-scan";
+
+    private string InputId => $"{TestId}-input";
+
+    /// <summary>The red message shown for the last scan, or null after a value was taken.</summary>
+    public string? Error => _error;
+
+    /// <summary>Rejects a read value for a reason of the screen, e.g. an item not on the order: red message, beep, vibration.</summary>
+    public async Task RejectAsync(string message)
+    {
+        _error = message;
+        StateHasChanged();
+        try
+        {
+            await JS.InvokeVoidAsync("quroPda.reject");
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is gone; nothing to tell
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _focus = await JS.InvokeAsync<IJSObjectReference>("quroPda.keepFocus", _input);
+        }
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _reading)
+        {
+            return;
+        }
+        var value = _value?.Trim();
+        _value = "";
+        if (string.IsNullOrEmpty(value))
+        {
+            return;
+        }
+        _reading = true;
+        try
+        {
+            var scan = await Scans.ReadAsync(value, Accept, CancellationToken.None);
+            _error = null;
+            await OnScanned.InvokeAsync(scan);
+        }
+        catch (ApiProblemException ex)
+        {
+            await RejectAsync(Messages.Get(ex.Problem));
+        }
+        catch (HttpRequestException)
+        {
+            await RejectAsync(Messages.Get(UnavailableCode));
+        }
+        finally
+        {
+            _reading = false;
+        }
+    }
+
+    private string Id(string part) => $"{TestId}-{part}";
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_focus is not null)
+        {
+            try
+            {
+                await _focus.InvokeVoidAsync("dispose");
+                await _focus.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // The circuit is gone with the page
+            }
+        }
+    }
+}

@@ -10,7 +10,8 @@ public sealed record ShellRoute(Type Page, IReadOnlyDictionary<string, object?> 
 /// <summary>
 /// Finds the page of a screen path for the screen tabs (app-shell.md 3.3), which draw pages themselves instead of the router.
 /// Templates come from the pages' @page directives: literal segments and {Name} or {Name:constraint} parameters, the value
-/// converted to the page parameter's type. Read once per app. Only interactive pages (with a render mode) are tab pages.
+/// converted to the page parameter's type. Read once per app. Only interactive pages (with a render mode) are tab pages, and not
+/// the PDA screens, which have a layout of their own (<see cref="PdaLayout"/>).
 /// </summary>
 public static class ShellRoutes
 {
@@ -21,6 +22,7 @@ public static class ShellRoutes
         .. typeof(ShellRoutes).Assembly.GetTypes()
             // Interactive pages only: the static ones (home, sign-in, error) need the request and are not drawn in a tab
             .Where(t => typeof(IComponent).IsAssignableFrom(t) && !t.IsAbstract && t.GetCustomAttribute<RenderModeAttribute>(true) is not null)
+            .Where(t => t.GetCustomAttribute<LayoutAttribute>(true)?.LayoutType != typeof(PdaLayout))
             .SelectMany(t => t.GetCustomAttributes<RouteAttribute>().Select(r => Parse(t, r.Template)))
             // Literal routes before parameter routes, longer before shorter
             .OrderBy(t => t.Segments.Count(IsParameter))
