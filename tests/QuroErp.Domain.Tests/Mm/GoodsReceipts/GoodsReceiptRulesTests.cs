@@ -307,4 +307,41 @@ public class GoodsReceiptRulesTests
     [InlineData(PoStatus.Draft, 4, PoStatus.Draft)]
     public void PoStatus_AfterReceipt(PoStatus status, int receivedOnFirstLine, PoStatus expected) =>
         PoStatusRules.AfterReceipt(status, [(10m, receivedOnFirstLine), (5m, receivedOnFirstLine >= 10 ? 5m : 0m)]).Should().Be(expected);
+
+    [Theory, Trait("Id", "MM-UT-920"), Trait("Rule", "MM-BR-920"), Trait("Id", "MM-UT-923"), Trait("Rule", "MM-BR-923")]
+    [InlineData(false, "PO", null, "MM-E-923")]
+    [InlineData(true, "DR", null, "MM-E-024")]
+    [InlineData(true, "CL", null, "MM-E-024")]
+    [InlineData(true, "MC", null, "MM-E-024")]
+    [InlineData(true, "PO", 8L, "MM-E-024")]
+    [InlineData(true, "PO", null, null)]
+    [InlineData(true, "RE", Vendor, null)]
+    [InlineData(true, null, null, null)]
+    public void PdaPo_MustBeKnown_AndReceivable(bool found, string? status, long? vendorId, string? expected)
+    {
+        var act = () => GoodsReceiptRules.EnsurePdaPo("PO-1", found, status, Vendor, vendorId);
+
+        if (expected is null)
+        {
+            act.Should().NotThrow();
+        }
+        else
+        {
+            var error = act.Should().Throw<DomainException>().Which;
+            (error.Code, error.Args).Should().BeEquivalentTo((expected, new object[] { "PO-1" }));
+        }
+    }
+
+    [Fact, Trait("Id", "MM-UT-923"), Trait("Rule", "MM-BR-923")]
+    public void PdaItem_MustHaveARemainingLineOnThePo()
+    {
+        var onPo = () => GoodsReceiptRules.EnsureItemOnPo(LotItem, "LT-1", [Inventory, LotItem]);
+        var notOnPo = () => GoodsReceiptRules.EnsureItemOnPo(Service, "SV-1", [Inventory, LotItem]);
+        var unknown = () => GoodsReceiptRules.EnsureItemOnPo(99, null, [Inventory]);
+
+        onPo.Should().NotThrow();
+        notOnPo.Should().Throw<DomainException>().Which.Args.Should().Equal("SV-1");
+        var error = unknown.Should().Throw<DomainException>().Which;
+        (error.Code, error.Args).Should().BeEquivalentTo(("MM-E-923", new object[] { "99" }));
+    }
 }

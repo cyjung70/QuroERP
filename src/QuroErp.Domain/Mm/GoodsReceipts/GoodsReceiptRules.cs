@@ -3,6 +3,7 @@ using QuroErp.Domain.Bc.SetItems;
 using QuroErp.Domain.Bc.Tax;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Domain.Mm.Labels;
 using QuroErp.Domain.Mm.Lots;
 using QuroErp.Domain.Mm.PurchaseOrders;
 
@@ -348,6 +349,36 @@ public static class GoodsReceiptRules
             return GoodsReceiptStatus.Open;
         }
         return allInvoiced ? GoodsReceiptStatus.Closed : GoodsReceiptStatus.PartiallyInvoiced;
+    }
+
+    /// <summary>
+    /// MM-BR-920, MM-BR-923: a PO number scanned on the PDA must be an order of this system that can still be received
+    /// (MM-BR-024, MM-BR-113). A null status counts as approved, as in the PC import. vendorId, when given, must be the order's vendor.
+    /// </summary>
+    /// <param name="found">False when no order has this number.</param>
+    /// <exception cref="DomainException">MM-E-923 for an unknown PO number; MM-E-024 for an order that cannot be received.</exception>
+    public static void EnsurePdaPo(string poNo, bool found, string? status, long? orderVendorId, long? vendorId)
+    {
+        if (!found)
+        {
+            throw new DomainException(LabelCode.UnknownCode, poNo);
+        }
+        if ((status ?? PoStatusCode.Approved) is not (PoStatusCode.Approved or PoStatusCode.PartiallyReceived)
+            || (vendorId is not null && orderVendorId != vendorId))
+        {
+            throw new DomainException(PoNotReceivableCode, poNo);
+        }
+    }
+
+    /// <summary>MM-BR-920, MM-BR-923: an item scanned on the PDA must have a line with remaining qty on the scanned PO.</summary>
+    /// <param name="itemCd">The item's code for the message; null when no item has this id.</param>
+    /// <exception cref="DomainException">MM-E-923 with the item code, or the id when the item is unknown.</exception>
+    public static void EnsureItemOnPo(long itemId, string? itemCd, IEnumerable<long> openLineItemIds)
+    {
+        if (!openLineItemIds.Contains(itemId))
+        {
+            throw new DomainException(LabelCode.UnknownCode, itemCd ?? itemId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
     }
 
     /// <summary>MM-BR-364: the checked Lot attributes of a line; only a lot-managed item has any.</summary>

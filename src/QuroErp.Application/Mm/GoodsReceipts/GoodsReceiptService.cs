@@ -64,10 +64,42 @@ public sealed class GoodsReceiptService(
     }
 
     /// <summary>MM-BR-113: PO lines of the vendor the receipt can import.</summary>
-    public async Task<IReadOnlyList<OpenPoLineDto>> OpenPoLinesAsync(long vendorId, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<OpenPoLineDto>> OpenPoLinesAsync(long vendorId, CancellationToken cancellationToken) =>
+        OpenPoLinesAsync(vendorId, null, null, cancellationToken);
+
+    /// <summary>
+    /// MM-BR-113: PO lines the receipt can import, of the vendor or, for the PDA, of the order with this PO number (MM-BR-920).
+    /// With itemId only the order's lines of that scanned item (MM-BR-923).
+    /// </summary>
+    /// <exception cref="DomainException">
+    /// Common-E-005 without vendorId or poNo; MM-E-923 for an unknown PO number or an item with no remaining line on the order;
+    /// MM-E-024 for an order that is not approved or partly received, or of another vendor.
+    /// </exception>
+    public async Task<IReadOnlyList<OpenPoLineDto>> OpenPoLinesAsync(
+        long? vendorId, string? poNo, long? itemId, CancellationToken cancellationToken)
     {
+        var no = string.IsNullOrWhiteSpace(poNo) ? null : poNo.Trim().ToUpperInvariant();
+        if (no is null && vendorId is null)
+        {
+            throw new DomainException(GoodsReceiptRules.RequiredCode, nameof(OpenPoLineDto.VendorId));
+        }
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
-        var lines = await receipts.FindOpenPoLinesAsync(vendorId, uow.Transaction, cancellationToken);
+        IReadOnlyList<OpenPoLineDto> lines;
+        if (no is null)
+        {
+            lines = await receipts.FindOpenPoLinesAsync(vendorId, null, uow.Transaction, cancellationToken);
+        }
+        else
+        {
+            var po = await receipts.FindPdaPoAsync(no, itemId, uow.Transaction, cancellationToken);
+            GoodsReceiptRules.EnsurePdaPo(no, po is not null, po?.Status, po?.VendorId, vendorId);
+            lines = await receipts.FindOpenPoLinesAsync(null, no, uow.Transaction, cancellationToken);
+            if (itemId is { } id)
+            {
+                GoodsReceiptRules.EnsureItemOnPo(id, po!.ItemCd, lines.Select(l => l.ItemId));
+                lines = [.. lines.Where(l => l.ItemId == id)];
+            }
+        }
         await uow.CommitAsync(cancellationToken);
         return lines;
     }

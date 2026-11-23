@@ -41,4 +41,13 @@ public class GoodsReceiptApiTests(ApiFactory factory) : IClassFixture<ApiFactory
             .Should().Be(HttpStatusCode.Forbidden);
         (await factory.CreateClient().GetAsync(GoodsReceiptRoutes.Base)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    [Fact, Trait("Id", "BC-UT-214"), Trait("Id", "MM-UT-920")]
+    public async Task PdaPoLookup_WithoutTheScreen_Returns403_AndWithoutSignIn_Returns401()
+    {
+        var path = $"{GoodsReceiptRoutes.Base}/{GoodsReceiptRoutes.OpenPoLines}?poNo=PO-1&itemId=1";
+
+        (await factory.NonAdmin().GetAsync(path)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await factory.CreateClient().GetAsync(path)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 }

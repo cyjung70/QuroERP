@@ -39,6 +39,9 @@ public sealed record GoodsReceiptSummaryRow(
     long Id, string GrNo, DateOnly GrDt, long VendorId, string? VendorName, string CurrencyCode, decimal TotGrAmt, bool AnyInvoiced,
     bool AllInvoiced);
 
+/// <summary>A PO scanned on the PDA (MM-BR-920): its vendor and status, and the code of the scanned item (null when unknown).</summary>
+public sealed record PdaPoRow(long? VendorId, string? Status, string? ItemCd);
+
 public sealed record GoodsReceiptVendorRow(long Id, string? VName, string? CurrencyCode, long? TaxCodeId);
 
 /// <summary>Header values to write; Lines are the new lines with their computed amounts.</summary>
@@ -133,6 +136,13 @@ public interface IGoodsReceiptRepository
     /// <returns>False when the header changed after updatedAt.</returns>
     Task<bool> DeleteAsync(long id, DateTimeOffset updatedAt, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>MM-BR-113: lines of the vendor's PO and RE orders with remaining qty above 0, PO number and line order.</summary>
-    Task<IReadOnlyList<OpenPoLineDto>> FindOpenPoLinesAsync(long vendorId, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>
+    /// MM-BR-113: lines of PO and RE orders with remaining qty above 0, PO number and line order; of the vendor, of the order
+    /// with this PO number, or both.
+    /// </summary>
+    Task<IReadOnlyList<OpenPoLineDto>> FindOpenPoLinesAsync(
+        long? vendorId, string? poNo, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>MM-BR-920: the order with this PO number, and the code of itemId when given; null when no order has the number.</summary>
+    Task<PdaPoRow?> FindPdaPoAsync(string poNo, long? itemId, IDbTransaction transaction, CancellationToken cancellationToken);
 }

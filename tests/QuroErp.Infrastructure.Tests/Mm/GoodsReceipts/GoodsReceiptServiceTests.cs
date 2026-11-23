@@ -197,7 +197,7 @@ public partial class GoodsReceiptServiceTests(AuthSchemaFixture db)
         (await Orders.GetAsync(po.Id, None)).Status.Should().Be(PoStatusCode.Received);
     }
 
-    [DatabaseFact, Trait("Id", "MM-UC-004-T06"), Trait("Id", "MM-UT-353"), Trait("Id", "MM-UT-356")]
+    [DatabaseFact, Trait("Id", "MM-UC-004-T06"), Trait("Id", "MM-UC-038-T06"), Trait("Id", "MM-UT-353"), Trait("Id", "MM-UT-356")]
     public async Task LotItems_GetANewLot_AndALotBalanceBelowZeroIsRefusedEvenInAllowInMonth()
     {
         await ModesAsync("DENY", "DENY");
@@ -324,7 +324,7 @@ public partial class GoodsReceiptServiceTests(AuthSchemaFixture db)
         await missing.Should().ThrowAsync<NotFoundException>();
     }
 
-    [DatabaseFact, Trait("Id", "MM-UC-004-T07"), Trait("Id", "MM-UT-001"), Trait("Id", "MM-UT-602")]
+    [DatabaseFact, Trait("Id", "MM-UC-004-T07"), Trait("Id", "MM-UC-038-T07"), Trait("Id", "MM-UT-001"), Trait("Id", "MM-UT-602")]
     public async Task Deny_RefusesADeleteBelowTheWarehouseOnHand()
     {
         await ModesAsync("DENY", "DENY");
@@ -338,7 +338,7 @@ public partial class GoodsReceiptServiceTests(AuthSchemaFixture db)
         (await OnHandAsync(m.Item, m.Main)).Should().Be(2m);
     }
 
-    [DatabaseFact, Trait("Id", "MM-UC-004-T08"), Trait("Id", "MM-UT-002")]
+    [DatabaseFact, Trait("Id", "MM-UC-004-T08"), Trait("Id", "MM-UC-038-T08"), Trait("Id", "MM-UT-002")]
     public async Task AllowInMonth_SavesAMidMonthNegative_AndMarksIt()
     {
         await ModesAsync("ALLOW_IN_MONTH", "DENY");
@@ -355,7 +355,7 @@ public partial class GoodsReceiptServiceTests(AuthSchemaFixture db)
         (await OnHandAsync(m.Item, m.Main)).Should().Be(2m);
     }
 
-    [DatabaseFact, Trait("Id", "MM-UC-004-T09"), Trait("Id", "MM-UT-009")]
+    [DatabaseFact, Trait("Id", "MM-UC-004-T09"), Trait("Id", "MM-UC-038-T09"), Trait("Id", "MM-UT-009")]
     public async Task Deny_RefusesADeleteThatMakesALaterDateNegative()
     {
         await ModesAsync("DENY", "DENY");
@@ -369,7 +369,7 @@ public partial class GoodsReceiptServiceTests(AuthSchemaFixture db)
         (await delete.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(PointInTimeStock.NegativeOnDate);
     }
 
-    [DatabaseFact, Trait("Id", "MM-UC-004-T10"), Trait("Id", "MM-UT-010")]
+    [DatabaseFact, Trait("Id", "MM-UC-004-T10"), Trait("Id", "MM-UC-038-T10"), Trait("Id", "MM-UT-010")]
     public async Task AllowInMonth_RefusesANegativeMonthEnd_WithNoMovementOnTheLastDay()
     {
         await ModesAsync("ALLOW_IN_MONTH", "DENY");
