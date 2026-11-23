@@ -1000,6 +1000,28 @@
   <data name="SD-E-174" xml:space="preserve"><value>수주 {0}은(는) 선청구 수주라 송장 가져오기로만 출하할 수 있습니다.</value></data>
   <data name="SD-E-175" xml:space="preserve"><value>선청구 출하는 송장 가져오기 줄만 받고 다른 줄과 섞을 수 없습니다 (송장 {0}, 줄 {1}, 미출하 수량 {2}).</value></data>
   <data name="Menu.G3SD03" xml:space="preserve"><value>출하</value></data>
+  <data name="Sd.PdaIssue.Title" xml:space="preserve"><value>PDA 출고</value></data>
+  <data name="Sd.PdaIssue.SoNo" xml:space="preserve"><value>수주·송장 번호</value></data>
+  <data name="Sd.PdaIssue.Customer" xml:space="preserve"><value>고객</value></data>
+  <data name="Sd.PdaIssue.Warehouse" xml:space="preserve"><value>출고 창고</value></data>
+  <data name="Sd.PdaIssue.Remaining" xml:space="preserve"><value>남은 수량</value></data>
+  <data name="Sd.PdaIssue.Qty" xml:space="preserve"><value>출고 수량</value></data>
+  <data name="Sd.PdaIssue.SuggestedLocation" xml:space="preserve"><value>Location · Lot (FIFO 추천)</value></data>
+  <data name="Sd.PdaIssue.Pallet" xml:space="preserve"><value>Pallet</value></data>
+  <data name="Sd.PdaIssue.FindLot" xml:space="preserve"><value>Lot 찾기</value></data>
+  <data name="Sd.PdaIssue.ScanNo" xml:space="preserve"><value>수주 또는 송장 번호를 스캔하세요</value></data>
+  <data name="Sd.PdaIssue.ScanItem" xml:space="preserve"><value>품목을 스캔하세요</value></data>
+  <data name="Sd.PdaIssue.ScanPalletOrLocation" xml:space="preserve"><value>품목·Pallet·Location·Lot을 스캔하세요</value></data>
+  <data name="Sd.PdaIssue.ChangeNo" xml:space="preserve"><value>번호 바꾸기</value></data>
+  <data name="Sd.PdaIssue.Saved" xml:space="preserve"><value>출하 {0}을(를) 저장했습니다.</value></data>
+  <data name="Sd.PdaIssue.NotSaved" xml:space="preserve"><value>저장하지 않았습니다. 신용 한도를 확인하세요.</value></data>
+  <data name="Sd.PdaIssue.Short" xml:space="preserve"><value>{0}은(는) 재고가 {1} 모자랍니다. 저장은 마이너스 재고 설정을 따릅니다.</value></data>
+  <data name="Sd.PdaIssue.AlreadyScanned" xml:space="preserve"><value>{0}의 남은 수량은 이미 카드에 있습니다.</value></data>
+  <data name="Sd.PdaIssue.WrongItem" xml:space="preserve"><value>{0}은(는) 이 카드의 품목이 아닙니다.</value></data>
+  <data name="Sd.PdaIssue.NoStock" xml:space="preserve"><value>{0}에 이 품목의 재고가 없습니다.</value></data>
+  <data name="Sd.PdaIssue.PalletNotFound" xml:space="preserve"><value>Pallet {0}은(는) 출고 창고에 있는 ACTIVE Pallet이 아닙니다.</value></data>
+  <data name="Sd.PdaIssue.LocationNotInWarehouse" xml:space="preserve"><value>Location {0}은(는) 출고 창고 {1}에 없습니다.</value></data>
+  <data name="Sd.PdaIssue.NoWarehouse" xml:space="preserve"><value>출고 창고를 찾지 못했습니다. 사용자 기본 창고나 회사 기본 창고를 확인하세요.</value></data>
   <data name="Sd.Shipment.FindFrom" xml:space="preserve"><value>출하일 시작</value></data>
   <data name="Sd.Shipment.FindTo" xml:space="preserve"><value>출하일 끝</value></data>
   <data name="Sd.Shipment.ShipTo" xml:space="preserve"><value>배송지</value></data>

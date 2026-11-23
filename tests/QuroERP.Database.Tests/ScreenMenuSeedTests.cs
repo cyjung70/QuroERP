@@ -54,4 +54,29 @@ public partial class MigrationTests
 
         menus.Should().Equal("G2MM08 /mm/pda-receipt", "G2MM09 /mm/pda-move", "G3SD06 /sd/pda-issue");
     }
+
+    // 0729 (TASK-SD-071): a database where G3SD06 held another program before 0728 gets the PDA Issue menu back
+    [DatabaseFact, Trait("Id", "SD-071-IT-01"), Trait("Rule", "BC-BR-214")]
+    public void Seed_PdaIssueFix_SetsG3SD06ToThePdaIssueScreen_WhenNoMenuOpensIt()
+    {
+        using var schema = new ScratchSchema();
+        schema.ApplySchemaScriptsBefore("9999");
+        schema.Execute("""
+            INSERT INTO sys_role (role_code, created_by, updated_by) VALUES ('admin', 't', 't');
+            INSERT INTO sys_menu (menu_code, name, type, module, valid_flag, created_by, updated_by) VALUES ('G3SD', 'Sales', 'M', 'sd', 'Y', 't', 't');
+            INSERT INTO sys_menu (menu_code, name, type, program_id, module, parent_menu_id, valid_flag, created_by, updated_by)
+            SELECT 'G3SD06', 'AR Receipt', 'P', '/sd/ar-receipt', 'sd', id, 'Y', 't', 't' FROM sys_menu WHERE menu_code = 'G3SD';
+            """);
+        schema.ApplyScript("Seed", "0728_seed_sys_menu_pda.sql");
+
+        schema.ApplyScript("Seed", "0729_seed_sys_menu_pda_issue_fix.sql");
+        schema.ApplyScript("Seed", "0729_seed_sys_menu_pda_issue_fix.sql");
+
+        schema.Rows("""
+            SELECT concat_ws(' ', m.menu_code, m.name, m.program_id, g.menu_code, rm.full_access)
+            FROM sys_menu m JOIN sys_menu g ON g.id = m.parent_menu_id
+            LEFT JOIN sys_role_menu rm ON rm.menu_id = m.id
+            WHERE m.menu_code LIKE 'G3SD0%'
+            """).Should().Equal("G3SD06 PDA Issue /sd/pda-issue G3SD Y");
+    }
 }

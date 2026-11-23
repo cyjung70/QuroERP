@@ -1,0 +1,557 @@
+@page "/sd/pda-issue"
+@layout PdaLayout
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Common
+@using QuroErp.Contracts.Mm.Labels
+@using QuroErp.Contracts.Mm.Lots
+@using QuroErp.Contracts.Mm.Warehouses
+@using QuroErp.Contracts.Sd.Shipments
+@using QuroErp.Web.Bc.UserProfiles
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pda
+@using QuroErp.Web.Mm.Locations
+@using QuroErp.Web.Mm.Lots
+@using QuroErp.Web.Mm.Warehouses
+@using QuroErp.Web.Sd.Shipments
+@inject ShipmentApiClient Api
+@inject LotApiClient LotApi
+@inject LocationApiClient LocationApi
+@inject WarehouseApiClient WarehouseApi
+@inject UserProfileApiClient ProfileApi
+@inject IQuroConfirm Confirm
+@inject ProblemMessages Messages
+@inject IStringLocalizer<SharedResource> L
+
+@* PDA shipment (SD-UC-054, TASK-SD-071, screen type SM on the PDA frame). Scan a sales order number, or a BILL_THEN_SHIP invoice
+   number (raw value): the customer and the lines left to ship appear (MM-BR-921). Each scanned item becomes cards in FIFO order,
+   one per suggested Location and Lot (MM-BR-716). On the selected card a Location, Lot or Pallet label replaces the suggestion; a
+   label of another item, or a Location or Lot without stock, is refused (MM-BR-923). A Pallet ships whole (MM-BR-913). Save goes
+   through the shipment API like the PC screen, with its write access, its checks and its credit limit question (SD-BR-309). The
+   order ships from the user's or company default warehouse, a BILL_THEN_SHIP invoice from the consignment warehouse (SD-BR-176). *@
+
+<PageTitle>@L["Sd.PdaIssue.Title"]</PageTitle>
+
+<QuroPdaScreen Title="@L["Sd.PdaIssue.Title"]" WritePath="@WritePath" LineCount="_cards.Count" OnSave="SaveAsync" Busy="_busy"
+               Error="@_error" Notice="@_notice" TestId="pda-issue">
+    <Header>
+        <div class="quro-pda-field">
+            <span>@L["Sd.PdaIssue.SoNo"]</span>
+            <strong data-testid="pda-issue-no">@(_docNo ?? "-")</strong>
+        </div>
+        @if (_docNo is not null)
+        {
+            <div class="quro-pda-field">
+                <span>@L["Sd.PdaIssue.Customer"]</span>
+                <strong data-testid="pda-issue-customer">@_customerName</strong>
+            </div>
+            <div class="quro-pda-field">
+                <span>@L["Sd.PdaIssue.Warehouse"]</span>
+                <strong data-testid="pda-issue-warehouse">@(_warehouse?.WarehouseCode ?? "-")</strong>
+            </div>
+            <ul class="quro-pda-open" data-testid="pda-issue-open">
+                @foreach (var line in _openLines)
+                {
+                    <li data-testid="pda-issue-open-line">@line.Seq · @line.ItemCd · @Qty(line.RemainingQty) @line.Unit</li>
+                }
+            </ul>
+        }
+    </Header>
+    <Scan>
+        <QuroScanInput @ref="_scan" Raw="@(_docNo is null)" OnRawScanned="ReadNumberAsync" Accept="Accept" OnScanned="OnScannedAsync"
+                       Label="@StepText" TestId="pda-issue-scan" />
+    </Scan>
+    <Lines>
+        @foreach (var card in _cards)
+        {
+            var selected = ReferenceEquals(card, _selected);
+            <article class="quro-pda-card @(selected ? "is-selected" : null)" data-testid="pda-issue-card" @onclick="() => _selected = card">
+                <span class="quro-pda-card-title">@card.Line.Seq · @card.Line.ItemCd</span>
+                <span class="quro-pda-card-meta">@card.Line.ItemName</span>
+                <span class="quro-pda-card-meta">@L["Sd.PdaIssue.Remaining"] @Qty(card.Line.RemainingQty) @card.Line.Unit</span>
+                <div class="quro-field quro-field-readonly">
+                    <label>@L["Sd.PdaIssue.SuggestedLocation"]</label>
+                    <input type="text" readonly value="@card.StockKey" data-testid="pda-issue-location" />
+                </div>
+                @if (card.PalletNo is not null)
+                {
+                    <div class="quro-field quro-field-readonly">
+                        <label>@L["Sd.PdaIssue.Pallet"]</label>
+                        <input type="text" readonly value="@card.PalletNo" data-testid="pda-issue-pallet" />
+                    </div>
+                    <div class="quro-field quro-field-readonly">
+                        <label>@L["Sd.PdaIssue.Qty"]</label>
+                        <input type="text" readonly value="@Qty(card.Qty ?? 0m)" data-testid="pda-issue-qty" />
+                    </div>
+                }
+                else
+                {
+                    <div class="quro-field quro-field-input quro-field-required">
+                        <label>@L["Sd.PdaIssue.Qty"]<span class="quro-required">*</span></label>
+                        <input type="number" inputmode="decimal" min="0" step="any" value="@card.Qty"
+                               @onchange="e => card.Qty = ParseDecimal(e.Value)" data-testid="pda-issue-qty" />
+                    </div>
+                    @if (card.Line.LotManaged)
+                    {
+                        <div class="quro-field quro-field-input">
+                            <label>@L["Sd.PdaIssue.FindLot"]</label>
+                            <select value="@card.BalanceKey" @onchange="e => PickBalance(card, e.Value?.ToString())" data-testid="pda-issue-lot">
+                                <option value="">-</option>
+                                @foreach (var balance in BalancesOf(card.Line.ItemId))
+                                {
+                                    <option value="@Key(balance.LocationId, balance.LotId)">
+                                        @balance.LotNo · @balance.LocationCode · @Qty(balance.OnHandQty)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    }
+                }
+                <button type="button" @onclick="() => Remove(card)" @onclick:stopPropagation="true" data-testid="pda-issue-remove">
+                    @L["Common.Delete"]
+                </button>
+            </article>
+        }
+    </Lines>
+    <Actions>
+        <button type="button" disabled="@(_docNo is null || _busy)" @onclick="ChangeNumber" data-testid="pda-issue-change-no">
+            @L["Sd.PdaIssue.ChangeNo"]
+        </button>
+    </Actions>
+</QuroPdaScreen>
+
+@code {
+    /// <summary>The PC screen the save goes through: its write access enables Save (BC-BR-214).</summary>
+    private const string WritePath = "/sd/shipment";
+
+    private const string CreditLimitField = "confirmCreditLimit";
+    private const string UnknownCode = "MM-E-923";
+    private const string NormalWarehouse = "NORMAL";
+    private const string ConsignmentWarehouse = "CONSIGNMENT";
+    private const string Star = "*";
+
+    private static readonly string[] ItemStep = [LabelKinds.Item];
+
+    private readonly List<Card> _cards = [];
+    private readonly Dictionary<long, IReadOnlyList<LotBalanceDto>> _balances = [];
+    private QuroScanInput? _scan;
+    private IReadOnlyList<OpenLine> _openLines = [];
+    private IReadOnlyList<WarehouseOptionDto> _warehouses = [];
+    private long? _defaultWarehouseId;
+    private string? _docNo;
+    private bool _isInvoice;
+    private long? _customerId;
+    private string? _customerName;
+    private DocumentHeader? _header;
+    private WarehouseOptionDto? _warehouse;
+    private Card? _selected;
+    private string? _error;
+    private string? _notice;
+    private bool _busy;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    // The selected card takes a Pallet and, by its item, a Location or a Lot label (MM-BR-921)
+    private IReadOnlyList<string> Accept => _selected is null
+        ? ItemStep
+        : [LabelKinds.Item, LabelKinds.Pallet,
+           .. _selected.Line.LocationManaged ? new[] { LabelKinds.Location } : [],
+           .. _selected.Line.LotManaged ? new[] { LabelKinds.Lot } : []];
+
+    private string StepText => _docNo is null
+        ? L["Sd.PdaIssue.ScanNo"]
+        : _selected is null ? L["Sd.PdaIssue.ScanItem"] : L["Sd.PdaIssue.ScanPalletOrLocation"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // The user's default warehouse, else the company default warehouse (MM-BR-702, MM-BR-703), as on the PC screen
+            _warehouses = await WarehouseApi.GetOptionsAsync(CancellationToken.None);
+            var profile = await ProfileApi.GetAsync(CancellationToken.None);
+            var companyDefault = (await WarehouseApi.SearchAsync(false, CancellationToken.None)).FirstOrDefault(w => w.IsDefault)?.Id;
+            var normal = _warehouses.Where(w => w.UseYn && w.WarehouseType == NormalWarehouse).ToList();
+            _defaultWarehouseId = (normal.FirstOrDefault(w => w.Id == profile.DefaultWarehouseId)
+                                   ?? normal.FirstOrDefault(w => w.Id == companyDefault))?.Id;
+        }
+        catch (ApiProblemException e)
+        {
+            _error = Messages.Get(e.Problem);
+        }
+    }
+
+    // MM-BR-921: the number is a sales order's or, when no order has it, a BILL_THEN_SHIP invoice's
+    private async Task ReadNumberAsync(string value)
+    {
+        try
+        {
+            var orders = await Api.OpenOrderLinesByNoAsync(value, null, CancellationToken.None);
+            var order = orders.First();
+            _isInvoice = false;
+            _docNo = order.SoNo;
+            _customerId = order.CustomerId;
+            _customerName = order.CustomerName;
+            _header = new(order.CurrencyCode, order.ExchangeRate, order.ShipVia, order.ShipName, order.ShipAddr1, order.ShipAddr2,
+                order.ShipCity, order.ShipState, order.ShipZipCode, order.ShipCountry, order.ShipPhone);
+            _openLines = [.. order.Lines.Select(OpenLine.OfOrder)];
+            _warehouse = _warehouses.FirstOrDefault(w => w.Id == _defaultWarehouseId);
+        }
+        catch (ApiProblemException e) when (e.Problem.Code == UnknownCode)
+        {
+            var read = await ReadInvoiceAsync(value);
+            if (read is not true)
+            {
+                if (read is false)
+                {
+                    await _scan!.RejectAsync(Messages.Get(e.Problem));
+                }
+                return;
+            }
+        }
+        catch (ApiProblemException e)
+        {
+            await _scan!.RejectAsync(Messages.Get(e.Problem));
+            return;
+        }
+        _error = null;
+        _notice = _warehouse is null ? L["Sd.PdaIssue.NoWarehouse"].Value : null;
+    }
+
+    // SD-BR-175, SD-BR-176: a BILL_THEN_SHIP invoice ships from the consignment warehouse. False when no invoice has the number,
+    // null when the invoice was refused
+    private async Task<bool?> ReadInvoiceAsync(string value)
+    {
+        IReadOnlyList<UnshippedInvoiceLineDto> lines;
+        try
+        {
+            lines = await Api.UnshippedInvoiceLinesByNoAsync(value, null, CancellationToken.None);
+        }
+        catch (ApiProblemException e) when (e.Problem.Code == UnknownCode)
+        {
+            return false;
+        }
+        catch (ApiProblemException e)
+        {
+            await _scan!.RejectAsync(Messages.Get(e.Problem));
+            return null;
+        }
+        var first = lines.First();
+        _isInvoice = true;
+        _docNo = first.DnNo;
+        _customerId = first.CustomerId;
+        _customerName = first.CustomerName;
+        _header = new(first.CurrencyCode, first.ExchangeRate, null, null, null, null, null, null, null, null, null);
+        _openLines = [.. lines.Select(OpenLine.OfInvoice)];
+        _warehouse = _warehouses.FirstOrDefault(w => w.WarehouseType == ConsignmentWarehouse);
+        return true;
+    }
+
+    private async Task OnScannedAsync(LabelScanDto scan)
+    {
+        _error = null;
+        switch (scan.Kind)
+        {
+            case LabelKinds.Location:
+                await SetLocationAsync(_selected!, scan);
+                break;
+            case LabelKinds.Lot:
+                await SetLotAsync(_selected!, scan);
+                break;
+            case LabelKinds.Pallet:
+                await SetPalletAsync(_selected!, scan);
+                break;
+            default:
+                await AddItemAsync(scan);
+                break;
+        }
+    }
+
+    // MM-BR-923: an item with no line left on the document is refused by the API (MM-E-923). The qty the cards don't cover yet
+    // is split over the FIFO suggestion, one card per Location and Lot (MM-BR-716); a short suggestion is said, the save then
+    // follows the negative stock mode
+    private async Task AddItemAsync(LabelScanDto scan)
+    {
+        IReadOnlyList<long> lineIds;
+        try
+        {
+            lineIds = _isInvoice
+                ? [.. (await Api.UnshippedInvoiceLinesByNoAsync(_docNo!, scan.ItemId, CancellationToken.None)).Select(l => l.SalesInvoiceLineId)]
+                : [.. (await Api.OpenOrderLinesByNoAsync(_docNo!, scan.ItemId, CancellationToken.None)).SelectMany(o => o.Lines)
+                    .Select(l => l.SalesOrderLineId)];
+        }
+        catch (ApiProblemException e)
+        {
+            await _scan!.RejectAsync(Messages.Get(e.Problem));
+            return;
+        }
+        var line = _openLines.Where(l => lineIds.Contains(l.LineId)).FirstOrDefault(l => Uncovered(l) > 0);
+        if (line is null)
+        {
+            _selected = _cards.LastOrDefault(c => lineIds.Contains(c.Line.LineId)) ?? _selected;
+            _notice = L["Sd.PdaIssue.AlreadyScanned", scan.ItemCd ?? ""].Value;
+            return;
+        }
+        var qty = Uncovered(line);
+        var suggestion = await SuggestAsync(line.ItemId, qty);
+        var parts = suggestion?.Lines ?? [];
+        List<Card> added = parts.Count == 0
+            ? [new Card(line) { Qty = qty }]
+            : parts.Select(p => new Card(line)
+            {
+                Qty = p.Qty, LocationId = p.LocationId, LocationCode = p.LocationCode, LotId = p.LotId, LotNo = p.LotNo,
+            }).ToList();
+        if (parts.Count > 0 && suggestion!.ShortQty > 0)
+        {
+            added.Add(new Card(line) { Qty = suggestion.ShortQty });
+        }
+        _cards.AddRange(added);
+        _selected = added[0];
+        if (line.LotManaged)
+        {
+            await LoadBalancesAsync(line.ItemId);
+        }
+        _notice = suggestion is { ShortQty: > 0 } ? L["Sd.PdaIssue.Short", line.ItemCd ?? "", Qty(suggestion.ShortQty)].Value : null;
+    }
+
+    private async Task<StockSuggestionResultDto?> SuggestAsync(long itemId, decimal qty)
+    {
+        if (_warehouse is null)
+        {
+            return null;
+        }
+        try
+        {
+            return await LotApi.SuggestAsync(itemId, _warehouse.Id, qty, Today, CancellationToken.None);
+        }
+        catch (ApiProblemException)
+        {
+            return null;
+        }
+    }
+
+    // MM-BR-713, MM-BR-923: LC|warehouse code|Location code of the shipping warehouse, holding stock of the card's item. The card
+    // keeps its Lot when that Lot is there, else takes the first Lot there in FIFO order
+    private async Task SetLocationAsync(Card card, LabelScanDto scan)
+    {
+        var location = _warehouse is not null && string.Equals(_warehouse.WarehouseCode, scan.Parts[0], StringComparison.OrdinalIgnoreCase)
+            ? (await LocationApi.GetOptionsAsync(_warehouse.Id, CancellationToken.None))
+                .FirstOrDefault(o => string.Equals(o.LocationCode, scan.Parts[1], StringComparison.OrdinalIgnoreCase))
+            : null;
+        if (location is null)
+        {
+            await _scan!.RejectAsync(L["Sd.PdaIssue.LocationNotInWarehouse", string.Join(" / ", scan.Parts), _warehouse?.WarehouseCode ?? "-"]);
+            return;
+        }
+        var here = (await LoadBalancesAsync(card.Line.ItemId)).Where(b => b.LocationId == location.Id).ToList();
+        var balance = here.FirstOrDefault(b => b.LotId == card.LotId) ?? here.FirstOrDefault();
+        if (balance is null)
+        {
+            await _scan!.RejectAsync(L["Sd.PdaIssue.NoStock", location.LocationCode]);
+            return;
+        }
+        Apply(card, balance);
+    }
+
+    // MM-BR-355, MM-BR-923: LT|item code|Lot number of the card's item, with stock; the card keeps its Location when the Lot is there
+    private async Task SetLotAsync(Card card, LabelScanDto scan)
+    {
+        if (scan.ItemId != card.Line.ItemId)
+        {
+            await _scan!.RejectAsync(L["Sd.PdaIssue.WrongItem", scan.ItemCd ?? string.Join(" / ", scan.Parts)]);
+            return;
+        }
+        var lotNo = scan.Parts.Count > 1 ? scan.Parts[1] : "";
+        var lots = (await LoadBalancesAsync(card.Line.ItemId))
+            .Where(b => string.Equals(b.LotNo, lotNo, StringComparison.OrdinalIgnoreCase)).ToList();
+        var balance = lots.FirstOrDefault(b => b.LocationId == card.LocationId) ?? lots.FirstOrDefault();
+        if (balance is null)
+        {
+            await _scan!.RejectAsync(L["Sd.PdaIssue.NoStock", lotNo]);
+            return;
+        }
+        Apply(card, balance);
+    }
+
+    // MM-BR-913: PL|Pallet number|…; an ACTIVE Pallet of the card's item in the shipping warehouse ships whole
+    private async Task SetPalletAsync(Card card, LabelScanDto scan)
+    {
+        var palletNo = scan.Parts[0];
+        var pallet = _warehouse is null
+            ? null
+            : (await Api.PalletsAsync(new ShipmentPalletQuery(_warehouse.Id, palletNo, null), CancellationToken.None))
+                .FirstOrDefault(p => string.Equals(p.PalletNo, palletNo, StringComparison.OrdinalIgnoreCase));
+        if (pallet is null)
+        {
+            await _scan!.RejectAsync(L["Sd.PdaIssue.PalletNotFound", palletNo]);
+            return;
+        }
+        if (pallet.ItemId != card.Line.ItemId)
+        {
+            await _scan!.RejectAsync(L["Sd.PdaIssue.WrongItem", pallet.ItemCd]);
+            return;
+        }
+        card.PalletId = pallet.Id;
+        card.PalletNo = pallet.PalletNo;
+        card.Qty = pallet.Qty;
+        card.LocationId = pallet.LocationId;
+        card.LocationCode = pallet.LocationCode;
+        card.LotId = pallet.LotId;
+        card.LotNo = pallet.LotNo;
+    }
+
+    // MM-BR-362: the Lot list of a lot-managed card, the same balances as a Lot scan
+    private void PickBalance(Card card, string? key)
+    {
+        var balance = BalancesOf(card.Line.ItemId).FirstOrDefault(b => Key(b.LocationId, b.LotId) == key);
+        if (balance is not null)
+        {
+            Apply(card, balance);
+        }
+    }
+
+    private static void Apply(Card card, LotBalanceDto balance)
+    {
+        card.LocationId = balance.LocationId;
+        card.LocationCode = balance.LocationCode;
+        card.LotId = balance.LotId;
+        card.LotNo = balance.LotNo;
+    }
+
+    private async Task<IReadOnlyList<LotBalanceDto>> LoadBalancesAsync(long itemId)
+    {
+        if (!_balances.TryGetValue(itemId, out var balances))
+        {
+            balances = _warehouse is null ? [] : await LotApi.SearchAsync(itemId, _warehouse.Id, Today, CancellationToken.None);
+            _balances[itemId] = balances;
+        }
+        return balances;
+    }
+
+    private IReadOnlyList<LotBalanceDto> BalancesOf(long itemId) => _balances.TryGetValue(itemId, out var balances) ? balances : [];
+
+    private decimal Uncovered(OpenLine line) => line.RemainingQty - _cards.Where(c => c.Line.LineId == line.LineId).Sum(c => c.Qty ?? 0m);
+
+    // Same request and credit limit question as the PC screen (SD-BR-309); the checks are the server's
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        _error = null;
+        _notice = null;
+        try
+        {
+            bool? confirmCreditLimit = null;
+            ShipmentDto saved;
+            while (true)
+            {
+                try
+                {
+                    saved = await Api.CreateAsync(Request(confirmCreditLimit), CancellationToken.None);
+                    break;
+                }
+                catch (ApiProblemException e) when (confirmCreditLimit is null && e.Problem.ConfirmField == CreditLimitField)
+                {
+                    if (!await Confirm.ConfirmAsync(Messages.Get(e.Problem)))
+                    {
+                        _error = L["Sd.PdaIssue.NotSaved"];
+                        return;
+                    }
+                    confirmCreditLimit = true;
+                }
+            }
+            _notice = L["Sd.PdaIssue.Saved", saved.ShipNo];
+            ClearDocument();
+        }
+        catch (ApiProblemException e)
+        {
+            _error = Messages.Get(e.Problem);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    // A Location or Lot goes only to an item managed by it; null is '*' (MM-BR-713, MM-BR-363)
+    private SaveShipmentRequest Request(bool? confirmCreditLimit) => new(
+        _customerId ?? 0, Today, _warehouse?.Id, _header?.CurrencyCode, _header?.ExchangeRate, _header?.ShipVia, _header?.ShipName,
+        _header?.ShipAddr1, _header?.ShipAddr2, _header?.ShipCity, _header?.ShipState, _header?.ShipZipCode, _header?.ShipCountry,
+        _header?.ShipPhone, null,
+        [.. _cards.Select(c => new SaveShipmentLineRequest(
+            null, c.Line.ItemId, null, _warehouse?.Id, c.Qty ?? 0m, null, null,
+            c.Line.LotManaged && c.LotNo != Star ? c.LotId : null, null,
+            _isInvoice ? null : c.Line.LineId, _isInvoice ? c.Line.LineId : null,
+            c.Line.LocationManaged && c.LocationCode != Star ? c.LocationId : null, c.PalletId))],
+        null, confirmCreditLimit);
+
+    private void Remove(Card card)
+    {
+        _cards.Remove(card);
+        if (ReferenceEquals(_selected, card))
+        {
+            _selected = _cards.LastOrDefault();
+        }
+    }
+
+    private void ChangeNumber()
+    {
+        ClearDocument();
+        _error = null;
+        _notice = null;
+    }
+
+    private void ClearDocument()
+    {
+        _cards.Clear();
+        _balances.Clear();
+        _selected = null;
+        _openLines = [];
+        _docNo = null;
+        _isInvoice = false;
+        _customerId = null;
+        _customerName = null;
+        _header = null;
+        _warehouse = null;
+    }
+
+    private static string Key(long locationId, long lotId) =>
+        $"{locationId.ToString(CultureInfo.InvariantCulture)}-{lotId.ToString(CultureInfo.InvariantCulture)}";
+
+    private static string Qty(decimal value) => value.ToString("0.####", CultureInfo.CurrentCulture);
+
+    private static decimal? ParseDecimal(object? value) =>
+        decimal.TryParse(value?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : null;
+
+    /// <summary>The header values the shipment copies from its order or invoice (SD-BR-170, SD-BR-172).</summary>
+    private sealed record DocumentHeader(
+        string CurrencyCode, decimal ExchangeRate, string? ShipVia, string? ShipName, string? ShipAddr1, string? ShipAddr2,
+        string? ShipCity, string? ShipState, string? ShipZipCode, string? ShipCountry, string? ShipPhone);
+
+    /// <summary>An order line or BILL_THEN_SHIP invoice line left to ship. LineId is the order line's or the invoice line's id.</summary>
+    private sealed record OpenLine(
+        long LineId, int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal RemainingQty, bool LotManaged,
+        bool LocationManaged)
+    {
+        public static OpenLine OfOrder(OpenSalesOrderLineDto l) =>
+            new(l.SalesOrderLineId, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.Unit, l.RemainingQty, l.LotManaged, l.LocationManaged);
+
+        public static OpenLine OfInvoice(UnshippedInvoiceLineDto l) =>
+            new(l.SalesInvoiceLineId, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.Unit, l.UnshippedQty, l.LotManaged, l.LocationManaged);
+    }
+
+    /// <summary>A scanned line part with its stock key. LocationId and LotId come from the suggestion, a scan or the Lot list.</summary>
+    private sealed class Card(OpenLine line)
+    {
+        public OpenLine Line { get; } = line;
+        public decimal? Qty { get; set; }
+        public long? LocationId { get; set; }
+        public string LocationCode { get; set; } = Star;
+        public long? LotId { get; set; }
+        public string LotNo { get; set; } = Star;
+        public long? PalletId { get; set; }
+        public string? PalletNo { get; set; }
+
+        public string StockKey => $"{LocationCode} · {LotNo}";
+
+        public string BalanceKey => LocationId is { } location && LotId is { } lot ? Key(location, lot) : "";
+    }
+}

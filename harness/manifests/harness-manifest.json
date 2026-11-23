@@ -64,7 +64,7 @@
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "003faddf0801772f6165ed955fccd5530ada604fdb5b1d3fa8289b5c21ea7e74"
+      "sha256": "3591a839bca4a3fb253371cdeaa04d0f3a68f6d1cf96ee0a8bdb57cadcf46b1a"
     },
     {
       "path": "docs/architecture/api.md",
@@ -100,7 +100,7 @@
     },
     {
       "path": "docs/architecture/inventory.md",
-      "sha256": "cd0bf72f524d13b2d34906df8bc0425c6c88be763f57328f7d7323cb2334b476"
+      "sha256": "4f2a002296e83686b0bdc551e96b4fd6a26220d322c9f11d1137b845505ec33f"
     },
     {
       "path": "docs/architecture/layers.md",
@@ -212,7 +212,7 @@
     },
     {
       "path": "docs/business-rules/MM/inventory.md",
-      "sha256": "3db52fd3050b61931f965bc920e261f562965fe646b91bdead7fab22bc492433"
+      "sha256": "bd9a266cbd69634da760357cbe829ded33f714c5709890ffdb824b99bc30d624"
     },
     {
       "path": "docs/business-rules/MM/item.md",
@@ -220,7 +220,7 @@
     },
     {
       "path": "docs/business-rules/MM/ledger.md",
-      "sha256": "de60389d883951e4a897ad6468a2168d1b6f963838ec36fc31e9f837be3d4832"
+      "sha256": "aa3e46ad2284a8ae5211798b54242b32276bf40a19e3425a58ad40e2084411f7"
     },
     {
       "path": "docs/business-rules/MM/lot.md",
@@ -272,7 +272,7 @@
     },
     {
       "path": "docs/business-rules/MM/warehouse.md",
-      "sha256": "19305e4ac58eeb19edc18bf9f5ff973cf743ed1d26c08cfe02a4447f529c99cd"
+      "sha256": "356591cc1b0b4289f3355a5732831369a5192182a753b0edf8f9e544188f385c"
     },
     {
       "path": "docs/business-rules/PP/README.md",
@@ -660,7 +660,7 @@
     },
     {
       "path": "docs/specifications/SD/pda-issue.md",
-      "sha256": "08aa182c3722c145ed2e2c8cbc5b1d6c5a871881b88435556aea532d28f8edda"
+      "sha256": "3a43a35ebfd8ef305decbb096c8262f2ec928b4173216b25bb9af7c33b611150"
     },
     {
       "path": "docs/specifications/SD/quotation.md",
@@ -1413,6 +1413,10 @@
     {
       "path": "harness/tasks/TASK-CORE-081.json",
       "sha256": "e76394e80ab50d61c210f1fa923d76daad947129e6cf50c22c80d6a42b85cb76"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-082.json",
+      "sha256": "fd675309dd0ebbfecce025e9a5e6e9df84135ea575809bd3b690770641329811"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",

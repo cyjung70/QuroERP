@@ -25,9 +25,12 @@ internal sealed class ScratchSchema : IDisposable
     }
 
     /// <summary>Runs the script in one transaction, as DbUp does.</summary>
-    public void ApplySchemaScript(string name)
+    public void ApplySchemaScript(string name) => ApplyScript("Schema", name);
+
+    /// <summary>Runs a Schema, Seed or Demo script in one transaction, as DbUp does.</summary>
+    public void ApplyScript(string folder, string name)
     {
-        using var stream = typeof(DatabaseMigrator).Assembly.GetManifestResourceStream(DatabaseMigrator.ResourcePrefix("Schema") + name)!;
+        using var stream = typeof(DatabaseMigrator).Assembly.GetManifestResourceStream(DatabaseMigrator.ResourcePrefix(folder) + name)!;
         using var reader = new StreamReader(stream);
         using var transaction = _connection.BeginTransaction();
         using (var command = new NpgsqlCommand(reader.ReadToEnd(), _connection, transaction))
