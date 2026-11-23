@@ -110,6 +110,16 @@
 
 .quro-pda-card-title { font-weight: 600; }
 
+/* The card a Location scan goes to */
+.quro-pda-card.is-selected { border: 2px solid var(--q-brand); }
+
+.quro-pda-card .quro-field { display: flex; flex-direction: column; gap: 2px; }
+
+.quro-pda-card .quro-field input { width: 100%; min-height: var(--q-pda-touch); }
+
+/* The PO lines left to receive, under the scanned PO number */
+.quro-pda-open { margin: 0; padding: 0 0 0 18px; color: var(--q-ink-muted); overflow-wrap: anywhere; }
+
 .quro-pda-card-meta { color: var(--q-ink-muted); }
 
 /* The bar stays at the bottom of the screen while the cards scroll. Buttons share the width and wrap their text, so at 360px

@@ -46,6 +46,18 @@ public sealed class GoodsReceiptApiClient(HttpClient http, AccessTokenProvider t
         return await response.Content.ReadFromJsonAsync<List<OpenPoLineDto>>(cancellationToken) ?? [];
     }
 
+    /// <summary>
+    /// PDA: the remaining lines of the order with this PO number, only those of itemId when given (MM-BR-920, MM-BR-923).
+    /// </summary>
+    /// <exception cref="ApiProblemException">422 MM-E-923 for an unknown PO number or an item not on it, MM-E-024.</exception>
+    public async Task<IReadOnlyList<OpenPoLineDto>> OpenPoLinesByPoAsync(string poNo, long? itemId, CancellationToken cancellationToken)
+    {
+        var uri = $"{GoodsReceiptRoutes.Base}/{GoodsReceiptRoutes.OpenPoLines}?poNo={Uri.EscapeDataString(poNo)}"
+            + (itemId is { } id ? $"&itemId={id.ToString(CultureInfo.InvariantCulture)}" : "");
+        using var response = await http.SendAuthorizedAsync(tokens, new HttpRequestMessage(HttpMethod.Get, uri), cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<OpenPoLineDto>>(cancellationToken) ?? [];
+    }
+
     /// <exception cref="ApiProblemException">422 MM-E-1nn, or MM-W-102 (confirmField confirmOverReceipt) in WARN mode.</exception>
     public async Task<GoodsReceiptDto> CreateAsync(SaveGoodsReceiptRequest request, CancellationToken cancellationToken)
     {

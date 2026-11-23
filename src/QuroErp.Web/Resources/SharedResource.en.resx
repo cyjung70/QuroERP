@@ -1354,4 +1354,22 @@
   <data name="Samples.Pda.StepGoods" xml:space="preserve"><value>Scan a Pallet, Lot or item</value></data>
   <data name="Samples.Pda.ChangeLocation" xml:space="preserve"><value>Change Location</value></data>
   <data name="Samples.Pda.Saved" xml:space="preserve"><value>Saved {0} lines (a sample, so nothing is kept).</value></data>
+  <data name="Mm.PdaReceipt.Title" xml:space="preserve"><value>PDA Receipt</value></data>
+  <data name="Mm.PdaReceipt.PoNo" xml:space="preserve"><value>PO No.</value></data>
+  <data name="Mm.PdaReceipt.Vendor" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Mm.PdaReceipt.ScanPo" xml:space="preserve"><value>Scan the PO number</value></data>
+  <data name="Mm.PdaReceipt.ScanItem" xml:space="preserve"><value>Scan an item</value></data>
+  <data name="Mm.PdaReceipt.ScanItemOrLocation" xml:space="preserve"><value>Scan an item or the receiving Location</value></data>
+  <data name="Mm.PdaReceipt.Remaining" xml:space="preserve"><value>Remaining</value></data>
+  <data name="Mm.PdaReceipt.Qty" xml:space="preserve"><value>Qty</value></data>
+  <data name="Mm.PdaReceipt.LocationId" xml:space="preserve"><value>Receiving Location</value></data>
+  <data name="Mm.PdaReceipt.PalletQty" xml:space="preserve"><value>Pallet Qty</value></data>
+  <data name="Mm.PdaReceipt.SupplierLotNo" xml:space="preserve"><value>Supplier Lot</value></data>
+  <data name="Mm.PdaReceipt.ExpiryDt" xml:space="preserve"><value>Expiry Date</value></data>
+  <data name="Mm.PdaReceipt.ChangePo" xml:space="preserve"><value>Change PO</value></data>
+  <data name="Mm.PdaReceipt.PalletLabels" xml:space="preserve"><value>Pallet Labels</value></data>
+  <data name="Mm.PdaReceipt.Saved" xml:space="preserve"><value>Goods receipt {0} saved.</value></data>
+  <data name="Mm.PdaReceipt.NothingLeft" xml:space="preserve"><value>Nothing is left to receive on this PO.</value></data>
+  <data name="Mm.PdaReceipt.AlreadyScanned" xml:space="preserve"><value>The open PO lines of {0} are already on cards.</value></data>
+  <data name="Mm.PdaReceipt.LocationNotInWarehouse" xml:space="preserve"><value>Location {0} is not in warehouse {1} of this line.</value></data>
 </root>

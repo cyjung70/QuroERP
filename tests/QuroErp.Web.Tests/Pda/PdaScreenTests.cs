@@ -108,6 +108,25 @@ public class PdaScreenTests : BunitContext
         JSInterop.Invocations["quroPda.reject"].Should().ContainSingle();
     }
 
+    [Fact, Trait("Id", "MM-UC-038-T01"), Trait("Rule", "MM-BR-923")]
+    public void RawMode_GivesTheTypedValueToTheScreen_WithoutTheScanApi_AndTheScreenCanStillReject()
+    {
+        var raw = new List<string>();
+        var input = Render<QuroScanInput>(p => p
+            .Add(x => x.Raw, true)
+            .Add(x => x.TestId, "scan")
+            .Add(x => x.OnRawScanned, (string value) => raw.Add(value)));
+
+        Scan(input, "  po2611000001 ");
+        input.InvokeAsync(() => input.Instance.RejectAsync("읽을 수 없는 바코드입니다: PO2611000001"));
+
+        raw.Should().Equal("po2611000001");
+        _api.Queries.Should().BeEmpty("a document number is not a label");
+        input.Find("[data-testid=scan-input]").GetAttribute("value").Should().BeEmpty();
+        input.Find("[data-testid=scan-error]").TextContent.Should().Be("읽을 수 없는 바코드입니다: PO2611000001");
+        JSInterop.Invocations["quroPda.reject"].Should().ContainSingle();
+    }
+
     [Fact, Trait("Id", "CORE-071-WT-06"), Trait("Rule", "BC-BR-214")]
     public void Frame_HasHeaderScanCardsAndSaveInOrder_SaveNeedsLinesAndWriteAccess()
     {
