@@ -660,7 +660,7 @@
     },
     {
       "path": "docs/specifications/SD/pda-issue.md",
-      "sha256": "23656abd02328b5a8ccac403ee8c7cf62e65cd6f37d33482c0cd8534d52ff3a3"
+      "sha256": "4d38f371322a2b9ed64fab336b204f8c7d123f15f3d4b33a0c4a92ce0106eb11"
     },
     {
       "path": "docs/specifications/SD/quotation.md",
@@ -844,7 +844,7 @@
     },
     {
       "path": "docs/specifications/SD/shipment.md",
-      "sha256": "20e19a135abd917a408a552547f9b512e09bf63f310476065dc943e7ea2733f5"
+      "sha256": "6e57b47d6e6c9b05fd9c172d4d1b6b887c6e5c9370cc049634841eb455defb6f"
     },
     {
       "path": "GEMINI.md",
