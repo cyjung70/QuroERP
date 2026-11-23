@@ -44,7 +44,7 @@ TO BE 신규 화면이다. 속성 이름은 제안이며 glossary 이름이 우�
 | --- | --- | --- |
 | GET | /api/sd/shipments/open-order-lines?soNo=&itemId= | 수주 번호 스캔 → 남은 줄, 품목을 스캔하면 `itemId`로 그 품목 줄만 (출하 명세와 같은 API). 422 SD-E-172(`CL` 수주)·MM-E-923·SD-E-174 |
 | GET | /api/sd/shipments/unshipped-invoice-lines?dnNo=&itemId= | 선청구 송장 번호 스캔 → 미출하 줄 (출하 명세와 같은 API). 422 MM-E-923·SD-E-175 |
-| GET | /api/mm/stock-suggestions?itemId=&warehouseId=&qty= | FIFO 추천 → { lines: [{ locationId, locationCode, lotId, lotNo, qty }], shortQty }. Pallet에 묶인 수량은 빼고 추천한다 (MM-BR-716·916) |
+| GET | /api/mm/stock-suggestions?itemId=&warehouseId=&qty=&date= | FIFO 추천 → { lines: [{ locationId, locationCode, lotId, lotNo, qty }], shortQty }. Pallet에 묶인 수량은 빼고 추천한다 (MM-BR-716·916) |
 | POST | /api/sd/shipments | 저장 (출하 명세와 같은 API) |
 
 ## 관련 테이블
