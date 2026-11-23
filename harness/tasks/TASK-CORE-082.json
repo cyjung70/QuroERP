@@ -1,0 +1,32 @@
+{
+  "id": "TASK-CORE-082",
+  "project": "core",
+  "title": "문서 수정의 취소 이동 일자를 원 이동 일자로 (MM-BR-601): 끝난 재고 문서",
+  "module": "CORE",
+  "layer": [
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/business-rules/MM/ledger.md",
+    "docs/business-rules/MM/inventory.md",
+    "docs/architecture/inventory.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-070"
+  ],
+  "acceptance": [
+    "저장한 문서를 **수정**할 때(줄 변경·줄 삭제·일자 변경) 취소 이동의 수불일자 = 원 이동의 수불일자. 끝난 문서: 입고, 출하, 매출 송장, 공급자 송장(`PV`), 조립. 아직 없는 문서(창고 이동 등)는 그 태스크가 같은 BR로 만든다 (MM-BR-601)",
+    "문서 **삭제**·**Void**는 지금처럼 처리 일자(오늘, 문서 일자보다 앞이면 문서 일자)다. 원 이동의 달이 마감되었으면 수정은 MM-E-002로 막는다 (MM-BR-004)",
+    "테스트: `DENY`에서 과거 일자 문서(지난 일자, 열린 달)의 출고 수량을 늘리면 최종·이후 일자 잔고가 0 이상일 때 저장된다(MM-E-009 아님). 취소 이동과 새 이동이 같은 수불일자다. 삭제·Void의 취소 이동은 오늘 일자다. 기존 테스트가 통과한다"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
