@@ -11,7 +11,7 @@ public class PdaIssueRulesTests
 
     [Theory, Trait("Id", "SD-UC-054-T05"), Trait("Id", "MM-UT-921"), Trait("Rule", "MM-BR-921"), Trait("Id", "MM-UT-923"), Trait("Rule", "MM-BR-923")]
     [InlineData(false, "SO", "SHIP_AND_BILL", null, true, "MM-E-923")]
-    [InlineData(true, "CL", "SHIP_AND_BILL", null, true, "MM-E-923")]
+    [InlineData(true, "CL", "SHIP_AND_BILL", null, false, "SD-E-172")]
     [InlineData(true, "RE", "SHIP_AND_BILL", null, false, "MM-E-923")]
     [InlineData(true, "SO", "BILL_THEN_SHIP", null, true, "SD-E-174")]
     [InlineData(true, "SO", "SHIP_AND_BILL", 8L, true, "Common-E-006")]

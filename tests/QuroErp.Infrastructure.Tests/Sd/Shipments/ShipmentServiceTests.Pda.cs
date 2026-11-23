@@ -48,7 +48,7 @@ public partial class ShipmentServiceTests
         await ExecuteAsync("UPDATE sd_sales_order SET status = 'CL' WHERE id = @Id", closed.Id);
 
         await ShouldFailAsync(() => Service.OpenOrderLinesAsync(null, "SO-NONE-" + m.Key, null, None), LabelCode.UnknownCode, "SO-NONE-" + m.Key);
-        await ShouldFailAsync(() => Service.OpenOrderLinesAsync(null, closed.SoNo, null, None), LabelCode.UnknownCode, closed.SoNo);
+        await ShouldFailAsync(() => Service.OpenOrderLinesAsync(null, closed.SoNo, null, None), ShipmentRules.ClosedOrderCode, closed.SoNo);
         await ShouldFailAsync(() => Service.OpenOrderLinesAsync(null, billFirst.SoNo, null, None), ShipmentRules.BillThenShipOrderCode, billFirst.SoNo);
         await ShouldFailAsync(() => Service.OpenOrderLinesAsync(other.Customer, so.SoNo, null, None), ShipmentRules.NotFoundCode, so.SoNo);
         await ShouldFailAsync(() => Service.OpenOrderLinesAsync(null, so.SoNo, m.Service, None), LabelCode.UnknownCode, "S" + m.Key);

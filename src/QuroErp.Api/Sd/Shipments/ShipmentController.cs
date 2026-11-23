@@ -53,8 +53,8 @@ public sealed class ShipmentController(ShipmentService service, ShipmentPrintSer
     /// <summary>
     /// Orders with lines left to ship (SD-BR-172): of the customer, or the order with soNo for the PDA (MM-BR-921). itemId keeps the
     /// order's lines of a scanned item. 400 Common-E-005 without customerId or soNo; 422 MM-E-923 for an unknown order, one with
-    /// nothing left to ship or an item with no line left on it (MM-BR-923), SD-E-174 for a BILL_THEN_SHIP order, Common-E-006 for
-    /// an order of another customer.
+    /// nothing left to ship or an item with no line left on it (MM-BR-923), SD-E-172 for a closed (CL) order, SD-E-174 for a
+    /// BILL_THEN_SHIP order, Common-E-006 for an order of another customer.
     /// </summary>
     [HttpGet(ShipmentRoutes.OpenOrderLines), Authorize(Policy = Screen)]
     public Task<IReadOnlyList<OpenSalesOrderDto>> OpenOrderLines(

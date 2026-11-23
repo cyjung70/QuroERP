@@ -123,8 +123,8 @@ public sealed class ShipmentService(
     /// </summary>
     /// <exception cref="BadRequestException">Common-E-005 without customerId or soNo.</exception>
     /// <exception cref="DomainException">
-    /// MM-E-923 for an unknown order, one with nothing left to ship or an item with no line left on it; SD-E-174 for a
-    /// BILL_THEN_SHIP order; Common-E-006 for an order of another customer.
+    /// MM-E-923 for an unknown order, one with nothing left to ship or an item with no line left on it; SD-E-172 for a closed
+    /// order; SD-E-174 for a BILL_THEN_SHIP order; Common-E-006 for an order of another customer.
     /// </exception>
     public async Task<IReadOnlyList<OpenSalesOrderDto>> OpenOrderLinesAsync(
         long? customerId, string? soNo, long? itemId, CancellationToken cancellationToken)

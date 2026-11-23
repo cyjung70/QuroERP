@@ -20,8 +20,8 @@ public static class PdaIssueRules
     /// <param name="found">False when no order has this number.</param>
     /// <param name="hasOpenLine">True when a line of the order has qty left to ship.</param>
     /// <exception cref="DomainException">
-    /// MM-E-923 for an unknown order or one with nothing left to ship (closed); SD-E-174 for a BILL_THEN_SHIP order; Common-E-006
-    /// for an order of another customer.
+    /// MM-E-923 for an unknown order or one with nothing left to ship; SD-E-172 for a closed (CL) order; SD-E-174 for a
+    /// BILL_THEN_SHIP order; Common-E-006 for an order of another customer.
     /// </exception>
     public static void EnsurePdaOrder(
         string soNo, bool found, string? status, string? billingFlow, long? orderCustomerId, long? customerId, bool hasOpenLine)
@@ -38,7 +38,11 @@ public static class PdaIssueRules
         {
             throw new DomainException(ShipmentRules.NotFoundCode, soNo);
         }
-        if ((status ?? SalesOrderStatus.Entered) == SalesOrderStatus.Closed || !hasOpenLine)
+        if (status == SalesOrderStatus.Closed)
+        {
+            throw new DomainException(ShipmentRules.ClosedOrderCode, soNo);
+        }
+        if (!hasOpenLine)
         {
             throw new DomainException(LabelCode.UnknownCode, soNo);
         }
