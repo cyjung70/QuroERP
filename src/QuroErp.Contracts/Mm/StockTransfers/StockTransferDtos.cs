@@ -12,6 +12,12 @@ public static class StockTransferRoutes
     /// <summary>GET one transfer with its lines, PUT a change (updatedAt required), DELETE ?updatedAt=.</summary>
     public const string ById = Base + "/{id:long}";
 
+    /// <summary>
+    /// GET ?value=&amp;step=FROM|TO : reads a place scanned on the PDA move (MM-BR-922, MM-BR-923) for any signed-in user. FROM takes
+    /// a Location or a Pallet label, TO a Location label.
+    /// </summary>
+    public const string ScanPlace = Base + "/scan-place";
+
     /// <summary>The most rows a list returns.</summary>
     public const int MaxListSize = 1000;
 }
@@ -52,8 +58,28 @@ public sealed record StockTransferLineDto(
 /// <summary>A transfer with its lines in seq order.</summary>
 public sealed record StockTransferDto(StockTransferSummaryDto Header, IReadOnlyList<StockTransferLineDto> Lines);
 
+/// <summary>A value scanned on the PDA move and its step: FROM (where the stock comes from) or TO (where it goes).</summary>
+public sealed class StockTransferScanQuery
+{
+    public string? Value { get; init; }
+
+    public string? Step { get; init; }
+}
+
 /// <summary>
-/// A new transfer or a change. MovType null is TR. TransferDt null is today. ToWarehouseId null on an LT is the sending warehouse.
+/// A scanned place: Kind LC (a Location) or PL (a Pallet, moved whole, MM-BR-912), with its warehouse and Location. Pallet is
+/// filled for PL; its Qty is the qty the line must move.
+/// </summary>
+public sealed record StockTransferPlaceDto(
+    string Kind, long WarehouseId, string WarehouseCode, long LocationId, string LocationCode, StockTransferPalletDto? Pallet);
+
+/// <summary>The scanned Pallet: what it holds.</summary>
+public sealed record StockTransferPalletDto(
+    long Id, string PalletNo, long ItemId, string ItemCd, string? ItemName, long LotId, string LotNo, decimal Qty);
+
+/// <summary>
+/// A new transfer or a change. MovType null is LT when the transfer stays in the sending warehouse (no ToWarehouseId or the same
+/// one) and TR when it goes to another (MM-BR-922). TransferDt null is today. ToWarehouseId null is the sending warehouse.
 /// UpdatedAt is required on a change.
 /// </summary>
 public sealed record SaveStockTransferRequest(

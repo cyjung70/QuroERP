@@ -30,7 +30,7 @@ public sealed class StockTransferSchemaDefinition : ICollectionFixture<AuthSchem
 /// the default warehouse on <see cref="Day"/> and sets the negative stock mode it needs. Today is <see cref="Today"/>.
 /// </summary>
 [Collection(StockTransferSchemaDefinition.Name)]
-public class StockTransferServiceTests(AuthSchemaFixture db)
+public partial class StockTransferServiceTests(AuthSchemaFixture db)
 {
     private const string Deny = "DENY";
     private const string AllowInMonth = "ALLOW_IN_MONTH";

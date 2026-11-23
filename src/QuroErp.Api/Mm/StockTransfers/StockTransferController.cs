@@ -21,6 +21,14 @@ public sealed class StockTransferController(StockTransferService service) : Cont
     public Task<IReadOnlyList<StockTransferSummaryDto>> Search([FromQuery] StockTransferSearchQuery query, CancellationToken cancellationToken) =>
         service.SearchAsync(query, cancellationToken);
 
+    /// <summary>
+    /// A place scanned on the PDA move (MM-BR-922, MM-BR-923): FROM takes a Location or Pallet label, TO a Location label. 422
+    /// Common-E-005 without a value, Common-E-002 for another step, MM-E-923 for a value it cannot use.
+    /// </summary>
+    [HttpGet(StockTransferRoutes.ScanPlace), Authorize]
+    public Task<StockTransferPlaceDto> ScanPlace([FromQuery] StockTransferScanQuery query, CancellationToken cancellationToken) =>
+        service.ScanPlaceAsync(query, cancellationToken);
+
     /// <summary>Header and lines. 404 Common-E-006.</summary>
     [HttpGet(StockTransferRoutes.ById), Authorize]
     public Task<StockTransferDto> Get(long id, CancellationToken cancellationToken) => service.GetAsync(id, cancellationToken);
