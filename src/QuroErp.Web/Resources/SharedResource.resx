@@ -1354,4 +1354,22 @@
   <data name="Samples.Pda.StepGoods" xml:space="preserve"><value>Pallet·Lot·품목을 스캔하세요</value></data>
   <data name="Samples.Pda.ChangeLocation" xml:space="preserve"><value>Location 바꾸기</value></data>
   <data name="Samples.Pda.Saved" xml:space="preserve"><value>{0}줄을 저장했습니다 (샘플이라 남기지 않습니다).</value></data>
+  <data name="Mm.PdaReceipt.Title" xml:space="preserve"><value>PDA 입고</value></data>
+  <data name="Mm.PdaReceipt.PoNo" xml:space="preserve"><value>발주 번호</value></data>
+  <data name="Mm.PdaReceipt.Vendor" xml:space="preserve"><value>공급자</value></data>
+  <data name="Mm.PdaReceipt.ScanPo" xml:space="preserve"><value>발주 번호를 스캔하세요</value></data>
+  <data name="Mm.PdaReceipt.ScanItem" xml:space="preserve"><value>품목을 스캔하세요</value></data>
+  <data name="Mm.PdaReceipt.ScanItemOrLocation" xml:space="preserve"><value>품목 또는 받는 Location을 스캔하세요</value></data>
+  <data name="Mm.PdaReceipt.Remaining" xml:space="preserve"><value>남은 수량</value></data>
+  <data name="Mm.PdaReceipt.Qty" xml:space="preserve"><value>수량</value></data>
+  <data name="Mm.PdaReceipt.LocationId" xml:space="preserve"><value>받는 Location</value></data>
+  <data name="Mm.PdaReceipt.PalletQty" xml:space="preserve"><value>Pallet 수량</value></data>
+  <data name="Mm.PdaReceipt.SupplierLotNo" xml:space="preserve"><value>공급자 Lot</value></data>
+  <data name="Mm.PdaReceipt.ExpiryDt" xml:space="preserve"><value>유효기한</value></data>
+  <data name="Mm.PdaReceipt.ChangePo" xml:space="preserve"><value>발주 바꾸기</value></data>
+  <data name="Mm.PdaReceipt.PalletLabels" xml:space="preserve"><value>Pallet 라벨</value></data>
+  <data name="Mm.PdaReceipt.Saved" xml:space="preserve"><value>입고 {0}을(를) 저장했습니다.</value></data>
+  <data name="Mm.PdaReceipt.NothingLeft" xml:space="preserve"><value>이 발주에는 입고할 수량이 남지 않았습니다.</value></data>
+  <data name="Mm.PdaReceipt.AlreadyScanned" xml:space="preserve"><value>{0}의 남은 발주 줄은 이미 카드에 있습니다.</value></data>
+  <data name="Mm.PdaReceipt.LocationNotInWarehouse" xml:space="preserve"><value>Location {0}은(는) 이 줄의 창고 {1}에 없습니다.</value></data>
 </root>

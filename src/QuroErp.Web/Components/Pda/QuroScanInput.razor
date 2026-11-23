@@ -10,7 +10,8 @@
 @* Scan input of the PDA screens (screens.md "PDA 화면", TASK-CORE-071). It keeps the focus; the scanner's Enter confirms the value,
    which the scan API reads as the own-format DataMatrix or an item barcode (MM-BR-918, MM-BR-923). A rejected value shows a red
    message and beeps and vibrates; the input is cleared for the next scan either way. The screen decides only which kinds the
-   step takes (Accept) and can reject a read value for its own reasons with RejectAsync. *@
+   step takes (Accept) and can reject a read value for its own reasons with RejectAsync. In Raw mode the value is not sent to the
+   scan API but given to the screen as typed (OnRawScanned), e.g. a document number, with the same focus, Enter and reject. *@
 
 <div class="quro-pda-scan @(_error is null ? null : "is-rejected")">
     <label class="quro-pda-scan-label" for="@InputId">@(Label ?? L["Pda.Scan"])</label>
@@ -39,6 +40,14 @@
     /// <summary>A value the API read and the step takes.</summary>
     [Parameter]
     public EventCallback<LabelScanDto> OnScanned { get; set; }
+
+    /// <summary>The value is not a label: it goes to OnRawScanned as typed, without the scan API (e.g. a scanned PO number).</summary>
+    [Parameter]
+    public bool Raw { get; set; }
+
+    /// <summary>A value confirmed in Raw mode, trimmed. The screen reads it and calls RejectAsync when it cannot take it.</summary>
+    [Parameter]
+    public EventCallback<string> OnRawScanned { get; set; }
 
     /// <summary>The label above the input; "Scan" by default.</summary>
     [Parameter]
@@ -91,6 +100,12 @@
         _reading = true;
         try
         {
+            if (Raw)
+            {
+                _error = null;
+                await OnRawScanned.InvokeAsync(value);
+                return;
+            }
             var scan = await Scans.ReadAsync(value, Accept, CancellationToken.None);
             _error = null;
             await OnScanned.InvokeAsync(scan);

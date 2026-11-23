@@ -1,0 +1,330 @@
+@page "/mm/pda-receipt"
+@layout PdaLayout
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Mm.GoodsReceipts
+@using QuroErp.Contracts.Mm.Labels
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pda
+@using QuroErp.Web.Mm.GoodsReceipts
+@using QuroErp.Web.Mm.Locations
+@using QuroErp.Web.Mm.Warehouses
+@inject GoodsReceiptApiClient Api
+@inject LocationApiClient LocationApi
+@inject WarehouseApiClient WarehouseApi
+@inject IQuroConfirm Confirm
+@inject IJSRuntime JS
+@inject ProblemMessages Messages
+@inject IStringLocalizer<SharedResource> L
+
+@* PDA receipt (MM-UC-038, TASK-MM-060, screen type SM on the PDA frame). Scan the PO number (raw value), then items: each item
+   on the order with qty left becomes a card with its PO line (MM-BR-920, MM-BR-923). While a Location-managed card is selected a
+   Location label sets its Location (default '*', MM-BR-713). Lot-managed items take the supplier Lot number and expiry; the Lot
+   itself is numbered by the save (MM-BR-353, MM-BR-364). Save goes through the goods receipt API like the PC screen, with its
+   write access, its checks and its over-receipt question (MM-BR-102); the saved receipt's Pallet labels print as a PDF
+   (MM-BR-910, MM-BR-918). *@
+
+<PageTitle>@L["Mm.PdaReceipt.Title"]</PageTitle>
+
+<QuroPdaScreen Title="@L["Mm.PdaReceipt.Title"]" WritePath="@WritePath" LineCount="_cards.Count" OnSave="SaveAsync" Busy="_busy"
+               Error="@_error" Notice="@_notice" TestId="pda-receipt">
+    <Header>
+        <div class="quro-pda-field">
+            <span>@L["Mm.PdaReceipt.PoNo"]</span>
+            <strong data-testid="pda-receipt-po">@(_poNo ?? "-")</strong>
+        </div>
+        @if (_poNo is not null)
+        {
+            <div class="quro-pda-field">
+                <span>@L["Mm.PdaReceipt.Vendor"]</span>
+                <strong data-testid="pda-receipt-vendor">@_vendorName</strong>
+            </div>
+            <ul class="quro-pda-open" data-testid="pda-receipt-open">
+                @foreach (var line in _openLines)
+                {
+                    <li data-testid="pda-receipt-open-line">@line.PoSeq · @line.ItemCd · @Qty(line.RemainingQty) @line.Unit</li>
+                }
+            </ul>
+        }
+    </Header>
+    <Scan>
+        <QuroScanInput @ref="_scan" Raw="@(_poNo is null)" OnRawScanned="ReadPoAsync" Accept="Accept" OnScanned="OnScannedAsync"
+                       Label="@StepText" TestId="pda-receipt-scan" />
+    </Scan>
+    <Lines>
+        @foreach (var card in _cards)
+        {
+            var selected = ReferenceEquals(card, _selected);
+            <article class="quro-pda-card @(selected ? "is-selected" : null)" data-testid="pda-receipt-card" @onclick="() => _selected = card">
+                <span class="quro-pda-card-title">@card.Line.PoSeq · @card.Line.ItemCd</span>
+                <span class="quro-pda-card-meta">@card.Line.ItemName</span>
+                <span class="quro-pda-card-meta">@L["Mm.PdaReceipt.Remaining"] @Qty(card.Line.RemainingQty) @card.Line.Unit</span>
+                <div class="quro-field quro-field-input quro-field-required">
+                    <label>@L["Mm.PdaReceipt.Qty"]<span class="quro-required">*</span></label>
+                    <input type="number" inputmode="decimal" min="0" step="any" value="@card.Qty"
+                           @onchange="e => card.Qty = ParseDecimal(e.Value)" data-testid="pda-receipt-qty" />
+                </div>
+                <div class="quro-field quro-field-readonly">
+                    <label>@L["Mm.PdaReceipt.LocationId"]</label>
+                    <input type="text" readonly value="@card.LocationCode" data-testid="pda-receipt-location" />
+                </div>
+                <div class="quro-field quro-field-input">
+                    <label>@L["Mm.PdaReceipt.PalletQty"]</label>
+                    <input type="number" inputmode="decimal" min="0" step="any" value="@card.PalletQty"
+                           @onchange="e => card.PalletQty = ParseDecimal(e.Value)" data-testid="pda-receipt-pallet-qty" />
+                </div>
+                @if (card.Line.LotManaged)
+                {
+                    <div class="quro-field quro-field-input">
+                        <label>@L["Mm.PdaReceipt.SupplierLotNo"]</label>
+                        <input type="text" maxlength="30" value="@card.SupplierLotNo"
+                               @onchange="e => card.SupplierLotNo = Clean(e.Value)" data-testid="pda-receipt-supplier-lot" />
+                    </div>
+                    <div class="quro-field quro-field-input">
+                        <label>@L["Mm.PdaReceipt.ExpiryDt"]</label>
+                        <input type="date" value="@card.ExpiryDt?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                               @onchange="e => card.ExpiryDt = ParseDate(e.Value)" data-testid="pda-receipt-expiry" />
+                    </div>
+                }
+                <button type="button" @onclick="() => Remove(card)" @onclick:stopPropagation="true" data-testid="pda-receipt-remove">
+                    @L["Common.Delete"]
+                </button>
+            </article>
+        }
+    </Lines>
+    <Actions>
+        <button type="button" disabled="@(_poNo is null || _busy)" @onclick="ChangePo" data-testid="pda-receipt-change-po">
+            @L["Mm.PdaReceipt.ChangePo"]
+        </button>
+        <button type="button" disabled="@(!HasPallets || _busy)" @onclick="PalletLabelsAsync" data-testid="pda-receipt-labels">
+            @L["Mm.PdaReceipt.PalletLabels"]
+        </button>
+    </Actions>
+</QuroPdaScreen>
+
+@code {
+    /// <summary>The PC screen the save goes through: its write access enables Save (BC-BR-214).</summary>
+    private const string WritePath = "/mm/goods-receipt";
+
+    private const string OverReceiptField = "confirmOverReceipt";
+    private const string NotSavedCode = "Mm.GoodsReceipt.OverReceiptNotSaved";
+    private const string Star = "*";
+
+    private static readonly string[] ItemStep = [LabelKinds.Item];
+    private static readonly string[] ItemOrLocationStep = [LabelKinds.Item, LabelKinds.Location];
+
+    private readonly List<Card> _cards = [];
+    private QuroScanInput? _scan;
+    private IReadOnlyList<OpenPoLineDto> _openLines = [];
+    private string? _poNo;
+    private long? _vendorId;
+    private string? _vendorName;
+    private Card? _selected;
+    private GoodsReceiptDto? _saved;
+    private string? _error;
+    private string? _notice;
+    private bool _busy;
+
+    private IReadOnlyList<string> Accept => _selected?.Line.LocationManaged == true ? ItemOrLocationStep : ItemStep;
+
+    private string StepText => _poNo is null
+        ? L["Mm.PdaReceipt.ScanPo"]
+        : _selected?.Line.LocationManaged == true ? L["Mm.PdaReceipt.ScanItemOrLocation"] : L["Mm.PdaReceipt.ScanItem"];
+
+    private bool HasPallets => _saved?.Lines.Any(l => l.PalletNos is { Count: > 0 }) == true;
+
+    // MM-BR-920: the scanned PO number gives the vendor and the lines left to receive; MM-E-923 / MM-E-024 reject it
+    private async Task ReadPoAsync(string value)
+    {
+        try
+        {
+            var lines = await Api.OpenPoLinesByPoAsync(value, null, CancellationToken.None);
+            _poNo = lines.FirstOrDefault()?.PoNo ?? value.ToUpperInvariant();
+            _vendorId = lines.FirstOrDefault()?.VendorId;
+            _vendorName = lines.FirstOrDefault()?.VendorName;
+            _openLines = lines;
+            _error = null;
+            _notice = lines.Count == 0 ? L["Mm.PdaReceipt.NothingLeft"].Value : null;
+        }
+        catch (ApiProblemException e)
+        {
+            await _scan!.RejectAsync(Messages.Get(e.Problem));
+        }
+    }
+
+    private async Task OnScannedAsync(LabelScanDto scan)
+    {
+        _error = null;
+        if (scan.Kind == LabelKinds.Location)
+        {
+            await SetLocationAsync(scan);
+            return;
+        }
+        await AddItemAsync(scan);
+    }
+
+    // MM-BR-923: an item with no line left on the order is refused by the API (MM-E-923). A PO line already on a card is selected
+    // again; the next line of the same item gets a new card
+    private async Task AddItemAsync(LabelScanDto scan)
+    {
+        IReadOnlyList<OpenPoLineDto> lines;
+        try
+        {
+            lines = await Api.OpenPoLinesByPoAsync(_poNo!, scan.ItemId, CancellationToken.None);
+        }
+        catch (ApiProblemException e)
+        {
+            await _scan!.RejectAsync(Messages.Get(e.Problem));
+            return;
+        }
+        var line = lines.FirstOrDefault(l => _cards.All(c => c.Line.PurchaseOrderLineId != l.PurchaseOrderLineId));
+        if (line is null)
+        {
+            _selected = _cards.LastOrDefault(c => lines.Any(l => l.PurchaseOrderLineId == c.Line.PurchaseOrderLineId));
+            _notice = L["Mm.PdaReceipt.AlreadyScanned", scan.ItemCd ?? ""];
+            return;
+        }
+        var card = new Card(line) { Qty = line.RemainingQty };
+        _cards.Add(card);
+        _selected = card;
+        _notice = null;
+    }
+
+    // MM-BR-713: LC|warehouse code|Location code; the Location must be one of the line's warehouse
+    private async Task SetLocationAsync(LabelScanDto scan)
+    {
+        var card = _selected!;
+        var warehouses = await WarehouseApi.GetOptionsAsync(CancellationToken.None);
+        var warehouse = warehouses.FirstOrDefault(w => w.Id == card.Line.WarehouseId);
+        var location = warehouse is not null && string.Equals(warehouse.WarehouseCode, scan.Parts[0], StringComparison.OrdinalIgnoreCase)
+            ? (await LocationApi.GetOptionsAsync(warehouse.Id, CancellationToken.None))
+                .FirstOrDefault(o => string.Equals(o.LocationCode, scan.Parts[1], StringComparison.OrdinalIgnoreCase))
+            : null;
+        if (location is null)
+        {
+            await _scan!.RejectAsync(L["Mm.PdaReceipt.LocationNotInWarehouse", string.Join(" / ", scan.Parts), warehouse?.WarehouseCode ?? "-"]);
+            return;
+        }
+        card.LocationId = location.LocationCode == Star ? null : location.Id;
+        card.LocationCode = location.LocationCode;
+    }
+
+    // Same request and over-receipt question as the PC screen (MM-BR-102); the checks are the server's
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        _error = null;
+        _notice = null;
+        try
+        {
+            bool? confirmOverReceipt = null;
+            while (true)
+            {
+                try
+                {
+                    _saved = await Api.CreateAsync(Request(confirmOverReceipt), CancellationToken.None);
+                    break;
+                }
+                catch (ApiProblemException e) when (confirmOverReceipt is null && e.Problem.ConfirmField == OverReceiptField)
+                {
+                    if (!await Confirm.ConfirmAsync(Messages.Get(e.Problem)))
+                    {
+                        _error = L[NotSavedCode];
+                        return;
+                    }
+                    confirmOverReceipt = true;
+                }
+            }
+            _notice = L["Mm.PdaReceipt.Saved", _saved.GrNo];
+            ClearPo();
+        }
+        catch (ApiProblemException e)
+        {
+            _error = Messages.Get(e.Problem);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private SaveGoodsReceiptRequest Request(bool? confirmOverReceipt) => new(
+        _vendorId ?? 0, DateOnly.FromDateTime(DateTime.Today), _cards[0].Line.WarehouseId, null, null, null, null,
+        [.. _cards.Select(c => new SaveGoodsReceiptLineRequest(
+            null, c.Line.ItemId, null, c.Line.WarehouseId, c.Qty ?? 0m, c.Line.PoPrc, c.Line.TaxCodeId,
+            PurchaseOrderLineId: c.Line.PurchaseOrderLineId, LocationId: c.LocationId, SupplierLotNo: c.SupplierLotNo,
+            ExpiryDt: c.ExpiryDt, PalletQty: c.PalletQty))],
+        null, confirmOverReceipt);
+
+    // MM-BR-918: the labels of the saved receipt's Pallets as a PDF
+    private async Task PalletLabelsAsync()
+    {
+        if (_saved is null)
+        {
+            return;
+        }
+        _busy = true;
+        try
+        {
+            var file = await Api.PalletLabelsAsync(_saved.Id, _saved.GrNo, CancellationToken.None);
+            await QuroExcel.DownloadAsync(JS, file.FileName, file.Content);
+        }
+        catch (ApiProblemException e)
+        {
+            _error = Messages.Get(e.Problem);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void Remove(Card card)
+    {
+        _cards.Remove(card);
+        if (ReferenceEquals(_selected, card))
+        {
+            _selected = _cards.LastOrDefault();
+        }
+    }
+
+    private void ChangePo()
+    {
+        ClearPo();
+        _saved = null;
+        _error = null;
+        _notice = null;
+    }
+
+    private void ClearPo()
+    {
+        _cards.Clear();
+        _selected = null;
+        _openLines = [];
+        _poNo = null;
+        _vendorId = null;
+        _vendorName = null;
+    }
+
+    private static string Qty(decimal value) => value.ToString("0.####", CultureInfo.CurrentCulture);
+
+    private static decimal? ParseDecimal(object? value) =>
+        decimal.TryParse(value?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : null;
+
+    private static DateOnly? ParseDate(object? value) =>
+        DateOnly.TryParseExact(value?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
+
+    private static string? Clean(object? value) => string.IsNullOrWhiteSpace(value?.ToString()) ? null : value.ToString()!.Trim();
+
+    /// <summary>A scanned PO line and what the user entered for it. LocationId null is '*'.</summary>
+    private sealed class Card(OpenPoLineDto line)
+    {
+        public OpenPoLineDto Line { get; } = line;
+        public decimal? Qty { get; set; }
+        public long? LocationId { get; set; }
+        public string LocationCode { get; set; } = Star;
+        public decimal? PalletQty { get; set; }
+        public string? SupplierLotNo { get; set; }
+        public DateOnly? ExpiryDt { get; set; }
+    }
+}
