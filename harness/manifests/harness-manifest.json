@@ -340,7 +340,7 @@
     },
     {
       "path": "docs/business-rules/SD/shipment.md",
-      "sha256": "ce1702e81bfc3f4dbd836e0b08a8f928422a309ab98762f45eaec48ef6f4f846"
+      "sha256": "77fa3321b1ff3f44351bbd655eec84fa4ecc4264d6c931978a0b313ac3f5dc07"
     },
     {
       "path": "docs/glossary.md",
@@ -660,7 +660,7 @@
     },
     {
       "path": "docs/specifications/SD/pda-issue.md",
-      "sha256": "4d38f371322a2b9ed64fab336b204f8c7d123f15f3d4b33a0c4a92ce0106eb11"
+      "sha256": "08aa182c3722c145ed2e2c8cbc5b1d6c5a871881b88435556aea532d28f8edda"
     },
     {
       "path": "docs/specifications/SD/quotation.md",
@@ -844,7 +844,7 @@
     },
     {
       "path": "docs/specifications/SD/shipment.md",
-      "sha256": "6e57b47d6e6c9b05fd9c172d4d1b6b887c6e5c9370cc049634841eb455defb6f"
+      "sha256": "22f4de40af7ab2480e457e915f6a0dc4d1c9a7d96f22f95ea4f5eef1b3ef5dd8"
     },
     {
       "path": "GEMINI.md",
