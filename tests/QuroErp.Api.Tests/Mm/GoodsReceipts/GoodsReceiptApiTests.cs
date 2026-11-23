@@ -50,4 +50,17 @@ public class GoodsReceiptApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         (await factory.NonAdmin().GetAsync(path)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await factory.CreateClient().GetAsync(path)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    [Theory, Trait("Id", "MM-UC-038-T02"), Trait("Id", "MM-UT-920")]
+    [InlineData("")]
+    [InlineData("?poNo=%20&itemId=1")]
+    public async Task OpenPoLines_WithoutVendorOrPoNumber_Returns400(string query)
+    {
+        var client = await factory.AdminAsync();
+
+        using var response = await client.GetAsync($"{GoodsReceiptRoutes.Base}/{GoodsReceiptRoutes.OpenPoLines}{query}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.ReadProblemAsync()).GetProperty("code").GetString().Should().Be("Common-E-005");
+    }
 }
