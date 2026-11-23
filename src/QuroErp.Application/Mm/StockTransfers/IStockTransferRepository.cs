@@ -26,6 +26,9 @@ public sealed record NewStockTransferLine(
 /// <summary>A warehouse a transfer can name: its code and whether it is in use.</summary>
 public sealed record TransferWarehouse(long Id, string WarehouseCode, bool InUse);
 
+/// <summary>An original movement of a transfer that is not reversed yet: below 0 the sending side, above 0 the receiving side.</summary>
+public sealed record OpenTransferMovement(long Id, decimal Qty);
+
 /// <summary>mm_stock_transfer and mm_stock_transfer_line, and the Pallet moves of their lines (MM-BR-705~708, MM-BR-912).</summary>
 public interface IStockTransferRepository
 {
@@ -51,8 +54,9 @@ public interface IStockTransferRepository
     /// <summary>Deletes the transfer and its lines; false when updatedAt is no longer the stored one.</summary>
     Task<bool> DeleteAsync(long id, DateTimeOffset updatedAt, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>The ids of the original movements of the transfer number that are not reversed yet.</summary>
-    Task<IReadOnlyList<long>> FindOpenMovementIdsAsync(string transferNo, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>The original movements of the transfer number that are not reversed yet, in id order.</summary>
+    Task<IReadOnlyList<OpenTransferMovement>> FindOpenMovementsAsync(
+        string transferNo, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>MM-BR-912: puts the Pallet at the warehouse and Location and adds its MOVE event.</summary>
     Task MovePalletAsync(
