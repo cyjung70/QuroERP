@@ -175,13 +175,23 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
                coalesce(l.item_id, 0) AS item_id, i.item_cd, coalesce(l.item_name, i.item_name) AS item_name, i.unit, l.warehouse_id,
                coalesce(l.po_qty, 0) AS po_qty, coalesce(l.receipt_qty, 0) AS received_qty,
                coalesce(l.po_qty, 0) - coalesce(l.receipt_qty, 0) AS remaining_qty, coalesce(l.po_prc, 0) AS po_prc,
-               coalesce(l.dc_rate, 0) AS dc_rate, l.tax_code_id, p.currency_code, p.exchange_rate
+               coalesce(l.dc_rate, 0) AS dc_rate, l.tax_code_id, p.currency_code, p.exchange_rate,
+               p.vendor_id, v.v_name AS vendor_name, coalesce(i.lot_managed, false) AS lot_managed,
+               coalesce(i.location_managed, false) AS location_managed
         FROM mm_purchase_order_line l
         JOIN mm_purchase_order p ON p.id = l.purchase_order_id
         LEFT JOIN bc_item i ON i.id = l.item_id
-        WHERE p.vendor_id = @VendorId AND coalesce(p.status, 'PO') IN ('PO', 'RE')
+        LEFT JOIN bc_vendor v ON v.id = p.vendor_id
+        WHERE (@VendorId::bigint IS NULL OR p.vendor_id = @VendorId) AND (@PoNo::varchar IS NULL OR p.po_no = @PoNo)
+          AND coalesce(p.status, 'PO') IN ('PO', 'RE')
           AND coalesce(l.po_qty, 0) - coalesce(l.receipt_qty, 0) > 0
         ORDER BY p.po_no, l.seq
+        """;
+
+    private const string SelectPdaPo = """
+        SELECT p.vendor_id, p.status, (SELECT i.item_cd FROM bc_item i WHERE i.id = @ItemId) AS item_cd
+        FROM mm_purchase_order p
+        WHERE p.po_no = @PoNo
         """;
 
     public async Task<IReadOnlyList<GoodsReceiptSummaryRow>> SearchAsync(
@@ -342,9 +352,14 @@ internal sealed class GoodsReceiptRepository : IGoodsReceiptRepository
         await transaction.Connection!.ExecuteAsync(new CommandDefinition(
             Delete, new { Id = id, UpdatedAt = updatedAt }, transaction, cancellationToken: cancellationToken)) == 1;
 
-    public async Task<IReadOnlyList<OpenPoLineDto>> FindOpenPoLinesAsync(long vendorId, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        [.. await transaction.Connection!.QueryAsync<OpenPoLineDto>(
-            new CommandDefinition(SelectOpenPoLines, new { VendorId = vendorId }, transaction, cancellationToken: cancellationToken))];
+    public async Task<IReadOnlyList<OpenPoLineDto>> FindOpenPoLinesAsync(
+        long? vendorId, string? poNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        [.. await transaction.Connection!.QueryAsync<OpenPoLineDto>(new CommandDefinition(
+            SelectOpenPoLines, new { VendorId = vendorId, PoNo = poNo }, transaction, cancellationToken: cancellationToken))];
+
+    public Task<PdaPoRow?> FindPdaPoAsync(string poNo, long? itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.QuerySingleOrDefaultAsync<PdaPoRow?>(new CommandDefinition(
+            SelectPdaPo, new { PoNo = poNo, ItemId = itemId }, transaction, cancellationToken: cancellationToken));
 
     private static async Task InsertLinesAsync(
         long id, IEnumerable<GoodsReceiptLine> lines, string user, IDbTransaction transaction, CancellationToken cancellationToken)

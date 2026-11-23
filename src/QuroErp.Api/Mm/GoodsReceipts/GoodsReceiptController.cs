@@ -36,10 +36,15 @@ public sealed class GoodsReceiptController(GoodsReceiptService service, GoodsRec
         return File(output.Content, output.ContentType);
     }
 
-    /// <summary>PO lines of the vendor's PO and RE orders with remaining qty above 0 (MM-BR-113).</summary>
+    /// <summary>
+    /// PO lines of PO and RE orders with remaining qty above 0 (MM-BR-113): of the vendor, or of the order with poNo for the PDA
+    /// (MM-BR-920). itemId keeps the order's lines of a scanned item. 422 Common-E-005 without vendorId or poNo; MM-E-923 for an
+    /// unknown PO number or an item with no remaining line on it (MM-BR-923); MM-E-024 for an order that cannot be received.
+    /// </summary>
     [HttpGet(GoodsReceiptRoutes.OpenPoLines), Authorize(Policy = Screen)]
-    public Task<IReadOnlyList<OpenPoLineDto>> OpenPoLines([FromQuery] long vendorId, CancellationToken cancellationToken) =>
-        service.OpenPoLinesAsync(vendorId, cancellationToken);
+    public Task<IReadOnlyList<OpenPoLineDto>> OpenPoLines(
+        [FromQuery] long? vendorId, [FromQuery] string? poNo, [FromQuery] long? itemId, CancellationToken cancellationToken) =>
+        service.OpenPoLinesAsync(vendorId, poNo, itemId, cancellationToken);
 
     /// <summary>
     /// 201 with the new receipt and its GR number; its stock is received. 422 MM-E-101~703, the inventory checks, Common-E-005/006,

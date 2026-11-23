@@ -6,7 +6,10 @@ public static class GoodsReceiptRoutes
     /// <summary>GET list (query <see cref="GoodsReceiptSearchQuery"/>), POST new receipt; GET, PUT, DELETE {Base}/{id}.</summary>
     public const string Base = "api/mm/goods-receipts";
 
-    /// <summary>GET {Base}/open-po-lines?vendorId: PO lines the receipt can import (MM-BR-113).</summary>
+    /// <summary>
+    /// GET {Base}/open-po-lines?vendorId: PO lines the receipt can import (MM-BR-113). The PDA asks with poNo (and itemId for a
+    /// scanned item) instead: the remaining lines of that one order (MM-BR-920, MM-BR-923).
+    /// </summary>
     public const string OpenPoLines = "open-po-lines";
 
     /// <summary>GET {Base}/{id}/pallet-labels: the labels of the receipt's ACTIVE Pallets as a PDF (MM-BR-918, MM-BR-919).</summary>
@@ -143,7 +146,9 @@ public sealed record SaveGoodsReceiptLineRequest(
 
 /// <summary>
 /// A PO line the receipt can import: from an approved or partly received order of the vendor with RemainingQty above 0
-/// (MM-BR-113, MM-BR-024). RemainingQty is the default quantity and WarehouseId the default warehouse.
+/// (MM-BR-113, MM-BR-024). RemainingQty is the default quantity and WarehouseId the default warehouse. VendorId and VendorName
+/// are the order's vendor, for the PDA that starts from a PO number; LotManaged and LocationManaged tell which line fields the
+/// item takes (MM-BR-363, MM-BR-713).
 /// </summary>
 public sealed record OpenPoLineDto(
     long PurchaseOrderLineId,
@@ -163,4 +168,8 @@ public sealed record OpenPoLineDto(
     decimal DcRate,
     long TaxCodeId,
     string CurrencyCode,
-    decimal ExchangeRate);
+    decimal ExchangeRate,
+    long? VendorId = null,
+    string? VendorName = null,
+    bool LotManaged = false,
+    bool LocationManaged = false);
