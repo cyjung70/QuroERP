@@ -216,7 +216,7 @@ public class LotServiceTests(AuthSchemaFixture db)
             .Should().Be(Day);
     }
 
-    [DatabaseFact, Trait("Id", "MM-UT-716"), Trait("Rule", "MM-BR-716"), Trait("Rule", "MM-BR-713")]
+    [DatabaseFact, Trait("Id", "MM-UT-716"), Trait("Id", "SD-UC-054-T01"), Trait("Rule", "MM-BR-716"), Trait("Rule", "MM-BR-713")]
     public async Task Suggest_FillsFromLotStarThenTheOldestLots_OverLocationsInUse()
     {
         var (main, _) = await WarehousesAsync();
@@ -329,7 +329,7 @@ public class LotServiceTests(AuthSchemaFixture db)
         (await short_.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(SetComponent.NotEnoughStock);
     }
 
-    [DatabaseFact, Trait("Id", "MM-UT-916"), Trait("Rule", "MM-BR-916"), Trait("Rule", "MM-BR-716")]
+    [DatabaseFact, Trait("Id", "MM-UT-916"), Trait("Id", "SD-UC-054-T01"), Trait("Rule", "MM-BR-916"), Trait("Rule", "MM-BR-716")]
     public async Task PalletStock_IsLeftOutOfTheSuggestion_AndALineThatIsNotAPalletLineCannotTakeIt()
     {
         var (main, _) = await WarehousesAsync();
