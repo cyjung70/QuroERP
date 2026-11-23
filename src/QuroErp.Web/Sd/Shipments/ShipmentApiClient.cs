@@ -83,6 +83,32 @@ public sealed class ShipmentApiClient(HttpClient http, AccessTokenProvider token
         return await response.Content.ReadFromJsonAsync<List<UnshippedInvoiceLineDto>>(cancellationToken) ?? [];
     }
 
+    /// <summary>PDA: the lines left to ship of the order with this number, only those of itemId when given (MM-BR-921, MM-BR-923).</summary>
+    /// <exception cref="ApiProblemException">422 MM-E-923, SD-E-172 for a closed order, SD-E-174 for a BILL_THEN_SHIP order.</exception>
+    public async Task<IReadOnlyList<OpenSalesOrderDto>> OpenOrderLinesByNoAsync(string soNo, long? itemId, CancellationToken cancellationToken)
+    {
+        var parameters = new List<string>();
+        Add(parameters, "soNo", soNo.Trim());
+        Add(parameters, "itemId", itemId?.ToString(CultureInfo.InvariantCulture));
+        using var response = await http.SendAuthorizedAsync(
+            tokens, new HttpRequestMessage(HttpMethod.Get, Uri($"{ShipmentRoutes.Base}/{ShipmentRoutes.OpenOrderLines}", parameters)), cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<OpenSalesOrderDto>>(cancellationToken) ?? [];
+    }
+
+    /// <summary>PDA: the lines left to ship of the BILL_THEN_SHIP invoice with this number, only those of itemId when given.</summary>
+    /// <exception cref="ApiProblemException">422 MM-E-923, SD-E-175 for an invoice that is void or not BILL_THEN_SHIP.</exception>
+    public async Task<IReadOnlyList<UnshippedInvoiceLineDto>> UnshippedInvoiceLinesByNoAsync(
+        string dnNo, long? itemId, CancellationToken cancellationToken)
+    {
+        var parameters = new List<string>();
+        Add(parameters, "dnNo", dnNo.Trim());
+        Add(parameters, "itemId", itemId?.ToString(CultureInfo.InvariantCulture));
+        using var response = await http.SendAuthorizedAsync(
+            tokens, new HttpRequestMessage(HttpMethod.Get, Uri($"{ShipmentRoutes.Base}/{ShipmentRoutes.UnshippedInvoiceLines}", parameters)),
+            cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<UnshippedInvoiceLineDto>>(cancellationToken) ?? [];
+    }
+
     /// <summary>The warehouse's ACTIVE Pallets by Pallet number start or item, in number order (MM-BR-913).</summary>
     public async Task<IReadOnlyList<ShipmentPalletDto>> PalletsAsync(ShipmentPalletQuery query, CancellationToken cancellationToken)
     {
