@@ -50,10 +50,16 @@ public sealed class ShipmentController(ShipmentService service, ShipmentPrintSer
     public Task<ShipmentDto> Void(long id, VoidShipmentRequest request, CancellationToken cancellationToken) =>
         service.VoidAsync(id, request.UpdatedAt, User.Identity!.Name!, cancellationToken);
 
-    /// <summary>The customer's orders with lines left to ship (SD-BR-172).</summary>
+    /// <summary>
+    /// Orders with lines left to ship (SD-BR-172): of the customer, or the order with soNo for the PDA (MM-BR-921). itemId keeps the
+    /// order's lines of a scanned item. 400 Common-E-005 without customerId or soNo; 422 MM-E-923 for an unknown order, one with
+    /// nothing left to ship or an item with no line left on it (MM-BR-923), SD-E-172 for a closed (CL) order, SD-E-174 for a
+    /// BILL_THEN_SHIP order, Common-E-006 for an order of another customer.
+    /// </summary>
     [HttpGet(ShipmentRoutes.OpenOrderLines), Authorize(Policy = Screen)]
-    public Task<IReadOnlyList<OpenSalesOrderDto>> OpenOrderLines([FromQuery] long customerId, CancellationToken cancellationToken) =>
-        service.OpenOrderLinesAsync(customerId, cancellationToken);
+    public Task<IReadOnlyList<OpenSalesOrderDto>> OpenOrderLines(
+        [FromQuery] long? customerId, [FromQuery] string? soNo, [FromQuery] long? itemId, CancellationToken cancellationToken) =>
+        service.OpenOrderLinesAsync(customerId, soNo, itemId, cancellationToken);
 
     /// <summary>SHIP_THEN_BILL lines of the customer in this currency left to bill (SD-BR-115), for the invoice screen.</summary>
     [HttpGet(ShipmentRoutes.UnbilledLines), Authorize(Policy = Screen)]
@@ -61,10 +67,16 @@ public sealed class ShipmentController(ShipmentService service, ShipmentPrintSer
         [FromQuery] long customerId, [FromQuery] string currencyCode, CancellationToken cancellationToken) =>
         service.UnbilledLinesAsync(customerId, currencyCode, cancellationToken);
 
-    /// <summary>BILL_THEN_SHIP invoice lines of the customer left to ship (SD-BR-175).</summary>
+    /// <summary>
+    /// BILL_THEN_SHIP invoice lines left to ship (SD-BR-175): of the customer, or of the invoice with dnNo for the PDA (MM-BR-921).
+    /// itemId keeps the invoice's lines of a scanned item. 400 Common-E-005 without customerId or dnNo; 422 MM-E-923 for an unknown
+    /// invoice, one with nothing left to ship or an item with no line left on it (MM-BR-923), SD-E-175 for an invoice that is void
+    /// or not BILL_THEN_SHIP, Common-E-006 for an invoice of another customer.
+    /// </summary>
     [HttpGet(ShipmentRoutes.UnshippedInvoiceLines), Authorize(Policy = Screen)]
-    public Task<IReadOnlyList<UnshippedInvoiceLineDto>> UnshippedInvoiceLines([FromQuery] long customerId, CancellationToken cancellationToken) =>
-        service.UnshippedInvoiceLinesAsync(customerId, cancellationToken);
+    public Task<IReadOnlyList<UnshippedInvoiceLineDto>> UnshippedInvoiceLines(
+        [FromQuery] long? customerId, [FromQuery] string? dnNo, [FromQuery] long? itemId, CancellationToken cancellationToken) =>
+        service.UnshippedInvoiceLinesAsync(customerId, dnNo, itemId, cancellationToken);
 
     /// <summary>
     /// The warehouse's ACTIVE Pallets a line can ship whole (MM-BR-913), by Pallet number start or item, in number order, at most

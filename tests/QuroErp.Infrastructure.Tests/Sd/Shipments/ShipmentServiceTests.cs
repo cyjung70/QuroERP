@@ -337,7 +337,8 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         saved.Status.Should().Be("BL");
     }
 
-    [DatabaseFact, Trait("Id", "SD-UC-051-T09"), Trait("Id", "MM-UT-714"), Trait("Id", "MM-UT-356")]
+    [DatabaseFact, Trait("Id", "SD-UC-051-T09"), Trait("Id", "SD-UC-054-T02"), Trait("Id", "SD-UC-054-T06"), Trait("Id", "MM-UT-714"),
+     Trait("Id", "MM-UT-356")]
     public async Task LotItems_WithoutALotUseTheEmptyLotStar_AndALotBalanceBelowZeroIsRefusedEvenInAllowInMonth()
     {
         await ModeAsync("DENY");
@@ -413,7 +414,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await OnHandAsync(m.Service, m.Main)).Should().Be(0m, "a service item has no stock");
     }
 
-    [DatabaseFact, Trait("Id", "SD-UC-051-T10"), Trait("Id", "MM-UT-001")]
+    [DatabaseFact, Trait("Id", "SD-UC-051-T10"), Trait("Id", "SD-UC-054-T07"), Trait("Id", "MM-UT-001")]
     public async Task Deny_RefusesAnIssueOverTheWarehouseOnHand()
     {
         await ModeAsync("DENY");
@@ -426,7 +427,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await OnHandAsync(m.Item, m.Main)).Should().Be(3m);
     }
 
-    [DatabaseFact, Trait("Id", "SD-UC-051-T11"), Trait("Id", "MM-UT-002")]
+    [DatabaseFact, Trait("Id", "SD-UC-051-T11"), Trait("Id", "SD-UC-054-T08"), Trait("Id", "MM-UT-002")]
     public async Task AllowInMonth_SavesAMidMonthNegative_AndMarksIt()
     {
         await ModeAsync("ALLOW_IN_MONTH");
@@ -440,7 +441,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await OnHandAsync(m.Item, m.Main)).Should().Be(5m);
     }
 
-    [DatabaseFact, Trait("Id", "SD-UC-051-T12"), Trait("Id", "MM-UT-009")]
+    [DatabaseFact, Trait("Id", "SD-UC-051-T12"), Trait("Id", "SD-UC-054-T09"), Trait("Id", "MM-UT-009")]
     public async Task Deny_RefusesABackDatedIssueThatMakesALaterDateNegative()
     {
         await ModeAsync("DENY");
@@ -454,7 +455,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await act.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(PointInTimeStock.NegativeOnDate);
     }
 
-    [DatabaseFact, Trait("Id", "SD-UC-051-T13"), Trait("Id", "MM-UT-010")]
+    [DatabaseFact, Trait("Id", "SD-UC-051-T13"), Trait("Id", "SD-UC-054-T10"), Trait("Id", "MM-UT-010")]
     public async Task AllowInMonth_RefusesANegativeMonthEnd_WithNoMovementOnTheLastDay()
     {
         await ModeAsync("ALLOW_IN_MONTH");
@@ -497,7 +498,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
             .Should().Contain("USD");
     }
 
-    [DatabaseFact, Trait("Id", "MM-UT-913"), Trait("Rule", "MM-BR-913"), Trait("Rule", "MM-BR-716")]
+    [DatabaseFact, Trait("Id", "MM-UT-913"), Trait("Id", "SD-UC-054-T03"), Trait("Rule", "MM-BR-913"), Trait("Rule", "MM-BR-716")]
     public async Task PalletLine_ShipsTheWholePallet_ClosesIt_AndADeleteOrVoidReopensIt()
     {
         await ModeAsync("DENY");

@@ -323,13 +323,34 @@ internal sealed class ShipmentRepository : IShipmentRepository
                o.rep, o.ship_via, o.ship_name, o.ship_addr1, o.ship_addr2, o.ship_city, o.ship_state, o.ship_zip_code, o.ship_country, o.ship_phone,
                l.id AS sales_order_line_id, l.seq, l.item_id, i.item_cd, coalesce(l.item_name, i.item_name) AS item_name, i.unit,
                coalesce(l.so_qty, 0) AS so_qty, l.ship_qty, coalesce(l.so_prc, 0) AS so_prc, l.dc_cd, coalesce(l.dc_rate, 0) AS dc_rate,
-               l.tax_code_id
+               l.tax_code_id, o.customer_id, c.c_name AS customer_name, coalesce(i.lot_managed, false) AS lot_managed,
+               coalesce(i.location_managed, false) AS location_managed
         FROM sd_sales_order o
         JOIN sd_sales_order_line l ON l.sales_order_id = o.id
         JOIN bc_item i ON i.id = l.item_id
-        WHERE o.customer_id = @CustomerId AND coalesce(o.status, 'SO') <> 'CL' AND o.billing_flow <> 'BILL_THEN_SHIP'
+        LEFT JOIN bc_customer c ON c.id = o.customer_id
+        WHERE (@CustomerId::bigint IS NULL OR o.customer_id = @CustomerId) AND (@SoNo::varchar IS NULL OR o.so_no = @SoNo)
+          AND coalesce(o.status, 'SO') <> 'CL' AND o.billing_flow <> 'BILL_THEN_SHIP'
           AND coalesce(l.so_qty, 0) - l.ship_qty > 0
         ORDER BY o.so_dt NULLS LAST, o.so_no, l.seq
+        """;
+
+    private const string SelectPdaOrder = """
+        SELECT o.customer_id, o.status, o.billing_flow,
+               EXISTS (SELECT 1 FROM sd_sales_order_line l WHERE l.sales_order_id = o.id AND coalesce(l.so_qty, 0) - l.ship_qty > 0)
+                   AS has_open_line,
+               (SELECT i.item_cd FROM bc_item i WHERE i.id = @ItemId) AS item_cd
+        FROM sd_sales_order o
+        WHERE o.so_no = @SoNo
+        """;
+
+    private const string SelectPdaInvoice = """
+        SELECT d.customer_id, d.status, d.billing_flow,
+               EXISTS (SELECT 1 FROM sd_sales_invoice_line l
+                       WHERE l.sales_invoice_id = d.id AND coalesce(l.dn_qty, 0) - l.shipped_qty - l.cancelled_qty > 0) AS has_open_line,
+               (SELECT i.item_cd FROM bc_item i WHERE i.id = @ItemId) AS item_cd
+        FROM sd_sales_invoice d
+        WHERE d.dn_no = @DnNo AND coalesce(d.type, 'IV') = 'IV'
         """;
 
     private const string SelectUnbilledLines = """
@@ -350,11 +371,15 @@ internal sealed class ShipmentRepository : IShipmentRepository
         SELECT l.id AS sales_invoice_line_id, d.id AS sales_invoice_id, d.dn_no, l.seq, l.item_id, i.item_cd, coalesce(l.item_name, i.item_name) AS item_name,
                coalesce(l.dn_qty, 0) AS invoiced_qty, l.shipped_qty, l.cancelled_qty,
                coalesce(l.dn_qty, 0) - l.shipped_qty - l.cancelled_qty AS unshipped_qty, coalesce(l.dn_prc, 0) AS prc, l.dc_cd,
-               coalesce(l.dc_rate, 0) AS dc_rate, l.tax_code_id, d.currency_code, d.exchange_rate, i.unit
+               coalesce(l.dc_rate, 0) AS dc_rate, l.tax_code_id, d.currency_code, d.exchange_rate, i.unit,
+               coalesce(i.lot_managed, false) AS lot_managed, coalesce(i.location_managed, false) AS location_managed, d.customer_id,
+               c.c_name AS customer_name
         FROM sd_sales_invoice d
         JOIN sd_sales_invoice_line l ON l.sales_invoice_id = d.id
         JOIN bc_item i ON i.id = l.item_id
-        WHERE d.customer_id = @CustomerId AND d.billing_flow = 'BILL_THEN_SHIP' AND coalesce(d.status, 'OP') <> 'VO'
+        LEFT JOIN bc_customer c ON c.id = d.customer_id
+        WHERE (@CustomerId::bigint IS NULL OR d.customer_id = @CustomerId) AND (@DnNo::varchar IS NULL OR d.dn_no = @DnNo)
+          AND d.billing_flow = 'BILL_THEN_SHIP' AND coalesce(d.status, 'OP') <> 'VO'
           AND coalesce(l.dn_qty, 0) - l.shipped_qty - l.cancelled_qty > 0
         ORDER BY d.dn_dt NULLS LAST, d.dn_no, l.seq
         """;
@@ -649,9 +674,18 @@ internal sealed class ShipmentRepository : IShipmentRepository
         await transaction.Connection!.ExecuteAsync(new CommandDefinition(VoidInvoiceHeader, parameters, transaction, cancellationToken: cancellationToken));
     }
 
-    public async Task<IReadOnlyList<OpenOrderLineRow>> FindOpenOrderLinesAsync(long customerId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+    public async Task<IReadOnlyList<OpenOrderLineRow>> FindOpenOrderLinesAsync(
+        long? customerId, string? soNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
         (await transaction.Connection!.QueryAsync<OpenOrderLineRow>(new CommandDefinition(
-            SelectOpenOrderLines, new { CustomerId = customerId }, transaction, cancellationToken: cancellationToken))).AsList();
+            SelectOpenOrderLines, new { CustomerId = customerId, SoNo = soNo }, transaction, cancellationToken: cancellationToken))).AsList();
+
+    public Task<PdaDocumentRow?> FindPdaOrderAsync(string soNo, long? itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.QuerySingleOrDefaultAsync<PdaDocumentRow?>(new CommandDefinition(
+            SelectPdaOrder, new { SoNo = soNo, ItemId = itemId }, transaction, cancellationToken: cancellationToken));
+
+    public Task<PdaDocumentRow?> FindPdaInvoiceAsync(string dnNo, long? itemId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.QuerySingleOrDefaultAsync<PdaDocumentRow?>(new CommandDefinition(
+            SelectPdaInvoice, new { DnNo = dnNo, ItemId = itemId }, transaction, cancellationToken: cancellationToken));
 
     public async Task<IReadOnlyList<UnbilledShipmentLineDto>> FindUnbilledLinesAsync(
         long customerId, string currencyCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
@@ -659,9 +693,9 @@ internal sealed class ShipmentRepository : IShipmentRepository
             SelectUnbilledLines, new { CustomerId = customerId, CurrencyCode = currencyCode }, transaction, cancellationToken: cancellationToken))).AsList();
 
     public async Task<IReadOnlyList<UnshippedInvoiceLineDto>> FindUnshippedInvoiceLinesAsync(
-        long customerId, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        long? customerId, string? dnNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
         (await transaction.Connection!.QueryAsync<UnshippedInvoiceLineDto>(new CommandDefinition(
-            SelectUnshippedInvoiceLines, new { CustomerId = customerId }, transaction, cancellationToken: cancellationToken))).AsList();
+            SelectUnshippedInvoiceLines, new { CustomerId = customerId, DnNo = dnNo }, transaction, cancellationToken: cancellationToken))).AsList();
 
     public async Task<IReadOnlyList<ShipmentPrintLine>> FindPrintLinesAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken) =>
         [.. (await transaction.Connection!.QueryAsync<PrintRow>(

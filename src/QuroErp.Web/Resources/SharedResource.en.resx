@@ -994,6 +994,7 @@
   <data name="SD-E-162" xml:space="preserve"><value>Order {0} line {1} has {2} left to ship. Ship that much or less.</value></data>
   <data name="SD-E-168" xml:space="preserve"><value>Line {1} of shipment {0} is billed, so it can't be deleted or voided.</value></data>
   <data name="SD-E-170" xml:space="preserve"><value>The shipment currency {0} differs from the order or invoice currency {1}.</value></data>
+  <data name="SD-E-172" xml:space="preserve"><value>Order {0} is closed: it has nothing left to ship.</value></data>
   <data name="SD-E-174" xml:space="preserve"><value>Order {0} bills before shipping, so ship it with Import invoice only.</value></data>
   <data name="SD-E-175" xml:space="preserve"><value>A bill-first shipment takes only lines from Import invoice and can't mix them with other lines (invoice {0}, line {1}, unshipped {2}).</value></data>
   <data name="Menu.G3SD03" xml:space="preserve"><value>Shipments</value></data>

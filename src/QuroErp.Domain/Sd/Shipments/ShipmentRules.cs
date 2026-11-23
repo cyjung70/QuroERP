@@ -80,6 +80,9 @@ public static class ShipmentRules
     /// <summary>The shipment currency differs from the order or invoice currency (SD-BR-170, SD-BR-173). Args: currency, source currency.</summary>
     public const string CurrencyCode = "SD-E-170";
 
+    /// <summary>The order scanned on the PDA is closed (CL) and has nothing left to ship (SD-BR-172, MM-BR-921). Arg: so_no.</summary>
+    public const string ClosedOrderCode = "SD-E-172";
+
     /// <summary>A BILL_THEN_SHIP order line was sent as an order line (SD-BR-174). Arg: so_no.</summary>
     public const string BillThenShipOrderCode = "SD-E-174";
 

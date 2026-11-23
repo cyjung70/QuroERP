@@ -72,7 +72,13 @@ public sealed record OpenOrderLineRow(
     long SalesOrderId, string SoNo, DateOnly SoDt, string CurrencyCode, decimal ExchangeRate, string BillingFlow, string? Rep, string? ShipVia,
     string? ShipName, string? ShipAddr1, string? ShipAddr2, string? ShipCity, string? ShipState, string? ShipZipCode, string? ShipCountry,
     string? ShipPhone, long SalesOrderLineId, int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal SoQty, decimal ShipQty,
-    decimal SoPrc, string? DcCd, decimal DcRate, long TaxCodeId);
+    decimal SoPrc, string? DcCd, decimal DcRate, long TaxCodeId, long? CustomerId, string? CustomerName, bool LotManaged, bool LocationManaged);
+
+/// <summary>
+/// An order or invoice number scanned on the PDA (MM-BR-921, MM-BR-923): its customer, status and billing flow, whether a line has
+/// qty left to ship, and the code of the scanned item (null when there is none or no item has the id).
+/// </summary>
+public sealed record PdaDocumentRow(long? CustomerId, string? Status, string? BillingFlow, bool HasOpenLine, string? ItemCd);
 
 /// <summary>
 /// A delivery note line: the item, its warehouse, Location and lot and the shipped qty. Components are the rows printed under a Kit
@@ -224,16 +230,29 @@ public interface IShipmentRepository
     /// </summary>
     Task VoidInvoiceAsync(long salesInvoiceId, string user, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>Lines of the customer's open orders left to ship, but not of BILL_THEN_SHIP orders (SD-BR-172).</summary>
-    Task<IReadOnlyList<OpenOrderLineRow>> FindOpenOrderLinesAsync(long customerId, IDbTransaction transaction, CancellationToken cancellationToken);
+    /// <summary>
+    /// Lines of open orders left to ship, but not of BILL_THEN_SHIP orders (SD-BR-172): of the customer and, when soNo is given,
+    /// of that order only (MM-BR-921).
+    /// </summary>
+    Task<IReadOnlyList<OpenOrderLineRow>> FindOpenOrderLinesAsync(
+        long? customerId, string? soNo, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The order with this number as the PDA scan checks it (MM-BR-921, MM-BR-923), or null; ItemCd is itemId's code.</summary>
+    Task<PdaDocumentRow?> FindPdaOrderAsync(string soNo, long? itemId, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The invoice with this number as the PDA scan checks it (MM-BR-921, MM-BR-923), or null; ItemCd is itemId's code.</summary>
+    Task<PdaDocumentRow?> FindPdaInvoiceAsync(string dnNo, long? itemId, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>SHIP_THEN_BILL lines of the customer in this currency left to bill, of shipments not void (SD-BR-115).</summary>
     Task<IReadOnlyList<UnbilledShipmentLineDto>> FindUnbilledLinesAsync(
         long customerId, string currencyCode, IDbTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>BILL_THEN_SHIP invoice lines of the customer left to ship, of invoices not void (SD-BR-175).</summary>
+    /// <summary>
+    /// BILL_THEN_SHIP invoice lines left to ship, of invoices not void (SD-BR-175): of the customer and, when dnNo is given, of that
+    /// invoice only (MM-BR-921).
+    /// </summary>
     Task<IReadOnlyList<UnshippedInvoiceLineDto>> FindUnshippedInvoiceLinesAsync(
-        long customerId, IDbTransaction transaction, CancellationToken cancellationToken);
+        long? customerId, string? dnNo, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>Lines of the delivery note in seq order.</summary>
     Task<IReadOnlyList<ShipmentPrintLine>> FindPrintLinesAsync(long id, IDbTransaction transaction, CancellationToken cancellationToken);

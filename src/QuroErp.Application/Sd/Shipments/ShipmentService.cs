@@ -114,10 +114,40 @@ public sealed class ShipmentService(
     }
 
     /// <summary>SD-BR-172: the customer's open SHIP_AND_BILL and SHIP_THEN_BILL orders with their lines left to ship.</summary>
-    public async Task<IReadOnlyList<OpenSalesOrderDto>> OpenOrderLinesAsync(long customerId, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<OpenSalesOrderDto>> OpenOrderLinesAsync(long customerId, CancellationToken cancellationToken) =>
+        OpenOrderLinesAsync(customerId, null, null, cancellationToken);
+
+    /// <summary>
+    /// SD-BR-172: open SHIP_AND_BILL and SHIP_THEN_BILL orders with their lines left to ship, of the customer or, for the PDA, the
+    /// order with this number (MM-BR-921). With itemId only the order's lines of that scanned item (MM-BR-923).
+    /// </summary>
+    /// <exception cref="BadRequestException">Common-E-005 without customerId or soNo.</exception>
+    /// <exception cref="DomainException">
+    /// MM-E-923 for an unknown order, one with nothing left to ship or an item with no line left on it; SD-E-172 for a closed
+    /// order; SD-E-174 for a BILL_THEN_SHIP order; Common-E-006 for an order of another customer.
+    /// </exception>
+    public async Task<IReadOnlyList<OpenSalesOrderDto>> OpenOrderLinesAsync(
+        long? customerId, string? soNo, long? itemId, CancellationToken cancellationToken)
     {
+        var no = Normalize(soNo);
+        if (no is null && customerId is null)
+        {
+            throw new BadRequestException(ShipmentRules.RequiredCode, nameof(OpenSalesOrderDto.CustomerId));
+        }
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
-        var rows = await shipments.FindOpenOrderLinesAsync(customerId, uow.Transaction, cancellationToken);
+        PdaDocumentRow? order = null;
+        if (no is not null)
+        {
+            order = await shipments.FindPdaOrderAsync(no, itemId, uow.Transaction, cancellationToken);
+            PdaIssueRules.EnsurePdaOrder(
+                no, order is not null, order?.Status, order?.BillingFlow, order?.CustomerId, customerId, order?.HasOpenLine == true);
+        }
+        var rows = await shipments.FindOpenOrderLinesAsync(no is null ? customerId : null, no, uow.Transaction, cancellationToken);
+        if (order is not null && itemId is { } id)
+        {
+            PdaIssueRules.EnsureItemOnDocument(id, order.ItemCd, rows.Select(r => r.ItemId));
+            rows = [.. rows.Where(r => r.ItemId == id)];
+        }
         await uow.CommitAsync(cancellationToken);
         return [.. rows.GroupBy(r => r.SalesOrderId).Select(g =>
         {
@@ -127,7 +157,8 @@ public sealed class ShipmentService(
                 o.ShipAddr2, o.ShipCity, o.ShipState, o.ShipZipCode, o.ShipCountry, o.ShipPhone,
                 [.. g.Select(l => new OpenSalesOrderLineDto(
                     l.SalesOrderLineId, l.Seq, l.ItemId, l.ItemCd, l.ItemName, l.Unit, l.SoQty, l.ShipQty, l.SoQty - l.ShipQty, l.SoPrc, l.DcCd,
-                    l.DcRate, l.TaxCodeId))]);
+                    l.DcRate, l.TaxCodeId, l.LotManaged, l.LocationManaged))],
+                o.CustomerId, o.CustomerName);
         })];
     }
 
@@ -141,13 +172,47 @@ public sealed class ShipmentService(
     }
 
     /// <summary>SD-BR-175: BILL_THEN_SHIP invoice lines of the customer left to ship.</summary>
-    public async Task<IReadOnlyList<UnshippedInvoiceLineDto>> UnshippedInvoiceLinesAsync(long customerId, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<UnshippedInvoiceLineDto>> UnshippedInvoiceLinesAsync(long customerId, CancellationToken cancellationToken) =>
+        UnshippedInvoiceLinesAsync(customerId, null, null, cancellationToken);
+
+    /// <summary>
+    /// SD-BR-175: BILL_THEN_SHIP invoice lines left to ship, of the customer or, for the PDA, of the invoice with this number
+    /// (MM-BR-921). With itemId only the invoice's lines of that scanned item (MM-BR-923).
+    /// </summary>
+    /// <exception cref="BadRequestException">Common-E-005 without customerId or dnNo.</exception>
+    /// <exception cref="DomainException">
+    /// MM-E-923 for an unknown invoice, one with nothing left to ship or an item with no line left on it; SD-E-175 for an invoice
+    /// that is void or not BILL_THEN_SHIP; Common-E-006 for an invoice of another customer.
+    /// </exception>
+    public async Task<IReadOnlyList<UnshippedInvoiceLineDto>> UnshippedInvoiceLinesAsync(
+        long? customerId, string? dnNo, long? itemId, CancellationToken cancellationToken)
     {
+        var no = Normalize(dnNo);
+        if (no is null && customerId is null)
+        {
+            throw new BadRequestException(ShipmentRules.RequiredCode, nameof(UnshippedInvoiceLineDto.CustomerId));
+        }
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
-        var rows = await shipments.FindUnshippedInvoiceLinesAsync(customerId, uow.Transaction, cancellationToken);
+        PdaDocumentRow? invoice = null;
+        if (no is not null)
+        {
+            invoice = await shipments.FindPdaInvoiceAsync(no, itemId, uow.Transaction, cancellationToken);
+            PdaIssueRules.EnsurePdaInvoice(
+                no, invoice is not null, invoice?.Status, invoice?.BillingFlow, invoice?.CustomerId, customerId, invoice?.HasOpenLine == true);
+        }
+        var rows = await shipments.FindUnshippedInvoiceLinesAsync(no is null ? customerId : null, no, uow.Transaction, cancellationToken);
+        if (invoice is not null && itemId is { } id)
+        {
+            PdaIssueRules.EnsureItemOnDocument(id, invoice.ItemCd, rows.Select(r => r.ItemId));
+            rows = [.. rows.Where(r => r.ItemId == id)];
+        }
         await uow.CommitAsync(cancellationToken);
         return rows;
     }
+
+    /// <summary>A scanned document number as stored: trimmed and upper case, null when blank.</summary>
+    private static string? Normalize(string? number) =>
+        string.IsNullOrWhiteSpace(number) ? null : number.Trim().ToUpperInvariant();
 
     /// <summary>
     /// MM-BR-913: the ACTIVE Pallets of a warehouse a line can ship, by number start or item, at most

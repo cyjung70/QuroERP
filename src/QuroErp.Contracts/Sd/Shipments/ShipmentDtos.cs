@@ -9,13 +9,19 @@ public static class ShipmentRoutes
     /// <summary>POST {Base}/{id}/void with <see cref="VoidShipmentRequest"/> (SD-BR-169).</summary>
     public const string Void = "void";
 
-    /// <summary>GET {Base}/open-order-lines?customerId: order lines left to ship (SD-BR-172).</summary>
+    /// <summary>
+    /// GET {Base}/open-order-lines?customerId or ?soNo[&amp;itemId]: order lines left to ship (SD-BR-172), of the customer or of the
+    /// order scanned on the PDA, only the scanned item's lines with itemId (MM-BR-921, MM-BR-923).
+    /// </summary>
     public const string OpenOrderLines = "open-order-lines";
 
     /// <summary>GET {Base}/unbilled-lines?customerId&amp;currencyCode: SHIP_THEN_BILL lines left to bill (SD-BR-115).</summary>
     public const string UnbilledLines = "unbilled-lines";
 
-    /// <summary>GET {Base}/unshipped-invoice-lines?customerId: BILL_THEN_SHIP invoice lines left to ship (SD-BR-175).</summary>
+    /// <summary>
+    /// GET {Base}/unshipped-invoice-lines?customerId or ?dnNo[&amp;itemId]: BILL_THEN_SHIP invoice lines left to ship (SD-BR-175), of the
+    /// customer or of the invoice scanned on the PDA (MM-BR-921, MM-BR-923).
+    /// </summary>
     public const string UnshippedInvoiceLines = "unshipped-invoice-lines";
 
     /// <summary>GET {Base}/{id}/print.pdf: the delivery note.</summary>
@@ -174,7 +180,8 @@ public sealed record SaveShipmentLineRequest(
 public sealed record VoidShipmentRequest(DateTimeOffset UpdatedAt);
 
 /// <summary>
-/// An order the shipment can import (SD-BR-172) with the header values a shipment copies and its lines left to ship.
+/// An order the shipment can import (SD-BR-172) with the header values a shipment copies and its lines left to ship. CustomerId and
+/// CustomerName are the order's customer, for the PDA that starts from a scanned order number (MM-BR-921).
 /// </summary>
 public sealed record OpenSalesOrderDto(
     long SalesOrderId,
@@ -193,12 +200,17 @@ public sealed record OpenSalesOrderDto(
     string? ShipZipCode,
     string? ShipCountry,
     string? ShipPhone,
-    IReadOnlyList<OpenSalesOrderLineDto> Lines);
+    IReadOnlyList<OpenSalesOrderLineDto> Lines,
+    long? CustomerId = null,
+    string? CustomerName = null);
 
-/// <summary>An order line left to ship: RemainingQty = SoQty − ShipQty, the default ship qty (SD-BR-172).</summary>
+/// <summary>
+/// An order line left to ship: RemainingQty = SoQty − ShipQty, the default ship qty (SD-BR-172). LotManaged and LocationManaged tell
+/// the PDA which stock keys the line scans (MM-BR-921).
+/// </summary>
 public sealed record OpenSalesOrderLineDto(
     long SalesOrderLineId, int Seq, long ItemId, string? ItemCd, string? ItemName, string? Unit, decimal SoQty, decimal ShipQty,
-    decimal RemainingQty, decimal SoPrc, string? DcCd, decimal DcRate, long TaxCodeId);
+    decimal RemainingQty, decimal SoPrc, string? DcCd, decimal DcRate, long TaxCodeId, bool LotManaged = false, bool LocationManaged = false);
 
 /// <summary>A SHIP_THEN_BILL shipment line left to bill (SD-BR-115): UnbilledQty = ShipQty − BilledQty.</summary>
 public sealed record UnbilledShipmentLineDto(
@@ -208,8 +220,10 @@ public sealed record UnbilledShipmentLineDto(
 
 /// <summary>
 /// A BILL_THEN_SHIP invoice line left to ship (SD-BR-175): UnshippedQty = InvoicedQty − ShippedQty − CancelledQty (SD-BR-143).
+/// LotManaged, LocationManaged and the invoice's customer are for the PDA that starts from a scanned invoice number (MM-BR-921).
 /// </summary>
 public sealed record UnshippedInvoiceLineDto(
     long SalesInvoiceLineId, long SalesInvoiceId, string DnNo, int Seq, long ItemId, string? ItemCd, string? ItemName, decimal InvoicedQty,
     decimal ShippedQty, decimal CancelledQty, decimal UnshippedQty, decimal Prc, string? DcCd, decimal DcRate, long TaxCodeId,
-    string CurrencyCode, decimal ExchangeRate, string? Unit = null);
+    string CurrencyCode, decimal ExchangeRate, string? Unit = null, bool LotManaged = false, bool LocationManaged = false, long? CustomerId = null,
+    string? CustomerName = null);
