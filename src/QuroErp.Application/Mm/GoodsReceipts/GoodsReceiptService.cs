@@ -71,9 +71,10 @@ public sealed class GoodsReceiptService(
     /// MM-BR-113: PO lines the receipt can import, of the vendor or, for the PDA, of the order with this PO number (MM-BR-920).
     /// With itemId only the order's lines of that scanned item (MM-BR-923).
     /// </summary>
+    /// <exception cref="BadRequestException">Common-E-005 without vendorId or poNo.</exception>
     /// <exception cref="DomainException">
-    /// Common-E-005 without vendorId or poNo; MM-E-923 for an unknown PO number or an item with no remaining line on the order;
-    /// MM-E-024 for an order that is not approved or partly received, or of another vendor.
+    /// MM-E-923 for an unknown PO number or an item with no remaining line on the order; MM-E-024 for an order that is not
+    /// approved or partly received, or of another vendor.
     /// </exception>
     public async Task<IReadOnlyList<OpenPoLineDto>> OpenPoLinesAsync(
         long? vendorId, string? poNo, long? itemId, CancellationToken cancellationToken)
@@ -81,7 +82,7 @@ public sealed class GoodsReceiptService(
         var no = string.IsNullOrWhiteSpace(poNo) ? null : poNo.Trim().ToUpperInvariant();
         if (no is null && vendorId is null)
         {
-            throw new DomainException(GoodsReceiptRules.RequiredCode, nameof(OpenPoLineDto.VendorId));
+            throw new BadRequestException(GoodsReceiptRules.RequiredCode, nameof(OpenPoLineDto.VendorId));
         }
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
         IReadOnlyList<OpenPoLineDto> lines;

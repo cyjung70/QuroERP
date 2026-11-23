@@ -1,4 +1,5 @@
 using FluentAssertions;
+using QuroErp.Application.Common;
 using QuroErp.Contracts.Mm.GoodsReceipts;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.GoodsReceipts;
@@ -54,7 +55,7 @@ public partial class GoodsReceiptServiceTests
         await ShouldFailAsync(unknownItem, LabelCode.UnknownCode, "-1");
         await ShouldFailAsync(received, GoodsReceiptRules.PoNotReceivableCode, done.PoNo);
         await ShouldFailAsync(otherVendor, GoodsReceiptRules.PoNotReceivableCode, po.PoNo);
-        await ShouldFailAsync(nothing, GoodsReceiptRules.RequiredCode, nameof(OpenPoLineDto.VendorId));
+        (await nothing.Should().ThrowAsync<BadRequestException>()).Which.Code.Should().Be(GoodsReceiptRules.RequiredCode);
     }
 
     [DatabaseFact, Trait("Id", "MM-UC-038-T03"), Trait("Id", "MM-UT-920"), Trait("Id", "MM-UT-910"), Trait("Id", "MM-UT-353"),
