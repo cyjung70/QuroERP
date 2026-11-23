@@ -178,6 +178,7 @@ public partial class StockTransferServiceTests(AuthSchemaFixture db)
         await ReceiveAsync(m.Item, 5m, 10m, date: new DateOnly(2026, 10, 1));
         var dto = await Service.CreateAsync(
             Request(m, m.Second, new SaveStockTransferLineRequest(m.Item, 2m)) with { TransferDt = new DateOnly(2026, 10, 20) }, "kim", None);
+        // close_year_month is the first open month, so 202611 closes October.
         // The test schema has no company row until one is set up; this class owns its schema, so the row goes again afterwards
         var added = (await QueryAsync<int>("SELECT count(*)::int FROM bc_company", new { })).Single() == 0;
         await using (var connection = new NpgsqlConnection(db.ConnectionString))
@@ -185,7 +186,7 @@ public partial class StockTransferServiceTests(AuthSchemaFixture db)
             await connection.ExecuteAsync("""
                 INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
                 SELECT 'Quro', 'US', 'USD', 'en', 'UTC', 't', 't' WHERE NOT EXISTS (SELECT 1 FROM bc_company);
-                UPDATE bc_company SET close_year_month = '202610';
+                UPDATE bc_company SET close_year_month = '202611';
                 """);
         }
         try
