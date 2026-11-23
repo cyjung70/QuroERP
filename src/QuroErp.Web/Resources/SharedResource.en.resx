@@ -998,6 +998,28 @@
   <data name="SD-E-174" xml:space="preserve"><value>Order {0} bills before shipping, so ship it with Import invoice only.</value></data>
   <data name="SD-E-175" xml:space="preserve"><value>A bill-first shipment takes only lines from Import invoice and can't mix them with other lines (invoice {0}, line {1}, unshipped {2}).</value></data>
   <data name="Menu.G3SD03" xml:space="preserve"><value>Shipments</value></data>
+  <data name="Sd.PdaIssue.Title" xml:space="preserve"><value>PDA Issue</value></data>
+  <data name="Sd.PdaIssue.SoNo" xml:space="preserve"><value>Order / Invoice No.</value></data>
+  <data name="Sd.PdaIssue.Customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Sd.PdaIssue.Warehouse" xml:space="preserve"><value>Shipping Warehouse</value></data>
+  <data name="Sd.PdaIssue.Remaining" xml:space="preserve"><value>Remaining</value></data>
+  <data name="Sd.PdaIssue.Qty" xml:space="preserve"><value>Ship Qty</value></data>
+  <data name="Sd.PdaIssue.SuggestedLocation" xml:space="preserve"><value>Location · Lot (FIFO)</value></data>
+  <data name="Sd.PdaIssue.Pallet" xml:space="preserve"><value>Pallet</value></data>
+  <data name="Sd.PdaIssue.FindLot" xml:space="preserve"><value>Find Lot</value></data>
+  <data name="Sd.PdaIssue.ScanNo" xml:space="preserve"><value>Scan the order or invoice number</value></data>
+  <data name="Sd.PdaIssue.ScanItem" xml:space="preserve"><value>Scan an item</value></data>
+  <data name="Sd.PdaIssue.ScanPalletOrLocation" xml:space="preserve"><value>Scan an item, Pallet, Location or Lot</value></data>
+  <data name="Sd.PdaIssue.ChangeNo" xml:space="preserve"><value>Change Number</value></data>
+  <data name="Sd.PdaIssue.Saved" xml:space="preserve"><value>Shipment {0} saved.</value></data>
+  <data name="Sd.PdaIssue.NotSaved" xml:space="preserve"><value>Not saved. Check the credit limit.</value></data>
+  <data name="Sd.PdaIssue.Short" xml:space="preserve"><value>{0} is short by {1}. The save follows the negative stock setting.</value></data>
+  <data name="Sd.PdaIssue.AlreadyScanned" xml:space="preserve"><value>The remaining qty of {0} is already on cards.</value></data>
+  <data name="Sd.PdaIssue.WrongItem" xml:space="preserve"><value>{0} is not the item of this card.</value></data>
+  <data name="Sd.PdaIssue.NoStock" xml:space="preserve"><value>There is no stock of this item at {0}.</value></data>
+  <data name="Sd.PdaIssue.PalletNotFound" xml:space="preserve"><value>Pallet {0} is not an ACTIVE Pallet in the shipping warehouse.</value></data>
+  <data name="Sd.PdaIssue.LocationNotInWarehouse" xml:space="preserve"><value>Location {0} is not in the shipping warehouse {1}.</value></data>
+  <data name="Sd.PdaIssue.NoWarehouse" xml:space="preserve"><value>No shipping warehouse found. Check the user or company default warehouse.</value></data>
   <data name="Sd.Shipment.FindFrom" xml:space="preserve"><value>Ship date from</value></data>
   <data name="Sd.Shipment.FindTo" xml:space="preserve"><value>Ship date to</value></data>
   <data name="Sd.Shipment.ShipTo" xml:space="preserve"><value>Ship-to</value></data>
