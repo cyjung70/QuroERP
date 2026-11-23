@@ -127,8 +127,8 @@ public sealed class StockTransferService(
     }
 
     /// <summary>
-    /// MM-BR-707: reverses every movement of the transfer and moves its Pallets back, then saves the request as the transfer's
-    /// new content under the same number.
+    /// MM-BR-707: reverses every movement of the transfer on its own date (MM-BR-601: an edit), so the old and new lines net on
+    /// that day, moves its Pallets back, and saves the request as the transfer's new content under the same number.
     /// </summary>
     /// <exception cref="DomainException">
     /// MM-E-002 when the transfer's month is closed, MM-E-912 when a moved Pallet changed since, the stock errors of the reversal
@@ -142,19 +142,28 @@ public sealed class StockTransferService(
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
         var tx = uow.Transaction;
         var row = await LockAsync(id, request.UpdatedAt ?? default, tx, cancellationToken);
-        await UndoAsync(row, user, tx, cancellationToken);
+        // The checks run on each step, so no step may leave a balance below both the old and the new content: the sending side
+        // gets its stock back first, the receiving side keeps the old receipts until the new ones are in
+        var receipts = await UndoAsync(row, row.TransferDt, keepReceipts: true, user, tx, cancellationToken);
         var save = await PrepareAsync(request, tx, cancellationToken);
         if (!await transfers.UpdateAsync(id, save.Header, row.UpdatedAt, user, tx, cancellationToken))
         {
             throw new ConcurrencyException();
         }
         await PostAsync(id, row.TransferNo, save, user, tx, cancellationToken);
+        if (receipts.Count > 0)
+        {
+            await inventory.ReverseAsync(receipts, row.TransferDt, user, tx, cancellationToken);
+        }
         var dto = await ReadAsync(id, tx, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return dto;
     }
 
-    /// <summary>MM-BR-707: reverses every movement of the transfer, moves its Pallets back and deletes it.</summary>
+    /// <summary>
+    /// MM-BR-707: reverses every movement of the transfer on the processing date (today, or the transfer date when later;
+    /// MM-BR-601), moves its Pallets back and deletes it.
+    /// </summary>
     /// <exception cref="DomainException">MM-E-002, MM-E-912 and the stock errors of the reversal, as on <see cref="UpdateAsync"/>.</exception>
     /// <exception cref="ConcurrencyException">409 when updatedAt is no longer the stored one.</exception>
     /// <exception cref="NotFoundException">404 Common-E-006.</exception>
@@ -163,7 +172,8 @@ public sealed class StockTransferService(
         await using var uow = await unitOfWork.BeginAsync(cancellationToken);
         var tx = uow.Transaction;
         var row = await LockAsync(id, updatedAt, tx, cancellationToken);
-        await UndoAsync(row, user, tx, cancellationToken);
+        var today = clock.Today();
+        await UndoAsync(row, today < row.TransferDt ? row.TransferDt : today, keepReceipts: false, user, tx, cancellationToken);
         if (!await transfers.DeleteAsync(id, row.UpdatedAt, tx, cancellationToken))
         {
             throw new ConcurrencyException();
@@ -178,13 +188,12 @@ public sealed class StockTransferService(
     }
 
     // MM-BR-707, MM-BR-004, MM-BR-912: a transfer of a closed month stays as it is. Pallets go back to the sending side, which
-    // they can only while each is still as the transfer left it; then every movement is reversed (MM-BR-601), dated today or the
-    // transfer date when later
-    private async Task UndoAsync(StockTransferRow row, string user, IDbTransaction tx, CancellationToken cancellationToken)
+    // they can only while each is still as the transfer left it; the movements are reversed on reversalDt (MM-BR-601). With
+    // keepReceipts only the sending side is reversed and the receiving side's movements are returned for the caller to reverse
+    private async Task<IReadOnlyList<long>> UndoAsync(
+        StockTransferRow row, DateOnly reversalDt, bool keepReceipts, string user, IDbTransaction tx, CancellationToken cancellationToken)
     {
         InventoryClosing.EnsureOpen(await stock.GetCloseYearMonthAsync(tx, cancellationToken), row.TransferDt);
-        var today = clock.Today();
-        var reversalDt = today < row.TransferDt ? row.TransferDt : today;
         var lines = await transfers.FindLinesAsync(row.Id, tx, cancellationToken);
         var palletLines = lines.Where(l => l.PalletId is not null).ToList();
         if (palletLines.Count > 0)
@@ -198,16 +207,18 @@ public sealed class StockTransferService(
                     line.Seq, palletId, locked.GetValueOrDefault(palletId), line.ItemId, line.Qty, row.ToWarehouseId, line.ToLocationId, line.LotId);
             }
         }
-        var movementIds = await transfers.FindOpenMovementIdsAsync(row.TransferNo, tx, cancellationToken);
-        if (movementIds.Count > 0)
+        var movements = await transfers.FindOpenMovementsAsync(row.TransferNo, tx, cancellationToken);
+        List<long> now = [.. movements.Where(m => !keepReceipts || m.Qty < 0).Select(m => m.Id)];
+        if (now.Count > 0)
         {
-            await inventory.ReverseAsync(movementIds, reversalDt, user, tx, cancellationToken);
+            await inventory.ReverseAsync(now, reversalDt, user, tx, cancellationToken);
         }
         foreach (var line in palletLines)
         {
             await transfers.MovePalletAsync(
                 line.PalletId!.Value, row.FromWarehouseId, line.FromLocationId, reversalDt, row.TransferNo, line.Seq, user, tx, cancellationToken);
         }
+        return keepReceipts ? [.. movements.Where(m => m.Qty > 0).Select(m => m.Id)] : [];
     }
 
     // Everything a save checks before it writes: the header, the warehouses (MM-BR-710), each line's item, qty, Locations

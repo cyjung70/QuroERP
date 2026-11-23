@@ -78,7 +78,7 @@ internal sealed class StockTransferRepository : IStockTransferRepository
     private const string Delete = "DELETE FROM mm_stock_transfer WHERE id = @Id AND updated_at = @UpdatedAt";
 
     private const string SelectOpenMovements = """
-        SELECT m.id
+        SELECT m.id, m.qty
         FROM mm_goods_movement m
         WHERE m.ref_key = @RefKey
           AND m.parent_movement_id IS NULL
@@ -197,8 +197,9 @@ internal sealed class StockTransferRepository : IStockTransferRepository
         await transaction.Connection!.ExecuteAsync(new CommandDefinition(
             Delete, new { Id = id, UpdatedAt = updatedAt }, transaction, cancellationToken: cancellationToken)) == 1;
 
-    public async Task<IReadOnlyList<long>> FindOpenMovementIdsAsync(string transferNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
-        [.. await transaction.Connection!.QueryAsync<long>(new CommandDefinition(
+    public async Task<IReadOnlyList<OpenTransferMovement>> FindOpenMovementsAsync(
+        string transferNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        [.. await transaction.Connection!.QueryAsync<OpenTransferMovement>(new CommandDefinition(
             SelectOpenMovements, new { RefKey = transferNo }, transaction, cancellationToken: cancellationToken))];
 
     public Task<ScannedLocation?> FindScannedLocationAsync(

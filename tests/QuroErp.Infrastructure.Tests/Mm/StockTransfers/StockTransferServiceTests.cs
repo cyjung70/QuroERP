@@ -132,6 +132,7 @@ public partial class StockTransferServiceTests(AuthSchemaFixture db)
         (updated.Header.Remarks, updated.Lines.Single().Qty).Should().Be(("More", 1m));
         (await OnHandAsync(m.Item, m.Main), await OnHandAsync(m.Item, m.Second)).Should().Be((4m, 1m));
         (await MovementsAsync(dto.Header.TransferNo)).Should().HaveCount(4, "the first pair stays, reversed, and the new pair is added");
+        (await ReversalsAsync(dto.Header.TransferNo)).Select(r => r.DocumentDt).Should().OnlyContain(d => d == Day, "an edit reverses on the transfer date");
         var stale = () => Service.UpdateAsync(dto.Header.Id, Request(m, m.Second, new SaveStockTransferLineRequest(m.Item, 1m)) with
         {
             UpdatedAt = dto.Header.UpdatedAt,
@@ -142,6 +143,68 @@ public partial class StockTransferServiceTests(AuthSchemaFixture db)
         await IssueAsync(m.Item, m.Second, 1m);
         var undo = () => Service.DeleteAsync(dto.Header.Id, updated.Header.UpdatedAt, "kim", None);
         (await undo.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be("MM-E-001");
+    }
+
+    // MM-BR-601 edit: the reversal takes the transfer date, so raising the qty of a past transfer only checks the new content.
+    // Dated today, the old issue would stay on the 5th until the 10th and the 5th..9th would read 5 − 2 − 4 = −1 (MM-E-009)
+    [DatabaseFact, Trait("Id", "MM-UC-018-T05"), Trait("Id", "MM-UT-707"), Trait("Id", "MM-UT-601"), Trait("Rule", "MM-BR-707"),
+     Trait("Rule", "MM-BR-601"), Trait("Rule", "MM-BR-009")]
+    public async Task Deny_RaisingThePastQty_NetsOnTheTransferDate_EvenAfterTheReceivingSideUsedTheStock()
+    {
+        await ModeAsync(Deny);
+        var m = await MastersAsync();
+        await ReceiveAsync(m.Item, 5m, 10m);
+        var fifth = new DateOnly(2026, 11, 5);
+        var dto = await Service.CreateAsync(
+            Request(m, m.Second, new SaveStockTransferLineRequest(m.Item, 2m)) with { TransferDt = fifth }, "kim", None);
+        // The receiving side issued what it got on the 6th: reversing its receipt before the new one is in would read −2 there
+        await IssueAsync(m.Item, m.Second, 2m, new DateOnly(2026, 11, 6));
+
+        var updated = await Service.UpdateAsync(
+            dto.Header.Id,
+            Request(m, m.Second, new SaveStockTransferLineRequest(m.Item, 4m)) with { TransferDt = fifth, UpdatedAt = dto.Header.UpdatedAt },
+            "kim", None);
+
+        updated.Lines.Single().Qty.Should().Be(4m);
+        (await ReversalsAsync(dto.Header.TransferNo)).Should().Equal(("TR", m.Main, 2m, fifth), ("TR", m.Second, -2m, fifth));
+        (await OnHandAsync(m.Item, m.Main), await OnHandAsync(m.Item, m.Second)).Should().Be((1m, 2m));
+    }
+
+    [DatabaseFact, Trait("Id", "MM-UT-004"), Trait("Rule", "MM-BR-004"), Trait("Rule", "MM-BR-707")]
+    public async Task ATransferOfAClosedMonth_CannotBeChangedOrDeleted_MmE002()
+    {
+        await ModeAsync(Deny);
+        var m = await MastersAsync();
+        await ReceiveAsync(m.Item, 5m, 10m, date: new DateOnly(2026, 10, 1));
+        var dto = await Service.CreateAsync(
+            Request(m, m.Second, new SaveStockTransferLineRequest(m.Item, 2m)) with { TransferDt = new DateOnly(2026, 10, 20) }, "kim", None);
+        // The test schema has no company row until one is set up; this class owns its schema, so the row goes again afterwards
+        var added = (await QueryAsync<int>("SELECT count(*)::int FROM bc_company", new { })).Single() == 0;
+        await using (var connection = new NpgsqlConnection(db.ConnectionString))
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO bc_company (name, country_code, base_currency_code, default_lang_code, time_zone, created_by, updated_by)
+                SELECT 'Quro', 'US', 'USD', 'en', 'UTC', 't', 't' WHERE NOT EXISTS (SELECT 1 FROM bc_company);
+                UPDATE bc_company SET close_year_month = '202610';
+                """);
+        }
+        try
+        {
+            var change = () => Service.UpdateAsync(dto.Header.Id, Request(m, m.Second, new SaveStockTransferLineRequest(m.Item, 1m)) with
+            {
+                TransferDt = new DateOnly(2026, 11, 5),
+                UpdatedAt = dto.Header.UpdatedAt,
+            }, "kim", None);
+            (await change.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be("MM-E-002");
+            var delete = () => Service.DeleteAsync(dto.Header.Id, dto.Header.UpdatedAt, "kim", None);
+            (await delete.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be("MM-E-002");
+        }
+        finally
+        {
+            await using var connection = new NpgsqlConnection(db.ConnectionString);
+            await connection.ExecuteAsync(added ? "DELETE FROM bc_company" : "UPDATE bc_company SET close_year_month = NULL");
+        }
+        (await OnHandAsync(m.Item, m.Second)).Should().Be(2m);
     }
 
     [DatabaseFact, Trait("Id", "MM-UC-018-T07"), Trait("Id", "MM-UT-357"), Trait("Id", "MM-UT-355"), Trait("Rule", "MM-BR-357"),
