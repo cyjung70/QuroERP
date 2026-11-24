@@ -26,6 +26,15 @@ public sealed record NewStockTransferLine(
 /// <summary>A warehouse a transfer can name: its code and whether it is in use.</summary>
 public sealed record TransferWarehouse(long Id, string WarehouseCode, bool InUse);
 
+/// <summary>A Location found by its label (MM-BR-918): its warehouse, and whether both are in use.</summary>
+public sealed record ScannedLocation(
+    long WarehouseId, string WarehouseCode, bool WarehouseInUse, long LocationId, string LocationCode, bool LocationInUse);
+
+/// <summary>A Pallet found by its number, with where it is and its status.</summary>
+public sealed record ScannedPallet(
+    long Id, string PalletNo, long ItemId, string ItemCd, string? ItemName, long LotId, string LotNo, decimal Qty, string Status,
+    long WarehouseId, string WarehouseCode, bool WarehouseInUse, long LocationId, string LocationCode, bool LocationInUse);
+
 /// <summary>mm_stock_transfer and mm_stock_transfer_line, and the Pallet moves of their lines (MM-BR-705~708, MM-BR-912).</summary>
 public interface IStockTransferRepository
 {
@@ -53,6 +62,12 @@ public interface IStockTransferRepository
 
     /// <summary>The ids of the original movements of the transfer number that are not reversed yet, in id order.</summary>
     Task<IReadOnlyList<long>> FindOpenMovementIdsAsync(string transferNo, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>The Location with this warehouse code and Location code, as a Location label carries them.</summary>
+    Task<ScannedLocation?> FindScannedLocationAsync(
+        string warehouseCode, string locationCode, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    Task<ScannedPallet?> FindScannedPalletAsync(string palletNo, IDbTransaction transaction, CancellationToken cancellationToken);
 
     /// <summary>MM-BR-912: puts the Pallet at the warehouse and Location and adds its MOVE event.</summary>
     Task MovePalletAsync(

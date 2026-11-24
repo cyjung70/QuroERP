@@ -11,6 +11,7 @@ using QuroErp.Contracts.Mm.StockTransfers;
 using QuroErp.Domain.Bc.Localization;
 using QuroErp.Domain.Common;
 using QuroErp.Domain.Mm.Inventory;
+using QuroErp.Domain.Mm.Labels;
 using QuroErp.Domain.Mm.Warehouses;
 
 namespace QuroErp.Application.Mm.StockTransfers;
@@ -51,6 +52,46 @@ public sealed class StockTransferService(
         var rows = await transfers.SearchAsync(filter, uow.Transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return [.. rows.Select(r => r.ToSummary())];
+    }
+
+    /// <summary>
+    /// The PDA move reads a scanned place (MM-BR-922, MM-BR-923): a Location label at FROM or TO, a Pallet label at FROM. Read only;
+    /// the PDA saves through <see cref="CreateAsync"/>.
+    /// </summary>
+    /// <exception cref="DomainException">
+    /// 422 Common-E-005 without a value, Common-E-002 for a step other than FROM or TO, MM-E-923 for a value that is not a label of
+    /// this system, a kind the step does not take, or a Location, warehouse or Pallet not found, not in use or not ACTIVE.
+    /// </exception>
+    public async Task<StockTransferPlaceDto> ScanPlaceAsync(StockTransferScanQuery query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        var scanned = Trim(query.Value) ?? throw new DomainException(RequiredCode, "value");
+        var kinds = PdaMoveRules.KindsOf(query.Step);
+        var scan = LabelCode.Parse(scanned);
+        LabelCode.EnsureAccepted(scan.Kind, [.. kinds], scanned);
+
+        await using var uow = await unitOfWork.BeginAsync(cancellationToken);
+        var tx = uow.Transaction;
+        StockTransferPlaceDto place;
+        if (scan.Kind == LabelCode.Location)
+        {
+            var location = await transfers.FindScannedLocationAsync(scan.Parts[0], scan.Parts[1], tx, cancellationToken);
+            PdaMoveRules.EnsurePlace(location is not null, location?.WarehouseInUse == true, location?.LocationInUse == true, null, scanned);
+            place = new StockTransferPlaceDto(
+                LabelCode.Location, location!.WarehouseId, location.WarehouseCode, location.LocationId, location.LocationCode, null);
+        }
+        else
+        {
+            var pallet = await transfers.FindScannedPalletAsync(scan.Parts[0], tx, cancellationToken);
+            PdaMoveRules.EnsurePlace(
+                pallet is not null, pallet?.WarehouseInUse == true, pallet?.LocationInUse == true, pallet?.Status, scanned);
+            place = new StockTransferPlaceDto(
+                LabelCode.Pallet, pallet!.WarehouseId, pallet.WarehouseCode, pallet.LocationId, pallet.LocationCode,
+                new StockTransferPalletDto(
+                    pallet.Id, pallet.PalletNo, pallet.ItemId, pallet.ItemCd, pallet.ItemName, pallet.LotId, pallet.LotNo, pallet.Qty));
+        }
+        await uow.CommitAsync(cancellationToken);
+        return place;
     }
 
     /// <exception cref="NotFoundException">404 Common-E-006.</exception>
@@ -186,12 +227,13 @@ public sealed class StockTransferService(
     // (MM-BR-713, MM-BR-715) and Pallet (MM-BR-912), and the price and amount of each line (MM-BR-706)
     private async Task<PreparedSave> PrepareAsync(SaveStockTransferRequest request, IDbTransaction tx, CancellationToken cancellationToken)
     {
-        var movType = Upper(request.MovType) ?? MovementType.StockTransfer;
+        var fromId = request.FromWarehouseId ?? throw new DomainException(RequiredCode, "fromWarehouseId");
+        // MM-BR-922: a transfer that names no type is LT inside the sending warehouse and TR to another
+        var movType = Upper(request.MovType) ?? StockTransferRules.TypeFor(fromId, request.ToWarehouseId);
         if (!StockTransferRules.IsType(movType))
         {
             throw new DomainException(StockTransferRules.InvalidCode, movType, 0);
         }
-        var fromId = request.FromWarehouseId ?? throw new DomainException(RequiredCode, "fromWarehouseId");
         var toId = request.ToWarehouseId ?? (movType == MovementType.LocationTransfer
             ? fromId
             : throw new DomainException(RequiredCode, "toWarehouseId"));

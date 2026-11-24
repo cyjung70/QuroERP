@@ -1,0 +1,371 @@
+@page "/mm/pda-move"
+@layout PdaLayout
+@rendermode InteractiveServer
+@using System.Globalization
+@using QuroErp.Contracts.Bc.Items
+@using QuroErp.Contracts.Mm.Labels
+@using QuroErp.Contracts.Mm.Lots
+@using QuroErp.Contracts.Mm.StockTransfers
+@using QuroErp.Web.Bc.Items
+@using QuroErp.Web.Common
+@using QuroErp.Web.Components.Pda
+@using QuroErp.Web.Mm.Lots
+@using QuroErp.Web.Mm.StockTransfers
+@inject StockTransferApiClient Api
+@inject ItemApiClient ItemApi
+@inject LotApiClient LotApi
+@inject ProblemMessages Messages
+@inject IStringLocalizer<SharedResource> L
+
+@* PDA move (MM-UC-039, TASK-MM-062, screen type SM on the PDA frame). Each card is one line in three scans: the sending Location
+   or Pallet (FROM), the item or Lot with its qty when it is not a Pallet (ITEM), and the receiving Location (TO). The places are
+   read by the scan-place API (MM-BR-923); a Pallet moves whole with its own item, Lot and qty (MM-BR-912). One save is one
+   transfer, so the first card fixes the sending and receiving warehouses and a card of another warehouse is refused until the
+   save. Save goes through the stock transfer API without a type, with the PC screen's write access: the server makes it LT inside
+   one warehouse and TR to another (MM-BR-922) and runs the stock checks. *@
+
+<PageTitle>@L["Mm.PdaMove.Title"]</PageTitle>
+
+<QuroPdaScreen Title="@L["Mm.PdaMove.Title"]" WritePath="@WritePath" LineCount="_cards.Count" OnSave="SaveAsync" Busy="_busy"
+               Error="@_error" Notice="@_notice" TestId="pda-move">
+    <Header>
+        <div class="quro-pda-field">
+            <span>@L["Mm.PdaMove.Warehouses"]</span>
+            <strong data-testid="pda-move-warehouses">@WarehousesText</strong>
+        </div>
+        <div class="quro-pda-field">
+            <span>@L["Mm.PdaMove.MovType"]</span>
+            <strong data-testid="pda-move-type">@(MovType ?? "-")</strong>
+        </div>
+    </Header>
+    <Scan>
+        <QuroScanInput @ref="_scan" Raw="@(Step != ItemStep)" OnRawScanned="ReadPlaceAsync" Accept="ItemKinds" OnScanned="SetItemAsync"
+                       Label="@StepText" TestId="pda-move-scan" />
+    </Scan>
+    <Lines>
+        @foreach (var card in _cards)
+        {
+            <article class="quro-pda-card @(ReferenceEquals(card, _current) ? "is-selected" : null)" data-testid="pda-move-card">
+                <span class="quro-pda-card-title">@(card.ItemCd ?? "-")</span>
+                <span class="quro-pda-card-meta">@card.ItemName</span>
+                <div class="quro-field quro-field-readonly">
+                    <label>@L["Mm.PdaMove.From"]</label>
+                    <input type="text" readonly value="@Place(card.FromWarehouseCode, card.FromLocationCode)" data-testid="pda-move-from" />
+                </div>
+                @if (card.Pallet is not null)
+                {
+                    <div class="quro-field quro-field-readonly">
+                        <label>@L["Mm.PdaMove.Pallet"]</label>
+                        <input type="text" readonly value="@card.Pallet.PalletNo" data-testid="pda-move-pallet" />
+                    </div>
+                    <div class="quro-field quro-field-readonly">
+                        <label>@L["Mm.PdaMove.Lot"]</label>
+                        <input type="text" readonly value="@card.LotNo" data-testid="pda-move-lot" />
+                    </div>
+                    <div class="quro-field quro-field-readonly">
+                        <label>@L["Mm.PdaMove.Qty"]</label>
+                        <input type="text" readonly value="@Qty(card.Qty ?? 0m)" data-testid="pda-move-qty" />
+                    </div>
+                }
+                else if (card.ItemId is not null)
+                {
+                    <div class="quro-field quro-field-input quro-field-required">
+                        <label>@L["Mm.PdaMove.Qty"]<span class="quro-required">*</span></label>
+                        <input type="number" inputmode="decimal" min="0" step="any" value="@card.Qty"
+                               @onchange="e => card.Qty = ParseDecimal(e.Value)" data-testid="pda-move-qty" />
+                    </div>
+                    @if (card.LotManaged)
+                    {
+                        <div class="quro-field quro-field-input">
+                            <label>@L["Mm.PdaMove.FindLot"]</label>
+                            <select value="@(card.LotId?.ToString(CultureInfo.InvariantCulture) ?? "")"
+                                    @onchange="e => PickLot(card, e.Value?.ToString())" data-testid="pda-move-lot">
+                                <option value="">*</option>
+                                @foreach (var balance in card.Balances)
+                                {
+                                    <option value="@balance.LotId.ToString(CultureInfo.InvariantCulture)">@balance.LotNo · @Qty(balance.OnHandQty)</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                }
+                <div class="quro-field quro-field-readonly">
+                    <label>@L["Mm.PdaMove.To"]</label>
+                    <input type="text" readonly value="@(card.ToWarehouseCode is null ? "-" : Place(card.ToWarehouseCode, card.ToLocationCode!))"
+                           data-testid="pda-move-to" />
+                </div>
+                <button type="button" @onclick="() => Remove(card)" data-testid="pda-move-remove">@L["Common.Delete"]</button>
+            </article>
+        }
+    </Lines>
+    <Actions>
+        <button type="button" disabled="@(_cards.Count == 0 || _busy)" @onclick="Clear" data-testid="pda-move-clear">
+            @L["Mm.PdaMove.Clear"]
+        </button>
+    </Actions>
+</QuroPdaScreen>
+
+@code {
+    /// <summary>The PC screen the save goes through: its write access enables Save (BC-BR-214).</summary>
+    private const string WritePath = "/mm/stock-transfer";
+
+    private const string FromStep = "FROM";
+    private const string ItemStep = "ITEM";
+    private const string ToStep = "TO";
+    private const string Star = "*";
+
+    private static readonly string[] ItemKinds = [LabelKinds.Item, LabelKinds.Lot];
+
+    private readonly List<Card> _cards = [];
+    private QuroScanInput? _scan;
+    private Card? _current;
+    private string? _error;
+    private string? _notice;
+    private bool _busy;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    private string Step => _current is null ? FromStep : _current.ItemId is null ? ItemStep : ToStep;
+
+    private string StepText => Step switch
+    {
+        FromStep => L["Mm.PdaMove.ScanFrom"],
+        ItemStep => L["Mm.PdaMove.ScanItem"],
+        _ => L["Mm.PdaMove.ScanTo"],
+    };
+
+    // One save is one transfer: its warehouses are those of the first card
+    private Card? First => _cards.FirstOrDefault();
+
+    private Card? FirstWithTo => _cards.FirstOrDefault(c => c.ToWarehouseId is not null);
+
+    private string WarehousesText => First is null ? "-" : $"{First.FromWarehouseCode} → {FirstWithTo?.ToWarehouseCode ?? "-"}";
+
+    // MM-BR-922, shown as the server will save it
+    private string? MovType => FirstWithTo is { } card ? (card.ToWarehouseId == card.FromWarehouseId ? "LT" : "TR") : null;
+
+    // FROM and TO go to the scan-place API as scanned (MM-BR-923)
+    private async Task ReadPlaceAsync(string value)
+    {
+        var step = Step;
+        StockTransferPlaceDto place;
+        try
+        {
+            place = await Api.ScanPlaceAsync(value, step, CancellationToken.None);
+        }
+        catch (ApiProblemException e)
+        {
+            await _scan!.RejectAsync(Messages.Get(e.Problem));
+            return;
+        }
+        _error = null;
+        _notice = null;
+        if (step == FromStep)
+        {
+            await SetFromAsync(place);
+        }
+        else
+        {
+            await SetToAsync(_current!, place);
+        }
+    }
+
+    // A Location starts a card that waits for its item; a Pallet fills the card with what it holds (MM-BR-912)
+    private async Task SetFromAsync(StockTransferPlaceDto place)
+    {
+        if (First is { } first && first.FromWarehouseId != place.WarehouseId)
+        {
+            await _scan!.RejectAsync(L["Mm.PdaMove.OtherFromWarehouse", place.WarehouseCode, first.FromWarehouseCode]);
+            return;
+        }
+        var card = new Card(place.WarehouseId, place.WarehouseCode, place.LocationId, place.LocationCode);
+        if (place.Pallet is { } pallet)
+        {
+            var item = await ItemAsync(pallet.ItemId);
+            if (item is null)
+            {
+                return;
+            }
+            card.Pallet = pallet;
+            card.SetItem(item);
+            card.Qty = pallet.Qty;
+            card.LotId = pallet.LotId;
+            card.LotNo = pallet.LotNo;
+        }
+        _cards.Add(card);
+        _current = card;
+    }
+
+    // MM-BR-713: an item that is not Location-managed is kept on Location '*'. A Lot label picks its Lot at the sending Location;
+    // an item label picks the first Lot there (MM-BR-355, MM-BR-362)
+    private async Task SetItemAsync(LabelScanDto scan)
+    {
+        var card = _current!;
+        var item = await ItemAsync(scan.ItemId!.Value);
+        if (item is null)
+        {
+            return;
+        }
+        if (!item.LocationManaged && card.FromLocationCode != Star)
+        {
+            await _scan!.RejectAsync(L["Mm.PdaMove.NotLocationManaged", item.ItemCd]);
+            return;
+        }
+        IReadOnlyList<LotBalanceDto> balances = [];
+        if (item.LotManaged)
+        {
+            balances = [.. (await LotApi.SearchAsync(item.Id, card.FromWarehouseId, Today, CancellationToken.None))
+                .Where(b => b.LocationId == card.FromLocationId)];
+        }
+        var lot = scan.Kind == LabelKinds.Lot && item.LotManaged
+            ? balances.FirstOrDefault(b => string.Equals(b.LotNo, scan.Parts.ElementAtOrDefault(1), StringComparison.OrdinalIgnoreCase))
+            : balances.FirstOrDefault();
+        if (scan.Kind == LabelKinds.Lot && item.LotManaged && lot is null)
+        {
+            await _scan!.RejectAsync(L["Mm.PdaMove.NoStock", scan.Parts.ElementAtOrDefault(1) ?? "", card.FromLocationCode]);
+            return;
+        }
+        _error = null;
+        card.SetItem(item);
+        card.Balances = balances;
+        card.LotId = lot?.LotId;
+        card.LotNo = lot?.LotNo ?? Star;
+    }
+
+    // MM-BR-715: not the sending Location; MM-BR-713: '*' for an item that is not Location-managed
+    private async Task SetToAsync(Card card, StockTransferPlaceDto place)
+    {
+        if (FirstWithTo is { } first && first.ToWarehouseId != place.WarehouseId)
+        {
+            await _scan!.RejectAsync(L["Mm.PdaMove.OtherToWarehouse", place.WarehouseCode, first.ToWarehouseCode!]);
+            return;
+        }
+        if (!card.LocationManaged && place.LocationCode != Star)
+        {
+            await _scan!.RejectAsync(L["Mm.PdaMove.NotLocationManaged", card.ItemCd ?? ""]);
+            return;
+        }
+        if (place.LocationId == card.FromLocationId)
+        {
+            await _scan!.RejectAsync(L["Mm.PdaMove.SameLocation", Place(place.WarehouseCode, place.LocationCode)]);
+            return;
+        }
+        card.ToWarehouseId = place.WarehouseId;
+        card.ToWarehouseCode = place.WarehouseCode;
+        card.ToLocationId = place.LocationId;
+        card.ToLocationCode = place.LocationCode;
+        _current = null;
+    }
+
+    private async Task<ItemDto?> ItemAsync(long itemId)
+    {
+        try
+        {
+            return await ItemApi.GetAsync(itemId, CancellationToken.None);
+        }
+        catch (ApiProblemException e)
+        {
+            await _scan!.RejectAsync(Messages.Get(e.Problem));
+            return null;
+        }
+    }
+
+    private static void PickLot(Card card, string? lotId)
+    {
+        var balance = card.Balances.FirstOrDefault(b => b.LotId.ToString(CultureInfo.InvariantCulture) == lotId);
+        card.LotId = balance?.LotId;
+        card.LotNo = balance?.LotNo ?? Star;
+    }
+
+    // The checks are the server's (MM-BR-001~010, MM-BR-356, MM-BR-714, MM-BR-715, MM-BR-912)
+    private async Task SaveAsync()
+    {
+        _error = null;
+        _notice = null;
+        if (_current is not null)
+        {
+            _error = L["Mm.PdaMove.Unfinished"];
+            return;
+        }
+        _busy = true;
+        try
+        {
+            var saved = await Api.CreateAsync(Request(), CancellationToken.None);
+            _notice = L["Mm.PdaMove.Saved", saved.Header.TransferNo, saved.Header.MovType];
+            Clear();
+        }
+        catch (ApiProblemException e)
+        {
+            _error = Messages.Get(e.Problem);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    // No type: the server picks LT or TR (MM-BR-922). A Location or Lot goes only to an item managed by it; null is '*'
+    // (MM-BR-713, MM-BR-363)
+    private SaveStockTransferRequest Request() => new(
+        null, Today, First?.FromWarehouseId, FirstWithTo?.ToWarehouseId, null,
+        [.. _cards.Select(c => new SaveStockTransferLineRequest(
+            c.ItemId, c.Qty,
+            LotId: c.LotManaged && c.LotNo != Star ? c.LotId : null,
+            FromLocationId: c.LocationManaged && c.FromLocationCode != Star ? c.FromLocationId : null,
+            ToLocationId: c.LocationManaged && c.ToLocationCode != Star ? c.ToLocationId : null,
+            PalletId: c.Pallet?.Id))]);
+
+    private void Remove(Card card)
+    {
+        _cards.Remove(card);
+        if (ReferenceEquals(_current, card))
+        {
+            _current = null;
+        }
+    }
+
+    private void Clear()
+    {
+        _cards.Clear();
+        _current = null;
+    }
+
+    private static string Place(string warehouseCode, string locationCode) => $"{warehouseCode} / {locationCode}";
+
+    private static string Qty(decimal value) => value.ToString("0.####", CultureInfo.CurrentCulture);
+
+    private static decimal? ParseDecimal(object? value) =>
+        decimal.TryParse(value?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : null;
+
+    /// <summary>One line of the transfer, filled step by step: FROM, then the item (or the Pallet), then TO.</summary>
+    private sealed class Card(long fromWarehouseId, string fromWarehouseCode, long fromLocationId, string fromLocationCode)
+    {
+        public long FromWarehouseId { get; } = fromWarehouseId;
+        public string FromWarehouseCode { get; } = fromWarehouseCode;
+        public long FromLocationId { get; } = fromLocationId;
+        public string FromLocationCode { get; } = fromLocationCode;
+        public StockTransferPalletDto? Pallet { get; set; }
+        public long? ItemId { get; private set; }
+        public string? ItemCd { get; private set; }
+        public string? ItemName { get; private set; }
+        public bool LotManaged { get; private set; }
+        public bool LocationManaged { get; private set; }
+        public decimal? Qty { get; set; }
+        public long? LotId { get; set; }
+        public string LotNo { get; set; } = Star;
+        public IReadOnlyList<LotBalanceDto> Balances { get; set; } = [];
+        public long? ToWarehouseId { get; set; }
+        public string? ToWarehouseCode { get; set; }
+        public long? ToLocationId { get; set; }
+        public string? ToLocationCode { get; set; }
+
+        public void SetItem(ItemDto item)
+        {
+            ItemId = item.Id;
+            ItemCd = item.ItemCd;
+            ItemName = item.ItemName;
+            LotManaged = item.LotManaged;
+            LocationManaged = item.LocationManaged;
+        }
+    }
+}
