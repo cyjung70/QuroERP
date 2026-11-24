@@ -30,6 +30,7 @@ using QuroErp.Application.Mm.Vendors;
 using QuroErp.Application.Sd.Customers;
 using QuroErp.Application.Mm.Warehouses;
 using QuroErp.Application.Sd.SalesOrders;
+using QuroErp.Application.Mm.StockTransfers;
 using QuroErp.Application.Sd.SalesInvoices;
 using QuroErp.Application.Sd.Assemblies;
 using QuroErp.Application.Sd.Shipments;
@@ -78,6 +79,7 @@ public static class DependencyInjection
         services.AddScoped<SalesOrderService>();
         services.AddScoped<SalesOrderPrintService>();
         services.AddScoped<AssemblyService>();
+        services.AddScoped<StockTransferService>();
         services.AddScoped<ShipmentService>();
         services.AddScoped<ShipmentPrintService>();
         services.AddScoped<SalesInvoiceService>();

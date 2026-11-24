@@ -160,8 +160,8 @@ public class ShellTests : BunitContext
         .. AdminMenus,
         new("G2MM", "Purchasing", null, "mm", null, null, "M"),
         new("G2MM01", "Orders", "/mm/purchase-order", "mm", "G2MM", "Y", "P"),
-        new("G2MM10", "Stock", null, "mm", "G2MM", null, "M"),
-        new("G2MM11", "Receipts", "/mm/goods-receipt", "mm", "G2MM10", "Y", "P"),
+        new("G2MM90", "Stock", null, "mm", "G2MM", null, "M"),
+        new("G2MM91", "Receipts", "/mm/goods-receipt", "mm", "G2MM90", "Y", "P"),
         new("G3SD", "Sales", null, "sd", null, null, "M"),
     ];
 
@@ -189,9 +189,9 @@ public class ShellTests : BunitContext
         nav.FindAll("[data-shell-module]").Where(m => !m.HasAttribute("hidden")).Should().ContainSingle()
             .Which.GetAttribute("data-shell-module").Should().Be(module, "the current screen's module, else the first");
         nav.FindAll("[data-shell-module=G2MM] [data-testid^=shell-nav-group-]").Select(g => g.GetAttribute("data-testid"))
-            .Should().Equal("shell-nav-group-g2mm", "shell-nav-group-g2mm10");
-        nav.Find("[data-testid=shell-nav-group-g2mm10] .shell-nav-label").TextContent.Should().Be("Stock");
-        nav.Find("[data-testid=shell-nav-group-g2mm10] [data-testid=shell-nav-item-g2mm11]").GetAttribute("href").Should().Be("/mm/goods-receipt");
+            .Should().Equal("shell-nav-group-g2mm", "shell-nav-group-g2mm90");
+        nav.Find("[data-testid=shell-nav-group-g2mm90] .shell-nav-label").TextContent.Should().Be("Stock");
+        nav.Find("[data-testid=shell-nav-group-g2mm90] [data-testid=shell-nav-item-g2mm91]").GetAttribute("href").Should().Be("/mm/goods-receipt");
     }
 
     [Fact, Trait("Id", "CORE-061-WT-03")]

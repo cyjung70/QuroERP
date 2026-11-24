@@ -71,6 +71,8 @@ using QuroErp.Infrastructure.Sd.SalesOrders;
 using QuroErp.Application.Sd.SalesInvoices;
 using QuroErp.Application.Sd.Assemblies;
 using QuroErp.Application.Sd.Shipments;
+using QuroErp.Application.Mm.StockTransfers;
+using QuroErp.Infrastructure.Mm.StockTransfers;
 using QuroErp.Infrastructure.Sd.SalesInvoices;
 using QuroErp.Infrastructure.Sd.Assemblies;
 using QuroErp.Infrastructure.Sd.Shipments;
@@ -135,6 +137,7 @@ public static class DependencyInjection
         services.AddSingleton<ISalesOrderRepository, SalesOrderRepository>();
         services.AddSingleton<ISalesOrderDocument, SalesOrderDocument>();
         services.AddSingleton<IAssemblyRepository, AssemblyRepository>();
+        services.AddSingleton<IStockTransferRepository, StockTransferRepository>();
         services.AddSingleton<IShipmentRepository, ShipmentRepository>();
         services.AddSingleton<IShipmentDocument, ShipmentDocument>();
         services.AddSingleton<ISalesInvoiceRepository, SalesInvoiceRepository>();

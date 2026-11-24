@@ -39,6 +39,7 @@ public static class ScreenPaths
     public const string Shipment = "/sd/shipment";
     public const string SalesInvoice = "/sd/sales-invoice";
     public const string Assembly = "/sd/assembly";
+    public const string StockTransfer = "/mm/stock-transfer";
 
     /// <summary>Every path above. A test checks the seed gives the admin role Full Access to each.</summary>
     public static IReadOnlyList<string> All { get; } =
@@ -46,6 +47,6 @@ public static class ScreenPaths
         Item, Code, CodeMajor, ItemBarcode, PurchasePrice, PurchaseOrder, GoodsReceipt, Company, Currency, User, CompanyMenu, RoleMenu,
         ExchangeRate, TaxCode, TaxArea, LocalizationSetting, SetItem, SalesPrice, AlternateItem, AlternateItemGroup, Vendor,
         Warehouse, Customer, SalesOrder, Shipment, SupplierInvoice, SalesInvoice, Location, Pallet, LabelFormat, LabelPrint,
-        Assembly, LotTrace,
+        Assembly, LotTrace, StockTransfer,
     ];
 }

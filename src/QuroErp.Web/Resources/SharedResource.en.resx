@@ -221,6 +221,8 @@
   <data name="MM-E-701" xml:space="preserve"><value>Warehouse code '{0}' can't be used. Enter up to 10 capital letters, digits, - or _, not used by another warehouse, and don't change a saved code. Enter the warehouse name too.</value></data>
   <data name="MM-E-702" xml:space="preserve"><value>The default warehouse must be exactly one warehouse in use, and it can't be deleted or set not in use ({0}).</value></data>
   <data name="MM-E-704" xml:space="preserve"><value>Warehouse {0} can't be set not in use or deleted (reason: {1}).</value></data>
+  <data name="MM-E-705" xml:space="preserve"><value>Line {0} {1}: a transfer goes between two different warehouses, its qty must be above 0, and only items that hold stock can move.</value></data>
+  <data name="MM-E-912" xml:space="preserve"><value>Line {0}: Pallet {1} moves only whole. It must be ACTIVE where the line takes it from, its item, Lot and qty must match the line, and one Pallet goes on one line only. Split it first to move a part.</value></data>
   <data name="MM-E-709" xml:space="preserve"><value>Warehouse {0}: the consignment warehouse can't be added, deleted, made the default or set not in use, and a warehouse type can't change.</value></data>
   <data name="MM-E-710" xml:space="preserve"><value>Warehouse {0} is the consignment warehouse and can't be picked for a document or as your default warehouse. Pick another warehouse.</value></data>
   <data name="MM-E-712" xml:space="preserve"><value>Location code '{0}' can't be used. Use up to 20 capital letters, digits, - and _, not used twice in the warehouse. Don't change a saved code, and don't change or delete the system Location *.</value></data>
@@ -1366,6 +1368,7 @@
   <data name="Mm.Pallet.PrintLabel" xml:space="preserve"><value>Print Label</value></data>
   <data name="Menu.G2MM08" xml:space="preserve"><value>PDA Receipt</value></data>
   <data name="Menu.G2MM09" xml:space="preserve"><value>PDA Move</value></data>
+  <data name="Menu.G2MM10" xml:space="preserve"><value>Stock Transfer</value></data>
   <data name="Menu.G3SD06" xml:space="preserve"><value>PDA Issue</value></data>
   <data name="Pda.Menu" xml:space="preserve"><value>‹ Menu</value></data>
   <data name="Pda.Scan" xml:space="preserve"><value>Scan</value></data>
