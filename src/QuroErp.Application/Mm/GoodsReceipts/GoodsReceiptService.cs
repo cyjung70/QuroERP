@@ -122,7 +122,7 @@ public sealed class GoodsReceiptService(
             ?? throw new BadRequestException(BusinessPlaceRules.NotFoundCode);
         var grNo = await numbers.NextAsync(DocumentNumberFormat.GoodsReceipt, request.GrDt, user, transaction, cancellationToken);
         var id = await receipts.InsertAsync(grNo, businessPlaceId, save.Write, user, transaction, cancellationToken);
-        await ApplyAsync(id, grNo, save, user, transaction, cancellationToken);
+        await ApplyAsync(id, grNo, save, edit: false, user, transaction, cancellationToken);
         var dto = await ReadAsync(id, transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return dto;
@@ -151,13 +151,14 @@ public sealed class GoodsReceiptService(
             return updated;
         }
         var save = await PrepareAsync(request, row, lines, user, transaction, cancellationToken);
-        await ReleaseDeletedLinesAsync(row.GrNo, save, transaction, user, cancellationToken);
+        // MM-BR-601: an edit closes the Pallets of its deleted lines on the receipt's own date
+        await ReleaseDeletedLinesAsync(row.GrNo, save, row.GrDt, transaction, user, cancellationToken);
         if (!await receipts.UpdateAsync(
                 id, save.Write, [.. save.Deleted.Select(l => l.Id)], row.UpdatedAt, user, transaction, cancellationToken))
         {
             throw new ConcurrencyException();
         }
-        await ApplyAsync(id, row.GrNo, save, user, transaction, cancellationToken);
+        await ApplyAsync(id, row.GrNo, save, edit: true, user, transaction, cancellationToken);
         var dto = await ReadAsync(id, transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return dto;
@@ -182,8 +183,8 @@ public sealed class GoodsReceiptService(
         GoodsReceiptRules.EnsureEditable(row.GrNo, lines.Select(l => l.ToStored()));
         var poLines = await LockPoLinesAsync(lines.Select(l => l.PurchaseOrderLineId), transaction, cancellationToken);
         var save = new PreparedSave(new GoodsReceiptWrite(Header(row), new(0, 0, 0, 0), []), [], lines, poLines, BaseCurrencyCode: "");
-        await ReleaseDeletedLinesAsync(row.GrNo, save, transaction, user, cancellationToken);
-        await ApplyAsync(id, row.GrNo, save, user, transaction, cancellationToken);
+        await ReleaseDeletedLinesAsync(row.GrNo, save, ReversalDt(save.Write.Header), transaction, user, cancellationToken);
+        await ApplyAsync(id, row.GrNo, save, edit: false, user, transaction, cancellationToken);
         if (!await receipts.DeleteAsync(id, updatedAt, transaction, cancellationToken))
         {
             throw new ConcurrencyException();
@@ -376,7 +377,7 @@ public sealed class GoodsReceiptService(
     // MM-BR-911: a deleted line closes its Pallets, which must still be as the receipt made them, before its stock goes back
     // (so the reversal is not held by MM-BR-916) and before the line row goes (the Pallets and Lots point at it)
     private async Task ReleaseDeletedLinesAsync(
-        string grNo, PreparedSave save, IDbTransaction transaction, string user, CancellationToken cancellationToken)
+        string grNo, PreparedSave save, DateOnly closeDt, IDbTransaction transaction, string user, CancellationToken cancellationToken)
     {
         if (save.Deleted.Count == 0)
         {
@@ -391,12 +392,12 @@ public sealed class GoodsReceiptService(
         if (linePallets.Count > 0)
         {
             await pallets.CloseForDeletedLinesAsync(
-                [.. linePallets.Select(p => p.Id)], ReversalDt(save.Write.Header), grNo, user, transaction, cancellationToken);
+                [.. linePallets.Select(p => p.Id)], closeDt, grNo, user, transaction, cancellationToken);
         }
         await receipts.UnlinkLotsAsync(lineIds, transaction, cancellationToken);
     }
 
-    // MM-BR-601: a reversal is dated the day it is made, never before the receipt itself
+    // MM-BR-601: a delete is reversed on the day it is made, never before the receipt itself
     private DateOnly ReversalDt(GoodsReceiptHeader header)
     {
         var today = clock.Today();
@@ -405,16 +406,22 @@ public sealed class GoodsReceiptService(
 
     // The side effects of a save in the receipt's transaction: stock (MM-BR-111, MM-BR-601), Lots and their attributes
     // (MM-BR-353, MM-BR-364), Pallets (MM-BR-910), PO received qty and status (MM-BR-108, MM-BR-109) and standard purchase
-    // prices (MM-BR-110)
+    // prices (MM-BR-110). MM-BR-601: an edit reverses the deleted lines on their own dates, the issues among them before the new
+    // lines are posted and the receipts after, so no step reads a balance below both the old and the new receipt; a delete
+    // reverses them on the processing date
     private async Task ApplyAsync(
-        long id, string grNo, PreparedSave save, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+        long id, string grNo, PreparedSave save, bool edit, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var header = save.Write.Header;
         // Service lines have no movement to reverse
         var movementIds = save.Deleted.Count == 0
             ? []
             : await receipts.FindOpenMovementIdsAsync(grNo, [.. save.Deleted.Select(l => l.Seq)], transaction, cancellationToken);
-        if (movementIds.Count > 0)
+        if (edit)
+        {
+            await inventory.ReverseOnOriginalDatesAsync(movementIds, ReversalSide.Decreases, user, transaction, cancellationToken);
+        }
+        else if (movementIds.Count > 0)
         {
             await inventory.ReverseAsync(movementIds, ReversalDt(header), user, transaction, cancellationToken);
         }
@@ -446,6 +453,10 @@ public sealed class GoodsReceiptService(
                 await receipts.SetStandardPricesAsync(
                     save.Added.GroupBy(l => l.ItemId).ToDictionary(g => g.Key, g => g.Last().GrPrc), user, transaction, cancellationToken);
             }
+        }
+        if (edit)
+        {
+            await inventory.ReverseOnOriginalDatesAsync(movementIds, ReversalSide.Increases, user, transaction, cancellationToken);
         }
 
         if (lotWrites.Count > 0)

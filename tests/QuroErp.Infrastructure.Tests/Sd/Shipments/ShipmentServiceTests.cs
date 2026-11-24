@@ -441,6 +441,28 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         (await OnHandAsync(m.Item, m.Main)).Should().Be(5m);
     }
 
+    // MM-BR-601: an edit reverses the old issue on its own date, so the old and new lines net there. Dated today, the old 2
+    // would stay out on the 4th..9th and the 4th would read 5 − 2 − 4 = −1 (MM-E-009), though the new content ends at 1
+    [DatabaseFact, Trait("Id", "MM-UT-601"), Trait("Id", "MM-UT-009"), Trait("Rule", "MM-BR-601"), Trait("Rule", "MM-BR-009")]
+    public async Task Deny_RaisingAPastShipmentsQty_NetsOnItsOwnDate_AndAVoidReversesToday()
+    {
+        await ModeAsync("DENY");
+        var m = await MastersAsync(ShipThenBill);
+        await ReceiveAsync(m.Item, m.Main, 5m);
+        var sh = await Service.CreateAsync(Request(m, Direct(m.Item, 2m)), "kim", None);
+
+        var saved = await Service.UpdateAsync(sh.Id, Saved(sh, Direct(m.Item, 4m)), "kim", None);
+
+        saved.Lines.Select(l => (l.Seq, l.ShipQty)).Should().Equal((2, 4m));
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(1m);
+        (await MovementsAsync(sh.ShipNo)).Select(x => (x.MovType, x.RefSeq, x.Qty, x.ReversalDt)).Should().Equal(
+            ("DN", 1, -2m, (DateOnly?)null), ("DN", 1, 2m, ShipDt), ("DN", 2, -4m, null));
+
+        await Service.VoidAsync(saved.Id, saved.UpdatedAt, "kim", None);
+        (await MovementsAsync(sh.ShipNo)).Select(x => (x.RefSeq, x.Qty, x.ReversalDt)).Last().Should().Be((2, 4m, (DateOnly?)Today));
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(5m);
+    }
+
     [DatabaseFact, Trait("Id", "SD-UC-051-T12"), Trait("Id", "SD-UC-054-T09"), Trait("Id", "MM-UT-009")]
     public async Task Deny_RefusesABackDatedIssueThatMakesALaterDateNegative()
     {
@@ -525,7 +547,7 @@ public partial class ShipmentServiceTests(AuthSchemaFixture db)
         await Service.UpdateAsync(sh.Id, Saved(sh), "kim", None);
         (await PalletStateAsync(pallet)).Should().Be(("ACTIVE", 6m));
 
-        // The stock came back on the reversal date (today), so the Pallet ships again from today
+        // The stock came back on the shipment's own date (MM-BR-601, an edit), so the Pallet ships again
         var again = await Service.CreateAsync(Request(m, Direct(m.Item, 6m) with { PalletId = pallet }) with { ShipDt = Today }, "kim", None);
         (await PalletStateAsync(pallet)).Should().Be(("CLOSED", 0m));
         await Service.VoidAsync(again.Id, again.UpdatedAt, "kim", None);

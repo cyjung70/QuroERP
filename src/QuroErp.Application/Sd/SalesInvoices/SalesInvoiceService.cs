@@ -534,8 +534,11 @@ public sealed class SalesInvoiceService(
     private async Task ApplyAsync(long id, string dnNo, PreparedSave save, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         await invoices.UpdateAmountsAsync(id, save.Amounts, save.Totals, user, transaction, cancellationToken);
-        await ReverseTransfersAsync(
-            dnNo, [.. save.Deleted.Where(IsBillFirst).Select(l => l.Seq)], save.Header.DnDt, user, transaction, cancellationToken);
+        // MM-BR-601: an edit reverses the consignment moves of its deleted lines on their own dates, the sending side before the
+        // new moves are posted and the consignment side after them
+        var seqs = save.Deleted.Where(IsBillFirst).Select(l => l.Seq).ToList();
+        var reversed = seqs.Count == 0 ? [] : await invoices.FindOpenTransferIdsAsync(dnNo, seqs, transaction, cancellationToken);
+        await inventory.ReverseOnOriginalDatesAsync(reversed, ReversalSide.Decreases, user, transaction, cancellationToken);
         var billFirst = save.Added.Where(l => l.ShipmentLineId is null && l.SalesOrderLineId is not null).ToList();
         if (billFirst.Count > 0)
         {
@@ -560,6 +563,7 @@ public sealed class SalesInvoiceService(
                 await invoices.SetLineKeysAsync(id, keys, transaction, cancellationToken);
             }
         }
+        await inventory.ReverseOnOriginalDatesAsync(reversed, ReversalSide.Increases, user, transaction, cancellationToken);
         await TakeBackQtyAsync(
             save.Added.Select(l => (l.ShipmentLineId, l.SalesOrderLineId, l.DnQty))
                 .Concat(save.Deleted.Select(l => (l.ShipmentLineId, l.SalesOrderLineId, -l.DnQty))),
@@ -597,7 +601,7 @@ public sealed class SalesInvoiceService(
             user, transaction, cancellationToken);
     }
 
-    // MM-BR-601: a reversal is dated the day it is made, never before the document itself
+    // MM-BR-601: a delete or void is reversed on the day it is made, never before the document itself
     private async Task ReverseTransfersAsync(
         string refKey, IReadOnlyCollection<int> seqs, DateOnly documentDt, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {

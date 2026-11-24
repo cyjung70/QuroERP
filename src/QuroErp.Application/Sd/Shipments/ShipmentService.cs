@@ -558,7 +558,9 @@ public sealed class ShipmentService(
         string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var header = save.Header;
-        await ReverseAsync(shipNo, stored, save.Deleted, header.ShipDt, user, transaction, cancellationToken);
+        // MM-BR-601: an edit reverses its deleted lines on their own dates, the issues before the new lines are posted and any
+        // receipt after them
+        var reversed = await ReverseOnOriginalDatesAsync(shipNo, stored, save.Deleted, user, transaction, cancellationToken);
         if (save.Added.Count > 0)
         {
             // Service items have no stock; the inventory service skips them and expands Kits, whose components it assigns in FIFO
@@ -585,6 +587,7 @@ public sealed class ShipmentService(
                 await shipments.ShipPalletsAsync(shipped, header.ShipDt, shipNo, user, transaction, cancellationToken);
             }
         }
+        await inventory.ReverseOnOriginalDatesAsync(reversed, ReversalSide.Increases, user, transaction, cancellationToken);
         await TakeBackQtyAsync(header.BillingFlow, save.Added, save.Deleted, save.OrderLines, user, transaction, cancellationToken);
 
         var invoiceId = stored?.SalesInvoiceId;
@@ -597,10 +600,10 @@ public sealed class ShipmentService(
         await shipments.SetStatusAsync(id, status, invoiceId, user, transaction, cancellationToken);
     }
 
-    // MM-BR-601: a reversal is dated the day it is made, never before the shipment itself. Service lines have no movement. A
+    // MM-BR-601: a void is reversed on the day it is made, never before the shipment itself. Service lines have no movement. A
     // Pallet line's Pallet is ACTIVE again where it was, after its stock is back (MM-BR-913, MM-BR-916)
     private async Task ReverseAsync(
-        string shipNo, ShipmentRow? stored, IReadOnlyList<StoredShipmentLine> lines, DateOnly shipDt, string user, IDbTransaction transaction,
+        string shipNo, ShipmentRow? stored, List<StoredShipmentLine> lines, DateOnly shipDt, string user, IDbTransaction transaction,
         CancellationToken cancellationToken)
     {
         if (lines.Count == 0)
@@ -609,17 +612,46 @@ public sealed class ShipmentService(
         }
         var today = clock.Today();
         var reversalDt = today < shipDt ? shipDt : today;
-        // A migrated shipment's stock was issued under its invoice number (0303)
-        string[] refKeys = stored?.SalesInvoiceNo is { } dnNo && stored.Id == stored.SalesInvoiceId ? [shipNo, dnNo] : [shipNo];
-        var movementIds = await shipments.FindOpenMovementIdsAsync(refKeys, [.. lines.Select(l => l.Seq)], transaction, cancellationToken);
+        var movementIds = await FindOpenMovementIdsAsync(shipNo, stored, lines, transaction, cancellationToken);
         if (movementIds.Count > 0)
         {
             await inventory.ReverseAsync(movementIds, reversalDt, user, transaction, cancellationToken);
         }
+        await ReturnPalletsAsync(shipNo, lines, reversalDt, user, transaction, cancellationToken);
+    }
+
+    // MM-BR-601, an edit: the issues of the deleted lines are reversed on their own dates and their Pallets go back on the
+    // shipment's date. Returns the movements, for the caller to reverse the receipts among them after the new lines
+    private async Task<IReadOnlyList<long>> ReverseOnOriginalDatesAsync(
+        string shipNo, ShipmentRow? stored, IReadOnlyList<StoredShipmentLine> lines, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        if (lines.Count == 0)
+        {
+            return [];
+        }
+        var movementIds = await FindOpenMovementIdsAsync(shipNo, stored, lines, transaction, cancellationToken);
+        await inventory.ReverseOnOriginalDatesAsync(movementIds, ReversalSide.Decreases, user, transaction, cancellationToken);
+        await ReturnPalletsAsync(shipNo, lines, stored!.ShipDt, user, transaction, cancellationToken);
+        return movementIds;
+    }
+
+    private async Task<IReadOnlyList<long>> FindOpenMovementIdsAsync(
+        string shipNo, ShipmentRow? stored, IReadOnlyList<StoredShipmentLine> lines, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        // A migrated shipment's stock was issued under its invoice number (0303)
+        string[] refKeys = stored?.SalesInvoiceNo is { } dnNo && stored.Id == stored.SalesInvoiceId ? [shipNo, dnNo] : [shipNo];
+        return await shipments.FindOpenMovementIdsAsync(refKeys, [.. lines.Select(l => l.Seq)], transaction, cancellationToken);
+    }
+
+    private async Task ReturnPalletsAsync(
+        string shipNo, IReadOnlyList<StoredShipmentLine> lines, DateOnly returnDt, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken)
+    {
         var returned = lines.Where(l => l.PalletId is not null).Select(l => new ShipmentPalletShip(l.PalletId!.Value, l.Seq, l.ShipQty)).ToList();
         if (returned.Count > 0)
         {
-            await shipments.ReturnPalletsAsync(returned, reversalDt, shipNo, user, transaction, cancellationToken);
+            await shipments.ReturnPalletsAsync(returned, returnDt, shipNo, user, transaction, cancellationToken);
         }
     }
 

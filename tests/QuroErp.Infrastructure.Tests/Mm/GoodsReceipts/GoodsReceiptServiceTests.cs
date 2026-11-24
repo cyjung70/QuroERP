@@ -87,6 +87,28 @@ public partial class GoodsReceiptServiceTests(AuthSchemaFixture db)
         (await Service.SearchAsync(new(gr.GrNo[..6], m.Vendor, GrDt, GrDt), None)).Should().ContainSingle(s => s.Id == gr.Id && s.Status == "OP");
     }
 
+    // MM-BR-601: an edit posts the new receipt line before it reverses the old one on its own date. Reversed first, the old 5
+    // would leave the 4th..5th at 0 and the 6th, after the issue of 5, at −5 (MM-E-009), though the new content ends at 1
+    [DatabaseFact, Trait("Id", "MM-UT-601"), Trait("Id", "MM-UT-009"), Trait("Rule", "MM-BR-601"), Trait("Rule", "MM-BR-009")]
+    public async Task Deny_RaisingAPastReceiptsQty_AfterItsStockWasIssued_Saves_AndADeleteReversesToday()
+    {
+        await ModesAsync("DENY", "DENY");
+        var m = await MastersAsync();
+        var gr = await Service.CreateAsync(Request(m, Direct(m.Item, 5m)), "kim", None);
+        await PostAsync(new StockMovementRequest("DN", GrDt.AddDays(2), m.Item, m.Main, -5m));
+
+        var saved = await Service.UpdateAsync(gr.Id, Request(m, gr.UpdatedAt, Direct(m.Item, 6m)), "kim", None);
+
+        saved.Lines.Select(l => (l.Seq, l.GrQty)).Should().Equal((2, 6m));
+        (await OnHandAsync(m.Item, m.Main)).Should().Be(1m);
+        (await MovementsAsync(gr.GrNo)).Should().Equal(
+            ("GR", 1, 5m, 500m, (DateOnly?)null), ("GR", 2, 6m, 600m, null), ("GR", 1, -5m, -500m, GrDt));
+
+        var extra = await Service.CreateAsync(Request(m, Direct(m.Item, 2m)), "kim", None);
+        await Service.DeleteAsync(extra.Id, extra.UpdatedAt, "kim", None);
+        (await MovementsAsync(extra.GrNo)).Should().Equal(("GR", 1, 2m, 200m, (DateOnly?)null), ("GR", 1, -2m, -200m, Today));
+    }
+
     [DatabaseFact, Trait("Id", "MM-UC-004-T02"), Trait("Id", "MM-UT-601"), Trait("Id", "MM-UT-018"), Trait("Id", "MM-UT-114")]
     public async Task Update_AddsAndDeletesLines_TakingBackStockAndPoQty()
     {
@@ -103,8 +125,9 @@ public partial class GoodsReceiptServiceTests(AuthSchemaFixture db)
         (await OnHandAsync(m.Item, m.Main)).Should().Be(5m);
         var po2 = await Orders.GetAsync(po.Id, None);
         (po2.Status, po2.ReceivedQty).Should().Be((PoStatusCode.Approved, 0m));
+        // MM-BR-601: an edit posts the new receipt first and reverses the old one on its own date
         (await MovementsAsync(gr.GrNo)).Should().Equal(
-            ("GR", 1, 5m, 500m, null), ("GR", 2, 3m, 300m, null), ("GR", 1, -5m, -500m, Today), ("GR", 3, 2m, 200m, null));
+            ("GR", 1, 5m, 500m, null), ("GR", 2, 3m, 300m, null), ("GR", 3, 2m, 200m, null), ("GR", 1, -5m, -500m, GrDt));
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-107"), Trait("Id", "MM-UT-116"), Trait("Id", "MM-UT-117")]

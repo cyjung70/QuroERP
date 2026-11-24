@@ -91,7 +91,7 @@ public sealed class SupplierInvoiceService(
             ?? throw new BadRequestException(BusinessPlaceRules.NotFoundCode);
         var invoiceNo = await numbers.NextAsync(DocumentNumberFormat.SupplierInvoice, request.InvoiceDt, user, transaction, cancellationToken);
         var id = await invoices.InsertAsync(invoiceNo, businessPlaceId, save.Write, user, transaction, cancellationToken);
-        await ApplyAsync(invoiceNo, save, user, transaction, cancellationToken);
+        await ApplyAsync(invoiceNo, save, edit: false, user, transaction, cancellationToken);
         var dto = await ReadAsync(id, transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return dto;
@@ -121,7 +121,7 @@ public sealed class SupplierInvoiceService(
         {
             throw new ConcurrencyException();
         }
-        await ApplyAsync(row.InvoiceNo, save, user, transaction, cancellationToken);
+        await ApplyAsync(row.InvoiceNo, save, edit: true, user, transaction, cancellationToken);
         var dto = await ReadAsync(id, transaction, cancellationToken);
         await uow.CommitAsync(cancellationToken);
         return dto;
@@ -142,7 +142,7 @@ public sealed class SupplierInvoiceService(
         await invoices.LockReceiptLinesAsync(
             [.. lines.Select(l => l.GoodsReceiptLineId).OfType<long>().Distinct()], transaction, cancellationToken);
         var save = new PreparedSave(new SupplierInvoiceWrite(Header(row), new(0, 0, 0, 0), 0, SupplierInvoiceStatus.Void, []), [], lines, new Dictionary<long, InvoiceReceiptLine>());
-        await ApplyAsync(row.InvoiceNo, save, user, transaction, cancellationToken);
+        await ApplyAsync(row.InvoiceNo, save, edit: false, user, transaction, cancellationToken);
         if (!await invoices.DeleteAsync(id, updatedAt, transaction, cancellationToken))
         {
             throw new ConcurrencyException();
@@ -290,15 +290,21 @@ public sealed class SupplierInvoiceService(
 
     // The side effects of a save in the invoice's transaction: price variances (MM-BR-758~760, MM-BR-601) and the receipt lines'
     // invoiced qty (MM-BR-757). The receipt status is computed from that qty when it is read (MM-BR-105)
-    private async Task ApplyAsync(string invoiceNo, PreparedSave save, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+    private async Task ApplyAsync(
+        string invoiceNo, PreparedSave save, bool edit, string user, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         var header = save.Write.Header;
         var movementIds = save.Deleted.Count == 0
             ? []
             : await invoices.FindOpenMovementIdsAsync(invoiceNo, [.. save.Deleted.Select(l => l.Seq)], transaction, cancellationToken);
-        if (movementIds.Count > 0)
+        if (edit)
         {
-            // MM-BR-601: the reversal is dated the day it is made, never before the invoice; a closed month moves it on (MM-BR-759)
+            // MM-BR-601: an edit reverses on the original variance's date; a closed month moves it on (MM-BR-759)
+            await inventory.ReverseOnOriginalDatesAsync(movementIds, ReversalSide.All, user, transaction, cancellationToken);
+        }
+        else if (movementIds.Count > 0)
+        {
+            // MM-BR-601: a delete is reversed on the day it is made, never before the invoice; a closed month moves it on (MM-BR-759)
             var today = clock.Today();
             await inventory.ReverseAsync(movementIds, today < header.InvoiceDt ? header.InvoiceDt : today, user, transaction, cancellationToken);
         }

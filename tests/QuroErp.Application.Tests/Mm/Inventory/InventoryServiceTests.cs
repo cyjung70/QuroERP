@@ -255,6 +255,64 @@ public class InventoryServiceTests
         _inventory.OnHand[(10, Main)].Should().Be(3);
     }
 
+    [Fact, Trait("Id", "MM-UT-601"), Trait("Rule", "MM-BR-601")]
+    public async Task ReverseOnOriginalDatesAsync_DatesEachReversalAsItsOriginal()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 0);
+        var first = (await Post(new StockMovementRequest("GR", new DateOnly(2026, 10, 3), 10, Main, 4, Price: 5))).Single();
+        var second = (await Post(new StockMovementRequest("GR", new DateOnly(2026, 10, 8), 10, Main, 2, Price: 5))).Single();
+
+        var reversals = await Service.ReverseOnOriginalDatesAsync([first.Id, second.Id], ReversalSide.All, "kim", null!, CancellationToken.None);
+
+        reversals.Select(r => (r.ParentMovementId, r.DocumentDt, r.Qty)).Should().Equal(
+            ((long?)first.Id, new DateOnly(2026, 10, 3), -4m), ((long?)second.Id, new DateOnly(2026, 10, 8), -2m));
+        _inventory.OnHand[(10, Main)].Should().Be(0);
+    }
+
+    // An edit reverses the old issues, posts the new lines, then reverses the old receipts: each call takes only its side
+    [Fact, Trait("Id", "MM-UT-601"), Trait("Rule", "MM-BR-601")]
+    public async Task ReverseOnOriginalDatesAsync_TakesOnlyTheSideAsked_AndLeavesTheOthersOpen()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 2);
+        var receipt = (await Post(new StockMovementRequest("TR", Day, 10, Main, 4, Price: 2))).Single();
+        var issue = (await Post(new StockMovementRequest("TR", Day, 10, Main, -3))).Single();
+
+        var decreases = await Service.ReverseOnOriginalDatesAsync([receipt.Id, issue.Id], ReversalSide.Decreases, "kim", null!, CancellationToken.None);
+        var increases = await Service.ReverseOnOriginalDatesAsync([receipt.Id, issue.Id], ReversalSide.Increases, "kim", null!, CancellationToken.None);
+        var none = await Service.ReverseOnOriginalDatesAsync([], ReversalSide.All, "kim", null!, CancellationToken.None);
+
+        decreases.Should().ContainSingle().Which.ParentMovementId.Should().Be(issue.Id);
+        increases.Should().ContainSingle().Which.ParentMovementId.Should().Be(receipt.Id);
+        none.Should().BeEmpty();
+        _inventory.OnHand[(10, Main)].Should().Be(0);
+    }
+
+    [Fact, Trait("Id", "MM-UT-004"), Trait("Rule", "MM-BR-004"), Trait("Rule", "MM-BR-601")]
+    public async Task ReverseOnOriginalDatesAsync_AnOriginalInAClosedMonth_IsMmE002()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 0);
+        var receipt = (await Post(new StockMovementRequest("GR", Day, 10, Main, 4, Price: 5))).Single();
+        _inventory.CloseYearMonth = "202611";
+
+        var act = () => Service.ReverseOnOriginalDatesAsync([receipt.Id], ReversalSide.All, "kim", null!, CancellationToken.None);
+
+        (await act.Should().ThrowAsync<DomainException>()).Which.Code.Should().Be(InventoryClosing.ClosedMonth);
+        _inventory.OnHand[(10, Main)].Should().Be(4);
+    }
+
+    [Fact, Trait("Id", "MM-UT-759"), Trait("Rule", "MM-BR-759"), Trait("Rule", "MM-BR-601")]
+    public async Task ReverseOnOriginalDatesAsync_APriceVarianceOfAClosedMonth_MovesToTheFirstOpenDay()
+    {
+        _inventory.AddItem(10, "A", onHand: (Main, 0m), cost: 0);
+        await Post(new StockMovementRequest("GR", Day, 10, Main, 4, Price: 5));
+        var variance = (await Post(new StockMovementRequest(MovementType.PriceVariance, Day, 10, Main, 0, 0, Amount: 6m))).Single();
+        _inventory.CloseYearMonth = "202611";
+
+        var reversal = (await Service.ReverseOnOriginalDatesAsync([variance.Id], ReversalSide.All, "kim", null!, CancellationToken.None)).Single();
+
+        (reversal.DocumentDt, reversal.Amount).Should().Be((new DateOnly(2026, 11, 1), -6m));
+    }
+
     [Fact, Trait("Id", "MM-UT-603")]
     public async Task PostAsync_LocksOnHandRowsInItemWarehouseOrderBeforeChecking()
     {
