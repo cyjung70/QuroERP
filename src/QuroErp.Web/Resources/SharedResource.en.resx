@@ -1398,4 +1398,24 @@
   <data name="Mm.PdaReceipt.NothingLeft" xml:space="preserve"><value>Nothing is left to receive on this PO.</value></data>
   <data name="Mm.PdaReceipt.AlreadyScanned" xml:space="preserve"><value>The open PO lines of {0} are already on cards.</value></data>
   <data name="Mm.PdaReceipt.LocationNotInWarehouse" xml:space="preserve"><value>Location {0} is not in warehouse {1} of this line.</value></data>
+  <data name="Mm.PdaMove.Title" xml:space="preserve"><value>PDA Move</value></data>
+  <data name="Mm.PdaMove.Warehouses" xml:space="preserve"><value>Warehouses (from → to)</value></data>
+  <data name="Mm.PdaMove.MovType" xml:space="preserve"><value>Move type</value></data>
+  <data name="Mm.PdaMove.ScanFrom" xml:space="preserve"><value>Scan the sending Location or Pallet</value></data>
+  <data name="Mm.PdaMove.ScanItem" xml:space="preserve"><value>Scan the item or Lot</value></data>
+  <data name="Mm.PdaMove.ScanTo" xml:space="preserve"><value>Scan the receiving Location</value></data>
+  <data name="Mm.PdaMove.Qty" xml:space="preserve"><value>Move qty</value></data>
+  <data name="Mm.PdaMove.From" xml:space="preserve"><value>From</value></data>
+  <data name="Mm.PdaMove.To" xml:space="preserve"><value>To</value></data>
+  <data name="Mm.PdaMove.Pallet" xml:space="preserve"><value>Pallet</value></data>
+  <data name="Mm.PdaMove.Lot" xml:space="preserve"><value>Lot</value></data>
+  <data name="Mm.PdaMove.FindLot" xml:space="preserve"><value>Find Lot</value></data>
+  <data name="Mm.PdaMove.Clear" xml:space="preserve"><value>Clear all</value></data>
+  <data name="Mm.PdaMove.Saved" xml:space="preserve"><value>Saved transfer {0} ({1}).</value></data>
+  <data name="Mm.PdaMove.Unfinished" xml:space="preserve"><value>A card has no receiving Location yet.</value></data>
+  <data name="Mm.PdaMove.OtherFromWarehouse" xml:space="preserve"><value>{0} is not this transfer's sending warehouse {1}. Save, then start again.</value></data>
+  <data name="Mm.PdaMove.OtherToWarehouse" xml:space="preserve"><value>{0} is not this transfer's receiving warehouse {1}. Save, then start again.</value></data>
+  <data name="Mm.PdaMove.NotLocationManaged" xml:space="preserve"><value>{0} is not Location-managed and uses only Location '*'.</value></data>
+  <data name="Mm.PdaMove.NoStock" xml:space="preserve"><value>There is no stock of Lot {0} at {1}.</value></data>
+  <data name="Mm.PdaMove.SameLocation" xml:space="preserve"><value>{0} is the sending Location.</value></data>
 </root>
