@@ -2,7 +2,8 @@
 -- Opening stock of the lot- and Location-managed demo resin (0915) on shelf A-01 of the default warehouse (0914), in two Lots,
 -- posted as goods receipts dated 2026-11-01, so a move inside the warehouse (LT, A-01 → A-02) and to the warehouse EAST (TR,
 -- E-01) can be tried with a Location and a Lot. The bolt (0908) and the Pallets (0917) on Location '*' cover the moves without
--- Location management. It posts only while the resin has no movement yet, so the script can run again.
+-- Location management. It posts only while the resin has no movement yet, so the script can run again. Its receipts carry
+-- their own ref_key, apart from the opening stock of 0908.
 -- An applied script is not changed. More demo stock goes into a new script.
 
 INSERT INTO mm_lot (item_id, lot_no, received_dt, created_by, updated_by)
@@ -17,8 +18,8 @@ WITH opening AS (
     SELECT v.document_no, i.id AS item_id, w.id AS warehouse_id, c.id AS location_id, l.id AS lot_id, v.qty::numeric AS qty,
            v.prc::numeric AS prc, v.ref_seq
     FROM (VALUES
-        ('DEMO-OB-0005', 'R2611A', 20, 3.5000, 5),
-        ('DEMO-OB-0006', 'R2611B', 10, 3.5000, 6)
+        ('DEMO-PM-0001', 'R2611A', 20, 3.5000, 1),
+        ('DEMO-PM-0002', 'R2611B', 10, 3.5000, 2)
     ) AS v (document_no, lot_no, qty, prc, ref_seq)
     JOIN bc_item i ON i.item_cd = 'DEMO-RESIN-LOC'
     JOIN bc_warehouse w ON w.is_default
@@ -29,7 +30,7 @@ WITH opening AS (
 movements AS (
     INSERT INTO mm_goods_movement (document_no, document_dt, mov_type, item_id, warehouse_id, location_id, lot_id, qty, prc, amount,
                                    ref_key, ref_seq, created_by, updated_by)
-    SELECT document_no, DATE '2026-11-01', 'GR', item_id, warehouse_id, location_id, lot_id, qty, prc, qty * prc, 'DEMO-OPENING',
+    SELECT document_no, DATE '2026-11-01', 'GR', item_id, warehouse_id, location_id, lot_id, qty, prc, qty * prc, 'DEMO-PDA-MOVE',
            ref_seq, 'system', 'system'
     FROM opening
     RETURNING id
