@@ -193,6 +193,29 @@ public partial class SalesInvoiceServiceTests(AuthSchemaFixture db)
         (await StockValueAsync(m.Item)).Should().Be(valueBefore);
     }
 
+    // MM-BR-601: an edit reverses the old consignment move on its own date: the sending side before the new move, the
+    // consignment side after it. A delete reverses on the processing date
+    [DatabaseFact, Trait("Id", "MM-UT-601"), Trait("Rule", "MM-BR-601"), Trait("Rule", "SD-BR-144")]
+    public async Task BillFirst_AnEditReversesTheOldMoveOnItsOwnDate_AndADeleteReversesToday()
+    {
+        var m = await MastersAsync(BillThenShip);
+        await ReceiveAsync(m.Item, m.Main, 6m);
+        var so = await OrderAsync(m, BillThenShip, 6m, 100m);
+        var inv = await Service.CreateAsync(Request(m, FromOrder(so.Line, 6m)), "kim", None);
+
+        var saved = await Service.UpdateAsync(inv.Id, Saved(inv, FromOrder(so.Line, 4m)), "kim", None);
+
+        saved.Lines.Select(l => (l.Seq, l.DnQty)).Should().Equal((2, 4m));
+        (await OnHandAsync(m.Item, m.Main), await OnHandAsync(m.Item, m.Consignment)).Should().Be((2m, 4m));
+        (await MovementsAsync(inv.DnNo)).Select(x => (x.RefSeq, x.Qty, x.ReversalDt)).Should().Equal(
+            (1, -6m, (DateOnly?)null), (1, 6m, null), (1, 6m, DnDt), (2, -4m, null), (2, 4m, null), (1, -6m, DnDt));
+
+        await Service.DeleteAsync(saved.Id, saved.UpdatedAt, "kim", None);
+        (await MovementsAsync(inv.DnNo)).Skip(6).Select(x => (x.RefSeq, x.Qty, x.ReversalDt)).Should().Equal(
+            (2, 4m, (DateOnly?)Today), (2, -4m, Today));
+        (await OnHandAsync(m.Item, m.Main), await OnHandAsync(m.Item, m.Consignment)).Should().Be((6m, 0m));
+    }
+
     [DatabaseFact, Trait("Id", "SD-UT-144"), Trait("Id", "SD-UT-145"), Trait("Id", "SD-UT-146"), Trait("Id", "SD-UT-206"), Trait("Id", "SD-UT-147")]
     public async Task AfterAPartialShipment_TheUnshippedQtyIsCancelledWithACreditMemo_AndTheCancellationCanBeUndone()
     {

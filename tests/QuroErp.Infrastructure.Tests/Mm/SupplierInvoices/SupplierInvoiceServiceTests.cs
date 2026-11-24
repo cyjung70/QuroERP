@@ -193,7 +193,8 @@ public partial class SupplierInvoiceServiceTests(AuthSchemaFixture db)
         saved.Lines.Select(l => (l.Seq, l.Qty, l.PvAmt)).Should().Equal((2, 2m, 0m), (3, 10m, 0m));
         (saved.DueDt, saved.TotAmt).Should().Be((InvoiceDt.AddDays(30), 1320m));
         (await Receipts.GetAsync(gr.Id, None)).Lines.Select(l => l.InvoicedQty).Should().Equal(10m, 2m);
-        (await MovementsAsync(invoice.InvoiceNo)).Should().Equal(("PV", 1, 0m, 40m, InvoiceDt, false), ("PV", 1, 0m, -40m, Today, true));
+        // MM-BR-601: an edit reverses the variance on its own date
+        (await MovementsAsync(invoice.InvoiceNo)).Should().Equal(("PV", 1, 0m, 40m, InvoiceDt, false), ("PV", 1, 0m, -40m, InvoiceDt, true));
     }
 
     [DatabaseFact, Trait("Id", "MM-UT-760")]

@@ -126,11 +126,33 @@ public sealed class InventoryService(
     /// MM-E-009 / MM-E-010 negative balance on a later date or at a month end (a set component error ends with the
     /// set item code), MM-E-356 / MM-E-714 a Location or lot balance below zero.
     /// </exception>
-    public async Task<IReadOnlyList<GoodsMovement>> ReverseAsync(
-        IReadOnlyList<long> movementIds, DateOnly reversalDt, string user, IDbTransaction transaction, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<GoodsMovement>> ReverseAsync(
+        IReadOnlyList<long> movementIds, DateOnly reversalDt, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        ReverseAsync(movementIds, _ => reversalDt, ReversalSide.All, user, transaction, cancellationToken);
+
+    /// <summary>
+    /// MM-BR-601, an edit of a saved document: like <see cref="ReverseAsync(IReadOnlyList{long}, DateOnly, string, IDbTransaction, CancellationToken)"/>,
+    /// but each reversal is dated its original's date, so the old and the new content net on that day. Side picks the movements
+    /// this call reverses; the others are left for a later call. An edit reverses the Decreases (old issues), posts its new lines
+    /// and then reverses the Increases (old receipts), so no step leaves a balance below both the old and the new content.
+    /// </summary>
+    /// <exception cref="QuroErp.Domain.Common.DomainException">
+    /// MM-E-002 when an original's month is closed (MM-BR-004); a price difference (PV) moves to the first open day instead
+    /// (MM-BR-759). The other errors as for a reversal dated today.
+    /// </exception>
+    public Task<IReadOnlyList<GoodsMovement>> ReverseOnOriginalDatesAsync(
+        IReadOnlyList<long> movementIds, ReversalSide side, string user, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        ReverseAsync(movementIds, m => m.DocumentDt, side, user, transaction, cancellationToken);
+
+    private async Task<IReadOnlyList<GoodsMovement>> ReverseAsync(
+        IReadOnlyList<long> movementIds, Func<GoodsMovement, DateOnly> dateOf, ReversalSide side, string user, IDbTransaction transaction,
+        CancellationToken cancellationToken)
     {
+        if (movementIds.Count == 0)
+        {
+            return [];
+        }
         var closeYearMonth = await inventory.GetCloseYearMonthAsync(transaction, cancellationToken);
-        var amountOnlyDt = InventoryClosing.OpenDateFor(closeYearMonth, reversalDt);
 
         var saved = (await inventory.LockMovementsAsync(movementIds, transaction, cancellationToken)).ToDictionary(s => s.Movement.Id);
         var reversedNow = new HashSet<long>();
@@ -138,13 +160,23 @@ public sealed class InventoryService(
         foreach (var id in movementIds)
         {
             var original = saved.GetValueOrDefault(id) ?? throw new InvalidOperationException($"Goods movement {id} does not exist.");
+            if (!side.Takes(original.Movement.Qty))
+            {
+                continue;
+            }
             var amountOnly = MovementType.IsAmountOnly(original.Movement.MovType);
+            var reversalDt = dateOf(original.Movement);
             if (!amountOnly)
             {
                 InventoryClosing.EnsureOpen(closeYearMonth, reversalDt);
             }
             // The same id twice in one call is a second reversal
-            reversals.Add(original.Movement.Reverse(amountOnly ? amountOnlyDt : reversalDt, original.Reversed || !reversedNow.Add(id)));
+            reversals.Add(original.Movement.Reverse(
+                amountOnly ? InventoryClosing.OpenDateFor(closeYearMonth, reversalDt) : reversalDt, original.Reversed || !reversedNow.Add(id)));
+        }
+        if (reversals.Count == 0)
+        {
+            return [];
         }
 
         // Set rows are locked with the components, in the same id order as posting, for the set code in errors
@@ -405,4 +437,22 @@ public sealed class InventoryService(
         long ItemId, long WarehouseId, DateOnly DocumentDt, string MovType, string SetItemCd, decimal Qty, long? LocationId,
         long? LotId, string? LotNo, bool Reversal, bool AmountOnly, Func<ItemStock, GoodsMovement> Build,
         Func<decimal, Func<ItemStock, GoodsMovement>>? Split = null, long? PalletId = null);
+}
+
+/// <summary>Which movements a reversal call takes (MM-BR-601): every one, those that took stock out (qty 0 included), or those that brought it in.</summary>
+public enum ReversalSide
+{
+    All,
+    Decreases,
+    Increases,
+}
+
+internal static class ReversalSideExtensions
+{
+    public static bool Takes(this ReversalSide side, decimal qty) => side switch
+    {
+        ReversalSide.Decreases => qty <= 0,
+        ReversalSide.Increases => qty > 0,
+        _ => true,
+    };
 }
