@@ -38,6 +38,7 @@ public class StockTransferApiTests(ApiFactory factory) : IClassFixture<ApiFactor
         {
             await client.GetAsync(StockTransferRoutes.Base),
             await client.GetAsync("api/mm/stock-transfers/1"),
+            await client.GetAsync(StockTransferRoutes.ScanPlace + "?value=LC|MAIN|A1&step=FROM"),
         };
 
         responses.Select(r => r.StatusCode).Should().OnlyContain(s => s == HttpStatusCode.Unauthorized);

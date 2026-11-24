@@ -92,6 +92,26 @@ internal sealed class StockTransferRepository : IStockTransferRepository
         SELECT id, 'MOVE', @EventDt, qty, @RefKey, @RefSeq, @User, @User FROM mm_pallet WHERE id = @PalletId;
         """;
 
+    private const string SelectScannedLocation = """
+        SELECT w.id AS warehouse_id, w.warehouse_code, w.use_yn AS warehouse_in_use, c.id AS location_id, c.location_code,
+               c.use_yn AS location_in_use
+        FROM bc_warehouse w
+        JOIN bc_location c ON c.warehouse_id = w.id
+        WHERE w.warehouse_code = @WarehouseCode AND c.location_code = @LocationCode
+        """;
+
+    private const string SelectScannedPallet = """
+        SELECT p.id, p.pallet_no, p.item_id, i.item_cd, i.item_name, p.lot_id, lot.lot_no, p.qty, p.status,
+               w.id AS warehouse_id, w.warehouse_code, w.use_yn AS warehouse_in_use, c.id AS location_id, c.location_code,
+               c.use_yn AS location_in_use
+        FROM mm_pallet p
+        JOIN bc_item i ON i.id = p.item_id
+        JOIN mm_lot lot ON lot.id = p.lot_id
+        JOIN bc_warehouse w ON w.id = p.warehouse_id
+        JOIN bc_location c ON c.id = p.location_id
+        WHERE p.pallet_no = @PalletNo
+        """;
+
     public async Task<IReadOnlyList<StockTransferRow>> SearchAsync(
         StockTransferFilter filter, IDbTransaction transaction, CancellationToken cancellationToken)
     {
@@ -181,6 +201,16 @@ internal sealed class StockTransferRepository : IStockTransferRepository
         string transferNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
         [.. await transaction.Connection!.QueryAsync<OpenTransferMovement>(new CommandDefinition(
             SelectOpenMovements, new { RefKey = transferNo }, transaction, cancellationToken: cancellationToken))];
+
+    public Task<ScannedLocation?> FindScannedLocationAsync(
+        string warehouseCode, string locationCode, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.QuerySingleOrDefaultAsync<ScannedLocation?>(new CommandDefinition(
+            SelectScannedLocation, new { WarehouseCode = warehouseCode, LocationCode = locationCode }, transaction,
+            cancellationToken: cancellationToken));
+
+    public Task<ScannedPallet?> FindScannedPalletAsync(string palletNo, IDbTransaction transaction, CancellationToken cancellationToken) =>
+        transaction.Connection!.QuerySingleOrDefaultAsync<ScannedPallet?>(new CommandDefinition(
+            SelectScannedPallet, new { PalletNo = palletNo }, transaction, cancellationToken: cancellationToken));
 
     public Task MovePalletAsync(
         long palletId, long warehouseId, long locationId, DateOnly eventDt, string refKey, int refSeq, string user, IDbTransaction transaction,

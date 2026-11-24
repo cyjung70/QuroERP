@@ -28,6 +28,13 @@ public static class StockTransferRules
     public static bool IsType(string? movType) => movType is MovementType.StockTransfer or MovementType.LocationTransfer;
 
     /// <summary>
+    /// MM-BR-922: the type of a transfer that names none, as the PDA move saves it: LT when it stays in the sending warehouse (no
+    /// receiving warehouse or the same one), TR when it goes to another.
+    /// </summary>
+    public static string TypeFor(long fromWarehouseId, long? toWarehouseId) =>
+        toWarehouseId is null || toWarehouseId == fromWarehouseId ? MovementType.LocationTransfer : MovementType.StockTransfer;
+
+    /// <summary>
     /// MM-BR-705: a TR goes between two warehouses, every qty is above 0 and every item holds stock of its own (MM-BR-008). A Kit
     /// has no stock of its own: its components move (MM-BR-007).
     /// </summary>
