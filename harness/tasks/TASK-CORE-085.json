@@ -1,0 +1,26 @@
+{
+  "id": "TASK-CORE-085",
+  "project": "core",
+  "title": "CI: 상위 에디션 전용 이름 유출 검사 (공개 저장소 보호)",
+  "module": "CORE",
+  "layer": [
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/posting-events.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-code-review"
+  ],
+  "dependsOn": [],
+  "acceptance": [
+    "CI에 검사 단계를 더한다: 추적 파일 전체와 PR 커밋 메시지에서 금지 패턴을 찾으면 실패한다",
+    "금지 패턴 목록은 저장소에 쓰지 않고 GitHub Actions 저장소 변수(예: `EDITION_LEAK_PATTERNS`, 한 줄에 정규식 하나)에서 읽는다. 변수가 없으면 검사를 건너뛰고 경고만 남긴다",
+    "검사 스크립트는 `scripts/`에 두고 로컬에서도 실행할 수 있다 (패턴은 환경 변수로 받는다)",
+    "테스트: 패턴이 있는 임시 파일로 실패, 없으면 통과"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

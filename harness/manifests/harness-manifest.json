@@ -64,7 +64,7 @@
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "3591a839bca4a3fb253371cdeaa04d0f3a68f6d1cf96ee0a8bdb57cadcf46b1a"
+      "sha256": "679bb4c72f2d51fc0079b21f15ce073be833c17815b101345ffee98e13102573"
     },
     {
       "path": "docs/architecture/api.md",
@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/architecture/database.md",
-      "sha256": "06a4667dbaeaf15e29f60824c610af68e2e68b2087e783b34d6a715247cdb606"
+      "sha256": "c23d502d7b18bfd75d4c360dd624ec68db1290eda866b9d7ed34b7266fb63347"
     },
     {
       "path": "docs/architecture/entry-frame.md",
@@ -117,6 +117,10 @@
     {
       "path": "docs/architecture/organization.md",
       "sha256": "98eca65dc37bdf0399fee45caebbda39a00620dd4126b65ddb3df24df5af5e5e"
+    },
+    {
+      "path": "docs/architecture/posting-events.md",
+      "sha256": "5b9c22256a76325d9ecea76b14535038457667b70a9bab7be590cd6c6296c8f4"
     },
     {
       "path": "docs/architecture/print-documents.md",
@@ -348,7 +352,7 @@
     },
     {
       "path": "docs/INDEX.md",
-      "sha256": "f6b868423c84a08839e7ac1c90e533ee7c4358fa571b2c17c03a1254d7aeab90"
+      "sha256": "eb2062cb3161fa55cc60091d4832eaf4b715aea6e32667fb04defb5f83a21985"
     },
     {
       "path": "docs/specifications/BC/alternate-item-group.md",
@@ -1417,6 +1421,18 @@
     {
       "path": "harness/tasks/TASK-CORE-082.json",
       "sha256": "fd675309dd0ebbfecce025e9a5e6e9df84135ea575809bd3b690770641329811"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-083.json",
+      "sha256": "4efb1e8d373475184a418e2c09651688bc2780138ca29bfc5917eb5b300c5a4f"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-084.json",
+      "sha256": "fedea19f1664637addfa2c3b7e4dd2a9d6eb67a091b7b28416733a1f753f6a15"
+    },
+    {
+      "path": "harness/tasks/TASK-CORE-085.json",
+      "sha256": "dff61059ff7a1b0b69642da31c5866113c7d553931bcb43ef6ca3a80c3ec2d22"
     },
     {
       "path": "harness/tasks/TASK-MM-001.json",
