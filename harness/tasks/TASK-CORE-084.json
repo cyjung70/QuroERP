@@ -1,0 +1,33 @@
+{
+  "id": "TASK-CORE-084",
+  "project": "core",
+  "title": "전기 이벤트: `IPostingEventPublisher`·`IPostingHandler`(No-op)와 `sys_outbox_event`",
+  "module": "CORE",
+  "layer": [
+    "Application",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/posting-events.md",
+    "docs/architecture/inventory.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-083"
+  ],
+  "acceptance": [
+    "`sys_outbox_event` 테이블(posting-events.md 열)과 `IPostingEventPublisher`(Outbox에 한 줄), `IPostingHandler` 기본 No-op 구현을 만들고 DI에 등록한다. 다른 구현이 등록되면 그것이 쓰인다",
+    "끝난 업무 서비스가 저장 트랜잭션 안에서 이벤트를 쓴다: 입고, 출하·출고, 창고 이동, 공급자 송장, 매출 송장(Void 포함), 지급, 입금, 반제, 실사·조정, 재고 월 마감·취소. 수정·삭제는 취소 이벤트 + 새 이벤트",
+    "아직 없는 업무는 그 태스크가 같은 규칙으로 이벤트를 쓴다 (posting-events.md)",
+    "Community 화면·API·리포트 결과가 바뀌지 않는다. 기존 테스트가 통과한다",
+    "테스트: 문서 저장 롤백 시 이벤트 없음, 수정 시 취소·새 이벤트 순서, 금액이 문서 저장값과 같음"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}

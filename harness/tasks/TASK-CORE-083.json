@@ -1,0 +1,33 @@
+{
+  "id": "TASK-CORE-083",
+  "project": "core",
+  "title": "회사 키 `company_id`: 마스터·문서 헤더·재고 이동 마이그레이션",
+  "module": "CORE",
+  "layer": [
+    "Domain",
+    "Infrastructure"
+  ],
+  "screenType": "-",
+  "specs": [
+    "docs/architecture/database.md",
+    "docs/architecture/organization.md"
+  ],
+  "rules": [],
+  "skills": [
+    "quro-dapper",
+    "quro-unit-test",
+    "quro-code-review"
+  ],
+  "dependsOn": [
+    "TASK-CORE-082"
+  ],
+  "acceptance": [
+    "마이그레이션 스크립트 하나로 database.md \"회사 키\" 기준의 테이블에 `company_id bigint NOT NULL DEFAULT 1`(`bc_company.id` FK)을 더한다. 대상 목록을 G1 계획에 적는다 (마스터, 문서 헤더, `mm_goods_movement`). 문서 줄에는 넣지 않는다",
+    "기존 행은 회사 1행의 id로 채운다. 회사 행이 없는 DB(국가 미설정)에서도 마이그레이션이 실패하지 않는다 (회사를 만들 때 id 1)",
+    "INSERT는 회사 id를 명시해 넣는다 (기본값에 기대지 않는다). 조회 SQL은 바꾸지 않는다 (단일 회사)",
+    "화면·API 요청·응답에 `company_id`가 나오지 않는다. 기존 API 계약 테스트가 그대로 통과한다",
+    "통합 테스트: 대상 테이블마다 컬럼·NOT NULL·FK 확인, 새 문서 저장 뒤 값이 회사 id"
+  ],
+  "estimateHours": 3,
+  "status": "todo"
+}
